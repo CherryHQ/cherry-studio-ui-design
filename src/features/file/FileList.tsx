@@ -1,0 +1,167 @@
+import React, { useState, useRef, useEffect } from 'react';
+import {
+  FileText, Image as ImageIcon, Code2, Music, Video,
+  File, Star, ChevronUp, ChevronDown,
+} from 'lucide-react';
+import type { FileItem, FileTag } from './mockData';
+import { getFormatLabel } from './mockData';
+
+const typeIcons: Record<string, React.ElementType> = {
+  image: ImageIcon, document: FileText, code: Code2,
+  audio: Music, video: Video, other: File,
+};
+
+const typeIconColors: Record<string, string> = {
+  image: 'text-rose-400/50',
+  document: 'text-sky-400/50',
+  code: 'text-cyan-400/50',
+  audio: 'text-amber-400/50',
+  video: 'text-violet-400/50',
+  other: 'text-foreground/25',
+};
+
+export type SortKey = 'name' | 'size' | 'updatedAt' | 'type';
+export type SortDir = 'asc' | 'desc';
+
+export function FileList({
+  files,
+  selectedIds,
+  onSelect,
+  onContextMenu,
+  onPreview,
+  onToggleStar,
+  tags,
+  sortKey,
+  sortDir,
+  onSort,
+  renamingId,
+  onRenameConfirm,
+  onRenameCancel,
+}: {
+  files: FileItem[];
+  selectedIds: Set<string>;
+  onSelect: (id: string, multi: boolean) => void;
+  onContextMenu: (e: React.MouseEvent, id: string) => void;
+  onPreview: (file: FileItem) => void;
+  onToggleStar: (id: string) => void;
+  tags: FileTag[];
+  sortKey: SortKey;
+  sortDir: SortDir;
+  onSort: (key: SortKey) => void;
+  renamingId: string | null;
+  onRenameConfirm: (id: string, name: string) => void;
+  onRenameCancel: () => void;
+}) {
+  const SortHeader = ({ label, field, className: cn }: { label: string; field: SortKey; className?: string }) => (
+    <button
+      onClick={() => onSort(field)}
+      className={`flex items-center gap-0.5 text-[9px] uppercase tracking-wider transition-colors ${
+        sortKey === field ? 'text-foreground/55' : 'text-foreground/30 hover:text-foreground/45'
+      } ${cn || ''}`}
+    >
+      <span>{label}</span>
+      {sortKey === field && (
+        sortDir === 'asc' ? <ChevronUp size={8} /> : <ChevronDown size={8} />
+      )}
+    </button>
+  );
+
+  return (
+    <div className="flex flex-col">
+      {/* Header */}
+      <div className="flex items-center gap-2 px-4 py-1.5 border-b border-border/30 sticky top-0 bg-background z-10">
+        <span className="w-5" />
+        <SortHeader label="名称" field="name" className="flex-1" />
+        <SortHeader label="大小" field="size" className="w-[70px] justify-end" />
+        <SortHeader label="类型" field="type" className="w-[55px]" />
+        <SortHeader label="修改时间" field="updatedAt" className="w-[110px]" />
+        <span className="w-[60px] text-[9px] text-foreground/30 uppercase tracking-wider">标签</span>
+      </div>
+      {/* Rows */}
+      {files.map(file => {
+        const selected = selectedIds.has(file.id);
+        const Icon = typeIcons[file.type] || File;
+        const fileTags = tags.filter(t => file.tags.includes(t.id));
+        const isRenaming = renamingId === file.id;
+        return (
+          <div
+            key={file.id}
+            onClick={(e) => { if (!isRenaming) onSelect(file.id, e.metaKey || e.ctrlKey); }}
+            onContextMenu={(e) => onContextMenu(e, file.id)}
+            onDoubleClick={() => { if (!isRenaming) onPreview(file); }}
+            className={`flex items-center gap-2 px-4 py-[6px] border-b border-border/10 cursor-pointer transition-colors ${
+              selected ? 'bg-accent/50' : 'hover:bg-accent/20'
+            }`}
+          >
+            {/* Star */}
+            <button
+              onClick={(e) => { e.stopPropagation(); onToggleStar(file.id); }}
+              className={`w-5 flex-shrink-0 flex items-center justify-center transition-colors ${
+                file.starred ? 'text-amber-400/60' : 'text-foreground/10 hover:text-amber-400/40'
+              }`}
+            >
+              <Star size={10} fill={file.starred ? 'currentColor' : 'none'} />
+            </button>
+            {/* Icon + Name */}
+            <div className="flex-1 flex items-center gap-2 min-w-0">
+              <Icon size={13} strokeWidth={1.4} className={`flex-shrink-0 ${typeIconColors[file.type] || typeIconColors.other}`} />
+              {isRenaming ? (
+                <InlineRename
+                  value={file.name}
+                  onConfirm={(v) => onRenameConfirm(file.id, v)}
+                  onCancel={onRenameCancel}
+                />
+              ) : (
+                <span className="text-[11px] text-foreground/80 truncate">{file.name}</span>
+              )}
+            </div>
+            {/* Size */}
+            <span className="text-[10px] text-foreground/45 w-[70px] text-right flex-shrink-0">{file.size}</span>
+            {/* Type */}
+            <span className="text-[10px] text-foreground/45 w-[55px] flex-shrink-0">{getFormatLabel(file.format)}</span>
+            {/* Date */}
+            <span className="text-[10px] text-foreground/40 w-[110px] flex-shrink-0">{file.updatedAt}</span>
+            {/* Tags */}
+            <div className="w-[60px] flex items-center gap-1 flex-shrink-0">
+              {fileTags.slice(0, 3).map(t => (
+                <span
+                  key={t.id}
+                  className="px-1.5 py-[1px] rounded-full text-[8px] truncate"
+                  style={{ backgroundColor: `${t.color}15`, color: t.color }}
+                >
+                  {t.name}
+                </span>
+              ))}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function InlineRename({ value, onConfirm, onCancel }: { value: string; onConfirm: (v: string) => void; onCancel: () => void }) {
+  const [text, setText] = useState(value);
+  const ref = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    if (ref.current) {
+      ref.current.focus();
+      const dotIdx = value.lastIndexOf('.');
+      ref.current.setSelectionRange(0, dotIdx > 0 ? dotIdx : value.length);
+    }
+  }, [value]);
+  return (
+    <input
+      ref={ref}
+      value={text}
+      onChange={e => setText(e.target.value)}
+      onKeyDown={e => {
+        if (e.key === 'Enter' && text.trim()) onConfirm(text.trim());
+        if (e.key === 'Escape') onCancel();
+      }}
+      onBlur={() => { if (text.trim()) onConfirm(text.trim()); else onCancel(); }}
+      className="flex-1 bg-transparent outline-none text-[11px] text-foreground border-b border-foreground/20 py-0 min-w-0"
+      onClick={e => e.stopPropagation()}
+    />
+  );
+}
