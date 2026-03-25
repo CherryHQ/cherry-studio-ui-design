@@ -3,3 +3,13 @@ dist/
 .vite/
 *.local
 .DS_Store
+Thumbs.db
+
+# Figma imports & refactor notes (not UI source)
+src/imports/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
