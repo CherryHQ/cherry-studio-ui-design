@@ -23,9 +23,10 @@ import type { AgentChatMessage, AgentSession, AgentSessionData } from '@/app/typ
 import type { ModelCapability } from '@/app/types/chat';
 import { SessionHistoryPage } from './SessionHistoryPage';
 import {
-  MOCK_SESSIONS, MODELS, SESSION_DATA_MAP, EMPTY_SESSION_DATA,
+  MODELS, SESSION_DATA_MAP, EMPTY_SESSION_DATA,
   DEFAULT_INITIAL_FILES, AGENT_MODEL_CAPABILITY_LABELS,
 } from '@/app/mock';
+import { useAgentSession } from '@/app/context/AgentSessionContext';
 
 // Backward-compatible aliases
 type ChatMessage = AgentChatMessage;
@@ -928,8 +929,11 @@ function AgentInfoPanel({ agent, onClose, onEdit }: {
 export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
   const { navigateToLibrary: _navLib, changeTabTitle: onTabTitleChange, openSettings: onOpenSettings } = useGlobalActions();
   const onNavigateToLibrary = () => _navLib('agent');
-  const [sessions, setSessions] = useState<AgentSession[]>(MOCK_SESSIONS);
-  const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
+  const {
+    sessions, activeSessionId,
+    selectSession, newSession: ctxNewSession, deleteSession: ctxDeleteSession,
+    addSession, updateSession,
+  } = useAgentSession();
   const [localMessages, setLocalMessages] = useState<Record<string, ChatMessage[]>>({});
   const [selectedFile, setSelectedFile] = useState<string | null>('src/App.tsx');
   const [showModelPicker, setShowModelPicker] = useState(false);
@@ -977,7 +981,7 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
   }, []);
 
   const handleSelectSession = useCallback((id: string) => {
-    setActiveSessionId(id);
+    selectSession(id);
     const data = SESSION_DATA_MAP[id];
     if (data) {
       setSelectedFile(null);
@@ -990,27 +994,26 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
       setShowPreview(true);
       setShowExplorer(true);
     }
-  }, []);
+  }, [selectSession]);
 
   const handleNewSession = useCallback(() => {
-    setActiveSessionId(null);
+    ctxNewSession();
     setShowPreview(false);
     setShowExplorer(false);
     setSelectedFile(null);
-  }, []);
+  }, [ctxNewSession]);
 
   const handleDeleteSession = useCallback((id: string) => {
-    setSessions(prev => prev.filter(s => s.id !== id));
+    ctxDeleteSession(id);
     if (activeSessionId === id) {
-      setActiveSessionId(null);
       setShowPreview(false);
       setShowExplorer(false);
     }
-  }, [activeSessionId]);
+  }, [ctxDeleteSession, activeSessionId]);
 
   const handleUpdateSession = useCallback((id: string, updates: Partial<AgentSession>) => {
-    setSessions(prev => prev.map(s => s.id === id ? { ...s, ...updates } : s));
-  }, []);
+    updateSession(id, updates);
+  }, [updateSession]);
 
   const handleSendMessage = useCallback((text: string) => {
     const ts = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
@@ -1028,8 +1031,7 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
         messageCount: 1,
         status: 'active',
       };
-      setSessions(prev => [newSession, ...prev]);
-      setActiveSessionId(newId);
+      addSession(newSession);
       key = newId;
     }
 
@@ -1051,11 +1053,7 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
     }));
 
     if (key.startsWith('new-')) {
-      setSessions(prev => prev.map(s =>
-        s.id === key
-          ? { ...s, title: text.slice(0, 40), lastMessage: text, messageCount: (s.messageCount || 0) + 1 }
-          : s
-      ));
+      updateSession(key, { title: text.slice(0, 40), lastMessage: text, messageCount: 1 });
     }
 
     setTimeout(() => {
