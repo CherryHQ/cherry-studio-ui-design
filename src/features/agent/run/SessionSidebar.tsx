@@ -134,12 +134,22 @@ function SessionItem({ session, isActive, onClick, onContextMenu }: {
       </div>
 
       {/* Status indicator */}
-      {session.status === 'active' && (
-        <div className="flex items-center gap-1 pl-[22px]">
-          <span className="w-[5px] h-[5px] rounded-full bg-cherry-primary/50 animate-pulse" />
-          <span className="text-[9px] text-cherry-primary/50">{"运行中"}</span>
-        </div>
-      )}
+      {session.status !== 'completed' && (() => {
+        const map = {
+          active:  { dot: 'bg-emerald-500 animate-pulse',      text: 'text-emerald-600/60 dark:text-emerald-400/50', label: '运行中' },
+          waiting: { dot: 'bg-amber-400 animate-pulse-slow',   text: 'text-amber-600/60 dark:text-amber-400/50',    label: '审批中' },
+          error:   { dot: 'bg-red-500',                        text: 'text-red-500/60',                             label: '运行报错' },
+          paused:  { dot: 'bg-muted-foreground/30',            text: 'text-muted-foreground/40',                    label: '已暂停' },
+        } as const;
+        const s = map[session.status as keyof typeof map];
+        if (!s) return null;
+        return (
+          <div className="flex items-center gap-1 pl-[22px]">
+            <span className={`w-[5px] h-[5px] rounded-full flex-shrink-0 ${s.dot}`} />
+            <span className={`text-[9px] ${s.text}`}>{s.label}</span>
+          </div>
+        );
+      })()}
     </button>
   );
 }

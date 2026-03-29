@@ -29,7 +29,7 @@ export interface AgentSession {
   lastMessage: string;
   timestamp: string;
   messageCount: number;
-  status: 'active' | 'completed' | 'paused';
+  status: 'active' | 'waiting' | 'error' | 'paused' | 'completed';
   pinned?: boolean;
   tags?: string[];
   group?: string;

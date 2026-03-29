@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Pin, X, GitBranch, Pencil } from 'lucide-react';
 import { useAgentSession } from '@/app/context/AgentSessionContext';
 import type { AgentSession } from '@/app/types/agent';
+import { Tooltip } from '@/app/components/Tooltip';
 
 // ===========================
 // Helpers
@@ -15,14 +16,18 @@ function escapeRegex(s: string) {
 // Status dot
 // ===========================
 
+const STATUS_META: Record<AgentSession['status'], { label: string; dot: string | null }> = {
+  active:    { label: '运行中',   dot: 'bg-emerald-500 animate-pulse' },
+  waiting:   { label: '审批中',   dot: 'bg-amber-400 animate-pulse-slow' },
+  error:     { label: '运行报错', dot: 'bg-red-500' },
+  paused:    { label: '已暂停',   dot: 'bg-muted-foreground/30' },
+  completed: { label: '已完成',   dot: null },
+};
+
 function StatusDot({ status }: { status: AgentSession['status'] }) {
-  if (status === 'active') {
-    return <span className="w-1.5 h-1.5 rounded-full flex-shrink-0 bg-emerald-500 animate-pulse" />;
-  }
-  if (status === 'paused') {
-    return <span className="w-1.5 h-1.5 rounded-full flex-shrink-0 bg-muted-foreground/30" />;
-  }
-  return null;
+  const dot = STATUS_META[status]?.dot;
+  if (!dot) return null;
+  return <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${dot}`} />;
 }
 
 // ===========================
@@ -319,6 +324,7 @@ export function TaskBar({ sidebarWidth }: TaskBarProps) {
                   </div>
                 ) : (
                   /* Normal mode */
+                  <Tooltip content={`${task.title} · ${STATUS_META[task.status].label}`} side="bottom">
                   <button
                     draggable
                     onClick={() => selectSession(task.id)}
@@ -345,6 +351,7 @@ export function TaskBar({ sidebarWidth }: TaskBarProps) {
                       <Pin size={8} className="flex-shrink-0 opacity-40 -rotate-45" />
                     )}
                   </button>
+                  </Tooltip>
                 )}
 
                 {/* After-insertion line */}

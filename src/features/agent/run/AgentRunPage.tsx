@@ -392,9 +392,16 @@ function CompactSessionSelector({
                     <Bot size={8} className="text-muted-foreground" />
                   </div>
                   <span className="flex-1 truncate">{s.title}</span>
-                  {s.status === 'active' && (
-                    <span className="w-[5px] h-[5px] rounded-full bg-cherry-primary flex-shrink-0" />
-                  )}
+                  {s.status !== 'completed' && (() => {
+                    const dotCls: Record<string, string> = {
+                      active:  'bg-emerald-500 animate-pulse',
+                      waiting: 'bg-amber-400 animate-pulse-slow',
+                      error:   'bg-red-500',
+                      paused:  'bg-muted-foreground/30',
+                    };
+                    const cls = dotCls[s.status];
+                    return cls ? <span className={`w-[5px] h-[5px] rounded-full flex-shrink-0 ${cls}`} /> : null;
+                  })()}
                   <span className="text-[9px] text-muted-foreground/55 flex-shrink-0">{s.timestamp}</span>
                 </button>
               ))}
@@ -1242,15 +1249,25 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
                 onOpenHistory={() => setShowHistory(true)}
               />
 
-              {sessionData.workDir && (
-                <div className="flex items-center gap-1.5">
-                  <div className="w-px h-3.5 bg-border/25" />
-                  <div className="flex items-center gap-1 text-[9px] text-cherry-primary-dark">
-                    <Circle size={5} className="fill-cherry-primary" />
-                    {activeSession?.status === 'active' ? '\u8fd0\u884c\u4e2d' : '\u5df2\u5b8c\u6210'}
+              {sessionData.workDir && (() => {
+                const statusMeta: Record<string, { label: string; color: string; dotColor: string }> = {
+                  active:    { label: '运行中',   color: 'text-emerald-600/70 dark:text-emerald-400/60', dotColor: 'fill-emerald-500' },
+                  waiting:   { label: '审批中',   color: 'text-amber-600/70 dark:text-amber-400/60',   dotColor: 'fill-amber-400' },
+                  error:     { label: '运行报错', color: 'text-red-500/70',                            dotColor: 'fill-red-500' },
+                  paused:    { label: '已暂停',   color: 'text-muted-foreground/50',                  dotColor: 'fill-muted-foreground/30' },
+                  completed: { label: '已完成',   color: 'text-cherry-primary-dark',                  dotColor: 'fill-cherry-primary' },
+                };
+                const s = statusMeta[activeSession?.status ?? 'completed'];
+                return (
+                  <div className="flex items-center gap-1.5">
+                    <div className="w-px h-3.5 bg-border/25" />
+                    <div className={`flex items-center gap-1 text-[9px] ${s.color}`}>
+                      <Circle size={5} className={s.dotColor} />
+                      {s.label}
+                    </div>
                   </div>
-                </div>
-              )}
+                );
+              })()}
             </div>
           )}
         </div>

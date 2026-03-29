@@ -79,6 +79,36 @@ const AGENT_ICONS: Record<string, string> = {
 };
 
 // ===========================
+// History Status Dot
+// ===========================
+
+const HISTORY_STATUS_DOT: Record<string, string> = {
+  active:    'bg-emerald-500 animate-pulse',
+  waiting:   'bg-amber-400 animate-pulse-slow',
+  error:     'bg-red-500',
+  paused:    'bg-muted-foreground/30',
+  completed: 'bg-muted-foreground/15',
+};
+
+const HISTORY_STATUS_LABEL: Record<string, string> = {
+  active:    '运行中',
+  waiting:   '审批中',
+  error:     '运行报错',
+  paused:    '已暂停',
+  completed: '已完成',
+};
+
+function HistoryStatusDot({ status }: { status: string }) {
+  const dot = HISTORY_STATUS_DOT[status] ?? 'bg-muted-foreground/15';
+  const label = HISTORY_STATUS_LABEL[status] ?? status;
+  return (
+    <Tooltip content={label} side="top">
+      <span className={`w-[5px] h-[5px] rounded-full flex-shrink-0 ${dot}`} />
+    </Tooltip>
+  );
+}
+
+// ===========================
 // Grouped Section
 // ===========================
 
@@ -323,9 +353,7 @@ function SessionCard({ session, isActive, isHovered, onSelect, onContextMenu, on
       {/* Content — compact two-line */}
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-1.5">
-          {session.status === 'active' && (
-            <span className="w-[5px] h-[5px] rounded-full bg-cherry-primary animate-pulse flex-shrink-0" />
-          )}
+          <HistoryStatusDot status={session.status} />
           {session.pinned && <Pin size={8} className="text-muted-foreground/50 -rotate-45 flex-shrink-0" />}
           <span className="text-[11px] text-foreground truncate">{session.title}</span>
         </div>
@@ -386,7 +414,7 @@ function SessionListRow({ session, isActive, isHovered, onSelect, onContextMenu,
       }`}
     >
       <span className="text-[12px] flex-shrink-0 w-5 text-center">{AGENT_ICONS[session.agentName] || '🤖'}</span>
-      {session.status === 'active' && <span className="w-[5px] h-[5px] rounded-full bg-cherry-primary animate-pulse flex-shrink-0" />}
+      <HistoryStatusDot status={session.status} />
       {session.pinned && <Pin size={8} className="text-muted-foreground/50 -rotate-45 flex-shrink-0" />}
       <span className={`text-[11px] flex-1 truncate ${isActive ? 'text-foreground' : 'text-foreground/85'}`}>
         {session.title}
@@ -424,7 +452,7 @@ export function SessionHistoryPage({ sessions, activeSessionId, onSelectSession,
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [selectedAgent, setSelectedAgent] = useState<string | null>(null);
-  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'completed'>('all');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'in-progress' | 'completed'>('all');
   const [sortKey, setSortKey] = useState<SortKey>('time');
   const [groupMode, setGroupMode] = useState<GroupMode>('none');
   const [viewMode, setViewMode] = useState<ViewMode>('list');
@@ -476,7 +504,9 @@ export function SessionHistoryPage({ sessions, activeSessionId, onSelectSession,
     }
     if (selectedTags.length > 0) list = list.filter(s => selectedTags.some(t => s.tags?.includes(t)));
     if (selectedAgent) list = list.filter(s => s.agentName === selectedAgent);
-    if (statusFilter !== 'all') list = list.filter(s => s.status === statusFilter);
+    // 'in-progress' is an aggregate: active / waiting / error / paused (i.e. all non-completed)
+    if (statusFilter === 'completed') list = list.filter(s => s.status === 'completed');
+    else if (statusFilter === 'in-progress') list = list.filter(s => s.status !== 'completed');
     list.sort((a, b) => {
       if (sortKey === 'name') return a.title.localeCompare(b.title);
       if (sortKey === 'messages') return b.messageCount - a.messageCount;
@@ -504,7 +534,8 @@ export function SessionHistoryPage({ sessions, activeSessionId, onSelectSession,
     return groups;
   }, [filteredSessions, groupMode]);
 
-  const activeCount = sessions.filter(s => s.status === 'active').length;
+  // in-progress: active / waiting / error / paused (all non-completed)
+  const inProgressCount = sessions.filter(s => s.status !== 'completed').length;
   const hasFilters = selectedTags.length > 0 || selectedAgent !== null || statusFilter !== 'all';
   const clearFilters = () => { setSelectedTags([]); setSelectedAgent(null); setStatusFilter('all'); setSearchQuery(''); };
 
@@ -514,7 +545,7 @@ export function SessionHistoryPage({ sessions, activeSessionId, onSelectSession,
     setCtxMenu({ x: e.clientX, y: e.clientY, session });
   };
 
-  const handleCtxAction = (action: string, payload?: string) => {
+  const handleCtxAction = (action: string, _payload?: string) => {
     if (!ctxMenu) return;
     const s = ctxMenu.session;
     if (action === 'editTags') setTagEditSession(s);
@@ -560,7 +591,7 @@ export function SessionHistoryPage({ sessions, activeSessionId, onSelectSession,
             <p className="text-[10px] text-muted-foreground">
               {selectedAgent
                 ? `${filteredSessions.length} 个话题 · 筛选自 ${sessions.length} 个`
-                : `${sessions.length} 个话题 · ${activeCount} 个运行中`}
+                : `${sessions.length} 个话题 · ${inProgressCount} 个进行中`}
             </p>
           </div>
         </div>
@@ -578,9 +609,9 @@ export function SessionHistoryPage({ sessions, activeSessionId, onSelectSession,
             <div className="text-[9.5px] text-muted-foreground uppercase tracking-[0.08em] px-1 mb-2">{"状态"}</div>
             <div className="flex flex-col gap-[2px]">
               {([
-                { key: 'all' as const, label: '全部', count: sessions.length },
-                { key: 'active' as const, label: '运行中', count: activeCount },
-                { key: 'completed' as const, label: '已完成', count: sessions.length - activeCount },
+                { key: 'all' as const,         label: '全部',   count: sessions.length },
+                { key: 'in-progress' as const, label: '进行中', count: inProgressCount },
+                { key: 'completed' as const,   label: '已完成', count: sessions.length - inProgressCount },
               ]).map(item => (
                 <button
                   key={item.key}
@@ -589,7 +620,7 @@ export function SessionHistoryPage({ sessions, activeSessionId, onSelectSession,
                     statusFilter === item.key ? 'bg-foreground/8 text-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-accent/15'
                   }`}
                 >
-                  {item.key === 'active' && <span className="w-[5px] h-[5px] rounded-full bg-cherry-primary flex-shrink-0" />}
+                  {item.key === 'in-progress' && <span className="w-[5px] h-[5px] rounded-full bg-emerald-500 flex-shrink-0" />}
                   {item.key === 'completed' && <Check size={9} className="text-muted-foreground flex-shrink-0" />}
                   <span className="flex-1 text-left">{item.label}</span>
                   <span className="text-[9px] text-muted-foreground tabular-nums">{item.count}</span>
