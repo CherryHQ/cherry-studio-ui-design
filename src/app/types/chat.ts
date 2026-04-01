@@ -125,7 +125,7 @@ export interface WorkflowStep {
   id: string;
   icon: WorkflowStepIcon;
   label: string;
-  status: 'done' | 'running' | 'pending';
+  status: 'done' | 'running' | 'pending' | 'error';
   description?: string;
   detailLabel?: string;
   details?: StepDetailItem[];

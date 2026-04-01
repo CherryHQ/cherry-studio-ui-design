@@ -64,7 +64,7 @@ export const MOCK_SESSIONS: AgentSession[] = [
     lastMessage: '已完成 Google OAuth 和 JWT refresh token 逻辑。',
     timestamp: '昨天',
     messageCount: 28,
-    status: 'completed',
+    status: 'waiting',
     tags: ['后端', '安全'],
     group: '项目开发',
   },
@@ -94,10 +94,10 @@ export const MOCK_SESSIONS: AgentSession[] = [
     id: 'session-7',
     title: 'CI/CD Pipeline 配置',
     agentName: '运维工程师',
-    lastMessage: 'GitHub Actions + Docker 部署流程已配置完成。',
+    lastMessage: 'Docker 镜像构建失败：基础镜像依赖冲突，构建中断。',
     timestamp: '上周',
-    messageCount: 14,
-    status: 'completed',
+    messageCount: 5,
+    status: 'error',
     tags: ['DevOps', '部署'],
     group: '运维部署',
   },
@@ -720,7 +720,7 @@ const SESSION_4_STEPS: WorkflowStep[] = [
   { id: 'a5', icon: 'code', label: '创建认证中间件', status: 'done' },
   { id: 'a6', icon: 'code', label: '添加 Google OAuth', status: 'done' },
   { id: 'a7', icon: 'code', label: '构建认证路由', status: 'done' },
-  { id: 'a8', icon: 'finish', label: '认证系统完成', status: 'done' },
+  { id: 'a8', icon: 'finish', label: '等待确认扩展功能', status: 'pending' },
 ];
 
 const SESSION_4_MESSAGES: ChatMessage[] = [
@@ -741,7 +741,7 @@ const SESSION_4_MESSAGES: ChatMessage[] = [
   { id: 'a-m15', role: 'agent', toolCall: { name: 'npm install resend', status: 'done', duration: '2.1s' }, timestamp: '16:07' },
   { id: 'a-m16', role: 'agent', toolCall: { name: 'write src/auth/email.ts', status: 'done', duration: '0.9s' }, timestamp: '16:07' },
   { id: 'a-m17', role: 'agent', content: '邮箱验证和密码重置功能已添加。新增 endpoints：\n\n• POST /auth/verify-email\n• POST /auth/forgot-password\n• POST /auth/reset-password', timestamp: '16:08' },
-  { id: 'a-m18', role: 'agent', generativeUI: { type: 'buttons', prompt: '还需要什么？', options: [{ label: '添加 Rate Limiting' }, { label: '添加 2FA 双因子' }, { label: '编写单元测试' }, { label: '这样就够了' }], resolved: false }, timestamp: '16:08' },
+  { id: 'a-m18', role: 'agent', generativeUI: { type: 'buttons', prompt: '认证系统核心功能已就绪，请确认是否继续以下扩展：', options: [{ label: '添加 Rate Limiting' }, { label: '添加 2FA 双因子' }, { label: '编写单元测试' }, { label: '无需扩展，完成任务' }], resolved: false }, timestamp: '16:08' },
 ];
 
 // ===========================
@@ -815,6 +815,50 @@ const SESSION_6_MESSAGES: ChatMessage[] = [
 const SESSION_6_PREVIEW = '<!DOCTYPE html>\n<html><head><meta charset="utf-8"><style>\n* { margin: 0; padding: 0; box-sizing: border-box; }\nbody { font-family: \'Inter\', system-ui, sans-serif; background: #fff; color: #1e293b; padding: 32px 40px; }\nh1 { font-size: 20px; font-weight: 700; margin-bottom: 4px; }\n.meta { font-size: 11px; color: #94a3b8; margin-bottom: 24px; }\nh2 { font-size: 14px; font-weight: 600; margin-top: 24px; margin-bottom: 10px; border-bottom: 1px solid #f1f5f9; padding-bottom: 6px; }\n.metrics { display: grid; grid-template-columns: repeat(4,1fr); gap: 10px; margin: 12px 0 20px; }\n.metric { border: 1px solid #f1f5f9; border-radius: 8px; padding: 14px; }\n.metric-label { font-size: 10px; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.04em; }\n.metric-value { font-size: 20px; font-weight: 700; margin: 4px 0 2px; }\n.metric-target { font-size: 10px; color: #94a3b8; }\n.bad { color: #ef4444; }\n.bottleneck { display: flex; align-items: center; gap: 12px; padding: 12px; border: 1px solid #f1f5f9; border-radius: 8px; margin-bottom: 8px; }\n.bn-pct { font-size: 18px; font-weight: 700; width: 56px; text-align: center; }\n.bn-name { font-size: 12px; font-weight: 500; }\n.bn-desc { font-size: 11px; color: #64748b; }\n.timeline { padding-left: 20px; border-left: 2px solid #e2e8f0; margin-top: 16px; }\n.phase { position: relative; padding: 0 0 20px 20px; }\n.phase::before { content: \'\'; position: absolute; left: -7px; top: 4px; width: 12px; height: 12px; border-radius: 50%; background: #10b981; }\n.phase-title { font-size: 12px; font-weight: 500; }\n.phase-desc { font-size: 11px; color: #64748b; }\n</style></head><body>\n<h1>API 性能分析报告</h1>\n<p class="meta">调研分析师 · 2026-02-25 · 基于 30 天监控数据</p>\n<div class="metrics">\n<div class="metric"><div class="metric-label">P50 延迟</div><div class="metric-value bad">180ms</div><div class="metric-target">目标 &lt;100ms</div></div>\n<div class="metric"><div class="metric-label">P99 延迟</div><div class="metric-value bad">2.4s</div><div class="metric-target">目标 &lt;500ms</div></div>\n<div class="metric"><div class="metric-label">吞吐量</div><div class="metric-value">850 RPS</div><div class="metric-target">目标 2000 RPS</div></div>\n<div class="metric"><div class="metric-label">错误率</div><div class="metric-value bad">0.8%</div><div class="metric-target">目标 &lt;0.1%</div></div>\n</div>\n<h2>瓶颈分析</h2>\n<div class="bottleneck"><div class="bn-pct" style="color:#ef4444">60%</div><div><div class="bn-name">数据库层</div><div class="bn-desc">缺少索引 N+1 查询 连接池不足</div></div></div>\n<div class="bottleneck"><div class="bn-pct" style="color:#f59e0b">25%</div><div><div class="bn-name">缓存层</div><div class="bn-desc">无 Redis 重复计算 Session 存 DB</div></div></div>\n<div class="bottleneck"><div class="bn-pct" style="color:#3b82f6">15%</div><div><div class="bn-name">应用层</div><div class="bn-desc">同步 I/O 大 JSON 序列化 无压缩</div></div></div>\n<h2>优化路线图</h2>\n<div class="timeline">\n<div class="phase"><div class="phase-title">Phase 1: 数据库索引 + 连接池</div><div class="phase-desc">本周 预计 P50 降至 80ms</div></div>\n<div class="phase"><div class="phase-title">Phase 2: Redis 缓存引入</div><div class="phase-desc">下周 预计 P99 降至 500ms</div></div>\n<div class="phase"><div class="phase-title">Phase 3: 应用层优化</div><div class="phase-desc">第3周 预计吞吐量翻倍</div></div>\n<div class="phase"><div class="phase-title">Phase 4: CDN + 监控完善</div><div class="phase-desc">第4周 最终目标 3000+ RPS</div></div>\n</div>\n</body></html>';
 
 // ===========================
+// Session 7: CI/CD Pipeline (error)
+// ===========================
+
+const SESSION_7_FILES: FileNode[] = [
+  {
+    name: '.github', type: 'folder', children: [
+      {
+        name: 'workflows', type: 'folder', children: [
+          { name: 'deploy.yml', type: 'file' },
+        ],
+      },
+    ],
+  },
+  { name: 'Dockerfile', type: 'file' },
+];
+
+const SESSION_7_STEPS: WorkflowStep[] = [
+  { id: 'ci1', icon: 'config', label: '编写 GitHub Actions workflow', status: 'done',
+    details: [
+      { icon: '📄', label: '.github/workflows/deploy.yml', meta: 'created' },
+    ],
+  },
+  { id: 'ci2', icon: 'build', label: '编写 Dockerfile', status: 'done',
+    details: [
+      { icon: '📄', label: 'Dockerfile', meta: 'created' },
+    ],
+  },
+  { id: 'ci3', icon: 'build', label: 'Docker 镜像构建', status: 'error',
+    description: '构建失败：node:18-alpine 与 canvas@2.11 存在原生依赖冲突，build 中断。',
+    details: [
+      { icon: '❌', label: 'Error: canvas@2.11 requires python3-dev, not found in alpine', meta: 'exit code 1' },
+    ],
+  },
+];
+
+const SESSION_7_MESSAGES: ChatMessage[] = [
+  { id: 'ci-m1', role: 'user', content: '帮我配置 GitHub Actions + Docker 的 CI/CD 部署流程。', timestamp: '上周' },
+  { id: 'ci-m2', role: 'agent', content: '好的，我会配置 GitHub Actions workflow 和 Dockerfile，实现推送到 main 分支自动构建并部署。', timestamp: '上周' },
+  { id: 'ci-m3', role: 'agent', toolCall: { name: 'write .github/workflows/deploy.yml', status: 'done', duration: '0.9s' }, timestamp: '上周' },
+  { id: 'ci-m4', role: 'agent', toolCall: { name: 'write Dockerfile', status: 'done', duration: '0.5s' }, timestamp: '上周' },
+  { id: 'ci-m5', role: 'agent', toolCall: { name: 'docker build -t app:latest .', status: 'running' }, timestamp: '上周' },
+];
+
+// ===========================
 // Session Data Map
 // ===========================
 
@@ -856,6 +900,14 @@ export const SESSION_DATA_MAP: Record<string, SessionData> = {
     ],
     fileContents: SESSION_4_CONTENTS,
     workDir: '~/projects/auth-service',
+  },
+  'session-7': {
+    messages: SESSION_7_MESSAGES,
+    steps: SESSION_7_STEPS,
+    files: SESSION_7_FILES,
+    outputFiles: [],
+    fileContents: {},
+    workDir: '~/projects/app',
   },
   'session-6': {
     messages: SESSION_6_MESSAGES,

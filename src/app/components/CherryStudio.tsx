@@ -9,7 +9,7 @@ import { SearchDialog } from './ui/SearchDialog';
 import { DragGhost } from './ui/DragGhost';
 import { MainContent } from './MainContent';
 import {
-  menuItems, getLayout,
+  menuItems, getLayout, BP_ICON, BP_VERTICAL_CARD,
   dialogAppIcons, MOCK_RESOURCES,
 } from '@/app/config/constants';
 import type { Tab, MenuItem, ContextMenuState } from '@/app/types';
@@ -22,6 +22,8 @@ import { initGlobalErrorHandler } from '@/app/services/errorHandler';
 import { useTabs } from '@/app/hooks/useTabs';
 import { useFloatingWindows } from '@/app/hooks/useFloatingWindows';
 import { useTabDrag } from '@/app/hooks/useTabDrag';
+import { TaskBar } from './layout/TaskBar';
+import { AgentSessionProvider } from '@/app/context/AgentSessionContext';
 
 // ===========================
 // Main UI
@@ -231,6 +233,12 @@ function CherryStudioInner() {
             startTabDrag={onStartTabDrag}
           />
 
+          {tabs.find(t => t.id === activeTabId)?.menuItemId === 'agent' && (() => {
+            const layout = getLayout(sidebarWidth);
+            const effectiveWidth = layout === 'icon' ? BP_ICON : layout === 'vertical-card' ? BP_VERTICAL_CARD : sidebarWidth;
+            return <TaskBar sidebarWidth={effectiveWidth} />;
+          })()}
+
           <div className="flex flex-1 min-h-0">
             <div ref={sidebarContainerRef} className="flex-shrink-0 h-full">
               <Sidebar
@@ -347,8 +355,10 @@ export function CherryStudio() {
 
   return (
     <SettingsProvider>
-      <CherryStudioInner />
-      <Toaster position="bottom-right" richColors closeButton />
+      <AgentSessionProvider>
+        <CherryStudioInner />
+        <Toaster position="bottom-right" richColors closeButton />
+      </AgentSessionProvider>
     </SettingsProvider>
   );
 }
