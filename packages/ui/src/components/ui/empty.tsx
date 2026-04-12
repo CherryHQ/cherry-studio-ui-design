@@ -1,3 +1,5 @@
+"use client"
+
 import { cva, type VariantProps } from "class-variance-authority"
 
 import { cn } from "../../lib/utils"
@@ -94,6 +96,43 @@ function EmptyContent({ className, ...props }: React.ComponentProps<"div">) {
   )
 }
 
+// EmptyState presets
+const EMPTY_PRESETS = {
+  "no-data": { icon: "Inbox", title: "No data", description: "There's nothing here yet." },
+  "no-results": { icon: "Search", title: "No results", description: "Try adjusting your search or filters." },
+  "no-files": { icon: "FileX", title: "No files", description: "Upload files to get started." },
+  "network-error": { icon: "WifiOff", title: "Network error", description: "Unable to connect. Check your internet." },
+  "no-permission": { icon: "ShieldX", title: "No permission", description: "You don't have access to this resource." },
+  "first-time": { icon: "Rocket", title: "Get started", description: "Create your first project to begin." },
+  "error": { icon: "AlertCircle", title: "Something went wrong", description: "An unexpected error occurred." },
+} as const
+
+type EmptyPreset = keyof typeof EMPTY_PRESETS
+
+function EmptyState({ preset, title, description, icon, action, className, ...props }: {
+  preset?: EmptyPreset
+  title?: string
+  description?: string
+  icon?: React.ReactNode
+  action?: React.ReactNode
+  className?: string
+} & React.HTMLAttributes<HTMLDivElement>) {
+  const presetData = preset ? EMPTY_PRESETS[preset] : null
+  const finalTitle = title || presetData?.title || ""
+  const finalDesc = description || presetData?.description || ""
+
+  return (
+    <Empty className={className} {...props}>
+      <EmptyHeader>
+        {icon && <EmptyMedia>{icon}</EmptyMedia>}
+        {finalTitle && <EmptyTitle>{finalTitle}</EmptyTitle>}
+        {finalDesc && <EmptyDescription>{finalDesc}</EmptyDescription>}
+      </EmptyHeader>
+      {action && <EmptyContent>{action}</EmptyContent>}
+    </Empty>
+  )
+}
+
 export {
   Empty,
   EmptyHeader,
@@ -101,4 +140,8 @@ export {
   EmptyDescription,
   EmptyContent,
   EmptyMedia,
+  EmptyState,
+  EMPTY_PRESETS,
 }
+
+export type { EmptyPreset }

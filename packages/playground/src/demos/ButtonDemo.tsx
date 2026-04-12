@@ -1,12 +1,24 @@
 import React from "react"
 import { Button } from "@cherry-studio/ui"
-import { Section } from "../components/Section"
+import { Section, type PropDef } from "../components/Section"
 import { ChevronRight, Mail, Loader2, Plus, Download } from "lucide-react"
 
 export function ButtonDemo() {
   return (
     <>
-      <Section title="Variants">
+      <Section title="Variants" install="npx shadcn@latest add button" props={[
+        { name: "variant", type: '"default" | "secondary" | "destructive" | "outline" | "ghost" | "link"', default: '"default"', description: "Visual style variant" },
+        { name: "size", type: '"default" | "sm" | "lg" | "icon"', default: '"default"', description: "Button size" },
+        { name: "asChild", type: "boolean", default: "false", description: "Merge props onto child element instead of rendering a button" },
+        { name: "disabled", type: "boolean", default: "false", description: "Disable the button" },
+      ]} code={`import { Button } from "@cherry-studio/ui"
+
+<Button>Default</Button>
+<Button variant="secondary">Secondary</Button>
+<Button variant="destructive">Destructive</Button>
+<Button variant="outline">Outline</Button>
+<Button variant="ghost">Ghost</Button>
+<Button variant="link">Link</Button>`}>
         <div className="flex flex-wrap gap-3">
           <Button>Default</Button>
           <Button variant="secondary">Secondary</Button>

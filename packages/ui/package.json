@@ -12,8 +12,9 @@
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "import": "./dist/index.mjs",
-      "require": "./dist/index.js"
+      "import": "./src/index.ts",
+      "require": "./dist/index.js",
+      "default": "./src/index.ts"
     },
     "./theme.css": "./src/styles/theme.css",
     "./globals.css": "./src/styles/globals.css"
@@ -26,11 +27,13 @@
     "*.css"
   ],
   "peerDependencies": {
+    "@tanstack/react-table": ">=8",
     "react": ">=18",
     "react-dom": ">=18"
   },
   "devDependencies": {
     "@tailwindcss/vite": "4.1.12",
+    "@tanstack/react-table": "^8.21.3",
     "@types/react": "^18",
     "@types/react-dom": "^18",
     "tailwindcss": "4.1.12",

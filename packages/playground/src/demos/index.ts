@@ -33,7 +33,48 @@ import { MenubarDemo } from "./MenubarDemo"
 import { ChartDemo } from "./ChartDemo"
 import { AspectRatioDemo } from "./AspectRatioDemo"
 import { EmptyFieldItemDemo } from "./EmptyFieldItemDemo"
-import { MiscDemo } from "./MiscDemo"
+import { SeparatorDemo } from "./SeparatorDemo"
+import { KbdDemo } from "./KbdDemo"
+import { SpinnerDemo } from "./SpinnerDemo"
+import { ThemePreviewDemo } from "./ThemePreviewDemo"
+import { FormRowDemo } from "./FormRowDemo"
+import { ConfigSectionDemo } from "./ConfigSectionDemo"
+import { InlineSelectDemo } from "./InlineSelectDemo"
+import { TreeNavDemo } from "./TreeNavDemo"
+import { FilterSidebarDemo } from "./FilterSidebarDemo"
+import { ComposerDemo } from "./ComposerDemo"
+import { MessageBubbleDemo } from "./MessageBubbleDemo"
+import { ResourceCardDemo } from "./ResourceCardDemo"
+import { WorkflowStepsDemo } from "./WorkflowStepsDemo"
+import { SidebarDemo } from "./SidebarDemo"
+import { DataTableDemo } from "./DataTableDemo"
+import { FileUploadDemo } from "./FileUploadDemo"
+import { DatePickerComboboxDemo } from "./DatePickerComboboxDemo"
+import { DatePickerDemo } from "./DatePickerDemo"
+import { ComboboxDemo } from "./ComboboxDemo"
+import { ChatModuleDemo } from "./ChatModuleDemo"
+import { SettingsModuleDemo } from "./SettingsModuleDemo"
+import { ExploreModuleDemo } from "./ExploreModuleDemo"
+import { SimpleTooltipDemo } from "./SimpleTooltipDemo"
+import { AlertDemo } from "./AlertDemo"
+import { BrandLogosDemo } from "./BrandLogosDemo"
+import { PickerPanelDemo } from "./PickerPanelDemo"
+import { VarManagerDemo } from "./VarManagerDemo"
+import { SearchDialogDemo } from "./SearchDialogDemo"
+import { TabBarDemo } from "./TabBarDemo"
+import { FileGridListDemo } from "./FileGridListDemo"
+import { TranslateModuleDemo } from "./TranslateModuleDemo"
+import { NoteModuleDemo } from "./NoteModuleDemo"
+import { ImageModuleDemo } from "./ImageModuleDemo"
+import { KnowledgeModuleDemo } from "./KnowledgeModuleDemo"
+import { DashboardModuleDemo } from "./DashboardModuleDemo"
+import { ShortcutEditorDemo } from "./ShortcutEditorDemo"
+import { ParallelResponseDemo } from "./ParallelResponseDemo"
+import { ChatDetailPanelDemo } from "./ChatDetailPanelDemo"
+import { AppLauncherDemo } from "./AppLauncherDemo"
+import { GenerativeUIDemo } from "./GenerativeUIDemo"
+import { ModelServiceDemo } from "./ModelServiceDemo"
+import { MCPServiceDemo } from "./MCPServiceDemo"
 
 export const demos = [
   // Forms
@@ -48,6 +89,8 @@ export const demos = [
   { id: "calendar", title: "Calendar", category: "Forms", description: "日历选择器", component: CalendarDemo },
   { id: "input-otp", title: "Input OTP", category: "Forms", description: "验证码输入", component: InputOtpDemo },
   { id: "toggle", title: "Toggle & Toggle Group", category: "Forms", description: "切换按钮和切换组", component: ToggleDemo },
+  { id: "date-picker", title: "DatePicker", category: "Forms", description: "日期选择器（单选/范围/预设）", component: DatePickerDemo },
+  { id: "combobox", title: "Combobox", category: "Forms", description: "搜索下拉选择器（单选/多选）", component: ComboboxDemo },
 
   // Data Display
   { id: "badge", title: "Badge", category: "Data Display", description: "徽标组件", component: BadgeDemo },
@@ -59,7 +102,8 @@ export const demos = [
   { id: "scroll-area", title: "Scroll Area", category: "Data Display", description: "自定义滚动区域", component: ScrollAreaDemo },
   { id: "chart", title: "Chart", category: "Data Display", description: "数据图表（Bar/Area）", component: ChartDemo },
   { id: "aspect-ratio", title: "Aspect Ratio", category: "Data Display", description: "宽高比容器", component: AspectRatioDemo },
-  { id: "empty", title: "Empty State", category: "Data Display", description: "空状态占位组件", component: EmptyFieldItemDemo },
+  { id: "empty", title: "Empty / Field / Item", category: "Data Display", description: "空状态 + 表单字段 + 列表项", component: EmptyFieldItemDemo },
+  { id: "alert", title: "Alert", category: "Data Display", description: "提示/警告/成功/错误信息块", component: AlertDemo },
 
   // Overlay
   { id: "dialog", title: "Dialog / Sheet / Drawer", category: "Overlay", description: "对话框、侧边面板、底部抽屉", component: DialogSheetDrawerDemo },
@@ -80,5 +124,55 @@ export const demos = [
 
   // Layout
   { id: "resizable", title: "Resizable Panels", category: "Layout", description: "可调整尺寸的面板", component: ResizableDemo },
-  { id: "misc", title: "Separator / Kbd / Spinner", category: "Layout", description: "分隔线、键盘按键、加载器等", component: MiscDemo },
+  { id: "separator", title: "Separator", category: "Layout", description: "分隔线（水平/垂直/带标签）", component: SeparatorDemo },
+  { id: "kbd", title: "Kbd", category: "Layout", description: "键盘按键快捷键展示", component: KbdDemo },
+  { id: "spinner", title: "Spinner", category: "Layout", description: "加载动画（尺寸/文字/按钮内）", component: SpinnerDemo },
+
+  // Cherry Composite
+  { id: "form-row", title: "FormRow & SectionHeader", category: "Cherry Composite", description: "表单行布局、区块标题", component: FormRowDemo },
+  { id: "config-section", title: "ConfigSection & PanelHeader", category: "Cherry Composite", description: "配置区块、面板头部", component: ConfigSectionDemo },
+  { id: "inline-select", title: "InlineSelect", category: "Cherry Composite", description: "紧凑型下拉选择器", component: InlineSelectDemo },
+  { id: "tree-nav", title: "TreeNav", category: "Cherry Composite", description: "树形导航组件（文件树/知识库）", component: TreeNavDemo },
+  { id: "filter-sidebar", title: "FilterSidebar", category: "Cherry Composite", description: "筛选侧栏（文件/资源/库管理）", component: FilterSidebarDemo },
+  { id: "composer", title: "Composer", category: "Cherry Composite", description: "聊天输入框（自适应高度/快捷键）", component: ComposerDemo },
+  { id: "message-bubble", title: "Chat & MessageBubble", category: "Cherry Composite", description: "聊天界面/消息气泡/空状态", component: MessageBubbleDemo },
+  { id: "resource-card", title: "ResourceCard / FileCard / StatusBadge", category: "Cherry Composite", description: "资源卡片/文件卡片/状态徽章", component: ResourceCardDemo },
+  { id: "workflow-steps", title: "WorkflowSteps", category: "Cherry Composite", description: "工作流步骤面板（Agent 执行流程）", component: WorkflowStepsDemo },
+  { id: "simple-tooltip", title: "SimpleTooltip", category: "Cherry Composite", description: "简化 Tooltip（Cherry API 兼容）", component: SimpleTooltipDemo },
+  { id: "brand-logos", title: "Brand Logos", category: "Cherry Composite", description: "品牌 Logo 图标（OpenAI/Anthropic/Google 等）+ LetterBadge", component: BrandLogosDemo },
+  { id: "picker-panel", title: "PickerPanel", category: "Cherry Composite", description: "通用选择面板（模型选择/助手选择）", component: PickerPanelDemo },
+  { id: "var-manager", title: "VarManager", category: "Cherry Composite", description: "变量管理面板（API Key/环境变量）", component: VarManagerDemo },
+
+  // Layout (extended)
+  { id: "sidebar-shadcn", title: "Sidebar (Shadcn)", category: "Layout", description: "Shadcn Sidebar 完整展示（展开/折叠/菜单）", component: SidebarDemo },
+
+  // Patterns (composed from primitives)
+  { id: "data-table", title: "DataTable", category: "Patterns", description: "数据表格（排序/筛选/分页/选择/操作）", component: DataTableDemo },
+  { id: "date-picker-combobox", title: "DatePicker & Combobox", category: "Patterns", description: "日期选择器 + 搜索下拉（Popover 组合模式）", component: DatePickerComboboxDemo },
+  { id: "file-upload", title: "File Upload & Attachments", category: "Patterns", description: "文件上传（拖拽/点击/进度/列表）+ 附件列表", component: FileUploadDemo },
+  { id: "file-grid-list", title: "File Grid / List View", category: "Patterns", description: "文件网格/列表切换视图", component: FileGridListDemo },
+
+  // 🖥️ Modules
+  { id: "chat-module", title: "Chat Module", category: "🖥️ Modules", description: "完整聊天界面（Composer + MessageBubble + ChatContainer）", component: ChatModuleDemo },
+  { id: "settings-module", title: "Settings Module", category: "🖥️ Modules", description: "设置页面（PanelHeader + ConfigSection + FormRow + InlineSelect）", component: SettingsModuleDemo },
+  { id: "explore-module", title: "Explore Module", category: "🖥️ Modules", description: "资源发现页（ResourceCard + Tabs + 搜索过滤）", component: ExploreModuleDemo },
+  { id: "search-dialog", title: "Search Dialog (⌘K)", category: "🖥️ Modules", description: "全局搜索对话框（Command + Dialog 组合）", component: SearchDialogDemo },
+  { id: "tab-bar", title: "Tab Bar", category: "🖥️ Modules", description: "多标签管理（Tabs + 右键菜单 + 固定/关闭）", component: TabBarDemo },
+  { id: "translate-module", title: "Translate Module", category: "🖥️ Modules", description: "翻译页面（双栏翻译 + 翻译专家选择）", component: TranslateModuleDemo },
+  { id: "note-module", title: "Note Editor Module", category: "🖥️ Modules", description: "笔记编辑器（文件树 + 编辑器 + AI 助手）", component: NoteModuleDemo },
+  { id: "image-module", title: "Image Gen Module", category: "🖥️ Modules", description: "AI 绘画页面（参数控制 + 图片画廊）", component: ImageModuleDemo },
+  { id: "knowledge-module", title: "Knowledge Base Module", category: "🖥️ Modules", description: "知识库管理（数据源 + RAG 设置 + 检索测试）", component: KnowledgeModuleDemo },
+  { id: "dashboard-module", title: "Dashboard Module", category: "🖥️ Modules", description: "数据仪表盘（统计卡片 + 图表 + 模型用量表）", component: DashboardModuleDemo },
+  { id: "shortcut-editor", title: "Shortcut Editor", category: "🖥️ Modules", description: "快捷键编辑器（分组 Accordion + Kbd + Switch）", component: ShortcutEditorDemo },
+
+  // Patterns (Cherry-specific)
+  { id: "parallel-response", title: "Parallel Response", category: "Patterns", description: "多模型并行响应（布局切换 + ThinkingBlock + CodeBlock）", component: ParallelResponseDemo },
+  { id: "chat-detail-panel", title: "Chat Detail Panel", category: "Patterns", description: "消息详情面板（Token 统计 + JSON 查看器）", component: ChatDetailPanelDemo },
+  { id: "app-launcher", title: "App Launcher", category: "Patterns", description: "应用启动器（网格 + 搜索 + 管理模式）", component: AppLauncherDemo },
+  { id: "generative-ui", title: "Generative UI", category: "Patterns", description: "AI 生成式 UI 交互（按钮选择 + 单选 + 确认框）", component: GenerativeUIDemo },
+  { id: "model-service", title: "Model Service Config", category: "Patterns", description: "模型服务配置（API Key + 模型列表 + 能力标签）", component: ModelServiceDemo },
+  { id: "mcp-service", title: "MCP Service Manager", category: "Patterns", description: "MCP 服务管理（服务卡片 + 工具列表 + 连接状态）", component: MCPServiceDemo },
+
+  // Theme
+  { id: "theme", title: "Theme Preview", category: "Theme", description: "主题配色、间距、圆角、字体预览", component: ThemePreviewDemo },
 ]

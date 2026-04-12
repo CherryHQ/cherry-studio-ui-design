@@ -7,6 +7,7 @@ import {
   Check,
   Filter,
 } from 'lucide-react';
+import { Button } from '@cherry-studio/ui';
 import { motion, AnimatePresence } from 'motion/react';
 import type { ResourceItem, ResourceType, ViewMode, SortKey, FolderNode, TagItem } from '@/app/types';
 import { RESOURCE_TYPE_CONFIG, RESOURCE_TYPES_LIST, SORT_LABELS, TAG_COLORS, DEFAULT_TAG_COLOR } from '@/app/config/constants';

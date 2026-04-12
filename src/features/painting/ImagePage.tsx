@@ -6,6 +6,7 @@ import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useGlobalActions } from '@/app/context/GlobalActionContext';
 import { copyToClipboard } from '@/app/utils/clipboard';
+import { Button } from '@cherry-studio/ui';
 import { EmptyState } from '@/app/components/ui/EmptyState';
 import {
   Sparkles, Settings, Download, X, Copy, Check, Heart,

@@ -18,8 +18,8 @@
   --accent-foreground: #030213;
   --destructive: #d4183d;
   --destructive-foreground: #ffffff;
-  --border: rgba(0, 0, 0, 0.1);
-  --input: transparent;
+  --border: oklch(0.922 0 0);
+  --input: oklch(0.922 0 0);
   --input-background: #f3f3f5;
   --switch-background: #cbced4;
   --font-weight-medium: 500;
@@ -53,6 +53,20 @@
   --cherry-ring: rgba(107, 114, 128, 0.50);
   --cherry-shadow: rgba(107, 114, 128, 0.25);
   --cherry-shadow-sm: rgba(107, 114, 128, 0.05);
+
+  /* Semantic role colors */
+  --cherry-user: #9ED64A;
+  --cherry-assistant: #6366F1;
+  --cherry-parallel: #f59e0b;
+
+  /* Animation tokens */
+  --duration-fast: 75ms;
+  --duration-normal: 150ms;
+  --duration-slow: 200ms;
+  --duration-slower: 300ms;
+  --ease-default: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-in: cubic-bezier(0.4, 0, 1, 1);
+  --ease-out: cubic-bezier(0, 0, 0.2, 1);
 }
 
 .dark {
@@ -74,6 +88,8 @@
   --destructive-foreground: oklch(0.637 0.237 25.331);
   --border: oklch(0.269 0 0);
   --input: oklch(0.269 0 0);
+  --input-background: oklch(0.205 0 0);
+  --switch-background: oklch(0.355 0 0);
   --ring: oklch(0.439 0 0);
   --font-weight-medium: 500;
   --font-weight-normal: 400;
@@ -104,6 +120,11 @@
   --cherry-ring: rgba(156, 163, 175, 0.50);
   --cherry-shadow: rgba(156, 163, 175, 0.25);
   --cherry-shadow-sm: rgba(156, 163, 175, 0.05);
+
+  /* Semantic role colors (dark) */
+  --cherry-user: #a3d977;
+  --cherry-assistant: #818cf8;
+  --cherry-parallel: #fbbf24;
 }
 
 @theme inline {
@@ -159,6 +180,11 @@
   --color-cherry-ring: var(--cherry-ring);
   --color-cherry-shadow: var(--cherry-shadow);
   --color-cherry-shadow-sm: var(--cherry-shadow-sm);
+
+  /* Semantic role colors */
+  --color-cherry-user: var(--cherry-user);
+  --color-cherry-assistant: var(--cherry-assistant);
+  --color-cherry-parallel: var(--cherry-parallel);
 }
 
 @layer base {

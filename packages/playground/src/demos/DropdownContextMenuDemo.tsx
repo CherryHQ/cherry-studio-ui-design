@@ -1,12 +1,26 @@
 import React from "react"
 import { Button, DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger, DropdownMenuCheckboxItem, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuSub, DropdownMenuSubContent, DropdownMenuSubTrigger, ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger, ContextMenuSeparator, ContextMenuSub, ContextMenuSubContent, ContextMenuSubTrigger } from "@cherry-studio/ui"
-import { Section } from "../components/Section"
+import { Section, type PropDef } from "../components/Section"
 import { ChevronDown, User, Settings, LogOut, Plus, Trash2 } from "lucide-react"
 
 export function DropdownContextMenuDemo() {
   return (
     <>
-      <Section title="Dropdown Menu">
+      <Section title="Dropdown Menu" install="npx shadcn@latest add dropdown-menu" props={[
+        { name: "open", type: "boolean", default: "undefined", description: "Controlled open state" },
+        { name: "onOpenChange", type: "(open) => void", default: "undefined", description: "Open change handler" },
+      ]} code={`import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, Button } from "@cherry-studio/ui"
+
+<DropdownMenu>
+  <DropdownMenuTrigger asChild>
+    <Button variant="outline">Open Menu</Button>
+  </DropdownMenuTrigger>
+  <DropdownMenuContent>
+    <DropdownMenuItem>Profile</DropdownMenuItem>
+    <DropdownMenuItem>Settings</DropdownMenuItem>
+    <DropdownMenuItem>Log out</DropdownMenuItem>
+  </DropdownMenuContent>
+</DropdownMenu>`}>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="outline">Open Menu <ChevronDown className="ml-2 h-4 w-4" /></Button>

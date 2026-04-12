@@ -11,6 +11,7 @@ import {
   Download, MessageSquare, Zap, Bug,
   Layers, Sparkles, BookOpen, FolderOpen,
 } from 'lucide-react';
+import { Button, Input } from '@cherry-studio/ui';
 import { motion, AnimatePresence } from 'motion/react';
 import type { ResourceItem, MCPServerStatus } from '@/app/types';
 import { PromptSection } from '@/app/components/assistant/sections/PromptSection';

@@ -1,0 +1,71 @@
+name: UI Quality Gate
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'packages/ui/**'
+      - 'packages/playground/**'
+      - 'src/**'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+
+jobs:
+  lint-and-build:
+    name: Lint & Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build UI library
+        run: pnpm --filter @cherry-studio/ui build
+
+      - name: Build Playground
+        run: pnpm --filter playground build
+
+      - name: Build Main App
+        run: pnpm build
+
+  bundle-size:
+    name: Bundle Size Check
+    runs-on: ubuntu-latest
+    needs: lint-and-build
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build Playground
+        run: pnpm --filter playground build
+
+      - name: Check bundle size
+        run: |
+          JS_SIZE=$(stat -c%s packages/playground/dist/assets/*.js 2>/dev/null || stat -f%z packages/playground/dist/assets/*.js)
+          CSS_SIZE=$(stat -c%s packages/playground/dist/assets/*.css 2>/dev/null || stat -f%z packages/playground/dist/assets/*.css)
+          echo "## Bundle Size Report" >> $GITHUB_STEP_SUMMARY
+          echo "| Asset | Size |" >> $GITHUB_STEP_SUMMARY
+          echo "|-------|------|" >> $GITHUB_STEP_SUMMARY
+          echo "| JS | $(echo "scale=1; $JS_SIZE/1024" | bc) KB |" >> $GITHUB_STEP_SUMMARY
+          echo "| CSS | $(echo "scale=1; $CSS_SIZE/1024" | bc) KB |" >> $GITHUB_STEP_SUMMARY

@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { copyToClipboard } from '@/app/utils/clipboard';
+import { Button } from '@cherry-studio/ui';
 import { EmptyState } from '@/app/components/ui/EmptyState';
 import { BrandLogo } from '@/app/components/ui/BrandLogos';
 

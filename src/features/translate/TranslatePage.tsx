@@ -6,6 +6,7 @@ import {
   Volume2, Copy, FileUp, ArrowLeftRight, ArrowRight,
   Star, Repeat, Clock, ChevronRight, PenLine, Plus
 } from 'lucide-react';
+import { Button } from '@cherry-studio/ui';
 import { Tooltip } from '@/components/common/Tooltip';
 import { motion, AnimatePresence } from 'motion/react';
 import { copyToClipboard } from '@/lib/utils/clipboard';

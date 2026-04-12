@@ -11,6 +11,7 @@ import {
   Code, Heading1, Heading2, Heading3, Undo2, Redo2,
   Braces, Table, Minus, Link, Image as ImageIcon, Eye
 } from 'lucide-react';
+import { Button } from '@cherry-studio/ui';
 import { Tooltip } from '@/components/common/Tooltip';
 import type { AssistantInfo } from '@/types/assistant';
 import { MOCK_ASSISTANTS, ASSISTANT_EMOJI_MAP } from '@/mock';

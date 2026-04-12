@@ -1,12 +1,24 @@
 import React from "react"
 import { Button, Popover, PopoverContent, PopoverTrigger, Tooltip, TooltipContent, TooltipProvider, TooltipTrigger, Input, Label } from "@cherry-studio/ui"
-import { Section } from "../components/Section"
+import { Section, type PropDef } from "../components/Section"
 import { Info, Settings } from "lucide-react"
 
 export function PopoverTooltipDemo() {
   return (
     <>
-      <Section title="Popover">
+      <Section title="Popover" install="npx shadcn@latest add popover" props={[
+        { name: "open", type: "boolean", default: "undefined", description: "Controlled open state" },
+        { name: "onOpenChange", type: "(open) => void", default: "undefined", description: "Open change handler" },
+      ]} code={`import { Popover, PopoverContent, PopoverTrigger, Button } from "@cherry-studio/ui"
+
+<Popover>
+  <PopoverTrigger asChild>
+    <Button variant="outline">Open Popover</Button>
+  </PopoverTrigger>
+  <PopoverContent className="w-80">
+    <p>Popover content here.</p>
+  </PopoverContent>
+</Popover>`}>
         <Popover>
           <PopoverTrigger asChild>
             <Button variant="outline"><Settings className="mr-2 h-4 w-4" /> Open Popover</Button>

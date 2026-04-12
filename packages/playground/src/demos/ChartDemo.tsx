@@ -1,6 +1,6 @@
 import React from "react"
 import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartLegend, ChartLegendContent } from "@cherry-studio/ui"
-import { Section } from "../components/Section"
+import { Section, type PropDef } from "../components/Section"
 import { Bar, BarChart, Line, LineChart, XAxis, YAxis, CartesianGrid, Area, AreaChart } from "recharts"
 
 const data = [
@@ -20,28 +20,46 @@ const chartConfig = {
 export function ChartDemo() {
   return (
     <>
-      <Section title="Bar Chart">
-        <ChartContainer config={chartConfig} className="h-[250px] w-full">
-          <BarChart data={data}>
-            <CartesianGrid vertical={false} />
-            <XAxis dataKey="month" tickLine={false} tickMargin={10} axisLine={false} />
-            <ChartTooltip content={<ChartTooltipContent />} />
-            <ChartLegend content={<ChartLegendContent />} />
-            <Bar dataKey="tokens" fill="var(--color-tokens)" radius={4} />
-            <Bar dataKey="cost" fill="var(--color-cost)" radius={4} />
-          </BarChart>
-        </ChartContainer>
+      <Section title="Bar Chart" install="npx shadcn@latest add chart" props={[
+          { name: "config", type: "ChartConfig", description: "Chart configuration object" },
+          { name: "className", type: "string", default: "undefined", description: "Container className" },
+        ]} code={`import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@cherry-studio/ui"
+import { BarChart, Bar, XAxis } from "recharts"
+
+const config = { tokens: { label: "Tokens", color: "var(--chart-1)" } }
+
+<ChartContainer config={config} className="h-[250px] w-full">
+  <BarChart data={data}>
+    <XAxis dataKey="month" />
+    <ChartTooltip content={<ChartTooltipContent />} />
+    <Bar dataKey="tokens" fill="var(--color-tokens)" radius={4} />
+  </BarChart>
+</ChartContainer>`}>
+        <div className="max-w-2xl">
+          <ChartContainer config={chartConfig} className="h-[250px] w-full">
+            <BarChart data={data}>
+              <CartesianGrid vertical={false} />
+              <XAxis dataKey="month" tickLine={false} tickMargin={10} axisLine={false} />
+              <ChartTooltip content={<ChartTooltipContent />} />
+              <ChartLegend content={<ChartLegendContent />} />
+              <Bar dataKey="tokens" fill="var(--color-tokens)" radius={4} />
+              <Bar dataKey="cost" fill="var(--color-cost)" radius={4} />
+            </BarChart>
+          </ChartContainer>
+        </div>
       </Section>
 
       <Section title="Area Chart">
-        <ChartContainer config={chartConfig} className="h-[250px] w-full">
-          <AreaChart data={data}>
-            <CartesianGrid vertical={false} />
-            <XAxis dataKey="month" tickLine={false} tickMargin={10} axisLine={false} />
-            <ChartTooltip content={<ChartTooltipContent />} />
-            <Area dataKey="tokens" type="natural" fill="var(--color-tokens)" fillOpacity={0.2} stroke="var(--color-tokens)" />
-          </AreaChart>
-        </ChartContainer>
+        <div className="max-w-2xl">
+          <ChartContainer config={chartConfig} className="h-[250px] w-full">
+            <AreaChart data={data}>
+              <CartesianGrid vertical={false} />
+              <XAxis dataKey="month" tickLine={false} tickMargin={10} axisLine={false} />
+              <ChartTooltip content={<ChartTooltipContent />} />
+              <Area dataKey="tokens" type="natural" fill="var(--color-tokens)" fillOpacity={0.2} stroke="var(--color-tokens)" />
+            </AreaChart>
+          </ChartContainer>
+        </div>
       </Section>
     </>
   )

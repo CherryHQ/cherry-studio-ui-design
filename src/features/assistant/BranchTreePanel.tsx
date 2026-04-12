@@ -452,20 +452,20 @@ function TreeNode({
   const isUser = node.role === 'user';
   const isParallel = node.role === 'parallel';
 
-  // Colors matching Figma: green for user (#9ED64A), blue-purple for assistant (#6366F1)
+  // Colors from design tokens: --cherry-user, --cherry-assistant, --cherry-parallel
   const borderColor = isUser
-    ? (isActive ? 'border-[#9ED64A]/60' : 'border-[#9ED64A]/20')
+    ? (isActive ? 'border-cherry-user/60' : 'border-cherry-user/20')
     : isParallel
-      ? (isActive ? 'border-amber-400/50' : 'border-amber-400/15')
-      : (isActive ? 'border-[#6366F1]/50' : 'border-[#6366F1]/20');
+      ? (isActive ? 'border-cherry-parallel/50' : 'border-cherry-parallel/15')
+      : (isActive ? 'border-cherry-assistant/50' : 'border-cherry-assistant/20');
 
   const bgColor = isUser
-    ? (isActive ? 'bg-[#9ED64A]/8' : 'bg-[#9ED64A]/3')
+    ? (isActive ? 'bg-cherry-user/8' : 'bg-cherry-user/3')
     : isParallel
-      ? (isActive ? 'bg-amber-500/6' : 'bg-amber-500/3')
-      : (isActive ? 'bg-[#6366F1]/8' : 'bg-[#6366F1]/3');
+      ? (isActive ? 'bg-cherry-parallel/6' : 'bg-cherry-parallel/3')
+      : (isActive ? 'bg-cherry-assistant/8' : 'bg-cherry-assistant/3');
 
-  const iconColor = isUser ? 'text-[#9ED64A]' : isParallel ? 'text-amber-400' : 'text-[#6366F1]';
+  const iconColor = isUser ? 'text-cherry-user' : isParallel ? 'text-cherry-parallel' : 'text-cherry-assistant';
 
   const childCount = countAll(node) - 1;
 
@@ -1067,11 +1067,11 @@ export function BranchTreePanel({ messages, onClose, assistantName, modelName, t
         {/* Legend */}
         <div className="absolute top-3 right-3 flex items-center gap-3 text-[8px] text-muted-foreground/30">
           <div className="flex items-center gap-1">
-            <div className="w-1.5 h-1.5 rounded-full bg-[#9ED64A]/60" />
+            <div className="w-1.5 h-1.5 rounded-full bg-cherry-user/60" />
             <span>{'\u7528\u6237'}</span>
           </div>
           <div className="flex items-center gap-1">
-            <div className="w-1.5 h-1.5 rounded-full bg-[#6366F1]/60" />
+            <div className="w-1.5 h-1.5 rounded-full bg-cherry-assistant/60" />
             <span>{'\u52a9\u624b'}</span>
           </div>
           <div className="flex items-center gap-1">
