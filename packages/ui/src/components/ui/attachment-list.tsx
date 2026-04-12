@@ -59,7 +59,7 @@ const AttachmentList = React.forwardRef<HTMLDivElement, AttachmentListProps>(
               <button
                 onClick={() => onRemove(item.id)}
                 aria-label={`Remove ${item.name}`}
-                className="p-0.5 rounded-sm text-muted-foreground/40 hover:text-foreground transition-colors shrink-0 opacity-0 group-hover:opacity-100 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                className="p-0.5 rounded-sm text-muted-foreground/40 hover:text-foreground transition-colors shrink-0 opacity-0 group-hover:opacity-100 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
               >
                 <X className="size-3" />
               </button>

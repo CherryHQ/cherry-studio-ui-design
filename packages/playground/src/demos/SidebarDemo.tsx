@@ -36,7 +36,7 @@ export function SidebarDemo() {
     </SidebarContent>
   </Sidebar>
 </SidebarProvider>`}>
-        <div className="h-[500px] rounded-xl border overflow-hidden">
+        <div className="h-[500px] rounded-xl border overflow-hidden relative" style={{ transform: "translate(0)" }}>
           <SidebarProvider defaultOpen={true}>
             <Sidebar>
               <SidebarHeader className="p-4">
@@ -183,7 +183,7 @@ export function SidebarDemo() {
       </Section>
 
       <Section title="Collapsed Sidebar">
-        <div className="h-[400px] rounded-xl border overflow-hidden">
+        <div className="h-[400px] rounded-xl border overflow-hidden relative" style={{ transform: "translate(0)" }}>
           <SidebarProvider defaultOpen={false}>
             <Sidebar collapsible="icon">
               <SidebarHeader className="p-2 flex items-center justify-center">

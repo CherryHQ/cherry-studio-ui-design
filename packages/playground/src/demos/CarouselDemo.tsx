@@ -77,8 +77,8 @@ export function CarouselDemo() {
             {Array.from({ length: count }).map((_, i) => (
               <button
                 key={i}
-                className={`h-2 rounded-full transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
-                  i === current ? "w-6 bg-primary" : "w-2 bg-muted-foreground/30"
+                className={`h-2.5 rounded-full transition-all focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 ${
+                  i === current ? "w-6 bg-primary" : "w-2.5 bg-muted-foreground/30"
                 }`}
                 onClick={() => api?.scrollTo(i)}
               />

@@ -61,16 +61,16 @@ export function ComposerDemo() {
             placeholder="Type a message..."
             leftActions={
               <div className="flex items-center gap-0.5">
-                <button className="p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-accent/20 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                <button className="p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-accent/20 transition-colors focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50">
                   <Plus size={14} />
                 </button>
-                <button className="p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-accent/20 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                <button className="p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-accent/20 transition-colors focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50">
                   <Image size={14} />
                 </button>
-                <button className="p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-accent/20 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                <button className="p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-accent/20 transition-colors focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50">
                   <Paperclip size={14} />
                 </button>
-                <button className="p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-accent/20 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                <button className="p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-accent/20 transition-colors focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50">
                   <Mic size={14} />
                 </button>
               </div>

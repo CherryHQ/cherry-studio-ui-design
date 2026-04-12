@@ -43,7 +43,7 @@ function DropZone({ onFiles, compact }: { onFiles: (files: File[]) => void; comp
       onDragLeave={() => setDragOver(false)}
       onDrop={handleDrop}
       onClick={() => inputRef.current?.click()}
-      className={`border-2 border-dashed rounded-xl transition-colors cursor-pointer flex flex-col items-center justify-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+      className={`border-2 border-dashed rounded-xl transition-colors cursor-pointer flex flex-col items-center justify-center gap-2 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 ${
         dragOver
           ? "border-primary bg-primary/5"
           : "border-border hover:border-primary/50 hover:bg-muted/30"
@@ -156,7 +156,7 @@ import { Upload } from "lucide-react"
                     {file.status === "uploading" && (
                       <span className="text-[10px] text-muted-foreground tabular-nums shrink-0">{file.progress}%</span>
                     )}
-                    <button onClick={() => removeFile(file.id)} className="p-0.5 rounded-sm text-muted-foreground/40 hover:text-foreground transition-colors shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                    <button onClick={() => removeFile(file.id)} className="p-0.5 rounded-sm text-muted-foreground/40 hover:text-foreground transition-colors shrink-0 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50">
                       <X className="h-3.5 w-3.5" />
                     </button>
                   </div>

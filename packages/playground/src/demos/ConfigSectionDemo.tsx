@@ -65,7 +65,7 @@ export function ConfigSectionDemo() {
                 </span>
                 <button
                   onClick={() => setShowKey(!showKey)}
-                  className="text-foreground/30 hover:text-foreground/60 transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                  className="text-foreground/30 hover:text-foreground/60 transition-colors focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
                 >
                   {showKey ? <EyeOff size={11} /> : <Eye size={11} />}
                 </button>

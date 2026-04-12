@@ -127,7 +127,7 @@ export function ResourceCardDemo() {
                 <p className="text-[10px] text-muted-foreground">{file.size} &middot; {file.chunks} chunks</p>
               </div>
               <StatusBadge variant={file.status}>{file.statusText}</StatusBadge>
-              <button className="p-1 rounded text-muted-foreground hover:text-foreground hover:bg-accent transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">
+              <button className="p-1 rounded text-muted-foreground hover:text-foreground hover:bg-accent transition-colors focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50">
                 <MoreHorizontal size={14} />
               </button>
             </div>

@@ -126,7 +126,7 @@ const PickerPanel = React.forwardRef<HTMLDivElement, PickerPanelProps>(
             {search && (
               <button
                 onClick={() => setSearch("")}
-                className="text-muted-foreground/40 hover:text-muted-foreground transition-colors rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                className="text-muted-foreground/40 hover:text-muted-foreground transition-colors rounded-sm focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
               >
                 <X className="size-3" />
               </button>
@@ -218,7 +218,7 @@ function ItemRow({
     <button
       onClick={() => onSelect(item.id)}
       className={cn(
-        "flex items-center gap-2 w-full px-2 py-1.5 rounded-md text-xs transition-colors text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+        "flex items-center gap-2 w-full px-2 py-1.5 rounded-md text-xs transition-colors text-left focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50",
         selected
           ? "bg-accent text-foreground"
           : "text-muted-foreground hover:text-foreground hover:bg-accent/50"

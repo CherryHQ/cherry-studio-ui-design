@@ -69,7 +69,7 @@ export function ChatDetailPanelDemo() {
             <span className="text-muted-foreground">Session</span>
             <button
               onClick={() => handleCopy("sess_abc123")}
-              className="font-mono text-[10px] text-foreground/70 hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-sm"
+              className="font-mono text-[10px] text-foreground/70 hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 rounded-sm"
             >
               {copied ? <Check className="size-3 text-primary inline" /> : "sess_abc123"}
             </button>

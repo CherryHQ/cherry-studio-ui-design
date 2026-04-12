@@ -36,7 +36,7 @@ const CodeBlock = React.forwardRef<HTMLDivElement, CodeBlockProps>(
           <button
             onClick={handleCopy}
             aria-label={copied ? "Copied" : "Copy code"}
-            className="p-1 rounded-sm text-muted-foreground/50 hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            className="p-1 rounded-sm text-muted-foreground/50 hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
           >
             {copied ? (
               <Check className="size-3.5 text-primary" />

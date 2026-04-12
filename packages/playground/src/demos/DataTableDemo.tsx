@@ -165,19 +165,19 @@ export function DataTableDemo() {
                 <Checkbox checked={allSelected ? true : someSelected ? "indeterminate" : false} onCheckedChange={toggleAll} />
               </TableHead>
               <TableHead>
-                <button className="flex items-center hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" onClick={() => handleSort("name")}>
+                <button className="flex items-center hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50" onClick={() => handleSort("name")}>
                   Model <SortIcon field="name" />
                 </button>
               </TableHead>
               <TableHead>Provider</TableHead>
               <TableHead>Context</TableHead>
               <TableHead>
-                <button className="flex items-center hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" onClick={() => handleSort("calls")}>
+                <button className="flex items-center hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50" onClick={() => handleSort("calls")}>
                   API Calls <SortIcon field="calls" />
                 </button>
               </TableHead>
               <TableHead>
-                <button className="flex items-center hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" onClick={() => handleSort("cost")}>
+                <button className="flex items-center hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50" onClick={() => handleSort("cost")}>
                   Cost <SortIcon field="cost" />
                 </button>
               </TableHead>

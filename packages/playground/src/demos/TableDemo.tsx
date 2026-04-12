@@ -123,7 +123,7 @@ export function TableDemo() {
               <TableHead>Provider</TableHead>
               <TableHead>Context</TableHead>
               <TableHead>
-                <button className="flex items-center gap-1 hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" onClick={handleSort}>
+                <button className="flex items-center gap-1 hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50" onClick={handleSort}>
                   API Calls <ArrowUpDown className="h-3.5 w-3.5" />
                 </button>
               </TableHead>

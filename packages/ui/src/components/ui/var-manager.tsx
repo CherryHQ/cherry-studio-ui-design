@@ -68,7 +68,7 @@ const VarManager = React.forwardRef<HTMLDivElement, VarManagerProps>(
               value={v.type || "string"}
               onChange={(e) => updateVariable(i, "type", e.target.value)}
               disabled={v.system}
-              className="h-7 rounded border border-input bg-background px-1 text-xs text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              className="h-7 rounded border border-input bg-background px-1 text-xs text-foreground focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
             >
               <option value="string">string</option>
               <option value="secret">secret</option>

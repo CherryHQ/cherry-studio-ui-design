@@ -82,7 +82,7 @@ export function SimpleTooltipDemo() {
             { icon: Settings, label: "Settings" },
           ].map(({ icon: Icon, label }) => (
             <SimpleTooltip key={label} content={label} side="bottom" delayDuration={200}>
-              <button className="p-2 rounded-md text-muted-foreground hover:text-foreground hover:bg-accent transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">
+              <button className="p-2 rounded-md text-muted-foreground hover:text-foreground hover:bg-accent transition-colors focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50">
                 <Icon className="h-4 w-4" />
               </button>
             </SimpleTooltip>

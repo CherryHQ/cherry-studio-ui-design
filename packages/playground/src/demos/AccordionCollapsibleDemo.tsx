@@ -118,7 +118,7 @@ export function AccordionCollapsibleDemo() {
           ].map((group) => (
             <Collapsible key={group.title} defaultOpen className="rounded-lg border">
               <CollapsibleTrigger asChild>
-                <button className="flex w-full items-center justify-between p-3 text-sm font-medium hover:bg-accent rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">
+                <button className="flex w-full items-center justify-between p-3 text-sm font-medium hover:bg-accent rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50">
                   <span>{group.title}</span>
                   <Badge variant="outline" className="text-xs">{group.count}</Badge>
                 </button>

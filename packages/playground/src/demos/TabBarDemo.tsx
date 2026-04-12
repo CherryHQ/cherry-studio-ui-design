@@ -94,7 +94,7 @@ export function TabBarDemo() {
                         <button
                           onClick={(e) => { e.stopPropagation(); closeTab(tab.id) }}
                           aria-label={`Close ${tab.title}`}
-                          className="absolute right-1 p-0.5 rounded-sm text-muted-foreground/30 hover:text-foreground hover:bg-accent opacity-0 group-hover:opacity-100 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring transition-opacity"
+                          className="absolute right-1 p-0.5 rounded-sm text-muted-foreground/30 hover:text-foreground hover:bg-accent opacity-0 group-hover:opacity-100 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 transition-opacity"
                         >
                           <X className="size-3" />
                         </button>

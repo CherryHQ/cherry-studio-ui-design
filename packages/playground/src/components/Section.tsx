@@ -37,7 +37,7 @@ export function Section({ title, children, code, props, install }: SectionProps)
           {install && (
             <button
               onClick={() => handleCopy(install, "install")}
-              className="flex items-center gap-1 px-2 py-1 rounded-md text-[10px] text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors font-mono focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              className="flex items-center gap-1 px-2 py-1 rounded-md text-[10px] text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors font-mono focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
             >
               <Terminal size={10} />
               {copied === "install" ? <Check size={10} className="text-green-500" /> : install.replace("npx shadcn@latest add ", "")}
@@ -47,7 +47,7 @@ export function Section({ title, children, code, props, install }: SectionProps)
             <div className="flex items-center rounded-lg bg-muted/50 p-0.5">
               <button
                 onClick={() => setTab("preview")}
-                className={`flex items-center gap-1 px-2.5 py-1 rounded-md text-[10px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+                className={`flex items-center gap-1 px-2.5 py-1 rounded-md text-[10px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 ${
                   tab === "preview" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
                 }`}
               >
@@ -55,7 +55,7 @@ export function Section({ title, children, code, props, install }: SectionProps)
               </button>
               <button
                 onClick={() => setTab("code")}
-                className={`flex items-center gap-1 px-2.5 py-1 rounded-md text-[10px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+                className={`flex items-center gap-1 px-2.5 py-1 rounded-md text-[10px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 ${
                   tab === "code" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
                 }`}
               >
@@ -73,7 +73,7 @@ export function Section({ title, children, code, props, install }: SectionProps)
         <div className="relative rounded-xl border border-border bg-zinc-100 dark:bg-[#0d1117] overflow-hidden">
           <button
             onClick={() => handleCopy(code!, "code")}
-            className="absolute top-3 right-3 p-1.5 rounded-md bg-white/10 text-white/50 hover:text-white hover:bg-white/20 transition-colors z-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            className="absolute top-3 right-3 p-1.5 rounded-md bg-white/10 text-white/50 hover:text-white hover:bg-white/20 transition-colors z-10 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
           >
             {copied === "code" ? <Check size={12} className="text-green-400" /> : <Copy size={12} />}
           </button>

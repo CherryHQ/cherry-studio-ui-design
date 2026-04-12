@@ -116,14 +116,21 @@ function InputGroupButton({
   )
 }
 
-function InputGroupText({ className, position, ...props }: React.ComponentProps<"span"> & { position?: "prefix" | "suffix" }) {
+function InputGroupText({ className, position, mode, ...props }: React.ComponentProps<"span"> & { position?: "prefix" | "suffix"; mode?: "icon" | "text" }) {
+  const isIcon = mode === "icon"
   return (
     <span
       className={cn(
-        "text-muted-foreground flex items-center gap-2 whitespace-nowrap bg-muted px-3 text-sm",
+        "text-muted-foreground flex items-center gap-2 whitespace-nowrap text-sm self-stretch",
         "[&_svg:not([class*='size-'])]:size-4 [&_svg]:pointer-events-none",
-        position !== "suffix" && "rounded-l-md border-r border-input",
-        position === "suffix" && "order-last rounded-r-md border-l border-input",
+        isIcon
+          ? "pl-3"
+          : cn(
+              "bg-muted px-3",
+              position !== "suffix" && "border-r border-input",
+              position === "suffix" && "border-l border-input",
+            ),
+        position === "suffix" && "order-last",
         className
       )}
       {...props}

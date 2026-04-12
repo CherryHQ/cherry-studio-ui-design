@@ -40,7 +40,7 @@ export function KnowledgeModuleDemo() {
               <button
                 key={kb.id}
                 onClick={() => setActiveKb(kb.id)}
-                className={`flex items-center gap-2 w-full px-2.5 py-2 rounded-md text-xs transition-colors text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+                className={`flex items-center gap-2 w-full px-2.5 py-2 rounded-md text-xs transition-colors text-left focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 ${
                   activeKb === kb.id ? "bg-accent text-foreground" : "text-muted-foreground hover:bg-accent/50"
                 }`}
               >

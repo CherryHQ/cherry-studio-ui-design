@@ -89,7 +89,7 @@ function InlineSelect({
       <button
         onClick={() => !disabled && setOpen((v) => !v)}
         className={cn(
-          "flex items-center gap-1.5 rounded-md bg-muted/50 transition-colors justify-between focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+          "flex items-center gap-1.5 rounded-md bg-muted/50 transition-colors justify-between focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50",
           btnPx,
           btnPy,
           btnText,
@@ -148,7 +148,7 @@ function InlineSelect({
                   setOpen(false)
                 }}
                 className={cn(
-                  "w-full text-left px-3 py-1.5 rounded-xl transition-colors flex items-center justify-between gap-3",
+                  "w-full text-left px-3 py-1.5 rounded-md transition-colors flex items-center justify-between gap-3",
                   btnText,
                   value === opt.value
                     ? "bg-accent text-accent-foreground font-medium"

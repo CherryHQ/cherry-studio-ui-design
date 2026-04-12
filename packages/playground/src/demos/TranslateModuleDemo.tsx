@@ -115,7 +115,7 @@ export function TranslateModuleDemo() {
                 <button
                   key={e.id}
                   onClick={() => setActiveExpert(e.id)}
-                  className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs whitespace-nowrap transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+                  className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs whitespace-nowrap transition-colors focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 ${
                     activeExpert === e.id ? "bg-accent text-foreground" : "text-muted-foreground hover:bg-accent/50"
                   }`}
                 >

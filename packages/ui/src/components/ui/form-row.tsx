@@ -41,7 +41,7 @@ const FormRow = React.forwardRef<HTMLDivElement, FormRowProps>(
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <span className="text-muted-foreground hover:text-muted-foreground transition-colors cursor-help flex-shrink-0">
-                      <Info size={11} />
+                      <Info size={14} />
                     </span>
                   </TooltipTrigger>
                   <TooltipContent side="top">

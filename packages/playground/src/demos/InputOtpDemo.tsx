@@ -131,7 +131,7 @@ export function InputOtpDemo() {
           </div>
           <p className="text-center text-sm text-muted-foreground">
             Didn't receive the code?{" "}
-            <button className="text-primary hover:underline font-medium focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">Resend</button>
+            <button className="text-primary hover:underline font-medium focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50">Resend</button>
           </p>
         </div>
       </Section>

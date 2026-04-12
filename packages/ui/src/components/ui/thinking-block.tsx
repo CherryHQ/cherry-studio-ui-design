@@ -20,7 +20,7 @@ const ThinkingBlock = React.forwardRef<HTMLDivElement, ThinkingBlockProps>(
       <div ref={ref} className={cn("my-1.5", className)}>
         <button
           onClick={() => setExpanded(!expanded)}
-          className="flex items-center gap-2 w-full px-2.5 py-1.5 rounded-lg text-left hover:bg-accent/50 transition-colors group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          className="flex items-center gap-2 w-full px-2.5 py-1.5 rounded-lg text-left hover:bg-accent/50 transition-colors group focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
         >
           <Brain className="size-3.5 text-primary/70 shrink-0" />
           <span className="text-xs text-muted-foreground font-medium">Thinking</span>

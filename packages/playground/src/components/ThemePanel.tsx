@@ -217,7 +217,7 @@ function ShadowEditor({ shadows, onChange }: {
           <button
             key={l.key}
             onClick={() => selectLevel(l.key)}
-            className={`flex-1 py-1 rounded text-[9px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring ${
+            className={`flex-1 py-1 rounded text-[9px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 ${
               activeLevel === l.key ? "bg-primary text-primary-foreground" : "bg-muted/50 text-muted-foreground hover:bg-muted"
             }`}
           >
@@ -274,7 +274,7 @@ function PanelGroup({ title, defaultOpen = false, badge, children }: { title: st
   const [open, setOpen] = useState(defaultOpen)
   return (
     <div className="border-b border-border/50">
-      <button onClick={() => setOpen(!open)} className="w-full flex items-center justify-between px-4 py-2.5 text-[11px] font-medium text-foreground/70 hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">
+      <button onClick={() => setOpen(!open)} className="w-full flex items-center justify-between px-4 py-2.5 text-[11px] font-medium text-foreground/70 hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50">
         <span className="flex items-center gap-1.5">
           {title}
           {badge && <span className="text-[8px] text-muted-foreground/50 bg-muted/50 px-1 py-0.5 rounded font-normal">{badge}</span>}
@@ -290,6 +290,21 @@ function PanelGroup({ title, defaultOpen = false, badge, children }: { title: st
    Color Row — editable
    ═══════════════════════════════════════════ */
 
+function cssColorToHex(cssColor: string): string {
+  if (cssColor.startsWith("#")) return cssColor
+  try {
+    const canvas = document.createElement("canvas")
+    canvas.width = canvas.height = 1
+    const ctx = canvas.getContext("2d")!
+    ctx.fillStyle = cssColor
+    ctx.fillRect(0, 0, 1, 1)
+    const [r, g, b] = ctx.getImageData(0, 0, 1, 1).data
+    return `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1)}`
+  } catch {
+    return "#888888"
+  }
+}
+
 function ColorRow({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
@@ -303,8 +318,8 @@ function ColorRow({ label, value, onChange }: { label: string; value: string; on
     return () => document.removeEventListener("mousedown", handler)
   }, [open])
 
-  // Try to convert CSS value to hex for the picker
-  const hexValue = value.startsWith("#") ? value : "#888888"
+  // Convert any CSS color (including oklch) to hex for the picker
+  const hexValue = cssColorToHex(value)
 
   return (
     <div className="relative flex items-center justify-between gap-2 py-0.5" ref={ref}>
@@ -312,7 +327,7 @@ function ColorRow({ label, value, onChange }: { label: string; value: string; on
       <div className="flex items-center gap-1.5">
         <button
           onClick={() => setOpen(!open)}
-          className="w-5 h-5 rounded border border-border/50 shrink-0 cursor-pointer hover:ring-1 hover:ring-primary/30 transition-all focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+          className="w-5 h-5 rounded border border-border/50 shrink-0 cursor-pointer hover:ring-1 hover:ring-primary/30 transition-all focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
           style={{ backgroundColor: value }}
         />
         <input
@@ -324,13 +339,11 @@ function ColorRow({ label, value, onChange }: { label: string; value: string; on
       </div>
       {open && (
         <div className="absolute right-0 top-7 z-50 rounded-lg border border-border bg-popover p-2 shadow-xl animate-in fade-in zoom-in-95 duration-100">
-          {value.startsWith("#") ? (
-            <HexColorPicker color={hexValue} onChange={onChange} style={{ width: 180, height: 140 }} />
-          ) : (
-            <div className="flex items-center justify-center h-[140px] w-[180px] text-[10px] text-muted-foreground text-center px-4">
-              oklch format — edit the text field below
-            </div>
-          )}
+          <HexColorPicker
+            color={hexValue}
+            onChange={(hex) => onChange(hex)}
+            style={{ width: 180, height: 140 }}
+          />
           <input
             type="text"
             value={value}
@@ -551,7 +564,7 @@ export function ThemePanel({ dark, onToggleDark }: { dark: boolean; onToggleDark
       {/* Header */}
       <div className="px-4 py-3 border-b border-border flex items-center justify-between">
         <span className="text-xs font-semibold">Theme</span>
-        <button onClick={reset} className="text-[10px] text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1 rounded focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">
+        <button onClick={reset} className="text-[10px] text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1 rounded focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50">
           <RotateCcw size={10} /> Reset
         </button>
       </div>
@@ -560,10 +573,10 @@ export function ThemePanel({ dark, onToggleDark }: { dark: boolean; onToggleDark
         {/* Mode Toggle */}
         <div className="px-4 py-3 border-b border-border/50">
           <div className="flex rounded-lg bg-muted/50 p-0.5">
-            <button onClick={() => dark && onToggleDark()} className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-md text-[10px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring ${!dark ? "bg-background text-foreground shadow-sm" : "text-muted-foreground"}`}>
+            <button onClick={() => dark && onToggleDark()} className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-md text-[10px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 ${!dark ? "bg-background text-foreground shadow-sm" : "text-muted-foreground"}`}>
               <Sun size={11} /> Light
             </button>
-            <button onClick={() => !dark && onToggleDark()} className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-md text-[10px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring ${dark ? "bg-background text-foreground shadow-sm" : "text-muted-foreground"}`}>
+            <button onClick={() => !dark && onToggleDark()} className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-md text-[10px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 ${dark ? "bg-background text-foreground shadow-sm" : "text-muted-foreground"}`}>
               <Moon size={11} /> Dark
             </button>
           </div>
@@ -576,7 +589,7 @@ export function ThemePanel({ dark, onToggleDark }: { dark: boolean; onToggleDark
         <PanelGroup title="Presets" defaultOpen>
           <div className="grid grid-cols-4 gap-1.5">
             {PRESETS.map((p) => (
-              <button key={p.name} onClick={() => applyPreset(p)} className={`flex flex-col items-center gap-1 p-1.5 rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring ${activePreset === p.name ? "bg-primary/10 ring-1 ring-primary/30" : "hover:bg-muted/50"}`}>
+              <button key={p.name} onClick={() => applyPreset(p)} className={`flex flex-col items-center gap-1 p-1.5 rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 ${activePreset === p.name ? "bg-primary/10 ring-1 ring-primary/30" : "hover:bg-muted/50"}`}>
                 <div className="w-6 h-6 rounded-full border-2 border-background shadow-sm" style={{ backgroundColor: dark ? p.dark["--primary"] : p.light["--primary"] }} />
                 <span className="text-[8px] text-muted-foreground leading-none">{p.name}</span>
               </button>
@@ -594,7 +607,7 @@ export function ThemePanel({ dark, onToggleDark }: { dark: boolean; onToggleDark
             <input type="range" min="0" max="1.5" step="0.05" value={radius} onChange={(e) => updateRadius(parseFloat(e.target.value))} className="w-full h-1 bg-muted rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-primary" />
             <div className="flex gap-2 pt-1">
               {[0, 0.25, 0.5, 0.625, 0.75, 1.0].map((r) => (
-                <button key={r} onClick={() => updateRadius(r)} className={`w-7 h-7 border-2 transition-all focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring ${Math.abs(radius - r) < 0.01 ? "border-primary bg-primary/10" : "border-border bg-muted/30"}`} style={{ borderRadius: `${r}rem` }} />
+                <button key={r} onClick={() => updateRadius(r)} className={`w-7 h-7 border-2 transition-all focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 ${Math.abs(radius - r) < 0.01 ? "border-primary bg-primary/10" : "border-border bg-muted/30"}`} style={{ borderRadius: `${r}rem` }} />
               ))}
             </div>
           </div>
@@ -604,7 +617,7 @@ export function ThemePanel({ dark, onToggleDark }: { dark: boolean; onToggleDark
         <PanelGroup title="🔤 Font">
           <div className="space-y-1">
             {FONTS.map((f) => (
-              <button key={f.label} onClick={() => updateFont(f.value)} className={`w-full text-left px-2.5 py-1.5 rounded-md text-[10px] transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring ${font === f.value ? "bg-primary/10 text-primary font-medium" : "text-muted-foreground hover:bg-muted/50"}`} style={{ fontFamily: f.value }}>
+              <button key={f.label} onClick={() => updateFont(f.value)} className={`w-full text-left px-2.5 py-1.5 rounded-md text-[10px] transition-colors focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 ${font === f.value ? "bg-primary/10 text-primary font-medium" : "text-muted-foreground hover:bg-muted/50"}`} style={{ fontFamily: f.value }}>
                 {f.label}
                 <span className="block text-[9px] opacity-60 mt-0.5" style={{ fontFamily: f.value }}>The quick brown fox</span>
               </button>
@@ -765,10 +778,10 @@ export function ThemePanel({ dark, onToggleDark }: { dark: boolean; onToggleDark
 
       {/* Export Footer */}
       <div className="px-3 py-3 border-t border-border space-y-1.5">
-        <button onClick={exportCSS} className="w-full flex items-center justify-center gap-1.5 py-2 rounded-md bg-primary text-primary-foreground text-[11px] font-medium hover:bg-primary/90 transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">
+        <button onClick={exportCSS} className="w-full flex items-center justify-center gap-1.5 py-2 rounded-md bg-primary text-primary-foreground text-[11px] font-medium hover:bg-primary/90 transition-colors focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50">
           {copied === "css" ? <><Check size={12} /> Copied!</> : <><Copy size={12} /> Export CSS</>}
         </button>
-        <button onClick={exportAIPrompt} className="w-full flex items-center justify-center gap-1.5 py-1.5 rounded-md bg-muted/50 text-[10px] text-muted-foreground hover:bg-muted hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">
+        <button onClick={exportAIPrompt} className="w-full flex items-center justify-center gap-1.5 py-1.5 rounded-md bg-muted/50 text-[10px] text-muted-foreground hover:bg-muted hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50">
           {copied === "ai" ? <><Check size={12} className="text-green-500" /> Copied!</> : <><Bot size={12} /> Copy AI Prompt (diff only)</>}
         </button>
       </div>

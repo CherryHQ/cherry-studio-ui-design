@@ -75,6 +75,22 @@ import { AppLauncherDemo } from "./AppLauncherDemo"
 import { GenerativeUIDemo } from "./GenerativeUIDemo"
 import { ModelServiceDemo } from "./ModelServiceDemo"
 import { MCPServiceDemo } from "./MCPServiceDemo"
+import { ThinkingBlockDemo } from "./ThinkingBlockDemo"
+import { CodeBlockDemo } from "./CodeBlockDemo"
+import { AttachmentListDemo } from "./AttachmentListDemo"
+import { AgentConfigDemo } from "./AgentConfigDemo"
+import { AssistantConfigDemo } from "./AssistantConfigDemo"
+import { TopicHistoryDemo } from "./TopicHistoryDemo"
+import { ExtensionsDemo } from "./ExtensionsDemo"
+import { LibraryDemo } from "./LibraryDemo"
+import { MiniAppsDemo } from "./MiniAppsDemo"
+import { CodeToolDemo } from "./CodeToolDemo"
+import { HomeDemo } from "./HomeDemo"
+import { ChatSettingsDemo } from "./ChatSettingsDemo"
+import { WebSearchConfigDemo } from "./WebSearchConfigDemo"
+import { AtMentionPickerDemo } from "./AtMentionPickerDemo"
+import { BranchTreeDemo } from "./BranchTreeDemo"
+import { ProviderStatusDemo } from "./ProviderStatusDemo"
 
 export const demos = [
   // Forms
@@ -172,6 +188,28 @@ export const demos = [
   { id: "generative-ui", title: "Generative UI", category: "Patterns", description: "AI 生成式 UI 交互（按钮选择 + 单选 + 确认框）", component: GenerativeUIDemo },
   { id: "model-service", title: "Model Service Config", category: "Patterns", description: "模型服务配置（API Key + 模型列表 + 能力标签）", component: ModelServiceDemo },
   { id: "mcp-service", title: "MCP Service Manager", category: "Patterns", description: "MCP 服务管理（服务卡片 + 工具列表 + 连接状态）", component: MCPServiceDemo },
+
+  // Cherry Composite (extended)
+  { id: "thinking-block", title: "ThinkingBlock", category: "Cherry Composite", description: "AI 思考过程展示（展开/折叠/耗时）", component: ThinkingBlockDemo },
+  { id: "code-block", title: "CodeBlock", category: "Cherry Composite", description: "代码块（语法高亮/行号/多语言）", component: CodeBlockDemo },
+  { id: "attachment-list", title: "AttachmentList", category: "Cherry Composite", description: "附件列表（文件/图片/进度/可删除）", component: AttachmentListDemo },
+
+  // 🖥️ Modules (extended)
+  { id: "agent-config", title: "Agent Config", category: "🖥️ Modules", description: "Agent 配置页（身份/模型/工具选择）", component: AgentConfigDemo },
+  { id: "assistant-config", title: "Assistant Config", category: "🖥️ Modules", description: "助手配置（资料/模型/知识库/工具）", component: AssistantConfigDemo },
+  { id: "topic-history", title: "Topic History", category: "🖥️ Modules", description: "话题历史（搜索/网格列表切换/标签筛选）", component: TopicHistoryDemo },
+  { id: "extensions", title: "Extensions Market", category: "🖥️ Modules", description: "扩展市场（安装/推荐/搜索）", component: ExtensionsDemo },
+  { id: "library", title: "Resource Library", category: "🖥️ Modules", description: "资源库（文件树 + 网格列表 + 搜索排序）", component: LibraryDemo },
+  { id: "mini-apps", title: "Mini Apps", category: "🖥️ Modules", description: "迷你应用网格（搜索 + 自定义添加）", component: MiniAppsDemo },
+  { id: "code-tool", title: "Code Tool", category: "🖥️ Modules", description: "代码工具配置（环境选择 + 参数设置）", component: CodeToolDemo },
+  { id: "home", title: "Home / Welcome", category: "🖥️ Modules", description: "欢迎首页（搜索 + 快捷操作 + 最近会话）", component: HomeDemo },
+  { id: "chat-settings", title: "Chat Settings", category: "🖥️ Modules", description: "聊天设置面板（模型参数 + 显示选项）", component: ChatSettingsDemo },
+  { id: "web-search-config", title: "Web Search Config", category: "🖥️ Modules", description: "搜索引擎配置（提供商 + API Key + 参数）", component: WebSearchConfigDemo },
+
+  // Patterns (extended)
+  { id: "at-mention-picker", title: "@Mention Picker", category: "Patterns", description: "@提及选择器（分类标签 + 滚动列表）", component: AtMentionPickerDemo },
+  { id: "branch-tree", title: "Branch Tree", category: "Patterns", description: "对话分支树（缩进 + 连接线 + 分支切换）", component: BranchTreeDemo },
+  { id: "provider-status", title: "Provider Status", category: "Patterns", description: "服务商状态卡片（状态指示 + 延迟进度条）", component: ProviderStatusDemo },
 
   // Theme
   { id: "theme", title: "Theme Preview", category: "Theme", description: "主题配色、间距、圆角、字体预览", component: ThemePreviewDemo },

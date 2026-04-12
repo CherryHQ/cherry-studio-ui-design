@@ -17,15 +17,15 @@ import { Search } from "lucide-react"
 </InputGroup>`}>
         <div className="space-y-4 max-w-md">
           <InputGroup>
-            <InputGroupText><Search className="h-4 w-4" /></InputGroupText>
+            <InputGroupText mode="icon"><Search className="h-4 w-4" /></InputGroupText>
             <InputGroupInput placeholder="Search..." />
           </InputGroup>
           <InputGroup>
-            <InputGroupText><Mail className="h-4 w-4" /></InputGroupText>
+            <InputGroupText mode="icon"><Mail className="h-4 w-4" /></InputGroupText>
             <InputGroupInput placeholder="Email address" />
           </InputGroup>
           <InputGroup>
-            <InputGroupText><Lock className="h-4 w-4" /></InputGroupText>
+            <InputGroupText mode="icon"><Lock className="h-4 w-4" /></InputGroupText>
             <InputGroupInput type="password" placeholder="Password" />
           </InputGroup>
         </div>
@@ -34,13 +34,13 @@ import { Search } from "lucide-react"
       <Section title="Prefix & Suffix">
         <div className="space-y-4 max-w-md">
           <InputGroup>
-            <InputGroupText><Globe className="h-4 w-4" /></InputGroupText>
+            <InputGroupText mode="icon"><Globe className="h-4 w-4" /></InputGroupText>
             <InputGroupInput placeholder="your-site" />
             <InputGroupText position="suffix">.com</InputGroupText>
           </InputGroup>
           <InputGroup>
-            <InputGroupText><DollarSign className="h-4 w-4" /></InputGroupText>
-            <InputGroupInput type="number" placeholder="0.00" />
+            <InputGroupText mode="icon"><DollarSign className="h-4 w-4" /></InputGroupText>
+            <InputGroupInput type="text" inputMode="decimal" placeholder="0.00" />
             <InputGroupText position="suffix">USD</InputGroupText>
           </InputGroup>
           <InputGroup>
@@ -53,21 +53,17 @@ import { Search } from "lucide-react"
 
       <Section title="With Button Action">
         <div className="space-y-4 max-w-md">
-          <div className="flex">
-            <InputGroup className="flex-1">
-              <InputGroupText><Search className="h-4 w-4" /></InputGroupText>
-              <InputGroupInput placeholder="Search models..." />
-            </InputGroup>
-            <Button className="rounded-l-none ml-[-1px]">Search</Button>
-          </div>
-          <div className="flex">
-            <InputGroup className="flex-1">
-              <InputGroupInput readOnly defaultValue="sk-xxxx...xxxx" className="font-mono text-xs" />
-            </InputGroup>
-            <Button variant="outline" size="icon" className="rounded-l-none ml-[-1px]">
+          <InputGroup>
+            <InputGroupText mode="icon"><Search className="h-4 w-4" /></InputGroupText>
+            <InputGroupInput placeholder="Search models..." />
+            <Button size="sm" className="mr-1.5 rounded-md">Search</Button>
+          </InputGroup>
+          <InputGroup>
+            <InputGroupInput readOnly defaultValue="sk-xxxx...xxxx" className="font-mono text-xs" />
+            <button className="mr-2 text-muted-foreground hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 rounded-sm">
               <Copy className="h-4 w-4" />
-            </Button>
-          </div>
+            </button>
+          </InputGroup>
         </div>
       </Section>
 
@@ -76,14 +72,14 @@ import { Search } from "lucide-react"
           <div className="space-y-1.5">
             <p className="text-sm text-muted-foreground">Disabled</p>
             <InputGroup>
-              <InputGroupText><Mail className="h-4 w-4" /></InputGroupText>
+              <InputGroupText mode="icon"><Mail className="h-4 w-4" /></InputGroupText>
               <InputGroupInput disabled placeholder="Disabled" value="user@example.com" />
             </InputGroup>
           </div>
           <div className="space-y-1.5">
             <p className="text-sm text-destructive">Error</p>
             <InputGroup className="border-destructive focus-within:ring-destructive">
-              <InputGroupText><Globe className="h-4 w-4" /></InputGroupText>
+              <InputGroupText mode="icon"><Globe className="h-4 w-4" /></InputGroupText>
               <InputGroupInput placeholder="https://" defaultValue="not-a-url" />
             </InputGroup>
             <p className="text-sm text-destructive">Please enter a valid URL.</p>
