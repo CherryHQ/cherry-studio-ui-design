@@ -1,7 +1,7 @@
 import React, { useState, useRef } from "react"
 import {
   Input, Avatar, AvatarFallback, Badge,
-  Popover, PopoverContent, PopoverAnchor,
+  Popover, PopoverContent, PopoverTrigger,
   Tabs, TabsList, TabsTrigger, TabsContent,
   ScrollArea
 } from "@cherry-studio/ui"
@@ -77,7 +77,7 @@ export function AtMentionPickerDemo() {
         <p className="text-xs text-muted-foreground">Type "@" in the input below to trigger the mention picker.</p>
 
         <Popover open={open} onOpenChange={setOpen}>
-          <PopoverAnchor asChild>
+          <PopoverTrigger asChild>
             <Input
               ref={inputRef}
               value={value}
@@ -85,7 +85,7 @@ export function AtMentionPickerDemo() {
               placeholder='Try typing "@" to mention an agent or knowledge base...'
               className="h-9 text-xs"
             />
-          </PopoverAnchor>
+          </PopoverTrigger>
           <PopoverContent className="w-72 p-2" align="start" side="bottom" onOpenAutoFocus={e => e.preventDefault()}>
             <Tabs defaultValue="agent">
               <TabsList className="w-full h-7 mb-2">
