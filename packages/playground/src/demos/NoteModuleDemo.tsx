@@ -1,102 +1,730 @@
-import React, { useState } from "react"
+import React, { useState, useEffect, useRef, useCallback } from "react"
+import { Button, Input, SimpleTooltip, Textarea, Badge, Separator } from "@cherry-studio/ui"
+import { Section, type PropDef } from "../components/Section"
 import {
-  Button, Input, Textarea,
-  ToggleGroup, ToggleGroupItem,
-  MessageBubble, Avatar, AvatarFallback, Composer
-} from "@cherry-studio/ui"
-import { Section } from "../components/Section"
-import {
-  Bold, Italic, List, ListOrdered, Code, Heading2,
-  FileText, Search, Plus, Sparkles
+  NotebookPen, FilePlus, FolderPlus, PanelLeftClose, PanelLeftOpen,
+  PanelRightClose, Search, Star, SortAsc, Filter,
+  FileText, ChevronRight, FolderOpen, Folder, PenLine,
+  Brain, Sparkles, Check, Languages, Maximize2, MessageCircle, Hash,
+  List, Send, Trash2, Download, Share2, MoreHorizontal,
+  X, Plus, ChevronDown, Tag,
+  Bold, Italic, Underline, Strikethrough, ListOrdered, Quote,
+  Code, Heading1, Heading2, Heading3, Undo2, Redo2,
+  Braces, Table, Minus, Link, Image as ImageIcon, Eye,
 } from "lucide-react"
 
-const noteTree = [
-  { id: "1", name: "Getting Started", active: false },
-  { id: "2", name: "Architecture Notes", active: true },
-  { id: "3", name: "Meeting 04/10", active: false },
-  { id: "4", name: "API Design", active: false },
-  { id: "5", name: "TODO List", active: false },
+// ===========================
+// Types & Data (matching src/features/note/NotePage)
+// ===========================
+
+interface NoteItem {
+  id: string
+  title: string
+  type: "file" | "folder"
+  children?: NoteItem[]
+  starred?: boolean
+  updatedAt?: string
+  preview?: string
+  tags?: string[]
+}
+
+interface AIChatMsg { role: "user" | "assistant"; content: string }
+
+interface NoteQuickAction {
+  id: string
+  label: string
+  icon: typeof Sparkles
+  category: "write" | "analyze" | "organize" | "format"
+  mockResponse: string
+}
+
+const mockNotes: NoteItem[] = [
+  {
+    id: "f1", title: "工作笔记", type: "folder", children: [
+      {
+        id: "f1-1", title: "项目管理", type: "folder", children: [
+          { id: "n1", title: "项目周报 - Week 12", type: "file", starred: true, updatedAt: "2 小时前", preview: "本周完成了用户认证模块的开发，修复了 3 个关键 Bug...", tags: ["周报", "项目"] },
+          { id: "n2", title: "Q4 OKR 复盘", type: "file", updatedAt: "1 天前", preview: "O1: 提升产品核心体验\nKR1: DAU 提升 20%...", tags: ["OKR"] },
+        ]
+      },
+      { id: "n4", title: "团队周会纪要", type: "file", starred: true, updatedAt: "5 小时前", preview: "讨论了下周的冲刺计划和资源分配问题...", tags: ["会议", "团队"] },
+      { id: "n5", title: "竞品分析报告", type: "file", updatedAt: "2 天前", preview: "对比了 5 款竞品的功能、定价和用户体验...", tags: ["分析"] },
+    ]
+  },
+  {
+    id: "f2", title: "学习笔记", type: "folder", children: [
+      { id: "n6", title: "React 性能优化技巧", type: "file", starred: true, updatedAt: "1 天前", preview: "1. 使用 React.memo 避免不必要的重渲染...", tags: ["React", "前端"] },
+      { id: "n7", title: "TypeScript 高级类型", type: "file", updatedAt: "4 天前", preview: "条件类型、映射类型、模板字面量类型...", tags: ["TypeScript"] },
+    ]
+  },
+  {
+    id: "f3", title: "个人", type: "folder", children: [
+      { id: "n9", title: "2026 年度计划", type: "file", starred: true, updatedAt: "3 天前", preview: "1. 完成 3 个开源项目\n2. 阅读 24 本书...", tags: ["计划"] },
+    ]
+  },
+  { id: "n11", title: "快速笔记", type: "file", updatedAt: "30 分钟前", preview: "今天需要处理的事项：\n- 代码评审\n- 更新文档...", tags: ["临时"] },
 ]
 
-export function NoteModuleDemo() {
-  const [content, setContent] = useState(
-    "# Architecture Notes\n\nCherry Studio uses a modular architecture with the following key systems:\n\n## Core Modules\n\n- **Chat Engine**: Manages conversations and message routing\n- **Model Service**: Handles LLM provider connections\n- **Knowledge Base**: RAG pipeline for document retrieval\n\n## Design Principles\n\n1. Plugin-based extensibility\n2. Provider-agnostic model layer\n3. Real-time streaming responses"
+const noteContent = `# 项目周报 - Week 12
+
+## 本周完成
+
+### 1. 用户认证模块
+完成了基于 JWT 的用户认证系统开发，包括：
+- 用户注册与登录接口
+- Token 刷新机制
+- 权限中间件
+
+### 2. Bug 修复
+修复了以下关键问题：
+- **#1234** 用户头像上传后未即时刷新
+- **#1256** 暗色模式下表单输入框文字不可见
+- **#1278** 分页查询在特定条件下返回空结果
+
+### 3. 性能优化
+- 首屏加载时间从 3.2s 优化至 1.8s
+- 列表页虚拟滚动实现，支持 10000+ 条数据流畅渲染
+
+## 下周计划
+
+1. 完成文件上传模块
+2. 对接第三方支付 SDK
+3. 编写单元测试（目标覆盖率 > 80%）
+
+## 风险与阻塞
+
+| 风险项 | 影响 | 应对措施 |
+| --- | --- | --- |
+| 支付 SDK 文档不完善 | 可能延期 | 已联系技术支持 |
+| 测试环境不稳定 | 影响联调 | 运维已在排查 |
+
+## 备注
+
+> 下周需要与设计团队确认新版 UI 规范，建议安排一次 30 分钟的同步会议。
+
+---
+*更新时间：2026-02-25*`
+
+const mockAIChat: AIChatMsg[] = [
+  { role: "user", content: "帮我总结一下这篇周报的核心要点" },
+  { role: "assistant", content: "根据周报内容，以下是核心要点：\n\n**完成事项：**\n1. JWT 用户认证系统上线\n2. 修复 3 个关键 Bug\n3. 首屏加载优化至 1.8s\n\n**下周重点：**\n- 文件上传 & 支付 SDK 对接\n- 单元测试目标覆盖率 80%+\n\n**风险提示：**\n- 支付 SDK 文档问题\n- 测试环境稳定性" },
+  { role: "user", content: "有哪些需要跟进的 action items？" },
+  { role: "assistant", content: "根据周报，建议跟进以下 Action Items：\n\n1. **联系支付 SDK 技术支持** — 获取完整文档\n2. **协调运维排查测试环境** — 确保联调顺畅\n3. **安排与设计团队的同步会议** — 确认新版 UI 规范\n4. **准备单元测试框架** — 提前搭建以达成覆盖率目标" },
+]
+
+const noteQuickActions: NoteQuickAction[] = [
+  { id: "summarize", label: "总结要点", icon: Sparkles, category: "analyze", mockResponse: "**核心要点总结：**\n\n1. **用户认证系统** — 基于 JWT 的完整认证方案已上线\n2. **Bug 修复** — 3 个关键问题已解决\n3. **性能优化** — 首屏加载时间优化 44%（3.2s → 1.8s）" },
+  { id: "outline", label: "生成大纲", icon: List, category: "organize", mockResponse: "**文档大纲：**\n\n1. 本周完成\n   1.1 用户认证模块\n   1.2 Bug 修复（3 项）\n   1.3 性能优化\n2. 下周计划\n3. 风险与阻塞\n4. 备注" },
+  { id: "polish", label: "润色文字", icon: PenLine, category: "write", mockResponse: "**润色建议：**\n\n1. \"完成了基于 JWT 的用户认证系统开发\" → \"成功交付基于 JWT 的企业级用户认证系统\"\n2. \"首屏加载时间从 3.2s 优化至 1.8s\" → \"首屏加载性能提升 44%\"" },
+  { id: "todo", label: "生成 TODO", icon: Check, category: "organize", mockResponse: "**TODO 列表：**\n\n- [ ] 完成文件上传模块开发\n- [ ] 对接第三方支付 SDK\n- [ ] 编写单元测试（目标覆盖率 > 80%）\n- [ ] 安排与设计团队的 UI 规范同步会议" },
+  { id: "tags", label: "自动打标签", icon: Hash, category: "analyze", mockResponse: "**建议标签：**\n\n`#JWT` `#认证` `#性能优化` `#周报` `#Week12`" },
+  { id: "translate", label: "翻译全文", icon: Languages, category: "write", mockResponse: "**英文翻译：**\n\n# Weekly Report - Week 12\n\n## Completed This Week\n### 1. User Authentication Module\nCompleted JWT-based authentication system..." },
+  { id: "expand", label: "扩展内容", icon: Maximize2, category: "write", mockResponse: "**内容扩展建议：**\n\n1. **用户认证模块** — Token 过期策略：Access Token 15min，Refresh Token 7d\n2. **性能优化** — LCP: 2.8s → 1.2s, FCP: 1.5s → 0.6s" },
+  { id: "mindmap", label: "思维导图", icon: Brain, category: "organize", mockResponse: "**思维导图结构：**\n\n```\n项目周报 Week 12\n├── 本周完成\n│   ├── 认证系统 ✅\n│   ├── Bug 修复 ✅\n│   └── 性能优化 ✅\n├── 下周计划\n└── 风险\n```" },
+  { id: "qa", label: "生成问答", icon: MessageCircle, category: "analyze", mockResponse: "**Q1: 本周最大的技术成就？**\nA: JWT 用户认证系统的完整交付。\n\n**Q2: 当前面临的主要风险？**\nA: 支付 SDK 文档不完善 + 测试环境不稳定。" },
+  { id: "proofread", label: "校对纠错", icon: Eye, category: "format", mockResponse: "**校对结果：**\n\n共发现 2 处可改进项：\n1. \"支持 10000+ 条数据\" → 建议使用 \"支持万级数据\"\n2. 表格格式建议统一措辞风格" },
+]
+
+const actionCategories = [
+  { id: "analyze" as const, label: "分析", icon: Search },
+  { id: "organize" as const, label: "整理", icon: List },
+  { id: "write" as const, label: "写作", icon: PenLine },
+  { id: "format" as const, label: "格式", icon: Eye },
+]
+
+const MOCK_ASSISTANTS = [
+  { id: "a1", name: "写作助手", emoji: "✍️", tags: ["写作", "润色"], systemPrompt: "你是一位专业的写作助手", modelProvider: "OpenAI", model: "gpt-4o" },
+  { id: "a2", name: "分析助手", emoji: "🔍", tags: ["分析", "数据"], systemPrompt: "你是一位数据分析专家", modelProvider: "Anthropic", model: "claude-opus-4" },
+  { id: "a3", name: "翻译助手", emoji: "🌐", tags: ["翻译"], systemPrompt: "你是一位专业翻译", modelProvider: "Google", model: "gemini-2.5-pro" },
+  { id: "a4", name: "代码助手", emoji: "💻", tags: ["代码", "开发"], systemPrompt: "你是一位高级开发工程师", modelProvider: "Anthropic", model: "claude-sonnet-4" },
+]
+
+// ===========================
+// Helper: flatten tree
+// ===========================
+function flattenNotes(items: NoteItem[]): NoteItem[] {
+  const result: NoteItem[] = []
+  for (const item of items) {
+    if (item.type === "file") result.push(item)
+    if (item.children) result.push(...flattenNotes(item.children))
+  }
+  return result
+}
+
+function collectFolders(items: NoteItem[]): NoteItem[] {
+  const result: NoteItem[] = []
+  for (const item of items) {
+    if (item.type === "folder") { result.push(item); if (item.children) result.push(...collectFolders(item.children)) }
+  }
+  return result
+}
+
+// ===========================
+// Helper: NoteTreeItem
+// ===========================
+function NoteTreeItem({ item, depth = 0, selectedId, onSelect, expandedFolders, onToggleFolder, filterStarred }: {
+  item: NoteItem; depth?: number; selectedId: string; onSelect: (id: string) => void
+  expandedFolders: Set<string>; onToggleFolder: (id: string) => void; filterStarred: boolean
+}) {
+  if (item.type === "folder") {
+    const isExpanded = expandedFolders.has(item.id)
+    const children = item.children || []
+    const filteredChildren = filterStarred ? children.filter(c => c.type === "folder" || c.starred) : children
+    if (filterStarred && filteredChildren.length === 0) return null
+    return (
+      <div>
+        <Button variant="ghost" type="button"
+          onClick={() => onToggleFolder(item.id)}
+          className="h-auto px-0 py-0 font-normal tracking-normal w-full flex items-center gap-1.5 py-[5px] px-2 rounded-md text-[12px] hover:bg-accent/60 transition-colors group/folder"
+          style={{ paddingLeft: `${depth * 16 + 8}px` }}
+        >
+          <ChevronRight size={12} className={`text-muted-foreground/50 transition-transform flex-shrink-0 ${isExpanded ? "rotate-90" : ""}`} />
+          {isExpanded ? <FolderOpen size={14} className="text-accent-amber flex-shrink-0" /> : <Folder size={14} className="text-accent-amber/70 flex-shrink-0" />}
+          <span className="truncate text-foreground/80 flex-1 text-left">{item.title}</span>
+          <span className="text-[10px] text-muted-foreground/40 opacity-0 group-hover/folder:opacity-100">{children.length}</span>
+        </Button>
+        {isExpanded && filteredChildren.map(child => (
+          <NoteTreeItem key={child.id} item={child} depth={depth + 1} selectedId={selectedId} onSelect={onSelect} expandedFolders={expandedFolders} onToggleFolder={onToggleFolder} filterStarred={filterStarred} />
+        ))}
+      </div>
+    )
+  }
+
+  if (filterStarred && !item.starred) return null
+  const isSelected = selectedId === item.id
+  return (
+    <Button variant="ghost" type="button"
+      onClick={() => onSelect(item.id)}
+      className={`h-auto px-0 py-0 font-normal tracking-normal w-full flex items-center gap-1.5 py-[5px] px-2 rounded-md text-[12px] transition-colors group/file ${
+        isSelected ? "bg-accent text-foreground" : "text-foreground/70 hover:bg-accent/50 hover:text-foreground"
+      }`}
+      style={{ paddingLeft: `${depth * 16 + 8}px` }}
+    >
+      <FileText size={13} className={`flex-shrink-0 ${isSelected ? "text-primary" : "text-muted-foreground/50"}`} />
+      <span className="truncate flex-1 text-left">{item.title}</span>
+      {item.starred && <Star size={10} className="text-accent-amber fill-accent-amber flex-shrink-0" />}
+    </Button>
   )
-  const [activeNote, setActiveNote] = useState("2")
+}
+
+// ===========================
+// Helper: render bold text in chat
+// ===========================
+function renderBoldText(text: string): React.ReactNode {
+  const parts = text.split(/(\*\*.+?\*\*)/g)
+  return parts.map((part, i) => {
+    if (part.startsWith("**") && part.endsWith("**")) {
+      return <strong key={i} className="text-foreground">{part.slice(2, -2)}</strong>
+    }
+    return <span key={i}>{part}</span>
+  })
+}
+
+// ===========================
+// Props
+// ===========================
+const noteProps: PropDef[] = [
+  { name: "notes", type: "NoteItem[]", default: "[]", description: "Hierarchical note tree with files and folders" },
+  { name: "activeNote", type: "string", default: '""', description: "ID of the currently active note" },
+  { name: "editorMode", type: '"edit" | "markdown" | "preview"', default: '"edit"', description: "Current editor mode" },
+  { name: "aiAssistant", type: "boolean", default: "true", description: "Show the AI assistant side panel" },
+]
+
+// ===========================
+// Main Demo
+// ===========================
+export function NoteModuleDemo() {
+  const [notes] = useState<NoteItem[]>(mockNotes)
+  const [selectedNoteId, setSelectedNoteId] = useState("n1")
+  const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set(["f1", "f1-1", "f2", "f3"]))
+  const [leftPanelOpen, setLeftPanelOpen] = useState(true)
+  const [rightPanelOpen, setRightPanelOpen] = useState(true)
+  const [searchTerm, setSearchTerm] = useState("")
+  const [filterStarred, setFilterStarred] = useState(false)
+  const [sortBy, setSortBy] = useState<"name" | "date">("date")
+  const [editorMode, setEditorMode] = useState<"edit" | "markdown" | "preview">("markdown")
+  const [noteContents, setNoteContents] = useState<Record<string, string>>({ n1: noteContent })
+  const [undoStack, setUndoStack] = useState<string[]>([])
+  const [redoStack, setRedoStack] = useState<string[]>([])
+  const [savedIndicator, setSavedIndicator] = useState(false)
+  const editorRef = useRef<HTMLTextAreaElement>(null)
+
+  // AI state
+  const [aiMessages, setAiMessages] = useState<AIChatMsg[]>(mockAIChat)
+  const [aiInput, setAiInput] = useState("")
+  const [selectedAssistantId, setSelectedAssistantId] = useState("a1")
+  const [showAssistantPicker, setShowAssistantPicker] = useState(false)
+  const [astSearch, setAstSearch] = useState("")
+  const [astTag, setAstTag] = useState<string | null>(null)
+  const [activeActionCategory, setActiveActionCategory] = useState<string>("analyze")
+  const [showAllActions, setShowAllActions] = useState(false)
+  const assistantPickerRef = useRef<HTMLDivElement>(null)
+  const aiEndRef = useRef<HTMLDivElement>(null)
+
+  const selectedAssistant = MOCK_ASSISTANTS.find(a => a.id === selectedAssistantId) || MOCK_ASSISTANTS[0]
+  const allAstTags = Array.from(new Set(MOCK_ASSISTANTS.flatMap(a => a.tags)))
+  const filteredAssistants = MOCK_ASSISTANTS.filter(a => {
+    if (astSearch && !a.name.toLowerCase().includes(astSearch.toLowerCase())) return false
+    if (astTag && !a.tags.includes(astTag)) return false
+    return true
+  })
+
+  const allNotes = flattenNotes(notes)
+  const selectedNote = allNotes.find(n => n.id === selectedNoteId)
+
+  // Click-outside: assistant picker
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (assistantPickerRef.current && !assistantPickerRef.current.contains(e.target as Node)) setShowAssistantPicker(false)
+    }
+    document.addEventListener("mousedown", handler)
+    return () => document.removeEventListener("mousedown", handler)
+  }, [])
+
+  const toggleFolder = (id: string) => {
+    setExpandedFolders(prev => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id); else next.add(id)
+      return next
+    })
+  }
+
+  const getCurrentContent = useCallback(() => {
+    if (!selectedNoteId) return ""
+    return noteContents[selectedNoteId] || `# ${selectedNote?.title || "新笔记"}\n\n开始编辑...`
+  }, [selectedNoteId, noteContents, selectedNote])
+
+  const updateContent = (val: string) => {
+    const prev = getCurrentContent()
+    setUndoStack(s => [...s.slice(-49), prev])
+    setRedoStack([])
+    setNoteContents(c => ({ ...c, [selectedNoteId]: val }))
+    setSavedIndicator(true)
+    setTimeout(() => setSavedIndicator(false), 1500)
+  }
+
+  const handleUndo = () => {
+    if (undoStack.length === 0) return
+    const prev = undoStack[undoStack.length - 1]
+    setRedoStack(s => [...s, getCurrentContent()])
+    setUndoStack(s => s.slice(0, -1))
+    setNoteContents(c => ({ ...c, [selectedNoteId]: prev }))
+  }
+
+  const handleRedo = () => {
+    if (redoStack.length === 0) return
+    const next = redoStack[redoStack.length - 1]
+    setUndoStack(s => [...s, getCurrentContent()])
+    setRedoStack(s => s.slice(0, -1))
+    setNoteContents(c => ({ ...c, [selectedNoteId]: next }))
+  }
+
+  const insertMarkdown = (before: string, after?: string, placeholder?: string) => {
+    if (!editorRef.current) return
+    const ta = editorRef.current
+    const start = ta.selectionStart
+    const end = ta.selectionEnd
+    const content = getCurrentContent()
+    const selected = content.slice(start, end)
+    const insert = selected || placeholder || ""
+    const newContent = content.slice(0, start) + before + insert + (after || "") + content.slice(end)
+    updateContent(newContent)
+    setTimeout(() => { ta.focus(); ta.selectionStart = start + before.length; ta.selectionEnd = start + before.length + insert.length }, 0)
+  }
+
+  const insertLinePrefix = (prefix: string) => {
+    if (!editorRef.current) return
+    const ta = editorRef.current
+    const content = getCurrentContent()
+    const start = ta.selectionStart
+    const lineStart = content.lastIndexOf("\n", start - 1) + 1
+    const newContent = content.slice(0, lineStart) + prefix + content.slice(lineStart)
+    updateContent(newContent)
+    setTimeout(() => { ta.focus(); ta.selectionStart = ta.selectionEnd = start + prefix.length }, 0)
+  }
+
+  // AI actions
+  const handleAISend = () => {
+    if (!aiInput.trim()) return
+    setAiMessages(prev => [...prev, { role: "user", content: aiInput }, { role: "assistant", content: `关于"${aiInput.slice(0, 20)}..."的分析：\n\n基于当前笔记内容，这是一个很好的问题。让我为您详细分析...` }])
+    setAiInput("")
+    setTimeout(() => aiEndRef.current?.scrollIntoView({ behavior: "smooth" }), 100)
+  }
+
+  const handleQuickAction = (action: NoteQuickAction) => {
+    setAiMessages(prev => [...prev, { role: "user", content: action.label }, { role: "assistant", content: action.mockResponse }])
+    setTimeout(() => aiEndRef.current?.scrollIntoView({ behavior: "smooth" }), 100)
+  }
+
+  // Filter notes by search
+  const filterNotes = (items: NoteItem[]): NoteItem[] => {
+    if (!searchTerm) return items
+    const q = searchTerm.toLowerCase()
+    return items.map(item => {
+      if (item.type === "folder") {
+        const filtered = filterNotes(item.children || [])
+        if (filtered.length > 0 || item.title.toLowerCase().includes(q)) return { ...item, children: filtered }
+        return null
+      }
+      if (item.title.toLowerCase().includes(q)) return item
+      return null
+    }).filter((n): n is NoteItem => n !== null)
+  }
+
+  const filteredNotes = filterNotes(notes)
 
   return (
-    <Section title="Note Editor Module" code={`// Three-column layout: file tree + editor + AI assistant
-// Compose with: Input, Textarea, ToggleGroup, Button, MessageBubble, Composer`}>
-      <div className="max-w-4xl rounded-xl border bg-background overflow-hidden h-96">
-        <div className="grid grid-cols-[180px_1fr_240px] divide-x divide-border h-full">
-          {/* Left: File tree */}
-          <div className="flex flex-col">
-            <div className="p-2 border-b">
-              <div className="relative">
-                <Search className="absolute left-2 top-1/2 -translate-y-1/2 size-3 text-muted-foreground" />
-                <Input placeholder="Search notes..." className="h-7 pl-7 text-[10px] border-0 bg-muted/50 shadow-none" />
+    <Section title="Note Editor Module" props={noteProps} code={`// Three-column layout: directory tree + editor + AI assistant
+// Matching src/features/note/NotePage.tsx structure
+<div className="flex-1 flex min-h-0">
+  {/* Left: Note directory tree with search, filters */}
+  <div style={{ width: 240 }}>
+    <NoteTreeItem ... />
+  </div>
+  {/* Center: Editor with toolbar + markdown/preview modes */}
+  <div className="flex-1 flex flex-col">
+    <Toolbar />
+    <textarea | PreviewRenderer />
+    <StatusBar />
+  </div>
+  {/* Right: AI Chat with assistant picker + quick actions */}
+  <div style={{ width: 320 }}>
+    <AssistantPicker />
+    <QuickActions />
+    <ChatMessages />
+    <ChatInput />
+  </div>
+</div>`}>
+      <div className="rounded-[24px] border bg-background overflow-hidden" style={{ height: 600 }}>
+        <div className="flex h-full min-h-0">
+
+          {/* ===== Left Panel - Note Directory ===== */}
+          {leftPanelOpen && (
+            <div className="flex flex-shrink-0 border-r border-border/40" style={{ width: 240 }}>
+              <div className="flex flex-col h-full w-full">
+                {/* Header */}
+                <div className="h-11 flex items-center gap-1.5 px-3 flex-shrink-0">
+                  <NotebookPen size={14} className="text-accent-orange flex-shrink-0" />
+                  <span className="text-xs text-foreground flex-1 truncate">笔记</span>
+                  <SimpleTooltip content="新建笔记"><Button variant="ghost" type="button" className="h-auto px-0 py-0 font-normal tracking-normal w-6 h-6 rounded-md flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"><FilePlus size={13} /></Button></SimpleTooltip>
+                  <SimpleTooltip content="新建文件夹"><Button variant="ghost" type="button" className="h-auto px-0 py-0 font-normal tracking-normal w-6 h-6 rounded-md flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"><FolderPlus size={13} /></Button></SimpleTooltip>
+                  <SimpleTooltip content="收起目录"><Button variant="ghost" type="button" onClick={() => setLeftPanelOpen(false)} className="h-auto px-0 py-0 font-normal tracking-normal w-6 h-6 rounded-md flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"><PanelLeftClose size={13} /></Button></SimpleTooltip>
+                </div>
+                {/* Search & Filters */}
+                <div className="px-2.5 pt-2 pb-1 space-y-1.5">
+                  <div className="relative">
+                    <Search size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground/50" />
+                    <Input type="text" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} placeholder="搜索笔记..." className="h-7 w-full rounded-md border-0 bg-accent/40 pl-7 pr-2 text-xs text-foreground shadow-none placeholder:text-muted-foreground/40 focus:bg-accent/60 focus-visible:ring-1 focus-visible:ring-border/50" />
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Button variant="ghost" type="button" onClick={() => setFilterStarred(!filterStarred)} className={`h-auto px-0 py-0 font-normal tracking-normal flex items-center gap-1 px-2 py-1 rounded-md text-[11px] transition-colors ${filterStarred ? "bg-accent-amber-muted text-accent-amber" : "text-muted-foreground hover:bg-accent/50 hover:text-foreground"}`}>
+                      <Star size={10} className={filterStarred ? "fill-accent-amber" : ""} /> 收藏
+                    </Button>
+                    <Button variant="ghost" type="button" onClick={() => setSortBy(sortBy === "name" ? "date" : "name")} className="h-auto px-0 py-0 font-normal tracking-normal flex items-center gap-1 px-2 py-1 rounded-md text-[11px] text-muted-foreground hover:bg-accent/50 hover:text-foreground transition-colors">
+                      <SortAsc size={10} /> {sortBy === "name" ? "名称" : "日期"}
+                    </Button>
+                    <Button variant="ghost" type="button" className="h-auto px-0 py-0 font-normal tracking-normal flex items-center gap-1 px-2 py-1 rounded-md text-[11px] text-muted-foreground hover:bg-accent/50 hover:text-foreground transition-colors">
+                      <Filter size={10} /> 筛选
+                    </Button>
+                  </div>
+                </div>
+                {/* Tree */}
+                <div className="flex-1 overflow-y-auto px-1.5 py-1 [&::-webkit-scrollbar]:w-[3px] [&::-webkit-scrollbar-thumb]:bg-border/30 [&::-webkit-scrollbar-thumb]:rounded-full">
+                  {filteredNotes.map(item => (
+                    <NoteTreeItem key={item.id} item={item} selectedId={selectedNoteId} onSelect={setSelectedNoteId} expandedFolders={expandedFolders} onToggleFolder={toggleFolder} filterStarred={filterStarred} />
+                  ))}
+                  {filteredNotes.length === 0 && (
+                    <div className="py-6 text-center text-[11px] text-muted-foreground/40">没有找到笔记</div>
+                  )}
+                </div>
+                {/* Footer */}
+                <div className="h-8 flex items-center px-3 text-[10px] text-muted-foreground/40 flex-shrink-0">
+                  {allNotes.length} 篇笔记 · {collectFolders(notes).length} 个文件夹
+                </div>
               </div>
             </div>
-            <div className="flex-1 overflow-y-auto p-1.5 space-y-0.5">
-              {noteTree.map((n) => (
-                <button
-                  key={n.id}
-                  onClick={() => setActiveNote(n.id)}
-                  className={`flex items-center gap-1.5 w-full px-2 py-1.5 rounded-md text-[10px] text-left transition-colors focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 ${
-                    activeNote === n.id ? "bg-accent text-foreground" : "text-muted-foreground hover:bg-accent/50"
-                  }`}
-                >
-                  <FileText className="size-3 shrink-0" />
-                  <span className="truncate">{n.name}</span>
-                </button>
-              ))}
+          )}
+
+          {/* ===== Center Panel - Editor ===== */}
+          <div className="flex-1 flex flex-col min-w-0">
+            {/* Header */}
+            <div className="h-11 flex items-center px-4 flex-shrink-0 gap-2">
+              {!leftPanelOpen && (
+                <SimpleTooltip content="展开目录"><Button variant="ghost" type="button" onClick={() => setLeftPanelOpen(true)} className="h-auto px-0 py-0 font-normal tracking-normal w-7 h-7 rounded-md flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent transition-colors mr-1"><PanelLeftOpen size={15} /></Button></SimpleTooltip>
+              )}
+              <div className="flex items-center gap-1.5 flex-1 min-w-0">
+                <FileText size={13} className="text-primary flex-shrink-0" />
+                <span className="text-xs text-foreground truncate">{selectedNote?.title || "选择一篇笔记"}</span>
+                {selectedNote?.starred && <Star size={10} className="text-accent-amber fill-accent-amber flex-shrink-0" />}
+                {selectedNote?.updatedAt && <span className="text-[10px] text-muted-foreground/40 flex-shrink-0 ml-1">&middot; {selectedNote.updatedAt}</span>}
+              </div>
+              {selectedNote?.tags && selectedNote.tags.length > 0 && (
+                <div className="flex items-center gap-1 flex-shrink-0">
+                  {selectedNote.tags.map(tag => (<Badge key={tag} variant="secondary" className="px-1.5 py-0.5 text-[10px] text-muted-foreground">#{tag}</Badge>))}
+                </div>
+              )}
+              <div className="flex items-center gap-0.5 flex-shrink-0 ml-1">
+                <div className="flex items-center bg-accent/40 rounded-[12px] p-0.5 gap-0.5">
+                  <SimpleTooltip content="实时编辑"><Button variant="ghost" type="button" onClick={() => setEditorMode("edit")} className={`h-auto px-0 py-0 font-normal tracking-normal w-6 h-6 rounded-md flex items-center justify-center transition-colors ${editorMode === "edit" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground/60 hover:text-foreground"}`}><PenLine size={11} /></Button></SimpleTooltip>
+                  <SimpleTooltip content="Markdown 源码"><Button variant="ghost" type="button" onClick={() => setEditorMode("markdown")} className={`h-auto px-0 py-0 font-normal tracking-normal w-6 h-6 rounded-md flex items-center justify-center transition-colors ${editorMode === "markdown" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground/60 hover:text-foreground"}`}><Code size={11} /></Button></SimpleTooltip>
+                  <SimpleTooltip content="只读预览"><Button variant="ghost" type="button" onClick={() => setEditorMode("preview")} className={`h-auto px-0 py-0 font-normal tracking-normal w-6 h-6 rounded-md flex items-center justify-center transition-colors ${editorMode === "preview" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground/60 hover:text-foreground"}`}><Eye size={11} /></Button></SimpleTooltip>
+                </div>
+              </div>
+              <div className="w-px h-4 bg-border/30 mx-1" />
+              <div className="flex items-center gap-0.5 flex-shrink-0">
+                <SimpleTooltip content="导出"><Button variant="ghost" type="button" className="h-auto px-0 py-0 font-normal tracking-normal w-7 h-7 rounded-md flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"><Download size={13} /></Button></SimpleTooltip>
+                <SimpleTooltip content="分享"><Button variant="ghost" type="button" className="h-auto px-0 py-0 font-normal tracking-normal w-7 h-7 rounded-md flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"><Share2 size={13} /></Button></SimpleTooltip>
+                <SimpleTooltip content="更多"><Button variant="ghost" type="button" className="h-auto px-0 py-0 font-normal tracking-normal w-7 h-7 rounded-md flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"><MoreHorizontal size={13} /></Button></SimpleTooltip>
+                <div className="w-px h-4 bg-border/30 mx-1" />
+                <SimpleTooltip content={rightPanelOpen ? "关闭 AI 面板" : "打开 AI 面板"}>
+                  <Button variant="ghost" type="button" onClick={() => setRightPanelOpen(!rightPanelOpen)} className={`h-auto px-0 py-0 font-normal tracking-normal w-7 h-7 rounded-md flex items-center justify-center transition-colors ${rightPanelOpen ? "bg-primary/15 text-primary" : "text-muted-foreground hover:text-foreground hover:bg-accent"}`}><Sparkles size={13} /></Button>
+                </SimpleTooltip>
+              </div>
             </div>
-            <div className="p-2 border-t">
-              <Button variant="ghost" size="sm" className="w-full h-7 text-[10px]">
-                <Plus className="size-3 mr-1" /> New Note
-              </Button>
+
+            {/* Toolbar */}
+            {editorMode !== "preview" && (
+              <div className="h-9 flex items-center px-3 gap-0.5 flex-shrink-0 overflow-x-auto [&::-webkit-scrollbar]:hidden bg-muted/20 rounded-[12px] mx-3 mt-1">
+                <div className="flex items-center gap-0.5">
+                  <SimpleTooltip content="撤销"><Button variant="ghost" type="button" onClick={handleUndo} className={`h-auto px-0 py-0 font-normal tracking-normal w-7 h-7 rounded-md flex items-center justify-center transition-colors ${undoStack.length > 0 ? "text-muted-foreground/60 hover:text-foreground hover:bg-accent" : "text-muted-foreground/20 cursor-not-allowed"}`}><Undo2 size={13} /></Button></SimpleTooltip>
+                  <SimpleTooltip content="重做"><Button variant="ghost" type="button" onClick={handleRedo} className={`h-auto px-0 py-0 font-normal tracking-normal w-7 h-7 rounded-md flex items-center justify-center transition-colors ${redoStack.length > 0 ? "text-muted-foreground/60 hover:text-foreground hover:bg-accent" : "text-muted-foreground/20 cursor-not-allowed"}`}><Redo2 size={13} /></Button></SimpleTooltip>
+                </div>
+                <div className="w-px h-4 bg-border/20 mx-1" />
+                <div className="flex items-center gap-0.5">
+                  <SimpleTooltip content="标题 1"><Button variant="ghost" type="button" onClick={() => insertLinePrefix("# ")} className="h-auto px-0 py-0 font-normal tracking-normal w-7 h-7 rounded-md flex items-center justify-center text-muted-foreground/60 hover:text-foreground hover:bg-accent transition-colors"><Heading1 size={13} /></Button></SimpleTooltip>
+                  <SimpleTooltip content="标题 2"><Button variant="ghost" type="button" onClick={() => insertLinePrefix("## ")} className="h-auto px-0 py-0 font-normal tracking-normal w-7 h-7 rounded-md flex items-center justify-center text-muted-foreground/60 hover:text-foreground hover:bg-accent transition-colors"><Heading2 size={13} /></Button></SimpleTooltip>
+                  <SimpleTooltip content="标题 3"><Button variant="ghost" type="button" onClick={() => insertLinePrefix("### ")} className="h-auto px-0 py-0 font-normal tracking-normal w-7 h-7 rounded-md flex items-center justify-center text-muted-foreground/60 hover:text-foreground hover:bg-accent transition-colors"><Heading3 size={13} /></Button></SimpleTooltip>
+                </div>
+                <div className="w-px h-4 bg-border/20 mx-1" />
+                <div className="flex items-center gap-0.5">
+                  <SimpleTooltip content="加粗"><Button variant="ghost" type="button" onClick={() => insertMarkdown("**", "**", "粗体文字")} className="h-auto px-0 py-0 font-normal tracking-normal w-7 h-7 rounded-md flex items-center justify-center text-muted-foreground/60 hover:text-foreground hover:bg-accent transition-colors"><Bold size={13} /></Button></SimpleTooltip>
+                  <SimpleTooltip content="斜体"><Button variant="ghost" type="button" onClick={() => insertMarkdown("*", "*", "斜体文字")} className="h-auto px-0 py-0 font-normal tracking-normal w-7 h-7 rounded-md flex items-center justify-center text-muted-foreground/60 hover:text-foreground hover:bg-accent transition-colors"><Italic size={13} /></Button></SimpleTooltip>
+                  <SimpleTooltip content="下划线"><Button variant="ghost" type="button" onClick={() => insertMarkdown("<u>", "</u>", "下划线文字")} className="h-auto px-0 py-0 font-normal tracking-normal w-7 h-7 rounded-md flex items-center justify-center text-muted-foreground/60 hover:text-foreground hover:bg-accent transition-colors"><Underline size={13} /></Button></SimpleTooltip>
+                  <SimpleTooltip content="删除线"><Button variant="ghost" type="button" onClick={() => insertMarkdown("~~", "~~", "删除线文字")} className="h-auto px-0 py-0 font-normal tracking-normal w-7 h-7 rounded-md flex items-center justify-center text-muted-foreground/60 hover:text-foreground hover:bg-accent transition-colors"><Strikethrough size={13} /></Button></SimpleTooltip>
+                </div>
+                <div className="w-px h-4 bg-border/20 mx-1" />
+                <div className="flex items-center gap-0.5">
+                  <SimpleTooltip content="无序列表"><Button variant="ghost" type="button" onClick={() => insertLinePrefix("- ")} className="h-auto px-0 py-0 font-normal tracking-normal w-7 h-7 rounded-md flex items-center justify-center text-muted-foreground/60 hover:text-foreground hover:bg-accent transition-colors"><List size={13} /></Button></SimpleTooltip>
+                  <SimpleTooltip content="有序列表"><Button variant="ghost" type="button" onClick={() => insertLinePrefix("1. ")} className="h-auto px-0 py-0 font-normal tracking-normal w-7 h-7 rounded-md flex items-center justify-center text-muted-foreground/60 hover:text-foreground hover:bg-accent transition-colors"><ListOrdered size={13} /></Button></SimpleTooltip>
+                  <SimpleTooltip content="引用"><Button variant="ghost" type="button" onClick={() => insertLinePrefix("> ")} className="h-auto px-0 py-0 font-normal tracking-normal w-7 h-7 rounded-md flex items-center justify-center text-muted-foreground/60 hover:text-foreground hover:bg-accent transition-colors"><Quote size={13} /></Button></SimpleTooltip>
+                  <SimpleTooltip content="代码"><Button variant="ghost" type="button" onClick={() => insertMarkdown("`", "`", "code")} className="h-auto px-0 py-0 font-normal tracking-normal w-7 h-7 rounded-md flex items-center justify-center text-muted-foreground/60 hover:text-foreground hover:bg-accent transition-colors"><Code size={13} /></Button></SimpleTooltip>
+                </div>
+                <div className="w-px h-4 bg-border/20 mx-1" />
+                <div className="flex items-center gap-0.5">
+                  <SimpleTooltip content="分割线"><Button variant="ghost" type="button" onClick={() => insertMarkdown("\n---\n")} className="h-auto px-0 py-0 font-normal tracking-normal w-7 h-7 rounded-md flex items-center justify-center text-muted-foreground/60 hover:text-foreground hover:bg-accent transition-colors"><Minus size={13} /></Button></SimpleTooltip>
+                  <SimpleTooltip content="插入链接"><Button variant="ghost" type="button" onClick={() => insertMarkdown("[", "](url)", "链接文字")} className="h-auto px-0 py-0 font-normal tracking-normal w-7 h-7 rounded-md flex items-center justify-center text-muted-foreground/60 hover:text-foreground hover:bg-accent transition-colors"><Link size={13} /></Button></SimpleTooltip>
+                  <SimpleTooltip content="插入图片"><Button variant="ghost" type="button" onClick={() => insertMarkdown("![", "](image-url)", "图片描述")} className="h-auto px-0 py-0 font-normal tracking-normal w-7 h-7 rounded-md flex items-center justify-center text-muted-foreground/60 hover:text-foreground hover:bg-accent transition-colors"><ImageIcon size={13} /></Button></SimpleTooltip>
+                </div>
+                {editorMode === "markdown" && (
+                  <>
+                    <div className="w-px h-4 bg-border/20 mx-1" />
+                    <div className="flex items-center gap-0.5">
+                      <SimpleTooltip content="代码块"><Button variant="ghost" type="button" onClick={() => insertMarkdown("\n```\n", "\n```\n", "// 代码")} className="h-auto px-0 py-0 font-normal tracking-normal w-7 h-7 rounded-md flex items-center justify-center text-muted-foreground/60 hover:text-foreground hover:bg-accent transition-colors"><Braces size={13} /></Button></SimpleTooltip>
+                      <SimpleTooltip content="表格"><Button variant="ghost" type="button" onClick={() => insertMarkdown("\n| 标题1 | 标题2 | 标题3 |\n| --- | --- | --- |\n| 内容 | 内容 | 内容 |\n")} className="h-auto px-0 py-0 font-normal tracking-normal w-7 h-7 rounded-md flex items-center justify-center text-muted-foreground/60 hover:text-foreground hover:bg-accent transition-colors"><Table size={13} /></Button></SimpleTooltip>
+                      <SimpleTooltip content="任务列表"><Button variant="ghost" type="button" onClick={() => insertLinePrefix("- [ ] ")} className="h-auto px-0 py-0 font-normal tracking-normal w-7 h-7 rounded-md flex items-center justify-center text-muted-foreground/60 hover:text-foreground hover:bg-accent transition-colors"><Check size={13} /></Button></SimpleTooltip>
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
+
+            {/* Editor Body */}
+            <div className="flex-1 overflow-y-auto [&::-webkit-scrollbar]:w-[4px] [&::-webkit-scrollbar-thumb]:bg-border/30 [&::-webkit-scrollbar-thumb]:rounded-full">
+              {selectedNote ? (
+                <div className="h-full">
+                  {editorMode === "markdown" && (
+                    <div className="flex h-full">
+                      <div className="flex-shrink-0 pt-8 pb-8 pl-4 pr-0 select-none">
+                        {getCurrentContent().split("\n").map((_, i) => (
+                          <div key={i} className="text-[11px] text-muted-foreground/25 text-right pr-3 leading-[22px] font-mono" style={{ minWidth: "32px" }}>{i + 1}</div>
+                        ))}
+                      </div>
+                      <Textarea
+                        ref={editorRef}
+                        value={getCurrentContent()}
+                        onChange={e => updateContent(e.target.value)}
+                        onKeyDown={e => {
+                          if ((e.metaKey || e.ctrlKey) && e.key === "z") { e.preventDefault(); if (e.shiftKey) handleRedo(); else handleUndo() }
+                          if (e.key === "Tab") {
+                            e.preventDefault()
+                            const start = e.currentTarget.selectionStart
+                            const end = e.currentTarget.selectionEnd
+                            const content = getCurrentContent()
+                            const newContent = content.slice(0, start) + "  " + content.slice(end)
+                            updateContent(newContent)
+                            setTimeout(() => { e.currentTarget.selectionStart = e.currentTarget.selectionEnd = start + 2 }, 0)
+                          }
+                        }}
+                        spellCheck={false}
+                        className="flex-1 bg-transparent border-0 shadow-none focus-visible:ring-0 rounded-none text-[13px] text-foreground font-mono leading-[22px] resize-none py-8 pr-10 placeholder:text-muted-foreground/30 [&::-webkit-scrollbar]:hidden"
+                        style={{ tabSize: 2 }}
+                      />
+                    </div>
+                  )}
+                  {(editorMode === "edit" || editorMode === "preview") && (
+                    <div className="max-w-[780px] mx-auto px-10 py-8 prose prose-sm dark:prose-invert max-w-none text-sm leading-relaxed whitespace-pre-wrap font-mono text-foreground/80">
+                      {getCurrentContent()}
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center h-full text-muted-foreground/40">
+                  <NotebookPen size={32} className="mb-3" />
+                  <p className="text-sm">选择一篇笔记开始编辑</p>
+                </div>
+              )}
+            </div>
+
+            {/* Status Bar */}
+            <div className="h-7 flex items-center px-4 text-[10px] text-muted-foreground/40 flex-shrink-0 gap-4">
+              <Badge variant="secondary" className={`px-1.5 py-0.5 ${editorMode === "markdown" || editorMode === "edit" ? "bg-primary/10 text-primary" : "bg-accent text-muted-foreground/60"}`}>
+                {editorMode === "markdown" ? "Markdown" : editorMode === "edit" ? "实时编辑" : "只读预览"}
+              </Badge>
+              <span>{getCurrentContent().split("\n").length} 行</span>
+              <span>{getCurrentContent().length} 字符</span>
+              {undoStack.length > 0 && <span className="text-muted-foreground/30">可撤销 {undoStack.length}</span>}
+              <div className="flex-1" />
+              {savedIndicator && (<span className="flex items-center gap-1 text-primary animate-in fade-in duration-200"><Check size={9} />已保存</span>)}
+              <span>UTF-8</span>
+              <span>自动保存</span>
             </div>
           </div>
 
-          {/* Center: Editor */}
-          <div className="flex flex-col">
-            <div className="flex items-center gap-0.5 px-2 py-1.5 border-b">
-              <ToggleGroup type="multiple" className="h-7 gap-0">
-                <ToggleGroupItem value="bold" className="size-7 p-0"><Bold className="size-3" /></ToggleGroupItem>
-                <ToggleGroupItem value="italic" className="size-7 p-0"><Italic className="size-3" /></ToggleGroupItem>
-                <ToggleGroupItem value="h2" className="size-7 p-0"><Heading2 className="size-3" /></ToggleGroupItem>
-                <ToggleGroupItem value="ul" className="size-7 p-0"><List className="size-3" /></ToggleGroupItem>
-                <ToggleGroupItem value="ol" className="size-7 p-0"><ListOrdered className="size-3" /></ToggleGroupItem>
-                <ToggleGroupItem value="code" className="size-7 p-0"><Code className="size-3" /></ToggleGroupItem>
-              </ToggleGroup>
-            </div>
-            <Textarea
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-              className="flex-1 border-0 rounded-none resize-none focus-visible:ring-0 text-xs leading-relaxed font-mono p-4"
-            />
-          </div>
+          {/* ===== Right Panel - AI Chat ===== */}
+          {rightPanelOpen && (
+            <div className="flex flex-col h-full flex-shrink-0 border-l border-border/40" style={{ width: 320 }}>
+              {/* Header: Assistant Picker */}
+              <div className="h-11 flex items-center gap-2 px-3 flex-shrink-0 relative">
+                <div className="relative" ref={assistantPickerRef}>
+                  <Button variant="ghost" type="button" onClick={() => { setShowAssistantPicker(!showAssistantPicker); setAstSearch(""); setAstTag(null) }} className={`h-auto px-0 py-0 font-normal tracking-normal flex items-center gap-1.5 px-2 py-[4px] rounded-md text-[10.5px] transition-all duration-100 ${showAssistantPicker ? "bg-accent/25 text-foreground" : "text-foreground/75 hover:text-foreground hover:bg-accent/15"}`}>
+                    <span className="text-[12px] leading-none flex-shrink-0">{selectedAssistant.emoji}</span>
+                    <span className="truncate max-w-[100px]">{selectedAssistant.name}</span>
+                    <ChevronDown size={8} className={`text-muted-foreground/50 flex-shrink-0 transition-transform duration-100 ${showAssistantPicker ? "rotate-180" : ""}`} />
+                  </Button>
+                  {showAssistantPicker && (
+                    <div className="absolute top-full left-0 mt-1 z-50 bg-popover border border-border/40 rounded-[12px] shadow-xl shadow-black/10 min-w-[260px]">
+                      <div className="px-2 pt-2 pb-1">
+                        <div className="flex items-center gap-1.5 px-2 py-[5px] rounded-md bg-accent/15 border border-border/20">
+                          <Search size={10} className="text-muted-foreground/40 flex-shrink-0" />
+                          <Input value={astSearch} onChange={e => setAstSearch(e.target.value)} placeholder="搜索助手..." className="h-auto min-w-0 flex-1 border-0 bg-transparent p-0 text-[10px] text-foreground shadow-none placeholder:text-muted-foreground/30 focus-visible:ring-0" autoFocus />
+                          {astSearch && <Button variant="ghost" type="button" onClick={() => setAstSearch("")} className="h-auto px-0 py-0 font-normal tracking-normal text-muted-foreground/30 hover:text-muted-foreground/60"><X size={8} /></Button>}
+                        </div>
+                      </div>
+                      {allAstTags.length > 0 && (
+                        <div className="px-2 pb-1.5">
+                          <div className="flex items-center gap-1 flex-wrap">
+                            <Tag size={8} className="text-muted-foreground/30 flex-shrink-0" />
+                            {allAstTags.map(tag => (
+                              <Button variant="ghost" type="button" key={tag} onClick={() => setAstTag(astTag === tag ? null : tag)} className={`h-auto px-0 py-0 font-normal tracking-normal px-1.5 py-px rounded-full text-[8px] transition-all ${astTag === tag ? "bg-foreground/10 text-foreground/70 border border-border/40" : "bg-accent/20 text-muted-foreground/50 border border-transparent hover:bg-accent/40 hover:text-muted-foreground/70"}`}>{tag}</Button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      <Separator className="mx-1 bg-border/20" />
+                      <div className="p-1.5 pt-1 max-h-[240px] overflow-y-auto [&::-webkit-scrollbar]:w-[3px] [&::-webkit-scrollbar-thumb]:bg-border/30 [&::-webkit-scrollbar-thumb]:rounded-full">
+                        {filteredAssistants.length === 0 ? (
+                          <div className="px-2.5 py-3 text-center text-[9px] text-muted-foreground/40">无匹配结果</div>
+                        ) : (
+                          filteredAssistants.map(a => {
+                            const isActive = selectedAssistant.id === a.id
+                            return (
+                              <Button variant="ghost" type="button" key={a.id} onClick={() => { setSelectedAssistantId(a.id); setShowAssistantPicker(false) }} className={`h-auto px-0 py-0 font-normal tracking-normal flex items-center gap-2 w-full px-2 py-[5px] rounded-[12px] text-[10.5px] transition-all duration-75 mb-px ${isActive ? "bg-accent/30 text-foreground ring-1 ring-border/30" : "text-foreground/75 hover:text-foreground hover:bg-accent/15"}`}>
+                                <div className={`w-5 h-5 rounded-[4px] flex items-center justify-center flex-shrink-0 ${isActive ? "bg-foreground/10" : "bg-accent/30"}`}>
+                                  <span className="text-[11px] leading-none">{a.emoji}</span>
+                                </div>
+                                <div className="flex-1 min-w-0 text-left">
+                                  <div className="text-[10.5px] text-foreground truncate">{a.name}</div>
+                                  <div className="text-[9px] text-muted-foreground/50 truncate">{a.systemPrompt.slice(0, 20)}</div>
+                                </div>
+                                {isActive && <Check size={10} className="text-primary flex-shrink-0" />}
+                              </Button>
+                            )
+                          })
+                        )}
+                      </div>
+                      <div className="border-t border-border/20 px-3 py-1.5">
+                        <p className="text-[9px] text-muted-foreground/40 leading-relaxed">切换助手将改变 AI 的分析视角和专业能力</p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+                <div className="flex-1" />
+                <SimpleTooltip content="清空对话"><Button variant="ghost" type="button" onClick={() => setAiMessages([])} className="h-auto px-0 py-0 font-normal tracking-normal w-6 h-6 rounded-md flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"><Trash2 size={12} /></Button></SimpleTooltip>
+                <SimpleTooltip content="关闭面板"><Button variant="ghost" type="button" onClick={() => setRightPanelOpen(false)} className="h-auto px-0 py-0 font-normal tracking-normal w-6 h-6 rounded-md flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"><PanelRightClose size={12} /></Button></SimpleTooltip>
+              </div>
 
-          {/* Right: AI Assistant */}
-          <div className="flex flex-col">
-            <div className="flex items-center gap-1.5 px-3 py-2 border-b">
-              <Sparkles className="size-3 text-primary" />
-              <span className="text-[10px] font-medium">AI Assistant</span>
-            </div>
-            <div className="flex-1 overflow-y-auto p-2 space-y-2">
-              <MessageBubble role="assistant" avatar={<Avatar className="size-5"><AvatarFallback className="text-[8px]">🍒</AvatarFallback></Avatar>}>
-                <p className="text-[10px]">I can help you with your notes. Try asking me to summarize, expand, or rewrite a section.</p>
-              </MessageBubble>
-            </div>
-            <div className="border-t p-2">
-              <div className="flex gap-1 mb-2">
-                {["Summarize", "Expand", "Fix"].map((a) => (
-                  <Button key={a} variant="outline" size="sm" className="h-6 text-[9px] px-2">{a}</Button>
+              {/* Quick Actions */}
+              <div className="flex-shrink-0">
+                <div className="flex items-center px-2 pt-1.5 gap-0.5">
+                  {actionCategories.map(cat => {
+                    const CatIcon = cat.icon
+                    return (<Button variant="ghost" type="button" key={cat.id} onClick={() => setActiveActionCategory(cat.id)} className={`h-auto px-0 py-0 font-normal tracking-normal flex items-center gap-1 px-2 py-1 rounded-md text-[10px] transition-colors ${activeActionCategory === cat.id ? "bg-accent text-foreground" : "text-muted-foreground/60 hover:text-foreground hover:bg-accent/40"}`}><CatIcon size={10} />{cat.label}</Button>)
+                  })}
+                  <div className="flex-1" />
+                  <Button variant="ghost" type="button" onClick={() => setShowAllActions(!showAllActions)} className="h-auto px-0 py-0 font-normal tracking-normal text-[10px] text-muted-foreground/40 hover:text-foreground px-1 transition-colors">{showAllActions ? "收起" : "全部"}</Button>
+                </div>
+                <div className="px-2 py-1.5 flex flex-wrap gap-1">
+                  {(showAllActions ? noteQuickActions : noteQuickActions.filter(a => a.category === activeActionCategory)).map(action => {
+                    const AIcon = action.icon
+                    return (<Button variant="ghost" type="button" key={action.id} onClick={() => handleQuickAction(action)} className="h-auto px-0 py-0 font-normal tracking-normal flex items-center gap-1 px-2 py-1 rounded-md bg-accent/30 text-[10px] text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"><AIcon size={10} />{action.label}</Button>)
+                  })}
+                </div>
+              </div>
+
+              {/* Chat Messages */}
+              <div className="flex-1 overflow-y-auto px-3 py-3 space-y-3 [&::-webkit-scrollbar]:w-[3px] [&::-webkit-scrollbar-thumb]:bg-border/30 [&::-webkit-scrollbar-thumb]:rounded-full">
+                {/* Current note indicator */}
+                <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-[12px] bg-primary/5 border border-primary/10">
+                  <FileText size={11} className="text-primary flex-shrink-0" />
+                  <span className="text-[10px] text-primary/70 truncate flex-1">当前笔记: {selectedNote?.title}</span>
+                  <span className="text-[10px] leading-none flex-shrink-0">{selectedAssistant.emoji}</span>
+                </div>
+                {/* Empty state */}
+                {aiMessages.length === 0 && (
+                  <div className="flex flex-col items-center justify-center py-6 text-muted-foreground/30">
+                    <div className="w-10 h-10 rounded-xl bg-accent/40 flex items-center justify-center mb-3 opacity-60"><span className="text-[22px] leading-none">{selectedAssistant.emoji}</span></div>
+                    <p className="text-[11px] text-muted-foreground/50 mb-1">{selectedAssistant.name}</p>
+                    <p className="text-[10px] text-muted-foreground/30">{selectedAssistant.modelProvider} &middot; {selectedAssistant.model}</p>
+                    <p className="text-[10px] text-muted-foreground/20 mt-3">点击上方操作或输入问题开始</p>
+                  </div>
+                )}
+                {/* Messages */}
+                {aiMessages.map((msg, i) => (
+                  <div key={i} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"} gap-1.5`}>
+                    {msg.role === "assistant" && (
+                      <div className="w-5 h-5 rounded-md bg-accent/40 flex items-center justify-center flex-shrink-0 mt-0.5"><span className="text-[11px] leading-none">{selectedAssistant.emoji}</span></div>
+                    )}
+                    <div className={`max-w-[85%] rounded-xl px-3 py-2 text-xs leading-relaxed ${msg.role === "user" ? "bg-primary text-primary-foreground rounded-br-sm" : "bg-accent/60 text-foreground rounded-bl-sm"}`}>
+                      {msg.content.split("\n").map((line, li) => {
+                        if (line.startsWith("```")) return <div key={li} className="font-mono text-[10px] bg-background/50 rounded px-1.5 py-0.5 my-1 text-muted-foreground">{line.replace(/```/g, "")}</div>
+                        if (line.startsWith("**") && line.endsWith("**")) return <p key={li} className="text-foreground mt-1.5 mb-0.5">{line.replace(/\*\*/g, "")}</p>
+                        if (line.startsWith("- [ ] ")) return <div key={li} className="flex items-start gap-1.5 py-0.5"><span className="w-3 h-3 rounded border border-muted-foreground/30 flex-shrink-0 mt-[1px]" /><span>{line.slice(6)}</span></div>
+                        if (line.startsWith("- ")) return <div key={li} className="flex items-start gap-1.5 py-0.5"><span className="text-primary mt-[2px]">&bull;</span><span>{renderBoldText(line.slice(2))}</span></div>
+                        if (/^\d+\. /.test(line)) {
+                          const m = line.match(/^(\d+)\. (.+)/)
+                          if (m) return <div key={li} className="flex items-start gap-1.5 py-0.5"><span className="text-muted-foreground w-3 text-right flex-shrink-0">{m[1]}.</span><span>{renderBoldText(m[2])}</span></div>
+                        }
+                        if (/^[│├└]/.test(line)) return <div key={li} className="font-mono text-[10px] text-muted-foreground leading-tight">{line}</div>
+                        if (line.trim() === "") return <div key={li} className="h-1.5" />
+                        return <p key={li} className="py-0.5">{renderBoldText(line)}</p>
+                      })}
+                    </div>
+                  </div>
                 ))}
+                <div ref={aiEndRef} />
               </div>
-              <Composer onSendMessage={() => {}} placeholder="Ask AI..." variant="rounded" />
+
+              {/* AI Input */}
+              <div className="px-3 pb-3 pt-1 flex-shrink-0">
+                <div className="flex items-end gap-1.5 bg-accent/40 rounded-xl px-3 py-2 border border-border/30 focus-within:border-primary/30 focus-within:bg-accent/60 transition-all">
+                  <Textarea value={aiInput} onChange={e => setAiInput(e.target.value)} onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleAISend() } }} placeholder={`向 ${selectedAssistant.name} 提问...`} rows={1} className="flex-1 bg-transparent border-0 shadow-none focus-visible:ring-0 rounded-none text-xs text-foreground placeholder:text-muted-foreground/40 resize-none min-h-[20px] max-h-[80px] p-0" />
+                  <Button variant="ghost" type="button" onClick={handleAISend} disabled={!aiInput.trim()} className={`h-auto px-0 py-0 font-normal tracking-normal w-6 h-6 rounded-md flex items-center justify-center flex-shrink-0 transition-colors ${aiInput.trim() ? "bg-primary text-primary-foreground hover:bg-primary/90" : "bg-muted text-muted-foreground/30"}`}><Send size={11} /></Button>
+                </div>
+                <p className="text-[9px] text-muted-foreground/30 mt-1.5 text-center">{selectedAssistant.name} &middot; 基于笔记上下文 &middot; Enter 发送</p>
+              </div>
             </div>
-          </div>
+          )}
+
         </div>
       </div>
     </Section>

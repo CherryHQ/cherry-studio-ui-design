@@ -14,9 +14,9 @@ interface Message {
 
 function ActionBtn({ icon: Icon }: { icon: React.ElementType }) {
   return (
-    <button className="p-1 rounded-sm text-muted-foreground/40 hover:text-muted-foreground hover:bg-accent/50 transition-colors focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50">
+    <Button variant="ghost" type="button" className="h-auto px-0 py-0 font-normal tracking-normal p-1 rounded-sm text-muted-foreground/40 hover:text-muted-foreground hover:bg-accent/50 transition-colors focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50">
       <Icon size={12} />
-    </button>
+    </Button>
   )
 }
 
