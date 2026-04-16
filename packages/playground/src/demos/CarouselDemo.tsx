@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react"
 import {
   Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious,
-  Card, CardContent, Badge
+  Card, CardContent, Badge, Button,
 } from "@cherry-studio/ui"
 import { Section, type PropDef } from "../components/Section"
 import { type CarouselApi } from "@cherry-studio/ui"
@@ -24,7 +24,7 @@ export function CarouselDemo() {
         { name: "opts", type: "EmblaOptionsType", default: "{}", description: "Embla carousel options" },
         { name: "orientation", type: '"horizontal" | "vertical"', default: '"horizontal"', description: "Carousel direction" },
         { name: "setApi", type: "(api) => void", default: "undefined", description: "Carousel API ref" },
-      ]} code={`import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@cherry-studio/ui"
+      ]} code={`import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious Button, } from "@cherry-studio/ui"
 
 <Carousel>
   <CarouselContent>
@@ -75,7 +75,7 @@ export function CarouselDemo() {
           </Carousel>
           <div className="flex justify-center gap-1.5">
             {Array.from({ length: count }).map((_, i) => (
-              <button
+              <Button variant="ghost"
                 key={i}
                 className={`h-2.5 rounded-full transition-all focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 ${
                   i === current ? "w-6 bg-primary" : "w-2.5 bg-muted-foreground/30"

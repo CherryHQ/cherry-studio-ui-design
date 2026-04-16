@@ -159,7 +159,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     root.style.setProperty('--cherry-accent-dark', accent.dark);
     root.style.setProperty('--cherry-accent-ring', accent.ring);
     root.style.setProperty('--primary', accent.main);
-    root.style.setProperty('--primary-foreground', '#ffffff');
+    root.style.setProperty('--primary-foreground', 'var(--destructive-foreground)');
   }, [settings.accentColor]);
 
   // Apply custom CSS

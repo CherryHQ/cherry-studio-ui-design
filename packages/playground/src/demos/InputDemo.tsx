@@ -1,5 +1,5 @@
 import React, { useState } from "react"
-import { Input, Textarea, Label } from "@cherry-studio/ui"
+import { Input, Textarea, Label, Button } from "@cherry-studio/ui"
 import { Section, type PropDef } from "../components/Section"
 import { Search, Eye, EyeOff, Mail, Lock } from "lucide-react"
 
@@ -13,7 +13,7 @@ export function InputDemo() {
         { name: "placeholder", type: "string", default: "undefined", description: "Placeholder text" },
         { name: "disabled", type: "boolean", default: "false", description: "Disable the input" },
         { name: "className", type: "string", default: "undefined", description: "Additional CSS classes" },
-      ] satisfies PropDef[]} code={`import { Input, Label } from "@cherry-studio/ui"
+      ] satisfies PropDef[]} code={`import { Input, Label, Button, } from "@cherry-studio/ui"
 
 <div className="space-y-2">
   <Label htmlFor="email">Email</Label>
@@ -62,13 +62,13 @@ export function InputDemo() {
                 placeholder="Enter password"
                 defaultValue="secret123"
               />
-              <button
+              <Button variant="ghost"
                 type="button"
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                 onClick={() => setShowPassword(!showPassword)}
               >
                 {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-              </button>
+              </Button>
             </div>
           </div>
         </div>
@@ -78,12 +78,12 @@ export function InputDemo() {
         <div className="space-y-4 max-w-sm">
           <div className="space-y-2">
             <Label htmlFor="error-email" className="text-destructive">Email</Label>
-            <Input id="error-email" type="email" placeholder="name@example.com" defaultValue="invalid-email" className="border-destructive focus-visible:ring-destructive" />
+            <Input id="error-email" type="email" placeholder="name@example.com" defaultValue="invalid-email" aria-invalid="true" />
             <p className="text-sm text-destructive">Please enter a valid email address.</p>
           </div>
           <div className="space-y-2">
             <Label htmlFor="error-name" className="text-destructive">Username</Label>
-            <Input id="error-name" defaultValue="ab" className="border-destructive focus-visible:ring-destructive" />
+            <Input id="error-name" defaultValue="ab" aria-invalid="true" />
             <p className="text-sm text-destructive">Username must be at least 3 characters.</p>
           </div>
         </div>
@@ -109,7 +109,7 @@ export function InputDemo() {
           </div>
           <div className="space-y-2">
             <Label htmlFor="bio-error" className="text-destructive">Bio</Label>
-            <Textarea id="bio-error" defaultValue="x" className="border-destructive focus-visible:ring-destructive" />
+            <Textarea id="bio-error" defaultValue="x" aria-invalid="true" />
             <p className="text-sm text-destructive">Bio must be at least 10 characters.</p>
           </div>
         </div>

@@ -89,8 +89,27 @@ import { HomeDemo } from "./HomeDemo"
 import { ChatSettingsDemo } from "./ChatSettingsDemo"
 import { WebSearchConfigDemo } from "./WebSearchConfigDemo"
 import { AtMentionPickerDemo } from "./AtMentionPickerDemo"
+import { AppSidebarDemo } from "./AppSidebarDemo"
+import { AppTabBarDemo } from "./AppTabBarDemo"
+import { ChatMessageDemo } from "./ChatMessageDemo"
+import { ChatInterfaceDemo } from "./ChatInterfaceDemo"
+import { ModelPickerPanelDemo } from "./ModelPickerPanelDemo"
+import { AssistantPickerPanelDemo } from "./AssistantPickerPanelDemo"
+import { NotificationPanelDemo } from "./NotificationPanelDemo"
+import { NotificationItemDemo } from "./NotificationItemDemo"
+import { ErrorBoundaryDemo } from "./ErrorBoundaryDemo"
+import { ShareModalDemo } from "./ShareModalDemo"
+import { SettingsModalDemo } from "./SettingsModalDemo"
+import { PlanCardDemo } from "./PlanCardDemo"
+import { FloatingWindowDemo } from "./FloatingWindowDemo"
+import { NewTabDialogDemo } from "./NewTabDialogDemo"
+import { DragGhostDemo } from "./DragGhostDemo"
+import { TabContextMenuDemo } from "./TabContextMenuDemo"
 import { BranchTreeDemo } from "./BranchTreeDemo"
 import { ProviderStatusDemo } from "./ProviderStatusDemo"
+import { AISDKChatDemo } from "./AISDKChatDemo"
+import { ToolCallDemo } from "./ToolCallDemo"
+import { ToolbarDemo } from "./ToolbarDemo"
 
 export const demos = [
   // Forms
@@ -210,6 +229,39 @@ export const demos = [
   { id: "at-mention-picker", title: "@Mention Picker", category: "Patterns", description: "@提及选择器（分类标签 + 滚动列表）", component: AtMentionPickerDemo },
   { id: "branch-tree", title: "Branch Tree", category: "Patterns", description: "对话分支树（缩进 + 连接线 + 分支切换）", component: BranchTreeDemo },
   { id: "provider-status", title: "Provider Status", category: "Patterns", description: "服务商状态卡片（状态指示 + 延迟进度条）", component: ProviderStatusDemo },
+  { id: "ai-sdk-chat", title: "AI SDK Chat", category: "Patterns", description: "AI SDK 聊天集成（Composer + MessageBubble + StreamingText）", component: AISDKChatDemo },
+  { id: "tool-call", title: "Tool Call Card", category: "Patterns", description: "工具调用卡片（参数/状态/结果展示）", component: ToolCallDemo },
+  { id: "toolbar", title: "Toolbar", category: "Cherry Composite", description: "工具栏（水平/垂直布局 + 分隔符）", component: ToolbarDemo },
+
+  // App Shell
+  { id: "app-sidebar", title: "AppSidebar", category: "App Shell", description: "应用侧边栏（菜单/搜索/Logo/标签）", component: AppSidebarDemo },
+  { id: "app-tab-bar", title: "AppTabBar", category: "App Shell", description: "多标签栏（主题切换/流量灯/固定标签）", component: AppTabBarDemo },
+  { id: "floating-window", title: "FloatingWindow", category: "App Shell", description: "浮动窗口（拖拽/关闭/重新附加）", component: FloatingWindowDemo },
+  { id: "new-tab-dialog", title: "NewTabDialog", category: "App Shell", description: "新标签对话框（搜索/应用网格/历史）", component: NewTabDialogDemo },
+  { id: "drag-ghost", title: "DragGhost", category: "App Shell", description: "标签拖拽幽灵预览", component: DragGhostDemo },
+  { id: "tab-context-menu", title: "TabContextMenu", category: "App Shell", description: "标签右键菜单（固定/关闭/停靠）", component: TabContextMenuDemo },
+
+  // Chat Components
+  { id: "chat-message", title: "ChatMessage", category: "Chat Components", description: "聊天消息（用户/助手/Markdown/操作）", component: ChatMessageDemo },
+  { id: "chat-interface", title: "ChatInterface", category: "Chat Components", description: "完整聊天界面（MessageList + Composer）", component: ChatInterfaceDemo },
+
+  // Picker Panels
+  { id: "model-picker-panel", title: "ModelPickerPanel", category: "Picker Panels", description: "模型选择面板（分组/能力标签/多选）", component: ModelPickerPanelDemo },
+  { id: "assistant-picker-panel", title: "AssistantPickerPanel", category: "Picker Panels", description: "助手选择面板（搜索/Emoji/多选）", component: AssistantPickerPanelDemo },
+
+  // Notifications
+  { id: "notification-panel", title: "NotificationPanel", category: "Notifications", description: "通知面板（标签过滤/计数徽章）", component: NotificationPanelDemo },
+  { id: "notification-item", title: "NotificationItem", category: "Notifications", description: "通知项（已读/未读/徽章图标）", component: NotificationItemDemo },
+
+  // Error Handling
+  { id: "error-boundary", title: "ErrorBoundary", category: "Error Handling", description: "错误边界（捕获渲染错误/重试）", component: ErrorBoundaryDemo },
+
+  // Modals
+  { id: "share-modal", title: "ShareModal", category: "Modals", description: "分享对话框（成员列表/链接复制）", component: ShareModalDemo },
+  { id: "settings-modal", title: "SettingsModal", category: "Modals", description: "设置对话框（侧栏导航/分区内容）", component: SettingsModalDemo },
+
+  // Pricing
+  { id: "plan-card", title: "PlanCard", category: "Pricing", description: "定价卡片（Free/Creator/Studio）", component: PlanCardDemo },
 
   // Theme
   { id: "theme", title: "Theme Preview", category: "Theme", description: "主题配色、间距、圆角、字体预览", component: ThemePreviewDemo },

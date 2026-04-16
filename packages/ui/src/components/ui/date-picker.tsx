@@ -21,35 +21,33 @@ export interface DatePickerProps {
   formatStr?: string
 }
 
-const DatePicker = React.forwardRef<HTMLButtonElement, DatePickerProps>(
-  ({ date, onDateChange, placeholder = "Pick a date", disabled, className, formatStr = "PPP" }, ref) => {
-    const [open, setOpen] = React.useState(false)
+function DatePicker({ date, onDateChange, placeholder = "Pick a date", disabled, className, formatStr = "PPP", ref }: DatePickerProps & { ref?: React.Ref<HTMLButtonElement> }) {
+  const [open, setOpen] = React.useState(false)
 
-    return (
-      <Popover open={open} onOpenChange={setOpen}>
-        <PopoverTrigger asChild>
-          <Button
-            ref={ref}
-            variant="outline"
-            disabled={disabled}
-            className={cn("w-full justify-start text-left font-normal", !date && "text-muted-foreground", className)}
-          >
-            <CalendarIcon className="mr-2 h-4 w-4" />
-            {date ? format(date, formatStr) : <span>{placeholder}</span>}
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent className="w-auto p-0" align="start">
-          <Calendar
-            mode="single"
-            selected={date}
-            onSelect={(d) => { onDateChange?.(d); setOpen(false) }}
-          />
-        </PopoverContent>
-      </Popover>
-    )
-  }
-)
-DatePicker.displayName = "DatePicker"
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button
+          ref={ref}
+          variant="outline"
+          disabled={disabled}
+          className={cn("w-full justify-start text-left font-normal", !date && "text-muted-foreground", className)}
+          data-slot="date-picker"
+        >
+          <CalendarIcon className="mr-2 h-4 w-4" />
+          {date ? format(date, formatStr) : <span>{placeholder}</span>}
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-auto p-0" align="start">
+        <Calendar
+          mode="single"
+          selected={date}
+          onSelect={(d) => { onDateChange?.(d); setOpen(false) }}
+        />
+      </PopoverContent>
+    </Popover>
+  )
+}
 
 /* ─── DateRangePicker ─── */
 
@@ -63,37 +61,35 @@ export interface DateRangePickerProps {
   formatStr?: string
 }
 
-const DateRangePicker = React.forwardRef<HTMLButtonElement, DateRangePickerProps>(
-  ({ dateRange, onDateRangeChange, placeholder = "Pick a date range", disabled, className, numberOfMonths = 2, formatStr = "LLL dd, y" }, ref) => {
-    return (
-      <Popover>
-        <PopoverTrigger asChild>
-          <Button
-            ref={ref}
-            variant="outline"
-            disabled={disabled}
-            className={cn("w-full justify-start text-left font-normal", !dateRange?.from && "text-muted-foreground", className)}
-          >
-            <CalendarIcon className="mr-2 h-4 w-4" />
-            {dateRange?.from ? (
-              dateRange.to ? (
-                <>{format(dateRange.from, formatStr)} — {format(dateRange.to, formatStr)}</>
-              ) : format(dateRange.from, formatStr)
-            ) : <span>{placeholder}</span>}
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent className="w-auto p-0" align="start">
-          <Calendar
-            mode="range"
-            selected={dateRange}
-            onSelect={onDateRangeChange}
-            numberOfMonths={numberOfMonths}
-          />
-        </PopoverContent>
-      </Popover>
-    )
-  }
-)
-DateRangePicker.displayName = "DateRangePicker"
+function DateRangePicker({ dateRange, onDateRangeChange, placeholder = "Pick a date range", disabled, className, numberOfMonths = 2, formatStr = "LLL dd, y", ref }: DateRangePickerProps & { ref?: React.Ref<HTMLButtonElement> }) {
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <Button
+          ref={ref}
+          variant="outline"
+          disabled={disabled}
+          className={cn("w-full justify-start text-left font-normal", !dateRange?.from && "text-muted-foreground", className)}
+          data-slot="date-range-picker"
+        >
+          <CalendarIcon className="mr-2 h-4 w-4" />
+          {dateRange?.from ? (
+            dateRange.to ? (
+              <>{format(dateRange.from, formatStr)} — {format(dateRange.to, formatStr)}</>
+            ) : format(dateRange.from, formatStr)
+          ) : <span>{placeholder}</span>}
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-auto p-0" align="start">
+        <Calendar
+          mode="range"
+          selected={dateRange}
+          onSelect={onDateRangeChange}
+          numberOfMonths={numberOfMonths}
+        />
+      </PopoverContent>
+    </Popover>
+  )
+}
 
 export { DatePicker, DateRangePicker }

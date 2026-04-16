@@ -63,7 +63,7 @@ export function AvatarDemo() {
             <AvatarFallback className="bg-primary text-primary-foreground">AI</AvatarFallback>
           </Avatar>
           <Avatar>
-            <AvatarFallback className="bg-violet-500 text-white">GP</AvatarFallback>
+            <AvatarFallback className="bg-accent-violet text-primary-foreground">GP</AvatarFallback>
           </Avatar>
         </div>
       </Section>
@@ -71,10 +71,10 @@ export function AvatarDemo() {
       <Section title="With Status Indicator">
         <div className="flex gap-6 items-center">
           {[
-            { initials: "JD", status: "bg-green-500", label: "Online" },
-            { initials: "AK", status: "bg-yellow-500", label: "Away" },
-            { initials: "MZ", status: "bg-red-500", label: "Busy" },
-            { initials: "SL", status: "bg-gray-400", label: "Offline" },
+            { initials: "JD", status: "bg-success", label: "Online" },
+            { initials: "AK", status: "bg-warning", label: "Away" },
+            { initials: "MZ", status: "bg-error", label: "Busy" },
+            { initials: "SL", status: "bg-muted-foreground", label: "Offline" },
           ].map(({ initials, status, label }) => (
             <div key={initials} className="text-center space-y-1.5">
               <div className="relative inline-flex">
@@ -106,12 +106,12 @@ export function AvatarDemo() {
       </Section>
 
       <Section title="Practical: User Card">
-        <div className="flex items-center gap-3 rounded-lg border p-3 max-w-xs">
+        <div className="flex items-center gap-3 rounded-xl border p-3 max-w-xs">
           <div className="relative">
             <Avatar className="h-10 w-10">
               <AvatarFallback>🍒</AvatarFallback>
             </Avatar>
-            <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full border-2 border-background bg-green-500" />
+            <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full border-2 border-background bg-success" />
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-sm font-medium truncate">Cherry Studio</p>

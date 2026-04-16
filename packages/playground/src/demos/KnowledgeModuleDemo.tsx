@@ -215,7 +215,7 @@ function KnowledgeSidebar({ items, selectedId, onSelect }: {
 
       {/* Search */}
       <div className="px-2 pb-1.5 flex-shrink-0">
-        <div className="flex items-center gap-1.5 px-2 py-[4px] rounded-md bg-muted/50 border border-transparent focus-within:border-border/50 transition-colors">
+        <div className="flex items-center gap-1.5 px-2 py-[4px] rounded-[12px] bg-muted/50 border border-transparent focus-within:border-border/50 transition-colors">
           <Search size={10} className="text-muted-foreground/50 flex-shrink-0" />
           <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="搜索知识库..." className="h-auto flex-1 border-0 bg-transparent p-0 text-[11px] text-foreground shadow-none placeholder:text-muted-foreground/40 focus-visible:ring-0" />
           {search && <Button variant="ghost" type="button" onClick={() => setSearch("")} className="h-auto px-0 py-0 font-normal tracking-normal text-muted-foreground/30 hover:text-foreground"><X size={9} /></Button>}
@@ -297,7 +297,7 @@ function DataSourceListPanel({ sources, onDelete, onReindex }: {
             </Button>
           ))}
         </div>
-        <Button variant="ghost" type="button" className="h-auto px-0 py-0 font-normal tracking-normal h-6 px-2.5 rounded-md text-[10px] text-foreground bg-primary/10 hover:bg-primary/20 transition-colors flex items-center gap-1">
+        <Button variant="ghost" type="button" className="h-auto px-0 py-0 font-normal tracking-normal h-6 px-2.5 rounded-[12px] text-[10px] text-foreground bg-primary/10 hover:bg-primary/20 transition-colors flex items-center gap-1">
           <Upload size={9} /> 添加
         </Button>
       </div>
@@ -369,9 +369,14 @@ function RAGSettingsPanel() {
           </div>
           <div>
             <div className="flex items-center gap-1 mb-1"><span className="text-[11px] text-foreground/75">处理服务商</span></div>
-            <select value={docProcessor} onChange={(e) => setDocProcessor(e.target.value)} className="w-full px-2.5 py-[6px] rounded-md border border-border/40 bg-transparent text-[11px] text-foreground outline-none focus:border-ring/40 transition-all cursor-pointer">
-              {docProcessors.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
-            </select>
+            <Select value={docProcessor} onValueChange={setDocProcessor}>
+              <SelectTrigger className="w-full h-auto px-2.5 py-[6px] rounded-[12px] border border-border/40 bg-transparent text-[11px] text-foreground">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {docProcessors.map((p) => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
+              </SelectContent>
+            </Select>
           </div>
         </div>
 
@@ -386,23 +391,28 @@ function RAGSettingsPanel() {
             <div>
               <div className="flex items-center gap-1 mb-1"><span className="text-[11px] text-foreground/75">分段大小</span><Info size={9} className="text-muted-foreground/40" /></div>
               <div className="relative">
-                <Input value={chunkSize} onChange={(e) => setChunkSize(e.target.value)} className="w-full rounded-md border border-border/40 bg-transparent px-2.5 py-[6px] text-[11px] text-foreground focus-visible:ring-0" />
+                <Input value={chunkSize} onChange={(e) => setChunkSize(e.target.value)} className="w-full rounded-[12px] border border-border/40 bg-transparent px-2.5 py-[6px] text-[11px] text-foreground focus-visible:ring-0" />
                 <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[9px] text-muted-foreground/25 pointer-events-none">tokens</span>
               </div>
             </div>
             <div>
               <div className="flex items-center gap-1 mb-1"><span className="text-[11px] text-foreground/75">重叠大小</span><Info size={9} className="text-muted-foreground/40" /></div>
               <div className="relative">
-                <Input value={chunkOverlap} onChange={(e) => setChunkOverlap(e.target.value)} className="w-full rounded-md border border-border/40 bg-transparent px-2.5 py-[6px] text-[11px] text-foreground focus-visible:ring-0" />
+                <Input value={chunkOverlap} onChange={(e) => setChunkOverlap(e.target.value)} className="w-full rounded-[12px] border border-border/40 bg-transparent px-2.5 py-[6px] text-[11px] text-foreground focus-visible:ring-0" />
                 <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[9px] text-muted-foreground/25 pointer-events-none">tokens</span>
               </div>
             </div>
           </div>
           <div>
             <div className="flex items-center gap-1 mb-1"><span className="text-[11px] text-foreground/75">分隔符规则</span></div>
-            <select value={separator} onChange={(e) => setSeparator(e.target.value)} className="w-full px-2.5 py-[6px] rounded-md border border-border/40 bg-transparent text-[11px] text-foreground outline-none focus:border-ring/40 transition-all cursor-pointer">
-              {separatorOptions.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
-            </select>
+            <Select value={separator} onValueChange={setSeparator}>
+              <SelectTrigger className="w-full h-auto px-2.5 py-[6px] rounded-[12px] border border-border/40 bg-transparent text-[11px] text-foreground">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {separatorOptions.map((s) => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
+              </SelectContent>
+            </Select>
           </div>
         </div>
 
@@ -415,9 +425,14 @@ function RAGSettingsPanel() {
           </div>
           <div>
             <div className="flex items-center gap-1 mb-1"><span className="text-[11px] text-foreground/75">模型选择</span></div>
-            <select value={embModel} onChange={(e) => setEmbModel(e.target.value)} className="w-full px-2.5 py-[6px] rounded-md border border-border/40 bg-transparent text-[11px] text-foreground outline-none focus:border-ring/40 transition-all cursor-pointer">
-              {embeddingModels.map((m) => <option key={m.id} value={m.id}>{m.name} ({m.provider}, {m.dim}d)</option>)}
-            </select>
+            <Select value={embModel} onValueChange={setEmbModel}>
+              <SelectTrigger className="w-full h-auto px-2.5 py-[6px] rounded-[12px] border border-border/40 bg-transparent text-[11px] text-foreground">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {embeddingModels.map((m) => <SelectItem key={m.id} value={m.id}>{m.name} ({m.provider}, {m.dim}d)</SelectItem>)}
+              </SelectContent>
+            </Select>
           </div>
         </div>
 
@@ -433,7 +448,7 @@ function RAGSettingsPanel() {
               <span className="text-[11px] text-foreground/75">请求文档片段数 (Top K)</span>
               <span className="text-[11px] text-foreground tabular-nums">{topK}</span>
             </div>
-            <input type="range" min={1} max={50} step={1} value={topK} onChange={(e) => setTopK(parseInt(e.target.value))} className="w-full h-1 accent-primary cursor-pointer" />
+            <Slider min={1} max={50} step={1} value={[topK]} onValueChange={([v]) => setTopK(v)} className="w-full" />
             <div className="flex justify-between text-[8px] text-muted-foreground/25 mt-px"><span>1</span><span>50</span></div>
           </div>
           <div>
@@ -441,23 +456,28 @@ function RAGSettingsPanel() {
               <span className="text-[11px] text-foreground/75">匹配度阈值</span>
               <span className="text-[11px] text-foreground tabular-nums">{scoreThreshold.toFixed(2)}</span>
             </div>
-            <input type="range" min={0} max={1} step={0.01} value={scoreThreshold} onChange={(e) => setScoreThreshold(parseFloat(e.target.value))} className="w-full h-1 accent-primary cursor-pointer" />
+            <Slider min={0} max={1} step={0.01} value={[scoreThreshold]} onValueChange={([v]) => setScoreThreshold(v)} className="w-full" />
             <div className="flex justify-between text-[8px] text-muted-foreground/25 mt-px"><span>0.00</span><span>1.00</span></div>
           </div>
           <div>
             <div className="flex items-center gap-1 mb-1"><span className="text-[11px] text-foreground/75">重排模型 (Rerank)</span></div>
-            <select value={rerankModel} onChange={(e) => setRerankModel(e.target.value)} className="w-full px-2.5 py-[6px] rounded-md border border-border/40 bg-transparent text-[11px] text-foreground outline-none focus:border-ring/40 transition-all cursor-pointer">
-              {rerankModels.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
-            </select>
+            <Select value={rerankModel} onValueChange={setRerankModel}>
+              <SelectTrigger className="w-full h-auto px-2.5 py-[6px] rounded-[12px] border border-border/40 bg-transparent text-[11px] text-foreground">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {rerankModels.map((m) => <SelectItem key={m.id} value={m.id}>{m.name}</SelectItem>)}
+              </SelectContent>
+            </Select>
           </div>
         </div>
 
         {/* Footer */}
         <div className="flex items-center justify-end gap-2 pt-3 border-t border-border/15">
-          <Button variant="ghost" type="button" className="h-auto px-0 py-0 font-normal tracking-normal h-6 px-2.5 rounded-md text-[11px] text-muted-foreground/50 hover:text-foreground hover:bg-accent transition-colors flex items-center gap-1">
+          <Button variant="ghost" type="button" className="h-auto px-0 py-0 font-normal tracking-normal h-6 px-2.5 rounded-[12px] text-[11px] text-muted-foreground/50 hover:text-foreground hover:bg-accent transition-colors flex items-center gap-1">
             <RotateCcw size={9} /> 恢复默认
           </Button>
-          <Button variant="ghost" type="button" className="h-auto px-0 py-0 font-normal tracking-normal h-6 px-3 rounded-md text-[11px] bg-primary text-primary-foreground hover:bg-primary/90 transition-colors">
+          <Button variant="ghost" type="button" className="h-auto px-0 py-0 font-normal tracking-normal h-6 px-3 rounded-[12px] text-[11px] bg-primary text-primary-foreground hover:bg-primary/90 transition-colors">
             保存
           </Button>
         </div>

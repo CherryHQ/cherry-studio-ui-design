@@ -109,7 +109,7 @@ export function FormDemo() {
                 id="v-first"
                 name="firstName"
                 placeholder="John"
-                className={errors.firstName ? "border-destructive focus-visible:ring-destructive" : ""}
+                aria-invalid={!!errors.firstName}
               />
               {errors.firstName && <p className="text-sm text-destructive">{errors.firstName}</p>}
             </div>
@@ -126,7 +126,7 @@ export function FormDemo() {
               id="v-email"
               name="email"
               placeholder="john@example.com"
-              className={errors.email ? "border-destructive focus-visible:ring-destructive" : ""}
+              aria-invalid={!!errors.email}
             />
             {errors.email && <p className="text-sm text-destructive">{errors.email}</p>}
           </div>
@@ -135,7 +135,7 @@ export function FormDemo() {
               Role <span className="text-destructive">*</span>
             </Label>
             <Select name="role">
-              <SelectTrigger className={errors.role ? "border-destructive" : ""}>
+              <SelectTrigger aria-invalid={!!errors.role}>
                 <SelectValue placeholder="Select a role" />
               </SelectTrigger>
               <SelectContent>
@@ -154,7 +154,7 @@ export function FormDemo() {
             </Button>
             <Button type="button" variant="outline">Cancel</Button>
             {submitted && (
-              <Badge variant="outline" className="bg-green-500/15 text-green-700 border-green-500/20 dark:text-green-400 gap-1">
+              <Badge variant="outline" className="bg-success-muted text-success border-success/20 gap-1">
                 <CheckCircle className="h-3 w-3" /> Saved successfully
               </Badge>
             )}

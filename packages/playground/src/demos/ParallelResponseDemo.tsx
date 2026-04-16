@@ -54,7 +54,11 @@ export function ParallelResponseDemo() {
     "grid grid-cols-2 gap-3"
 
   return (
-    <Section title="Parallel Response Pattern" code={`// Multiple model responses side-by-side
+    <Section title="Parallel Response Pattern" props={[
+        { name: "models", type: "string[]", default: "[]", description: "List of model IDs to query in parallel" },
+        { name: "layout", type: '"columns" | "rows" | "grid"', default: '"columns"', description: "Layout arrangement for response cards" },
+        { name: "showThinking", type: "boolean", default: "true", description: "Show thinking/reasoning process blocks" },
+      ]} code={`// Multiple model responses side-by-side
 // Compose with: Card, Avatar, ThinkingBlock, CodeBlock, ToggleGroup, Badge`}>
       <div className="max-w-4xl space-y-3">
         <div className="flex items-center justify-between">

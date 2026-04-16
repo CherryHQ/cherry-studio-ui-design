@@ -950,7 +950,7 @@ function DefaultConfigPanel({ entry, onClose }: {
                   <div className="flex items-center gap-2.5">
                     <input type="range" min={0} max={2} step={0.01} value={temperature} onChange={e => setTemperature(Number(e.target.value))}
                       className={`flex-1 h-[3px] rounded-full appearance-none cursor-pointer ${SLIDER_THUMB}`}
-                      style={{ background: `linear-gradient(to right, #10b981 ${(temperature / 2) * 100}%, rgba(255,255,255,0.08) ${(temperature / 2) * 100}%)` }}
+                      style={{ background: `linear-gradient(to right, var(--accent-emerald) ${(temperature / 2) * 100}%, var(--cherry-active-bg) ${(temperature / 2) * 100}%)` }}
                     />
                     <input type="text" value={temperature.toFixed(2)}
                       onChange={e => { const v = parseFloat(e.target.value); if (!isNaN(v) && v >= 0 && v <= 2) setTemperature(v); }}
@@ -982,7 +982,7 @@ function DefaultConfigPanel({ entry, onClose }: {
                   <div className="flex items-center gap-2.5">
                     <input type="range" min={0} max={1} step={0.01} value={topP} onChange={e => setTopP(Number(e.target.value))}
                       className={`flex-1 h-[3px] rounded-full appearance-none cursor-pointer ${SLIDER_THUMB}`}
-                      style={{ background: `linear-gradient(to right, #10b981 ${topP * 100}%, rgba(255,255,255,0.08) ${topP * 100}%)` }}
+                      style={{ background: `linear-gradient(to right, var(--accent-emerald) ${topP * 100}%, var(--cherry-active-bg) ${topP * 100}%)` }}
                     />
                     <input type="text" value={topP.toFixed(2)}
                       onChange={e => { const v = parseFloat(e.target.value); if (!isNaN(v) && v >= 0 && v <= 1) setTopP(v); }}
@@ -1010,7 +1010,7 @@ function DefaultConfigPanel({ entry, onClose }: {
                     value={contextCount > 20 ? 21 : contextCount}
                     onChange={e => { const v = Number(e.target.value); setContextCount(v >= 21 ? Infinity : v); }}
                     className={`flex-1 h-[3px] rounded-full appearance-none cursor-pointer ${SLIDER_THUMB}`}
-                    style={{ background: `linear-gradient(to right, #10b981 ${((contextCount > 20 ? 21 : contextCount) / 21) * 100}%, rgba(255,255,255,0.08) ${((contextCount > 20 ? 21 : contextCount) / 21) * 100}%)` }}
+                    style={{ background: `linear-gradient(to right, var(--accent-emerald) ${((contextCount > 20 ? 21 : contextCount) / 21) * 100}%, var(--cherry-active-bg) ${((contextCount > 20 ? 21 : contextCount) / 21) * 100}%)` }}
                   />
                   <input type="text"
                     value={contextCount === Infinity ? '\u221E' : contextCount}

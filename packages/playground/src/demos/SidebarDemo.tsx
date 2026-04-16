@@ -1,4 +1,4 @@
-import React from "react"
+import React, { useState } from "react"
 import {
   SidebarProvider, Sidebar, SidebarHeader, SidebarContent, SidebarFooter,
   SidebarGroup, SidebarGroupLabel, SidebarGroupContent,
@@ -20,6 +20,8 @@ const sidebarProps: PropDef[] = [
 ]
 
 export function SidebarDemo() {
+  const [selected, setSelected] = useState("home")
+
   return (
     <>
       <Section title="Full Sidebar" install="npx shadcn@latest add sidebar" props={sidebarProps} code={`import { SidebarProvider, Sidebar, SidebarHeader, SidebarContent, SidebarMenu, SidebarMenuItem, SidebarMenuButton } from "@cherry-studio/ui"
@@ -41,7 +43,7 @@ export function SidebarDemo() {
             <Sidebar>
               <SidebarHeader className="p-4">
                 <div className="flex items-center gap-2">
-                  <div className="w-7 h-7 rounded-lg bg-primary flex items-center justify-center text-primary-foreground text-xs font-bold">C</div>
+                  <div className="w-7 h-7 rounded-xl bg-primary flex items-center justify-center text-primary-foreground text-xs font-bold">C</div>
                   <span className="text-sm font-semibold">Cherry Studio</span>
                 </div>
               </SidebarHeader>
@@ -51,31 +53,20 @@ export function SidebarDemo() {
                   <SidebarGroupLabel>Navigation</SidebarGroupLabel>
                   <SidebarGroupContent>
                     <SidebarMenu>
-                      <SidebarMenuItem>
-                        <SidebarMenuButton isActive>
-                          <Home className="h-4 w-4" />
-                          <span>Home</span>
-                        </SidebarMenuButton>
-                      </SidebarMenuItem>
-                      <SidebarMenuItem>
-                        <SidebarMenuButton>
-                          <MessageSquare className="h-4 w-4" />
-                          <span>Chat</span>
-                          <SidebarMenuBadge>3</SidebarMenuBadge>
-                        </SidebarMenuButton>
-                      </SidebarMenuItem>
-                      <SidebarMenuItem>
-                        <SidebarMenuButton>
-                          <Bot className="h-4 w-4" />
-                          <span>Agents</span>
-                        </SidebarMenuButton>
-                      </SidebarMenuItem>
-                      <SidebarMenuItem>
-                        <SidebarMenuButton>
-                          <BookOpen className="h-4 w-4" />
-                          <span>Knowledge</span>
-                        </SidebarMenuButton>
-                      </SidebarMenuItem>
+                      {[
+                        { id: "home", icon: Home, label: "Home", badge: undefined },
+                        { id: "chat", icon: MessageSquare, label: "Chat", badge: "3" },
+                        { id: "agents", icon: Bot, label: "Agents", badge: undefined },
+                        { id: "knowledge", icon: BookOpen, label: "Knowledge", badge: undefined },
+                      ].map(({ id, icon: Icon, label, badge }) => (
+                        <SidebarMenuItem key={id}>
+                          <SidebarMenuButton isActive={selected === id} onClick={() => setSelected(id)}>
+                            <Icon className="h-4 w-4" />
+                            <span>{label}</span>
+                            {badge && <SidebarMenuBadge>{badge}</SidebarMenuBadge>}
+                          </SidebarMenuButton>
+                        </SidebarMenuItem>
+                      ))}
                     </SidebarMenu>
                   </SidebarGroupContent>
                 </SidebarGroup>
@@ -157,7 +148,7 @@ export function SidebarDemo() {
                   <SidebarMenuItem>
                     <SidebarMenuButton>
                       <div className="flex items-center gap-2 flex-1">
-                        <div className="w-6 h-6 rounded-full bg-gradient-to-br from-blue-400 to-indigo-500 flex items-center justify-center text-white text-[10px]">S</div>
+                        <div className="w-6 h-6 rounded-full bg-gradient-to-br from-accent-blue to-accent-indigo flex items-center justify-center text-primary-foreground text-[10px]">S</div>
                         <div className="flex-1 min-w-0">
                           <p className="text-xs font-medium truncate">Siin</p>
                           <p className="text-[10px] text-muted-foreground truncate">siin@gmail.com</p>
@@ -175,7 +166,7 @@ export function SidebarDemo() {
                 <span className="text-sm font-medium">Dashboard</span>
               </header>
               <div className="flex-1 flex items-center justify-center text-muted-foreground text-sm">
-                Main content area
+                Selected: <span className="ml-1 font-medium text-foreground">{selected}</span>
               </div>
             </SidebarInset>
           </SidebarProvider>
@@ -187,7 +178,7 @@ export function SidebarDemo() {
           <SidebarProvider defaultOpen={false}>
             <Sidebar collapsible="icon">
               <SidebarHeader className="p-2 flex items-center justify-center">
-                <div className="w-7 h-7 rounded-lg bg-primary flex items-center justify-center text-primary-foreground text-xs font-bold">C</div>
+                <div className="w-7 h-7 rounded-xl bg-primary flex items-center justify-center text-primary-foreground text-xs font-bold">C</div>
               </SidebarHeader>
               <SidebarContent>
                 <SidebarGroup>

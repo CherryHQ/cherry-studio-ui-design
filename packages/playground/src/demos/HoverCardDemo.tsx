@@ -69,7 +69,7 @@ export function HoverCardDemo() {
                 </p>
                 <div className="flex items-center gap-4 text-xs text-muted-foreground">
                   <span className="flex items-center gap-1">
-                    <span className="h-2.5 w-2.5 rounded-full bg-blue-500" /> TypeScript
+                    <span className="h-2.5 w-2.5 rounded-full bg-accent-blue" /> TypeScript
                   </span>
                   <span className="flex items-center gap-1"><Star className="h-3 w-3" /> 2.4k</span>
                   <span className="flex items-center gap-1"><GitFork className="h-3 w-3" /> 186</span>

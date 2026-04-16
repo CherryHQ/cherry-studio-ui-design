@@ -276,7 +276,7 @@ function StatusBadge({ status, errorMsg }: { status: DataSource['status']; error
               step < cfg.step ? 'bg-primary' :
               step === cfg.step ? 'bg-current animate-pulse' :
               'bg-border/40'
-            }`} style={step === cfg.step ? { color: cfg.color.includes('blue') ? '#3b82f6' : cfg.color.includes('violet') ? '#8b5cf6' : '#f59e0b' } : undefined} />
+            }`} style={step === cfg.step ? { color: cfg.color.includes('blue') ? 'var(--accent-blue)' : cfg.color.includes('violet') ? 'var(--accent-violet)' : 'var(--warning)' } : undefined} />
           ))}
         </div>
         <span className={`inline-flex items-center gap-0.5 text-[9px] ${cfg.color}`}>

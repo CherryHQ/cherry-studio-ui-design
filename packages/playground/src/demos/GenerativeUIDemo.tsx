@@ -15,7 +15,11 @@ export function GenerativeUIDemo() {
 
   return (
     <>
-      <Section title="Button Selection (Prompt + Pills)" code={`// AI suggests actions as pill buttons
+      <Section title="Button Selection (Prompt + Pills)" props={[
+        { name: "options", type: "string[]", default: "[]", description: "List of action options to display as pills" },
+        { name: "onSelect", type: "(option: string) => void", default: "undefined", description: "Callback when an option is selected" },
+        { name: "disabled", type: "boolean", default: "false", description: "Disable all options after selection" },
+      ]} code={`// AI suggests actions as pill buttons
 <div className="flex flex-wrap gap-2">
   {options.map(opt => (
     <Button key={opt} variant={selected === opt ? "default" : "outline"} size="sm"
@@ -64,7 +68,7 @@ export function GenerativeUIDemo() {
                 { value: "detailed", label: "Detailed", desc: "Comprehensive with examples" },
                 { value: "step-by-step", label: "Step by Step", desc: "Structured walkthrough" },
               ].map((opt) => (
-                <div key={opt.value} className="flex items-start space-x-2.5 rounded-md border p-2.5 hover:bg-accent/30 transition-colors">
+                <div key={opt.value} className="flex items-start space-x-2.5 rounded-xl border p-2.5 hover:bg-accent/30 transition-colors">
                   <RadioGroupItem value={opt.value} id={opt.value} className="mt-0.5" />
                   <Label htmlFor={opt.value} className="flex-1 cursor-pointer">
                     <div className="text-xs font-medium">{opt.label}</div>

@@ -60,7 +60,7 @@ function SystemOCRConfig() {
   return (
     <div className="flex-1 overflow-y-auto px-6 py-5 [&::-webkit-scrollbar]:w-[3px] [&::-webkit-scrollbar-thumb]:bg-border/20">
       <div className="flex items-center gap-3 mb-5">
-        <div className="w-9 h-9 rounded-xl bg-[#1a1a1a] flex items-center justify-center text-white text-[14px] flex-shrink-0">■</div>
+        <div className="w-9 h-9 rounded-xl bg-foreground flex items-center justify-center text-background text-[14px] flex-shrink-0">■</div>
         <div className="flex-1 min-w-0">
           <h3 className="text-[13px] text-foreground/90" style={{ fontWeight: 600 }}>System OCR</h3>
           <p className="text-[9px] text-foreground/35 mt-0.5">原生操作系统 OCR 引擎</p>
@@ -96,7 +96,7 @@ function TesseractConfig() {
   return (
     <div className="flex-1 overflow-y-auto px-6 py-5 space-y-4 [&::-webkit-scrollbar]:w-[3px] [&::-webkit-scrollbar-thumb]:bg-border/20">
       <div className="flex items-center gap-3">
-        <div className="w-9 h-9 rounded-xl flex items-center justify-center text-white text-[14px] flex-shrink-0" style={{ fontWeight: 700, background: '#d97706' }}>T</div>
+        <div className="w-9 h-9 rounded-xl flex items-center justify-center text-white text-[14px] flex-shrink-0" style={{ fontWeight: 700, background: 'var(--accent-amber)' }}>T</div>
         <div className="flex-1 min-w-0">
           <h3 className="text-[13px] text-foreground/90" style={{ fontWeight: 600 }}>Tesseract OCR</h3>
           <p className="text-[9px] text-foreground/35 mt-0.5">Google 开源的光学字符识别引擎，完全本地运行。</p>
@@ -163,7 +163,7 @@ function PaddleOCRConfig() {
   return (
     <div className="flex-1 overflow-y-auto px-6 py-5 space-y-4 [&::-webkit-scrollbar]:w-[3px] [&::-webkit-scrollbar-thumb]:bg-border/20">
       <div className="flex items-center gap-3">
-        <div className="w-9 h-9 rounded-xl flex items-center justify-center text-white text-[14px] flex-shrink-0" style={{ fontWeight: 700, background: '#2563eb' }}>P</div>
+        <div className="w-9 h-9 rounded-xl flex items-center justify-center text-white text-[14px] flex-shrink-0" style={{ fontWeight: 700, background: 'var(--accent-blue)' }}>P</div>
         <div className="flex-1 min-w-0">
           <h3 className="text-[13px] text-foreground/90" style={{ fontWeight: 600 }}>PaddleOCR</h3>
           <p className="text-[9px] text-foreground/35 mt-0.5">超轻量级 OCR 识别系统</p>
@@ -208,7 +208,7 @@ function MistralConfig() {
   return (
     <div className="flex-1 overflow-y-auto px-6 py-5 space-y-4 [&::-webkit-scrollbar]:w-[3px] [&::-webkit-scrollbar-thumb]:bg-border/20">
       <div className="flex items-center gap-3">
-        <div className="w-9 h-9 rounded-xl flex items-center justify-center text-white text-[14px] flex-shrink-0" style={{ fontWeight: 700, background: '#f59e0b' }}>M</div>
+        <div className="w-9 h-9 rounded-xl flex items-center justify-center text-white text-[14px] flex-shrink-0" style={{ fontWeight: 700, background: 'var(--warning)' }}>M</div>
         <div className="flex-1 min-w-0">
           <h3 className="text-[13px] text-foreground/90" style={{ fontWeight: 600 }}>Mistral</h3>
           <p className="text-[9px] text-foreground/35 mt-0.5">文档解析与理解</p>
@@ -274,7 +274,7 @@ function MinerUConfig() {
   return (
     <div className="flex-1 overflow-y-auto px-6 py-5 space-y-4 [&::-webkit-scrollbar]:w-[3px] [&::-webkit-scrollbar-thumb]:bg-border/20">
       <div className="flex items-center gap-3">
-        <div className="w-9 h-9 rounded-xl flex items-center justify-center text-white text-[14px] flex-shrink-0" style={{ fontWeight: 700, background: '#6366f1' }}>U</div>
+        <div className="w-9 h-9 rounded-xl flex items-center justify-center text-white text-[14px] flex-shrink-0" style={{ fontWeight: 700, background: 'var(--accent-indigo)' }}>U</div>
         <div className="flex-1 min-w-0">
           <h3 className="text-[13px] text-foreground/90" style={{ fontWeight: 600 }}>MinerU</h3>
           <p className="text-[9px] text-foreground/35 mt-0.5">OpenDataLab 开源的高质量 PDF 提取工具。</p>
@@ -356,7 +356,7 @@ function Doc2xConfig() {
   return (
     <div className="flex-1 overflow-y-auto px-6 py-5 space-y-4 [&::-webkit-scrollbar]:w-[3px] [&::-webkit-scrollbar-thumb]:bg-border/20">
       <div className="flex items-center gap-3">
-        <div className="w-9 h-9 rounded-xl flex items-center justify-center text-white text-[12px] flex-shrink-0" style={{ fontWeight: 700, background: '#ef4444' }}>2x</div>
+        <div className="w-9 h-9 rounded-xl flex items-center justify-center text-white text-[12px] flex-shrink-0" style={{ fontWeight: 700, background: 'var(--error)' }}>2x</div>
         <div className="flex-1 min-w-0">
           <h3 className="text-[13px] text-foreground/90" style={{ fontWeight: 600 }}>Doc2x</h3>
           <p className="text-[9px] text-foreground/35 mt-0.5">高级文档还原引擎</p>

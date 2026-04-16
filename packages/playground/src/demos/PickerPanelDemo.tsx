@@ -4,16 +4,16 @@ import { Section, type PropDef } from "../components/Section"
 import { Bot, Brain, Eye, Hammer, Globe, Sparkles } from "lucide-react"
 
 const modelItems = [
-  { id: "gpt-4o", label: "GPT-4o", group: "OpenAI", tags: ["vision", "tools"], icon: <Bot className="size-3.5 text-green-600" /> },
-  { id: "gpt-4o-mini", label: "GPT-4o Mini", group: "OpenAI", tags: ["tools"], icon: <Bot className="size-3.5 text-green-600" /> },
-  { id: "o3", label: "o3", group: "OpenAI", tags: ["reasoning"], icon: <Brain className="size-3.5 text-green-600" /> },
-  { id: "claude-opus-4", label: "Claude Opus 4", group: "Anthropic", tags: ["vision", "reasoning", "tools"], icon: <Sparkles className="size-3.5 text-amber-600" /> },
-  { id: "claude-sonnet-4", label: "Claude Sonnet 4", group: "Anthropic", tags: ["vision", "tools"], icon: <Sparkles className="size-3.5 text-amber-600" /> },
-  { id: "gemini-2.5-pro", label: "Gemini 2.5 Pro", group: "Google", tags: ["vision", "reasoning", "web"], icon: <Globe className="size-3.5 text-blue-500" /> },
-  { id: "gemini-2.5-flash", label: "Gemini 2.5 Flash", group: "Google", tags: ["vision"], icon: <Globe className="size-3.5 text-blue-500" /> },
-  { id: "deepseek-v3", label: "DeepSeek V3", group: "DeepSeek", tags: ["reasoning"], icon: <Brain className="size-3.5 text-cyan-500" /> },
-  { id: "deepseek-r1", label: "DeepSeek R1", group: "DeepSeek", tags: ["reasoning"], icon: <Brain className="size-3.5 text-cyan-500" /> },
-  { id: "qwen-3", label: "Qwen 3", group: "Alibaba", tags: ["tools"], icon: <Hammer className="size-3.5 text-orange-500" /> },
+  { id: "gpt-4o", label: "GPT-4o", group: "OpenAI", tags: ["vision", "tools"], icon: <Bot className="size-3.5 text-accent-emerald" /> },
+  { id: "gpt-4o-mini", label: "GPT-4o Mini", group: "OpenAI", tags: ["tools"], icon: <Bot className="size-3.5 text-accent-emerald" /> },
+  { id: "o3", label: "o3", group: "OpenAI", tags: ["reasoning"], icon: <Brain className="size-3.5 text-accent-emerald" /> },
+  { id: "claude-opus-4", label: "Claude Opus 4", group: "Anthropic", tags: ["vision", "reasoning", "tools"], icon: <Sparkles className="size-3.5 text-accent-amber" /> },
+  { id: "claude-sonnet-4", label: "Claude Sonnet 4", group: "Anthropic", tags: ["vision", "tools"], icon: <Sparkles className="size-3.5 text-accent-amber" /> },
+  { id: "gemini-2.5-pro", label: "Gemini 2.5 Pro", group: "Google", tags: ["vision", "reasoning", "web"], icon: <Globe className="size-3.5 text-accent-blue" /> },
+  { id: "gemini-2.5-flash", label: "Gemini 2.5 Flash", group: "Google", tags: ["vision"], icon: <Globe className="size-3.5 text-accent-blue" /> },
+  { id: "deepseek-v3", label: "DeepSeek V3", group: "DeepSeek", tags: ["reasoning"], icon: <Brain className="size-3.5 text-accent-cyan" /> },
+  { id: "deepseek-r1", label: "DeepSeek R1", group: "DeepSeek", tags: ["reasoning"], icon: <Brain className="size-3.5 text-accent-cyan" /> },
+  { id: "qwen-3", label: "Qwen 3", group: "Alibaba", tags: ["tools"], icon: <Hammer className="size-3.5 text-accent-orange" /> },
 ]
 
 const assistantItems = [
@@ -49,7 +49,7 @@ export function PickerPanelDemo() {
   onValueChange={setModel}
   searchPlaceholder="Search models..."
 />`}>
-        <div className="max-w-md rounded-lg border h-72">
+        <div className="max-w-md rounded-xl border h-72">
           <PickerPanel
             items={modelItems}
             value={model}
@@ -61,7 +61,7 @@ export function PickerPanelDemo() {
       </Section>
 
       <Section title="Model Picker — Multi Select">
-        <div className="max-w-md rounded-lg border h-72">
+        <div className="max-w-md rounded-xl border h-72">
           <PickerPanel
             items={modelItems}
             values={models}
@@ -73,7 +73,7 @@ export function PickerPanelDemo() {
       </Section>
 
       <Section title="Assistant Picker — Flat List (No Groups)">
-        <div className="max-w-sm rounded-lg border">
+        <div className="max-w-sm rounded-xl border">
           <PickerPanel
             items={assistantItems}
             value={assistant}

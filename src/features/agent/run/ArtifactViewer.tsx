@@ -77,17 +77,17 @@ function tokenizeLine(line: string): React.ReactNode[] {
   while ((match = TOKEN_PATTERN.exec(line)) !== null) {
     const seg = match[0];
     if (RE_LINE_COMMENT.test(seg)) {
-      tokens.push(<span key={key++} className="text-[#6a737d]">{seg}</span>);
+      tokens.push(<span key={key++} className="text-syntax-comment">{seg}</span>);
     } else if (RE_STRING_START.test(seg)) {
-      tokens.push(<span key={key++} className="text-[#b07d48]">{seg}</span>);
+      tokens.push(<span key={key++} className="text-syntax-string">{seg}</span>);
     } else if (RE_DIGIT_START.test(seg)) {
-      tokens.push(<span key={key++} className="text-[#0e7490]">{seg}</span>);
+      tokens.push(<span key={key++} className="text-syntax-number">{seg}</span>);
     } else if (KEYWORDS.has(seg)) {
-      tokens.push(<span key={key++} className="text-[#8250df]">{seg}</span>);
+      tokens.push(<span key={key++} className="text-syntax-keyword">{seg}</span>);
     } else if (LITERALS.has(seg)) {
-      tokens.push(<span key={key++} className="text-[#0e7490]">{seg}</span>);
+      tokens.push(<span key={key++} className="text-syntax-number">{seg}</span>);
     } else if (RE_UPPER_START.test(seg) && seg.length > 1) {
-      tokens.push(<span key={key++} className="text-[#1a7f37]">{seg}</span>);
+      tokens.push(<span key={key++} className="text-syntax-type">{seg}</span>);
     } else if (RE_PUNCTUATION.test(seg)) {
       tokens.push(<span key={key++} className="text-foreground/55">{seg}</span>);
     } else {

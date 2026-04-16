@@ -38,19 +38,19 @@ import { Terminal } from "lucide-react"
 
       <Section title="Custom Styled Variants">
         <div className="max-w-lg space-y-4">
-          <Alert className="border-green-500/30 bg-green-500/5 text-green-700 dark:text-green-400 [&>svg]:text-green-600">
+          <Alert className="border-success/30 bg-success/5 text-success [&>svg]:text-success">
             <CheckCircle className="h-4 w-4" />
             <AlertTitle>Success</AlertTitle>
             <AlertDescription>Your changes have been saved successfully.</AlertDescription>
           </Alert>
 
-          <Alert className="border-yellow-500/30 bg-yellow-500/5 text-yellow-700 dark:text-yellow-400 [&>svg]:text-yellow-600">
+          <Alert className="border-warning/30 bg-warning/5 text-warning [&>svg]:text-warning">
             <AlertTriangle className="h-4 w-4" />
             <AlertTitle>Warning</AlertTitle>
             <AlertDescription>Your API key will expire in 3 days. Please renew it.</AlertDescription>
           </Alert>
 
-          <Alert className="border-blue-500/30 bg-blue-500/5 text-blue-700 dark:text-blue-400 [&>svg]:text-blue-600">
+          <Alert className="border-info/30 bg-info/5 text-info [&>svg]:text-info">
             <Info className="h-4 w-4" />
             <AlertTitle>Information</AlertTitle>
             <AlertDescription>A new version of Cherry Studio is available. Update to get the latest features.</AlertDescription>

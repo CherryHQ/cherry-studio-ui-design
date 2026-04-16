@@ -3,6 +3,10 @@
 import * as React from "react"
 import { Check, Search, X } from "lucide-react"
 import { cn } from "../../lib/utils"
+import { Badge } from "./badge"
+import { Button } from "./button"
+import { Checkbox } from "./checkbox"
+import { Input } from "./input"
 
 export interface PickerPanelItem {
   id: string
@@ -29,22 +33,19 @@ export interface PickerPanelProps {
   renderItem?: (item: PickerPanelItem, selected: boolean) => React.ReactNode
 }
 
-const PickerPanel = React.forwardRef<HTMLDivElement, PickerPanelProps>(
-  (
-    {
-      items,
-      value,
-      onValueChange,
-      values,
-      onValuesChange,
-      searchPlaceholder = "Search...",
-      emptyMessage = "No results.",
-      className,
-      autoFocus = false,
-      renderItem,
-    },
-    ref
-  ) => {
+function PickerPanel({
+  items,
+  value,
+  onValueChange,
+  values,
+  onValuesChange,
+  searchPlaceholder = "Search...",
+  emptyMessage = "No results.",
+  className,
+  autoFocus = false,
+  renderItem,
+  ref,
+}: PickerPanelProps & { ref?: React.Ref<HTMLDivElement> }) {
     const [search, setSearch] = React.useState("")
     const isMulti = !!onValuesChange
     const searchRef = React.useRef<HTMLInputElement>(null)
@@ -110,26 +111,28 @@ const PickerPanel = React.forwardRef<HTMLDivElement, PickerPanelProps>(
       : Array.from(groups.values()).flat()
 
     return (
-      <div ref={ref} className={cn("flex flex-col", className)}>
+      <div ref={ref} data-slot="picker-panel" className={cn("flex flex-col tracking-tight", className)}>
         {/* Search */}
         <div className="p-2 pb-1.5">
-          <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-muted/50 border border-input">
+          <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-[var(--radius-button)] bg-muted/50 border border-input">
             <Search className="size-3.5 text-muted-foreground/50 shrink-0" />
-            <input
+            <Input
               ref={searchRef}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder={searchPlaceholder}
               aria-label={searchPlaceholder}
-              className="flex-1 bg-transparent text-xs text-foreground placeholder:text-muted-foreground/50 outline-none min-w-0"
+              className="flex-1 h-auto border-0 bg-transparent px-0 py-0 text-xs shadow-none focus-visible:ring-0 focus-visible:border-transparent min-w-0"
             />
             {search && (
-              <button
+              <Button
+                variant="ghost"
+                size="icon-xs"
                 onClick={() => setSearch("")}
-                className="text-muted-foreground/40 hover:text-muted-foreground transition-colors rounded-sm focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
+                className="text-muted-foreground/40 hover:text-muted-foreground"
               >
                 <X className="size-3" />
-              </button>
+              </Button>
             )}
           </div>
         </div>
@@ -142,11 +145,13 @@ const PickerPanel = React.forwardRef<HTMLDivElement, PickerPanelProps>(
               {groupKeys.map((g) => {
                 const count = groups.get(g)?.length ?? 0
                 return (
-                  <button
+                  <Button
                     key={g}
+                    variant="ghost"
+                    size="sm"
                     onClick={() => setActiveGroup(g)}
                     className={cn(
-                      "flex items-center justify-between w-full px-2.5 py-1.5 text-xs transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring",
+                      "w-full justify-between px-2.5 py-1.5 text-xs",
                       activeGroup === g
                         ? "bg-accent text-foreground"
                         : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
@@ -154,7 +159,7 @@ const PickerPanel = React.forwardRef<HTMLDivElement, PickerPanelProps>(
                   >
                     <span className="truncate">{g || "Other"}</span>
                     <span className="text-xs text-muted-foreground/50 shrink-0 ml-1">{count}</span>
-                  </button>
+                  </Button>
                 )
               })}
             </div>
@@ -196,10 +201,8 @@ const PickerPanel = React.forwardRef<HTMLDivElement, PickerPanelProps>(
           </div>
         )}
       </div>
-    )
-  }
-)
-PickerPanel.displayName = "PickerPanel"
+  )
+}
 
 function ItemRow({
   item,
@@ -215,24 +218,19 @@ function ItemRow({
   renderItem?: PickerPanelProps["renderItem"]
 }) {
   return (
-    <button
+    <Button
+      variant="ghost"
+      size="sm"
       onClick={() => onSelect(item.id)}
       className={cn(
-        "flex items-center gap-2 w-full px-2 py-1.5 rounded-md text-xs transition-colors text-left focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50",
+        "w-full justify-start gap-2 px-2 py-1.5 text-xs text-left",
         selected
           ? "bg-accent text-foreground"
           : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
       )}
     >
       {multi && (
-        <div
-          className={cn(
-            "size-3.5 rounded border flex items-center justify-center shrink-0 transition-colors",
-            selected ? "border-primary bg-primary" : "border-input"
-          )}
-        >
-          {selected && <Check className="size-2.5 text-primary-foreground" />}
-        </div>
+        <Checkbox checked={selected} className="size-3.5 pointer-events-none" tabIndex={-1} />
       )}
       {renderItem ? (
         renderItem(item, selected)
@@ -243,19 +241,20 @@ function ItemRow({
           {item.tags && item.tags.length > 0 && (
             <span className="flex items-center gap-1 shrink-0">
               {item.tags.map((tag) => (
-                <span
+                <Badge
                   key={tag}
-                  className="px-1.5 py-px rounded-full bg-muted text-xs text-muted-foreground"
+                  variant="secondary"
+                  className="px-1.5 py-px text-xs text-muted-foreground"
                 >
                   {tag}
-                </span>
+                </Badge>
               ))}
             </span>
           )}
           {!multi && selected && <Check className="size-3.5 text-primary shrink-0 ml-0.5" />}
         </>
       )}
-    </button>
+    </Button>
   )
 }
 

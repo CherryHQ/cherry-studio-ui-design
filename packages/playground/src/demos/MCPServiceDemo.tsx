@@ -70,7 +70,11 @@ export function MCPServiceDemo() {
   }
 
   return (
-    <Section title="MCP Service Manager" code={`// Compose with: Card, Badge, Switch, Accordion, Checkbox, Input, Button`}>
+    <Section title="MCP Service Manager" props={[
+        { name: "services", type: "MCPService[]", default: "[]", description: "List of MCP services to manage" },
+        { name: "onToggle", type: "(serviceId: string) => void", default: "undefined", description: "Callback when a service is connected/disconnected" },
+        { name: "onToolToggle", type: "(serviceId: string, toolName: string) => void", default: "undefined", description: "Callback when a tool is enabled/disabled" },
+      ]} code={`// Compose with: Card, Badge, Switch, Accordion, Checkbox, Input, Button`}>
       <div className="max-w-lg space-y-3">
         <div className="flex items-center justify-between">
           <p className="text-xs text-muted-foreground">{services.filter((s) => s.status === "connected").length} of {services.length} services connected</p>
@@ -81,7 +85,7 @@ export function MCPServiceDemo() {
 
         <Accordion type="multiple" defaultValue={["filesystem"]} className="space-y-2">
           {services.map((service) => (
-            <AccordionItem key={service.id} value={service.id} className="border rounded-lg overflow-hidden">
+            <AccordionItem key={service.id} value={service.id} className="border rounded-xl overflow-hidden">
               <div className="flex items-center gap-2.5 px-3 py-0 border-b-0">
                 <span className="text-base">{service.icon}</span>
                 <AccordionTrigger className="flex-1 py-2.5 hover:no-underline">
@@ -91,8 +95,8 @@ export function MCPServiceDemo() {
                       variant="outline"
                       className={`text-[8px] px-1.5 py-0 ${
                         service.status === "connected"
-                          ? "bg-green-500/10 text-green-600 border-green-500/20 dark:text-green-400"
-                          : "bg-red-500/10 text-red-600 border-red-500/20 dark:text-red-400"
+                          ? "bg-success-muted text-success border-success/20"
+                          : "bg-error-muted text-error border-error/20"
                       }`}
                     >
                       {service.status}

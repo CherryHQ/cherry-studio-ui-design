@@ -31,9 +31,13 @@ export function App() {
 
   // Toggle dark mode — single source of truth on <html>
   const toggleDark = useCallback(() => {
+    // Disable all CSS transitions during theme switch to prevent flash
+    const css = document.createElement("style")
+    css.textContent = "*, *::before, *::after { transition: none !important; }"
+    document.head.appendChild(css)
+
     setDark((prev) => {
       const next = !prev
-      // Synchronously update DOM class before React re-render
       if (next) {
         document.documentElement.classList.add("dark")
       } else {
@@ -41,10 +45,17 @@ export function App() {
       }
       return next
     })
+
+    // Re-enable transitions after a frame
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        document.head.removeChild(css)
+      })
+    })
   }, [])
 
   return (
-    <div className="flex h-screen bg-background text-foreground overflow-hidden">
+    <div className="flex h-screen bg-background text-foreground">
       {/* Left: Sidebar */}
       <Sidebar
         demos={demos}

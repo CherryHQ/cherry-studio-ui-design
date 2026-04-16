@@ -90,7 +90,7 @@ function Combobox() {
               return (
                 <CommandGroup key={provider} heading={provider}>
                   {providerModels.map((model) => (
-                    <CommandItem key={model.value} value={model.value} onSelect={(v) => { setValue(v === value ? "" : v); setOpen(false) }}>
+                    <CommandItem key={model.value} value={model.value} onSelect={(v: string) => { setValue(v === value ? "" : v); setOpen(false) }}>
                       <Check className={`mr-2 h-3.5 w-3.5 ${value === model.value ? "opacity-100" : "opacity-0"}`} />
                       {model.label}
                     </CommandItem>

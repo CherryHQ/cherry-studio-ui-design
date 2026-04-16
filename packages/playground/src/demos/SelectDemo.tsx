@@ -3,6 +3,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SelectGr
 import { Section, type PropDef } from "../components/Section"
 
 export function SelectDemo() {
+  const [fruit, setFruit] = useState("")
   const [model, setModel] = useState("")
 
   return (
@@ -23,8 +24,8 @@ export function SelectDemo() {
     <SelectItem value="banana">Banana</SelectItem>
   </SelectContent>
 </Select>`}>
-        <div className="max-w-70">
-          <Select>
+        <div className="max-w-70 space-y-3">
+          <Select value={fruit} onValueChange={setFruit}>
             <SelectTrigger>
               <SelectValue placeholder="Select a fruit" />
             </SelectTrigger>
@@ -36,6 +37,7 @@ export function SelectDemo() {
               <SelectItem value="mango">Mango</SelectItem>
             </SelectContent>
           </Select>
+          {fruit && <p className="text-sm text-muted-foreground">You picked: <span className="text-foreground font-medium">{fruit}</span></p>}
         </div>
       </Section>
 
@@ -100,7 +102,7 @@ export function SelectDemo() {
           <div className="space-y-2">
             <Label className="text-sm text-destructive">With Error</Label>
             <Select>
-              <SelectTrigger className="border-destructive focus:ring-destructive">
+              <SelectTrigger aria-invalid="true">
                 <SelectValue placeholder="Select required" />
               </SelectTrigger>
               <SelectContent>

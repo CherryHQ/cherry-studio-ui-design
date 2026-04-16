@@ -40,7 +40,7 @@ export function Section({ title, children, code, props, install }: SectionProps)
               className="flex items-center gap-1 px-2 py-1 rounded-md text-[10px] text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors font-mono focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
             >
               <Terminal size={10} />
-              {copied === "install" ? <Check size={10} className="text-green-500" /> : install.replace("npx shadcn@latest add ", "")}
+              {copied === "install" ? <Check size={10} className="text-success" /> : install.replace("npx shadcn@latest add ", "")}
             </button>
           )}
           {code && (
@@ -70,14 +70,14 @@ export function Section({ title, children, code, props, install }: SectionProps)
       {tab === "preview" ? (
         <div className="rounded-xl border border-border bg-card p-6 [&:focus-within]:outline-none [&:focus-within]:ring-0 [&:focus-within]:border-border">{children}</div>
       ) : (
-        <div className="relative rounded-xl border border-border bg-zinc-100 dark:bg-[#0d1117] overflow-hidden">
+        <div className="relative rounded-xl border border-border bg-muted dark:bg-code-block-bg overflow-hidden">
           <button
             onClick={() => handleCopy(code!, "code")}
             className="absolute top-3 right-3 p-1.5 rounded-md bg-white/10 text-white/50 hover:text-white hover:bg-white/20 transition-colors z-10 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
           >
-            {copied === "code" ? <Check size={12} className="text-green-400" /> : <Copy size={12} />}
+            {copied === "code" ? <Check size={12} className="text-success" /> : <Copy size={12} />}
           </button>
-          <pre className="p-5 text-[12px] leading-relaxed overflow-x-auto text-zinc-800 dark:text-[#e6edf3] font-mono">
+          <pre className="p-5 text-[12px] leading-relaxed overflow-x-auto text-foreground dark:text-foreground font-mono">
             <code>{code}</code>
           </pre>
         </div>

@@ -3,3 +3,116 @@
 @import "@cherry-studio/ui/theme.css";
 
 @source "../../ui/src/**/*.{ts,tsx}";
+
+/* Extend Tailwind theme with our design tokens */
+@theme {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-input-background: var(--input-background);
+  --color-switch-background: var(--switch-background);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-surface-02: var(--surface-02);
+  --color-stroke-02: var(--stroke-02);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+
+  /* Cherry tokens */
+  --color-cherry-active-bg: var(--cherry-active-bg);
+  --color-cherry-active-border: var(--cherry-active-border);
+  --color-cherry-glow-bg: var(--cherry-glow-bg);
+  --color-cherry-glow-line: var(--cherry-glow-line);
+  --color-cherry-primary: var(--cherry-primary);
+  --color-cherry-primary-hover: var(--cherry-primary-hover);
+  --color-cherry-primary-dark: var(--cherry-primary-dark);
+  --color-cherry-text: var(--cherry-text);
+  --color-cherry-text-muted: var(--cherry-text-muted);
+  --color-cherry-ring: var(--cherry-ring);
+  --color-cherry-shadow: var(--cherry-shadow);
+  --color-cherry-shadow-sm: var(--cherry-shadow-sm);
+  --color-cherry-user: var(--cherry-user);
+  --color-cherry-assistant: var(--cherry-assistant);
+  --color-cherry-parallel: var(--cherry-parallel);
+
+  /* Status */
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-success-muted: var(--success-muted);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-warning-muted: var(--warning-muted);
+  --color-error: var(--error);
+  --color-error-foreground: var(--error-foreground);
+  --color-error-muted: var(--error-muted);
+  --color-info: var(--info);
+  --color-info-foreground: var(--info-foreground);
+  --color-info-muted: var(--info-muted);
+
+  /* Accent palette */
+  --color-accent-blue: var(--accent-blue);
+  --color-accent-blue-muted: var(--accent-blue-muted);
+  --color-accent-violet: var(--accent-violet);
+  --color-accent-violet-muted: var(--accent-violet-muted);
+  --color-accent-amber: var(--accent-amber);
+  --color-accent-amber-muted: var(--accent-amber-muted);
+  --color-accent-orange: var(--accent-orange);
+  --color-accent-orange-muted: var(--accent-orange-muted);
+  --color-accent-purple: var(--accent-purple);
+  --color-accent-purple-muted: var(--accent-purple-muted);
+  --color-accent-pink: var(--accent-pink);
+  --color-accent-pink-muted: var(--accent-pink-muted);
+  --color-accent-cyan: var(--accent-cyan);
+  --color-accent-cyan-muted: var(--accent-cyan-muted);
+  --color-accent-indigo: var(--accent-indigo);
+  --color-accent-indigo-muted: var(--accent-indigo-muted);
+  --color-accent-emerald: var(--accent-emerald);
+  --color-accent-emerald-muted: var(--accent-emerald-muted);
+
+  /* Shadow */
+  --shadow-button: var(--shadow-button);
+  --shadow-button-inset: var(--shadow-button-inset);
+  --shadow-popover: var(--shadow-popover);
+
+  /* Animation */
+  --animate-accordion-down: accordion-down 0.2s ease-out;
+  --animate-accordion-up: accordion-up 0.2s ease-out;
+
+  @keyframes accordion-down {
+    from { height: 0; }
+    to { height: var(--radix-accordion-content-height); }
+  }
+  @keyframes accordion-up {
+    from { height: var(--radix-accordion-content-height); }
+    to { height: 0; }
+  }
+}

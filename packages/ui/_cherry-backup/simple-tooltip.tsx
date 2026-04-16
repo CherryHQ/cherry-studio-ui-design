@@ -1,0 +1,68 @@
+"use client"
+
+import * as React from "react"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "./tooltip"
+import { cn } from "../../lib/utils"
+
+export interface SimpleTooltipProps {
+  children: React.ReactNode
+  /** Tooltip text content */
+  content: string
+  /** Placement side */
+  side?: "top" | "right" | "bottom" | "left"
+  /** Offset from trigger */
+  sideOffset?: number
+  /** Delay before showing (ms) */
+  delayDuration?: number
+  /** Additional className for the content */
+  className?: string
+}
+
+/**
+ * SimpleTooltip — a simplified API wrapper around Shadcn Tooltip.
+ *
+ * Usage: `<SimpleTooltip content="Help text">{children}</SimpleTooltip>`
+ *
+ * This matches Cherry Studio's existing Tooltip API so it can be used as a
+ * drop-in replacement for `@/app/components/Tooltip`.
+ */
+function SimpleTooltip({
+  children,
+  content,
+  side = "right",
+  sideOffset = 8,
+  delayDuration = 400,
+  className,
+}: SimpleTooltipProps) {
+  if (!content) {
+    return <>{children}</>
+  }
+
+  return (
+    <TooltipProvider delayDuration={delayDuration}>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <span className="contents">{children}</span>
+        </TooltipTrigger>
+        <TooltipContent
+          side={side}
+          sideOffset={sideOffset}
+          className={cn(
+            "z-50 text-xs px-2.5 py-1.5 rounded-lg max-w-60 leading-relaxed",
+            className
+          )}
+        >
+          {content}
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
+  )
+}
+SimpleTooltip.displayName = "SimpleTooltip"
+
+export { SimpleTooltip }

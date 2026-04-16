@@ -240,7 +240,7 @@ export function MiniAppsPage() {
                 ) : (
                   <div
                     className="w-14 h-14 rounded-2xl flex items-center justify-center text-white text-lg shadow-sm"
-                    style={{ background: editingApp?.color || '#6366f1' }}
+                    style={{ background: editingApp?.color || 'var(--accent-indigo)' }}
                   >
                     {formName.charAt(0).toUpperCase() || '?'}
                   </div>

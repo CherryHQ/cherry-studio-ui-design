@@ -7,15 +7,15 @@ import {
 } from "lucide-react"
 
 const apps = [
-  { id: "chat", name: "Chat", icon: MessageSquare, color: "bg-blue-500", enabled: true },
-  { id: "translate", name: "Translate", icon: Globe, color: "bg-green-500", enabled: true },
-  { id: "image", name: "Image Gen", icon: Image, color: "bg-purple-500", enabled: true },
-  { id: "files", name: "Files", icon: FileText, color: "bg-amber-500", enabled: true },
-  { id: "knowledge", name: "Knowledge", icon: BookOpen, color: "bg-cyan-500", enabled: true },
-  { id: "notes", name: "Notes", icon: PenTool, color: "bg-pink-500", enabled: true },
-  { id: "code", name: "Code", icon: Code, color: "bg-orange-500", enabled: false },
-  { id: "agents", name: "Agents", icon: Bot, color: "bg-indigo-500", enabled: false },
-  { id: "settings", name: "Settings", icon: Settings, color: "bg-gray-500", enabled: true },
+  { id: "chat", name: "Chat", icon: MessageSquare, color: "bg-accent-blue", enabled: true },
+  { id: "translate", name: "Translate", icon: Globe, color: "bg-accent-emerald", enabled: true },
+  { id: "image", name: "Image Gen", icon: Image, color: "bg-accent-purple", enabled: true },
+  { id: "files", name: "Files", icon: FileText, color: "bg-accent-amber", enabled: true },
+  { id: "knowledge", name: "Knowledge", icon: BookOpen, color: "bg-accent-cyan", enabled: true },
+  { id: "notes", name: "Notes", icon: PenTool, color: "bg-accent-pink", enabled: true },
+  { id: "code", name: "Code", icon: Code, color: "bg-accent-orange", enabled: false },
+  { id: "agents", name: "Agents", icon: Bot, color: "bg-accent-indigo", enabled: false },
+  { id: "settings", name: "Settings", icon: Settings, color: "bg-muted-foreground", enabled: true },
 ]
 
 export function AppLauncherDemo() {
@@ -33,7 +33,11 @@ export function AppLauncherDemo() {
   }
 
   return (
-    <Section title="App Launcher" code={`// Compose with: Card, Input, Switch, Badge`}>
+    <Section title="App Launcher" props={[
+        { name: "apps", type: "AppItem[]", default: "[]", description: "List of available applications" },
+        { name: "onSelect", type: "(appId: string) => void", default: "undefined", description: "Callback when an app is selected" },
+        { name: "searchable", type: "boolean", default: "true", description: "Enable search filtering of apps" },
+      ]} code={`// Compose with: Card, Input, Switch, Badge`}>
       <div className="max-w-sm rounded-xl border bg-background p-4 space-y-3">
         <div className="flex items-center justify-between">
           <p className="text-sm font-medium">New Tab</p>
@@ -62,7 +66,7 @@ export function AppLauncherDemo() {
               }`}
             >
               <div className={`size-10 rounded-xl ${app.color} flex items-center justify-center`}>
-                <app.icon className="size-5 text-white" />
+                <app.icon className="size-5 text-primary-foreground" />
               </div>
               <span className="text-[10px] font-medium">{app.name}</span>
               {manage && (

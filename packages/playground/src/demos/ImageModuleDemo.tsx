@@ -1,5 +1,5 @@
 import React, { useState } from "react"
-import { Button, Badge, Input, Textarea } from "@cherry-studio/ui"
+import { Button, Badge, Input, Textarea, Slider, Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@cherry-studio/ui"
 import { Section } from "../components/Section"
 import {
   Settings2, Heart, ChevronLeft, ChevronRight, Dices, Sparkles, X,
@@ -99,10 +99,10 @@ export function ImageModuleDemo() {
         >
           {/* ─── Top Toolbar ─── */}
           <div className="absolute top-3 right-3 z-20 flex items-center gap-1.5">
-            <Button variant="ghost" type="button" onClick={toggleFav} className={`h-auto px-0 py-0 font-normal tracking-normal w-8 h-8 rounded-[12px] flex items-center justify-center transition-colors ${isFav ? "bg-error/10 text-error" : "bg-background/80 backdrop-blur-sm border border-border/30 text-muted-foreground/50 hover:text-foreground"}`}>
+            <Button variant="ghost" type="button" onClick={toggleFav} className={`h-auto px-0 py-0 font-normal tracking-normal w-8 h-8 rounded-[12px] flex items-center justify-center transition-colors ${isFav ? "bg-error/10 text-error" : "bg-background/80 backdrop-blur-[6px] border border-border/30 text-muted-foreground/50 hover:text-foreground"}`}>
               <Heart size={14} fill={isFav ? "currentColor" : "none"} />
             </Button>
-            <Button variant="ghost" type="button" onClick={() => setShowPanel(p => !p)} className={`h-auto px-0 py-0 font-normal tracking-normal w-8 h-8 rounded-[12px] flex items-center justify-center transition-colors ${showPanel ? "bg-foreground/10 text-foreground" : "bg-background/80 backdrop-blur-sm border border-border/30 text-muted-foreground/50 hover:text-foreground"}`}>
+            <Button variant="ghost" type="button" onClick={() => setShowPanel(p => !p)} className={`h-auto px-0 py-0 font-normal tracking-normal w-8 h-8 rounded-[12px] flex items-center justify-center transition-colors ${showPanel ? "bg-foreground/10 text-foreground" : "bg-background/80 backdrop-blur-[6px] border border-border/30 text-muted-foreground/50 hover:text-foreground"}`}>
               <Settings2 size={14} />
             </Button>
           </div>
@@ -124,10 +124,10 @@ export function ImageModuleDemo() {
             </div>
 
             {/* Nav arrows */}
-            <Button variant="ghost" type="button" onClick={() => navigate(-1)} className="h-auto px-0 py-0 font-normal tracking-normal absolute left-4 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-background/80 backdrop-blur-sm border border-border/30 flex items-center justify-center text-muted-foreground/50 hover:text-foreground transition-colors">
+            <Button variant="ghost" type="button" onClick={() => navigate(-1)} className="h-auto px-0 py-0 font-normal tracking-normal absolute left-4 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-background/80 backdrop-blur-[6px] border border-border/30 flex items-center justify-center text-muted-foreground/50 hover:text-foreground transition-colors">
               <ChevronLeft size={16} />
             </Button>
-            <Button variant="ghost" type="button" onClick={() => navigate(1)} className="h-auto px-0 py-0 font-normal tracking-normal absolute right-4 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-background/80 backdrop-blur-sm border border-border/30 flex items-center justify-center text-muted-foreground/50 hover:text-foreground transition-colors" style={{ right: showPanel ? 294 : 16 }}>
+            <Button variant="ghost" type="button" onClick={() => navigate(1)} className="h-auto px-0 py-0 font-normal tracking-normal absolute right-4 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-background/80 backdrop-blur-[6px] border border-border/30 flex items-center justify-center text-muted-foreground/50 hover:text-foreground transition-colors" style={{ right: showPanel ? 294 : 16 }}>
               <ChevronRight size={16} />
             </Button>
 
@@ -142,7 +142,7 @@ export function ImageModuleDemo() {
           {/* ─── History Strip ─── */}
           <div className="absolute bottom-[90px] left-1/2 -translate-x-1/2 z-10 flex items-center gap-2" style={{ marginRight: showPanel ? 290 : 0 }}>
             {IMAGES.map((img, i) => (
-              <Button variant="ghost" type="button" key={img.id} onClick={() => setSelectedIdx(i)} className={`h-auto px-0 py-0 font-normal tracking-normal w-12 h-12 rounded-[12px] flex items-center justify-center text-lg flex-shrink-0 transition-all ${i === selectedIdx ? "bg-background border-2 border-primary shadow-sm scale-110" : "bg-background/70 backdrop-blur-sm border border-border/30 hover:scale-105"}`}>
+              <Button variant="ghost" type="button" key={img.id} onClick={() => setSelectedIdx(i)} className={`h-auto px-0 py-0 font-normal tracking-normal w-12 h-12 rounded-[12px] flex items-center justify-center text-lg flex-shrink-0 transition-all ${i === selectedIdx ? "bg-background border-2 border-primary shadow-sm scale-110" : "bg-background/70 backdrop-blur-[6px] border border-border/30 hover:scale-105"}`}>
                 {img.emoji}
               </Button>
             ))}
@@ -153,9 +153,14 @@ export function ImageModuleDemo() {
             <div className="rounded-[24px] border border-border/40 bg-background/95 backdrop-blur-[6px] shadow-popover p-3 space-y-2">
               {/* Row 1: Model + Inspiration + Aspect */}
               <div className="flex items-center gap-2">
-                <select value={model} onChange={e => setModel(e.target.value)} className="h-7 px-2 rounded-[10px] border border-border/30 bg-transparent text-[11px] text-foreground outline-none cursor-pointer">
-                  {MODELS.map(m => <option key={m} value={m}>{m}</option>)}
-                </select>
+                <Select value={model} onValueChange={setModel}>
+                  <SelectTrigger className="h-7 w-auto px-2 rounded-[10px] border border-border/30 bg-transparent text-[11px] gap-1" size="sm">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {MODELS.map(m => <SelectItem key={m} value={m}>{m}</SelectItem>)}
+                  </SelectContent>
+                </Select>
                 <Button variant="ghost" type="button" onClick={randomPrompt} className="h-auto px-0 py-0 font-normal tracking-normal w-7 h-7 rounded-[10px] border border-border/30 flex items-center justify-center text-muted-foreground/50 hover:text-foreground hover:bg-accent/30 transition-colors" title="随机灵感">
                   <Dices size={13} />
                 </Button>
@@ -200,7 +205,7 @@ export function ImageModuleDemo() {
                   <span className="text-[11px] text-foreground/70">Steps</span>
                   <span className="text-[11px] text-foreground tabular-nums font-medium">{steps}</span>
                 </div>
-                <input type="range" min={1} max={50} value={steps} onChange={e => setSteps(Number(e.target.value))} className="w-full h-1 accent-primary cursor-pointer" />
+                <Slider min={1} max={50} step={1} value={[steps]} onValueChange={v => setSteps(v[0])} className="w-full" />
                 <div className="flex justify-between text-[8px] text-muted-foreground/25 mt-0.5"><span>1</span><span>50</span></div>
               </PanelSection>
 
@@ -236,7 +241,7 @@ export function ImageModuleDemo() {
                       <span className="text-[11px] text-foreground/70">CFG Scale</span>
                       <span className="text-[11px] text-foreground tabular-nums font-medium">{cfgScale}</span>
                     </div>
-                    <input type="range" min={1} max={20} value={cfgScale} onChange={e => setCfgScale(Number(e.target.value))} className="w-full h-1 accent-primary cursor-pointer" />
+                    <Slider min={1} max={20} step={1} value={[cfgScale]} onValueChange={v => setCfgScale(v[0])} className="w-full" />
                     <div className="flex justify-between text-[8px] text-muted-foreground/25 mt-0.5"><span>1</span><span>20</span></div>
                   </div>
                 </div>

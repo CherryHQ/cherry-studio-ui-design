@@ -9,9 +9,9 @@ import { Copy, ThumbsUp, ThumbsDown, RotateCcw, Pencil, Inbox } from "lucide-rea
 
 function ActionButton({ icon: Icon }: { icon: React.ElementType }) {
   return (
-    <button className="p-1 rounded-sm text-muted-foreground/40 hover:text-muted-foreground hover:bg-accent/50 transition-colors focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50">
+    <Button variant="ghost" className="p-1 rounded-sm text-muted-foreground/40 hover:text-muted-foreground hover:bg-accent/50 transition-colors focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50">
       <Icon size={12} />
-    </button>
+    </Button>
   )
 }
 
@@ -115,7 +115,7 @@ export function MessageBubbleDemo() {
             <p className="mt-1">Here's a simple counter component:</p>
             <CodeBlock
               language="tsx"
-              code={`import { useState } from "react"\n\nexport function Counter({ initial = 0 }: { initial?: number }) {\n  const [count, setCount] = useState(initial)\n  return (\n    <button onClick={() => setCount(c => c + 1)}>\n      Count: {count}\n    </button>\n  )\n}`}
+              code={`import { useState } from "react"\n\nexport function Counter({ initial = 0 }: { initial?: number }) {\n  const [count, setCount] = useState(initial)\n  return (\n    <Button variant="ghost" onClick={() => setCount(c => c + 1)}>\n      Count: {count}\n    </Button>\n  )\n}`}
             />
             <p>You can use it by importing and rendering <code className="bg-muted px-1 rounded text-[11px]">&lt;Counter initial={5} /&gt;</code>.</p>
           </MessageBubble>

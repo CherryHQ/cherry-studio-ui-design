@@ -27,7 +27,7 @@ export function Sidebar({ demos, active, onSelect, dark, onToggleDark }: Sidebar
 
   return (
     <aside className="w-[220px] flex-shrink-0 border-r border-border bg-muted/30 flex flex-col">
-      <div className="px-4 py-4 border-b border-border flex items-center justify-between">
+      <div className="px-5 py-4 border-b border-border flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Palette className="w-5 h-5 text-primary" />
           <span className="font-semibold text-sm">UI Playground</span>
@@ -40,7 +40,7 @@ export function Sidebar({ demos, active, onSelect, dark, onToggleDark }: Sidebar
         </button>
       </div>
 
-      <div className="px-2 pt-2 pb-1">
+      <div className="px-3 pt-2 pb-1">
         <div className="relative">
           <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground/50" />
           <input
@@ -61,7 +61,7 @@ export function Sidebar({ demos, active, onSelect, dark, onToggleDark }: Sidebar
         </div>
       </div>
 
-      <nav className="flex-1 overflow-y-auto py-1 px-2 [&::-webkit-scrollbar]:w-[3px] [&::-webkit-scrollbar-thumb]:bg-border/30 [&::-webkit-scrollbar-thumb]:rounded-full">
+      <nav className="flex-1 overflow-y-auto py-1 px-3 [&::-webkit-scrollbar]:w-[3px] [&::-webkit-scrollbar-thumb]:bg-border/30 [&::-webkit-scrollbar-thumb]:rounded-full">
         {categories.length === 0 && (
           <p className="px-2 py-4 text-xs text-muted-foreground/50 text-center">No results</p>
         )}
@@ -89,7 +89,7 @@ export function Sidebar({ demos, active, onSelect, dark, onToggleDark }: Sidebar
         ))}
       </nav>
 
-      <div className="px-3 py-2 border-t border-border">
+      <div className="px-5 py-2 border-t border-border">
         <p className="text-[10px] text-muted-foreground/50 text-center">
           {demos.length} components
         </p>

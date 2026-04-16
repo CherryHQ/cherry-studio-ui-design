@@ -38,9 +38,9 @@ export function TabBar({
     <div className="h-11 bg-sidebar flex items-center select-none flex-shrink-0">
       {/* Traffic lights */}
       <div className="flex items-center gap-2 px-4 flex-shrink-0">
-        <div className="w-3 h-3 rounded-full bg-[#ff5f57] border border-[#e0443e]" />
-        <div className="w-3 h-3 rounded-full bg-[#febc2e] border border-[#d4a528]" />
-        <div className="w-3 h-3 rounded-full bg-[#28c840] border border-[#24a732]" />
+        <div className="w-3 h-3 rounded-full bg-traffic-red border border-traffic-red-border" />
+        <div className="w-3 h-3 rounded-full bg-traffic-yellow border border-traffic-yellow-border" />
+        <div className="w-3 h-3 rounded-full bg-traffic-green border border-traffic-green-border" />
       </div>
 
       {/* Tabs area */}

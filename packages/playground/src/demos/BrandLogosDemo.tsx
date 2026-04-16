@@ -54,7 +54,7 @@ export function BrandLogosDemo() {
           {LOGOS.map(({ name, component: Logo }) => (
             <div
               key={name}
-              className="flex flex-col items-center gap-2 rounded-lg border p-3"
+              className="flex flex-col items-center gap-2 rounded-xl border p-3"
             >
               <Logo size={24} />
               <span className="text-xs text-muted-foreground">{name}</span>

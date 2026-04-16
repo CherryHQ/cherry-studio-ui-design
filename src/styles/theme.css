@@ -59,6 +59,33 @@
   --cherry-assistant: #6366F1;
   --cherry-parallel: #f59e0b;
 
+  /* Window chrome (macOS traffic lights) */
+  --traffic-red: #ff5f57;
+  --traffic-red-border: #e0443e;
+  --traffic-yellow: #febc2e;
+  --traffic-yellow-border: #d4a528;
+  --traffic-green: #28c840;
+  --traffic-green-border: #24a732;
+
+  /* Syntax highlighting */
+  --syntax-keyword: var(--accent-purple, #8755E9);
+  --syntax-string: var(--success, #49BA61);
+  --syntax-comment: var(--muted-foreground);
+  --syntax-number: var(--accent-orange, #E36323);
+  --syntax-function: var(--accent-blue, #3582FF);
+  --syntax-type: var(--warning, #f59e0b);
+  --syntax-variable: var(--error, #ef4444);
+
+  /* Code block */
+  --code-block-bg: var(--muted);
+  --code-block-border: var(--border);
+
+  /* Inset shadow tokens */
+  --shadow-inset-sm: inset 0 1px 2px 0 rgba(0,0,0,0.12);
+  --shadow-toggle-inset: inset 0 -1px 3px rgba(0,0,0,0.15);
+  --shadow-tab-active: 0 1.25px 3px 0 rgba(0,0,0,0.10);
+  --shadow-tab-inset: inset 0 1.25px 1px 0 var(--popover);
+
   /* Animation tokens */
   --duration-fast: 75ms;
   --duration-normal: 150ms;
@@ -185,6 +212,33 @@
   --color-cherry-user: var(--cherry-user);
   --color-cherry-assistant: var(--cherry-assistant);
   --color-cherry-parallel: var(--cherry-parallel);
+
+  /* Window chrome tokens */
+  --color-traffic-red: var(--traffic-red);
+  --color-traffic-red-border: var(--traffic-red-border);
+  --color-traffic-yellow: var(--traffic-yellow);
+  --color-traffic-yellow-border: var(--traffic-yellow-border);
+  --color-traffic-green: var(--traffic-green);
+  --color-traffic-green-border: var(--traffic-green-border);
+
+  /* Syntax highlighting tokens */
+  --color-syntax-keyword: var(--syntax-keyword);
+  --color-syntax-string: var(--syntax-string);
+  --color-syntax-comment: var(--syntax-comment);
+  --color-syntax-number: var(--syntax-number);
+  --color-syntax-function: var(--syntax-function);
+  --color-syntax-type: var(--syntax-type);
+  --color-syntax-variable: var(--syntax-variable);
+
+  /* Code block tokens */
+  --color-code-block-bg: var(--code-block-bg);
+  --color-code-block-border: var(--code-block-border);
+
+  /* Shadow tokens */
+  --shadow-inset-sm: var(--shadow-inset-sm);
+  --shadow-toggle-inset: var(--shadow-toggle-inset);
+  --shadow-tab-active: var(--shadow-tab-active);
+  --shadow-tab-inset: var(--shadow-tab-inset);
 }
 
 @layer base {

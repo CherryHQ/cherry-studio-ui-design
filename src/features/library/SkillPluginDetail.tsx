@@ -162,7 +162,7 @@ export function SkillPluginDetail({ resource, onBack, onToggle, onDelete }: Prop
             <label className="text-[10px] text-muted-foreground/60 mb-2 block">
               {resource.fileType === 'zip' ? '包内容' : '文件预览'}
             </label>
-            <div className="rounded-xl border border-border/15 bg-[#0d1117]/40 overflow-hidden">
+            <div className="rounded-xl border border-border/15 bg-code-block-bg/40 overflow-hidden">
               <div className="flex items-center gap-2 px-3 py-2 border-b border-border/10 bg-accent/5">
                 <FileIcon size={10} className="text-muted-foreground/40" />
                 <span className="text-[9px] text-muted-foreground/50 font-mono">{resource.fileName || 'preview'}</span>

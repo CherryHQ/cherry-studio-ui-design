@@ -46,12 +46,12 @@ export function highlightLine(line: string): React.ReactNode[] {
   let k = 0;
   while ((m = re.exec(line)) !== null) {
     const s = m[0];
-    if (isComment(s)) tokens.push(<span key={k++} className="text-[#6a737d]">{s}</span>);
-    else if (isQuote(s)) tokens.push(<span key={k++} className="text-[#b07d48]">{s}</span>);
-    else if (isDigit(s)) tokens.push(<span key={k++} className="text-[#0e7490]">{s}</span>);
-    else if (KW.has(s)) tokens.push(<span key={k++} className="text-[#7c3aed]">{s}</span>);
-    else if (LIT.has(s)) tokens.push(<span key={k++} className="text-[#0e7490]">{s}</span>);
-    else if (isUpper(s)) tokens.push(<span key={k++} className="text-[#0369a1]">{s}</span>);
+    if (isComment(s)) tokens.push(<span key={k++} className="text-syntax-comment">{s}</span>);
+    else if (isQuote(s)) tokens.push(<span key={k++} className="text-syntax-string">{s}</span>);
+    else if (isDigit(s)) tokens.push(<span key={k++} className="text-syntax-number">{s}</span>);
+    else if (KW.has(s)) tokens.push(<span key={k++} className="text-syntax-keyword">{s}</span>);
+    else if (LIT.has(s)) tokens.push(<span key={k++} className="text-syntax-number">{s}</span>);
+    else if (isUpper(s)) tokens.push(<span key={k++} className="text-syntax-function">{s}</span>);
     else tokens.push(<span key={k++}>{s}</span>);
   }
   return tokens;

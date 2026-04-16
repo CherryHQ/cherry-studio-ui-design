@@ -10,45 +10,45 @@ const fileTree: TreeNavItem[] = [
   {
     id: "src",
     label: "src",
-    icon: <Folder className="text-blue-500" />,
+    icon: <Folder className="text-accent-blue" />,
     children: [
       {
         id: "components",
         label: "components",
-        icon: <Folder className="text-blue-500" />,
+        icon: <Folder className="text-accent-blue" />,
         children: [
-          { id: "button.tsx", label: "button.tsx", icon: <Code className="text-green-500" />, count: 46 },
-          { id: "input.tsx", label: "input.tsx", icon: <Code className="text-green-500" />, count: 32 },
-          { id: "dialog.tsx", label: "dialog.tsx", icon: <Code className="text-green-500" />, count: 58 },
+          { id: "button.tsx", label: "button.tsx", icon: <Code className="text-accent-emerald" />, count: 46 },
+          { id: "input.tsx", label: "input.tsx", icon: <Code className="text-accent-emerald" />, count: 32 },
+          { id: "dialog.tsx", label: "dialog.tsx", icon: <Code className="text-accent-emerald" />, count: 58 },
         ],
       },
       {
         id: "features",
         label: "features",
-        icon: <Folder className="text-blue-500" />,
+        icon: <Folder className="text-accent-blue" />,
         children: [
-          { id: "chat", label: "chat", icon: <Folder className="text-blue-500" />, children: [
-            { id: "ChatPage.tsx", label: "ChatPage.tsx", icon: <Code className="text-green-500" /> },
-            { id: "Composer.tsx", label: "Composer.tsx", icon: <Code className="text-green-500" /> },
+          { id: "chat", label: "chat", icon: <Folder className="text-accent-blue" />, children: [
+            { id: "ChatPage.tsx", label: "ChatPage.tsx", icon: <Code className="text-accent-emerald" /> },
+            { id: "Composer.tsx", label: "Composer.tsx", icon: <Code className="text-accent-emerald" /> },
           ]},
-          { id: "settings", label: "settings", icon: <Folder className="text-blue-500" />, children: [
-            { id: "SettingsPage.tsx", label: "SettingsPage.tsx", icon: <Code className="text-green-500" /> },
+          { id: "settings", label: "settings", icon: <Folder className="text-accent-blue" />, children: [
+            { id: "SettingsPage.tsx", label: "SettingsPage.tsx", icon: <Code className="text-accent-emerald" /> },
           ]},
         ],
       },
-      { id: "App.tsx", label: "App.tsx", icon: <Code className="text-green-500" /> },
-      { id: "main.tsx", label: "main.tsx", icon: <Code className="text-green-500" /> },
+      { id: "App.tsx", label: "App.tsx", icon: <Code className="text-accent-emerald" /> },
+      { id: "main.tsx", label: "main.tsx", icon: <Code className="text-accent-emerald" /> },
     ],
   },
-  { id: "README.md", label: "README.md", icon: <FileText className="text-slate-400" /> },
-  { id: "package.json", label: "package.json", icon: <FileText className="text-amber-500" /> },
+  { id: "README.md", label: "README.md", icon: <FileText className="text-muted-foreground" /> },
+  { id: "package.json", label: "package.json", icon: <FileText className="text-accent-amber" /> },
 ]
 
 const knowledgeTree: TreeNavItem[] = [
   {
     id: "work",
     label: "Work",
-    icon: <Database className="text-blue-500" />,
+    icon: <Database className="text-accent-blue" />,
     count: 3,
     children: [
       { id: "api-docs", label: "API Documentation", icon: <BookOpen />, count: 24 },
@@ -59,7 +59,7 @@ const knowledgeTree: TreeNavItem[] = [
   {
     id: "personal",
     label: "Personal",
-    icon: <Database className="text-violet-500" />,
+    icon: <Database className="text-accent-violet" />,
     count: 2,
     children: [
       { id: "notes", label: "Meeting Notes", icon: <BookOpen />, count: 45 },
@@ -88,7 +88,7 @@ const items: TreeNavItem[] = [
 ]
 
 <TreeNav items={items} activeId="app.tsx" onSelect={setActive} />`}>
-        <div className="max-w-xs rounded-lg border bg-card p-2">
+        <div className="max-w-xs rounded-xl border bg-card p-2">
           <TreeNav
             items={fileTree}
             activeId={fileActive}
@@ -99,7 +99,7 @@ const items: TreeNavItem[] = [
       </Section>
 
       <Section title="Knowledge Base Tree">
-        <div className="max-w-xs rounded-lg border bg-card p-2">
+        <div className="max-w-xs rounded-xl border bg-card p-2">
           <TreeNav
             items={knowledgeTree}
             activeId={kbActive}
@@ -110,11 +110,11 @@ const items: TreeNavItem[] = [
       </Section>
 
       <Section title="With Groups">
-        <div className="max-w-xs rounded-lg border bg-card p-2 space-y-1">
+        <div className="max-w-xs rounded-xl border bg-card p-2 space-y-1">
           <TreeNavGroup title="Favorites">
             <TreeNav
               items={[
-                { id: "starred", label: "Starred", icon: <Star className="text-amber-500" />, count: 5 },
+                { id: "starred", label: "Starred", icon: <Star className="text-accent-amber" />, count: 5 },
                 { id: "recent", label: "Recent", icon: <Clock />, count: 12 },
               ]}
               activeId="starred"
@@ -124,12 +124,12 @@ const items: TreeNavItem[] = [
           <TreeNavGroup title="Folders" defaultOpen>
             <TreeNav
               items={[
-                { id: "docs", label: "Documents", icon: <Folder className="text-blue-500" />, count: 23, children: [
-                  { id: "reports", label: "Reports", icon: <Folder className="text-blue-500" />, count: 8 },
-                  { id: "drafts", label: "Drafts", icon: <Folder className="text-blue-500" />, count: 3 },
+                { id: "docs", label: "Documents", icon: <Folder className="text-accent-blue" />, count: 23, children: [
+                  { id: "reports", label: "Reports", icon: <Folder className="text-accent-blue" />, count: 8 },
+                  { id: "drafts", label: "Drafts", icon: <Folder className="text-accent-blue" />, count: 3 },
                 ]},
-                { id: "images", label: "Images", icon: <Folder className="text-green-500" />, count: 45 },
-                { id: "audio", label: "Audio", icon: <Folder className="text-violet-500" />, count: 7 },
+                { id: "images", label: "Images", icon: <Folder className="text-accent-emerald" />, count: 45 },
+                { id: "audio", label: "Audio", icon: <Folder className="text-accent-violet" />, count: 7 },
               ]}
               defaultExpanded={["docs"]}
               onSelect={() => {}}
@@ -149,14 +149,14 @@ const items: TreeNavItem[] = [
       </Section>
 
       <Section title="Deeply Nested">
-        <div className="max-w-xs rounded-lg border bg-card p-2">
+        <div className="max-w-xs rounded-xl border bg-card p-2">
           <TreeNav
             items={[
               { id: "root", label: "Root", icon: <Folder />, children: [
                 { id: "l1", label: "Level 1", icon: <Folder />, children: [
                   { id: "l2", label: "Level 2", icon: <Folder />, children: [
                     { id: "l3", label: "Level 3", icon: <Folder />, children: [
-                      { id: "deep-file", label: "deep-file.ts", icon: <Code className="text-green-500" /> },
+                      { id: "deep-file", label: "deep-file.ts", icon: <Code className="text-accent-emerald" /> },
                     ]},
                   ]},
                 ]},

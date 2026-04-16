@@ -112,7 +112,7 @@ function formatNumber(n: number) {
 
 function FavBadge() {
   return (
-    <div className="absolute top-2.5 left-2.5 z-10 w-5 h-5 rounded-full bg-error/10 flex items-center justify-center backdrop-blur-sm border border-error/15 shadow-sm">
+    <div className="absolute top-2.5 left-2.5 z-10 w-5 h-5 rounded-full bg-error/10 flex items-center justify-center backdrop-blur-[6px] border border-error/15 shadow-sm">
       <Heart size={9} className="text-error" fill="currentColor" />
     </div>
   )
@@ -139,7 +139,7 @@ function AgentCard({ agent, isFavorited, onClick, onExperience, onFavorite }: {
   agent: Agent; isFavorited?: boolean; onClick: () => void; onExperience: () => void; onFavorite: () => void
 }) {
   return (
-    <div className="group relative rounded-2xl border border-border/20 bg-card hover:border-border/40 hover:shadow-lg hover:shadow-foreground/[0.03] transition-all duration-200 overflow-hidden cursor-pointer" onClick={onClick}>
+    <div className="group relative rounded-[24px] border border-border/20 bg-card hover:border-border/40 hover:shadow-lg hover:shadow-foreground/[0.03] transition-all duration-200 overflow-hidden cursor-pointer" onClick={onClick}>
       {isFavorited && <FavBadge />}
       <CardHoverOverlay onExperience={onExperience} onFavorite={onFavorite} isFavorited={!!isFavorited} />
       <div className="p-4 pb-3">
@@ -164,7 +164,7 @@ function AgentCard({ agent, isFavorited, onClick, onExperience, onFavorite }: {
           <span className="text-[9px] text-muted-foreground/25">{formatNumber(agent.runs)} 次运行</span>
         </div>
         <div className="flex items-center gap-1">
-          {agent.tags.map((tag) => <span key={tag} className="text-[9px] px-1.5 py-px rounded-md bg-accent/50 text-muted-foreground/40">{tag}</span>)}
+          {agent.tags.map((tag) => <span key={tag} className="text-[9px] px-1.5 py-px rounded-[12px] bg-accent/50 text-muted-foreground/40">{tag}</span>)}
         </div>
       </div>
       <div className="px-4 py-2.5 border-t border-border/10">
@@ -181,12 +181,12 @@ function AssistantCard({ assistant, isFavorited, onClick, onFavorite }: {
   assistant: Assistant; isFavorited?: boolean; onClick: () => void; onFavorite: () => void
 }) {
   return (
-    <div className="group relative rounded-2xl border border-border/20 bg-card hover:border-border/40 hover:shadow-lg hover:shadow-foreground/[0.03] transition-all duration-200 overflow-hidden cursor-pointer" onClick={onClick}>
+    <div className="group relative rounded-[24px] border border-border/20 bg-card hover:border-border/40 hover:shadow-lg hover:shadow-foreground/[0.03] transition-all duration-200 overflow-hidden cursor-pointer" onClick={onClick}>
       {isFavorited && <FavBadge />}
       <CardHoverOverlay onExperience={onClick} onFavorite={onFavorite} isFavorited={!!isFavorited} />
       <div className="p-4 pb-3">
         <div className="flex items-start gap-3 mb-3">
-          <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-foreground/[0.06] to-foreground/[0.06] flex items-center justify-center text-xl flex-shrink-0">{assistant.avatar}</div>
+          <div className="w-10 h-10 rounded-[24px] bg-gradient-to-br from-foreground/[0.06] to-foreground/[0.06] flex items-center justify-center text-xl flex-shrink-0">{assistant.avatar}</div>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-1.5">
               <h3 className="text-[12px] text-foreground truncate">{assistant.name}</h3>
@@ -201,7 +201,7 @@ function AssistantCard({ assistant, isFavorited, onClick, onFavorite }: {
         </div>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-1">
-            {assistant.tags.map((tag) => <span key={tag} className="text-[9px] px-1.5 py-px rounded-md bg-accent/50 text-muted-foreground/40">{tag}</span>)}
+            {assistant.tags.map((tag) => <span key={tag} className="text-[9px] px-1.5 py-px rounded-[12px] bg-accent/50 text-muted-foreground/40">{tag}</span>)}
           </div>
           <div className="flex items-center gap-0.5 text-[9px] text-muted-foreground/25"><MessageCircle size={8} /><span>{formatNumber(assistant.conversations)}</span></div>
         </div>
@@ -220,7 +220,7 @@ function ToolCard({ item, metricLabel, metricValue, isFavorited, onClick, onFavo
   item: ToolItem; metricLabel: string; metricValue: string; isFavorited?: boolean; onClick: () => void; onFavorite: () => void
 }) {
   return (
-    <div className="group relative rounded-2xl border border-border/20 bg-card hover:border-border/40 hover:shadow-lg hover:shadow-foreground/[0.03] transition-all duration-200 p-4 cursor-pointer overflow-hidden" onClick={onClick}>
+    <div className="group relative rounded-[24px] border border-border/20 bg-card hover:border-border/40 hover:shadow-lg hover:shadow-foreground/[0.03] transition-all duration-200 p-4 cursor-pointer overflow-hidden" onClick={onClick}>
       {isFavorited && <FavBadge />}
       <CardHoverOverlay onExperience={onClick} onFavorite={onFavorite} isFavorited={!!isFavorited} />
       <div className="flex items-start gap-3 mb-3">
@@ -236,7 +236,7 @@ function ToolCard({ item, metricLabel, metricValue, isFavorited, onClick, onFavo
       <p className="text-[11px] text-muted-foreground/50 leading-relaxed line-clamp-2 mb-3">{item.description}</p>
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-1">
-          {item.tags.map((tag) => <span key={tag} className="text-[9px] px-1.5 py-px rounded-md bg-accent/50 text-muted-foreground/40">{tag}</span>)}
+          {item.tags.map((tag) => <span key={tag} className="text-[9px] px-1.5 py-px rounded-[12px] bg-accent/50 text-muted-foreground/40">{tag}</span>)}
         </div>
         <div className="flex items-center gap-0.5 text-[9px] text-muted-foreground/25"><Download size={8} /><span>{metricValue} {metricLabel}</span></div>
       </div>
@@ -268,7 +268,7 @@ function PreviewContent({ resource, category, isFavorited, isSaved, onToggleFavo
             <Button variant="ghost" type="button" onClick={onClose} className="h-auto px-0 py-0 font-normal tracking-normal w-6 h-6 rounded-[12px] flex items-center justify-center text-muted-foreground/40 hover:text-foreground hover:bg-accent transition-colors"><X size={13} /></Button>
           </div>
           <div className="flex items-start gap-3.5">
-            <div className={`w-14 h-14 rounded-2xl flex items-center justify-center text-2xl flex-shrink-0 ring-1 ring-border/10 ${isAgent ? "bg-gradient-to-br from-accent-violet/10 to-accent-blue/10" : isAssistant ? "bg-gradient-to-br from-foreground/[0.06] to-foreground/[0.06]" : "bg-accent/60"}`}>
+            <div className={`w-14 h-14 rounded-[24px] flex items-center justify-center text-2xl flex-shrink-0 ring-1 ring-border/10 ${isAgent ? "bg-gradient-to-br from-accent-violet/10 to-accent-blue/10" : isAssistant ? "bg-gradient-to-br from-foreground/[0.06] to-foreground/[0.06]" : "bg-accent/60"}`}>
               {avatar}
             </div>
             <div className="flex-1 min-w-0 pt-0.5">
@@ -398,7 +398,7 @@ function ExperienceModal({ resource, category, onSave, onClose }: {
       {/* Left: resource info */}
       <div className="w-[200px] shrink-0 border-r border-border/15 flex flex-col p-4 bg-accent/[0.03]">
         <div className="flex flex-col items-center text-center mb-4">
-          <div className="w-14 h-14 rounded-2xl bg-accent/50 flex items-center justify-center text-2xl mb-2.5">{avatar}</div>
+          <div className="w-14 h-14 rounded-[24px] bg-accent/50 flex items-center justify-center text-2xl mb-2.5">{avatar}</div>
           <h3 className="text-[13px] text-foreground font-medium mb-0.5">{resource.name}</h3>
           <p className="text-[10px] text-muted-foreground/40 leading-relaxed">{resource.description}</p>
         </div>
@@ -426,14 +426,14 @@ function ExperienceModal({ resource, category, onSave, onClose }: {
               <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs shrink-0 ${msg.role === "user" ? "bg-foreground/10" : "bg-accent-violet/10"}`}>
                 {msg.role === "user" ? "👤" : avatar}
               </div>
-              <div className={`max-w-[75%] px-3 py-2 rounded-2xl text-[11px] leading-relaxed ${msg.role === "user" ? "bg-foreground text-background rounded-tr-md" : "bg-accent/50 text-foreground/80 rounded-tl-md"}`}>
+              <div className={`max-w-[75%] px-3 py-2 rounded-[24px] text-[11px] leading-relaxed ${msg.role === "user" ? "bg-foreground text-background rounded-tr-md" : "bg-accent/50 text-foreground/80 rounded-tl-md"}`}>
                 {msg.text}
               </div>
             </div>
           ))}
           <div className="flex gap-2.5">
             <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs shrink-0 bg-accent-violet/10">{avatar}</div>
-            <div className="flex items-center gap-1 px-3 py-2 rounded-2xl bg-accent/50 rounded-tl-md">
+            <div className="flex items-center gap-1 px-3 py-2 rounded-[24px] bg-accent/50 rounded-tl-md">
               <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground/30 animate-pulse" />
               <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground/30 animate-pulse [animation-delay:0.2s]" />
               <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground/30 animate-pulse [animation-delay:0.4s]" />
@@ -526,7 +526,7 @@ export function ExploreModuleDemo() {
 
           {/* Featured banner (agents only) */}
           {!search && category === "agents" && sub === "全部" && (
-            <div className="relative rounded-2xl overflow-hidden mb-5">
+            <div className="relative rounded-[24px] overflow-hidden mb-5">
               <div className="absolute inset-0 bg-gradient-to-r from-accent-violet/[0.08] via-accent-blue/[0.05] to-foreground/[0.05]" />
               <div className="relative px-6 py-5">
                 <div className="flex items-center gap-2 mb-2">

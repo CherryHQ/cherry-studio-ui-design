@@ -42,7 +42,7 @@ export function CheckboxRadioSwitchDemo() {
       </Section>
 
       <Section title="Checkbox — Practical Settings">
-        <div className="rounded-lg border p-4 max-w-sm space-y-4">
+        <div className="rounded-xl border p-4 max-w-sm space-y-4">
           <h4 className="text-sm font-medium">Notification Preferences</h4>
           {(["email", "push", "sms"] as const).map((key) => (
             <div key={key} className="flex items-start space-x-3">
@@ -96,7 +96,7 @@ export function CheckboxRadioSwitchDemo() {
             <Label
               key={model.value}
               htmlFor={`model-${model.value}`}
-              className="flex flex-col items-center justify-center rounded-lg border-2 border-muted bg-transparent p-4 hover:bg-accent hover:text-accent-foreground cursor-pointer has-[:checked]:border-primary [&:has(:checked)]:border-primary"
+              className="flex flex-col items-center justify-center rounded-xl border-2 border-muted bg-transparent p-4 hover:bg-accent hover:text-accent-foreground cursor-pointer has-[:checked]:border-primary [&:has(:checked)]:border-primary"
             >
               <RadioGroupItem value={model.value} id={`model-${model.value}`} className="sr-only" />
               <span className="text-sm font-medium">{model.label}</span>
@@ -128,7 +128,7 @@ export function CheckboxRadioSwitchDemo() {
       </Section>
 
       <Section title="Switch — Practical Settings Row">
-        <div className="max-w-sm space-y-4 rounded-lg border p-4">
+        <div className="max-w-sm space-y-4 rounded-xl border p-4">
           {[
             { id: "dark-mode", label: "Dark Mode", desc: "Use dark theme", on: true },
             { id: "stream", label: "Stream Output", desc: "Show tokens as they generate", on: true },

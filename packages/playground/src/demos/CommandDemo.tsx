@@ -22,7 +22,7 @@ export function CommandDemo() {
         { name: "onValueChange", type: "(value) => void", description: "Selection handler" },
       ]} code={`import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@cherry-studio/ui"
 
-<Command className="rounded-lg border shadow-md">
+<Command className="rounded-[24px] border shadow-popover">
   <CommandInput placeholder="Type a command..." />
   <CommandList>
     <CommandEmpty>No results found.</CommandEmpty>
@@ -32,7 +32,7 @@ export function CommandDemo() {
     </CommandGroup>
   </CommandList>
 </Command>`}>
-        <Command className="rounded-lg border shadow-md max-w-lg">
+        <Command className="rounded-[24px] border shadow-popover max-w-lg">
           <CommandInput placeholder="Type a command or search..." />
           <CommandList>
             <CommandEmpty>No results found.</CommandEmpty>
@@ -97,7 +97,7 @@ export function CommandDemo() {
       </Section>
 
       <Section title="With Selection Feedback">
-        <Command className="rounded-lg border shadow-md max-w-lg">
+        <Command className="rounded-[24px] border shadow-popover max-w-lg">
           <CommandInput placeholder="Select a model..." />
           <CommandList>
             <CommandEmpty>No model found.</CommandEmpty>

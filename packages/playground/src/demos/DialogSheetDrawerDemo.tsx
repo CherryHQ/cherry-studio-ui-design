@@ -59,7 +59,7 @@ export function DialogSheetDrawerDemo() {
                 <SheetTitle>Settings</SheetTitle>
                 <SheetDescription>Configure your preferences.</SheetDescription>
               </SheetHeader>
-              <div className="py-6 space-y-4">
+              <div className="px-6 py-6 space-y-4">
                 <div className="space-y-2">
                   <Label>Theme</Label>
                   <Input placeholder="light" />

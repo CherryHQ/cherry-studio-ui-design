@@ -53,7 +53,7 @@ export function SpinnerDemo() {
       </Section>
 
       <Section title="Full Page Loading">
-        <div className="h-32 rounded-lg border flex items-center justify-center">
+        <div className="h-32 rounded-xl border flex items-center justify-center">
           <div className="text-center space-y-3">
             <Spinner className="size-6 mx-auto" />
             <p className="text-sm text-muted-foreground">Loading your workspace...</p>

@@ -3,6 +3,7 @@
 import * as React from "react"
 import { ChevronRight, MoreHorizontal } from "lucide-react"
 import { cn } from "../../lib/utils"
+import { Button } from "./button"
 
 /* ---------------------------------- Types --------------------------------- */
 
@@ -52,7 +53,8 @@ function TreeNav({
 
   return (
     <div
-      className={cn("space-y-0.5", className)}
+      data-slot="tree-nav"
+      className={cn("space-y-0.5 tracking-tight", className)}
       role="list"
       {...props}
     >
@@ -100,14 +102,16 @@ function TreeNavNode({
 
   return (
     <div role="listitem">
-      <button
+      <Button
+        variant="ghost"
+        size="sm"
         onClick={() => {
           if (hasChildren) onToggle(item.id)
           onSelect?.(item.id)
         }}
         onContextMenu={(e) => onItemContextMenu?.(e, item)}
         className={cn(
-          "w-full flex items-center gap-1.5 rounded-md text-xs transition-colors py-1.5 pr-2 group/node focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring rounded-sm",
+          "w-full flex items-center gap-1.5 text-xs py-1.5 pr-2 justify-start group/node",
           isActive
             ? "bg-accent text-foreground font-medium"
             : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
@@ -143,7 +147,7 @@ function TreeNavNode({
             {item.count}
           </span>
         )}
-      </button>
+      </Button>
 
       {/* Children */}
       {hasChildren && isExpanded && (
@@ -187,11 +191,13 @@ function TreeNavGroup({
 
   return (
     <div className={cn("space-y-0.5", className)} {...props}>
-      <button
+      <Button
+        variant="ghost"
+        size="xs"
         onClick={() => collapsible && setOpen(!open)}
         className={cn(
-          "w-full flex items-center gap-1.5 px-2 py-1 text-xs font-medium uppercase tracking-wider text-muted-foreground",
-          collapsible && "hover:text-muted-foreground cursor-pointer"
+          "w-full flex items-center gap-1.5 px-2 py-1 text-xs font-medium uppercase tracking-wider text-muted-foreground justify-start",
+          collapsible && "cursor-pointer"
         )}
       >
         {collapsible && (
@@ -204,7 +210,7 @@ function TreeNavGroup({
           />
         )}
         <span>{title}</span>
-      </button>
+      </Button>
       {open && children}
     </div>
   )

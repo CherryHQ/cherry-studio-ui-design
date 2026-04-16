@@ -1,4 +1,4 @@
-import React from "react"
+import React, { useState } from "react"
 import { Button, Badge, Card, CardContent, Input, Progress } from "@cherry-studio/ui"
 import { Section, type PropDef } from "../components/Section"
 
@@ -47,7 +47,7 @@ function ColorSwatch({ name, cssVar, label }: { name: string; cssVar: string; la
   return (
     <div className="flex items-center gap-3">
       <div
-        className="h-8 w-8 rounded-md border border-border shadow-sm flex-shrink-0"
+        className="h-8 w-8 rounded-[12px] border border-border shadow-sm flex-shrink-0"
         style={{ backgroundColor: `var(${cssVar})` }}
       />
       <div className="min-w-0">
@@ -69,6 +69,8 @@ const themePreviewProps: PropDef[] = [
 ]
 
 export function ThemePreviewDemo() {
+  const [theme, setTheme] = useState<"light" | "dark">("light")
+
   return (
     <>
       <Section title="Semantic Colors" install="npm install @cherry-studio/ui" props={themePreviewProps} code={`/* Use CSS variables for theming */
@@ -116,7 +118,7 @@ export function ThemePreviewDemo() {
           ].map((t) => (
             <div key={t.var} className="space-y-1.5">
               <div
-                className="h-8 w-full rounded-md bg-primary hover:scale-105"
+                className="h-8 w-full rounded-[12px] bg-primary hover:scale-105"
                 style={{ transitionDuration: `var(${t.var})`, transitionProperty: "transform" }}
               />
               <p className="text-xs font-medium">{t.label}</p>
@@ -131,7 +133,7 @@ export function ThemePreviewDemo() {
           {[
             { label: "radius-sm", class: "rounded-sm", size: "0.25rem" },
             { label: "radius", class: "rounded-md", size: "calc(var(--radius))" },
-            { label: "radius-md", class: "rounded-lg", size: "calc(var(--radius) + 2px)" },
+            { label: "radius-md", class: "rounded-[12px]", size: "calc(var(--radius) + 2px)" },
             { label: "radius-lg", class: "rounded-xl", size: "calc(var(--radius) + 4px)" },
             { label: "radius-full", class: "rounded-full", size: "9999px" },
           ].map((r) => (
@@ -177,10 +179,19 @@ export function ThemePreviewDemo() {
       </Section>
 
       <Section title="Component Preview">
-        <Card className="max-w-sm">
+        <div className="mb-3">
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => setTheme(theme === "light" ? "dark" : "light")}
+          >
+            {theme === "light" ? "Switch to Dark" : "Switch to Light"}
+          </Button>
+        </div>
+        <Card className={`max-w-sm ${theme === "dark" ? "dark bg-background text-foreground" : ""}`}>
           <CardContent className="p-6 space-y-4">
             <div className="space-y-1">
-              <h4 className="text-sm font-semibold">Theme Test Card</h4>
+              <h4 className="text-sm font-semibold">Theme Test Card ({theme})</h4>
               <p className="text-xs text-muted-foreground">Verify all theme tokens render correctly.</p>
             </div>
             <Input placeholder="Input field" />

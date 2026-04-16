@@ -4,33 +4,69 @@
   --font-size: 16px;
   --background: #f4f4f4;
   --foreground: #121212;
-  --card: #ffffff;
+  --card: #fcfcfc;
   --card-foreground: #121212;
   --popover: #fcfcfc;
   --popover-foreground: #121212;
-  --primary: #00b96b;
-  --primary-foreground: #ffffff;
+  --primary: #323232;
+  --primary-foreground: #fcfcfc;
   --secondary: #f1f1f1;
   --secondary-foreground: #121212;
   --muted: #f1f1f1;
   --muted-foreground: #7b7b7b;
   --accent: #f1f1f1;
   --accent-foreground: #121212;
-  --destructive: #d4183d;
+  --destructive: #dc2626;
   --destructive-foreground: #ffffff;
+  --destructive-border: #e87070;
+  --destructive-ring: #f5c0c0;
   --border: #ececec;
   --input: #ececec;
-  --input-background: #ffffff;
-  --switch-background: #cbced4;
+  --input-background: #fcfcfc;
+  --switch-background: #ececec;
+  --surface-02: #F8F7F7;
+  --stroke-02: #E2E2E2;
+  --shade-7: #323232;
+  --shade-8: #222222;
+  /* Button gradient tokens — Secondary (derives from --secondary) */
+  --btn-default-from: color-mix(in srgb, var(--secondary), black 5%);
+  --btn-default-to: color-mix(in srgb, var(--secondary), black 8%);
+  --btn-default-hover-from: color-mix(in srgb, var(--secondary), black 10%);
+  --btn-default-hover-to: color-mix(in srgb, var(--secondary), black 13%);
+  --btn-default-shadow: 0 3px 4px -1px rgba(0,0,0,0.15), 0 0 0 1px color-mix(in srgb, var(--secondary), black 15%);
+  --btn-default-inset: inset 0 1px 0 rgba(255,255,255,0.33);
+  /* Button gradient tokens — Primary (derives from --primary for theme switching) */
+  --btn-primary-from: var(--primary);
+  --btn-primary-to: color-mix(in srgb, var(--primary), black 15%);
+  --btn-primary-hover-from: color-mix(in srgb, var(--primary), white 8%);
+  --btn-primary-hover-to: color-mix(in srgb, var(--primary), black 10%);
+  --btn-primary-shadow: 0 2px 4px -1px color-mix(in srgb, var(--primary) 50%, transparent), 0 0 0 1px color-mix(in srgb, var(--primary), black 10%);
+  --btn-primary-inset: inset 0 0.5px 1px rgba(255,255,255,0.15), inset 0 -1px 1.2px 0.35px color-mix(in srgb, var(--primary), black 30%);
+  /* Button gradient tokens — Destructive (derives from --destructive for theme switching) */
+  --btn-destructive-from: var(--destructive);
+  --btn-destructive-to: color-mix(in srgb, var(--destructive), black 15%);
+  --btn-destructive-hover-from: color-mix(in srgb, var(--destructive), black 15%);
+  --btn-destructive-hover-to: color-mix(in srgb, var(--destructive), black 25%);
+  --btn-destructive-shadow: 0 3px 4px -1px color-mix(in srgb, var(--destructive) 50%, transparent), 0 0 0 1px color-mix(in srgb, var(--destructive), black 20%);
+  --btn-destructive-inset: inset 0 1px 0 rgba(255,255,255,0.2);
+
   --font-weight-medium: 500;
   --font-weight-normal: 400;
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
+  --ring: var(--primary);
+  --chart-1: #3582FF;
+  --chart-2: #6366F1;
+  --chart-3: #8755E9;
+  --chart-4: #06b6d4;
+  --chart-5: #64748b;
   --radius: 0.75rem;
+  /* Figma radius system */
+  --radius-window: 32px;
+  --radius-card: 24px;
+  --radius-button: 12px;
+  --radius-control: 10px;
+  --radius-track: 8px;
+  --radius-kbd: 6px;
+  --radius-dot: 4px;
   --sidebar: oklch(0.985 0 0);
   --sidebar-foreground: oklch(0.145 0 0);
   --sidebar-primary: #030213;
@@ -59,12 +95,76 @@
   --cherry-assistant: #6366F1;
   --cherry-parallel: #f59e0b;
 
-  /* Shadow tokens */
-  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-  --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
-  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
-  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+  /* Semantic status colors */
+  --success: #49BA61;
+  --success-foreground: #ffffff;
+  --success-muted: rgba(73, 186, 97, 0.15);
+  --warning: #f59e0b;
+  --warning-foreground: #ffffff;
+  --warning-muted: rgba(245, 158, 11, 0.15);
+  --error: #ef4444;
+  --error-foreground: #ffffff;
+  --error-muted: rgba(239, 68, 68, 0.15);
+  --info: #3b82f6;
+  --info-foreground: #ffffff;
+  --info-muted: rgba(59, 130, 246, 0.15);
+
+  /* Accent palette (Figma brand colors) */
+  --accent-blue: #3582FF;
+  --accent-blue-muted: rgba(53, 130, 255, 0.15);
+  --accent-violet: #8b5cf6;
+  --accent-violet-muted: rgba(139, 92, 246, 0.10);
+  --accent-amber: #FFB73A;
+  --accent-amber-muted: rgba(255, 183, 58, 0.10);
+  --accent-orange: #E36323;
+  --accent-orange-muted: rgba(227, 99, 35, 0.15);
+  --accent-purple: #8755E9;
+  --accent-purple-muted: rgba(135, 85, 233, 0.15);
+  --accent-pink: #ec4899;
+  --accent-pink-muted: rgba(236, 72, 153, 0.15);
+  --accent-cyan: #06b6d4;
+  --accent-cyan-muted: rgba(6, 182, 212, 0.15);
+  --accent-indigo: #6366f1;
+  --accent-indigo-muted: rgba(99, 102, 241, 0.15);
+  --accent-emerald: #10b981;
+  --accent-emerald-muted: rgba(16, 185, 129, 0.15);
+
+  /* Shadow tokens (Figma Depth system) */
+  --shadow-sm: 0px 1px 1px 0px rgba(0,0,0,0.02), 0px 3px 3px 0px rgba(0,0,0,0.02), 0px 6px 3px 0px rgba(0,0,0,0.01);
+  --shadow: 0px 2px 8px -4px rgba(0,0,0,0.25);
+  --shadow-md: 0px 1px 4px -4px rgba(0,0,0,0.08), 0px 8px 16px -12px rgba(0,0,0,0.13);
+  --shadow-lg: 0px 18px 24px -20px rgba(0,0,0,0.13), 0px 8px 16px -12px rgba(0,0,0,0.08);
+  --shadow-xl: 0px 12px 11px -12px rgba(0,0,0,0.15), 0px 80px 64px -64px rgba(0,0,0,0.2), 0px 16px 32px -24px rgba(0,0,0,0.62);
+  --shadow-button: 0px 0px 0px 1px #D4D4D4, 0px 3px 4px -1px rgba(0,0,0,0.15);
+  --shadow-button-inset: inset 0px 1px 0px 0px rgba(255,255,255,0.33);
+  --shadow-popover: 0px 10px 21px 0px rgba(0,0,0,0.07), 0px 38px 38px 0px rgba(0,0,0,0.06), 0px 86px 52px 0px rgba(0,0,0,0.04), 0px 153px 61px 0px rgba(0,0,0,0.01);
+
+  /* Window chrome (macOS traffic lights) */
+  --traffic-red: #ff5f57;
+  --traffic-red-border: #e0443e;
+  --traffic-yellow: #febc2e;
+  --traffic-yellow-border: #d4a528;
+  --traffic-green: #28c840;
+  --traffic-green-border: #24a732;
+
+  /* Syntax highlighting */
+  --syntax-keyword: var(--accent-purple);
+  --syntax-string: var(--success);
+  --syntax-comment: var(--muted-foreground);
+  --syntax-number: var(--accent-orange);
+  --syntax-function: var(--accent-blue);
+  --syntax-type: var(--warning);
+  --syntax-variable: var(--error);
+
+  /* Code block */
+  --code-block-bg: var(--muted);
+  --code-block-border: var(--border);
+
+  /* Inset shadow tokens */
+  --shadow-inset-sm: inset 0 1px 2px 0 rgba(0,0,0,0.12);
+  --shadow-toggle-inset: inset 0 -1px 3px rgba(0,0,0,0.15);
+  --shadow-tab-active: 0 1.25px 3px 0 rgba(0,0,0,0.10);
+  --shadow-tab-inset: inset 0 1.25px 1px 0 var(--popover);
 
   /* Animation tokens */
   --duration-fast: 75ms;
@@ -83,28 +183,57 @@
   --card-foreground: oklch(0.985 0 0);
   --popover: oklch(0.145 0 0);
   --popover-foreground: oklch(0.985 0 0);
-  --primary: #00b96b;
-  --primary-foreground: #ffffff;
+  --primary: #e5e5e5;
+  --primary-foreground: #121212;
   --secondary: oklch(0.269 0 0);
   --secondary-foreground: oklch(0.985 0 0);
   --muted: oklch(0.269 0 0);
   --muted-foreground: oklch(0.708 0 0);
   --accent: oklch(0.269 0 0);
   --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.396 0.141 25.723);
+  --destructive: #ef4444;
   --destructive-foreground: #ffffff;
+  --destructive-border: #b04040;
+  --destructive-ring: #5c2020;
   --border: oklch(0.269 0 0);
   --input: oklch(0.269 0 0);
   --input-background: oklch(0.205 0 0);
+  --surface-02: oklch(0.205 0 0);
+  --stroke-02: oklch(0.3 0 0);
+  --shade-7: #c0c0c0;
+  --shade-8: #a0a0a0;
   --switch-background: oklch(0.355 0 0);
-  --ring: oklch(0.439 0 0);
+  --ring: var(--primary);
+
+  /* Button gradient tokens (dark) — Secondary (derives from --secondary) */
+  --btn-default-from: color-mix(in srgb, var(--secondary), black 5%);
+  --btn-default-to: color-mix(in srgb, var(--secondary), black 8%);
+  --btn-default-hover-from: color-mix(in srgb, var(--secondary), black 10%);
+  --btn-default-hover-to: color-mix(in srgb, var(--secondary), black 13%);
+  --btn-default-shadow: 0 2px 4px -1px rgba(0,0,0,0.5), 0 0 0 1px color-mix(in srgb, var(--secondary), black 15%);
+  --btn-default-inset: inset 0 1px 0 rgba(255,255,255,0.1);
+  /* Button gradient tokens (dark) — Primary (derives from --primary) */
+  --btn-primary-from: var(--primary);
+  --btn-primary-to: color-mix(in srgb, var(--primary), black 15%);
+  --btn-primary-hover-from: color-mix(in srgb, var(--primary), white 8%);
+  --btn-primary-hover-to: color-mix(in srgb, var(--primary), black 10%);
+  --btn-primary-shadow: 0 2px 4px -1px color-mix(in srgb, var(--primary) 50%, transparent), 0 0 0 1px color-mix(in srgb, var(--primary), black 10%);
+  --btn-primary-inset: inset 0 0.5px 1px rgba(255,255,255,0.15), inset 0 -1px 1.2px 0.35px color-mix(in srgb, var(--primary), black 30%);
+  /* Button gradient tokens (dark) — Destructive (derives from --destructive) */
+  --btn-destructive-from: var(--destructive);
+  --btn-destructive-to: color-mix(in srgb, var(--destructive), black 15%);
+  --btn-destructive-hover-from: color-mix(in srgb, var(--destructive), black 15%);
+  --btn-destructive-hover-to: color-mix(in srgb, var(--destructive), black 25%);
+  --btn-destructive-shadow: 0 3px 4px -1px color-mix(in srgb, var(--destructive) 50%, transparent), 0 0 0 1px color-mix(in srgb, var(--destructive), black 20%);
+  --btn-destructive-inset: inset 0 1px 0 rgba(255,255,255,0.15);
+
   --font-weight-medium: 500;
   --font-weight-normal: 400;
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
+  --chart-1: #60a5fa;
+  --chart-2: #818cf8;
+  --chart-3: #a78bfa;
+  --chart-4: #22d3ee;
+  --chart-5: #94a3b8;
   --sidebar: oklch(0.205 0 0);
   --sidebar-foreground: oklch(0.985 0 0);
   --sidebar-primary: oklch(0.488 0.243 264.376);
@@ -114,12 +243,49 @@
   --sidebar-border: oklch(0.269 0 0);
   --sidebar-ring: oklch(0.439 0 0);
 
-  /* Shadow tokens (dark) */
-  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.2);
-  --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.3), 0 1px 2px -1px rgb(0 0 0 / 0.3);
-  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.3), 0 2px 4px -2px rgb(0 0 0 / 0.3);
-  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.3), 0 4px 6px -4px rgb(0 0 0 / 0.3);
-  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.3), 0 8px 10px -6px rgb(0 0 0 / 0.3);
+  /* Semantic status colors (dark) */
+  --success: #4ade80;
+  --success-foreground: #052e16;
+  --success-muted: rgba(74, 222, 128, 0.15);
+  --warning: #fbbf24;
+  --warning-foreground: #451a03;
+  --warning-muted: rgba(251, 191, 36, 0.15);
+  --error: #f87171;
+  --error-foreground: #450a0a;
+  --error-muted: rgba(248, 113, 113, 0.15);
+  --info: #60a5fa;
+  --info-foreground: #172554;
+  --info-muted: rgba(96, 165, 250, 0.15);
+
+  /* Accent palette (dark) */
+  --accent-blue: #60a5fa;
+  --accent-blue-muted: rgba(96, 165, 250, 0.15);
+  --accent-violet: #a78bfa;
+  --accent-violet-muted: rgba(167, 139, 250, 0.10);
+  --accent-amber: #fbbf24;
+  --accent-amber-muted: rgba(251, 191, 36, 0.10);
+  --accent-orange: #fb923c;
+  --accent-orange-muted: rgba(251, 146, 60, 0.15);
+  --accent-purple: #c084fc;
+  --accent-purple-muted: rgba(192, 132, 252, 0.15);
+  --accent-pink: #f472b6;
+  --accent-pink-muted: rgba(244, 114, 182, 0.15);
+  --accent-cyan: #22d3ee;
+  --accent-cyan-muted: rgba(34, 211, 238, 0.15);
+  --accent-indigo: #818cf8;
+  --accent-indigo-muted: rgba(129, 140, 248, 0.15);
+  --accent-emerald: #34d399;
+  --accent-emerald-muted: rgba(52, 211, 153, 0.15);
+
+  /* Shadow tokens (dark - Figma Depth system) */
+  --shadow-sm: 0px 1px 1px 0px rgba(0,0,0,0.06), 0px 3px 3px 0px rgba(0,0,0,0.06), 0px 6px 3px 0px rgba(0,0,0,0.03);
+  --shadow: 0px 2px 8px -4px rgba(0,0,0,0.5);
+  --shadow-md: 0px 1px 4px -4px rgba(0,0,0,0.2), 0px 8px 16px -12px rgba(0,0,0,0.3);
+  --shadow-lg: 0px 18px 24px -20px rgba(0,0,0,0.3), 0px 8px 16px -12px rgba(0,0,0,0.2);
+  --shadow-xl: 0px 12px 11px -12px rgba(0,0,0,0.3), 0px 80px 64px -64px rgba(0,0,0,0.4), 0px 16px 32px -24px rgba(0,0,0,0.8);
+  --shadow-button: 0px 0px 0px 1px rgba(255,255,255,0.1), 0px 3px 4px -1px rgba(0,0,0,0.3);
+  --shadow-button-inset: inset 0px 1px 0px 0px rgba(255,255,255,0.1);
+  --shadow-popover: 0px 10px 21px 0px rgba(0,0,0,0.15), 0px 38px 38px 0px rgba(0,0,0,0.12), 0px 86px 52px 0px rgba(0,0,0,0.08);
 
   /* Cherry accent: neutral system (dark mode) */
   --cherry-active-bg: rgba(156, 163, 175, 0.06);
@@ -134,6 +300,12 @@
   --cherry-ring: rgba(156, 163, 175, 0.50);
   --cherry-shadow: rgba(156, 163, 175, 0.25);
   --cherry-shadow-sm: rgba(156, 163, 175, 0.05);
+
+  /* Inset shadow tokens (dark) */
+  --shadow-inset-sm: inset 0 1px 2px 0 rgba(0,0,0,0.25);
+  --shadow-toggle-inset: inset 0 -1px 3px rgba(0,0,0,0.3);
+  --shadow-tab-active: 0 1.25px 3px 0 rgba(0,0,0,0.4);
+  --shadow-tab-inset: inset 0 1px 0 rgba(255,255,255,0.1);
 
   /* Semantic role colors (dark) */
   --cherry-user: #a3d977;
@@ -157,7 +329,11 @@
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
   --color-destructive: var(--destructive);
+  --color-surface-02: var(--surface-02);
+  --color-stroke-02: var(--stroke-02);
   --color-destructive-foreground: var(--destructive-foreground);
+  --color-destructive-border: var(--destructive-border);
+  --color-destructive-ring: var(--destructive-ring);
   --color-border: var(--border);
   --color-input: var(--input);
   --color-input-background: var(--input-background);
@@ -172,6 +348,13 @@
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
+  --radius-window: var(--radius-window);
+  --radius-card: var(--radius-card);
+  --radius-button: var(--radius-button);
+  --radius-control: var(--radius-control);
+  --radius-track: var(--radius-track);
+  --radius-kbd: var(--radius-kbd);
+  --radius-dot: var(--radius-dot);
   --color-sidebar: var(--sidebar);
   --color-sidebar-foreground: var(--sidebar-foreground);
   --color-sidebar-primary: var(--sidebar-primary);
@@ -180,6 +363,40 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
+
+  /* Semantic status tokens */
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-success-muted: var(--success-muted);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-warning-muted: var(--warning-muted);
+  --color-error: var(--error);
+  --color-error-foreground: var(--error-foreground);
+  --color-error-muted: var(--error-muted);
+  --color-info: var(--info);
+  --color-info-foreground: var(--info-foreground);
+  --color-info-muted: var(--info-muted);
+
+  /* Accent palette tokens */
+  --color-accent-blue: var(--accent-blue);
+  --color-accent-blue-muted: var(--accent-blue-muted);
+  --color-accent-violet: var(--accent-violet);
+  --color-accent-violet-muted: var(--accent-violet-muted);
+  --color-accent-amber: var(--accent-amber);
+  --color-accent-amber-muted: var(--accent-amber-muted);
+  --color-accent-orange: var(--accent-orange);
+  --color-accent-orange-muted: var(--accent-orange-muted);
+  --color-accent-purple: var(--accent-purple);
+  --color-accent-purple-muted: var(--accent-purple-muted);
+  --color-accent-pink: var(--accent-pink);
+  --color-accent-pink-muted: var(--accent-pink-muted);
+  --color-accent-cyan: var(--accent-cyan);
+  --color-accent-cyan-muted: var(--accent-cyan-muted);
+  --color-accent-indigo: var(--accent-indigo);
+  --color-accent-indigo-muted: var(--accent-indigo-muted);
+  --color-accent-emerald: var(--accent-emerald);
+  --color-accent-emerald-muted: var(--accent-emerald-muted);
 
   /* Cherry accent tokens */
   --color-cherry-active-bg: var(--cherry-active-bg);
@@ -199,6 +416,36 @@
   --color-cherry-user: var(--cherry-user);
   --color-cherry-assistant: var(--cherry-assistant);
   --color-cherry-parallel: var(--cherry-parallel);
+
+  /* Shadow tokens */
+  --shadow-button: var(--shadow-button);
+  --shadow-button-inset: var(--shadow-button-inset);
+  --shadow-popover: var(--shadow-popover);
+  --shadow-inset-sm: var(--shadow-inset-sm);
+  --shadow-toggle-inset: var(--shadow-toggle-inset);
+  --shadow-tab-active: var(--shadow-tab-active);
+  --shadow-tab-inset: var(--shadow-tab-inset);
+
+  /* Window chrome tokens */
+  --color-traffic-red: var(--traffic-red);
+  --color-traffic-red-border: var(--traffic-red-border);
+  --color-traffic-yellow: var(--traffic-yellow);
+  --color-traffic-yellow-border: var(--traffic-yellow-border);
+  --color-traffic-green: var(--traffic-green);
+  --color-traffic-green-border: var(--traffic-green-border);
+
+  /* Syntax highlighting tokens */
+  --color-syntax-keyword: var(--syntax-keyword);
+  --color-syntax-string: var(--syntax-string);
+  --color-syntax-comment: var(--syntax-comment);
+  --color-syntax-number: var(--syntax-number);
+  --color-syntax-function: var(--syntax-function);
+  --color-syntax-type: var(--syntax-type);
+  --color-syntax-variable: var(--syntax-variable);
+
+  /* Code block tokens */
+  --color-code-block-bg: var(--code-block-bg);
+  --color-code-block-border: var(--code-block-border);
 
   /* Animation tokens */
   --animate-duration-fast: var(--duration-fast);

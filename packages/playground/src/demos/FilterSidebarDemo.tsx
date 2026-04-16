@@ -26,7 +26,7 @@ export function FilterSidebarDemo() {
     <FilterItem icon={<Star />} label="Starred" count={8} />
   </FilterSection>
 </FilterSidebar>`}>
-        <div className="h-[400px] rounded-lg border overflow-hidden">
+        <div className="h-[400px] rounded-xl border overflow-hidden">
           <FilterSidebar width={200}>
             <div className="p-2">
               <div className="relative">
@@ -53,12 +53,12 @@ export function FilterSidebarDemo() {
             <FilterSection title="Folders">
               <TreeNav
                 items={[
-                  { id: "projects", label: "Projects", icon: <Folder className="text-blue-500" />, count: 23, children: [
-                    { id: "cherry-v2", label: "Cherry V2", icon: <Folder className="text-blue-500" />, count: 15 },
-                    { id: "website", label: "Website", icon: <Folder className="text-blue-500" />, count: 8 },
+                  { id: "projects", label: "Projects", icon: <Folder className="text-accent-blue" />, count: 23, children: [
+                    { id: "cherry-v2", label: "Cherry V2", icon: <Folder className="text-accent-blue" />, count: 15 },
+                    { id: "website", label: "Website", icon: <Folder className="text-accent-blue" />, count: 8 },
                   ]},
-                  { id: "assets", label: "Assets", icon: <Folder className="text-amber-500" />, count: 45 },
-                  { id: "archive", label: "Archive", icon: <Folder className="text-slate-400" />, count: 12 },
+                  { id: "assets", label: "Assets", icon: <Folder className="text-accent-amber" />, count: 45 },
+                  { id: "archive", label: "Archive", icon: <Folder className="text-muted-foreground" />, count: 12 },
                 ]}
                 defaultExpanded={["projects"]}
                 onSelect={() => {}}
@@ -75,7 +75,7 @@ export function FilterSidebarDemo() {
       </Section>
 
       <Section title="Library/Resource Sidebar">
-        <div className="h-[350px] rounded-lg border overflow-hidden">
+        <div className="h-[350px] rounded-xl border overflow-hidden">
           <FilterSidebar width={200}>
             <FilterSection>
               <FilterItem icon={<Inbox />} label="All Resources" count={86} active={libraryFilter === "all"} onClick={() => setLibraryFilter("all")} />
@@ -102,7 +102,7 @@ export function FilterSidebarDemo() {
       </Section>
 
       <Section title="Minimal Sidebar">
-        <div className="h-[250px] rounded-lg border overflow-hidden">
+        <div className="h-[250px] rounded-xl border overflow-hidden">
           <FilterSidebar width={180}>
             <FilterSection>
               <FilterItem label="Inbox" count={24} active />

@@ -175,7 +175,7 @@ function NoteTreeItem({ item, depth = 0, selectedId, onSelect, expandedFolders, 
       <div>
         <Button variant="ghost" type="button"
           onClick={() => onToggleFolder(item.id)}
-          className="h-auto px-0 py-0 font-normal tracking-normal w-full flex items-center gap-1.5 py-[5px] px-2 rounded-md text-[12px] hover:bg-accent/60 transition-colors group/folder"
+          className="h-auto px-0 py-0 font-normal tracking-normal w-full flex items-center gap-1.5 py-[5px] px-2 rounded-[12px] text-[12px] hover:bg-accent/60 transition-colors group/folder"
           style={{ paddingLeft: `${depth * 16 + 8}px` }}
         >
           <ChevronRight size={12} className={`text-muted-foreground/50 transition-transform flex-shrink-0 ${isExpanded ? "rotate-90" : ""}`} />
@@ -195,7 +195,7 @@ function NoteTreeItem({ item, depth = 0, selectedId, onSelect, expandedFolders, 
   return (
     <Button variant="ghost" type="button"
       onClick={() => onSelect(item.id)}
-      className={`h-auto px-0 py-0 font-normal tracking-normal w-full flex items-center gap-1.5 py-[5px] px-2 rounded-md text-[12px] transition-colors group/file ${
+      className={`h-auto px-0 py-0 font-normal tracking-normal w-full flex items-center gap-1.5 py-[5px] px-2 rounded-[12px] text-[12px] transition-colors group/file ${
         isSelected ? "bg-accent text-foreground" : "text-foreground/70 hover:bg-accent/50 hover:text-foreground"
       }`}
       style={{ paddingLeft: `${depth * 16 + 8}px` }}
@@ -406,24 +406,24 @@ export function NoteModuleDemo() {
                 <div className="h-11 flex items-center gap-1.5 px-3 flex-shrink-0">
                   <NotebookPen size={14} className="text-accent-orange flex-shrink-0" />
                   <span className="text-xs text-foreground flex-1 truncate">笔记</span>
-                  <SimpleTooltip content="新建笔记"><Button variant="ghost" type="button" className="h-auto px-0 py-0 font-normal tracking-normal w-6 h-6 rounded-md flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"><FilePlus size={13} /></Button></SimpleTooltip>
-                  <SimpleTooltip content="新建文件夹"><Button variant="ghost" type="button" className="h-auto px-0 py-0 font-normal tracking-normal w-6 h-6 rounded-md flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"><FolderPlus size={13} /></Button></SimpleTooltip>
-                  <SimpleTooltip content="收起目录"><Button variant="ghost" type="button" onClick={() => setLeftPanelOpen(false)} className="h-auto px-0 py-0 font-normal tracking-normal w-6 h-6 rounded-md flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"><PanelLeftClose size={13} /></Button></SimpleTooltip>
+                  <SimpleTooltip content="新建笔记"><Button variant="ghost" type="button" className="h-auto px-0 py-0 font-normal tracking-normal w-6 h-6 rounded-[12px] flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"><FilePlus size={13} /></Button></SimpleTooltip>
+                  <SimpleTooltip content="新建文件夹"><Button variant="ghost" type="button" className="h-auto px-0 py-0 font-normal tracking-normal w-6 h-6 rounded-[12px] flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"><FolderPlus size={13} /></Button></SimpleTooltip>
+                  <SimpleTooltip content="收起目录"><Button variant="ghost" type="button" onClick={() => setLeftPanelOpen(false)} className="h-auto px-0 py-0 font-normal tracking-normal w-6 h-6 rounded-[12px] flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"><PanelLeftClose size={13} /></Button></SimpleTooltip>
                 </div>
                 {/* Search & Filters */}
                 <div className="px-2.5 pt-2 pb-1 space-y-1.5">
                   <div className="relative">
                     <Search size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground/50" />
-                    <Input type="text" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} placeholder="搜索笔记..." className="h-7 w-full rounded-md border-0 bg-accent/40 pl-7 pr-2 text-xs text-foreground shadow-none placeholder:text-muted-foreground/40 focus:bg-accent/60 focus-visible:ring-1 focus-visible:ring-border/50" />
+                    <Input type="text" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} placeholder="搜索笔记..." className="h-7 w-full rounded-[12px] border-0 bg-accent/40 pl-7 pr-2 text-xs text-foreground shadow-none placeholder:text-muted-foreground/40 focus:bg-accent/60 focus-visible:ring-1 focus-visible:ring-border/50" />
                   </div>
                   <div className="flex items-center gap-1">
-                    <Button variant="ghost" type="button" onClick={() => setFilterStarred(!filterStarred)} className={`h-auto px-0 py-0 font-normal tracking-normal flex items-center gap-1 px-2 py-1 rounded-md text-[11px] transition-colors ${filterStarred ? "bg-accent-amber-muted text-accent-amber" : "text-muted-foreground hover:bg-accent/50 hover:text-foreground"}`}>
+                    <Button variant="ghost" type="button" onClick={() => setFilterStarred(!filterStarred)} className={`h-auto px-0 py-0 font-normal tracking-normal flex items-center gap-1 px-2 py-1 rounded-[12px] text-[11px] transition-colors ${filterStarred ? "bg-accent-amber-muted text-accent-amber" : "text-muted-foreground hover:bg-accent/50 hover:text-foreground"}`}>
                       <Star size={10} className={filterStarred ? "fill-accent-amber" : ""} /> 收藏
                     </Button>
-                    <Button variant="ghost" type="button" onClick={() => setSortBy(sortBy === "name" ? "date" : "name")} className="h-auto px-0 py-0 font-normal tracking-normal flex items-center gap-1 px-2 py-1 rounded-md text-[11px] text-muted-foreground hover:bg-accent/50 hover:text-foreground transition-colors">
+                    <Button variant="ghost" type="button" onClick={() => setSortBy(sortBy === "name" ? "date" : "name")} className="h-auto px-0 py-0 font-normal tracking-normal flex items-center gap-1 px-2 py-1 rounded-[12px] text-[11px] text-muted-foreground hover:bg-accent/50 hover:text-foreground transition-colors">
                       <SortAsc size={10} /> {sortBy === "name" ? "名称" : "日期"}
                     </Button>
-                    <Button variant="ghost" type="button" className="h-auto px-0 py-0 font-normal tracking-normal flex items-center gap-1 px-2 py-1 rounded-md text-[11px] text-muted-foreground hover:bg-accent/50 hover:text-foreground transition-colors">
+                    <Button variant="ghost" type="button" className="h-auto px-0 py-0 font-normal tracking-normal flex items-center gap-1 px-2 py-1 rounded-[12px] text-[11px] text-muted-foreground hover:bg-accent/50 hover:text-foreground transition-colors">
                       <Filter size={10} /> 筛选
                     </Button>
                   </div>
@@ -450,7 +450,7 @@ export function NoteModuleDemo() {
             {/* Header */}
             <div className="h-11 flex items-center px-4 flex-shrink-0 gap-2">
               {!leftPanelOpen && (
-                <SimpleTooltip content="展开目录"><Button variant="ghost" type="button" onClick={() => setLeftPanelOpen(true)} className="h-auto px-0 py-0 font-normal tracking-normal w-7 h-7 rounded-md flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent transition-colors mr-1"><PanelLeftOpen size={15} /></Button></SimpleTooltip>
+                <SimpleTooltip content="展开目录"><Button variant="ghost" type="button" onClick={() => setLeftPanelOpen(true)} className="h-auto px-0 py-0 font-normal tracking-normal w-7 h-7 rounded-[12px] flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent transition-colors mr-1"><PanelLeftOpen size={15} /></Button></SimpleTooltip>
               )}
               <div className="flex items-center gap-1.5 flex-1 min-w-0">
                 <FileText size={13} className="text-primary flex-shrink-0" />
@@ -465,19 +465,19 @@ export function NoteModuleDemo() {
               )}
               <div className="flex items-center gap-0.5 flex-shrink-0 ml-1">
                 <div className="flex items-center bg-accent/40 rounded-[12px] p-0.5 gap-0.5">
-                  <SimpleTooltip content="实时编辑"><Button variant="ghost" type="button" onClick={() => setEditorMode("edit")} className={`h-auto px-0 py-0 font-normal tracking-normal w-6 h-6 rounded-md flex items-center justify-center transition-colors ${editorMode === "edit" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground/60 hover:text-foreground"}`}><PenLine size={11} /></Button></SimpleTooltip>
-                  <SimpleTooltip content="Markdown 源码"><Button variant="ghost" type="button" onClick={() => setEditorMode("markdown")} className={`h-auto px-0 py-0 font-normal tracking-normal w-6 h-6 rounded-md flex items-center justify-center transition-colors ${editorMode === "markdown" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground/60 hover:text-foreground"}`}><Code size={11} /></Button></SimpleTooltip>
-                  <SimpleTooltip content="只读预览"><Button variant="ghost" type="button" onClick={() => setEditorMode("preview")} className={`h-auto px-0 py-0 font-normal tracking-normal w-6 h-6 rounded-md flex items-center justify-center transition-colors ${editorMode === "preview" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground/60 hover:text-foreground"}`}><Eye size={11} /></Button></SimpleTooltip>
+                  <SimpleTooltip content="实时编辑"><Button variant="ghost" type="button" onClick={() => setEditorMode("edit")} className={`h-auto px-0 py-0 font-normal tracking-normal w-6 h-6 rounded-[12px] flex items-center justify-center transition-colors ${editorMode === "edit" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground/60 hover:text-foreground"}`}><PenLine size={11} /></Button></SimpleTooltip>
+                  <SimpleTooltip content="Markdown 源码"><Button variant="ghost" type="button" onClick={() => setEditorMode("markdown")} className={`h-auto px-0 py-0 font-normal tracking-normal w-6 h-6 rounded-[12px] flex items-center justify-center transition-colors ${editorMode === "markdown" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground/60 hover:text-foreground"}`}><Code size={11} /></Button></SimpleTooltip>
+                  <SimpleTooltip content="只读预览"><Button variant="ghost" type="button" onClick={() => setEditorMode("preview")} className={`h-auto px-0 py-0 font-normal tracking-normal w-6 h-6 rounded-[12px] flex items-center justify-center transition-colors ${editorMode === "preview" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground/60 hover:text-foreground"}`}><Eye size={11} /></Button></SimpleTooltip>
                 </div>
               </div>
               <div className="w-px h-4 bg-border/30 mx-1" />
               <div className="flex items-center gap-0.5 flex-shrink-0">
-                <SimpleTooltip content="导出"><Button variant="ghost" type="button" className="h-auto px-0 py-0 font-normal tracking-normal w-7 h-7 rounded-md flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"><Download size={13} /></Button></SimpleTooltip>
-                <SimpleTooltip content="分享"><Button variant="ghost" type="button" className="h-auto px-0 py-0 font-normal tracking-normal w-7 h-7 rounded-md flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"><Share2 size={13} /></Button></SimpleTooltip>
-                <SimpleTooltip content="更多"><Button variant="ghost" type="button" className="h-auto px-0 py-0 font-normal tracking-normal w-7 h-7 rounded-md flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"><MoreHorizontal size={13} /></Button></SimpleTooltip>
+                <SimpleTooltip content="导出"><Button variant="ghost" type="button" className="h-auto px-0 py-0 font-normal tracking-normal w-7 h-7 rounded-[12px] flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"><Download size={13} /></Button></SimpleTooltip>
+                <SimpleTooltip content="分享"><Button variant="ghost" type="button" className="h-auto px-0 py-0 font-normal tracking-normal w-7 h-7 rounded-[12px] flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"><Share2 size={13} /></Button></SimpleTooltip>
+                <SimpleTooltip content="更多"><Button variant="ghost" type="button" className="h-auto px-0 py-0 font-normal tracking-normal w-7 h-7 rounded-[12px] flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"><MoreHorizontal size={13} /></Button></SimpleTooltip>
                 <div className="w-px h-4 bg-border/30 mx-1" />
                 <SimpleTooltip content={rightPanelOpen ? "关闭 AI 面板" : "打开 AI 面板"}>
-                  <Button variant="ghost" type="button" onClick={() => setRightPanelOpen(!rightPanelOpen)} className={`h-auto px-0 py-0 font-normal tracking-normal w-7 h-7 rounded-md flex items-center justify-center transition-colors ${rightPanelOpen ? "bg-primary/15 text-primary" : "text-muted-foreground hover:text-foreground hover:bg-accent"}`}><Sparkles size={13} /></Button>
+                  <Button variant="ghost" type="button" onClick={() => setRightPanelOpen(!rightPanelOpen)} className={`h-auto px-0 py-0 font-normal tracking-normal w-7 h-7 rounded-[12px] flex items-center justify-center transition-colors ${rightPanelOpen ? "bg-primary/15 text-primary" : "text-muted-foreground hover:text-foreground hover:bg-accent"}`}><Sparkles size={13} /></Button>
                 </SimpleTooltip>
               </div>
             </div>
@@ -486,42 +486,42 @@ export function NoteModuleDemo() {
             {editorMode !== "preview" && (
               <div className="h-9 flex items-center px-3 gap-0.5 flex-shrink-0 overflow-x-auto [&::-webkit-scrollbar]:hidden bg-muted/20 rounded-[12px] mx-3 mt-1">
                 <div className="flex items-center gap-0.5">
-                  <SimpleTooltip content="撤销"><Button variant="ghost" type="button" onClick={handleUndo} className={`h-auto px-0 py-0 font-normal tracking-normal w-7 h-7 rounded-md flex items-center justify-center transition-colors ${undoStack.length > 0 ? "text-muted-foreground/60 hover:text-foreground hover:bg-accent" : "text-muted-foreground/20 cursor-not-allowed"}`}><Undo2 size={13} /></Button></SimpleTooltip>
-                  <SimpleTooltip content="重做"><Button variant="ghost" type="button" onClick={handleRedo} className={`h-auto px-0 py-0 font-normal tracking-normal w-7 h-7 rounded-md flex items-center justify-center transition-colors ${redoStack.length > 0 ? "text-muted-foreground/60 hover:text-foreground hover:bg-accent" : "text-muted-foreground/20 cursor-not-allowed"}`}><Redo2 size={13} /></Button></SimpleTooltip>
+                  <SimpleTooltip content="撤销"><Button variant="ghost" type="button" onClick={handleUndo} className={`h-auto px-0 py-0 font-normal tracking-normal w-7 h-7 rounded-[12px] flex items-center justify-center transition-colors ${undoStack.length > 0 ? "text-muted-foreground/60 hover:text-foreground hover:bg-accent" : "text-muted-foreground/20 cursor-not-allowed"}`}><Undo2 size={13} /></Button></SimpleTooltip>
+                  <SimpleTooltip content="重做"><Button variant="ghost" type="button" onClick={handleRedo} className={`h-auto px-0 py-0 font-normal tracking-normal w-7 h-7 rounded-[12px] flex items-center justify-center transition-colors ${redoStack.length > 0 ? "text-muted-foreground/60 hover:text-foreground hover:bg-accent" : "text-muted-foreground/20 cursor-not-allowed"}`}><Redo2 size={13} /></Button></SimpleTooltip>
                 </div>
                 <div className="w-px h-4 bg-border/20 mx-1" />
                 <div className="flex items-center gap-0.5">
-                  <SimpleTooltip content="标题 1"><Button variant="ghost" type="button" onClick={() => insertLinePrefix("# ")} className="h-auto px-0 py-0 font-normal tracking-normal w-7 h-7 rounded-md flex items-center justify-center text-muted-foreground/60 hover:text-foreground hover:bg-accent transition-colors"><Heading1 size={13} /></Button></SimpleTooltip>
-                  <SimpleTooltip content="标题 2"><Button variant="ghost" type="button" onClick={() => insertLinePrefix("## ")} className="h-auto px-0 py-0 font-normal tracking-normal w-7 h-7 rounded-md flex items-center justify-center text-muted-foreground/60 hover:text-foreground hover:bg-accent transition-colors"><Heading2 size={13} /></Button></SimpleTooltip>
-                  <SimpleTooltip content="标题 3"><Button variant="ghost" type="button" onClick={() => insertLinePrefix("### ")} className="h-auto px-0 py-0 font-normal tracking-normal w-7 h-7 rounded-md flex items-center justify-center text-muted-foreground/60 hover:text-foreground hover:bg-accent transition-colors"><Heading3 size={13} /></Button></SimpleTooltip>
+                  <SimpleTooltip content="标题 1"><Button variant="ghost" type="button" onClick={() => insertLinePrefix("# ")} className="h-auto px-0 py-0 font-normal tracking-normal w-7 h-7 rounded-[12px] flex items-center justify-center text-muted-foreground/60 hover:text-foreground hover:bg-accent transition-colors"><Heading1 size={13} /></Button></SimpleTooltip>
+                  <SimpleTooltip content="标题 2"><Button variant="ghost" type="button" onClick={() => insertLinePrefix("## ")} className="h-auto px-0 py-0 font-normal tracking-normal w-7 h-7 rounded-[12px] flex items-center justify-center text-muted-foreground/60 hover:text-foreground hover:bg-accent transition-colors"><Heading2 size={13} /></Button></SimpleTooltip>
+                  <SimpleTooltip content="标题 3"><Button variant="ghost" type="button" onClick={() => insertLinePrefix("### ")} className="h-auto px-0 py-0 font-normal tracking-normal w-7 h-7 rounded-[12px] flex items-center justify-center text-muted-foreground/60 hover:text-foreground hover:bg-accent transition-colors"><Heading3 size={13} /></Button></SimpleTooltip>
                 </div>
                 <div className="w-px h-4 bg-border/20 mx-1" />
                 <div className="flex items-center gap-0.5">
-                  <SimpleTooltip content="加粗"><Button variant="ghost" type="button" onClick={() => insertMarkdown("**", "**", "粗体文字")} className="h-auto px-0 py-0 font-normal tracking-normal w-7 h-7 rounded-md flex items-center justify-center text-muted-foreground/60 hover:text-foreground hover:bg-accent transition-colors"><Bold size={13} /></Button></SimpleTooltip>
-                  <SimpleTooltip content="斜体"><Button variant="ghost" type="button" onClick={() => insertMarkdown("*", "*", "斜体文字")} className="h-auto px-0 py-0 font-normal tracking-normal w-7 h-7 rounded-md flex items-center justify-center text-muted-foreground/60 hover:text-foreground hover:bg-accent transition-colors"><Italic size={13} /></Button></SimpleTooltip>
-                  <SimpleTooltip content="下划线"><Button variant="ghost" type="button" onClick={() => insertMarkdown("<u>", "</u>", "下划线文字")} className="h-auto px-0 py-0 font-normal tracking-normal w-7 h-7 rounded-md flex items-center justify-center text-muted-foreground/60 hover:text-foreground hover:bg-accent transition-colors"><Underline size={13} /></Button></SimpleTooltip>
-                  <SimpleTooltip content="删除线"><Button variant="ghost" type="button" onClick={() => insertMarkdown("~~", "~~", "删除线文字")} className="h-auto px-0 py-0 font-normal tracking-normal w-7 h-7 rounded-md flex items-center justify-center text-muted-foreground/60 hover:text-foreground hover:bg-accent transition-colors"><Strikethrough size={13} /></Button></SimpleTooltip>
+                  <SimpleTooltip content="加粗"><Button variant="ghost" type="button" onClick={() => insertMarkdown("**", "**", "粗体文字")} className="h-auto px-0 py-0 font-normal tracking-normal w-7 h-7 rounded-[12px] flex items-center justify-center text-muted-foreground/60 hover:text-foreground hover:bg-accent transition-colors"><Bold size={13} /></Button></SimpleTooltip>
+                  <SimpleTooltip content="斜体"><Button variant="ghost" type="button" onClick={() => insertMarkdown("*", "*", "斜体文字")} className="h-auto px-0 py-0 font-normal tracking-normal w-7 h-7 rounded-[12px] flex items-center justify-center text-muted-foreground/60 hover:text-foreground hover:bg-accent transition-colors"><Italic size={13} /></Button></SimpleTooltip>
+                  <SimpleTooltip content="下划线"><Button variant="ghost" type="button" onClick={() => insertMarkdown("<u>", "</u>", "下划线文字")} className="h-auto px-0 py-0 font-normal tracking-normal w-7 h-7 rounded-[12px] flex items-center justify-center text-muted-foreground/60 hover:text-foreground hover:bg-accent transition-colors"><Underline size={13} /></Button></SimpleTooltip>
+                  <SimpleTooltip content="删除线"><Button variant="ghost" type="button" onClick={() => insertMarkdown("~~", "~~", "删除线文字")} className="h-auto px-0 py-0 font-normal tracking-normal w-7 h-7 rounded-[12px] flex items-center justify-center text-muted-foreground/60 hover:text-foreground hover:bg-accent transition-colors"><Strikethrough size={13} /></Button></SimpleTooltip>
                 </div>
                 <div className="w-px h-4 bg-border/20 mx-1" />
                 <div className="flex items-center gap-0.5">
-                  <SimpleTooltip content="无序列表"><Button variant="ghost" type="button" onClick={() => insertLinePrefix("- ")} className="h-auto px-0 py-0 font-normal tracking-normal w-7 h-7 rounded-md flex items-center justify-center text-muted-foreground/60 hover:text-foreground hover:bg-accent transition-colors"><List size={13} /></Button></SimpleTooltip>
-                  <SimpleTooltip content="有序列表"><Button variant="ghost" type="button" onClick={() => insertLinePrefix("1. ")} className="h-auto px-0 py-0 font-normal tracking-normal w-7 h-7 rounded-md flex items-center justify-center text-muted-foreground/60 hover:text-foreground hover:bg-accent transition-colors"><ListOrdered size={13} /></Button></SimpleTooltip>
-                  <SimpleTooltip content="引用"><Button variant="ghost" type="button" onClick={() => insertLinePrefix("> ")} className="h-auto px-0 py-0 font-normal tracking-normal w-7 h-7 rounded-md flex items-center justify-center text-muted-foreground/60 hover:text-foreground hover:bg-accent transition-colors"><Quote size={13} /></Button></SimpleTooltip>
-                  <SimpleTooltip content="代码"><Button variant="ghost" type="button" onClick={() => insertMarkdown("`", "`", "code")} className="h-auto px-0 py-0 font-normal tracking-normal w-7 h-7 rounded-md flex items-center justify-center text-muted-foreground/60 hover:text-foreground hover:bg-accent transition-colors"><Code size={13} /></Button></SimpleTooltip>
+                  <SimpleTooltip content="无序列表"><Button variant="ghost" type="button" onClick={() => insertLinePrefix("- ")} className="h-auto px-0 py-0 font-normal tracking-normal w-7 h-7 rounded-[12px] flex items-center justify-center text-muted-foreground/60 hover:text-foreground hover:bg-accent transition-colors"><List size={13} /></Button></SimpleTooltip>
+                  <SimpleTooltip content="有序列表"><Button variant="ghost" type="button" onClick={() => insertLinePrefix("1. ")} className="h-auto px-0 py-0 font-normal tracking-normal w-7 h-7 rounded-[12px] flex items-center justify-center text-muted-foreground/60 hover:text-foreground hover:bg-accent transition-colors"><ListOrdered size={13} /></Button></SimpleTooltip>
+                  <SimpleTooltip content="引用"><Button variant="ghost" type="button" onClick={() => insertLinePrefix("> ")} className="h-auto px-0 py-0 font-normal tracking-normal w-7 h-7 rounded-[12px] flex items-center justify-center text-muted-foreground/60 hover:text-foreground hover:bg-accent transition-colors"><Quote size={13} /></Button></SimpleTooltip>
+                  <SimpleTooltip content="代码"><Button variant="ghost" type="button" onClick={() => insertMarkdown("`", "`", "code")} className="h-auto px-0 py-0 font-normal tracking-normal w-7 h-7 rounded-[12px] flex items-center justify-center text-muted-foreground/60 hover:text-foreground hover:bg-accent transition-colors"><Code size={13} /></Button></SimpleTooltip>
                 </div>
                 <div className="w-px h-4 bg-border/20 mx-1" />
                 <div className="flex items-center gap-0.5">
-                  <SimpleTooltip content="分割线"><Button variant="ghost" type="button" onClick={() => insertMarkdown("\n---\n")} className="h-auto px-0 py-0 font-normal tracking-normal w-7 h-7 rounded-md flex items-center justify-center text-muted-foreground/60 hover:text-foreground hover:bg-accent transition-colors"><Minus size={13} /></Button></SimpleTooltip>
-                  <SimpleTooltip content="插入链接"><Button variant="ghost" type="button" onClick={() => insertMarkdown("[", "](url)", "链接文字")} className="h-auto px-0 py-0 font-normal tracking-normal w-7 h-7 rounded-md flex items-center justify-center text-muted-foreground/60 hover:text-foreground hover:bg-accent transition-colors"><Link size={13} /></Button></SimpleTooltip>
-                  <SimpleTooltip content="插入图片"><Button variant="ghost" type="button" onClick={() => insertMarkdown("![", "](image-url)", "图片描述")} className="h-auto px-0 py-0 font-normal tracking-normal w-7 h-7 rounded-md flex items-center justify-center text-muted-foreground/60 hover:text-foreground hover:bg-accent transition-colors"><ImageIcon size={13} /></Button></SimpleTooltip>
+                  <SimpleTooltip content="分割线"><Button variant="ghost" type="button" onClick={() => insertMarkdown("\n---\n")} className="h-auto px-0 py-0 font-normal tracking-normal w-7 h-7 rounded-[12px] flex items-center justify-center text-muted-foreground/60 hover:text-foreground hover:bg-accent transition-colors"><Minus size={13} /></Button></SimpleTooltip>
+                  <SimpleTooltip content="插入链接"><Button variant="ghost" type="button" onClick={() => insertMarkdown("[", "](url)", "链接文字")} className="h-auto px-0 py-0 font-normal tracking-normal w-7 h-7 rounded-[12px] flex items-center justify-center text-muted-foreground/60 hover:text-foreground hover:bg-accent transition-colors"><Link size={13} /></Button></SimpleTooltip>
+                  <SimpleTooltip content="插入图片"><Button variant="ghost" type="button" onClick={() => insertMarkdown("![", "](image-url)", "图片描述")} className="h-auto px-0 py-0 font-normal tracking-normal w-7 h-7 rounded-[12px] flex items-center justify-center text-muted-foreground/60 hover:text-foreground hover:bg-accent transition-colors"><ImageIcon size={13} /></Button></SimpleTooltip>
                 </div>
                 {editorMode === "markdown" && (
                   <>
                     <div className="w-px h-4 bg-border/20 mx-1" />
                     <div className="flex items-center gap-0.5">
-                      <SimpleTooltip content="代码块"><Button variant="ghost" type="button" onClick={() => insertMarkdown("\n```\n", "\n```\n", "// 代码")} className="h-auto px-0 py-0 font-normal tracking-normal w-7 h-7 rounded-md flex items-center justify-center text-muted-foreground/60 hover:text-foreground hover:bg-accent transition-colors"><Braces size={13} /></Button></SimpleTooltip>
-                      <SimpleTooltip content="表格"><Button variant="ghost" type="button" onClick={() => insertMarkdown("\n| 标题1 | 标题2 | 标题3 |\n| --- | --- | --- |\n| 内容 | 内容 | 内容 |\n")} className="h-auto px-0 py-0 font-normal tracking-normal w-7 h-7 rounded-md flex items-center justify-center text-muted-foreground/60 hover:text-foreground hover:bg-accent transition-colors"><Table size={13} /></Button></SimpleTooltip>
-                      <SimpleTooltip content="任务列表"><Button variant="ghost" type="button" onClick={() => insertLinePrefix("- [ ] ")} className="h-auto px-0 py-0 font-normal tracking-normal w-7 h-7 rounded-md flex items-center justify-center text-muted-foreground/60 hover:text-foreground hover:bg-accent transition-colors"><Check size={13} /></Button></SimpleTooltip>
+                      <SimpleTooltip content="代码块"><Button variant="ghost" type="button" onClick={() => insertMarkdown("\n```\n", "\n```\n", "// 代码")} className="h-auto px-0 py-0 font-normal tracking-normal w-7 h-7 rounded-[12px] flex items-center justify-center text-muted-foreground/60 hover:text-foreground hover:bg-accent transition-colors"><Braces size={13} /></Button></SimpleTooltip>
+                      <SimpleTooltip content="表格"><Button variant="ghost" type="button" onClick={() => insertMarkdown("\n| 标题1 | 标题2 | 标题3 |\n| --- | --- | --- |\n| 内容 | 内容 | 内容 |\n")} className="h-auto px-0 py-0 font-normal tracking-normal w-7 h-7 rounded-[12px] flex items-center justify-center text-muted-foreground/60 hover:text-foreground hover:bg-accent transition-colors"><Table size={13} /></Button></SimpleTooltip>
+                      <SimpleTooltip content="任务列表"><Button variant="ghost" type="button" onClick={() => insertLinePrefix("- [ ] ")} className="h-auto px-0 py-0 font-normal tracking-normal w-7 h-7 rounded-[12px] flex items-center justify-center text-muted-foreground/60 hover:text-foreground hover:bg-accent transition-colors"><Check size={13} /></Button></SimpleTooltip>
                     </div>
                   </>
                 )}
@@ -596,7 +596,7 @@ export function NoteModuleDemo() {
               {/* Header: Assistant Picker */}
               <div className="h-11 flex items-center gap-2 px-3 flex-shrink-0 relative">
                 <div className="relative" ref={assistantPickerRef}>
-                  <Button variant="ghost" type="button" onClick={() => { setShowAssistantPicker(!showAssistantPicker); setAstSearch(""); setAstTag(null) }} className={`h-auto px-0 py-0 font-normal tracking-normal flex items-center gap-1.5 px-2 py-[4px] rounded-md text-[10.5px] transition-all duration-100 ${showAssistantPicker ? "bg-accent/25 text-foreground" : "text-foreground/75 hover:text-foreground hover:bg-accent/15"}`}>
+                  <Button variant="ghost" type="button" onClick={() => { setShowAssistantPicker(!showAssistantPicker); setAstSearch(""); setAstTag(null) }} className={`h-auto px-0 py-0 font-normal tracking-normal flex items-center gap-1.5 px-2 py-[4px] rounded-[12px] text-[10.5px] transition-all duration-100 ${showAssistantPicker ? "bg-accent/25 text-foreground" : "text-foreground/75 hover:text-foreground hover:bg-accent/15"}`}>
                     <span className="text-[12px] leading-none flex-shrink-0">{selectedAssistant.emoji}</span>
                     <span className="truncate max-w-[100px]">{selectedAssistant.name}</span>
                     <ChevronDown size={8} className={`text-muted-foreground/50 flex-shrink-0 transition-transform duration-100 ${showAssistantPicker ? "rotate-180" : ""}`} />
@@ -604,7 +604,7 @@ export function NoteModuleDemo() {
                   {showAssistantPicker && (
                     <div className="absolute top-full left-0 mt-1 z-50 bg-popover border border-border/40 rounded-[12px] shadow-xl shadow-black/10 min-w-[260px]">
                       <div className="px-2 pt-2 pb-1">
-                        <div className="flex items-center gap-1.5 px-2 py-[5px] rounded-md bg-accent/15 border border-border/20">
+                        <div className="flex items-center gap-1.5 px-2 py-[5px] rounded-[12px] bg-accent/15 border border-border/20">
                           <Search size={10} className="text-muted-foreground/40 flex-shrink-0" />
                           <Input value={astSearch} onChange={e => setAstSearch(e.target.value)} placeholder="搜索助手..." className="h-auto min-w-0 flex-1 border-0 bg-transparent p-0 text-[10px] text-foreground shadow-none placeholder:text-muted-foreground/30 focus-visible:ring-0" autoFocus />
                           {astSearch && <Button variant="ghost" type="button" onClick={() => setAstSearch("")} className="h-auto px-0 py-0 font-normal tracking-normal text-muted-foreground/30 hover:text-muted-foreground/60"><X size={8} /></Button>}
@@ -649,8 +649,8 @@ export function NoteModuleDemo() {
                   )}
                 </div>
                 <div className="flex-1" />
-                <SimpleTooltip content="清空对话"><Button variant="ghost" type="button" onClick={() => setAiMessages([])} className="h-auto px-0 py-0 font-normal tracking-normal w-6 h-6 rounded-md flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"><Trash2 size={12} /></Button></SimpleTooltip>
-                <SimpleTooltip content="关闭面板"><Button variant="ghost" type="button" onClick={() => setRightPanelOpen(false)} className="h-auto px-0 py-0 font-normal tracking-normal w-6 h-6 rounded-md flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"><PanelRightClose size={12} /></Button></SimpleTooltip>
+                <SimpleTooltip content="清空对话"><Button variant="ghost" type="button" onClick={() => setAiMessages([])} className="h-auto px-0 py-0 font-normal tracking-normal w-6 h-6 rounded-[12px] flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"><Trash2 size={12} /></Button></SimpleTooltip>
+                <SimpleTooltip content="关闭面板"><Button variant="ghost" type="button" onClick={() => setRightPanelOpen(false)} className="h-auto px-0 py-0 font-normal tracking-normal w-6 h-6 rounded-[12px] flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"><PanelRightClose size={12} /></Button></SimpleTooltip>
               </div>
 
               {/* Quick Actions */}
@@ -658,7 +658,7 @@ export function NoteModuleDemo() {
                 <div className="flex items-center px-2 pt-1.5 gap-0.5">
                   {actionCategories.map(cat => {
                     const CatIcon = cat.icon
-                    return (<Button variant="ghost" type="button" key={cat.id} onClick={() => setActiveActionCategory(cat.id)} className={`h-auto px-0 py-0 font-normal tracking-normal flex items-center gap-1 px-2 py-1 rounded-md text-[10px] transition-colors ${activeActionCategory === cat.id ? "bg-accent text-foreground" : "text-muted-foreground/60 hover:text-foreground hover:bg-accent/40"}`}><CatIcon size={10} />{cat.label}</Button>)
+                    return (<Button variant="ghost" type="button" key={cat.id} onClick={() => setActiveActionCategory(cat.id)} className={`h-auto px-0 py-0 font-normal tracking-normal flex items-center gap-1 px-2 py-1 rounded-[12px] text-[10px] transition-colors ${activeActionCategory === cat.id ? "bg-accent text-foreground" : "text-muted-foreground/60 hover:text-foreground hover:bg-accent/40"}`}><CatIcon size={10} />{cat.label}</Button>)
                   })}
                   <div className="flex-1" />
                   <Button variant="ghost" type="button" onClick={() => setShowAllActions(!showAllActions)} className="h-auto px-0 py-0 font-normal tracking-normal text-[10px] text-muted-foreground/40 hover:text-foreground px-1 transition-colors">{showAllActions ? "收起" : "全部"}</Button>
@@ -666,7 +666,7 @@ export function NoteModuleDemo() {
                 <div className="px-2 py-1.5 flex flex-wrap gap-1">
                   {(showAllActions ? noteQuickActions : noteQuickActions.filter(a => a.category === activeActionCategory)).map(action => {
                     const AIcon = action.icon
-                    return (<Button variant="ghost" type="button" key={action.id} onClick={() => handleQuickAction(action)} className="h-auto px-0 py-0 font-normal tracking-normal flex items-center gap-1 px-2 py-1 rounded-md bg-accent/30 text-[10px] text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"><AIcon size={10} />{action.label}</Button>)
+                    return (<Button variant="ghost" type="button" key={action.id} onClick={() => handleQuickAction(action)} className="h-auto px-0 py-0 font-normal tracking-normal flex items-center gap-1 px-2 py-1 rounded-[12px] bg-accent/30 text-[10px] text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"><AIcon size={10} />{action.label}</Button>)
                   })}
                 </div>
               </div>
@@ -692,7 +692,7 @@ export function NoteModuleDemo() {
                 {aiMessages.map((msg, i) => (
                   <div key={i} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"} gap-1.5`}>
                     {msg.role === "assistant" && (
-                      <div className="w-5 h-5 rounded-md bg-accent/40 flex items-center justify-center flex-shrink-0 mt-0.5"><span className="text-[11px] leading-none">{selectedAssistant.emoji}</span></div>
+                      <div className="w-5 h-5 rounded-[12px] bg-accent/40 flex items-center justify-center flex-shrink-0 mt-0.5"><span className="text-[11px] leading-none">{selectedAssistant.emoji}</span></div>
                     )}
                     <div className={`max-w-[85%] rounded-xl px-3 py-2 text-xs leading-relaxed ${msg.role === "user" ? "bg-primary text-primary-foreground rounded-br-sm" : "bg-accent/60 text-foreground rounded-bl-sm"}`}>
                       {msg.content.split("\n").map((line, li) => {
@@ -718,7 +718,7 @@ export function NoteModuleDemo() {
               <div className="px-3 pb-3 pt-1 flex-shrink-0">
                 <div className="flex items-end gap-1.5 bg-accent/40 rounded-xl px-3 py-2 border border-border/30 focus-within:border-primary/30 focus-within:bg-accent/60 transition-all">
                   <Textarea value={aiInput} onChange={e => setAiInput(e.target.value)} onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleAISend() } }} placeholder={`向 ${selectedAssistant.name} 提问...`} rows={1} className="flex-1 bg-transparent border-0 shadow-none focus-visible:ring-0 rounded-none text-xs text-foreground placeholder:text-muted-foreground/40 resize-none min-h-[20px] max-h-[80px] p-0" />
-                  <Button variant="ghost" type="button" onClick={handleAISend} disabled={!aiInput.trim()} className={`h-auto px-0 py-0 font-normal tracking-normal w-6 h-6 rounded-md flex items-center justify-center flex-shrink-0 transition-colors ${aiInput.trim() ? "bg-primary text-primary-foreground hover:bg-primary/90" : "bg-muted text-muted-foreground/30"}`}><Send size={11} /></Button>
+                  <Button variant="ghost" type="button" onClick={handleAISend} disabled={!aiInput.trim()} className={`h-auto px-0 py-0 font-normal tracking-normal w-6 h-6 rounded-[12px] flex items-center justify-center flex-shrink-0 transition-colors ${aiInput.trim() ? "bg-primary text-primary-foreground hover:bg-primary/90" : "bg-muted text-muted-foreground/30"}`}><Send size={11} /></Button>
                 </div>
                 <p className="text-[9px] text-muted-foreground/30 mt-1.5 text-center">{selectedAssistant.name} &middot; 基于笔记上下文 &middot; Enter 发送</p>
               </div>

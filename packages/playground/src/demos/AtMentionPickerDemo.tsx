@@ -3,8 +3,7 @@ import {
   Input, Avatar, AvatarFallback, Badge,
   Popover, PopoverContent, PopoverTrigger,
   Tabs, TabsList, TabsTrigger, TabsContent,
-  ScrollArea
-} from "@cherry-studio/ui"
+  ScrollArea, Button, } from "@cherry-studio/ui"
 import { Section } from "../components/Section"
 
 interface MentionItem {
@@ -53,9 +52,9 @@ export function AtMentionPickerDemo() {
   const MentionList = ({ items }: { items: MentionItem[] }) => (
     <div className="space-y-0.5">
       {items.map(item => (
-        <button
+        <Button variant="ghost"
           key={item.id}
-          className="w-full flex items-center gap-2 p-1.5 rounded-md hover:bg-accent/50 transition-colors text-left"
+          className="w-full flex items-center gap-2 p-1.5 rounded-xl hover:bg-accent/50 transition-colors text-left"
           onClick={() => handleSelect(item)}
         >
           <Avatar className="h-6 w-6">
@@ -65,14 +64,18 @@ export function AtMentionPickerDemo() {
             <p className="text-xs font-medium truncate">{item.name}</p>
             <p className="text-[10px] text-muted-foreground truncate">{item.description}</p>
           </div>
-        </button>
+        </Button>
       ))}
       {items.length === 0 && <p className="text-[10px] text-muted-foreground/50 text-center py-2">No results</p>}
     </div>
   )
 
   return (
-    <Section title="@Mention Picker" install="npm install @cherry-studio/ui">
+    <Section title="@Mention Picker" install="npm install @cherry-studio/ui" props={[
+        { name: "items", type: "MentionItem[]", default: "[]", description: "Available items to mention (agents, assistants, knowledge bases)" },
+        { name: "onSelect", type: "(item: MentionItem) => void", default: "undefined", description: "Callback when a mention item is selected" },
+        { name: "trigger", type: "string", default: '"@"', description: "Character that triggers the mention picker" },
+      ]}>
       <div className="max-w-md space-y-3">
         <p className="text-xs text-muted-foreground">Type "@" in the input below to trigger the mention picker.</p>
 

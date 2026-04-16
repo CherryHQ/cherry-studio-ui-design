@@ -59,7 +59,12 @@ export function TabBarDemo() {
   }
 
   return (
-    <Section title="Tab Bar Pattern" code={`import { Tabs, TabsList, TabsTrigger, Button, DropdownMenu } from "@cherry-studio/ui"
+    <Section title="Tab Bar Pattern" props={[
+        { name: "tabs", type: "Tab[]", default: "[]", description: "List of tab items to display" },
+        { name: "activeTab", type: "string", default: '""', description: "ID of the currently active tab" },
+        { name: "onTabChange", type: "(tabId: string) => void", default: "undefined", description: "Callback when active tab changes" },
+        { name: "closable", type: "boolean", default: "true", description: "Allow tabs to be closed" },
+      ]} code={`import { Tabs, TabsList, TabsTrigger, Button, DropdownMenu } from "@cherry-studio/ui"
 
 // Combine Tabs + Button + DropdownMenu to build a tab bar
 <Tabs value={active} onValueChange={setActive}>
@@ -67,14 +72,14 @@ export function TabBarDemo() {
     {tabs.map(tab => (
       <TabsTrigger key={tab.id} value={tab.id}>
         {tab.title}
-        <button onClick={() => closeTab(tab.id)}><X /></button>
+        <Button variant="ghost" size="icon-xs" onClick={() => closeTab(tab.id)}><X /></Button>
       </TabsTrigger>
     ))}
     <Button size="icon" variant="ghost" onClick={addTab}><Plus /></Button>
   </TabsList>
 </Tabs>`}>
       <div className="max-w-2xl">
-        <div className="rounded-lg border bg-muted/30 overflow-hidden">
+        <div className="rounded-xl border bg-muted/30 overflow-hidden">
           {/* Tab bar */}
           <div className="flex items-center border-b bg-muted/50 overflow-x-auto">
             <Tabs value={active} onValueChange={setActive} className="flex-1 min-w-0">
@@ -91,17 +96,17 @@ export function TabBarDemo() {
                         {tab.pinned && <Pin className="size-2.5 text-muted-foreground/50" />}
                       </TabsTrigger>
                       {!tab.pinned && (
-                        <button
+                        <Button variant="ghost"
                           onClick={(e) => { e.stopPropagation(); closeTab(tab.id) }}
                           aria-label={`Close ${tab.title}`}
                           className="absolute right-1 p-0.5 rounded-sm text-muted-foreground/30 hover:text-foreground hover:bg-accent opacity-0 group-hover:opacity-100 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 transition-opacity"
                         >
                           <X className="size-3" />
-                        </button>
+                        </Button>
                       )}
                     </div>
                     <DropdownMenuTrigger asChild>
-                      <button className="sr-only">Menu</button>
+                      <Button variant="ghost" className="sr-only">Menu</Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="start" className="w-44">
                       <DropdownMenuItem onClick={() => togglePin(tab.id)}>

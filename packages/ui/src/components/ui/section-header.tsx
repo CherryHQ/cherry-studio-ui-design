@@ -7,22 +7,20 @@ export interface SectionHeaderProps extends React.HTMLAttributes<HTMLParagraphEl
   title: string
 }
 
-const SectionHeader = React.forwardRef<HTMLParagraphElement, SectionHeaderProps>(
-  ({ title, className, ...props }, ref) => {
-    return (
-      <p
-        ref={ref}
-        className={cn(
-          "text-xs text-muted-foreground font-medium mb-0 mt-2",
-          className
-        )}
-        {...props}
-      >
-        {title}
-      </p>
-    )
-  }
-)
-SectionHeader.displayName = "SectionHeader"
+function SectionHeader({ title, className, ref, ...props }: SectionHeaderProps & { ref?: React.Ref<HTMLParagraphElement> }) {
+  return (
+    <p
+      ref={ref}
+      data-slot="section-header"
+      className={cn(
+        "text-[11px] text-muted-foreground font-medium tracking-tight mb-0 mt-2",
+        className
+      )}
+      {...props}
+    >
+      {title}
+    </p>
+  )
+}
 
 export { SectionHeader }
