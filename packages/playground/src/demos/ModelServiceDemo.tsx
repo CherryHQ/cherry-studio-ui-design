@@ -63,7 +63,7 @@ export function ModelServiceDemo() {
               <div className={`size-3 rounded-full ${p.color}`} />
               <span className="text-sm font-medium flex-1">{p.name}</span>
               <CircleDot className="size-3 text-success" />
-              <Badge variant="outline" className="text-[9px] bg-success-muted text-success border-success/20">
+              <Badge variant="outline" className="text-xs bg-success-muted text-success border-success/20">
                 {p.status}
               </Badge>
             </div>
@@ -104,7 +104,7 @@ export function ModelServiceDemo() {
                     <TableCell>
                       <div className="flex gap-1">
                         {m.caps.map((c) => (
-                          <Badge key={c} variant="outline" className={`text-[8px] px-1.5 py-0 ${capColors[c] || ""}`}>{c}</Badge>
+                          <Badge key={c} variant="outline" className={`text-xs px-1.5 py-0 ${capColors[c] || ""}`}>{c}</Badge>
                         ))}
                       </div>
                     </TableCell>

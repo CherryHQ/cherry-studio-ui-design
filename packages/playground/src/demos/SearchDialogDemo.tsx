@@ -108,7 +108,7 @@ export function SearchDialogDemo() {
                     <CommandItem key={item.id} className="gap-2" onSelect={() => setOpen(false)}>
                       {item.icon}
                       <span className="flex-1">{item.label}</span>
-                      <Badge variant="outline" className="text-[9px] font-mono px-1.5 py-0">{item.shortcut}</Badge>
+                      <Badge variant="outline" className="text-xs font-mono px-1.5 py-0">{item.shortcut}</Badge>
                     </CommandItem>
                   ))}
                 </CommandGroup>

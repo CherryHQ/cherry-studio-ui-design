@@ -4,6 +4,7 @@ import * as React from "react"
 import { Copy, Check } from "lucide-react"
 import { cn } from "../../lib/utils"
 import { Button } from "./button"
+import { ScrollArea } from "./scroll-area"
 import hljs from "highlight.js/lib/core"
 import javascript from "highlight.js/lib/languages/javascript"
 import typescript from "highlight.js/lib/languages/typescript"
@@ -91,7 +92,7 @@ function CodeBlock({ code, language, showLineNumbers = true, className, ref }: C
     <div
       ref={ref}
       data-slot="code-block"
-      className={cn("my-2 rounded-[var(--radius-button)] overflow-hidden border border-border tracking-tight", className)}
+      className={cn("my-2 rounded-[var(--radius-button)] overflow-hidden border border-border tracking-[-0.14px]", className)}
     >
       <style>{HLJS_STYLES}</style>
       <div className="flex items-center justify-between px-3 py-1.5 bg-muted/50 border-b border-border">
@@ -112,21 +113,23 @@ function CodeBlock({ code, language, showLineNumbers = true, className, ref }: C
           )}
         </Button>
       </div>
-      <pre className="px-3 py-2.5 overflow-x-auto text-xs leading-relaxed font-mono bg-muted/20 max-h-80 overflow-y-auto scrollbar-thin">
-        {highlightedLines.map((line, i) => (
-          <div key={i} className="flex">
-            {showLineNumbers && (
-              <span className="w-7 text-right pr-3 text-xs text-muted-foreground/30 select-none shrink-0 tabular-nums">
-                {i + 1}
-              </span>
-            )}
-            <code
-              className={cn("hljs flex-1", language && `language-${language}`)}
-              dangerouslySetInnerHTML={{ __html: line || "\n" }}
-            />
-          </div>
-        ))}
-      </pre>
+      <ScrollArea className="max-h-80">
+        <pre className="px-3 py-2.5 text-xs leading-relaxed font-mono bg-muted/40">
+          {highlightedLines.map((line, i) => (
+            <div key={i} className="flex">
+              {showLineNumbers && (
+                <span className="w-7 text-right pr-3 text-xs text-muted-foreground/50 select-none shrink-0 tabular-nums">
+                  {i + 1}
+                </span>
+              )}
+              <code
+                className={cn("hljs flex-1", language && `language-${language}`)}
+                dangerouslySetInnerHTML={{ __html: line || "\n" }}
+              />
+            </div>
+          ))}
+        </pre>
+      </ScrollArea>
     </div>
   )
 }

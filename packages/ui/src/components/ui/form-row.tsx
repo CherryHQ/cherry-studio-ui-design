@@ -26,9 +26,9 @@ function FormRow({ label, desc, disabled, direction = "horizontal", className, c
       data-slot="form-row"
       className={cn(
         isVertical
-          ? "flex flex-col gap-2 py-2 tracking-tight"
-          : "flex items-center justify-between gap-6 py-2 tracking-tight",
-        disabled && "opacity-30 pointer-events-none",
+          ? "flex flex-col gap-2 py-2 tracking-[-0.14px]"
+          : "flex items-center justify-between gap-6 py-2 tracking-[-0.14px]",
+        disabled && "opacity-50 pointer-events-none",
         className
       )}
       {...props}

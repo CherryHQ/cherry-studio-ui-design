@@ -5,10 +5,13 @@ import {
   Search, X, Check,
   Eye, Brain, Hammer, Globe,
 } from 'lucide-react';
-import { cn } from '../../lib/utils';
+import { cn } from "../../lib/utils"
 import { Button } from './button';
 import { Checkbox } from './checkbox';
 import { Input } from './input';
+import { Switch } from './switch';
+import { ScrollArea } from './scroll-area';
+import { Separator } from './separator';
 
 // --- Local types (extracted from app types) ---
 
@@ -32,10 +35,10 @@ export const MODEL_CAPABILITY_LABELS: Record<ModelCapability, string> = {
 // --- Constants ---
 
 const CAP_ICONS: Record<ModelCapability, { icon: typeof Eye; color: string }> = {
-  vision: { icon: Eye, color: 'text-foreground/60' },
-  tools: { icon: Hammer, color: 'text-accent-amber' },
-  reasoning: { icon: Brain, color: 'text-accent-violet' },
-  web: { icon: Globe, color: 'text-accent-blue' },
+  vision: { icon: Eye, color: 'text-muted-foreground/60' },
+  tools: { icon: Hammer, color: 'text-accent-amber/60' },
+  reasoning: { icon: Brain, color: 'text-accent-violet/60' },
+  web: { icon: Globe, color: 'text-accent-blue/60' },
 };
 
 const CAP_TAG_ICONS: Record<ModelCapability, typeof Eye> = {
@@ -48,6 +51,12 @@ const CAP_TAG_ICONS: Record<ModelCapability, typeof Eye> = {
 const ALL_CAPS: ModelCapability[] = ['vision', 'reasoning', 'tools', 'web'];
 
 // --- Component ---
+
+export interface ModelPickerPanelLabels {
+  searchPlaceholder?: string
+  multiModelLabel?: string
+  noResults?: string
+}
 
 export interface ModelPickerPanelProps {
   /** All available models */
@@ -68,6 +77,8 @@ export interface ModelPickerPanelProps {
   initialProvider?: string;
   /** Optional className for root container */
   className?: string;
+  /** UI text overrides for i18n */
+  labels?: ModelPickerPanelLabels;
 }
 
 export function ModelPickerPanel({
@@ -82,7 +93,14 @@ export function ModelPickerPanel({
   autoFocus = true,
   initialProvider,
   className,
+  labels: labelsProp,
 }: ModelPickerPanelProps) {
+  const uiLabels = {
+    searchPlaceholder: "搜索模型...",
+    multiModelLabel: "多模型并行（与多助手互斥）",
+    noResults: "无匹配结果",
+    ...labelsProp,
+  };
   const searchRef = useRef<HTMLInputElement>(null);
   const [search, setSearch] = useState('');
   const [capFilter, setCapFilter] = useState<ModelCapability | null>(null);
@@ -122,21 +140,22 @@ export function ModelPickerPanel({
   };
 
   return (
-    <div data-slot="model-picker-panel" className={cn('tracking-tight', className)}>
+    <div data-slot="model-picker-panel" className={cn('tracking-[-0.14px]', className)}>
       {/* Search */}
       <div className="px-2 pt-2 pb-1.5">
-        <div className="flex items-center gap-1.5 px-2 py-[5px] rounded-[var(--radius-button)] bg-accent/15 border border-border/20">
-          <Search size={10} className="text-muted-foreground/40 flex-shrink-0" />
+        <div className="flex items-center gap-1.5 px-2 py-[5px] rounded-[var(--radius-button)] bg-muted/30 border-[1.5px] border-input">
+          <Search size={10} className="text-muted-foreground/60 flex-shrink-0" />
           <Input
             ref={searchRef}
             value={search}
             onChange={e => setSearch(e.target.value)}
-            placeholder="搜索模型..."
+            placeholder={uiLabels.searchPlaceholder}
+            aria-label="Search models"
             className="flex-1 h-auto border-0 bg-transparent text-xs shadow-none px-0 py-0 rounded-none focus-visible:ring-0 focus-visible:border-transparent min-w-0"
           />
           {search && (
-            <Button variant="ghost" size="icon-xs" onClick={() => setSearch('')} className="w-4 h-4 text-muted-foreground/30 hover:text-muted-foreground/60">
-              <X size={8} />
+            <Button variant="ghost" size="icon-xs" onClick={() => setSearch('')} aria-label="Clear search" className="w-4 h-4 text-muted-foreground/50 hover:text-muted-foreground/60">
+              <X size={12} />
             </Button>
           )}
         </div>
@@ -157,10 +176,10 @@ export function ModelPickerPanel({
                 "gap-1 px-1.5 py-[2px] h-auto rounded-full text-xs border",
                 active
                   ? 'bg-foreground/8 text-foreground/80 border-border/50'
-                  : 'bg-accent/15 text-muted-foreground/55 border-transparent hover:bg-accent/30 hover:text-muted-foreground/75'
+                  : 'bg-accent/25 text-muted-foreground/55 border-transparent hover:bg-accent/30 hover:text-muted-foreground/75'
               )}
             >
-              <Icon size={9} />
+              <Icon size={12} />
               <span>{labels[cap]}</span>
             </Button>
           );
@@ -169,58 +188,49 @@ export function ModelPickerPanel({
 
       {/* Multi-model switch */}
       <div className="flex items-center justify-between px-2.5 py-1.5">
-        <span className="text-xs text-muted-foreground/50">多模型并行（与多助手互斥）</span>
-        <Button
-          variant="ghost"
-          size="xs"
-          onClick={onToggleMultiModel}
-          className={cn(
-            "relative w-[28px] h-[14px] p-0 rounded-full transition-colors duration-150 flex-shrink-0",
-            multiModel ? 'bg-cherry-primary hover:bg-cherry-primary/90' : 'bg-accent/40'
-          )}
-        >
-          <div className={`absolute top-[2px] w-[10px] h-[10px] rounded-full bg-background shadow-sm transition-transform duration-150 ${
-            multiModel ? 'left-[16px]' : 'left-[2px]'
-          }`} />
-        </Button>
+        <span className="text-xs text-muted-foreground/50">{uiLabels.multiModelLabel}</span>
+        <Switch checked={multiModel} onCheckedChange={() => onToggleMultiModel()} className="scale-75" />
       </div>
 
-      <div className="h-px bg-border/20" />
+      <Separator className="bg-border/20" />
 
       {/* Two-column: providers | models */}
       <div className="flex h-[240px]">
         {/* Left: providers */}
-        <div className="w-[110px] border-r border-border/20 py-1 overflow-y-auto flex-shrink-0">
-          {allProviders.map(p => {
-            const count = models.filter(
-              m => m.provider === p && (!capFilter || m.capabilities.includes(capFilter))
-            ).length;
-            const provColor = providerColors[p] || 'bg-muted-foreground/40';
-            return (
-              <Button
-                key={p}
-                variant="ghost"
-                size="xs"
-                onClick={() => setActiveProvider(p)}
-                className={cn(
-                  "w-full justify-start gap-1.5 px-2.5 py-[6px] h-auto rounded-none text-xs transition-all duration-75",
-                  activeProvider === p
-                    ? 'bg-accent/30 text-foreground'
-                    : 'text-foreground/60 hover:text-foreground hover:bg-accent/15'
-                )}
-              >
-                <span className={`w-[6px] h-[6px] rounded-full flex-shrink-0 ${provColor}`} />
-                <span className="truncate flex-1">{p}</span>
-                <span className="text-[11px] text-muted-foreground/40 flex-shrink-0">{count}</span>
-              </Button>
-            );
-          })}
-        </div>
+        <ScrollArea className="w-[110px] border-r border-border/30 flex-shrink-0">
+          <div className="py-1">
+            {allProviders.map(p => {
+              const count = models.filter(
+                m => m.provider === p && (!capFilter || m.capabilities.includes(capFilter))
+              ).length;
+              const provColor = providerColors[p] || 'bg-muted-foreground/40';
+              return (
+                <Button
+                  key={p}
+                  variant="ghost"
+                  size="xs"
+                  onClick={() => setActiveProvider(p)}
+                  className={cn(
+                    "w-full justify-start gap-1.5 px-2.5 py-[6px] h-auto rounded-[var(--radius-button)] text-xs transition-all duration-[var(--duration-fast)]",
+                    activeProvider === p
+                      ? 'bg-accent/30 text-foreground'
+                      : 'text-foreground/60 hover:text-foreground hover:bg-accent/25'
+                  )}
+                >
+                  <span className={`w-[6px] h-[6px] rounded-full flex-shrink-0 ${provColor}`} />
+                  <span className="truncate flex-1">{p}</span>
+                  <span className="text-xs text-muted-foreground/60 flex-shrink-0">{count}</span>
+                </Button>
+              );
+            })}
+          </div>
+        </ScrollArea>
 
         {/* Right: models */}
-        <div className="flex-1 py-1 px-1.5 overflow-y-auto">
+        <ScrollArea className="flex-1">
+          <div className="py-1 px-1.5">
           {providerModels.length === 0 ? (
-            <div className="px-2.5 py-3 text-center text-xs text-muted-foreground/40">无匹配结果</div>
+            <div className="px-2.5 py-3 text-center text-xs text-muted-foreground/60">{uiLabels.noResults}</div>
           ) : (
             providerModels.map(m => {
               const selected = selectedModels.includes(m.id);
@@ -231,8 +241,8 @@ export function ModelPickerPanel({
                   size="xs"
                   onClick={() => handleSelect(m.id)}
                   className={cn(
-                    "w-full justify-start gap-2 px-2 py-[5px] h-auto text-xs transition-all duration-75 mb-px",
-                    selected ? 'bg-accent/30 ring-[1px] ring-border/30' : 'text-foreground/70 hover:text-foreground hover:bg-accent/15'
+                    "w-full justify-start gap-2 px-2 py-[5px] h-auto text-xs transition-all duration-[var(--duration-fast)] mb-px",
+                    selected ? 'bg-accent/30 ring-[1px] ring-border/30' : 'text-foreground/70 hover:text-foreground hover:bg-accent/25'
                   )}
                 >
                   {multiModel && (
@@ -243,15 +253,16 @@ export function ModelPickerPanel({
                     {m.capabilities.map(cap => {
                       const ci = CAP_ICONS[cap];
                       const CapIcon = ci.icon;
-                      return <CapIcon key={cap} size={10} className={`${ci.color}/40`} />;
+                      return <CapIcon key={cap} size={10} className={ci.color} />;
                     })}
                   </div>
-                  {!multiModel && selected && <Check size={9} className="text-cherry-primary flex-shrink-0 ml-0.5" />}
+                  {!multiModel && selected && <Check size={12} className="text-cherry-primary flex-shrink-0 ml-0.5" />}
                 </Button>
               );
             })
           )}
-        </div>
+          </div>
+        </ScrollArea>
       </div>
     </div>
   );

@@ -65,7 +65,7 @@ function ChartContainer({
         data-slot="chart"
         data-chart={chartId}
         className={cn(
-          "[&_.recharts-cartesian-grid_line]:stroke-border/50 [&_.recharts-polar-grid_line]:stroke-border [&_.recharts-reference-line_line]:stroke-border flex aspect-video justify-center tracking-tight text-xs [&_.recharts-cartesian-axis-tick_text]:fill-muted-foreground [&_.recharts-curve.recharts-tooltip-cursor]:stroke-border [&_.recharts-dot]:stroke-transparent [&_.recharts-layer]:outline-hidden [&_.recharts-radial-bar-background-sector]:fill-muted [&_.recharts-rectangle.recharts-tooltip-cursor]:fill-muted [&_.recharts-sector]:outline-hidden [&_.recharts-sector]:stroke-transparent [&_.recharts-surface]:outline-hidden",
+          "[&_.recharts-cartesian-grid_line]:stroke-border/50 [&_.recharts-polar-grid_line]:stroke-border [&_.recharts-reference-line_line]:stroke-border flex aspect-video justify-center tracking-[-0.14px] text-xs [&_.recharts-cartesian-axis-tick_text]:fill-muted-foreground [&_.recharts-curve.recharts-tooltip-cursor]:stroke-border [&_.recharts-dot]:stroke-transparent [&_.recharts-layer]:outline-hidden [&_.recharts-radial-bar-background-sector]:fill-muted [&_.recharts-rectangle.recharts-tooltip-cursor]:fill-muted [&_.recharts-sector]:outline-hidden [&_.recharts-sector]:stroke-transparent [&_.recharts-surface]:outline-hidden",
           className
         )}
         {...props}
@@ -191,7 +191,7 @@ function ChartTooltipContent({
   return (
     <div
       className={cn(
-        "grid min-w-[8rem] items-start gap-1.5 rounded-[var(--radius-button)] border border-border/50 bg-background px-2.5 py-1.5 text-xs shadow-xl",
+        "grid min-w-[8rem] items-start gap-1.5 rounded-[var(--radius-button)] border border-border/50 bg-background px-2.5 py-1.5 text-xs shadow-popover",
         className
       )}
     >

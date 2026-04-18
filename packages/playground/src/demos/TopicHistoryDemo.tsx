@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from "react"
-import { Button, Input, Badge, Separator } from "@cherry-studio/ui"
+import { Button, Input, Badge, Separator, Popover, PopoverTrigger, PopoverContent, DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@cherry-studio/ui"
 import { Section, type PropDef } from "../components/Section"
 import {
   Search, X, Tag, Pin, Trash2, Check, ChevronDown, History,
@@ -38,14 +38,14 @@ const ASSISTANT_ICONS: Record<string, string> = {
 
 const TAG_COLORS: Record<string, string> = {
   React: "bg-accent-cyan-muted text-accent-cyan border-accent-cyan/20",
-  "Next.js": "bg-foreground/[0.07] text-foreground/80 border-foreground/[0.1]",
+  "Next.js": "bg-muted/40 text-foreground/80 border-border/50",
   "前端": "bg-accent-blue-muted text-accent-blue border-accent-blue/20",
   "后端": "bg-accent-violet-muted text-accent-violet border-accent-violet/20",
   "写作": "bg-accent-amber-muted text-accent-amber border-accent-amber/20",
   "报告": "bg-accent-orange-muted text-accent-orange border-accent-orange/20",
   TypeScript: "bg-accent-sky-muted text-accent-sky border-accent-sky/20",
   CSS: "bg-accent-pink-muted text-accent-pink border-accent-pink/20",
-  "产品": "bg-foreground/[0.07] text-foreground/80 border-foreground/[0.1]",
+  "产品": "bg-muted/40 text-foreground/80 border-border/50",
   "数据库": "bg-accent-indigo-muted text-accent-indigo border-accent-indigo/20",
   AI: "bg-accent-purple-muted text-accent-purple border-accent-purple/20",
   "架构": "bg-error/10 text-error border-error/20",
@@ -75,7 +75,7 @@ function TagBadge({ tag, selected, onClick, onRemove, size = "sm" }: {
   tag: string; selected?: boolean; onClick?: () => void; onRemove?: () => void; size?: "sm" | "xs"
 }) {
   const color = TAG_COLORS[tag] || "bg-muted text-muted-foreground border-border/20"
-  const cls = size === "sm" ? "px-2 py-[2px] text-[10px]" : "px-1.5 py-[1px] text-[9px]"
+  const cls = size === "sm" ? "px-2 py-[2px] text-[10px]" : "px-1.5 py-[1px] text-xs"
   return (
     <span onClick={onClick} className={`inline-flex items-center gap-0.5 rounded-[12px] border transition-all duration-100 ${cls} ${color} ${selected ? "ring-1 ring-foreground/20 shadow-sm" : ""} ${onClick ? "cursor-pointer hover:shadow-sm active:scale-[0.96]" : "cursor-default"}`}>
       {tag}
@@ -86,36 +86,48 @@ function TagBadge({ tag, selected, onClick, onRemove, size = "sm" }: {
 
 /* ─── Topic Card (card view) ─── */
 
-function TopicCard({ topic, isActive, onSelect }: {
-  topic: AssistantTopic; isActive: boolean; onSelect: () => void
+function TopicCard({ topic, isActive, onSelect, onTogglePin, onDelete }: {
+  topic: AssistantTopic; isActive: boolean; onSelect: () => void; onTogglePin?: (id: string) => void; onDelete?: (id: string) => void
 }) {
   return (
     <div onClick={onSelect} className={`flex items-center gap-2.5 px-3 py-2 rounded-[12px] cursor-pointer transition-all duration-100 group/tc ${isActive ? "bg-cherry-active-bg border border-cherry-ring" : "border border-transparent hover:bg-accent/10 hover:border-border/30"}`}>
-      <span className="text-[13px] flex-shrink-0">{ASSISTANT_ICONS[topic.assistantName] || "🤖"}</span>
+      <span className="text-sm flex-shrink-0">{ASSISTANT_ICONS[topic.assistantName] || "🤖"}</span>
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-1.5">
           {topic.status === "active" && <span className="w-[5px] h-[5px] rounded-full bg-primary animate-pulse flex-shrink-0" />}
           {topic.pinned && <Pin size={8} className="text-muted-foreground/50 -rotate-45 flex-shrink-0" />}
-          <span className="text-[11px] text-foreground truncate">{topic.title}</span>
+          <span className="text-xs text-foreground truncate">{topic.title}</span>
         </div>
         <div className="flex items-center gap-1.5 mt-[2px]">
           <span className="text-[9.5px] text-muted-foreground/60 flex-shrink-0">{topic.assistantName}</span>
-          <span className="text-muted-foreground/20">·</span>
+          <span className="text-muted-foreground/50">·</span>
           <span className="text-[9.5px] text-muted-foreground/50 tabular-nums flex-shrink-0">{topic.messageCount} 条</span>
-          <span className="text-muted-foreground/20">·</span>
+          <span className="text-muted-foreground/50">·</span>
           <span className="text-[9.5px] text-muted-foreground/50 flex-shrink-0">{topic.timestamp}</span>
           {topic.tags && topic.tags.length > 0 && (
             <div className="flex items-center gap-0.5 overflow-hidden ml-0.5">
               {topic.tags.slice(0, 2).map((t) => <TagBadge key={t} tag={t} size="xs" />)}
-              {topic.tags.length > 2 && <span className="text-[8px] text-muted-foreground/40">+{topic.tags.length - 2}</span>}
+              {topic.tags.length > 2 && <span className="text-xs text-muted-foreground/40">+{topic.tags.length - 2}</span>}
             </div>
           )}
         </div>
       </div>
-      <div className="w-[20px] flex-shrink-0 flex justify-center">
-        <Button variant="ghost" size="icon-xs" className="size-5 opacity-0 group-hover/tc:opacity-100 text-muted-foreground/40">
-          <MoreHorizontal size={11} />
-        </Button>
+      <div className="w-[20px] flex-shrink-0 flex justify-center" onClick={e => e.stopPropagation()}>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="icon-xs" className="size-5 opacity-0 group-hover/tc:opacity-100 text-muted-foreground/40">
+              <MoreHorizontal size={11} />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="min-w-[100px]">
+            <DropdownMenuItem onClick={() => onTogglePin?.(topic.id)}>
+              {topic.pinned ? "取消置顶" : "置顶"}
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => onDelete?.(topic.id)} className="text-destructive">
+              删除
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </div>
   )
@@ -123,28 +135,40 @@ function TopicCard({ topic, isActive, onSelect }: {
 
 /* ─── Topic List Row (list view) ─── */
 
-function TopicListRow({ topic, isActive, onSelect }: {
-  topic: AssistantTopic; isActive: boolean; onSelect: () => void
+function TopicListRow({ topic, isActive, onSelect, onTogglePin, onDelete }: {
+  topic: AssistantTopic; isActive: boolean; onSelect: () => void; onTogglePin?: (id: string) => void; onDelete?: (id: string) => void
 }) {
   return (
     <div onClick={onSelect} className={`flex items-center gap-2.5 px-3 py-[7px] rounded-[12px] cursor-pointer transition-all duration-75 group/lr ${isActive ? "bg-cherry-active-bg" : "hover:bg-accent/10"}`}>
-      <span className="text-[12px] flex-shrink-0 w-5 text-center">{ASSISTANT_ICONS[topic.assistantName] || "🤖"}</span>
+      <span className="text-xs flex-shrink-0 w-5 text-center">{ASSISTANT_ICONS[topic.assistantName] || "🤖"}</span>
       {topic.status === "active" && <span className="w-[5px] h-[5px] rounded-full bg-primary animate-pulse flex-shrink-0" />}
       {topic.pinned && <Pin size={8} className="text-muted-foreground/50 -rotate-45 flex-shrink-0" />}
-      <span className={`text-[11px] flex-1 truncate ${isActive ? "text-foreground" : "text-foreground/85"}`}>{topic.title}</span>
+      <span className={`text-xs flex-1 truncate ${isActive ? "text-foreground" : "text-foreground/85"}`}>{topic.title}</span>
       <div className="flex items-center gap-1 flex-shrink-0">
         {topic.tags?.slice(0, 2).map((t) => <TagBadge key={t} tag={t} size="xs" />)}
       </div>
       <span className="text-[10px] text-muted-foreground truncate flex-shrink-0 w-[70px] text-right">{topic.assistantName}</span>
       <div className="flex items-center gap-0.5 flex-shrink-0 w-[36px] justify-end">
         <MessageCircle size={8} className="text-muted-foreground/40" />
-        <span className="text-[9px] text-muted-foreground tabular-nums">{topic.messageCount}</span>
+        <span className="text-xs text-muted-foreground tabular-nums">{topic.messageCount}</span>
       </div>
       <span className="text-[10px] text-muted-foreground flex-shrink-0 w-[40px] text-right tabular-nums">{topic.timestamp}</span>
-      <div className="w-[24px] flex-shrink-0 flex justify-center">
-        <Button variant="ghost" size="icon-xs" className="size-5 opacity-0 group-hover/lr:opacity-100 text-muted-foreground/40">
-          <MoreHorizontal size={11} />
-        </Button>
+      <div className="w-[24px] flex-shrink-0 flex justify-center" onClick={e => e.stopPropagation()}>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="icon-xs" className="size-5 opacity-0 group-hover/lr:opacity-100 text-muted-foreground/40">
+              <MoreHorizontal size={11} />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="min-w-[100px]">
+            <DropdownMenuItem onClick={() => onTogglePin?.(topic.id)}>
+              {topic.pinned ? "取消置顶" : "置顶"}
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => onDelete?.(topic.id)} className="text-destructive">
+              删除
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </div>
   )
@@ -161,7 +185,7 @@ function GroupSection({ title, count, children, icon }: {
       <Button variant="ghost" onClick={() => setOpen(!open)} className="h-auto px-0 py-0 font-normal tracking-normal flex items-center gap-2 w-full px-2 py-1.5 rounded-[12px] hover:bg-accent/15 transition-colors">
         <ChevronDown size={11} className={`text-muted-foreground transition-transform duration-100 ${open ? "" : "-rotate-90"}`} />
         {icon || <FolderOpen size={11} className="text-muted-foreground" />}
-        <span className="text-[11px] text-foreground/90 flex-1 text-left">{title}</span>
+        <span className="text-xs text-foreground/90 flex-1 text-left">{title}</span>
         <span className="text-[10px] text-muted-foreground bg-accent/30 px-1.5 py-[1px] rounded-[12px] tabular-nums">{count}</span>
       </Button>
       {open && <div className="pt-0.5">{children}</div>}
@@ -227,7 +251,7 @@ export function TopicHistoryDemo() {
   const handleTogglePin = (id: string) => setTopics((p) => p.map((t) => t.id === id ? { ...t, pinned: !t.pinned } : t))
 
   const renderTopic = (topic: AssistantTopic) => {
-    const props = { topic, isActive: activeId === topic.id, onSelect: () => setActiveId(topic.id) }
+    const props = { topic, isActive: activeId === topic.id, onSelect: () => setActiveId(topic.id), onTogglePin: handleTogglePin, onDelete: handleDelete }
     return viewMode === "card" ? <TopicCard key={topic.id} {...props} /> : <TopicListRow key={topic.id} {...props} />
   }
   const listGap = viewMode === "card" ? "gap-1.5" : "gap-0"
@@ -239,7 +263,7 @@ export function TopicHistoryDemo() {
       { name: "sortKey", type: '"time" | "name" | "messages"', default: '"time"', description: "Sort order" },
       { name: "groupMode", type: '"none" | "assistant" | "tag"', default: '"none"', description: "Group mode" },
     ] satisfies PropDef[]}>
-      <div className="rounded-xl border bg-background overflow-hidden">
+      <div className="rounded-[24px] border bg-background overflow-hidden">
         <div className="flex h-[520px]">
 
           {/* ─── Left Filter Sidebar ─── */}
@@ -248,7 +272,7 @@ export function TopicHistoryDemo() {
             <div className="flex items-center gap-2 mb-3">
               <div className="w-7 h-7 rounded-[12px] bg-accent/40 flex items-center justify-center"><History size={14} className="text-foreground/70" /></div>
               <div>
-                <h2 className="text-[13px] text-foreground">话题历史</h2>
+                <h2 className="text-sm text-foreground">话题历史</h2>
                 <p className="text-[10px] text-muted-foreground">{topics.length} 个话题</p>
               </div>
             </div>
@@ -257,17 +281,17 @@ export function TopicHistoryDemo() {
             <div className="mb-2">
               <div className="text-[9.5px] text-muted-foreground uppercase tracking-[0.08em] px-1 mb-2">助手</div>
               <div className="flex flex-col gap-[2px]">
-                <Button variant="ghost" onClick={() => setSelectedAssistant(null)} className={`h-auto px-0 py-0 font-normal tracking-normal flex items-center gap-2 px-2.5 py-[5px] rounded-[12px] text-[10.5px] transition-all duration-75 ${!selectedAssistant ? "bg-foreground/8 text-foreground" : "text-muted-foreground hover:text-foreground hover:bg-accent/15"}`}>
+                <Button variant="ghost" onClick={() => setSelectedAssistant(null)} className={`h-auto px-0 py-0 font-normal tracking-normal flex items-center gap-2 px-2.5 py-[5px] rounded-[12px] text-[10.5px] transition-all duration-75 ${!selectedAssistant ? "bg-muted/30 text-foreground" : "text-muted-foreground hover:text-foreground hover:bg-accent/15"}`}>
                   <span className="flex-1 text-left">全部</span>
-                  <span className="text-[9px] text-muted-foreground tabular-nums">{topics.length}</span>
+                  <span className="text-xs text-muted-foreground tabular-nums">{topics.length}</span>
                 </Button>
                 {allAssistants.map((ast) => {
                   const count = topics.filter((t) => t.assistantName === ast).length
                   return (
-                    <Button variant="ghost" key={ast} onClick={() => setSelectedAssistant(selectedAssistant === ast ? null : ast)} className={`h-auto px-0 py-0 font-normal tracking-normal flex items-center gap-2 px-2.5 py-[5px] rounded-[12px] text-[10.5px] transition-all duration-75 ${selectedAssistant === ast ? "bg-foreground/8 text-foreground" : "text-muted-foreground hover:text-foreground hover:bg-accent/15"}`}>
+                    <Button variant="ghost" key={ast} onClick={() => setSelectedAssistant(selectedAssistant === ast ? null : ast)} className={`h-auto px-0 py-0 font-normal tracking-normal flex items-center gap-2 px-2.5 py-[5px] rounded-[12px] text-[10.5px] transition-all duration-75 ${selectedAssistant === ast ? "bg-muted/30 text-foreground" : "text-muted-foreground hover:text-foreground hover:bg-accent/15"}`}>
                       <span className="text-[10px] flex-shrink-0">{ASSISTANT_ICONS[ast] || "🤖"}</span>
                       <span className="flex-1 text-left truncate">{ast}</span>
-                      <span className="text-[9px] text-muted-foreground tabular-nums">{count}</span>
+                      <span className="text-xs text-muted-foreground tabular-nums">{count}</span>
                     </Button>
                   )
                 })}
@@ -288,42 +312,39 @@ export function TopicHistoryDemo() {
               <div className="flex items-center gap-2">
                 <span className="text-[10.5px] text-foreground/70">{filteredTopics.length} 条结果</span>
                 {/* Tag filter dropdown */}
-                <div className="relative">
-                  <Button variant="ghost" onClick={() => setTagDropdownOpen(!tagDropdownOpen)} className={`h-auto px-0 py-0 font-normal tracking-normal flex items-center gap-1 px-2 py-[3px] rounded-[12px] text-[10px] transition-all duration-100 ${tagDropdownOpen || selectedTags.length > 0 ? "bg-foreground/8 text-foreground" : "text-muted-foreground hover:text-foreground hover:bg-accent/15"}`}>
-                    <Tag size={9} />
-                    <span>{selectedTags.length > 0 ? `${selectedTags.length} 个标签` : "标签"}</span>
-                    <ChevronDown size={8} className={`transition-transform duration-100 ${tagDropdownOpen ? "rotate-180" : ""}`} />
-                  </Button>
-                  {tagDropdownOpen && (
-                    <>
-                      <div className="fixed inset-0 z-[55]" onClick={() => setTagDropdownOpen(false)} />
-                      <div className="absolute left-0 top-full mt-1 z-[56] w-[220px] bg-popover border border-border/40 rounded-[12px] shadow-xl py-1 max-h-[280px] overflow-y-auto [&::-webkit-scrollbar]:w-[2px] [&::-webkit-scrollbar-thumb]:bg-border/30">
-                        {allTags.map((tag) => {
-                          const isSelected = selectedTags.includes(tag)
-                          const count = topics.filter((t) => t.tags?.includes(tag)).length
-                          return (
-                            <Button variant="ghost" key={tag} onClick={() => toggleTag(tag)} className={`h-auto px-0 py-0 font-normal tracking-normal flex items-center gap-2 w-full px-2.5 py-[5px] text-[10.5px] transition-colors rounded-none ${isSelected ? "bg-foreground/6 text-foreground" : "text-muted-foreground hover:text-foreground hover:bg-accent/15"}`}>
-                              <div className={`w-3.5 h-3.5 rounded border flex items-center justify-center flex-shrink-0 transition-all ${isSelected ? "border-primary bg-primary" : "border-border/50"}`}>
-                                {isSelected && <Check size={8} className="text-primary-foreground" />}
-                              </div>
-                              <TagBadge tag={tag} size="xs" />
-                              <span className="flex-1" />
-                              <span className="text-[9px] text-muted-foreground/50 tabular-nums">{count}</span>
-                            </Button>
-                          )
-                        })}
-                        {selectedTags.length > 0 && (
-                          <>
-                            <div className="h-px bg-border/20 my-0.5" />
-                            <Button variant="ghost" onClick={() => setSelectedTags([])} className="h-auto px-0 py-0 font-normal tracking-normal flex items-center gap-2 w-full px-2.5 py-[5px] text-[10.5px] text-muted-foreground hover:text-foreground hover:bg-accent/15 transition-colors rounded-none">
-                              <X size={9} className="flex-shrink-0" /> 清除选择
-                            </Button>
-                          </>
-                        )}
-                      </div>
-                    </>
-                  )}
-                </div>
+                <Popover open={tagDropdownOpen} onOpenChange={setTagDropdownOpen}>
+                  <PopoverTrigger asChild>
+                    <Button variant="ghost" className={`h-auto px-0 py-0 font-normal tracking-normal flex items-center gap-1 px-2 py-[3px] rounded-[12px] text-[10px] transition-all duration-100 ${tagDropdownOpen || selectedTags.length > 0 ? "bg-muted/30 text-foreground" : "text-muted-foreground hover:text-foreground hover:bg-accent/15"}`}>
+                      <Tag size={9} />
+                      <span>{selectedTags.length > 0 ? `${selectedTags.length} 个标签` : "标签"}</span>
+                      <ChevronDown size={8} className={`transition-transform duration-100 ${tagDropdownOpen ? "rotate-180" : ""}`} />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-[220px] rounded-[12px] p-0 py-1 border-border/40 shadow-xl max-h-[280px] overflow-y-auto [&::-webkit-scrollbar]:w-[2px] [&::-webkit-scrollbar-thumb]:bg-border/30" align="start" sideOffset={4}>
+                    {allTags.map((tag) => {
+                      const isSelected = selectedTags.includes(tag)
+                      const count = topics.filter((t) => t.tags?.includes(tag)).length
+                      return (
+                        <Button variant="ghost" key={tag} onClick={() => toggleTag(tag)} className={`h-auto px-0 py-0 font-normal tracking-normal flex items-center gap-2 w-full px-2.5 py-[5px] text-[10.5px] transition-colors rounded-none ${isSelected ? "bg-foreground/6 text-foreground" : "text-muted-foreground hover:text-foreground hover:bg-accent/15"}`}>
+                          <div className={`w-3.5 h-3.5 rounded border flex items-center justify-center flex-shrink-0 transition-all ${isSelected ? "border-primary bg-primary" : "border-border/50"}`}>
+                            {isSelected && <Check size={8} className="text-primary-foreground" />}
+                          </div>
+                          <TagBadge tag={tag} size="xs" />
+                          <span className="flex-1" />
+                          <span className="text-xs text-muted-foreground/50 tabular-nums">{count}</span>
+                        </Button>
+                      )
+                    })}
+                    {selectedTags.length > 0 && (
+                      <>
+                        <div className="h-px bg-border/20 my-0.5" />
+                        <Button variant="ghost" onClick={() => setSelectedTags([])} className="h-auto px-0 py-0 font-normal tracking-normal flex items-center gap-2 w-full px-2.5 py-[5px] text-[10.5px] text-muted-foreground hover:text-foreground hover:bg-accent/15 transition-colors rounded-none">
+                          <X size={9} className="flex-shrink-0" /> 清除选择
+                        </Button>
+                      </>
+                    )}
+                  </PopoverContent>
+                </Popover>
                 {/* Selected tags inline */}
                 {selectedTags.length > 0 && (
                   <div className="flex items-center gap-1">
@@ -365,7 +386,7 @@ export function TopicHistoryDemo() {
 
             {/* List header (list view only) */}
             {viewMode === "list" && filteredTopics.length > 0 && (
-              <div className="flex items-center gap-2.5 px-3 py-[5px] border-b border-border/15 text-[9px] text-muted-foreground uppercase tracking-[0.06em] flex-shrink-0">
+              <div className="flex items-center gap-2.5 px-3 py-[5px] border-b border-border/30 text-xs text-muted-foreground uppercase tracking-[0.06em] flex-shrink-0">
                 <span className="w-5 flex-shrink-0 text-center">助手</span>
                 <span className="flex-1">标题</span>
                 <span className="w-[70px] text-right flex-shrink-0">类型</span>
@@ -379,7 +400,7 @@ export function TopicHistoryDemo() {
             <div className="flex-1 overflow-y-auto px-2 py-1.5 [&::-webkit-scrollbar]:w-[3px] [&::-webkit-scrollbar-thumb]:bg-border/25 [&::-webkit-scrollbar-thumb]:rounded-full">
               {groupedTopics ? (
                 Object.entries(groupedTopics).map(([name, items]) => (
-                  <GroupSection key={name} title={name} count={items.length} icon={groupMode === "tag" ? <TagBadge tag={name} size="xs" /> : groupMode === "assistant" ? <span className="text-[11px]">{ASSISTANT_ICONS[name] || "🤖"}</span> : undefined}>
+                  <GroupSection key={name} title={name} count={items.length} icon={groupMode === "tag" ? <TagBadge tag={name} size="xs" /> : groupMode === "assistant" ? <span className="text-xs">{ASSISTANT_ICONS[name] || "🤖"}</span> : undefined}>
                     <div className={`flex flex-col ${listGap} pl-2`}>{items.map(renderTopic)}</div>
                   </GroupSection>
                 ))
@@ -388,8 +409,8 @@ export function TopicHistoryDemo() {
               )}
               {filteredTopics.length === 0 && (
                 <div className="flex flex-col items-center justify-center py-20">
-                  <div className="w-12 h-12 rounded-xl bg-accent/25 flex items-center justify-center mb-3"><Search size={18} className="text-muted-foreground/40" /></div>
-                  <p className="text-[11px] text-foreground/70 mb-1">没有找到匹配的话题</p>
+                  <div className="w-12 h-12 rounded-[12px] bg-accent/25 flex items-center justify-center mb-3"><Search size={18} className="text-muted-foreground/40" /></div>
+                  <p className="text-xs text-foreground/70 mb-1">没有找到匹配的话题</p>
                   <p className="text-[10px] text-muted-foreground mb-3">尝试修改搜索条件或筛选标签</p>
                   {hasFilters && <Button variant="secondary" size="xs" onClick={clearFilters}>清除筛选条件</Button>}
                 </div>

@@ -3,6 +3,7 @@
 import * as React from "react"
 import { cn } from "../../lib/utils"
 import { Button } from "./button"
+import { ScrollArea } from "./scroll-area"
 
 /* ----------------------------- FilterSidebar ----------------------------- */
 
@@ -17,13 +18,15 @@ function FilterSidebar({ width = 220, className, children, style, ref, ...props 
       ref={ref}
       data-slot="filter-sidebar"
       className={cn(
-        "h-full flex-shrink-0 border-r border-border bg-muted/30 flex flex-col overflow-y-auto tracking-tight",
+        "h-full flex-shrink-0 border-r border-border bg-muted/30 flex flex-col tracking-[-0.14px]",
         className
       )}
       style={{ width, ...style }}
       {...props}
     >
-      {children}
+      <ScrollArea className="flex-1">
+        {children}
+      </ScrollArea>
     </aside>
   )
 }

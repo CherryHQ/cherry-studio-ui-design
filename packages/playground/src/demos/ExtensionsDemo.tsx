@@ -1,5 +1,5 @@
 import React, { useState } from "react"
-import { Button, Badge, Switch, Dialog, DialogContent, Input } from "@cherry-studio/ui"
+import { Button, Badge, Switch, Dialog, DialogContent, Input, Tabs, TabsList, TabsTrigger, TabsContent } from "@cherry-studio/ui"
 import {
   Search, X, Download, RefreshCw,
   Star, Wrench, Package, Blocks,
@@ -83,7 +83,7 @@ const STATUS_CONFIG: Record<DepStatus, { label: string; icon: React.ReactNode; c
 }
 
 const TYPE_BADGE: Record<DepType, string> = {
-  binary: "bg-foreground/[0.06] text-foreground/60",
+  binary: "bg-muted/30 text-foreground/60",
   npm: "bg-accent-red-muted text-accent-red",
   pip: "bg-accent-blue-muted text-accent-blue",
 }
@@ -99,22 +99,22 @@ function ExtensionCard({ ext, isInstalled, selected, onClick, trailing }: {
     <Button
       variant="ghost"
       onClick={onClick}
-      className={`w-full h-auto text-left px-3.5 py-3 rounded-[12px] border transition-all group ${selected ? "bg-foreground/[0.04] border-foreground/[0.08]" : "border-transparent hover:bg-foreground/[0.03] hover:border-foreground/[0.04]"}`}
+      className={`w-full h-auto text-left px-3.5 py-3 rounded-[12px] border transition-all group ${selected ? "bg-accent/20 border-border/40" : "border-transparent hover:bg-accent/20 hover:border-border/30"}`}
     >
       <div className="flex items-start gap-3 w-full">
-        <div className="w-10 h-10 rounded-[12px] bg-foreground/[0.05] flex items-center justify-center text-[20px] flex-shrink-0">{ext.icon}</div>
+        <div className="w-10 h-10 rounded-[12px] bg-muted/30 flex items-center justify-center text-[20px] flex-shrink-0">{ext.icon}</div>
         <div className="flex-1 min-w-0 text-left">
           <div className="flex items-center gap-2">
-            <span className="text-[13px] text-foreground truncate font-medium tracking-tight">{ext.name}</span>
-            {ext.category === "official" && <Badge variant="outline" className="text-[11px] py-0 text-accent-blue border-accent-blue/20 bg-accent-blue-muted">官方</Badge>}
-            {ext.status === "update-available" && <Badge variant="outline" className="text-[11px] py-0 text-accent-amber border-accent-amber/20 bg-accent-amber-muted">可更新</Badge>}
+            <span className="text-sm text-foreground truncate font-medium tracking-tight">{ext.name}</span>
+            {ext.category === "official" && <Badge variant="outline" className="text-xs py-0 text-accent-blue border-accent-blue/20 bg-accent-blue-muted">官方</Badge>}
+            {ext.status === "update-available" && <Badge variant="outline" className="text-xs py-0 text-accent-amber border-accent-amber/20 bg-accent-amber-muted">可更新</Badge>}
           </div>
-          <p className="text-[11px] text-muted-foreground/60 mt-0.5 line-clamp-1 tracking-tight">{ext.description}</p>
-          <div className="flex items-center gap-2 mt-1.5 text-[11px] text-muted-foreground/40 tracking-tight">
-            <span>v{ext.version}</span><span className="text-muted-foreground/20">·</span><span>{ext.size}</span>
-            {ext.rating && <><span className="text-muted-foreground/20">·</span><span className="text-accent-amber flex items-center gap-0.5"><Star size={9} fill="currentColor" /> {ext.rating}</span></>}
-            {ext.downloads && <><span className="text-muted-foreground/20">·</span><span className="flex items-center gap-0.5"><Download size={9} /> {formatDownloads(ext.downloads)}</span></>}
-            {ext.mcpTools && ext.mcpTools.length > 0 && <><span className="text-muted-foreground/20">·</span><span className="flex items-center gap-0.5"><Wrench size={9} /> {ext.mcpTools.length} MCP</span></>}
+          <p className="text-xs text-muted-foreground/60 mt-0.5 line-clamp-1 tracking-tight">{ext.description}</p>
+          <div className="flex items-center gap-2 mt-1.5 text-xs text-muted-foreground/40 tracking-tight">
+            <span>v{ext.version}</span><span className="text-muted-foreground/50">·</span><span>{ext.size}</span>
+            {ext.rating && <><span className="text-muted-foreground/50">·</span><span className="text-accent-amber flex items-center gap-0.5"><Star size={9} fill="currentColor" /> {ext.rating}</span></>}
+            {ext.downloads && <><span className="text-muted-foreground/50">·</span><span className="flex items-center gap-0.5"><Download size={9} /> {formatDownloads(ext.downloads)}</span></>}
+            {ext.mcpTools && ext.mcpTools.length > 0 && <><span className="text-muted-foreground/50">·</span><span className="flex items-center gap-0.5"><Wrench size={9} /> {ext.mcpTools.length} MCP</span></>}
           </div>
         </div>
         <div onClick={e => e.stopPropagation()}>{trailing}</div>
@@ -165,35 +165,36 @@ export function ExtensionsDemo() {
             <Blocks size={13} className="text-muted-foreground" />
             <span className="text-foreground">扩展管理</span>
           </div>
-          <div className="flex items-center gap-0.5 bg-muted/40 rounded-[12px] p-0.5">
-            {([{ id: "installed" as ExtensionTab, label: "已安装", count: extensions.length }, { id: "marketplace" as ExtensionTab, label: "市场" }, { id: "dependencies" as ExtensionTab, label: "依赖管理" }]).map(tab => (
-              <Button key={tab.id} variant="ghost" size="xs" onClick={() => { setActiveTab(tab.id); setSelectedInstalled(null) }} className={`px-2.5 py-[3px] rounded-[10px] text-[11px] tracking-tight ${activeTab === tab.id ? "bg-background text-foreground shadow-sm" : "text-muted-foreground/60 hover:text-foreground/80"}`}>
-                {tab.label}{tab.count != null && ` (${tab.count})`}
-              </Button>
-            ))}
-          </div>
+          <Tabs value={activeTab} onValueChange={v => { setActiveTab(v as ExtensionTab); setSelectedInstalled(null) }}>
+            <TabsList className="bg-muted/40 rounded-[12px] p-0.5 h-auto">
+              <TabsTrigger value="installed" className="px-2.5 py-[3px] rounded-[10px] text-xs tracking-tight">已安装 ({extensions.length})</TabsTrigger>
+              <TabsTrigger value="marketplace" className="px-2.5 py-[3px] rounded-[10px] text-xs tracking-tight">市场</TabsTrigger>
+              <TabsTrigger value="dependencies" className="px-2.5 py-[3px] rounded-[10px] text-xs tracking-tight">依赖管理</TabsTrigger>
+            </TabsList>
+          </Tabs>
         </div>
 
+        <Tabs value={activeTab} onValueChange={v => setActiveTab(v as ExtensionTab)}>
         {/* Dependencies tab */}
-        {activeTab === "dependencies" ? (
+        <TabsContent value="dependencies" className="mt-0">
           <div className="px-4 py-4 min-h-[360px] max-h-[480px] overflow-y-auto space-y-1 [&::-webkit-scrollbar]:w-[2px] [&::-webkit-scrollbar-thumb]:bg-border/20">
-            <p className="text-[11px] text-muted-foreground/50 mb-3 tracking-tight px-1">运行时依赖 ({deps.length})</p>
+            <p className="text-xs text-muted-foreground/50 mb-3 tracking-tight px-1">运行时依赖 ({deps.length})</p>
             {deps.map(dep => {
               const sc = STATUS_CONFIG[dep.status]
               const loading = depLoading.has(dep.id)
               return (
-                <div key={dep.id} className="flex items-center gap-3 px-3.5 py-2.5 rounded-[12px] hover:bg-foreground/[0.03] transition-colors">
+                <div key={dep.id} className="flex items-center gap-3 px-3.5 py-2.5 rounded-[12px] hover:bg-accent/20 transition-colors">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
-                      <span className="text-[13px] text-foreground font-medium tracking-tight">{dep.name}</span>
+                      <span className="text-sm text-foreground font-medium tracking-tight">{dep.name}</span>
                       <Badge variant="outline" className={`text-[10px] py-0 px-1.5 ${TYPE_BADGE[dep.type]}`}>{dep.type}</Badge>
                     </div>
-                    <div className="flex items-center gap-2 mt-1 text-[11px] text-muted-foreground/40 tracking-tight">
+                    <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground/40 tracking-tight">
                       <span>{dep.currentVersion}</span>
                       {dep.currentVersion !== dep.latestVersion && <span className="text-accent-amber">→ {dep.latestVersion}</span>}
                     </div>
                   </div>
-                  <Badge variant="outline" className={`text-[11px] py-0.5 gap-1 ${sc.badgeClass}`}>
+                  <Badge variant="outline" className={`text-xs py-0.5 gap-1 ${sc.badgeClass}`}>
                     {sc.icon} {sc.label}
                   </Badge>
                   {(dep.status === "outdated" || dep.status === "missing") && (
@@ -205,9 +206,10 @@ export function ExtensionsDemo() {
               )
             })}
           </div>
-        ) : (
-          <>
-            {/* Search + category (for installed/marketplace) */}
+        </TabsContent>
+
+        <TabsContent value="installed" className="mt-0">
+            {/* Search + category */}
             <div className="px-4 py-2 flex items-center gap-2">
               <div className="flex-1 relative">
                 <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground/40" />
@@ -216,86 +218,94 @@ export function ExtensionsDemo() {
               </div>
               <div className="flex items-center gap-0.5">
                 {([{ id: "all" as ExtensionCategory, label: "全部" }, { id: "official" as ExtensionCategory, label: "官方" }, { id: "community" as ExtensionCategory, label: "社区" }]).map(cat => (
-                  <Button key={cat.id} variant="ghost" size="xs" onClick={() => setCategoryFilter(cat.id)} className={`px-2 py-1 rounded-[10px] text-[11px] tracking-tight ${categoryFilter === cat.id ? "bg-accent text-foreground" : "text-muted-foreground/50 hover:text-foreground"}`}>{cat.label}</Button>
+                  <Button key={cat.id} variant="ghost" size="xs" onClick={() => setCategoryFilter(cat.id)} className={`px-2 py-1 rounded-[10px] text-xs tracking-tight ${categoryFilter === cat.id ? "bg-accent text-foreground" : "text-muted-foreground/50 hover:text-foreground"}`}>{cat.label}</Button>
                 ))}
               </div>
             </div>
-
-            {/* Installed: dual-pane layout */}
-            {activeTab === "installed" ? (
-              <div className="flex min-h-[360px] max-h-[480px]">
-                {/* Left list */}
-                <div className="w-[280px] border-r border-border/20 overflow-y-auto px-2 pb-4 space-y-0.5 [&::-webkit-scrollbar]:w-[2px] [&::-webkit-scrollbar-thumb]:bg-border/20">
-                  {filtered.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center py-16 text-muted-foreground/30">
-                      <Package size={24} className="mb-2" /><span className="text-[13px] tracking-tight">暂无扩展</span>
-                    </div>
-                  ) : filtered.map(ext => (
-                    <ExtensionCard
-                      key={ext.id} ext={ext} isInstalled selected={selectedInstalled?.id === ext.id}
-                      onClick={() => setSelectedInstalled(ext)}
-                      trailing={<Switch checked={ext.enabled} onCheckedChange={() => toggleEnabled(ext.id)} />}
-                    />
-                  ))}
-                </div>
-                {/* Right detail */}
-                <div className="flex-1 overflow-y-auto px-5 py-4 [&::-webkit-scrollbar]:w-[2px] [&::-webkit-scrollbar-thumb]:bg-border/20">
-                  {selectedInstalled ? (
-                    <div className="space-y-4">
-                      <div className="flex items-start gap-3">
-                        <div className="w-12 h-12 rounded-[16px] bg-foreground/[0.05] flex items-center justify-center text-[24px]">{selectedInstalled.icon}</div>
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2">
-                            <h3 className="text-[15px] font-semibold tracking-tight">{selectedInstalled.name}</h3>
-                            {selectedInstalled.category === "official" && <Badge variant="outline" className="text-[11px] py-0 text-accent-blue border-accent-blue/20 bg-accent-blue-muted">官方</Badge>}
-                            {selectedInstalled.status === "update-available" && <Badge variant="outline" className="text-[11px] py-0 text-accent-amber border-accent-amber/20 bg-accent-amber-muted">可更新</Badge>}
-                          </div>
-                          <p className="text-[11px] text-muted-foreground/50 tracking-tight mt-0.5">{selectedInstalled.author} · v{selectedInstalled.version} · {selectedInstalled.size}</p>
-                        </div>
-                      </div>
-                      <p className="text-[13px] text-muted-foreground/60 leading-relaxed tracking-tight">{selectedInstalled.description}</p>
-                      {selectedInstalled.mcpTools && selectedInstalled.mcpTools.length > 0 && (
-                        <div>
-                          <p className="text-[11px] text-muted-foreground/40 mb-1.5 tracking-tight">MCP 工具</p>
-                          <div className="flex flex-wrap gap-1">{selectedInstalled.mcpTools.map(tool => <Badge key={tool} variant="outline" className="text-[11px]">{tool}</Badge>)}</div>
-                        </div>
-                      )}
-                      <div className="flex gap-2 pt-2">
-                        <Button size="sm" variant={selectedInstalled.enabled ? "destructive" : "default"} onClick={() => { toggleEnabled(selectedInstalled.id); setSelectedInstalled({ ...selectedInstalled, enabled: !selectedInstalled.enabled }) }}>
-                          {selectedInstalled.enabled ? "禁用" : "启用"}
-                        </Button>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="flex flex-col items-center justify-center h-full text-muted-foreground/30 py-20">
-                      <Package size={28} className="mb-2" />
-                      <span className="text-[13px] tracking-tight">选择一个扩展查看详情</span>
-                    </div>
-                  )}
-                </div>
-              </div>
-            ) : (
-              /* Marketplace: single list */
-              <div className="px-4 pb-4 space-y-1 min-h-[360px] max-h-[480px] overflow-y-auto [&::-webkit-scrollbar]:w-[2px] [&::-webkit-scrollbar-thumb]:bg-border/20">
+            <div className="flex min-h-[360px] max-h-[480px]">
+              <div className="w-[280px] border-r border-border/20 overflow-y-auto px-2 pb-4 space-y-0.5 [&::-webkit-scrollbar]:w-[2px] [&::-webkit-scrollbar-thumb]:bg-border/20">
                 {filtered.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-16 text-muted-foreground/30">
-                    <Package size={24} className="mb-2" /><span className="text-[13px] tracking-tight">暂无扩展</span>
+                    <Package size={24} className="mb-2" /><span className="text-sm tracking-tight">暂无扩展</span>
                   </div>
                 ) : filtered.map(ext => (
                   <ExtensionCard
-                    key={ext.id} ext={ext} isInstalled={false}
-                    onClick={() => setDetailExt(ext)}
-                    trailing={
-                      <Button variant="secondary" size="xs" onClick={() => handleInstall(ext.id)} disabled={installing.has(ext.id)}>
-                        {installing.has(ext.id) ? <><RefreshCw size={11} className="animate-spin" /> 安装中</> : "安装"}
-                      </Button>
-                    }
+                    key={ext.id} ext={ext} isInstalled selected={selectedInstalled?.id === ext.id}
+                    onClick={() => setSelectedInstalled(ext)}
+                    trailing={<Switch checked={ext.enabled} onCheckedChange={() => toggleEnabled(ext.id)} />}
                   />
                 ))}
               </div>
-            )}
-          </>
-        )}
+              <div className="flex-1 overflow-y-auto px-5 py-4 [&::-webkit-scrollbar]:w-[2px] [&::-webkit-scrollbar-thumb]:bg-border/20">
+                {selectedInstalled ? (
+                  <div className="space-y-4">
+                    <div className="flex items-start gap-3">
+                      <div className="w-12 h-12 rounded-[16px] bg-muted/30 flex items-center justify-center text-[24px]">{selectedInstalled.icon}</div>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2">
+                          <h3 className="text-base font-semibold tracking-tight">{selectedInstalled.name}</h3>
+                          {selectedInstalled.category === "official" && <Badge variant="outline" className="text-xs py-0 text-accent-blue border-accent-blue/20 bg-accent-blue-muted">官方</Badge>}
+                          {selectedInstalled.status === "update-available" && <Badge variant="outline" className="text-xs py-0 text-accent-amber border-accent-amber/20 bg-accent-amber-muted">可更新</Badge>}
+                        </div>
+                        <p className="text-xs text-muted-foreground/50 tracking-tight mt-0.5">{selectedInstalled.author} · v{selectedInstalled.version} · {selectedInstalled.size}</p>
+                      </div>
+                    </div>
+                    <p className="text-sm text-muted-foreground/60 leading-relaxed tracking-tight">{selectedInstalled.description}</p>
+                    {selectedInstalled.mcpTools && selectedInstalled.mcpTools.length > 0 && (
+                      <div>
+                        <p className="text-xs text-muted-foreground/40 mb-1.5 tracking-tight">MCP 工具</p>
+                        <div className="flex flex-wrap gap-1">{selectedInstalled.mcpTools.map(tool => <Badge key={tool} variant="outline" className="text-xs">{tool}</Badge>)}</div>
+                      </div>
+                    )}
+                    <div className="flex gap-2 pt-2">
+                      <Button size="sm" variant={selectedInstalled.enabled ? "destructive" : "default"} onClick={() => { toggleEnabled(selectedInstalled.id); setSelectedInstalled({ ...selectedInstalled, enabled: !selectedInstalled.enabled }) }}>
+                        {selectedInstalled.enabled ? "禁用" : "启用"}
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center justify-center h-full text-muted-foreground/30 py-20">
+                    <Package size={28} className="mb-2" />
+                    <span className="text-sm tracking-tight">选择一个扩展查看详情</span>
+                  </div>
+                )}
+              </div>
+            </div>
+        </TabsContent>
+
+        <TabsContent value="marketplace" className="mt-0">
+            {/* Search + category */}
+            <div className="px-4 py-2 flex items-center gap-2">
+              <div className="flex-1 relative">
+                <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground/40" />
+                <Input value={searchTerm} onChange={e => setSearchTerm(e.target.value)} placeholder="搜索扩展…" className="pl-8 pr-7 h-auto py-1.5 text-xs tracking-tight" />
+                {searchTerm && <Button variant="ghost" size="icon-xs" onClick={() => setSearchTerm("")} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground/30"><X size={12} /></Button>}
+              </div>
+              <div className="flex items-center gap-0.5">
+                {([{ id: "all" as ExtensionCategory, label: "全部" }, { id: "official" as ExtensionCategory, label: "官方" }, { id: "community" as ExtensionCategory, label: "社区" }]).map(cat => (
+                  <Button key={cat.id} variant="ghost" size="xs" onClick={() => setCategoryFilter(cat.id)} className={`px-2 py-1 rounded-[10px] text-xs tracking-tight ${categoryFilter === cat.id ? "bg-accent text-foreground" : "text-muted-foreground/50 hover:text-foreground"}`}>{cat.label}</Button>
+                ))}
+              </div>
+            </div>
+            <div className="px-4 pb-4 space-y-1 min-h-[360px] max-h-[480px] overflow-y-auto [&::-webkit-scrollbar]:w-[2px] [&::-webkit-scrollbar-thumb]:bg-border/20">
+              {filtered.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-16 text-muted-foreground/30">
+                  <Package size={24} className="mb-2" /><span className="text-sm tracking-tight">暂无扩展</span>
+                </div>
+              ) : filtered.map(ext => (
+                <ExtensionCard
+                  key={ext.id} ext={ext} isInstalled={false}
+                  onClick={() => setDetailExt(ext)}
+                  trailing={
+                    <Button variant="secondary" size="xs" onClick={() => handleInstall(ext.id)} disabled={installing.has(ext.id)}>
+                      {installing.has(ext.id) ? <><RefreshCw size={11} className="animate-spin" /> 安装中</> : "安装"}
+                    </Button>
+                  }
+                />
+              ))}
+            </div>
+        </TabsContent>
+        </Tabs>
       </div>
 
       {/* Marketplace detail dialog */}
@@ -304,17 +314,17 @@ export function ExtensionsDemo() {
           {detailExt && (
             <div className="space-y-4">
               <div className="flex items-start gap-3">
-                <div className="w-12 h-12 rounded-[24px] bg-foreground/[0.05] flex items-center justify-center text-[24px]">{detailExt.icon}</div>
+                <div className="w-12 h-12 rounded-[24px] bg-muted/30 flex items-center justify-center text-[24px]">{detailExt.icon}</div>
                 <div className="flex-1">
-                  <div className="flex items-center gap-2"><h3 className="text-[15px] font-semibold tracking-tight">{detailExt.name}</h3>{detailExt.category === "official" && <Badge variant="outline" className="text-[11px] py-0">官方</Badge>}</div>
-                  <p className="text-[11px] text-muted-foreground/50 tracking-tight">{detailExt.author} · v{detailExt.version} · {detailExt.size}</p>
+                  <div className="flex items-center gap-2"><h3 className="text-base font-semibold tracking-tight">{detailExt.name}</h3>{detailExt.category === "official" && <Badge variant="outline" className="text-xs py-0">官方</Badge>}</div>
+                  <p className="text-xs text-muted-foreground/50 tracking-tight">{detailExt.author} · v{detailExt.version} · {detailExt.size}</p>
                 </div>
               </div>
-              <p className="text-[13px] text-muted-foreground/60 leading-relaxed tracking-tight">{detailExt.description}</p>
+              <p className="text-sm text-muted-foreground/60 leading-relaxed tracking-tight">{detailExt.description}</p>
               {detailExt.mcpTools && detailExt.mcpTools.length > 0 && (
                 <div>
-                  <p className="text-[11px] text-muted-foreground/40 mb-1.5 tracking-tight">MCP 工具</p>
-                  <div className="flex flex-wrap gap-1">{detailExt.mcpTools.map(tool => <Badge key={tool} variant="outline" className="text-[11px]">{tool}</Badge>)}</div>
+                  <p className="text-xs text-muted-foreground/40 mb-1.5 tracking-tight">MCP 工具</p>
+                  <div className="flex flex-wrap gap-1">{detailExt.mcpTools.map(tool => <Badge key={tool} variant="outline" className="text-xs">{tool}</Badge>)}</div>
                 </div>
               )}
               <div className="flex justify-end gap-2 pt-2">

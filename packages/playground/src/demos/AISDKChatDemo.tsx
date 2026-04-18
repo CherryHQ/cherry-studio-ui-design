@@ -151,7 +151,7 @@ const { messages, input, setInput, handleSubmit, isLoading, stop } = useChatStre
       <div className="border rounded-[24px] overflow-hidden bg-background h-[520px] flex flex-col">
         <div className="flex items-center gap-2 px-4 py-2 border-b bg-muted/30">
           <Sparkles className="size-4 text-primary" />
-          <span className="text-[13px] font-medium">AI Chat Demo</span>
+          <span className="text-sm font-medium">AI Chat Demo</span>
           <span className="text-[10px] text-muted-foreground ml-auto">{messages.length} messages</span>
         </div>
         <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-4">

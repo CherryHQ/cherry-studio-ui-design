@@ -1,7 +1,7 @@
 import React, { useState } from "react"
 import {
   ConfigSection, FormRow, Input, Textarea, Badge, Button, Switch,
-  InlineSelect, Slider, SectionHeader,
+  InlineSelect, Slider, SectionHeader, Separator,
 } from "@cherry-studio/ui"
 import { Search, Globe, Eye, EyeOff, Trash2, Check } from "lucide-react"
 import { Section, type PropDef } from "../components/Section"
@@ -67,18 +67,18 @@ export function WebSearchConfigDemo() {
           <div className="w-[200px] shrink-0 border-r border-border/30 flex flex-col">
             <div className="h-11 flex items-center gap-1.5 px-4 border-b border-border/30">
               <Globe size={13} className="text-muted-foreground" />
-              <span className="text-[13px] text-foreground font-medium tracking-tight">网络搜索</span>
+              <span className="text-sm text-foreground font-medium tracking-tight">网络搜索</span>
             </div>
             <div className="flex-1 overflow-y-auto p-2 space-y-0.5">
               {providers.map(p => (
-                <Button variant="ghost" key={p.id} onClick={() => setSelectedId(p.id)} className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-[12px] transition-all text-left ${selectedId === p.id ? "bg-foreground/[0.05]" : "hover:bg-foreground/[0.03]"}`}>
-                  <div className="w-8 h-8 rounded-[12px] flex items-center justify-center text-primary-foreground text-[11px] font-medium flex-shrink-0" style={{ background: p.color }}>{p.initial}</div>
+                <Button variant="ghost" key={p.id} onClick={() => setSelectedId(p.id)} className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-[12px] transition-all text-left ${selectedId === p.id ? "bg-muted/40" : "hover:bg-muted/20"}`}>
+                  <div className="w-8 h-8 rounded-[12px] flex items-center justify-center text-primary-foreground text-xs font-medium flex-shrink-0" style={{ background: p.color }}>{p.initial}</div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-1.5">
-                      <span className="text-[13px] text-foreground truncate font-medium tracking-tight">{p.name}</span>
+                      <span className="text-sm text-foreground truncate font-medium tracking-tight">{p.name}</span>
                       {p.configured && <Check size={9} className="text-success flex-shrink-0" />}
                     </div>
-                    <span className="text-[11px] text-muted-foreground/40 tracking-tight">{p.subtitle}</span>
+                    <span className="text-xs text-muted-foreground/40 tracking-tight">{p.subtitle}</span>
                   </div>
                   <div onClick={e => e.stopPropagation()}><Switch checked={p.enabled} onCheckedChange={() => toggleProvider(p.id)} /></div>
                 </Button>
@@ -89,8 +89,8 @@ export function WebSearchConfigDemo() {
           {/* Right: Config panel */}
           <div className="flex-1 overflow-y-auto p-5 space-y-5 [&::-webkit-scrollbar]:w-[2px] [&::-webkit-scrollbar-thumb]:bg-border/20">
             <div className="flex items-center gap-2.5 mb-1">
-              <div className="w-8 h-8 rounded-[12px] flex items-center justify-center text-primary-foreground text-[11px] font-medium" style={{ background: selected.color }}>{selected.initial}</div>
-              <div><h3 className="text-[13px] text-foreground font-semibold tracking-tight">{selected.name} 配置</h3><p className="text-[11px] text-muted-foreground/40 tracking-tight">{selected.subtitle}</p></div>
+              <div className="w-8 h-8 rounded-[12px] flex items-center justify-center text-primary-foreground text-xs font-medium" style={{ background: selected.color }}>{selected.initial}</div>
+              <div><h3 className="text-sm text-foreground font-semibold tracking-tight">{selected.name} 配置</h3><p className="text-xs text-muted-foreground/40 tracking-tight">{selected.subtitle}</p></div>
             </div>
 
             <ConfigSection title="认证">
@@ -128,21 +128,21 @@ export function WebSearchConfigDemo() {
 
             <ConfigSection title="全局搜索策略" hint="控制所有搜索服务商的通用行为和结果处理规则">
               <FormRow label="搜索结果个数 (Top K)">
-                <div className="flex items-center gap-2 w-32"><Slider value={topK} onValueChange={setTopK} min={1} max={50} step={1} /><span className="text-[11px] font-mono text-foreground/60 w-5 text-right">{topK[0]}</span></div>
+                <div className="flex items-center gap-2 w-32"><Slider value={topK} onValueChange={setTopK} min={1} max={50} step={1} /><span className="text-xs font-mono text-foreground/60 w-5 text-right">{topK[0]}</span></div>
               </FormRow>
               <FormRow label="搜索包含日期" desc="搜索结果将优先包含发布时间"><Switch checked={includeDates} onCheckedChange={setIncludeDates} /></FormRow>
               <FormRow label="压缩方法"><InlineSelect value={compression} options={[{ value: "llm-summary", label: "LLM 智能摘要 (推荐)" }, { value: "extractive", label: "关键句提取" }, { value: "none", label: "不压缩" }]} onChange={setCompression} /></FormRow>
               <FormRow label="最大上下文长度 (Tokens)"><Input value={maxTokens} onChange={e => setMaxTokens(e.target.value)} className="w-24 h-8 text-xs font-mono" /></FormRow>
             </ConfigSection>
 
-            <ConfigSection title="黑名单 (Blacklist)" hint="屏蔽不需要的搜索结果来源" actions={<Badge variant="outline" className="text-[11px] py-0">{blacklistRules.split("\n").filter(Boolean).length} 条规则</Badge>}>
+            <ConfigSection title="黑名单 (Blacklist)" hint="屏蔽不需要的搜索结果来源" actions={<Badge variant="outline" className="text-xs py-0">{blacklistRules.split("\n").filter(Boolean).length} 条规则</Badge>}>
               <div className="space-y-2">
-                <Textarea value={blacklistRules} onChange={e => setBlacklistRules(e.target.value)} className="w-full min-h-[80px] bg-foreground/[0.03] rounded-[12px] border border-border/30 px-3 py-2 text-[11px] font-mono text-foreground/60 resize-none focus-visible:ring-0 focus-visible:border-ring/30 tracking-tight" placeholder="每行一个域名或通配符规则" />
+                <Textarea value={blacklistRules} onChange={e => setBlacklistRules(e.target.value)} className="w-full min-h-[80px] bg-muted/20 rounded-[12px] border border-border/30 px-3 py-2 text-xs font-mono text-foreground/60 resize-none focus-visible:ring-0 focus-visible:border-ring/30 tracking-tight" placeholder="每行一个域名或通配符规则" />
                 <div className="space-y-1">
                   {subscriptions.map(sub => (
-                    <div key={sub.id} className="flex items-center gap-2 px-2 py-1.5 rounded-[12px] hover:bg-foreground/[0.02] transition-colors">
+                    <div key={sub.id} className="flex items-center gap-2 px-2 py-1.5 rounded-[12px] hover:bg-muted/20 transition-colors">
                       <Switch checked={sub.enabled} onCheckedChange={() => toggleSubscription(sub.id)} />
-                      <div className="flex-1 min-w-0"><span className="text-[11px] text-foreground/60 truncate block tracking-tight">{sub.name}</span><span className="text-[11px] text-muted-foreground/30 truncate block tracking-tight">{sub.url}</span></div>
+                      <div className="flex-1 min-w-0"><span className="text-xs text-foreground/60 truncate block tracking-tight">{sub.name}</span><span className="text-xs text-muted-foreground/30 truncate block tracking-tight">{sub.url}</span></div>
                       <Button variant="ghost" size="icon-xs" className="text-muted-foreground/30"><Trash2 size={11} /></Button>
                     </div>
                   ))}
@@ -150,6 +150,7 @@ export function WebSearchConfigDemo() {
               </div>
             </ConfigSection>
 
+            <Separator className="my-4" />
             <div className="flex items-center gap-2">
               <div className="flex-1 relative"><Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground/40" /><Input placeholder="测试搜索..." className="pl-8 h-9 text-xs" /></div>
               <Button size="sm"><Search size={12} /> 搜索</Button>

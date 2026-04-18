@@ -68,7 +68,7 @@ export function GenerativeUIDemo() {
                 { value: "detailed", label: "Detailed", desc: "Comprehensive with examples" },
                 { value: "step-by-step", label: "Step by Step", desc: "Structured walkthrough" },
               ].map((opt) => (
-                <div key={opt.value} className="flex items-start space-x-2.5 rounded-xl border p-2.5 hover:bg-accent/30 transition-colors">
+                <div key={opt.value} className="flex items-start space-x-2.5 rounded-[12px] border p-2.5 hover:bg-accent/30 transition-colors">
                   <RadioGroupItem value={opt.value} id={opt.value} className="mt-0.5" />
                   <Label htmlFor={opt.value} className="flex-1 cursor-pointer">
                     <div className="text-xs font-medium">{opt.label}</div>

@@ -38,7 +38,7 @@ export function ChatSettingsDemo() {
         { name: "maxTokens", type: "number", default: "4096", description: "Maximum number of tokens in the response" },
         { name: "streaming", type: "boolean", default: "true", description: "Enable streaming token output" },
       ]}>
-      <div className="max-w-md rounded-xl border bg-background p-4 space-y-3">
+      <div className="max-w-md rounded-[12px] border bg-background p-4 space-y-3">
         <PanelHeader icon="💬" title="Chat Settings" desc="Configure conversation preferences" />
 
         <ConfigSection title="Model" hint="AI model and parameters">

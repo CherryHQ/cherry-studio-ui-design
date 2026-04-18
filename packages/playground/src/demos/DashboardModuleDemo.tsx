@@ -1,14 +1,21 @@
 import React, { useState } from "react"
 import {
   BarChart3, TrendingUp, Clock, MessageSquare, Coins,
-  Cpu, Activity,
+  Cpu, Activity, ArrowUpRight, ArrowDownRight,
 } from "lucide-react"
-import { InlineSelect } from "@cherry-studio/ui"
+import {
+  Card, CardContent, CardHeader, CardTitle,
+  Badge, Button, Separator,
+  Tabs, TabsList, TabsTrigger, TabsContent,
+  Select, SelectTrigger, SelectValue, SelectContent, SelectItem,
+  Table, TableHeader, TableBody, TableRow, TableHead, TableCell,
+} from "@cherry-studio/ui"
 import { Section, type PropDef } from "../components/Section"
 
-// ===========================
-// Mock data (matching src/features/settings/DashboardPage)
-// ===========================
+/* ═══════════════════════════════════════════
+   Mock data
+   ═══════════════════════════════════════════ */
+
 const DAILY_USAGE = [
   { day: "周一", conversations: 18, tokens: 0.8 },
   { day: "周二", conversations: 24, tokens: 1.1 },
@@ -20,12 +27,12 @@ const DAILY_USAGE = [
 ]
 
 const MODEL_USAGE = [
-  { name: "Claude 4 Sonnet", provider: "Anthropic", tokens: 520000, cost: 2.56, conversations: 48, color: "#d97706" },
-  { name: "GPT-4o", provider: "OpenAI", tokens: 380000, cost: 1.23, conversations: 31, color: "#10a37f" },
-  { name: "Gemini 2.5 Pro", provider: "Google", tokens: 180000, cost: 0.49, conversations: 18, color: "#4285f4" },
-  { name: "DeepSeek V3", provider: "DeepSeek", tokens: 95000, cost: 0.12, conversations: 12, color: "#4f6ef7" },
-  { name: "Llama 3.3 70B", provider: "Ollama", tokens: 62000, cost: 0, conversations: 7, color: "#888" },
-  { name: "GLM-4 Plus", provider: "智谱 AI", tokens: 35000, cost: 0.08, conversations: 5, color: "#2563eb" },
+  { name: "Claude 4 Sonnet", provider: "Anthropic", tokens: 520000, cost: 2.56, conversations: 48, color: "var(--chart-2)" },
+  { name: "GPT-4o", provider: "OpenAI", tokens: 380000, cost: 1.23, conversations: 31, color: "var(--chart-4)" },
+  { name: "Gemini 2.5 Pro", provider: "Google", tokens: 180000, cost: 0.49, conversations: 18, color: "var(--chart-1)" },
+  { name: "DeepSeek V3", provider: "DeepSeek", tokens: 95000, cost: 0.12, conversations: 12, color: "var(--chart-3)" },
+  { name: "Llama 3.3 70B", provider: "Ollama", tokens: 62000, cost: 0, conversations: 7, color: "var(--chart-5)" },
+  { name: "GLM-4 Plus", provider: "智谱 AI", tokens: 35000, cost: 0.08, conversations: 5, color: "var(--accent-violet)" },
 ]
 
 const HOURLY_DISTRIBUTION = [0, 0, 0, 0, 0, 1, 2, 5, 8, 12, 15, 11, 9, 14, 16, 13, 10, 8, 6, 4, 3, 2, 1, 0]
@@ -48,18 +55,16 @@ const RECENT_CONVERSATIONS = [
 ]
 
 const PROVIDERS = [
-  { name: "Anthropic", cost: 2.56, color: "#d97706" },
-  { name: "OpenAI", cost: 1.23, color: "#10a37f" },
-  { name: "Google", cost: 0.49, color: "#4285f4" },
-  { name: "DeepSeek", cost: 0.12, color: "#4f6ef7" },
-  { name: "智谱 AI", cost: 0.08, color: "#2563eb" },
+  { name: "Anthropic", cost: 2.56, color: "var(--chart-2)" },
+  { name: "OpenAI", cost: 1.23, color: "var(--chart-4)" },
+  { name: "Google", cost: 0.49, color: "var(--chart-1)" },
+  { name: "DeepSeek", cost: 0.12, color: "var(--chart-3)" },
+  { name: "智谱 AI", cost: 0.08, color: "var(--accent-violet)" },
 ]
 
-// ===========================
-// Sub-components (matching original)
-// ===========================
-const card = "bg-foreground/[0.03] border border-foreground/[0.06] rounded-[24px] p-3.5 hover:border-foreground/[0.12] transition-all duration-200"
-const cardLabel = "text-[11px] text-foreground/30 tracking-tight"
+/* ═══════════════════════════════════════════
+   Sub-components
+   ═══════════════════════════════════════════ */
 
 function MiniBarChart({ data, maxVal, color, height = 40 }: { data: number[]; maxVal: number; color: string; height?: number }) {
   return (
@@ -75,28 +80,6 @@ function MiniBarChart({ data, maxVal, color, height = 40 }: { data: number[]; ma
           }}
         />
       ))}
-    </div>
-  )
-}
-
-function StatCard({ label, value, unit, sub, icon: Icon, iconColor }: {
-  label: string; value: string | number; unit?: string; sub?: React.ReactNode
-  icon: React.ComponentType<{ size?: number; className?: string }>
-  iconColor?: string
-}) {
-  return (
-    <div className={card}>
-      <div className="flex items-center justify-between mb-2">
-        <p className={cardLabel}>{label}</p>
-        <div className={`w-5 h-5 rounded-[12px] flex items-center justify-center ${iconColor || "bg-foreground/[0.06]"}`}>
-          <Icon size={10} className="text-current" />
-        </div>
-      </div>
-      <div className="flex items-baseline gap-0.5">
-        <span className="text-[20px] text-foreground/70 font-bold">{value}</span>
-        {unit && <span className="text-[11px] text-foreground/25">{unit}</span>}
-      </div>
-      {sub && <div className="mt-1.5">{sub}</div>}
     </div>
   )
 }
@@ -122,240 +105,393 @@ function DonutChart({ data, total }: { data: { name: string; cost: number; color
         })}
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <span className="text-[11px] text-foreground/70 font-bold">${total.toFixed(0)}</span>
-        <span className="text-[11px] text-foreground/25">总计</span>
+        <span className="text-xs text-foreground/70 font-bold">${total.toFixed(0)}</span>
+        <span className="text-xs text-muted-foreground/60">总计</span>
       </div>
     </div>
   )
 }
 
-// ===========================
-// Props
-// ===========================
+/* ═══════════════════════════════════════════
+   Stats Cards using Card component
+   ═══════════════════════════════════════════ */
+
+function StatCard({ label, value, unit, sub, icon: Icon, trend }: {
+  label: string; value: string | number; unit?: string; sub?: React.ReactNode
+  icon: React.ComponentType<{ size?: number; className?: string }>
+  trend?: { value: string; positive: boolean }
+}) {
+  return (
+    <Card className="shadow-none">
+      <CardContent className="p-3.5">
+        <div className="flex items-center justify-between mb-2">
+          <p className="text-xs text-muted-foreground">{label}</p>
+          <div className="w-6 h-6 rounded-[10px] bg-accent/50 flex items-center justify-center">
+            <Icon size={12} className="text-muted-foreground" />
+          </div>
+        </div>
+        <div className="flex items-baseline gap-1">
+          <span className="text-xl text-foreground font-bold tracking-tight">{value}</span>
+          {unit && <span className="text-xs text-muted-foreground">{unit}</span>}
+        </div>
+        {trend && (
+          <div className="flex items-center gap-1 mt-1.5">
+            {trend.positive ? <ArrowUpRight size={10} className="text-success" /> : <ArrowDownRight size={10} className="text-error" />}
+            <span className={`text-[10px] ${trend.positive ? "text-success" : "text-error"}`}>{trend.value}</span>
+          </div>
+        )}
+        {sub && <div className="mt-1.5">{sub}</div>}
+      </CardContent>
+    </Card>
+  )
+}
+
+/* ═══════════════════════════════════════════
+   Model Table using table primitives
+   ═══════════════════════════════════════════ */
+
+function ModelTable({ data }: { data: typeof MODEL_USAGE }) {
+  const maxTokens = Math.max(...data.map(m => m.tokens))
+  return (
+    <div className="overflow-x-auto">
+      <Table className="text-xs">
+        <TableHeader>
+          <TableRow>
+            <TableHead className="w-8">#</TableHead>
+            <TableHead>模型</TableHead>
+            <TableHead>服务商</TableHead>
+            <TableHead className="text-right">Token</TableHead>
+            <TableHead className="text-right">对话数</TableHead>
+            <TableHead className="text-right">费用</TableHead>
+            <TableHead className="w-24">占比</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {data.map((m, i) => (
+            <TableRow key={m.name}>
+              <TableCell className="text-muted-foreground/40">{i + 1}</TableCell>
+              <TableCell>
+                <div className="flex items-center gap-1.5">
+                  <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: m.color }} />
+                  <span className="text-foreground/70">{m.name}</span>
+                </div>
+              </TableCell>
+              <TableCell className="text-muted-foreground/50">{m.provider}</TableCell>
+              <TableCell className="text-right text-foreground/60 tabular-nums">{(m.tokens / 1000).toFixed(0)}K</TableCell>
+              <TableCell className="text-right text-foreground/60 tabular-nums">{m.conversations}</TableCell>
+              <TableCell className="text-right text-foreground/70 font-medium tabular-nums">
+                {m.cost > 0 ? `$${m.cost.toFixed(2)}` : "Free"}
+              </TableCell>
+              <TableCell>
+                <div className="h-[4px] rounded-full bg-muted/30 overflow-hidden w-24">
+                  <div className="h-full rounded-full" style={{ width: `${(m.tokens / maxTokens) * 100}%`, backgroundColor: m.color, opacity: 0.6 }} />
+                </div>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
+  )
+}
+
+/* ═══════════════════════════════════════════
+   Cost Analysis Tab
+   ═══════════════════════════════════════════ */
+
+function CostAnalysis() {
+  const totalCost = MODEL_USAGE.reduce((s, m) => s + m.cost, 0)
+  const maxCost = Math.max(...MONTHLY_TREND.map(t => t.cost))
+
+  return (
+    <div className="space-y-4">
+      {/* Provider breakdown */}
+      <Card className="shadow-none">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm font-medium">服务商费用占比</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center gap-4">
+            <DonutChart data={PROVIDERS} total={totalCost} />
+            <div className="flex-1 space-y-1.5">
+              {PROVIDERS.map(p => (
+                <div key={p.name} className="flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: p.color }} />
+                  <span className="text-xs text-foreground/60 flex-1">{p.name}</span>
+                  <span className="text-xs text-foreground/40 tabular-nums">${p.cost.toFixed(2)}</span>
+                  <Badge variant="secondary" className="text-xs px-1.5">{Math.round((p.cost / totalCost) * 100)}%</Badge>
+                </div>
+              ))}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Monthly trend */}
+      <Card className="shadow-none">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm font-medium">月度费用趋势</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-end gap-[6px]" style={{ height: 80 }}>
+            {MONTHLY_TREND.map((m, i) => {
+              const isLast = i === MONTHLY_TREND.length - 1
+              return (
+                <div key={m.month} className="flex-1 flex flex-col items-center gap-1">
+                  <span className={`text-xs tabular-nums ${isLast ? "text-foreground/50 font-medium" : "text-muted-foreground/60"}`}>${m.cost.toFixed(1)}</span>
+                  <div className={`w-full rounded-[3px] ${isLast ? "bg-primary/60" : "bg-muted/40"}`} style={{ height: `${(m.cost / maxCost) * 50}px` }} />
+                  <span className="text-[10px] text-muted-foreground/60">{m.month}</span>
+                </div>
+              )
+            })}
+          </div>
+          <Separator className="my-3" />
+          <div className="grid grid-cols-3 gap-4 text-center">
+            <div>
+              <p className="text-[10px] text-muted-foreground/40 mb-0.5">6个月总计</p>
+              <p className="text-sm text-foreground/70 font-bold tabular-nums">${MONTHLY_TREND.reduce((s, m) => s + m.cost, 0).toFixed(2)}</p>
+            </div>
+            <div>
+              <p className="text-[10px] text-muted-foreground/40 mb-0.5">月均</p>
+              <p className="text-sm text-foreground/70 font-bold tabular-nums">${(MONTHLY_TREND.reduce((s, m) => s + m.cost, 0) / MONTHLY_TREND.length).toFixed(2)}</p>
+            </div>
+            <div>
+              <p className="text-[10px] text-muted-foreground/40 mb-0.5">环比</p>
+              <p className="text-sm text-success font-bold">+10.2%</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  )
+}
+
+/* ═══════════════════════════════════════════
+   Props
+   ═══════════════════════════════════════════ */
+
 const dashboardProps: PropDef[] = [
   { name: "timeRange", type: '"today" | "this-week" | "this-month" | "all"', default: '"this-month"', description: "Date range filter" },
   { name: "modelUsage", type: "ModelUsage[]", default: "[]", description: "Model usage statistics" },
   { name: "dailyUsage", type: "DailyUsage[]", default: "[]", description: "Daily conversation data" },
 ]
 
-// ===========================
-// Main Demo
-// ===========================
+/* ═══════════════════════════════════════════
+   Main Demo
+   ═══════════════════════════════════════════ */
+
 export function DashboardModuleDemo() {
   const [timeRange, setTimeRange] = useState("this-month")
+  const [selectedTab, setSelectedTab] = useState("overview")
 
   const totalTokens = MODEL_USAGE.reduce((s, m) => s + m.tokens, 0)
   const totalCost = MODEL_USAGE.reduce((s, m) => s + m.cost, 0)
   const totalConversations = MODEL_USAGE.reduce((s, m) => s + m.conversations, 0)
   const maxDailyConv = Math.max(...DAILY_USAGE.map(d => d.conversations))
   const maxHourly = Math.max(...HOURLY_DISTRIBUTION)
-  const maxModelTokens = Math.max(...MODEL_USAGE.map(m => m.tokens))
   const avgTokensPerConv = Math.round(totalTokens / totalConversations)
 
   return (
-    <Section title="Dashboard Module" install="npm install @cherry-studio/ui" props={dashboardProps} code={`// 4-column stat cards + charts + model table
-<div className="grid grid-cols-4 gap-2">
-  <StatCard label="总对话数" value={121} icon={MessageSquare} />
-  <StatCard label="Token 总量" value="1.3M" icon={Cpu} />
-  <StatCard label="总花费" value="$4.48" icon={Coins} />
-  <StatCard label="活跃天数" value={24} icon={Activity} />
-</div>
-// Daily trend + hourly distribution
-// Model usage breakdown + monthly cost trend
-// Recent conversations + provider donut chart`}>
+    <Section title="Dashboard Module" install="npm install @cherry-studio/ui" props={dashboardProps} code={`// Uses Card, Badge, Tabs, Select, and Separator components
+<Tabs defaultValue="overview">
+  <TabsList>
+    <TabsTrigger value="overview">概览</TabsTrigger>
+    <TabsTrigger value="models">模型分析</TabsTrigger>
+    <TabsTrigger value="cost">费用</TabsTrigger>
+  </TabsList>
+  <TabsContent value="overview">
+    <div className="grid grid-cols-4 gap-2">
+      <Card>...</Card>
+    </div>
+  </TabsContent>
+</Tabs>`}>
       <div className="rounded-[24px] border bg-background overflow-hidden">
-        <div className="px-5 py-4 space-y-2">
-          {/* Header */}
-          <div className="flex items-center justify-between mb-1">
+        <div className="px-5 py-4 space-y-4">
+          {/* Header with filters */}
+          <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <BarChart3 size={14} className="text-foreground/50" />
-              <h2 className="text-[13px] text-foreground/90 font-medium tracking-tight">数据统计</h2>
+              <h2 className="text-sm text-foreground/90 font-medium tracking-tight">数据统计</h2>
             </div>
-            <InlineSelect
-              value={timeRange}
-              onChange={setTimeRange}
-              options={[
-                { value: "today", label: "今日" },
-                { value: "this-week", label: "本周" },
-                { value: "this-month", label: "本月" },
-                { value: "all", label: "全部" },
-              ]}
-            />
+            <div className="flex items-center gap-2">
+              <Select value={timeRange} onValueChange={setTimeRange}>
+                <SelectTrigger className="h-7 w-auto px-2.5 rounded-[10px] text-xs gap-1" size="sm">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="today">今日</SelectItem>
+                  <SelectItem value="this-week">本周</SelectItem>
+                  <SelectItem value="this-month">本月</SelectItem>
+                  <SelectItem value="all">全部</SelectItem>
+                </SelectContent>
+              </Select>
+              <Button variant="outline" size="sm" className="h-7 text-xs gap-1" onClick={() => alert("报告已导出")}>
+                <Activity size={10} /> 导出
+              </Button>
+            </div>
           </div>
 
-          {/* Row 1: 4 stat cards */}
+          {/* Stat Cards row */}
           <div className="grid grid-cols-4 gap-2">
             <StatCard
               label="总对话数" value={totalConversations} icon={MessageSquare}
-              iconColor="bg-accent-blue/10 text-accent-blue"
-              sub={
-                <div className="flex items-center gap-1">
-                  <TrendingUp size={9} className="text-success" />
-                  <span className="text-[11px] text-success">↑ 18% 较上月</span>
-                </div>
-              }
+              trend={{ value: "↑ 18% 较上月", positive: true }}
             />
             <StatCard
               label="Token 总量" value={(totalTokens / 1000000).toFixed(1)} unit="M" icon={Cpu}
-              iconColor="bg-accent-violet/10 text-accent-violet"
-              sub={<span className="text-[11px] text-foreground/25">平均 {(avgTokensPerConv / 1000).toFixed(1)}K / 对话</span>}
+              sub={<span className="text-[10px] text-muted-foreground">平均 {(avgTokensPerConv / 1000).toFixed(1)}K / 对话</span>}
             />
             <StatCard
               label="总花费" value={`$${totalCost.toFixed(2)}`} icon={Coins}
-              iconColor="bg-accent-amber/10 text-accent-amber"
-              sub={<span className="text-[11px] text-foreground/25">日均 ${(totalCost / 28).toFixed(2)}</span>}
+              trend={{ value: "↑ 10.2% 环比", positive: false }}
             />
             <StatCard
-              label="活跃天数" value={24} unit="天" icon={Activity}
-              iconColor="bg-foreground/[0.06] text-foreground/50"
+              label="活跃天数" value={24} unit="/ 28 天" icon={Activity}
               sub={
-                <div className="h-[3px] rounded-full bg-foreground/[0.06] overflow-hidden">
-                  <div className="h-full rounded-full bg-foreground/20" style={{ width: "86%" }} />
+                <div className="h-[3px] rounded-full bg-muted/30 overflow-hidden">
+                  <div className="h-full rounded-full bg-primary/40" style={{ width: "86%" }} />
                 </div>
               }
             />
           </div>
 
-          {/* Row 2: Daily trend + Hourly distribution */}
-          <div className="grid grid-cols-2 gap-2">
-            <div className={card}>
-              <div className="flex items-center justify-between mb-3">
-                <p className={cardLabel}>每日对话趋势</p>
-                <span className="text-[11px] text-foreground/20">最近 7 天</span>
-              </div>
-              <MiniBarChart data={DAILY_USAGE.map(d => d.conversations)} maxVal={maxDailyConv} color="var(--success, #49BA61)" height={60} />
-              <div className="flex justify-between mt-1.5 px-[1px]">
-                {DAILY_USAGE.map(d => <span key={d.day} className="text-[11px] text-foreground/20 flex-1 text-center">{d.day}</span>)}
-              </div>
-            </div>
+          {/* Tabs: 概览 / 模型分析 / 费用 */}
+          <Tabs value={selectedTab} onValueChange={setSelectedTab}>
+            <TabsList>
+              <TabsTrigger value="overview">概览</TabsTrigger>
+              <TabsTrigger value="models">模型分析</TabsTrigger>
+              <TabsTrigger value="cost">费用</TabsTrigger>
+            </TabsList>
 
-            <div className={card}>
-              <div className="flex items-center justify-between mb-3">
-                <p className={cardLabel}>活跃时段分布</p>
-                <span className="text-[11px] text-foreground/20">24 小时</span>
-              </div>
-              <MiniBarChart data={HOURLY_DISTRIBUTION} maxVal={maxHourly} color="var(--accent-violet, #8755E9)" height={60} />
-              <div className="flex justify-between mt-1.5 px-[1px]">
-                {[0, 6, 12, 18, 23].map(h => <span key={h} className="text-[11px] text-foreground/20">{h}:00</span>)}
-              </div>
-            </div>
-          </div>
-
-          {/* Row 3: Model breakdown + Monthly trend */}
-          <div className="grid grid-cols-5 gap-2">
-            <div className={`${card} col-span-3`}>
-              <p className={`${cardLabel} mb-2.5`}>模型使用明细</p>
-              <div className="space-y-[5px]">
-                {MODEL_USAGE.map((m, i) => (
-                  <div key={m.name} className="flex items-center gap-2">
-                    <span className="text-[11px] text-foreground/20 w-3 text-right flex-shrink-0">{i + 1}</span>
-                    <div className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ backgroundColor: m.color }} />
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between mb-[2px]">
-                        <div className="flex items-center gap-1.5 min-w-0">
-                          <span className="text-[11px] text-foreground/60 truncate">{m.name}</span>
-                          <span className="text-[11px] text-foreground/20 flex-shrink-0">{m.provider}</span>
-                        </div>
-                        <div className="flex items-center gap-3 flex-shrink-0 ml-2">
-                          <span className="text-[11px] text-foreground/30">{(m.tokens / 1000).toFixed(0)}K</span>
-                          <span className="text-[11px] text-foreground/30 w-9 text-right">{m.conversations} 次</span>
-                          <span className="text-[11px] text-foreground/40 w-10 text-right font-medium">
-                            {m.cost > 0 ? `$${m.cost.toFixed(2)}` : "免费"}
-                          </span>
-                        </div>
-                      </div>
-                      <div className="h-[2px] rounded-full bg-foreground/[0.04] overflow-hidden">
-                        <div className="h-full rounded-full" style={{ width: `${(m.tokens / maxModelTokens) * 100}%`, backgroundColor: m.color, opacity: 0.5 }} />
-                      </div>
+            {/* ── Overview Tab ── */}
+            <TabsContent value="overview" className="space-y-3 mt-3">
+              {/* Charts row */}
+              <div className="grid grid-cols-2 gap-2">
+                <Card className="shadow-none">
+                  <CardContent className="p-3.5">
+                    <div className="flex items-center justify-between mb-3">
+                      <p className="text-xs text-muted-foreground">每日对话趋势</p>
+                      <Badge variant="secondary" className="text-xs">最近 7 天</Badge>
                     </div>
+                    <MiniBarChart data={DAILY_USAGE.map(d => d.conversations)} maxVal={maxDailyConv} color="var(--success, #49BA61)" height={60} />
+                    <div className="flex justify-between mt-1.5 px-[1px]">
+                      {DAILY_USAGE.map(d => <span key={d.day} className="text-[10px] text-muted-foreground/30 flex-1 text-center">{d.day}</span>)}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card className="shadow-none">
+                  <CardContent className="p-3.5">
+                    <div className="flex items-center justify-between mb-3">
+                      <p className="text-xs text-muted-foreground">活跃时段分布</p>
+                      <Badge variant="secondary" className="text-xs">24 小时</Badge>
+                    </div>
+                    <MiniBarChart data={HOURLY_DISTRIBUTION} maxVal={maxHourly} color="var(--accent-violet, #8755E9)" height={60} />
+                    <div className="flex justify-between mt-1.5 px-[1px]">
+                      {[0, 6, 12, 18, 23].map(h => <span key={h} className="text-[10px] text-muted-foreground/30">{h}:00</span>)}
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Recent conversations */}
+              <Card className="shadow-none">
+                <CardContent className="p-3.5">
+                  <div className="flex items-center justify-between mb-2.5">
+                    <p className="text-xs text-muted-foreground">最近对话</p>
+                    <Clock size={10} className="text-muted-foreground/30" />
                   </div>
-                ))}
-              </div>
-            </div>
+                  <div className="space-y-[1px]">
+                    {RECENT_CONVERSATIONS.map((conv, i) => (
+                      <div key={i} className="flex items-center gap-2 py-[5px] group">
+                        <div className="w-1.5 h-1.5 rounded-full bg-foreground/40 flex-shrink-0 group-hover:bg-foreground/60 transition-colors" />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs text-foreground/55 truncate group-hover:text-foreground/75 transition-colors">{conv.title}</p>
+                          <div className="flex items-center gap-2 mt-[1px]">
+                            <Badge variant="outline" className="text-xs px-1 py-0 h-3.5">{conv.model}</Badge>
+                            <span className="text-[10px] text-muted-foreground/50">{conv.time}</span>
+                          </div>
+                        </div>
+                        <span className="text-[10px] text-muted-foreground/50 flex-shrink-0 tabular-nums">{(conv.tokens / 1000).toFixed(1)}K</span>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
 
-            <div className={`${card} col-span-2`}>
-              <p className={`${cardLabel} mb-2.5`}>月度花费趋势</p>
-              <div className="flex items-end gap-[6px]" style={{ height: 80 }}>
-                {MONTHLY_TREND.map((m, i) => {
-                  const maxCost = Math.max(...MONTHLY_TREND.map(t => t.cost))
-                  const isLast = i === MONTHLY_TREND.length - 1
-                  return (
-                    <div key={m.month} className="flex-1 flex flex-col items-center gap-1">
-                      <span className={`text-[11px] ${isLast ? "text-foreground/45" : "text-foreground/20"}`}>${m.cost.toFixed(1)}</span>
-                      <div className={`w-full rounded-[3px] ${isLast ? "bg-foreground/40" : "bg-foreground/[0.08]"}`} style={{ height: `${(m.cost / maxCost) * 50}px` }} />
-                      <span className="text-[11px] text-foreground/20">{m.month}</span>
-                    </div>
-                  )
-                })}
-              </div>
-              <div className="mt-3 pt-2.5 border-t border-foreground/[0.04]">
-                <div className="flex items-center justify-between">
-                  <span className="text-[11px] text-foreground/30">6 个月总计</span>
-                  <span className="text-[11px] text-foreground/60 font-semibold">${MONTHLY_TREND.reduce((s, m) => s + m.cost, 0).toFixed(2)}</span>
-                </div>
-                <div className="flex items-center justify-between mt-1">
-                  <span className="text-[11px] text-foreground/30">月均花费</span>
-                  <span className="text-[11px] text-foreground/45">${(MONTHLY_TREND.reduce((s, m) => s + m.cost, 0) / MONTHLY_TREND.length).toFixed(2)}</span>
-                </div>
-              </div>
-            </div>
-          </div>
+            {/* ── Model Analysis Tab ── */}
+            <TabsContent value="models" className="space-y-3 mt-3">
+              <Card className="shadow-none">
+                <CardHeader className="pb-2">
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-sm font-medium">模型使用明细</CardTitle>
+                    <Badge variant="secondary" className="text-xs">{MODEL_USAGE.length} 个模型</Badge>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <ModelTable data={MODEL_USAGE} />
+                </CardContent>
+              </Card>
 
-          {/* Row 4: Recent conversations + Provider donut */}
-          <div className="grid grid-cols-2 gap-2">
-            <div className={card}>
-              <div className="flex items-center justify-between mb-2.5">
-                <p className={cardLabel}>最近对话</p>
-                <Clock size={10} className="text-foreground/20" />
-              </div>
-              <div className="space-y-[1px]">
-                {RECENT_CONVERSATIONS.map((conv, i) => (
-                  <div key={i} className="flex items-center gap-2 py-[4px] group">
-                    <div className="w-[3px] h-[3px] rounded-full bg-foreground/15 flex-shrink-0 group-hover:bg-foreground/45 transition-colors" />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-[11px] text-foreground/55 truncate group-hover:text-foreground/75 transition-colors">{conv.title}</p>
-                      <div className="flex items-center gap-2 mt-[1px]">
-                        <span className="text-[11px] text-foreground/25">{conv.model}</span>
-                        <span className="text-[11px] text-foreground/15">{conv.time}</span>
+              {/* Model pie + stats */}
+              <div className="grid grid-cols-2 gap-2">
+                <Card className="shadow-none">
+                  <CardContent className="p-3.5">
+                    <p className="text-xs text-muted-foreground mb-3">Token 使用分布</p>
+                    <div className="flex items-center gap-3">
+                      <DonutChart data={MODEL_USAGE.map(m => ({ name: m.name, cost: m.tokens / 1000, color: m.color }))} total={totalTokens / 1000} />
+                      <div className="flex-1 space-y-1">
+                        {MODEL_USAGE.slice(0, 4).map(m => (
+                          <div key={m.name} className="flex items-center gap-1.5">
+                            <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: m.color }} />
+                            <span className="text-[10px] text-foreground/50 flex-1 truncate">{m.name}</span>
+                            <span className="text-[10px] text-foreground/30 tabular-nums">{Math.round((m.tokens / totalTokens) * 100)}%</span>
+                          </div>
+                        ))}
                       </div>
                     </div>
-                    <span className="text-[11px] text-foreground/20 flex-shrink-0">{(conv.tokens / 1000).toFixed(1)}K</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className={card}>
-              <p className={`${cardLabel} mb-2.5`}>服务商费用占比</p>
-              <div className="flex items-center gap-3">
-                <DonutChart data={PROVIDERS} total={totalCost} />
-                <div className="flex-1 space-y-1.5">
-                  {PROVIDERS.map(p => (
-                    <div key={p.name} className="flex items-center gap-2">
-                      <div className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ backgroundColor: p.color }} />
-                      <span className="text-[11px] text-foreground/50 flex-1">{p.name}</span>
-                      <span className="text-[11px] text-foreground/35">${p.cost.toFixed(2)}</span>
-                      <span className="text-[11px] text-foreground/20 w-7 text-right">{Math.round((p.cost / totalCost) * 100)}%</span>
+                  </CardContent>
+                </Card>
+                <Card className="shadow-none">
+                  <CardContent className="p-3.5">
+                    <p className="text-xs text-muted-foreground mb-3">连接状态</p>
+                    <div className="grid grid-cols-3 gap-3 text-center">
+                      <div>
+                        <p className="text-[10px] text-muted-foreground/40 mb-0.5">平均延迟</p>
+                        <p className="text-sm text-foreground/60 font-semibold tabular-nums">118ms</p>
+                      </div>
+                      <div>
+                        <p className="text-[10px] text-muted-foreground/40 mb-0.5">成功率</p>
+                        <p className="text-sm text-success font-semibold">99.7%</p>
+                      </div>
+                      <div>
+                        <p className="text-[10px] text-muted-foreground/40 mb-0.5">连接数</p>
+                        <p className="text-sm text-foreground/60 font-semibold">5/8</p>
+                      </div>
                     </div>
-                  ))}
-                </div>
+                    <Separator className="my-3" />
+                    <div className="space-y-1.5">
+                      {PROVIDERS.slice(0, 3).map(p => (
+                        <div key={p.name} className="flex items-center justify-between">
+                          <div className="flex items-center gap-1.5">
+                            <div className="w-1.5 h-1.5 rounded-full bg-success" />
+                            <span className="text-[10px] text-foreground/50">{p.name}</span>
+                          </div>
+                          <Badge variant="outline" className="text-xs px-1 py-0 h-3.5 text-success">connected</Badge>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
               </div>
-              <div className="mt-3 pt-2.5 border-t border-foreground/[0.04] grid grid-cols-3 gap-2">
-                <div className="text-center">
-                  <p className="text-[11px] text-foreground/25 mb-0.5">平均延迟</p>
-                  <p className="text-[11px] text-foreground/55 font-semibold">118ms</p>
-                </div>
-                <div className="text-center">
-                  <p className="text-[11px] text-foreground/25 mb-0.5">成功率</p>
-                  <p className="text-[11px] text-success font-semibold">99.7%</p>
-                </div>
-                <div className="text-center">
-                  <p className="text-[11px] text-foreground/25 mb-0.5">连接数</p>
-                  <p className="text-[11px] text-foreground/55 font-semibold">5/8</p>
-                </div>
-              </div>
-            </div>
-          </div>
+            </TabsContent>
+
+            {/* ── Cost Tab ── */}
+            <TabsContent value="cost" className="mt-3">
+              <CostAnalysis />
+            </TabsContent>
+          </Tabs>
         </div>
       </div>
     </Section>

@@ -55,7 +55,7 @@ export function ChatInterface({
   // Show empty state if no messages
   if (!hasMessages && emptyState) {
     return (
-      <div data-slot="chat-interface" className={cn("flex flex-col h-full tracking-tight", className)}>
+      <div data-slot="chat-interface" className={cn("flex flex-col h-full tracking-[-0.14px]", className)}>
         {emptyState}
         {customComposer !== undefined ? customComposer : (
           <Composer onSendMessage={onSendMessage} {...composerProps} />
@@ -65,7 +65,7 @@ export function ChatInterface({
   }
 
   return (
-    <div data-slot="chat-interface" className={cn("flex flex-col h-full tracking-tight", className)}>
+    <div data-slot="chat-interface" className={cn("flex flex-col h-full tracking-[-0.14px]", className)}>
       {topAddon}
       <MessageList
         scrollDeps={scrollDeps}

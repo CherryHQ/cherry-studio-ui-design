@@ -2,6 +2,7 @@ import React, { useState } from "react"
 import {
   Button, Switch, ConfigSection, FormRow, InlineSelect, Textarea,
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger,
+  Popover, PopoverTrigger, PopoverContent,
 } from "@cherry-studio/ui"
 import {
   Languages, Brain, ChevronDown, Check, Sparkles,
@@ -72,35 +73,34 @@ function LangSelector({ value, onChange, options, label }: {
 }) {
   const [open, setOpen] = useState(false)
   return (
-    <div className="relative">
-      <Button variant="ghost" type="button"
-        onClick={() => setOpen(v => !v)}
-        className="h-auto px-0 py-0 font-normal tracking-normal flex items-center gap-1.5 px-2.5 py-1.5 rounded-[12px] hover:bg-accent/50 transition-colors text-[13px] tracking-tight"
-      >
-        <span>{LANG_FLAGS[value] || "🌐"}</span>
-        <span className="text-foreground">{value}</span>
-        <ChevronDown size={11} className="text-muted-foreground/40" />
-      </Button>
-      {open && (
-        <div className="absolute top-full left-0 mt-1 w-36 bg-popover border border-border rounded-[24px] shadow-popover z-50 py-1 max-h-[240px] overflow-y-auto">
-          <p className="px-3 py-1 text-[11px] text-muted-foreground/50 tracking-tight">{label}</p>
-          {options.map(lang => (
-            <Button variant="ghost" type="button"
-              key={lang}
-              onClick={() => { onChange(lang); setOpen(false) }}
-              className={`h-auto px-0 py-0 font-normal tracking-normal w-full text-left px-3 py-1.5 text-[13px] tracking-tight flex items-center gap-2 rounded-[12px] mx-1 transition-colors ${
-                lang === value ? "bg-accent text-foreground" : "text-foreground/70 hover:bg-accent/50"
-              }`}
-              style={{ width: "calc(100% - 8px)" }}
-            >
-              <span>{LANG_FLAGS[lang] || "🌐"}</span>
-              <span>{lang}</span>
-              {lang === value && <Check size={11} className="text-foreground/60 ml-auto" />}
-            </Button>
-          ))}
-        </div>
-      )}
-    </div>
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button variant="ghost" type="button"
+          className="h-auto px-0 py-0 font-normal tracking-normal flex items-center gap-1.5 px-2.5 py-1.5 rounded-[12px] hover:bg-accent/50 transition-colors text-sm tracking-tight"
+        >
+          <span>{LANG_FLAGS[value] || "🌐"}</span>
+          <span className="text-foreground">{value}</span>
+          <ChevronDown size={11} className="text-muted-foreground/40" />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-36 p-0 py-1 max-h-[240px] overflow-y-auto" side="bottom" align="start">
+        <p className="px-3 py-1 text-xs text-muted-foreground/50 tracking-tight">{label}</p>
+        {options.map(lang => (
+          <Button variant="ghost" type="button"
+            key={lang}
+            onClick={() => { onChange(lang); setOpen(false) }}
+            className={`h-auto px-0 py-0 font-normal tracking-normal w-full text-left px-3 py-1.5 text-sm tracking-tight flex items-center gap-2 rounded-[12px] mx-1 transition-colors ${
+              lang === value ? "bg-accent text-foreground" : "text-foreground/70 hover:bg-accent/50"
+            }`}
+            style={{ width: "calc(100% - 8px)" }}
+          >
+            <span>{LANG_FLAGS[lang] || "🌐"}</span>
+            <span>{lang}</span>
+            {lang === value && <Check size={11} className="text-foreground/60 ml-auto" />}
+          </Button>
+        ))}
+      </PopoverContent>
+    </Popover>
   )
 }
 
@@ -125,6 +125,8 @@ export function TranslateModuleDemo() {
   const [autoCopy, setAutoCopy] = useState(false)
   const [scrollSync, setScrollSync] = useState(true)
   const [detectMethod, setDetectMethod] = useState("auto")
+  const [bidirectional, setBidirectional] = useState(false)
+  const [streaming, setStreaming] = useState(true)
 
   const currentExpert = EXPERTS.find(e => e.id === selectedExpert) || EXPERTS[0]
 
@@ -169,7 +171,7 @@ export function TranslateModuleDemo() {
 // Bottom: char count | copy | speak
 // History panel (collapsible)`}>
       <div className="rounded-[24px] border bg-background overflow-hidden">
-        <div className="flex-1 flex min-h-0 relative">
+        <div className="flex min-h-0">
           {/* Main translate area */}
           <div className="flex-1 flex flex-col min-h-0 min-w-0">
 
@@ -177,65 +179,59 @@ export function TranslateModuleDemo() {
             <div className="h-11 flex items-center justify-between px-4 flex-shrink-0 border-b border-border/40">
               <div className="flex items-center gap-2 text-xs min-w-0">
                 <Languages size={14} className="text-muted-foreground flex-shrink-0" />
-                <span className="text-foreground text-[13px] tracking-tight flex-shrink-0">翻译</span>
+                <span className="text-foreground text-sm tracking-tight flex-shrink-0">翻译</span>
                 <span className="text-muted-foreground/30 flex-shrink-0">·</span>
                 {/* Expert dropdown */}
-                <div className="relative flex-shrink-0">
-                  <Button variant="ghost" type="button"
-                    onClick={() => setShowExpertDropdown(v => !v)}
-                    className="h-auto px-0 py-0 font-normal tracking-normal flex items-center gap-1 px-1.5 py-0.5 rounded-[10px] hover:bg-accent/50 transition-colors text-muted-foreground hover:text-foreground"
-                  >
-                    <Brain size={11} className="text-foreground/60" />
-                    <span className="max-w-[110px] truncate text-[11px] tracking-tight">{currentExpert.label}</span>
-                    <ChevronDown size={9} className="text-muted-foreground/40" />
-                  </Button>
-                  {showExpertDropdown && (
-                    <div className="absolute top-full left-0 mt-1 w-48 bg-popover border border-border rounded-[24px] shadow-popover z-50 py-1 max-h-[340px] overflow-y-auto">
-                      {EXPERTS.map(e => (
-                        <Button variant="ghost" type="button"
-                          key={e.id}
-                          onClick={() => { setSelectedExpert(e.id); setShowExpertDropdown(false) }}
-                          className={`h-auto px-0 py-0 font-normal tracking-normal w-full text-left px-3 py-1.5 text-[11px] tracking-tight flex items-center gap-1.5 rounded-[12px] mx-1 transition-colors ${
-                            e.id === selectedExpert ? "bg-accent text-foreground" : "text-foreground/70 hover:bg-accent/50"
-                          }`}
-                          style={{ width: "calc(100% - 8px)" }}
-                        >
-                          {e.id === selectedExpert ? <Check size={11} className="text-foreground/60 flex-shrink-0" /> : <span className="w-[11px] flex-shrink-0" />}
-                          <span>{e.label}</span>
-                        </Button>
-                      ))}
-                    </div>
-                  )}
-                </div>
+                <Popover open={showExpertDropdown} onOpenChange={setShowExpertDropdown}>
+                  <PopoverTrigger asChild>
+                    <Button variant="ghost" type="button"
+                      className="h-auto px-0 py-0 font-normal tracking-normal flex items-center gap-1 px-1.5 py-0.5 rounded-[10px] hover:bg-accent/50 transition-colors text-muted-foreground hover:text-foreground flex-shrink-0"
+                    >
+                      <Brain size={11} className="text-foreground/60" />
+                      <span className="max-w-[110px] truncate text-xs tracking-tight">{currentExpert.label}</span>
+                      <ChevronDown size={9} className="text-muted-foreground/40" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-48 p-0 py-1 max-h-[340px] overflow-y-auto" side="bottom" align="start">
+                    {EXPERTS.map(e => (
+                      <Button variant="ghost" type="button"
+                        key={e.id}
+                        onClick={() => { setSelectedExpert(e.id); setShowExpertDropdown(false) }}
+                        className={`h-auto px-0 py-0 font-normal tracking-normal w-full text-left px-3 py-1.5 text-xs tracking-tight flex items-center gap-1.5 rounded-[12px] mx-1 transition-colors ${
+                          e.id === selectedExpert ? "bg-accent text-foreground" : "text-foreground/70 hover:bg-accent/50"
+                        }`}                      >
+                        {e.id === selectedExpert ? <Check size={11} className="text-foreground/60 flex-shrink-0" /> : <span className="w-[11px] flex-shrink-0" />}
+                        <span>{e.label}</span>
+                      </Button>
+                    ))}
+                  </PopoverContent>
+                </Popover>
                 {/* Model selector */}
-                <div className="relative flex-shrink-0">
-                  <Button variant="ghost" type="button"
-                    onClick={() => setShowModelDropdown(v => !v)}
-                    className="h-auto px-0 py-0 font-normal tracking-normal flex items-center gap-1 px-1.5 py-0.5 rounded-[10px] hover:bg-accent/50 transition-colors text-muted-foreground hover:text-foreground"
-                  >
-                    <Sparkles size={11} className="text-foreground/60" />
-                    <span className="max-w-[100px] truncate text-[11px] tracking-tight">{MODELS.find(m => m.id === selectedModel)?.name}</span>
-                    <ChevronDown size={9} className="text-muted-foreground/40" />
-                  </Button>
-                  {showModelDropdown && (
-                    <div className="absolute top-full left-0 mt-1 w-48 bg-popover border border-border rounded-[24px] shadow-popover z-50 py-1 max-h-[280px] overflow-y-auto">
-                      {MODELS.map(m => (
-                        <Button variant="ghost" type="button"
-                          key={m.id}
-                          onClick={() => { setSelectedModel(m.id); setShowModelDropdown(false) }}
-                          className={`h-auto px-0 py-0 font-normal tracking-normal w-full text-left px-3 py-1.5 text-[11px] tracking-tight flex items-center gap-2 rounded-[12px] mx-1 transition-colors ${
-                            m.id === selectedModel ? "bg-accent text-foreground" : "text-foreground/70 hover:bg-accent/50"
-                          }`}
-                          style={{ width: "calc(100% - 8px)" }}
-                        >
-                          <span className="w-4 h-4 rounded-full bg-accent-blue-muted text-accent-blue text-[9px] font-bold flex items-center justify-center flex-shrink-0">{m.icon}</span>
-                          <span>{m.name}</span>
-                          {m.id === selectedModel && <Check size={11} className="text-foreground/60 ml-auto" />}
-                        </Button>
-                      ))}
-                    </div>
-                  )}
-                </div>
+                <Popover open={showModelDropdown} onOpenChange={setShowModelDropdown}>
+                  <PopoverTrigger asChild>
+                    <Button variant="ghost" type="button"
+                      className="h-auto px-0 py-0 font-normal tracking-normal flex items-center gap-1 px-1.5 py-0.5 rounded-[10px] hover:bg-accent/50 transition-colors text-muted-foreground hover:text-foreground flex-shrink-0"
+                    >
+                      <Sparkles size={11} className="text-foreground/60" />
+                      <span className="max-w-[100px] truncate text-xs tracking-tight">{MODELS.find(m => m.id === selectedModel)?.name}</span>
+                      <ChevronDown size={9} className="text-muted-foreground/40" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-48 p-0 py-1 max-h-[280px] overflow-y-auto" side="bottom" align="start">
+                    {MODELS.map(m => (
+                      <Button variant="ghost" type="button"
+                        key={m.id}
+                        onClick={() => { setSelectedModel(m.id); setShowModelDropdown(false) }}
+                        className={`h-auto px-0 py-0 font-normal tracking-normal w-full text-left px-3 py-1.5 text-xs tracking-tight flex items-center gap-2 rounded-[12px] mx-1 transition-colors ${
+                          m.id === selectedModel ? "bg-accent text-foreground" : "text-foreground/70 hover:bg-accent/50"
+                        }`}                      >
+                        <span className="w-4 h-4 rounded-full bg-accent-blue-muted text-accent-blue text-xs font-bold flex items-center justify-center flex-shrink-0">{m.icon}</span>
+                        <span>{m.name}</span>
+                        {m.id === selectedModel && <Check size={11} className="text-foreground/60 ml-auto" />}
+                      </Button>
+                    ))}
+                  </PopoverContent>
+                </Popover>
                 {/* Settings */}
                 <Dialog>
                   <DialogTrigger asChild>
@@ -245,7 +241,7 @@ export function TranslateModuleDemo() {
                   </DialogTrigger>
                   <DialogContent className="max-w-[380px]">
                     <DialogHeader>
-                      <DialogTitle className="text-[14px]">翻译设置</DialogTitle>
+                      <DialogTitle className="text-md">翻译设置</DialogTitle>
                     </DialogHeader>
                     <div className="space-y-3 pt-2">
                       <ConfigSection title="显示">
@@ -264,10 +260,10 @@ export function TranslateModuleDemo() {
                           <Switch checked={detectMethod === "auto"} onCheckedChange={v => setDetectMethod(v ? "auto" : "manual")} />
                         </FormRow>
                         <FormRow label="双向翻译" desc="同时生成双向翻译结果">
-                          <Switch checked={false} />
+                          <Switch checked={bidirectional} onCheckedChange={setBidirectional} />
                         </FormRow>
                         <FormRow label="流式输出" desc="实时显示翻译进度">
-                          <Switch checked={true} />
+                          <Switch checked={streaming} onCheckedChange={setStreaming} />
                         </FormRow>
                       </ConfigSection>
                     </div>
@@ -303,17 +299,17 @@ export function TranslateModuleDemo() {
                   value={sourceText}
                   onChange={e => setSourceText(e.target.value)}
                   placeholder="输入要翻译的文本..."
-                  className="min-h-[180px] flex-1 rounded-none border-0 bg-transparent px-4 py-3 text-[14px] tracking-tight leading-6 text-foreground shadow-none placeholder:text-muted-foreground/40 focus-visible:ring-0 resize-none"
+                  className="min-h-[180px] flex-1 rounded-none border-0 bg-transparent px-4 py-3 text-md tracking-tight leading-6 text-foreground shadow-none placeholder:text-muted-foreground/40 focus-visible:ring-0 resize-none"
                 />
                 <div className="flex items-center justify-between px-4 py-2 border-t border-border/20">
-                  <span className="text-[11px] text-muted-foreground/40 tracking-tight">
+                  <span className="text-xs text-muted-foreground/40 tracking-tight">
                     {sourceText.length} 字符
                   </span>
                   <div className="flex items-center gap-1">
                     <Button variant="ghost" size="icon-xs" className="text-muted-foreground" onClick={() => handleCopy(sourceText)}>
                       <Copy size={12} />
                     </Button>
-                    <Button variant="ghost" size="icon-xs" className="text-muted-foreground">
+                    <Button variant="ghost" size="icon-xs" className="text-muted-foreground" onClick={() => { speechSynthesis.cancel(); speechSynthesis.speak(new SpeechSynthesisUtterance(sourceText)) }}>
                       <Volume2 size={12} />
                     </Button>
                   </div>
@@ -322,11 +318,11 @@ export function TranslateModuleDemo() {
 
               {/* Target */}
               <div className="flex-1 flex flex-col">
-                <div className="flex-1 px-4 py-3 text-[14px] tracking-tight leading-6 text-foreground min-h-[180px] overflow-y-auto">
+                <div className="flex-1 px-4 py-3 text-md tracking-tight leading-6 text-foreground min-h-[180px] overflow-y-auto">
                   {isTranslating ? (
                     <div className="flex items-center gap-2 text-muted-foreground/50">
                       <div className="w-3 h-3 border-2 border-foreground/20 border-t-foreground/60 rounded-full animate-spin" />
-                      <span className="text-[13px] tracking-tight">翻译中...</span>
+                      <span className="text-sm tracking-tight">翻译中...</span>
                     </div>
                   ) : translatedText ? (
                     <p className="whitespace-pre-wrap">{translatedText}</p>
@@ -335,14 +331,14 @@ export function TranslateModuleDemo() {
                   )}
                 </div>
                 <div className="flex items-center justify-between px-4 py-2 border-t border-border/20">
-                  <span className="text-[11px] text-muted-foreground/40 tracking-tight">
+                  <span className="text-xs text-muted-foreground/40 tracking-tight">
                     {translatedText.length} 字符{translatedText && <span className="ml-1.5 text-muted-foreground/30">· 0.8s</span>}
                   </span>
                   <div className="flex items-center gap-1">
                     <Button variant="ghost" size="icon-xs" className="text-muted-foreground" onClick={() => handleCopy(translatedText)}>
                       {copied ? <Check size={12} className="text-success" /> : <Copy size={12} />}
                     </Button>
-                    <Button variant="ghost" size="icon-xs" className="text-muted-foreground">
+                    <Button variant="ghost" size="icon-xs" className="text-muted-foreground" onClick={() => { speechSynthesis.cancel(); speechSynthesis.speak(new SpeechSynthesisUtterance(translatedText)) }}>
                       <Volume2 size={12} />
                     </Button>
                     <Button size="xs" onClick={handleTranslate} disabled={!sourceText.trim() || isTranslating} className="ml-1">
@@ -353,12 +349,12 @@ export function TranslateModuleDemo() {
                 </div>
               </div>
             </div>
-          </div>
 
-          {/* Status bar */}
-          <div className="absolute bottom-0 left-0 right-0 h-7 flex items-center justify-between px-4 border-t border-border/30 bg-muted/20 text-[10px] text-muted-foreground/40 tracking-tight" style={{ right: historyOpen ? 280 : 0 }}>
-            <span>源文本: {sourceText.length} 字符 / {sourceText.trim() ? sourceText.trim().split(/\s+/).length : 0} 词</span>
-            <span>译文: {translatedText.length} 字符 / {translatedText.trim() ? translatedText.trim().split(/\s+/).length : 0} 词</span>
+            {/* Status bar */}
+            <div className="flex items-center justify-between px-4 py-1.5 border-t border-border/30 bg-muted/20 text-xs text-muted-foreground/60 tracking-tight shrink-0">
+              <span>源文本: {sourceText.length} 字符 / {sourceText.trim() ? sourceText.trim().split(/\s+/).length : 0} 词</span>
+              <span>译文: {translatedText.length} 字符 / {translatedText.trim() ? translatedText.trim().split(/\s+/).length : 0} 词</span>
+            </div>
           </div>
 
           {/* History panel (matching original historyOpen toggle) */}
@@ -367,19 +363,19 @@ export function TranslateModuleDemo() {
               <div className="h-11 flex items-center justify-between px-3 border-b border-border/40 flex-shrink-0">
                 <div className="flex items-center gap-1.5">
                   <Clock size={12} className="text-muted-foreground" />
-                  <span className="text-[13px] tracking-tight font-medium">翻译历史</span>
+                  <span className="text-sm tracking-tight font-medium">翻译历史</span>
                 </div>
-                <span className="text-[11px] text-muted-foreground/40">{TRANSLATE_HISTORY.length} 条</span>
+                <span className="text-xs text-muted-foreground/40">{TRANSLATE_HISTORY.length} 条</span>
               </div>
               {/* History filter */}
               <div className="flex items-center gap-1 px-3 py-1.5 border-b border-border/20">
                 <Button variant="ghost" type="button"
                   onClick={() => setHistoryFilter("all")}
-                  className={`h-auto px-0 py-0 font-normal tracking-normal px-2 py-0.5 rounded-[8px] text-[11px] tracking-tight transition-colors ${historyFilter === "all" ? "bg-accent text-foreground font-medium" : "text-muted-foreground/50 hover:text-foreground/70"}`}
+                  className={`h-auto px-0 py-0 font-normal tracking-normal px-2 py-0.5 rounded-[8px] text-xs tracking-tight transition-colors ${historyFilter === "all" ? "bg-accent text-foreground font-medium" : "text-muted-foreground/50 hover:text-foreground/70"}`}
                 >全部</Button>
                 <Button variant="ghost" type="button"
                   onClick={() => setHistoryFilter("starred")}
-                  className={`h-auto px-0 py-0 font-normal tracking-normal px-2 py-0.5 rounded-[8px] text-[11px] tracking-tight transition-colors flex items-center gap-1 ${historyFilter === "starred" ? "bg-accent text-foreground font-medium" : "text-muted-foreground/50 hover:text-foreground/70"}`}
+                  className={`h-auto px-0 py-0 font-normal tracking-normal px-2 py-0.5 rounded-[8px] text-xs tracking-tight transition-colors flex items-center gap-1 ${historyFilter === "starred" ? "bg-accent text-foreground font-medium" : "text-muted-foreground/50 hover:text-foreground/70"}`}
                 ><Star size={9} />已收藏</Button>
               </div>
               <div className="flex-1 overflow-y-auto [&::-webkit-scrollbar]:w-[2px] [&::-webkit-scrollbar-thumb]:bg-border/20">
@@ -391,12 +387,12 @@ export function TranslateModuleDemo() {
                   >
                     <div className="flex items-center justify-between mb-1">
                       <div className="flex items-center gap-1.5">
-                        <span className="text-[11px]">{LANG_FLAGS[h.srcLang]}</span>
+                        <span className="text-xs">{LANG_FLAGS[h.srcLang]}</span>
                         <ArrowRight size={9} className="text-muted-foreground/30" />
-                        <span className="text-[11px]">{LANG_FLAGS[h.tgtLang]}</span>
+                        <span className="text-xs">{LANG_FLAGS[h.tgtLang]}</span>
                       </div>
                       <div className="flex items-center gap-1">
-                        <span className="text-[11px] text-muted-foreground/30 tracking-tight">{h.time}</span>
+                        <span className="text-xs text-muted-foreground/30 tracking-tight">{h.time}</span>
                         <Button variant="ghost" type="button"
                           onClick={e => { e.stopPropagation(); toggleStar(h.id) }}
                           className="h-auto px-0 py-0 font-normal tracking-normal opacity-0 group-hover:opacity-100 transition-opacity"
@@ -405,8 +401,8 @@ export function TranslateModuleDemo() {
                         </Button>
                       </div>
                     </div>
-                    <p className="text-[11px] text-foreground/60 truncate tracking-tight">{h.source}</p>
-                    <p className="text-[11px] text-muted-foreground/40 truncate tracking-tight mt-0.5">{h.translated}</p>
+                    <p className="text-xs text-foreground/60 truncate tracking-tight">{h.source}</p>
+                    <p className="text-xs text-muted-foreground/40 truncate tracking-tight mt-0.5">{h.translated}</p>
                   </div>
                 ))}
               </div>

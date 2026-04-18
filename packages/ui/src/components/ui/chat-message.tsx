@@ -3,6 +3,7 @@
 import * as React from "react"
 import { Bot, User } from "lucide-react"
 import { cn } from "../../lib/utils"
+import { Avatar, AvatarFallback } from "./avatar"
 import type { ChatMessage as ChatMessageData, ToolCallResult } from "../../types/ai"
 import { MarkdownRenderer } from "./markdown-renderer"
 import { ThinkingBlock } from "./thinking-block"
@@ -64,15 +65,11 @@ function ChatMessage({
 
   // Default avatars
   const defaultAvatar = (
-    <div
-      data-slot="chat-message-avatar"
-      className={cn(
-        "size-8 rounded-full flex items-center justify-center shrink-0",
-        isUser ? "bg-primary text-primary-foreground" : "bg-muted"
-      )}
-    >
-      {isUser ? <User className="size-4" /> : <Bot className="size-4" />}
-    </div>
+    <Avatar data-slot="chat-message-avatar" className="size-8 shrink-0">
+      <AvatarFallback className={isUser ? "bg-primary text-primary-foreground" : "bg-muted"}>
+        {isUser ? <User className="size-4" /> : <Bot className="size-4" />}
+      </AvatarFallback>
+    </Avatar>
   )
 
   return (
@@ -118,7 +115,7 @@ function ChatMessage({
         <div
           data-slot="chat-message-bubble"
           className={cn(
-            "rounded-[var(--radius-card)] px-4 py-3 text-[13px] leading-relaxed tracking-tight",
+            "rounded-[var(--radius-card)] px-4 py-3 text-sm leading-relaxed tracking-[-0.14px]",
             isUser
               ? "bg-primary text-primary-foreground"
               : "bg-card border border-border"

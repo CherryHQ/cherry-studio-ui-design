@@ -38,7 +38,7 @@ export function AppLauncherDemo() {
         { name: "onSelect", type: "(appId: string) => void", default: "undefined", description: "Callback when an app is selected" },
         { name: "searchable", type: "boolean", default: "true", description: "Enable search filtering of apps" },
       ]} code={`// Compose with: Card, Input, Switch, Badge`}>
-      <div className="max-w-sm rounded-xl border bg-background p-4 space-y-3">
+      <div className="max-w-sm rounded-[12px] border bg-background p-4 space-y-3">
         <div className="flex items-center justify-between">
           <p className="text-sm font-medium">New Tab</p>
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
@@ -65,7 +65,7 @@ export function AppLauncherDemo() {
                 !app.enabled ? "opacity-40" : ""
               }`}
             >
-              <div className={`size-10 rounded-xl ${app.color} flex items-center justify-center`}>
+              <div className={`size-10 rounded-[12px] ${app.color} flex items-center justify-center`}>
                 <app.icon className="size-5 text-primary-foreground" />
               </div>
               <span className="text-[10px] font-medium">{app.name}</span>
@@ -79,7 +79,7 @@ export function AppLauncherDemo() {
                 </div>
               )}
               {!app.enabled && !manage && (
-                <Badge variant="secondary" className="absolute top-1 right-1 text-[7px] px-1">OFF</Badge>
+                <Badge variant="secondary" className="absolute top-1 right-1 text-xs px-1">OFF</Badge>
               )}
             </Card>
           ))}

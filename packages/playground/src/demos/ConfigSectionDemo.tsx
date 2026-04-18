@@ -115,7 +115,7 @@ export function ConfigSectionDemo() {
 
       <Section title="Panel Header">
         <div className="max-w-md space-y-4">
-          <div className="rounded-xl border p-4">
+          <div className="rounded-[12px] border p-4">
             <PanelHeader
               icon="⚙️"
               title="General Settings"
@@ -132,7 +132,7 @@ export function ConfigSectionDemo() {
             </ConfigSection>
           </div>
 
-          <div className="rounded-xl border p-4">
+          <div className="rounded-[12px] border p-4">
             <PanelHeader
               icon="🤖"
               title="Model Services"
@@ -141,7 +141,7 @@ export function ConfigSectionDemo() {
             <p className="text-xs text-muted-foreground">3 providers configured</p>
           </div>
 
-          <div className="rounded-xl border p-4">
+          <div className="rounded-[12px] border p-4">
             <PanelHeader
               icon={<Settings className="h-4 w-4 text-muted-foreground" />}
               title="With React Node Icon"

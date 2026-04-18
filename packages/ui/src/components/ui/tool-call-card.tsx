@@ -5,6 +5,7 @@ import { Loader2, CheckCircle2, XCircle, Clock } from "lucide-react"
 import { cn } from "../../lib/utils"
 import { Card } from "./card"
 import { Badge } from "./badge"
+import { ScrollArea } from "./scroll-area"
 
 export interface ToolCallCardProps extends React.HTMLAttributes<HTMLDivElement> {
   toolName: string
@@ -28,7 +29,7 @@ function ToolCallCard({ toolName, args, status, result, error, className, ...pro
     <Card
       data-slot="tool-call-card"
       className={cn(
-        "rounded-[var(--radius-button)] p-3 text-[13px] tracking-tight gap-2",
+        "rounded-[var(--radius-card)] p-3 text-sm tracking-[-0.14px] gap-2",
         className
       )}
       {...props}
@@ -41,9 +42,11 @@ function ToolCallCard({ toolName, args, status, result, error, className, ...pro
         <span className="font-mono text-xs text-foreground font-medium">{toolName}</span>
       </div>
       {Object.keys(args).length > 0 && (
-        <pre className="text-xs bg-muted/50 rounded-[var(--radius-button)] p-2 overflow-x-auto text-muted-foreground font-mono">
-          {JSON.stringify(args, null, 2)}
-        </pre>
+        <ScrollArea className="rounded-[var(--radius-button)] bg-muted/50">
+          <pre className="text-xs p-2 text-muted-foreground font-mono">
+            {JSON.stringify(args, null, 2)}
+          </pre>
+        </ScrollArea>
       )}
       {status === "done" && result !== undefined && (
         <div className="text-xs text-muted-foreground">

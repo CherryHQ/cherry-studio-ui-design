@@ -1,5 +1,5 @@
 import React, { useState } from "react"
-import { DragGhost, type DragGhostTab, Button, } from "@cherry-studio/ui"
+import { DragGhost, type DragGhostTab, Button, Checkbox, Label, ToggleGroup, ToggleGroupItem } from "@cherry-studio/ui"
 import { Section } from "../components/Section"
 import { MessageCircle, FileText, Compass } from "lucide-react"
 
@@ -25,22 +25,22 @@ export function DragGhostDemo() {
 
 <DragGhost tabId="chat" x={100} y={50} overSidebar={false} tabs={tabs} />`}>
         <div className="space-y-4 max-w-md">
-          <div className="flex gap-2 flex-wrap">
+          <ToggleGroup type="single" value={activeTab} onValueChange={v => { if (v) setActiveTab(v) }} className="flex gap-2 flex-wrap">
             {sampleTabs.map(tab => (
-              <Button variant="ghost"
+              <ToggleGroupItem
                 key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`px-3 py-1.5 text-xs rounded-xl border transition-colors ${activeTab === tab.id ? "bg-accent border-primary/30" : "hover:bg-accent/50"}`}
+                value={tab.id}
+                className="px-3 py-1.5 text-xs rounded-[12px] border transition-colors data-[state=on]:bg-accent data-[state=on]:border-primary/30"
               >
                 {tab.title}
-              </Button>
+              </ToggleGroupItem>
             ))}
-          </div>
-          <label className="flex items-center gap-2 text-xs text-muted-foreground">
-            <input type="checkbox" checked={overSidebar} onChange={e => setOverSidebar(e.target.checked)} />
+          </ToggleGroup>
+          <Label className="flex items-center gap-2 text-xs text-muted-foreground">
+            <Checkbox checked={overSidebar} onCheckedChange={(v) => setOverSidebar(v === true)} />
             Simulate over sidebar (dock mode)
-          </label>
-          <div className="relative h-24 border rounded-xl bg-muted/20 overflow-hidden">
+          </Label>
+          <div className="relative h-24 border rounded-[12px] bg-muted/20 overflow-hidden">
             <DragGhost
               tabId={activeTab}
               x={120}

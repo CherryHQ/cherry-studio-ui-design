@@ -32,7 +32,7 @@ export function ModelPickerPanelDemo() {
   multiModel={false}
   onToggleMultiModel={() => setMulti(!multi)}
 />`}>
-        <div className="max-w-sm border rounded-xl overflow-hidden bg-popover p-0">
+        <div className="max-w-sm border rounded-[12px] overflow-hidden bg-popover p-0">
           <ModelPickerPanel
             models={sampleModels}
             selectedModels={selected}

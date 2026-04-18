@@ -63,7 +63,7 @@ export function ThinkingBlockDemo() {
             />
             <div className="space-y-2 mt-1">
               <p>Here's a recommended approach for structuring React context:</p>
-              <ol className="list-decimal pl-4 space-y-1 text-[12px]">
+              <ol className="list-decimal pl-4 space-y-1 text-xs">
                 <li>Create a separate context for each domain (auth, theme, etc.)</li>
                 <li>Use a custom hook to consume each context</li>
                 <li>Memoize the provider value to prevent unnecessary re-renders</li>

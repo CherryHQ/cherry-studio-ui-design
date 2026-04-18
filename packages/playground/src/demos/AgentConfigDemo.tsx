@@ -71,6 +71,9 @@ export function AgentConfigDemo() {
   const [maxSteps, setMaxSteps] = useState(10)
   const [timeout_, setTimeout_] = useState(300)
   const [saved, setSaved] = useState(false)
+  const [errorRetry, setErrorRetry] = useState(true)
+  const [parallel, setParallel] = useState(false)
+  const [verboseLog, setVerboseLog] = useState(true)
 
   const toggleTool = (id: string) => setTools(prev => prev.map(t => t.id === id ? { ...t, enabled: !t.enabled } : t))
   const toggleKb = (id: string) => setKbs(prev => prev.map(k => k.id === id ? { ...k, active: !k.active } : k))
@@ -93,24 +96,24 @@ export function AgentConfigDemo() {
     ]}>
       <div className="border rounded-[24px] overflow-hidden bg-background min-h-[560px] flex flex-col">
         {/* Header */}
-        <div className="flex items-center gap-3 px-5 py-3 border-b border-border/15 shrink-0">
-          <Button variant="ghost" size="icon-xs"><ArrowLeft size={14} /></Button>
-          <div className="flex items-center gap-1 text-[11px] text-muted-foreground/50 tracking-tight">
+        <div className="flex items-center gap-3 px-5 py-3 border-b border-border/30 shrink-0">
+          <Button variant="ghost" size="icon-xs" onClick={() => setActive("basic")}><ArrowLeft size={14} /></Button>
+          <div className="flex items-center gap-1 text-xs text-muted-foreground/50 tracking-tight">
             <span className="hover:text-foreground cursor-pointer">资源库</span>
             <ChevronRight size={9} />
             <span className="text-foreground">{name}</span>
             <span className="text-muted-foreground/35 ml-1">(智能体)</span>
           </div>
           <div className="flex-1" />
-          {saved && <span className="text-[11px] text-success tracking-tight">已保存</span>}
-          <Button variant="secondary" size="xs">取消</Button>
+          {saved && <span className="text-xs text-success tracking-tight">已保存</span>}
+          <Button variant="secondary" size="xs" onClick={() => { setName("代码审查 Agent"); setDesc("自动审查 PR 并提供改进建议"); setAvatar("🤖"); setTags(["编程", "工具"]); setPlanModel("Claude 3.5 Sonnet"); setExecModel("GPT-4o"); setTemp(0.7); setMaxTokens(4096); setSystemPrompt("你是一个专业的代码审查助手。你的任务是审查代码变更，找出潜在问题，并提供改进建议。\n\n审查时请关注：\n1. 代码质量和可维护性\n2. 潜在的 bug 和安全漏洞\n3. 性能优化机会\n4. 最佳实践和设计模式"); setTools(TOOLS); setMaxSteps(10); setTimeout_(300) }}>取消</Button>
           <Button size="xs" className="gap-1" onClick={handleSave}><Save size={10} />保存</Button>
         </div>
 
         {/* Body */}
         <div className="flex flex-1 min-h-0">
           {/* Sidebar Nav */}
-          <div className="w-[180px] shrink-0 border-r border-border/10 p-3 overflow-y-auto">
+          <div className="w-[180px] shrink-0 border-r border-border/30 p-3 overflow-y-auto">
             {SECTIONS.map(s => {
               const isActive = active === s.id
               return (
@@ -120,8 +123,8 @@ export function AgentConfigDemo() {
                   }`}>
                   <s.icon size={14} strokeWidth={1.5} className={isActive ? "text-foreground/60" : "text-muted-foreground/35"} />
                   <div className="flex-1 min-w-0">
-                    <div className="text-[11px] tracking-tight">{s.label}</div>
-                    <div className={`text-[9px] truncate ${isActive ? "text-muted-foreground/50" : "text-muted-foreground/25"}`}>{s.desc}</div>
+                    <div className="text-xs tracking-tight">{s.label}</div>
+                    <div className={`text-xs truncate ${isActive ? "text-muted-foreground/50" : "text-muted-foreground/50"}`}>{s.desc}</div>
                   </div>
                 </Button>
               )
@@ -134,8 +137,8 @@ export function AgentConfigDemo() {
             {active === "basic" && (
               <div className="max-w-lg space-y-5">
                 <div>
-                  <h3 className="text-[14px] text-foreground mb-1 tracking-tight">基础设置</h3>
-                  <p className="text-[11px] text-muted-foreground/55 tracking-tight">配置智能体的身份信息和模型</p>
+                  <h3 className="text-md text-foreground mb-1 tracking-tight">基础设置</h3>
+                  <p className="text-xs text-muted-foreground/55 tracking-tight">配置智能体的身份信息和模型</p>
                 </div>
 
                 <ConfigSection title="头像">
@@ -156,7 +159,7 @@ export function AgentConfigDemo() {
 
                 <ConfigSection title="简介">
                   <Textarea value={desc} onChange={e => setDesc(e.target.value)} rows={2}
-                    className="w-full rounded-[12px] text-[13px] tracking-tight resize-none" />
+                    className="w-full rounded-[12px] text-sm tracking-tight resize-none" />
                 </ConfigSection>
 
                 <ConfigSection title="标签">
@@ -172,12 +175,12 @@ export function AgentConfigDemo() {
 
                 <div className="space-y-3">
                   <div className="flex items-center gap-2">
-                    <span className="text-[11px] text-muted-foreground/60 tracking-tight">模型配置</span>
+                    <span className="text-xs text-muted-foreground/60 tracking-tight">模型配置</span>
                     <div className="flex-1 h-px bg-border/10" />
                   </div>
                   <FormRow label="规划模型" desc="负责任务拆解和决策">
                     <Select value={planModel} onValueChange={setPlanModel}>
-                      <SelectTrigger className="w-48 h-auto px-3 py-1.5 rounded-[10px] text-[11px] tracking-tight">
+                      <SelectTrigger className="w-48 h-auto px-3 py-1.5 rounded-[10px] text-xs tracking-tight">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -187,7 +190,7 @@ export function AgentConfigDemo() {
                   </FormRow>
                   <FormRow label="执行模型" desc="负责主要推理和执行">
                     <Select value={execModel} onValueChange={setExecModel}>
-                      <SelectTrigger className="w-48 h-auto px-3 py-1.5 rounded-[10px] text-[11px] tracking-tight">
+                      <SelectTrigger className="w-48 h-auto px-3 py-1.5 rounded-[10px] text-xs tracking-tight">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -209,12 +212,12 @@ export function AgentConfigDemo() {
             {active === "prompt" && (
               <div className="max-w-lg space-y-5">
                 <div>
-                  <h3 className="text-[14px] text-foreground mb-1 tracking-tight">提示词</h3>
-                  <p className="text-[11px] text-muted-foreground/55 tracking-tight">配置智能体的系统提示词和行为指令</p>
+                  <h3 className="text-md text-foreground mb-1 tracking-tight">提示词</h3>
+                  <p className="text-xs text-muted-foreground/55 tracking-tight">配置智能体的系统提示词和行为指令</p>
                 </div>
                 <ConfigSection title="系统提示词">
                   <Textarea value={systemPrompt} onChange={e => setSystemPrompt(e.target.value)} rows={8}
-                    className="w-full rounded-[12px] text-[13px] tracking-tight leading-relaxed resize-none font-mono" />
+                    className="w-full rounded-[12px] text-sm tracking-tight leading-relaxed resize-none font-mono" />
                   <p className="text-[10px] text-muted-foreground/40 mt-1.5 tracking-tight">{systemPrompt.length} 字符</p>
                 </ConfigSection>
               </div>
@@ -224,8 +227,8 @@ export function AgentConfigDemo() {
             {active === "knowledge" && (
               <div className="max-w-lg space-y-5">
                 <div>
-                  <h3 className="text-[14px] text-foreground mb-1 tracking-tight">知识库</h3>
-                  <p className="text-[11px] text-muted-foreground/55 tracking-tight">关联知识库以增强检索能力</p>
+                  <h3 className="text-md text-foreground mb-1 tracking-tight">知识库</h3>
+                  <p className="text-xs text-muted-foreground/55 tracking-tight">关联知识库以增强检索能力</p>
                 </div>
                 <div className="space-y-2">
                   {kbs.map(kb => (
@@ -234,14 +237,14 @@ export function AgentConfigDemo() {
                         <BookOpen size={14} className="text-accent-blue" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-[12px] font-medium tracking-tight">{kb.name}</p>
+                        <p className="text-xs font-medium tracking-tight">{kb.name}</p>
                         <p className="text-[10px] text-muted-foreground/50 tracking-tight">{kb.docs} 文档 · {kb.size}</p>
                       </div>
                       <Switch checked={kb.active} onCheckedChange={() => toggleKb(kb.id)} />
                     </div>
                   ))}
                 </div>
-                <Button variant="secondary" size="xs" className="gap-1"><Plus size={10} />添加知识库</Button>
+                <Button variant="secondary" size="xs" className="gap-1" onClick={() => setKbs(prev => [...prev, { id: `kb-${Date.now()}`, name: "新知识库", docs: 0, size: "0 KB", active: true }])}><Plus size={10} />添加知识库</Button>
               </div>
             )}
 
@@ -250,8 +253,8 @@ export function AgentConfigDemo() {
               <div className="max-w-lg space-y-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h3 className="text-[14px] text-foreground mb-1 tracking-tight">工具配置</h3>
-                    <p className="text-[11px] text-muted-foreground/55 tracking-tight">选择智能体可使用的工具</p>
+                    <h3 className="text-md text-foreground mb-1 tracking-tight">工具配置</h3>
+                    <p className="text-xs text-muted-foreground/55 tracking-tight">选择智能体可使用的工具</p>
                   </div>
                   <Badge variant="outline" className="text-[10px]">
                     {tools.filter(t => t.enabled).length}/{tools.length} 已启用
@@ -261,16 +264,16 @@ export function AgentConfigDemo() {
                 <div className="relative">
                   <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground/50" />
                   <Input value={toolSearch} onChange={e => setToolSearch(e.target.value)}
-                    placeholder="搜索工具..." className="pl-7 h-8 text-[11px]" />
+                    placeholder="搜索工具..." className="pl-7 h-8 text-xs" />
                 </div>
 
                 <Accordion type="multiple" defaultValue={Object.keys(grouped)}>
                   {Object.entries(grouped).map(([category, items]) => (
                     <AccordionItem key={category} value={category}>
-                      <AccordionTrigger className="text-[11px] py-2">
+                      <AccordionTrigger className="text-xs py-2">
                         <span className="flex items-center gap-2">
                           {category}
-                          <Badge variant="outline" className="text-[9px] px-1.5 py-0">{items.filter(t => t.enabled).length}/{items.length}</Badge>
+                          <Badge variant="outline" className="text-xs px-1.5 py-0">{items.filter(t => t.enabled).length}/{items.length}</Badge>
                         </span>
                       </AccordionTrigger>
                       <AccordionContent>
@@ -283,8 +286,8 @@ export function AgentConfigDemo() {
                                   <Icon size={13} className={tool.enabled ? "text-accent-blue" : "text-muted-foreground/40"} />
                                 </div>
                                 <div className="flex-1 min-w-0">
-                                  <p className="text-[11px] tracking-tight">{tool.name}</p>
-                                  <p className="text-[9px] text-muted-foreground/45 tracking-tight">{tool.desc}</p>
+                                  <p className="text-xs tracking-tight">{tool.name}</p>
+                                  <p className="text-xs text-muted-foreground/45 tracking-tight">{tool.desc}</p>
                                 </div>
                                 <Switch checked={tool.enabled} onCheckedChange={() => toggleTool(tool.id)} />
                               </div>
@@ -302,8 +305,8 @@ export function AgentConfigDemo() {
             {active === "advanced" && (
               <div className="max-w-lg space-y-5">
                 <div>
-                  <h3 className="text-[14px] text-foreground mb-1 tracking-tight">高级设置</h3>
-                  <p className="text-[11px] text-muted-foreground/55 tracking-tight">执行限制和运行参数</p>
+                  <h3 className="text-md text-foreground mb-1 tracking-tight">高级设置</h3>
+                  <p className="text-xs text-muted-foreground/55 tracking-tight">执行限制和运行参数</p>
                 </div>
                 <FormRow label="最大步骤" desc={`最多执行 ${maxSteps} 步`}>
                   <Slider value={[maxSteps]} onValueChange={v => setMaxSteps(v[0])} min={1} max={50} step={1} className="w-48" />
@@ -312,13 +315,13 @@ export function AgentConfigDemo() {
                   <Slider value={[timeout_]} onValueChange={v => setTimeout_(v[0])} min={30} max={1800} step={30} className="w-48" />
                 </FormRow>
                 <FormRow label="错误重试">
-                  <Switch defaultChecked />
+                  <Switch checked={errorRetry} onCheckedChange={setErrorRetry} />
                 </FormRow>
                 <FormRow label="并行执行">
-                  <Switch />
+                  <Switch checked={parallel} onCheckedChange={setParallel} />
                 </FormRow>
                 <FormRow label="详细日志">
-                  <Switch defaultChecked />
+                  <Switch checked={verboseLog} onCheckedChange={setVerboseLog} />
                 </FormRow>
               </div>
             )}

@@ -54,7 +54,7 @@ export function BrandLogosDemo() {
           {LOGOS.map(({ name, component: Logo }) => (
             <div
               key={name}
-              className="flex flex-col items-center gap-2 rounded-xl border p-3"
+              className="flex flex-col items-center gap-2 rounded-[12px] border p-3"
             >
               <Logo size={24} />
               <span className="text-xs text-muted-foreground">{name}</span>
@@ -95,18 +95,18 @@ export function BrandLogosDemo() {
           <LetterBadge letter="Q" bg="#7C3AED" size={24} />
           <LetterBadge letter="SF" bg="#3B82F6" size={24} />
           <LetterBadge letter="C" bg="#4F46E5" size={24} />
-          <LetterBadge letter="G" bg="#f97316" size={24} />
+          <LetterBadge letter="G" bg="#4f46e5" size={24} />
           <LetterBadge letter="D" bg="#1677FF" size={24} />
-          <LetterBadge letter="n8n" bg="#EA4B71" size={24} />
+          <LetterBadge letter="n8n" bg="#818cf8" size={24} />
           <LetterBadge letter="T" bg="#6366f1" size={24} />
         </div>
 
         <p className="mt-4 text-sm text-muted-foreground">Different sizes:</p>
         <div className="mt-2 flex items-end gap-3">
-          <LetterBadge letter="A" bg="#10b981" size={16} />
-          <LetterBadge letter="A" bg="#10b981" size={24} />
-          <LetterBadge letter="A" bg="#10b981" size={32} />
-          <LetterBadge letter="A" bg="#10b981" size={48} />
+          <LetterBadge letter="A" bg="#06b6d4" size={16} />
+          <LetterBadge letter="A" bg="#06b6d4" size={24} />
+          <LetterBadge letter="A" bg="#06b6d4" size={32} />
+          <LetterBadge letter="A" bg="#06b6d4" size={48} />
         </div>
       </Section>
 

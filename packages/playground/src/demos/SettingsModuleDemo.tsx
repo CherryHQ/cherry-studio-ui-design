@@ -1,7 +1,7 @@
 import React, { useState } from "react"
 import {
   ConfigSection, FormRow, SectionHeader,
-  InlineSelect, Switch, Input, Badge, Slider, Button,
+  InlineSelect, Switch, Input, Badge, Slider, Button, Kbd,
 } from "@cherry-studio/ui"
 import {
   Settings2, Cloud, Sparkles, Server, Plug, Globe2, FileScan,
@@ -79,16 +79,16 @@ function SettingsSidebar({ active, onSelect }: { active: SettingsSection; onSele
     <div className="w-[180px] flex-shrink-0 flex flex-col overflow-y-auto select-none [&::-webkit-scrollbar]:w-[2px] [&::-webkit-scrollbar-thumb]:bg-border/20">
       <div className="h-10 flex items-center px-4 flex-shrink-0">
         <div className="flex items-center gap-2">
-          <div className="w-3 h-3 rounded-full bg-[var(--traffic-red)] border border-[var(--traffic-red-border)]" />
-          <div className="w-3 h-3 rounded-full bg-[var(--traffic-yellow)] border border-[var(--traffic-yellow-border)]" />
-          <div className="w-3 h-3 rounded-full bg-[var(--traffic-green)] border border-[var(--traffic-green-border)]" />
+          <div className="w-3 h-3 rounded-full bg-destructive/60 border border-destructive/40" />
+          <div className="w-3 h-3 rounded-full bg-accent-amber border border-accent-amber/40" />
+          <div className="w-3 h-3 rounded-full bg-success/60 border border-success/40" />
         </div>
       </div>
       <div className="flex-1 px-2 pb-4 space-y-1">
         {NAV_GROUPS.map((group, gi) => (
           <div key={gi}>
             {group.label && (
-              <p className="px-3 pb-1 pt-2 text-[11px] text-foreground/40 leading-[12px] tracking-tight">{group.label}</p>
+              <p className="px-3 pb-1 pt-2 text-xs text-foreground/40 leading-[12px] tracking-tight">{group.label}</p>
             )}
             <div className="space-y-[1px]">
               {group.items.map(item => {
@@ -98,10 +98,10 @@ function SettingsSidebar({ active, onSelect }: { active: SettingsSection; onSele
                   <Button variant="ghost" type="button"
                     key={item.id}
                     onClick={() => onSelect(item.id)}
-                    className={`h-auto px-0 py-0 font-normal tracking-normal w-full flex items-center gap-2.5 px-3 py-[5px] rounded-[12px] transition-all duration-150 text-[11px] tracking-tight relative ${
+                    className={`h-auto px-0 py-0 font-normal tracking-normal w-full flex items-center gap-2.5 px-3 py-[5px] rounded-[12px] transition-all duration-150 text-xs tracking-tight relative ${
                       isActive
                         ? "bg-cherry-active-bg text-foreground/90"
-                        : "text-foreground/70 hover:text-foreground/90 hover:bg-foreground/[0.04]"
+                        : "text-foreground/70 hover:text-foreground/90 hover:bg-accent/20"
                     }`}
                   >
                     {isActive && (
@@ -156,7 +156,7 @@ function GeneralContent() {
         <FormRow label="字体大小" desc="聊天内容字号">
           <div className="flex items-center gap-2 w-32">
             <Slider value={fontSize} onValueChange={setFontSize} min={12} max={20} step={1} />
-            <span className="text-[11px] font-mono text-muted-foreground w-6 text-right">{fontSize[0]}</span>
+            <span className="text-xs font-mono text-muted-foreground w-6 text-right">{fontSize[0]}</span>
           </div>
         </FormRow>
       </ConfigSection>
@@ -191,8 +191,8 @@ function ModelServiceContent() {
   const [selectedProvider, setSelectedProvider] = useState("openai")
 
   const providers = [
-    { id: "openai", name: "OpenAI", color: "#10a37f", models: 4, total: 8, status: "connected" as const, latency: 120 },
-    { id: "anthropic", name: "Anthropic", color: "#d97706", models: 3, total: 5, status: "connected" as const, latency: 85 },
+    { id: "openai", name: "OpenAI", color: "#06b6d4", models: 4, total: 8, status: "connected" as const, latency: 120 },
+    { id: "anthropic", name: "Anthropic", color: "#818cf8", models: 3, total: 5, status: "connected" as const, latency: 85 },
     { id: "google", name: "Google", color: "#4285f4", models: 2, total: 4, status: "connected" as const, latency: 145 },
     { id: "ollama", name: "Ollama", color: "#1a1a1a", models: 2, total: 3, status: "connected" as const, latency: 30 },
     { id: "deepseek", name: "DeepSeek", color: "#4f6ef7", models: 1, total: 3, status: "disconnected" as const },
@@ -210,16 +210,16 @@ function ModelServiceContent() {
           <Button variant="ghost" type="button"
             key={p.id}
             onClick={() => setSelectedProvider(p.id)}
-            className={`h-auto px-0 py-0 font-normal tracking-normal w-full flex items-center gap-3 px-3 py-2 rounded-[12px] text-[13px] tracking-tight transition-colors ${
+            className={`h-auto px-0 py-0 font-normal tracking-normal w-full flex items-center gap-3 px-3 py-2 rounded-[12px] text-sm tracking-tight transition-colors ${
               selectedProvider === p.id ? "bg-accent" : "hover:bg-accent/50"
             }`}
           >
-            <div className="w-6 h-6 rounded-full flex items-center justify-center text-primary-foreground text-[11px] font-medium" style={{ background: p.color }}>
+            <div className="w-6 h-6 rounded-full flex items-center justify-center text-primary-foreground text-xs font-medium" style={{ background: p.color }}>
               {p.name.charAt(0)}
             </div>
             <span className="flex-1 text-left font-medium">{p.name}</span>
-            <span className="text-[11px] text-muted-foreground">{p.models}/{p.total}</span>
-            <div className={`w-1.5 h-1.5 rounded-full ${p.status === "connected" ? "bg-success" : "bg-muted-foreground/30"}`} />
+            <span className="text-xs text-muted-foreground">{p.models}/{p.total}</span>
+            <div className={`w-2 h-2 rounded-full ${p.status === "connected" ? "bg-success" : "bg-muted-foreground/30"}`} />
           </Button>
         ))}
       </div>
@@ -233,7 +233,7 @@ function ModelServiceContent() {
           <Input defaultValue={`https://api.${current.id}.com/v1`} className="w-48 h-8 text-xs" />
         </FormRow>
         <FormRow label="状态">
-          <Badge variant={current.status === "connected" ? "default" : "outline"} className="text-[11px]">
+          <Badge variant={current.status === "connected" ? "default" : "outline"} className="text-xs">
             {current.status === "connected" ? `已连接 · ${current.latency}ms` : "未连接"}
           </Badge>
         </FormRow>
@@ -264,11 +264,11 @@ function DataContent() {
       </ConfigSection>
       <ConfigSection title="存储">
         <FormRow label="对话数据">
-          <span className="text-[13px] text-muted-foreground">128.4 MB</span>
+          <span className="text-sm text-muted-foreground">128.4 MB</span>
         </FormRow>
         <FormRow label="缓存">
           <div className="flex items-center gap-2">
-            <span className="text-[13px] text-muted-foreground">45.2 MB</span>
+            <span className="text-sm text-muted-foreground">45.2 MB</span>
             <Button variant="outline" size="xs">清除</Button>
           </div>
         </FormRow>
@@ -293,19 +293,19 @@ function MCPContent() {
     <div className="space-y-4">
       <SectionHeader title="MCP 服务" />
       <div className="flex items-center justify-between">
-        <p className="text-[11px] text-muted-foreground/60 tracking-tight">{tools.filter(t => t.enabled).length} 个已启用</p>
+        <p className="text-xs text-muted-foreground/60 tracking-tight">{tools.filter(t => t.enabled).length} 个已启用</p>
         <Button variant="secondary" size="xs" className="gap-1"><Plug size={10} />添加服务</Button>
       </div>
       <div className="space-y-1">
         {tools.map(t => (
           <div key={t.id} className="flex items-center gap-3 px-3 py-2.5 rounded-[12px] hover:bg-accent/30 transition-colors">
-            <div className={`w-7 h-7 rounded-[10px] flex items-center justify-center text-[11px] font-medium ${t.enabled ? "bg-accent-blue-muted text-accent-blue" : "bg-muted text-muted-foreground/40"}`}>
+            <div className={`w-7 h-7 rounded-[10px] flex items-center justify-center text-xs font-medium ${t.enabled ? "bg-accent-blue-muted text-accent-blue" : "bg-muted text-muted-foreground/40"}`}>
               {t.name.charAt(0)}
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2">
-                <span className="text-[12px] font-medium tracking-tight">{t.name}</span>
-                <div className={`w-1.5 h-1.5 rounded-full ${t.status === "connected" ? "bg-success" : t.status === "error" ? "bg-error" : "bg-muted-foreground/30"}`} />
+                <span className="text-xs font-medium tracking-tight">{t.name}</span>
+                <div className={`w-2 h-2 rounded-full ${t.status === "connected" ? "bg-success" : t.status === "error" ? "bg-error" : "bg-muted-foreground/30"}`} />
               </div>
               <p className="text-[10px] text-muted-foreground/50 tracking-tight">{t.desc}</p>
             </div>
@@ -336,10 +336,10 @@ function SearchContent() {
               className={`h-auto px-0 py-0 font-normal tracking-normal w-full flex items-center gap-3 px-3 py-2 rounded-[12px] text-left transition-colors ${provider === p.id ? "bg-accent" : "hover:bg-accent/50"}`}>
               <div className="w-6 h-6 rounded-full bg-accent-blue-muted flex items-center justify-center text-accent-blue text-[10px] font-medium">{p.name.charAt(0)}</div>
               <div className="flex-1 min-w-0">
-                <span className="text-[12px] font-medium tracking-tight">{p.name}</span>
+                <span className="text-xs font-medium tracking-tight">{p.name}</span>
                 <p className="text-[10px] text-muted-foreground/50">{p.desc}</p>
               </div>
-              {provider === p.id && <Badge variant="default" className="text-[9px]">Active</Badge>}
+              {provider === p.id && <Badge variant="default" className="text-xs">Active</Badge>}
             </Button>
           ))}
         </div>
@@ -361,39 +361,43 @@ function SearchContent() {
 
 /** Default Model (matching DefaultModelSettingsPage) */
 function DefaultModelContent() {
+  const [mainModel, setMainModel] = useState("claude-sonnet")
+  const [fallbackModel, setFallbackModel] = useState("gpt-4o")
+  const [translateModel, setTranslateModel] = useState("gpt-4o-mini")
+  const [codeModel, setCodeModel] = useState("claude-sonnet")
   return (
     <div className="space-y-4">
       <SectionHeader title="默认模型" />
       <ConfigSection title="对话默认模型">
         <FormRow label="主模型" desc="新对话默认使用的模型">
-          <InlineSelect value="claude-sonnet" options={[
+          <InlineSelect value={mainModel} options={[
             { value: "claude-sonnet", label: "Claude Sonnet" },
             { value: "gpt-4o", label: "GPT-4o" },
             { value: "gemini-pro", label: "Gemini Pro" },
-          ]} onChange={() => {}} />
+          ]} onChange={setMainModel} />
         </FormRow>
         <FormRow label="备用模型" desc="主模型不可用时自动切换">
-          <InlineSelect value="gpt-4o" options={[
+          <InlineSelect value={fallbackModel} options={[
             { value: "gpt-4o", label: "GPT-4o" },
             { value: "claude-sonnet", label: "Claude Sonnet" },
-          ]} onChange={() => {}} />
+          ]} onChange={setFallbackModel} />
         </FormRow>
       </ConfigSection>
       <ConfigSection title="翻译默认模型">
         <FormRow label="翻译模型">
-          <InlineSelect value="gpt-4o-mini" options={[
+          <InlineSelect value={translateModel} options={[
             { value: "gpt-4o-mini", label: "GPT-4o Mini" },
             { value: "claude-haiku", label: "Claude Haiku" },
-          ]} onChange={() => {}} />
+          ]} onChange={setTranslateModel} />
         </FormRow>
       </ConfigSection>
       <ConfigSection title="代码默认模型">
         <FormRow label="代码模型">
-          <InlineSelect value="claude-sonnet" options={[
+          <InlineSelect value={codeModel} options={[
             { value: "claude-sonnet", label: "Claude Sonnet" },
             { value: "gpt-4o", label: "GPT-4o" },
             { value: "deepseek-coder", label: "DeepSeek Coder" },
-          ]} onChange={() => {}} />
+          ]} onChange={setCodeModel} />
         </FormRow>
       </ConfigSection>
     </div>
@@ -402,22 +406,25 @@ function DefaultModelContent() {
 
 /** Document Service (matching DocumentServicePage) */
 function DocumentContent() {
+  const [pdfEngine, setPdfEngine] = useState("builtin")
+  const [wordEngine, setWordEngine] = useState("builtin")
+  const [embedModel, setEmbedModel] = useState("text-embedding-3-small")
   return (
     <div className="space-y-4">
       <SectionHeader title="文档解析" />
       <ConfigSection title="文档引擎">
         <FormRow label="PDF 解析">
-          <InlineSelect value="builtin" options={[
+          <InlineSelect value={pdfEngine} options={[
             { value: "builtin", label: "内置解析器" },
             { value: "tesseract", label: "Tesseract OCR" },
             { value: "paddle", label: "PaddleOCR" },
-          ]} onChange={() => {}} />
+          ]} onChange={setPdfEngine} />
         </FormRow>
         <FormRow label="Word/Excel">
-          <InlineSelect value="builtin" options={[
+          <InlineSelect value={wordEngine} options={[
             { value: "builtin", label: "内置解析器" },
             { value: "libreoffice", label: "LibreOffice" },
-          ]} onChange={() => {}} />
+          ]} onChange={setWordEngine} />
         </FormRow>
         <FormRow label="最大文件大小">
           <Slider defaultValue={[50]} min={1} max={200} step={1} className="w-36" />
@@ -431,10 +438,10 @@ function DocumentContent() {
           <Slider defaultValue={[64]} min={0} max={256} step={32} className="w-36" />
         </FormRow>
         <FormRow label="嵌入模型">
-          <InlineSelect value="text-embedding-3-small" options={[
+          <InlineSelect value={embedModel} options={[
             { value: "text-embedding-3-small", label: "text-embedding-3-small" },
             { value: "text-embedding-3-large", label: "text-embedding-3-large" },
-          ]} onChange={() => {}} />
+          ]} onChange={setEmbedModel} />
         </FormRow>
       </ConfigSection>
     </div>
@@ -451,7 +458,7 @@ function HomeContent() {
   return (
     <div className="space-y-4">
       <SectionHeader title="首页" />
-      <p className="text-[12px] text-muted-foreground/60 tracking-tight">快速配置常用选项</p>
+      <p className="text-xs text-muted-foreground/60 tracking-tight">快速配置常用选项</p>
       <ConfigSection title="快捷设置">
         <FormRow label="默认模型" desc="新对话使用的模型">
           <InlineSelect value={model} options={[
@@ -493,7 +500,7 @@ function HomeContent() {
             <div key={i} className="flex items-center gap-2.5 px-3 py-2.5 rounded-[12px] border border-border/30 hover:bg-accent/30 transition-colors cursor-pointer">
               <item.icon size={14} className="text-muted-foreground flex-shrink-0" />
               <div className="min-w-0">
-                <p className="text-[11px] font-medium tracking-tight">{item.label}</p>
+                <p className="text-xs font-medium tracking-tight">{item.label}</p>
                 <p className="text-[10px] text-muted-foreground/50 tracking-tight">{item.desc}</p>
               </div>
               <ChevronRight size={10} className="text-muted-foreground/30 ml-auto flex-shrink-0" />
@@ -522,29 +529,29 @@ function AboutContent() {
       <div className="flex items-center gap-3 px-1">
         <div className="w-10 h-10 rounded-[14px] bg-gradient-to-br from-error/80 to-accent-orange flex items-center justify-center text-primary-foreground text-[16px] font-bold shadow-sm">C</div>
         <div>
-          <p className="text-[14px] font-semibold tracking-tight">Cherry Studio</p>
-          <p className="text-[11px] text-muted-foreground/50 tracking-tight">v2.6.0 · Build 2026.04.12</p>
+          <p className="text-md font-semibold tracking-tight">Cherry Studio</p>
+          <p className="text-xs text-muted-foreground/50 tracking-tight">v2.6.0 · Build 2026.04.12</p>
         </div>
       </div>
       <ConfigSection title="更新日志">
         <div className="space-y-2">
           {changelog.map((item, i) => (
             <div key={i} className="flex items-start gap-2 px-1 py-1">
-              <Badge className={`text-[9px] px-1.5 py-0 rounded-[6px] font-medium flex-shrink-0 ${badgeColor[item.type]}`}>{badgeLabel[item.type]}</Badge>
-              <span className="text-[11px] text-foreground/70 tracking-tight leading-[16px]">{item.text}</span>
+              <Badge className={`text-xs px-1.5 py-0 rounded-[6px] font-medium flex-shrink-0 ${badgeColor[item.type]}`}>{badgeLabel[item.type]}</Badge>
+              <span className="text-xs text-foreground/70 tracking-tight leading-[16px]">{item.text}</span>
             </div>
           ))}
         </div>
       </ConfigSection>
       <ConfigSection title="链接">
         <FormRow label="GitHub">
-          <a href="#" className="text-[11px] text-accent-blue hover:underline tracking-tight">github.com/cherry-studio</a>
+          <a href="#" className="text-xs text-accent-blue hover:underline tracking-tight">github.com/cherry-studio</a>
         </FormRow>
         <FormRow label="文档">
-          <a href="#" className="text-[11px] text-accent-blue hover:underline tracking-tight">docs.cherry-ai.com</a>
+          <a href="#" className="text-xs text-accent-blue hover:underline tracking-tight">docs.cherry-ai.com</a>
         </FormRow>
         <FormRow label="反馈">
-          <a href="#" className="text-[11px] text-accent-blue hover:underline tracking-tight">提交 Issue</a>
+          <a href="#" className="text-xs text-accent-blue hover:underline tracking-tight">提交 Issue</a>
         </FormRow>
       </ConfigSection>
     </div>
@@ -566,15 +573,15 @@ function ShortcutsContent() {
   return (
     <div className="space-y-4">
       <SectionHeader title="快捷键" />
-      <div className="divide-y divide-border/5">
+      <div className="divide-y divide-border/30">
         {shortcuts.map((s, i) => (
           <div key={i} className="flex items-center justify-between py-2 px-1">
-            <span className="text-[12px] text-foreground/70 tracking-tight">{s.label}</span>
+            <span className="text-xs text-foreground/70 tracking-tight">{s.label}</span>
             <div className="flex items-center gap-[2px]">
               {s.keys.map((k, j) => (
-                <kbd key={j} className="inline-flex items-center justify-center min-w-[20px] h-[20px] px-[5px] rounded-[4px] text-[10px] border bg-muted/30 border-border/20 text-foreground/50 shadow-[0_1px_0_0] shadow-border/10" style={{ fontFamily: "system-ui", fontWeight: 500 }}>
+                <Kbd key={j}>
                   {k}
-                </kbd>
+                </Kbd>
               ))}
             </div>
           </div>
@@ -607,8 +614,8 @@ function PlaceholderContent({ section }: { section: string }) {
   return (
     <div className="flex flex-col items-center justify-center h-full gap-3 text-muted-foreground/40">
       <Icon size={32} />
-      <p className="text-[13px] tracking-tight">{item?.label ?? section}</p>
-      <p className="text-[11px]">此页面内容在 Demo 中省略</p>
+      <p className="text-sm tracking-tight">{item?.label ?? section}</p>
+      <p className="text-xs">此页面内容在 Demo 中省略</p>
     </div>
   )
 }

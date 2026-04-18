@@ -3,6 +3,7 @@
 import * as React from "react"
 import { cn } from "../../lib/utils"
 import { Badge } from './badge'
+import { Card } from './card'
 
 /* ----------------------------- ResourceCard ----------------------------- */
 
@@ -42,11 +43,11 @@ function ResourceCard({
   ...props
 }: ResourceCardProps & { ref?: React.Ref<HTMLDivElement> }) {
   return (
-    <div
+    <Card
       ref={ref}
       data-slot="resource-card"
       className={cn(
-        "relative rounded-[var(--radius-card)] border bg-card p-2 flex flex-col gap-3 transition-all duration-150 tracking-tight",
+        "relative p-2 transition-all duration-[var(--duration-normal)] tracking-[-0.14px]",
         hoverable && "hover:shadow-sm hover:border-border/80 hover:-translate-y-0.5",
         className
       )}
@@ -58,7 +59,7 @@ function ResourceCard({
       <div className="flex items-start gap-3">
         {avatar && <div className="flex-shrink-0">{avatar}</div>}
         <div className="min-w-0 flex-1">
-          <h4 className="text-[13px] font-medium truncate">{title}</h4>
+          <h4 className="text-sm font-medium truncate">{title}</h4>
           {subtitle && (
             <p className="text-xs text-muted-foreground truncate">{subtitle}</p>
           )}
@@ -88,7 +89,7 @@ function ResourceCard({
           {actions && <div className="flex items-center gap-1.5 ml-auto">{actions}</div>}
         </div>
       )}
-    </div>
+    </Card>
   )
 }
 
@@ -111,18 +112,18 @@ export interface FileCardProps extends React.HTMLAttributes<HTMLDivElement> {
 
 function FileCard({ icon, name, size, type, status, actions, className, ref, ...props }: FileCardProps & { ref?: React.Ref<HTMLDivElement> }) {
   return (
-    <div
+    <Card
       ref={ref}
       data-slot="file-card"
       className={cn(
-        "group relative rounded-[var(--radius-button)] border bg-card p-3 flex flex-col gap-2 hover:shadow-sm hover:border-border/80 transition-all cursor-pointer",
+        "group relative rounded-[var(--radius-button)] p-3 gap-2 hover:shadow-sm hover:border-border/80 transition-all cursor-pointer",
         className
       )}
       {...props}
     >
       {/* Thumbnail/icon area */}
       <div className="h-20 rounded-[var(--radius-button)] bg-muted/50 flex items-center justify-center">
-        {icon || <span className="text-2xl text-muted-foreground/30">📄</span>}
+        {icon || <span className="text-2xl text-muted-foreground/50">📄</span>}
       </div>
       <div className="min-w-0">
         <p className="text-xs font-medium truncate">{name}</p>
@@ -139,7 +140,7 @@ function FileCard({ icon, name, size, type, status, actions, className, ref, ...
           {actions}
         </div>
       )}
-    </div>
+    </Card>
   )
 }
 
@@ -156,8 +157,8 @@ export interface StatusBadgeProps extends React.HTMLAttributes<HTMLSpanElement> 
 }
 
 const statusStyles: Record<StatusBadgeVariant, string> = {
-  success: "bg-success-muted text-success border-success/20",
-  warning: "bg-warning-muted text-warning border-warning/20",
+  success: "bg-success-muted text-success border-success/40",
+  warning: "bg-warning-muted text-warning border-warning/40",
   error: "bg-error-muted text-error border-error/20",
   info: "bg-info-muted text-info border-info/20",
   processing: "bg-info-muted text-info border-info/20",

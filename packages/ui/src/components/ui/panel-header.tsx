@@ -15,18 +15,18 @@ function PanelHeader({ icon, title, desc, actions, className, ref, ...props }: P
     <div
       ref={ref}
       data-slot="panel-header"
-      className={cn("flex items-center gap-2.5 mb-3 tracking-tight", className)}
+      className={cn("flex items-center gap-2.5 mb-3 tracking-[-0.14px]", className)}
       {...props}
     >
       {icon && (
         typeof icon === "string" ? (
-          <span className="text-[13px]">{icon}</span>
+          <span className="text-sm">{icon}</span>
         ) : (
           icon
         )
       )}
       <div className="flex-1 min-w-0">
-        <h3 className="text-[13px] text-foreground font-medium">{title}</h3>
+        <h3 className="text-sm text-foreground font-medium">{title}</h3>
         {desc && (
           <p className="text-xs text-muted-foreground mt-0.5">{desc}</p>
         )}

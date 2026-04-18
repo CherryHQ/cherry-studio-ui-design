@@ -61,7 +61,7 @@ export function FloatingWindow({
       data-slot="floating-window"
       role="dialog"
       aria-label={win.tab.title}
-      className="fixed bg-background border border-border rounded-[var(--radius-button)] shadow-2xl overflow-hidden flex flex-col z-[100] tracking-tight"
+      className="fixed bg-background border border-border rounded-[var(--radius-button)] shadow-popover overflow-hidden flex flex-col z-[var(--z-floating)] tracking-[-0.14px]"
       style={{ left: pos.x, top: pos.y, width: win.width, height: win.height }}
     >
       <div
@@ -69,8 +69,8 @@ export function FloatingWindow({
         onMouseDown={onTitleMouseDown}
       >
         {win.tab.miniAppId ? (
-          win.tab.miniAppLogoUrl ? <img src={win.tab.miniAppLogoUrl} alt="" className="w-3.5 h-3.5 rounded-[3px] object-cover" /> :
-          <div className="w-3.5 h-3.5 rounded-[3px] flex items-center justify-center text-primary-foreground text-[11px]" style={{ background: win.tab.miniAppColor }}>{win.tab.miniAppInitial}</div>
+          win.tab.miniAppLogoUrl ? <img src={win.tab.miniAppLogoUrl} alt="" className="w-3.5 h-3.5 rounded-[var(--radius-dot)] object-cover" /> :
+          <div className="w-3.5 h-3.5 rounded-[var(--radius-dot)] flex items-center justify-center text-primary-foreground text-xs" style={{ background: win.tab.miniAppColor }}>{win.tab.miniAppInitial}</div>
         ) : <Icon size={13} className="text-muted-foreground" />}
         <span className="text-xs text-foreground flex-1 truncate">{win.tab.title}</span>
         <Button
@@ -91,11 +91,11 @@ export function FloatingWindow({
           <X size={11} />
         </Button>
       </div>
-      <div className="flex-1 flex items-center justify-center text-muted-foreground text-[13px] p-4">
+      <div className="flex-1 flex items-center justify-center text-muted-foreground text-sm p-4">
         <div className="text-center">
           {win.tab.miniAppId ? (
             win.tab.miniAppLogoUrl ? <img src={win.tab.miniAppLogoUrl} alt="" className="w-8 h-8 rounded-[var(--radius-button)] mx-auto mb-2 object-cover opacity-60" /> :
-            <div className="w-8 h-8 rounded-[var(--radius-button)] mx-auto mb-2 flex items-center justify-center text-primary-foreground text-[13px] opacity-60" style={{ background: win.tab.miniAppColor }}>{win.tab.miniAppInitial}</div>
+            <div className="w-8 h-8 rounded-[var(--radius-button)] mx-auto mb-2 flex items-center justify-center text-primary-foreground text-sm opacity-60" style={{ background: win.tab.miniAppColor }}>{win.tab.miniAppInitial}</div>
           ) : <Icon size={32} className="mx-auto mb-2 opacity-30" />}
           <p>{win.tab.title}</p>
           <p className="text-xs text-muted-foreground/60 mt-1">独立窗口</p>

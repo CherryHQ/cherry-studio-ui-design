@@ -95,7 +95,7 @@ export function AlertDialogDemo() {
                 This will remove all conversations, settings, and cached data. This action cannot be undone.
               </AlertDialogDescription>
             </AlertDialogHeader>
-            <div className="rounded-xl border bg-muted/50 p-3 text-sm text-muted-foreground">
+            <div className="rounded-[12px] border bg-muted/50 p-3 text-sm text-muted-foreground">
               <p className="font-medium text-foreground mb-1">The following will be deleted:</p>
               <ul className="list-disc pl-4 space-y-0.5">
                 <li>42 conversations</li>

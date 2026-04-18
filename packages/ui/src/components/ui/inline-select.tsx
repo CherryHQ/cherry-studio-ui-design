@@ -44,8 +44,8 @@ function InlineSelect({
 
   const isMd = size === "md"
   const btnText = "text-xs"
-  const chevronSize = isMd ? 10 : 9
-  const checkSize = isMd ? 12 : 10
+  const chevronSize = isMd ? 12 : 12
+  const checkSize = isMd ? 12 : 12
 
   const renderLabel = (opt: InlineSelectOption) => {
     if (showDesc && opt.desc) {
@@ -61,7 +61,7 @@ function InlineSelect({
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
-      <div data-slot="inline-select" className={cn("relative tracking-tight", className)}>
+      <div data-slot="inline-select" className={cn("relative tracking-[-0.14px]", className)}>
         <PopoverTrigger asChild>
           <Button
             variant="ghost"

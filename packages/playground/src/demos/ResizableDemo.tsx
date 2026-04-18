@@ -14,7 +14,7 @@ export function ResizableDemo() {
   <ResizableHandle withHandle />
   <ResizablePanel defaultSize={50}>Panel B</ResizablePanel>
 </ResizablePanelGroup>`}>
-        <ResizablePanelGroup orientation="horizontal" className="min-h-[200px] max-w-2xl rounded-xl border">
+        <ResizablePanelGroup orientation="horizontal" className="min-h-[200px] max-w-2xl rounded-[12px] border">
           <ResizablePanel defaultSize={50}>
             <div className="flex h-full items-center justify-center p-6">
               <span className="font-semibold">Panel A</span>
@@ -44,7 +44,7 @@ export function ResizableDemo() {
   <ResizableHandle withHandle />
   <ResizablePanel defaultSize={60}>Bottom</ResizablePanel>
 </ResizablePanelGroup>`}>
-        <ResizablePanelGroup orientation="vertical" className="min-h-[300px] max-w-md rounded-xl border">
+        <ResizablePanelGroup orientation="vertical" className="min-h-[300px] max-w-md rounded-[12px] border">
           <ResizablePanel defaultSize={30}>
             <div className="flex h-full items-center justify-center p-6">
               <span className="font-semibold">Header</span>

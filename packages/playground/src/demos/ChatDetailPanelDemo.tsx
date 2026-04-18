@@ -59,11 +59,11 @@ export function ChatDetailPanelDemo() {
         { name: "model", type: "string", default: '""', description: "Model used to generate the response" },
         { name: "tokenUsage", type: "{ input: number; output: number; thinking?: number }", default: "undefined", description: "Token usage statistics for the message" },
       ]} code={`// Compose with: Tabs, Badge, CodeBlock, Card, Button`}>
-      <div className="max-w-lg rounded-xl border bg-background p-4 space-y-4">
+      <div className="max-w-lg rounded-[12px] border bg-background p-4 space-y-4">
         {/* Header */}
         <div className="flex items-center justify-between">
           <p className="text-sm font-medium">Message Details</p>
-          <Badge variant="outline" className="text-[9px]">Assistant</Badge>
+          <Badge variant="outline" className="text-xs">Assistant</Badge>
         </div>
 
         {/* Meta info */}
@@ -90,7 +90,7 @@ export function ChatDetailPanelDemo() {
           </div>
           <div className="flex items-center gap-2 text-xs">
             <span className="text-muted-foreground">Status</span>
-            <Badge variant="outline" className="text-[9px] bg-success-muted text-success border-success/20">Complete</Badge>
+            <Badge variant="outline" className="text-xs bg-success-muted text-success border-success/20">Complete</Badge>
           </div>
         </div>
 
@@ -101,7 +101,7 @@ export function ChatDetailPanelDemo() {
             {tokenStats.map((s) => (
               <div key={s.label} className="text-center">
                 <p className={`text-sm font-semibold tabular-nums ${s.color}`}>{s.value}</p>
-                <p className="text-[9px] text-muted-foreground">{s.label}</p>
+                <p className="text-xs text-muted-foreground">{s.label}</p>
               </div>
             ))}
           </div>

@@ -70,7 +70,7 @@ export function FormRowDemo() {
           </FormRow>
           <FormRow label="System Prompt" direction="vertical">
             <Textarea
-              className="w-full rounded-xl border border-input bg-background px-3 py-2 text-xs min-h-[60px] resize-none"
+              className="w-full rounded-[12px] border border-input bg-background px-3 py-2 text-xs min-h-[60px] resize-none"
               placeholder="You are a helpful assistant..."
             />
           </FormRow>
@@ -92,7 +92,7 @@ export function FormRowDemo() {
       </Section>
 
       <Section title="Practical: Settings Panel">
-        <div className="max-w-md rounded-xl border bg-card p-4 space-y-0">
+        <div className="max-w-md rounded-[12px] border bg-card p-4 space-y-0">
           <SectionHeader title="Chat Settings" />
           <FormRow label="Auto-scroll" desc="Scroll to bottom on new messages">
             <Switch defaultChecked />

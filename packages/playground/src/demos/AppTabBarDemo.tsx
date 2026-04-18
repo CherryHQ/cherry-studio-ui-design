@@ -32,7 +32,7 @@ export function AppTabBarDemo() {
   onTabClick={(id) => setActiveTab(id)}
   onToggleTheme={() => setIsDark(!isDark)}
 />`}>
-        <div className="border rounded-xl overflow-hidden bg-sidebar">
+        <div className="border rounded-[12px] overflow-hidden bg-sidebar">
           <AppTabBar
             tabs={sampleTabs}
             activeTabId={activeTab}

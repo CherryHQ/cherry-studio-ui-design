@@ -28,7 +28,7 @@ export function AssistantConfigDemo() {
         { name: "systemPrompt", type: "string", default: '""', description: "System prompt that defines assistant behavior" },
         { name: "tools", type: "ToolConfig[]", default: "[]", description: "Enabled tools and capabilities" },
       ]}>
-      <div className="max-w-md rounded-xl border bg-background p-4 space-y-3">
+      <div className="max-w-md rounded-[12px] border bg-background p-4 space-y-3">
         <PanelHeader icon="✨" title="Assistant Configuration" desc="Set up your AI assistant" />
 
         <ConfigSection title="Profile" hint="Basic assistant information">

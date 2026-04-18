@@ -106,7 +106,7 @@ export function AvatarDemo() {
       </Section>
 
       <Section title="Practical: User Card">
-        <div className="flex items-center gap-3 rounded-xl border p-3 max-w-xs">
+        <div className="flex items-center gap-3 rounded-[12px] border p-3 max-w-xs">
           <div className="relative">
             <Avatar className="h-10 w-10">
               <AvatarFallback>🍒</AvatarFallback>

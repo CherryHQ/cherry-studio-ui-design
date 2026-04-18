@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import { cn } from "../../lib/utils"
+import { Card } from './card'
 
 export interface AssetCardProps extends React.HTMLAttributes<HTMLDivElement> {
   title: string
@@ -21,11 +22,11 @@ function AssetCard({
   ...props
 }: AssetCardProps & { ref?: React.Ref<HTMLDivElement> }) {
   return (
-    <div
+    <Card
       ref={ref}
       data-slot="asset-card"
       className={cn(
-        "rounded-[var(--radius-card)] border bg-card p-4 hover:shadow-sm transition-shadow cursor-pointer tracking-tight",
+        "gap-0 p-4 hover:shadow-sm transition-shadow cursor-pointer tracking-[-0.14px]",
         className
       )}
       onClick={onClick}
@@ -36,7 +37,7 @@ function AssetCard({
           <div className="flex-shrink-0 text-muted-foreground">{icon}</div>
         )}
         <div className="min-w-0 flex-1">
-          <h4 className="text-[13px] font-medium truncate">{title}</h4>
+          <h4 className="text-sm font-medium truncate">{title}</h4>
           {description && (
             <p className="mt-0.5 text-xs text-muted-foreground line-clamp-2">
               {description}
@@ -49,7 +50,7 @@ function AssetCard({
           )}
         </div>
       </div>
-    </div>
+    </Card>
   )
 }
 

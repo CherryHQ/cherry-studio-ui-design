@@ -150,14 +150,14 @@ export function DataTableDemo() {
         {selected.size > 0 && (
           <div className="flex items-center gap-2 text-xs">
             <span className="text-muted-foreground">{selected.size} selected</span>
-            <Button variant="outline" size="sm" className="h-7 text-[11px]" onClick={() => setSelected(new Set())}>Clear</Button>
-            <Button variant="destructive" size="sm" className="h-7 text-[11px]"><Trash2 className="h-3 w-3 mr-1" />Delete</Button>
+            <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => setSelected(new Set())}>Clear</Button>
+            <Button variant="destructive" size="sm" className="h-7 text-xs"><Trash2 className="h-3 w-3 mr-1" />Delete</Button>
           </div>
         )}
       </div>
 
       {/* Table */}
-      <div className="rounded-xl border">
+      <div className="rounded-[12px] border">
         <Table>
           <TableHeader>
             <TableRow>

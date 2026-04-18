@@ -14,7 +14,7 @@ function InputGroup({ className, ...props }: React.ComponentProps<"div">) {
       data-slot="input-group"
       role="group"
       className={cn(
-        "group/input-group border-input dark:bg-input/30 shadow-xs relative flex w-full items-center overflow-hidden rounded-[var(--radius-button)] border-[1.5px] outline-none tracking-tight transition-[color,box-shadow]",
+        "group/input-group border-input dark:bg-input/30 shadow-xs relative flex w-full items-center overflow-hidden rounded-[var(--radius-button)] border-[1.5px] outline-none tracking-[-0.14px] transition-[color,box-shadow]",
         "h-10 has-[>textarea]:h-auto",
 
         // Variants based on alignment.
@@ -37,7 +37,7 @@ function InputGroup({ className, ...props }: React.ComponentProps<"div">) {
 }
 
 const inputGroupAddonVariants = cva(
-  "text-muted-foreground flex h-auto cursor-text select-none items-center justify-center gap-2 py-1.5 text-[13px] font-medium group-data-[disabled=true]/input-group:opacity-30 [&>kbd]:rounded-[calc(var(--radius)-5px)] [&>svg:not([class*='size-'])]:size-4",
+  "text-muted-foreground flex h-auto cursor-text select-none items-center justify-center gap-2 py-1.5 text-sm font-medium group-data-[disabled=true]/input-group:opacity-30 [&>kbd]:rounded-[calc(var(--radius)-5px)] [&>svg:not([class*='size-'])]:size-4",
   {
     variants: {
       align: {
@@ -80,7 +80,7 @@ function InputGroupAddon({
 }
 
 const inputGroupButtonVariants = cva(
-  "flex items-center gap-2 text-[13px] shadow-none",
+  "flex items-center gap-2 text-sm shadow-none",
   {
     variants: {
       size: {
@@ -121,7 +121,7 @@ function InputGroupText({ className, position, mode, ...props }: React.Component
   return (
     <span
       className={cn(
-        "text-muted-foreground flex items-center gap-2 whitespace-nowrap text-[13px] self-stretch",
+        "text-muted-foreground flex items-center gap-2 whitespace-nowrap text-sm self-stretch",
         "[&_svg:not([class*='size-'])]:size-4 [&_svg]:pointer-events-none",
         isIcon
           ? "pl-3"

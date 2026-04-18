@@ -10,8 +10,12 @@ import {
 } from "lucide-react"
 import { cn } from "../../lib/utils"
 import { Button } from "./button"
+import { Label } from "./label"
 import { Input } from "./input"
 import { Popover, PopoverContent, PopoverTrigger } from "./popover"
+import { Separator } from "./separator"
+import { ScrollArea } from "./scroll-area"
+import { Tabs, TabsList, TabsTrigger } from "./tabs"
 
 /* ===========================
    Types
@@ -76,9 +80,9 @@ function TypeSelect({ value, onChange }: { value: VarType; onChange: (t: VarType
           size="xs"
           className="w-full px-2 bg-accent/10 text-xs text-foreground hover:border-border/80"
         >
-          <Icon size={9} className={tc.colorClass} />
+          <Icon size={14} className={tc.colorClass} />
           <span className="flex-1 text-left truncate">{tc.label}</span>
-          <ChevronDown size={8} className="text-muted-foreground/30" />
+          <ChevronDown size={12} className="text-muted-foreground/30" />
         </Button>
       </PopoverTrigger>
       <PopoverContent align="start" className="p-1 w-auto min-w-[100px]">
@@ -195,28 +199,28 @@ function VarManager({
   }
 
   const filteredSystem = systemVars.filter(v =>
-    v.name.includes(search.toLowerCase()) || v.description.includes(search.toLowerCase())
+    v.name.toLowerCase().includes(search.toLowerCase()) || v.description.toLowerCase().includes(search.toLowerCase())
   )
   const filteredUser = userVars.filter(v =>
-    v.name.includes(search.toLowerCase()) || v.description.includes(search.toLowerCase())
+    v.name.toLowerCase().includes(search.toLowerCase()) || v.description.toLowerCase().includes(search.toLowerCase())
   )
 
   const showSystem = activeTab === "all" || activeTab === "system"
   const showCustom = activeTab === "all" || activeTab === "custom"
 
   return (
-    <div ref={ref} data-slot="var-manager" className="tracking-tight">
+    <div ref={ref} data-slot="var-manager" className="tracking-[-0.14px]">
       {/* Backdrop */}
       {!noBackdrop && (
         <div
-          className="absolute inset-0 z-[500] bg-black/15"
+          className="absolute inset-0 z-[var(--z-overlay)] bg-foreground/15"
           onClick={onClose}
         />
       )}
       {/* Drawer Panel */}
       <div
         className={cn(
-          "absolute z-[501] top-2 bottom-2 w-[320px] bg-popover rounded-[var(--radius-card)] border border-border shadow-popover flex flex-col overflow-hidden",
+          "absolute z-[var(--z-modal)] top-2 bottom-2 w-[320px] bg-popover rounded-[var(--radius-card)] border border-border shadow-popover flex flex-col overflow-hidden",
           !positionStyle && (position === "left" ? "left-2" : "right-2"),
           className,
         )}
@@ -231,7 +235,7 @@ function VarManager({
                 <Variable size={14} className="text-accent-violet" />
               </div>
               <div>
-                <h3 className="text-[13px] font-medium text-foreground">Variables</h3>
+                <h3 className="text-sm font-medium text-foreground">Variables</h3>
                 <p className="text-xs text-muted-foreground">{systemVars.length + userVars.length} variables</p>
               </div>
             </div>
@@ -257,39 +261,35 @@ function VarManager({
           </div>
 
           {/* Tabs */}
-          <div className="flex items-center gap-1">
-            {([
-              { id: "all" as const, label: "All", count: systemVars.length + userVars.length },
-              { id: "system" as const, label: "System", count: systemVars.length },
-              { id: "custom" as const, label: "Custom", count: userVars.length },
-            ]).map(tab => (
-              <Button
-                key={tab.id}
-                variant="ghost"
-                size="xs"
-                onClick={() => setActiveTab(tab.id)}
-                className={cn(
-                  "px-2.5 text-xs",
-                  activeTab === tab.id
-                    ? "bg-accent text-foreground"
-                    : "text-muted-foreground hover:text-foreground hover:bg-accent/25"
-                )}
-              >
-                <span>{tab.label}</span>
-                <span className="text-[11px] text-muted-foreground">{tab.count}</span>
-              </Button>
-            ))}
-          </div>
+          <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "all" | "system" | "custom")}>
+            <TabsList className="bg-muted/30 h-auto p-0.5">
+              {([
+                { id: "all" as const, label: "All", count: systemVars.length + userVars.length },
+                { id: "system" as const, label: "System", count: systemVars.length },
+                { id: "custom" as const, label: "Custom", count: userVars.length },
+              ]).map(tab => (
+                <TabsTrigger
+                  key={tab.id}
+                  value={tab.id}
+                  className="px-2.5 text-xs gap-1"
+                >
+                  <span>{tab.label}</span>
+                  <span className="text-xs text-muted-foreground">{tab.count}</span>
+                </TabsTrigger>
+              ))}
+            </TabsList>
+          </Tabs>
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto px-5 py-3">
+        <ScrollArea className="flex-1">
+        <div className="px-5 py-3">
           {/* System Variables */}
           {showSystem && filteredSystem.length > 0 && (
             <div className="mb-4">
               <div className="flex items-center gap-1.5 mb-2">
                 <span className="text-xs text-muted-foreground uppercase tracking-wider">System</span>
-                <div className="flex-1 h-px bg-border" />
+                <Separator className="flex-1" />
               </div>
               <div className="space-y-1">
                 {filteredSystem.map(v => {
@@ -306,13 +306,13 @@ function VarManager({
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-1.5">
                           <span className="text-xs text-foreground font-mono">{v.name}</span>
-                          <span className={cn("text-[11px] px-1.5 py-px rounded-full", VAR_TYPE_CONFIG[v.type].bgClass, VAR_TYPE_CONFIG[v.type].colorClass)}>
+                          <span className={cn("text-xs px-1.5 py-px rounded-full", VAR_TYPE_CONFIG[v.type].bgClass, VAR_TYPE_CONFIG[v.type].colorClass)}>
                             {VAR_TYPE_CONFIG[v.type].label}
                           </span>
                         </div>
                         <p className="text-xs text-muted-foreground mt-0.5 truncate">{v.description}</p>
                       </div>
-                      <Lock size={8} className="text-muted-foreground flex-shrink-0" />
+                      <Lock size={12} className="text-muted-foreground flex-shrink-0" />
                     </div>
                   )
                 })}
@@ -325,21 +325,21 @@ function VarManager({
             <div>
               <div className="flex items-center gap-1.5 mb-2">
                 <span className="text-xs text-muted-foreground uppercase tracking-wider">Custom</span>
-                <div className="flex-1 h-px bg-border" />
+                <Separator className="flex-1" />
                 <Button
                   variant="ghost"
                   size="xs"
                   onClick={handleAdd}
                   className="h-auto px-1 py-0 text-xs text-accent-violet hover:text-accent-violet/80"
                 >
-                  <Plus size={9} />
+                  <Plus size={12} />
                   <span>Add</span>
                 </Button>
               </div>
               <div className="space-y-1">
                 {filteredUser.length === 0 && (
                   <div className="text-center py-6">
-                    <Variable size={20} className="text-muted-foreground/15 mx-auto mb-2" />
+                    <Variable size={20} className="text-muted-foreground/40 mx-auto mb-2" />
                     <p className="text-xs text-muted-foreground">No custom variables</p>
                     <Button variant="ghost" size="xs" onClick={handleAdd} className="h-auto px-1 py-0 text-xs text-accent-violet hover:text-accent-violet/80 mt-1">
                       Create variable
@@ -366,11 +366,11 @@ function VarManager({
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-1.5">
                             <span className="text-xs text-foreground font-mono">{v.name || "unnamed"}</span>
-                            <span className={cn("text-[11px] px-1.5 py-px rounded-full", tc.bgClass, tc.colorClass)}>
+                            <span className={cn("text-xs px-1.5 py-px rounded-full", tc.bgClass, tc.colorClass)}>
                               {tc.label}
                             </span>
                             {v.defaultValue && (
-                              <span className="text-[11px] text-muted-foreground font-mono">= {v.defaultValue}</span>
+                              <span className="text-xs text-muted-foreground font-mono">= {v.defaultValue}</span>
                             )}
                           </div>
                           <p className="text-xs text-muted-foreground mt-0.5 truncate">{v.description || "No description"}</p>
@@ -385,7 +385,7 @@ function VarManager({
                             onClick={() => setEditingId(isEditing ? null : v.id)}
                             className="w-5 h-5 text-muted-foreground hover:text-foreground"
                           >
-                            <Settings2 size={9} />
+                            <Settings2 size={12} />
                           </Button>
                           <Button
                             variant="ghost"
@@ -393,7 +393,7 @@ function VarManager({
                             onClick={() => onRemove(v.id)}
                             className="w-5 h-5 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
                           >
-                            <Trash2 size={9} />
+                            <Trash2 size={12} />
                           </Button>
                         </div>
                       </div>
@@ -402,7 +402,7 @@ function VarManager({
                         <div className="px-3 pb-2 pt-1 space-y-2 ml-9">
                           <div className="grid grid-cols-2 gap-2">
                             <div>
-                              <label className="text-[11px] text-muted-foreground mb-0.5 block">Name</label>
+                              <Label className="text-xs text-muted-foreground mb-0.5 block">Name</Label>
                               <Input
                                 value={v.name}
                                 onChange={e => onUpdate(v.id, "name", e.target.value)}
@@ -411,7 +411,7 @@ function VarManager({
                               />
                             </div>
                             <div>
-                              <label className="text-[11px] text-muted-foreground mb-0.5 block">Type</label>
+                              <Label className="text-xs text-muted-foreground mb-0.5 block">Type</Label>
                               <div onClick={e => e.stopPropagation()}>
                                 <TypeSelect value={v.type} onChange={t => onUpdateType(v.id, t)} />
                               </div>
@@ -419,7 +419,7 @@ function VarManager({
                           </div>
                           <div className="grid grid-cols-2 gap-2">
                             <div>
-                              <label className="text-[11px] text-muted-foreground mb-0.5 block">Default</label>
+                              <Label className="text-xs text-muted-foreground mb-0.5 block">Default</Label>
                               {v.type === "secret" ? (
                                 <SecretInput
                                   value={v.defaultValue}
@@ -439,7 +439,7 @@ function VarManager({
                               )}
                             </div>
                             <div>
-                              <label className="text-[11px] text-muted-foreground mb-0.5 block">Description</label>
+                              <Label className="text-xs text-muted-foreground mb-0.5 block">Description</Label>
                               <Input
                                 value={v.description}
                                 onChange={e => onUpdate(v.id, "description", e.target.value)}
@@ -458,6 +458,7 @@ function VarManager({
             </div>
           )}
         </div>
+        </ScrollArea>
 
         {/* Footer */}
         <div className="flex-shrink-0 px-5 py-3 border-t border-border">

@@ -23,7 +23,7 @@ export function NotificationItemDemo() {
   avatar={<MessageCircle size={18} />}
   badgeIcon={<Bell size={9} />}
 />`}>
-        <div className="max-w-md border rounded-xl overflow-hidden bg-popover divide-y divide-border/50">
+        <div className="max-w-md border rounded-[12px] overflow-hidden bg-popover divide-y divide-border/50">
           <NotificationItem
             title="Unread with badge"
             description="This notification is unread and has a badge icon."

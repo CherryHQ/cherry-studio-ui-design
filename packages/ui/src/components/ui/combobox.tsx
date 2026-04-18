@@ -73,7 +73,7 @@ function Combobox({
           role="combobox"
           aria-expanded={open}
           disabled={disabled}
-          className={cn("w-full justify-between font-normal tracking-tight h-10 border-[1.5px]", className)}
+          className={cn("w-full justify-between font-normal tracking-[-0.14px] h-10 border-[1.5px]", className)}
           data-slot="combobox"
         >
           <span className="flex items-center gap-0.5 overflow-hidden">{triggerLabel}</span>

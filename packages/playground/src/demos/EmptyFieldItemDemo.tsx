@@ -186,14 +186,14 @@ import { Inbox } from "lucide-react"
             <Field orientation="horizontal">
               <Checkbox id="f-terms" checked={terms} onCheckedChange={(v) => setTerms(v === true)} />
               <FieldContent>
-                <FieldTitle>Accept terms {terms && <Badge variant="outline" className="ml-1 text-[9px]">Accepted</Badge>}</FieldTitle>
+                <FieldTitle>Accept terms {terms && <Badge variant="outline" className="ml-1 text-xs">Accepted</Badge>}</FieldTitle>
                 <FieldDescription>You agree to our Terms of Service and Privacy Policy.</FieldDescription>
               </FieldContent>
             </Field>
             <Field orientation="horizontal">
               <Checkbox id="f-news" checked={newsletter} onCheckedChange={(v) => setNewsletter(v === true)} />
               <FieldContent>
-                <FieldTitle>Newsletter {newsletter && <Badge variant="outline" className="ml-1 text-[9px]">Subscribed</Badge>}</FieldTitle>
+                <FieldTitle>Newsletter {newsletter && <Badge variant="outline" className="ml-1 text-xs">Subscribed</Badge>}</FieldTitle>
                 <FieldDescription>Receive product updates and news.</FieldDescription>
               </FieldContent>
             </Field>

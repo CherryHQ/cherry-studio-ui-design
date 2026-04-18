@@ -88,7 +88,7 @@ const items: TreeNavItem[] = [
 ]
 
 <TreeNav items={items} activeId="app.tsx" onSelect={setActive} />`}>
-        <div className="max-w-xs rounded-xl border bg-card p-2">
+        <div className="max-w-xs rounded-[12px] border bg-card p-2">
           <TreeNav
             items={fileTree}
             activeId={fileActive}
@@ -99,7 +99,7 @@ const items: TreeNavItem[] = [
       </Section>
 
       <Section title="Knowledge Base Tree">
-        <div className="max-w-xs rounded-xl border bg-card p-2">
+        <div className="max-w-xs rounded-[12px] border bg-card p-2">
           <TreeNav
             items={knowledgeTree}
             activeId={kbActive}
@@ -110,7 +110,7 @@ const items: TreeNavItem[] = [
       </Section>
 
       <Section title="With Groups">
-        <div className="max-w-xs rounded-xl border bg-card p-2 space-y-1">
+        <div className="max-w-xs rounded-[12px] border bg-card p-2 space-y-1">
           <TreeNavGroup title="Favorites">
             <TreeNav
               items={[
@@ -149,7 +149,7 @@ const items: TreeNavItem[] = [
       </Section>
 
       <Section title="Deeply Nested">
-        <div className="max-w-xs rounded-xl border bg-card p-2">
+        <div className="max-w-xs rounded-[12px] border bg-card p-2">
           <TreeNav
             items={[
               { id: "root", label: "Root", icon: <Folder />, children: [

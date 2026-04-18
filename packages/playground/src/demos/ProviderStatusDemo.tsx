@@ -86,7 +86,7 @@ export function ProviderStatusDemo() {
                       <span className="text-lg">{provider.icon}</span>
                       <span className="text-xs font-medium">{provider.name}</span>
                     </div>
-                    <Badge variant="outline" className={`text-[9px] ${cfg.color}`}>
+                    <Badge variant="outline" className={`text-xs ${cfg.color}`}>
                       {cfg.label}
                     </Badge>
                   </div>

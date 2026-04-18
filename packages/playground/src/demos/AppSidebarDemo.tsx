@@ -36,7 +36,7 @@ export function AppSidebarDemo() {
   activeTabId="home"
   onMenuItemClick={(id) => setActiveItem(id)}
 />`}>
-        <div className="h-[420px] border rounded-xl overflow-hidden flex bg-background">
+        <div className="h-[420px] border rounded-[12px] overflow-hidden flex bg-background">
           <AppSidebar
             width={240}
             setWidth={() => {}}

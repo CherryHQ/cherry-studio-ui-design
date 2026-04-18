@@ -38,12 +38,12 @@ export function SidebarDemo() {
     </SidebarContent>
   </Sidebar>
 </SidebarProvider>`}>
-        <div className="h-[500px] rounded-xl border overflow-hidden relative" style={{ transform: "translate(0)" }}>
+        <div className="h-[500px] rounded-[12px] border overflow-hidden relative" style={{ transform: "translate(0)" }}>
           <SidebarProvider defaultOpen={true}>
             <Sidebar>
               <SidebarHeader className="p-4">
                 <div className="flex items-center gap-2">
-                  <div className="w-7 h-7 rounded-xl bg-primary flex items-center justify-center text-primary-foreground text-xs font-bold">C</div>
+                  <div className="w-7 h-7 rounded-[12px] bg-primary flex items-center justify-center text-primary-foreground text-xs font-bold">C</div>
                   <span className="text-sm font-semibold">Cherry Studio</span>
                 </div>
               </SidebarHeader>
@@ -95,7 +95,7 @@ export function SidebarDemo() {
                           <Puzzle className="h-4 w-4" />
                           <span>Extensions</span>
                           <SidebarMenuBadge>
-                            <Badge variant="secondary" className="text-[9px] px-1 h-4">New</Badge>
+                            <Badge variant="secondary" className="text-xs px-1 h-4">New</Badge>
                           </SidebarMenuBadge>
                         </SidebarMenuButton>
                       </SidebarMenuItem>
@@ -174,11 +174,11 @@ export function SidebarDemo() {
       </Section>
 
       <Section title="Collapsed Sidebar">
-        <div className="h-[400px] rounded-xl border overflow-hidden relative" style={{ transform: "translate(0)" }}>
+        <div className="h-[400px] rounded-[12px] border overflow-hidden relative" style={{ transform: "translate(0)" }}>
           <SidebarProvider defaultOpen={false}>
             <Sidebar collapsible="icon">
               <SidebarHeader className="p-2 flex items-center justify-center">
-                <div className="w-7 h-7 rounded-xl bg-primary flex items-center justify-center text-primary-foreground text-xs font-bold">C</div>
+                <div className="w-7 h-7 rounded-[12px] bg-primary flex items-center justify-center text-primary-foreground text-xs font-bold">C</div>
               </SidebarHeader>
               <SidebarContent>
                 <SidebarGroup>

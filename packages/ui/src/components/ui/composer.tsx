@@ -87,6 +87,14 @@ function Composer({
     }
   }, [inputValue, disabled, isLoading, isControlled, onSendMessage])
 
+  // Sync textarea height when value is cleared externally
+  React.useEffect(() => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = "auto"
+      textareaRef.current.style.height = Math.min(textareaRef.current.scrollHeight, maxHeight ?? 140) + "px"
+    }
+  }, [inputValue, maxHeight])
+
   const handleFormSubmit = React.useCallback(
     (e: React.FormEvent) => {
       e.preventDefault()
@@ -179,10 +187,11 @@ function Composer({
     >
       <div
         className={cn(
-          "relative border bg-background shadow-sm focus-within:border-border/80 transition-all duration-150",
+          "relative border border-border bg-popover backdrop-blur-[6px] shadow-popover focus-within:border-border/80 transition-all duration-[var(--duration-normal)]",
+          "before:absolute before:inset-0 before:rounded-[inherit] before:shadow-[inset_0_2px_0_0_var(--surface-01,white)] dark:before:shadow-none before:pointer-events-none",
           isRounded
-            ? "rounded-[var(--radius-card)] border-border/40 bg-card/80 shadow-popover backdrop-blur-[6px] focus-within:shadow-popover"
-            : "rounded-[var(--radius-button)] border-border/50",
+            ? "rounded-[var(--radius-card)]"
+            : "rounded-[var(--radius-button)]",
           isDragOver && "border-primary ring-[3px] ring-primary/20"
         )}
       >
@@ -196,7 +205,7 @@ function Composer({
           autoFocus={autoFocus}
           disabled={disabled}
           className={cn(
-            "w-full bg-transparent text-[15px] tracking-tight leading-6 text-foreground placeholder:text-muted-foreground border-0 shadow-none focus-visible:ring-0 rounded-none p-0 resize-none max-h-36",
+            "w-full bg-transparent text-base tracking-[-0.14px] leading-6 text-foreground placeholder:text-muted-foreground border-0 shadow-none focus-visible:ring-0 rounded-none p-0 resize-none max-h-36",
             isRounded
               ? "min-h-11 px-4 pt-3.5 pb-10 placeholder:text-muted-foreground"
               : "min-h-9 px-3.5 pt-2.5 pb-9"
@@ -209,7 +218,7 @@ function Composer({
                 <Paperclip className="size-3" />
                 <span className="truncate max-w-[120px]">{att.name}</span>
                 {onRemoveAttachment && (
-                  <Button variant="ghost" size="icon-xs" onClick={() => onRemoveAttachment(att.id)} className="size-4">
+                  <Button variant="ghost" size="icon-xs" onClick={() => onRemoveAttachment(att.id)} aria-label="Remove attachment" className="size-4">
                     <X className="size-3" />
                   </Button>
                 )}
@@ -248,6 +257,7 @@ function Composer({
                 size="icon"
                 onClick={handleSend}
                 disabled={!canSend}
+                aria-label="Send message"
                 className={cn(
                   "size-10 active:scale-[0.92]",
                   canSend

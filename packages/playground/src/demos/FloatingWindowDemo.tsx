@@ -40,7 +40,7 @@ export function FloatingWindowDemo() {
   onClose={(id) => handleClose(id)}
   onReattach={(win) => handleReattach(win)}
 />`}>
-        <div className="relative h-[360px] border rounded-xl overflow-hidden bg-muted/20">
+        <div className="relative h-[360px] border rounded-[12px] overflow-hidden bg-muted/20">
           <p className="absolute top-3 left-3 text-xs text-muted-foreground">
             Drag the title bar to move windows. {windows.length} window(s) open.
           </p>

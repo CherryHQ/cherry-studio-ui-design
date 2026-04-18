@@ -56,7 +56,7 @@ import { Search } from "lucide-react"
           <InputGroup>
             <InputGroupText mode="icon"><Search className="h-4 w-4" /></InputGroupText>
             <InputGroupInput placeholder="Search models..." />
-            <Button size="xs" className="mr-1.5 shrink-0 h-7 px-3 text-[11px]">Search</Button>
+            <Button size="xs" className="mr-1.5 shrink-0 h-7 px-3 text-xs">Search</Button>
           </InputGroup>
           <InputGroup>
             <InputGroupInput readOnly defaultValue="sk-xxxx...xxxx" className="font-mono text-xs" />

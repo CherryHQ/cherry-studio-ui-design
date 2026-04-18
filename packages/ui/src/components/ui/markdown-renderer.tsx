@@ -3,8 +3,46 @@
 import * as React from "react"
 import ReactMarkdown from "react-markdown"
 import remarkGfm from "remark-gfm"
+import remarkMath from "remark-math"
 import rehypeHighlight from "rehype-highlight"
+import rehypeKatex from "rehype-katex"
 import { cn } from "../../lib/utils"
+import { ScrollArea } from "./scroll-area"
+import { CodeBlock } from "./code-block"
+import { Skeleton } from "./skeleton"
+
+/* ---------- Mermaid (lazy-loaded) ---------- */
+
+function MermaidBlock({ code }: { code: string }) {
+  const [svg, setSvg] = React.useState("")
+  const [error, setError] = React.useState("")
+
+  React.useEffect(() => {
+    let cancelled = false
+    import("mermaid").then(async (mermaid) => {
+      mermaid.default.initialize({ startOnLoad: false, theme: "neutral" })
+      try {
+        const { svg: rendered } = await mermaid.default.render(`mermaid-${Date.now()}`, code)
+        if (!cancelled) setSvg(rendered)
+      } catch (e) {
+        if (!cancelled) setError(String(e))
+      }
+    })
+    return () => { cancelled = true }
+  }, [code])
+
+  if (error) return <CodeBlock code={code} language="text" />
+  if (!svg) return <Skeleton className="h-32 w-full rounded-[var(--radius-button)]" />
+
+  return (
+    <div
+      className="my-4 flex justify-center overflow-x-auto"
+      dangerouslySetInnerHTML={{ __html: svg }}
+    />
+  )
+}
+
+/* ---------- MarkdownRenderer ---------- */
 
 export interface MarkdownRendererProps {
   /** Markdown content string */
@@ -15,38 +53,42 @@ export interface MarkdownRendererProps {
 
 function MarkdownRenderer({ content, className }: MarkdownRendererProps) {
   return (
-    <div data-slot="markdown-renderer" className={cn("prose-cherry tracking-tight", className)}>
+    <div data-slot="markdown-renderer" className={cn("prose-cherry tracking-[-0.14px]", className)}>
       <ReactMarkdown
-        remarkPlugins={[remarkGfm]}
-        rehypePlugins={[rehypeHighlight]}
+        remarkPlugins={[remarkGfm, remarkMath]}
+        rehypePlugins={[rehypeHighlight, rehypeKatex]}
         components={{
           code({ className: codeClassName, children, ...rest }) {
-            const isInline = !codeClassName
+            const match = /language-(\w+)/.exec(codeClassName || "")
+            const language = match ? match[1] : ""
+            const isInline = !match && !String(children).includes("\n")
+
             if (isInline) {
               return (
                 <code
-                  className="bg-muted px-1 py-0.5 rounded-[var(--radius-kbd)] text-[13px] font-mono"
+                  className="bg-muted/50 px-1.5 py-0.5 rounded-[var(--radius-kbd)] text-xs font-mono"
                   {...rest}
                 >
                   {children}
                 </code>
               )
             }
+
+            if (language === "mermaid") {
+              return <MermaidBlock code={String(children).trim()} />
+            }
+
             return (
-              <code className={cn("text-[13px] font-mono", codeClassName)} {...rest}>
-                {children}
-              </code>
+              <CodeBlock
+                code={String(children).replace(/\n$/, "")}
+                language={language}
+                showLineNumbers
+              />
             )
           },
-          pre({ children, ...rest }) {
-            return (
-              <pre
-                className="my-2 rounded-[var(--radius-button)] overflow-x-auto bg-muted/20 border border-border px-3 py-2.5 text-xs leading-relaxed font-mono"
-                {...rest}
-              >
-                {children}
-              </pre>
-            )
+          pre({ children }) {
+            // When code blocks are handled by CodeBlock, pre is just a pass-through
+            return <>{children}</>
           },
           a({ children, ...rest }) {
             return (
@@ -100,11 +142,11 @@ function MarkdownRenderer({ content, className }: MarkdownRendererProps) {
           },
           table({ children, ...rest }) {
             return (
-              <div className="my-3 overflow-x-auto">
-                <table className="w-full border-collapse text-[13px]" {...rest}>
+              <ScrollArea className="my-3">
+                <table className="w-full border-collapse text-sm" {...rest}>
                   {children}
                 </table>
-              </div>
+              </ScrollArea>
             )
           },
           thead({ children, ...rest }) {

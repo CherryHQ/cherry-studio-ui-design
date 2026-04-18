@@ -53,7 +53,7 @@ function SimpleTooltip({
           side={side}
           sideOffset={sideOffset}
           className={cn(
-            "z-50 text-xs px-2.5 py-1.5 rounded-[var(--radius-button)] max-w-60 tracking-tight leading-relaxed",
+            "z-[var(--z-tooltip)] text-xs px-2.5 py-1.5 rounded-[var(--radius-button)] max-w-60 tracking-[-0.14px] leading-relaxed",
             className
           )}
         >

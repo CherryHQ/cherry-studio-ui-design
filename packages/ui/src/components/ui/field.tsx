@@ -55,7 +55,7 @@ function FieldGroup({ className, ...props }: React.ComponentProps<"div">) {
 }
 
 const fieldVariants = cva(
-  "group/field data-[invalid=true]:text-destructive flex w-full gap-3 tracking-tight",
+  "group/field data-[invalid=true]:text-destructive flex w-full gap-3 tracking-[-0.14px]",
   {
     variants: {
       orientation: {
@@ -143,7 +143,7 @@ function FieldDescription({ className, ...props }: React.ComponentProps<"p">) {
     <p
       data-slot="field-description"
       className={cn(
-        "text-muted-foreground text-[13px] font-normal leading-normal group-has-[[data-orientation=horizontal]]/field:text-balance",
+        "text-muted-foreground text-sm font-normal leading-normal group-has-[[data-orientation=horizontal]]/field:text-balance",
         "nth-last-2:-mt-1 last:mt-0 [[data-variant=legend]+&]:-mt-1.5",
         "[&>a:hover]:text-accent-blue [&>a]:underline [&>a]:underline-offset-4",
         className
@@ -165,7 +165,7 @@ function FieldSeparator({
       data-slot="field-separator"
       data-content={!!children}
       className={cn(
-        "relative -my-2 h-5 text-[13px] group-data-[variant=outline]/field-group:-mb-2",
+        "relative -my-2 h-5 text-sm group-data-[variant=outline]/field-group:-mb-2",
         className
       )}
       {...props}

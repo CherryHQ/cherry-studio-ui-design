@@ -84,7 +84,7 @@ const options = [
       </Section>
 
       <Section title="Practical: Settings Integration">
-        <div className="max-w-md rounded-xl border bg-card p-4 space-y-0">
+        <div className="max-w-md rounded-[12px] border bg-card p-4 space-y-0">
           <SectionHeader title="Preferences" />
           <FormRow label="Default Model" desc="Model used for new conversations">
             <InlineSelect value={model} options={modelOptions} onChange={setModel} />

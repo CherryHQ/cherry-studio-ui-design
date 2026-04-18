@@ -38,14 +38,14 @@ export function ScrollAreaDemo() {
         { name: "type", type: '"auto" | "always" | "scroll" | "hover"', default: '"hover"', description: "Scrollbar visibility" },
       ]} code={`import { ScrollArea } from "@cherry-studio/ui"
 
-<ScrollArea className="h-72 w-48 rounded-md border">
+<ScrollArea className="h-72 w-48 rounded-[12px] border">
   <div className="p-4">
     {items.map((item) => (
       <div key={item}>{item}</div>
     ))}
   </div>
 </ScrollArea>`}>
-        <ScrollArea className="h-72 w-48 rounded-xl border">
+        <ScrollArea className="h-72 w-48 rounded-[12px] border">
           <div className="p-4">
             <h4 className="mb-4 text-sm font-medium leading-none">Tags</h4>
             {tags.map((tag, i) => (
@@ -59,11 +59,11 @@ export function ScrollAreaDemo() {
       </Section>
 
       <Section title="Horizontal Scroll">
-        <ScrollArea className="w-full max-w-lg whitespace-nowrap rounded-xl border">
+        <ScrollArea className="w-full max-w-lg whitespace-nowrap rounded-[12px] border">
           <div className="flex w-max space-x-4 p-4">
             {artworks.map((artwork) => (
               <div key={artwork.title} className="shrink-0" style={{ width: artwork.width }}>
-                <div className="overflow-hidden rounded-xl">
+                <div className="overflow-hidden rounded-[12px]">
                   <div
                     className="bg-gradient-to-br from-primary/10 to-primary/30 flex items-center justify-center"
                     style={{ height: 120, width: artwork.width }}
@@ -83,14 +83,14 @@ export function ScrollAreaDemo() {
       </Section>
 
       <Section title="Practical: File List">
-        <ScrollArea className="h-80 w-full max-w-md rounded-xl border">
+        <ScrollArea className="h-80 w-full max-w-md rounded-[12px] border">
           <div className="p-3 space-y-1">
             {files.map((file) => {
               const Icon = file.icon
               return (
                 <div
                   key={file.name}
-                  className="flex items-center gap-3 rounded-xl px-3 py-2 hover:bg-accent cursor-pointer transition-colors"
+                  className="flex items-center gap-3 rounded-[12px] px-3 py-2 hover:bg-accent cursor-pointer transition-colors"
                 >
                   <Icon className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                   <div className="flex-1 min-w-0">
@@ -106,7 +106,7 @@ export function ScrollAreaDemo() {
       </Section>
 
       <Section title="Custom Height with Long Content">
-        <ScrollArea className="h-48 w-full max-w-md rounded-xl border p-4">
+        <ScrollArea className="h-48 w-full max-w-md rounded-[12px] border p-4">
           <div className="space-y-4 text-sm">
             <h4 className="font-semibold">Cherry Studio v2.0 Release Notes</h4>
             <p className="text-muted-foreground">

@@ -78,7 +78,7 @@ function EmptyTitle({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="empty-title"
-      className={cn("text-lg font-medium tracking-tight", className)}
+      className={cn("text-lg font-medium tracking-[-0.14px]", className)}
       {...props}
     />
   )
@@ -89,7 +89,7 @@ function EmptyDescription({ className, ...props }: React.ComponentProps<"p">) {
     <div
       data-slot="empty-description"
       className={cn(
-        "text-muted-foreground [&>a:hover]:text-accent-blue text-[13px]/relaxed [&>a]:underline [&>a]:underline-offset-4",
+        "text-muted-foreground [&>a:hover]:text-accent-blue text-sm/relaxed [&>a]:underline [&>a]:underline-offset-4",
         className
       )}
       {...props}
@@ -102,7 +102,7 @@ function EmptyContent({ className, ...props }: React.ComponentProps<"div">) {
     <div
       data-slot="empty-content"
       className={cn(
-        "flex w-full min-w-0 max-w-sm flex-col items-center gap-4 text-balance text-[13px]",
+        "flex w-full min-w-0 max-w-sm flex-col items-center gap-4 text-balance text-sm",
         className
       )}
       {...props}
@@ -249,7 +249,7 @@ function EmptyState({
         <div className="w-9 h-9 rounded-[var(--radius-button)] bg-muted flex items-center justify-center mb-3">
           <Icon size={16} className="text-muted-foreground" />
         </div>
-        <p className="text-[11px] text-muted-foreground mb-1">{title}</p>
+        <p className="text-xs text-muted-foreground mb-1">{title}</p>
         {description && (
           <p className="text-xs text-muted-foreground/70 text-center max-w-[200px]">
             {description}
@@ -282,9 +282,9 @@ function EmptyState({
       <div className="w-14 h-14 rounded-[var(--radius-card)] bg-muted/60 border border-border flex items-center justify-center mb-5">
         <Icon size={24} className="text-muted-foreground" />
       </div>
-      <h3 className="text-[13px] text-foreground/70 mb-1.5">{title}</h3>
+      <h3 className="text-sm text-foreground/70 mb-1.5">{title}</h3>
       {description && (
-        <p className="text-[11px] text-muted-foreground text-center max-w-[280px] mb-5 leading-relaxed">
+        <p className="text-xs text-muted-foreground text-center max-w-[280px] mb-5 leading-relaxed">
           {description}
         </p>
       )}
@@ -294,7 +294,7 @@ function EmptyState({
             variant="ghost"
             size="sm"
             onClick={onAction}
-            className="bg-muted text-muted-foreground text-[11px] hover:bg-accent"
+            className="bg-muted text-muted-foreground text-xs hover:bg-accent"
           >
             {actionLabel}
           </Button>
@@ -304,7 +304,7 @@ function EmptyState({
             variant="ghost"
             size="sm"
             onClick={onSecondary}
-            className="bg-muted/60 text-muted-foreground text-[11px] hover:bg-accent"
+            className="bg-muted/60 text-muted-foreground text-xs hover:bg-accent"
           >
             {secondaryLabel}
           </Button>

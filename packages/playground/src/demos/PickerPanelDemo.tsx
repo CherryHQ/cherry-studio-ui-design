@@ -49,7 +49,7 @@ export function PickerPanelDemo() {
   onValueChange={setModel}
   searchPlaceholder="Search models..."
 />`}>
-        <div className="max-w-md rounded-xl border h-72">
+        <div className="max-w-md rounded-[12px] border h-72">
           <PickerPanel
             items={modelItems}
             value={model}
@@ -61,7 +61,7 @@ export function PickerPanelDemo() {
       </Section>
 
       <Section title="Model Picker — Multi Select">
-        <div className="max-w-md rounded-xl border h-72">
+        <div className="max-w-md rounded-[12px] border h-72">
           <PickerPanel
             items={modelItems}
             values={models}
@@ -73,7 +73,7 @@ export function PickerPanelDemo() {
       </Section>
 
       <Section title="Assistant Picker — Flat List (No Groups)">
-        <div className="max-w-sm rounded-xl border">
+        <div className="max-w-sm rounded-[12px] border">
           <PickerPanel
             items={assistantItems}
             value={assistant}

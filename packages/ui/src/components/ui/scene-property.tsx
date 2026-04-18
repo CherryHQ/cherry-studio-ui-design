@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import { cn } from "../../lib/utils"
+import { Card } from './card'
 
 export interface ScenePropertyProps extends React.HTMLAttributes<HTMLDivElement> {
   label: string
@@ -23,12 +24,12 @@ function SceneProperty({
   const isAdd = type === "add"
 
   return (
-    <div
+    <Card
       ref={ref}
       data-slot="scene-property"
       data-type={type || undefined}
       className={cn(
-        "rounded-[var(--radius-button)] border bg-card p-3 tracking-tight hover:bg-accent transition-colors cursor-pointer",
+        "rounded-[var(--radius-button)] gap-0 p-3 tracking-[-0.14px] hover:bg-accent transition-colors cursor-pointer",
         isAdd && "border-dashed",
         className
       )}
@@ -58,7 +59,7 @@ function SceneProperty({
           )}
         </div>
       </div>
-    </div>
+    </Card>
   )
 }
 

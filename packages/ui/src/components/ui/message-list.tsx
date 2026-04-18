@@ -1,8 +1,11 @@
 "use client"
 
 import * as React from "react"
+import { useVirtualizer } from "@tanstack/react-virtual"
 import { cn } from "../../lib/utils"
 import type { ChatMessage, ToolCallResult } from "../../types/ai"
+import { Badge } from "./badge"
+import { ScrollArea } from "./scroll-area"
 import { MarkdownRenderer } from "./markdown-renderer"
 
 /* ----------------------------- MessageList ----------------------------- */
@@ -12,10 +15,21 @@ export interface MessageListProps extends React.HTMLAttributes<HTMLDivElement> {
   scrollDeps?: unknown[]
   /** Header content rendered before messages */
   header?: React.ReactNode
+  /** Enable virtual scrolling for large lists (recommended when > 100 messages) */
+  virtualize?: boolean
 }
 
-function MessageList({ scrollDeps = [], header, className, children, ref, ...props }: MessageListProps & { ref?: React.Ref<HTMLDivElement> }) {
+function MessageList({ scrollDeps = [], header, virtualize = false, className, children, ref, ...props }: MessageListProps & { ref?: React.Ref<HTMLDivElement> }) {
   const scrollRef = React.useRef<HTMLDivElement>(null)
+  const items = React.Children.toArray(children)
+
+  const virtualizer = useVirtualizer({
+    count: items.length,
+    getScrollElement: () => scrollRef.current,
+    estimateSize: () => 120,
+    overscan: 5,
+    enabled: virtualize,
+  })
 
   React.useEffect(() => {
     if (scrollRef.current) {
@@ -30,16 +44,33 @@ function MessageList({ scrollDeps = [], header, className, children, ref, ...pro
   return (
     <div ref={ref} data-slot="message-list" className="flex-1 min-h-0 flex flex-col" {...props}>
       {header}
-      <div
-        ref={scrollRef}
-        className={cn(
-          "flex-1 overflow-y-auto px-3.5 py-4 space-y-4 scrollbar-thin",
-          "[&::-webkit-scrollbar]:w-[3px] [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-border/30 [&::-webkit-scrollbar-thumb]:rounded-full",
-          className
+      <ScrollArea ref={scrollRef} className={cn("flex-1", className)}>
+        {virtualize ? (
+          <div className="px-3.5 py-4" style={{ height: virtualizer.getTotalSize(), position: "relative" }}>
+            {virtualizer.getVirtualItems().map((virtualItem) => (
+              <div
+                key={virtualItem.key}
+                data-index={virtualItem.index}
+                ref={virtualizer.measureElement}
+                style={{
+                  position: "absolute",
+                  top: 0,
+                  left: 0,
+                  width: "100%",
+                  transform: `translateY(${virtualItem.start}px)`,
+                  paddingBottom: 16,
+                }}
+              >
+                {items[virtualItem.index]}
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="px-3.5 py-4 space-y-4">
+            {children}
+          </div>
         )}
-      >
-        {children}
-      </div>
+      </ScrollArea>
     </div>
   )
 }
@@ -95,10 +126,10 @@ function MessageBubble({ role, avatar, name, timestamp, actions, message, isStre
         )}
         <div
           className={cn(
-            "rounded-[var(--radius-card)] px-3.5 py-2.5 text-[13px] leading-relaxed tracking-tight max-w-[85%]",
+            "rounded-[var(--radius-card)] px-3.5 py-2.5 text-sm leading-relaxed tracking-[-0.14px] max-w-[85%]",
             isUser
-              ? "bg-primary text-primary-foreground rounded-tr-[6px]"
-              : "bg-muted/60 text-foreground rounded-tl-[6px]"
+              ? "bg-primary text-primary-foreground rounded-tr-[var(--radius-kbd)]"
+              : "bg-card border border-border/50 text-foreground rounded-tl-[var(--radius-kbd)]"
           )}
         >
           {children ?? (() => {
@@ -123,15 +154,15 @@ function MessageBubble({ role, avatar, name, timestamp, actions, message, isStre
               >
                 <div className="flex items-center gap-1.5 text-muted-foreground">
                   <span className="font-mono font-medium text-foreground">{tr.toolName}</span>
-                  <span className={cn(
-                    "rounded-full px-1.5 py-0.5 text-xs font-medium",
-                    tr.status === "done" && "bg-success-muted text-success",
-                    tr.status === "error" && "bg-error-muted text-error",
-                    tr.status === "running" && "bg-info-muted text-info",
-                    tr.status === "pending" && "bg-muted text-muted-foreground"
+                  <Badge variant="outline" className={cn(
+                    "text-xs",
+                    tr.status === "done" && "bg-success-muted text-success border-success/20",
+                    tr.status === "error" && "bg-error-muted text-error border-error/20",
+                    tr.status === "running" && "bg-info-muted text-info border-info/20",
+                    tr.status === "pending" && "bg-muted text-muted-foreground border-border"
                   )}>
                     {tr.status}
-                  </span>
+                  </Badge>
                 </div>
                 {tr.status === "done" && tr.result !== undefined && (
                   <p className="mt-1 text-muted-foreground font-mono truncate">

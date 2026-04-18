@@ -4,6 +4,7 @@ import * as React from "react"
 import { Code2, CheckCircle2, XCircle, Clock } from "lucide-react"
 import { cn } from "../../lib/utils"
 import { Button } from "./button"
+import { ScrollArea } from "./scroll-area"
 
 export interface FunctionCallUIProps {
   /** Name of the function being called */
@@ -57,7 +58,7 @@ function FunctionCallUI({
     <div
       data-slot="function-call-ui"
       className={cn(
-        "rounded-[var(--radius-button)] border border-border bg-card p-4 tracking-tight",
+        "rounded-[var(--radius-button)] border border-border bg-card p-4 tracking-[-0.14px]",
         className
       )}
     >
@@ -83,19 +84,21 @@ function FunctionCallUI({
 
       {/* Description */}
       {description && (
-        <p className="text-[13px] text-muted-foreground mb-2 leading-relaxed">
+        <p className="text-sm text-muted-foreground mb-2 leading-relaxed">
           {description}
         </p>
       )}
 
       {/* Arguments */}
       {hasArgs && (
-        <pre
-          data-slot="function-call-args"
-          className="text-xs font-mono bg-muted/50 rounded-[var(--radius-button)] p-3 mb-3 overflow-x-auto text-muted-foreground leading-relaxed"
-        >
-          {JSON.stringify(args, null, 2)}
-        </pre>
+        <ScrollArea className="rounded-[var(--radius-button)] bg-muted/50 mb-3">
+          <pre
+            data-slot="function-call-args"
+            className="text-xs font-mono p-3 text-muted-foreground leading-relaxed"
+          >
+            {JSON.stringify(args, null, 2)}
+          </pre>
+        </ScrollArea>
       )}
 
       {/* Approve / Reject buttons */}

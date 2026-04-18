@@ -119,7 +119,7 @@ function MessageActions({
             className={cn(
               "size-7",
               feedbackValue === "down"
-                ? "text-destructive bg-destructive/10"
+                ? "text-destructive bg-destructive/20"
                 : "text-muted-foreground hover:text-foreground"
             )}
             aria-label="Thumbs down"

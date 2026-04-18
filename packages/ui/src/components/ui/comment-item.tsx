@@ -1,7 +1,8 @@
 "use client"
 
 import * as React from "react"
-import { cn } from "@/lib/utils"
+import { cn } from "../../lib/utils"
+import { Avatar } from './avatar'
 
 export interface CommentItemProps {
   avatar?: React.ReactNode
@@ -26,12 +27,12 @@ function CommentItem({
       className={cn("flex gap-3 py-4 border-t first:border-t-0", className)}
     >
       {avatar && (
-        <div
+        <Avatar
           data-slot="comment-item-avatar"
-          className="size-8 rounded-full flex-shrink-0 overflow-hidden"
+          className="size-8 flex-shrink-0"
         >
           {avatar}
-        </div>
+        </Avatar>
       )}
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2">
@@ -52,7 +53,7 @@ function CommentItem({
         </div>
         <p
           data-slot="comment-item-content"
-          className="text-[13px] tracking-tight mt-1"
+          className="text-sm tracking-[-0.14px] mt-1"
         >
           {content}
         </p>

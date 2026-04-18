@@ -34,29 +34,29 @@ function PlanCard({
       ref={ref}
       data-slot="plan-card"
       className={cn(
-        "p-6 gap-4 tracking-tight",
+        "p-6 gap-4 tracking-[-0.14px]",
         highlighted && "border-primary shadow-popover",
         className
       )}
       {...props}
     >
       <div className="space-y-1">
-        <h3 className="text-[15px] font-medium">{name}</h3>
+        <h3 className="text-base font-medium">{name}</h3>
         {description && (
-          <p className="text-[13px] text-muted-foreground">{description}</p>
+          <p className="text-sm text-muted-foreground">{description}</p>
         )}
       </div>
 
       <div className="flex items-baseline gap-0.5">
         <span className="text-3xl font-bold">{price}</span>
         {period && (
-          <span className="text-[11px] text-muted-foreground">{period}</span>
+          <span className="text-xs text-muted-foreground">{period}</span>
         )}
       </div>
 
       <ul className="flex flex-col gap-2 flex-1">
         {features.map((feature) => (
-          <li key={feature} className="flex items-center gap-2 text-[13px]">
+          <li key={feature} className="flex items-center gap-2 text-sm">
             <svg
               className="h-4 w-4 shrink-0 text-primary"
               viewBox="0 0 16 16"
@@ -78,7 +78,7 @@ function PlanCard({
         variant={highlighted ? "default" : "outline"}
         onClick={onAction}
         className={cn(
-          "mt-2 w-full text-[13px]",
+          "mt-2 w-full text-sm",
           highlighted && "bg-primary text-primary-foreground hover:bg-primary/90"
         )}
       >

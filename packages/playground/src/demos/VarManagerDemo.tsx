@@ -63,7 +63,7 @@ export function VarManagerDemo() {
           <div className="flex items-center justify-center h-full">
             <Button variant="ghost"
               onClick={() => setOpen(true)}
-              className="px-4 py-2 rounded-xl bg-primary text-primary-foreground text-sm"
+              className="px-4 py-2 rounded-[12px] bg-primary text-primary-foreground text-sm"
             >
               Open Variable Manager
             </Button>
@@ -83,7 +83,7 @@ export function VarManagerDemo() {
           />
         )}
         {lastInserted && (
-          <div className="absolute bottom-3 left-3 text-xs text-muted-foreground bg-card border rounded-xl px-3 py-1.5">
+          <div className="absolute bottom-3 left-3 text-xs text-muted-foreground bg-card border rounded-[12px] px-3 py-1.5">
             Last inserted: <code className="font-mono text-foreground">{`{{${lastInserted}}}`}</code>
           </div>
         )}

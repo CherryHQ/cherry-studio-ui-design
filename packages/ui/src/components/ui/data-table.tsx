@@ -62,13 +62,13 @@ interface DataTablePaginationProps<TData> {
 function DataTablePagination<TData>({ table }: DataTablePaginationProps<TData>) {
   return (
     <div className="flex items-center justify-between px-2 py-4">
-      <div className="flex-1 text-[13px] text-muted-foreground">
+      <div className="flex-1 text-sm text-muted-foreground">
         {table.getFilteredSelectedRowModel().rows.length} of{" "}
         {table.getFilteredRowModel().rows.length} row(s) selected.
       </div>
       <div className="flex items-center space-x-6 lg:space-x-8">
         <div className="flex items-center space-x-2">
-          <p className="text-[13px] font-medium">Rows per page</p>
+          <p className="text-sm font-medium">Rows per page</p>
           <Select
             value={`${table.getState().pagination.pageSize}`}
             onValueChange={(value) => table.setPageSize(Number(value))}
@@ -83,7 +83,7 @@ function DataTablePagination<TData>({ table }: DataTablePaginationProps<TData>) 
             </SelectContent>
           </Select>
         </div>
-        <div className="flex w-25 items-center justify-center text-[13px] font-medium">
+        <div className="flex w-25 items-center justify-center text-sm font-medium">
           Page {table.getState().pagination.pageIndex + 1} of {table.getPageCount()}
         </div>
         <div className="flex items-center space-x-2">
@@ -149,7 +149,7 @@ function DataTable<TData, TValue>({
   })
 
   return (
-    <div data-slot="data-table" className={cn("space-y-4 tracking-tight", className)}>
+    <div data-slot="data-table" className={cn("space-y-4 tracking-[-0.14px]", className)}>
       {searchKey && enableFiltering && (
         <Input
           placeholder={searchPlaceholder}

@@ -107,7 +107,7 @@ export function InputOtpDemo() {
       </Section>
 
       <Section title="Practical: Verification Flow">
-        <div className="max-w-sm space-y-4 rounded-xl border p-6">
+        <div className="max-w-sm space-y-4 rounded-[12px] border p-6">
           <div className="space-y-1.5 text-center">
             <h4 className="text-lg font-semibold">Verify your email</h4>
             <p className="text-sm text-muted-foreground">

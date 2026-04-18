@@ -10,6 +10,7 @@ import {
 } from "lucide-react"
 import { cn } from "../../lib/utils"
 import { Button } from "./button"
+import { Progress } from "./progress"
 
 export interface MultimodalMessageProps {
   /** Images to display in a grid */
@@ -77,7 +78,7 @@ function MultimodalMessage({
   return (
     <div
       data-slot="multimodal-message"
-      className={cn("flex flex-col gap-2 tracking-tight", className)}
+      className={cn("flex flex-col gap-2 tracking-[-0.14px]", className)}
     >
       {/* Images grid */}
       {images && images.length > 0 && (
@@ -102,7 +103,7 @@ function MultimodalMessage({
                 className="w-full h-auto max-h-64 object-cover"
                 loading="lazy"
               />
-              <div className="absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 bg-black/20 transition-opacity">
+              <div className="absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 bg-foreground/20 transition-opacity">
                 <ImageIcon className="size-5 text-primary-foreground" />
               </div>
             </Button>
@@ -143,12 +144,7 @@ function MultimodalMessage({
                 {audio.title}
               </span>
             )}
-            <div className="h-1 rounded-full bg-muted overflow-hidden">
-              <div
-                className="h-full rounded-full bg-primary transition-[width] duration-150"
-                style={{ width: `${progress}%` }}
-              />
-            </div>
+            <Progress value={progress} className="h-1" />
           </div>
           <span className="text-xs tabular-nums text-muted-foreground shrink-0">
             {duration}
@@ -168,7 +164,7 @@ function MultimodalMessage({
                 {file.icon ?? <FileIcon className="size-4 text-muted-foreground" />}
               </div>
               <div className="flex flex-col min-w-0 flex-1">
-                <span className="text-[13px] font-medium text-foreground truncate">
+                <span className="text-sm font-medium text-foreground truncate">
                   {file.name}
                 </span>
                 {(file.size || file.type) && (
@@ -186,7 +182,7 @@ function MultimodalMessage({
       {lightboxSrc && (
         <div
           data-slot="multimodal-lightbox"
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80"
+          className="fixed inset-0 z-[var(--z-modal)] flex items-center justify-center bg-foreground/80"
           onClick={() => setLightboxSrc(null)}
           role="dialog"
           aria-modal="true"

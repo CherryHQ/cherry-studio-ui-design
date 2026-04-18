@@ -33,7 +33,7 @@ function AttachmentList({ items, onRemove, className, ref }: AttachmentListProps
   if (items.length === 0) return null
 
   return (
-    <div ref={ref} data-slot="attachment-list" className={cn("flex flex-wrap gap-2 tracking-tight", className)}>
+    <div ref={ref} data-slot="attachment-list" className={cn("flex flex-wrap gap-2 tracking-[-0.14px]", className)}>
       {items.map((item) => (
         <div
           key={item.id}
@@ -61,7 +61,7 @@ function AttachmentList({ items, onRemove, className, ref }: AttachmentListProps
               size="icon-xs"
               onClick={() => onRemove(item.id)}
               aria-label={`Remove ${item.name}`}
-              className="text-muted-foreground/40 hover:text-foreground shrink-0 opacity-0 group-hover:opacity-100 focus-visible:opacity-100"
+              className="text-muted-foreground/60 hover:text-foreground shrink-0 opacity-0 group-hover:opacity-100 focus-visible:opacity-100"
             >
               <X className="size-3" />
             </Button>

@@ -1,3 +1,5 @@
+"use client"
+
 import * as React from "react"
 import { cva, type VariantProps } from "class-variance-authority"
 import { Slot } from "radix-ui"
@@ -5,7 +7,7 @@ import { Slot } from "radix-ui"
 import { cn } from "@/lib/utils"
 
 const badgeVariants = cva(
-  "inline-flex w-fit shrink-0 items-center justify-center gap-1 overflow-hidden rounded-[var(--radius-button)] border border-transparent px-2.5 py-0.5 text-[11px] font-medium tracking-tight whitespace-nowrap transition-[color,box-shadow] focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 aria-invalid:border-destructive-border aria-invalid:ring-destructive-ring dark:aria-invalid:ring-destructive-ring [&>svg]:pointer-events-none [&>svg]:size-3",
+  "inline-flex w-fit shrink-0 items-center justify-center gap-1 overflow-hidden rounded-[var(--radius-button)] border border-transparent px-2.5 py-0.5 text-xs font-medium tracking-[-0.12px] whitespace-nowrap transition-[color,box-shadow] focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 aria-invalid:border-destructive-border aria-invalid:ring-destructive-ring dark:aria-invalid:ring-destructive-ring [&>svg]:pointer-events-none [&>svg]:size-3",
   {
     variants: {
       variant: {

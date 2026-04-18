@@ -47,7 +47,7 @@ export function ErrorBoundaryDemo() {
               Reset
             </Button>
           </div>
-          <div className="border rounded-xl overflow-hidden bg-background h-[280px]">
+          <div className="border rounded-[12px] overflow-hidden bg-background h-[280px]">
             <ErrorBoundary key={key}>
               <BuggyComponent shouldThrow={shouldThrow} />
             </ErrorBoundary>

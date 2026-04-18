@@ -16,8 +16,8 @@ function ConfigSection({ title, hint, actions, disabled, className, children, re
       ref={ref}
       data-slot="config-section"
       className={cn(
-        "bg-muted/50 border border-border rounded-[var(--radius-button)] px-3.5 py-3 space-y-2 tracking-tight",
-        disabled && "opacity-30 pointer-events-none",
+        "bg-muted/50 border border-border rounded-[var(--radius-button)] px-3.5 py-3 space-y-2 tracking-[-0.14px]",
+        disabled && "opacity-50 pointer-events-none",
         className
       )}
       {...props}

@@ -79,7 +79,7 @@ export function ParallelResponseDemo() {
                   <p className="text-xs font-medium truncate">{r.model}</p>
                   <p className="text-[10px] text-muted-foreground">{r.provider}</p>
                 </div>
-                <Badge variant="outline" className="text-[9px] tabular-nums">{r.tokens.output} tok</Badge>
+                <Badge variant="outline" className="text-xs tabular-nums">{r.tokens.output} tok</Badge>
               </div>
 
               {r.thinking && (
@@ -99,7 +99,7 @@ export function ParallelResponseDemo() {
                 </Button>
                 <Button variant="ghost" size="icon" className="size-6"><ThumbsUp className="size-3" /></Button>
                 <div className="flex-1" />
-                <span className="text-[9px] text-muted-foreground tabular-nums">{r.tokens.input}→{r.tokens.output}</span>
+                <span className="text-xs text-muted-foreground tabular-nums">{r.tokens.input}→{r.tokens.output}</span>
               </div>
             </Card>
           ))}

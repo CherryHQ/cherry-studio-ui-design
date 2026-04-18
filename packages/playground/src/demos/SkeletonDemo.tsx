@@ -65,7 +65,7 @@ export function SkeletonDemo() {
 
 <Skeleton className="h-12 w-12 rounded-full" />
 <Skeleton className="h-4 w-64" />
-<Skeleton className="h-[125px] w-full rounded-xl" />`}>
+<Skeleton className="h-[125px] w-full rounded-[12px]" />`}>
         <div className="space-y-6">
           <div className="flex items-center space-x-4">
             <Skeleton className="h-12 w-12 rounded-full" />
@@ -79,7 +79,7 @@ export function SkeletonDemo() {
             <Skeleton className="h-4 w-[80%]" />
             <Skeleton className="h-4 w-[60%]" />
           </div>
-          <Skeleton className="h-[125px] w-full rounded-xl" />
+          <Skeleton className="h-[125px] w-full rounded-[12px]" />
         </div>
       </Section>
 

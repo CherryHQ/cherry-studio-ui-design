@@ -79,7 +79,7 @@ export function TabBarDemo() {
   </TabsList>
 </Tabs>`}>
       <div className="max-w-2xl">
-        <div className="rounded-xl border bg-muted/30 overflow-hidden">
+        <div className="rounded-[12px] border bg-muted/30 overflow-hidden">
           {/* Tab bar */}
           <div className="flex items-center border-b bg-muted/50 overflow-x-auto">
             <Tabs value={active} onValueChange={setActive} className="flex-1 min-w-0">

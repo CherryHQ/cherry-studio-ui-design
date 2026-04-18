@@ -109,7 +109,7 @@ const [value, setValue] = useState([50])
       </Section>
 
       <Section title="Practical: Settings Sliders">
-        <div className="space-y-6 max-w-md rounded-xl border p-4">
+        <div className="space-y-6 max-w-md rounded-[12px] border p-4">
           {[
             { label: "Max Tokens", value: 4096, max: 8192, step: 256 },
             { label: "Top P", value: 90, max: 100, step: 5 },

@@ -5,7 +5,7 @@ import {
   ChevronRight,
   Bot, Cpu,
 } from 'lucide-react';
-import { cn } from '../../lib/utils';
+import { cn } from "../../lib/utils"
 import { Button } from './button';
 import { ModelPickerPanel } from './model-picker-panel';
 import { AssistantPickerPanel } from './assistant-picker-panel';
@@ -80,7 +80,7 @@ export function AtMentionPicker({
     clearTimer();
     hoverTimer.current = window.setTimeout(() => {
       setActiveCategory(null);
-    }, 200);
+    }, 400);
   };
 
   const handleSubpanelEnter = () => { clearTimer(); };
@@ -88,13 +88,13 @@ export function AtMentionPicker({
     clearTimer();
     hoverTimer.current = window.setTimeout(() => {
       setActiveCategory(null);
-    }, 200);
+    }, 400);
   };
 
   return (
-    <div ref={panelRef} data-slot="at-mention-picker" className={cn('absolute bottom-full left-0 mb-2 z-50 flex items-end tracking-tight', className)}>
+    <div ref={panelRef} data-slot="at-mention-picker" role="menu" onKeyDown={(e) => { if (e.key === "Escape") onClose() }} className={cn('absolute bottom-full left-0 mb-2 z-[var(--z-popover)] flex items-end tracking-[-0.14px]', className)}>
       {/* Level 1: Category selector */}
-      <div className="w-[120px] bg-popover border border-border rounded-[var(--radius-button)] shadow-popover py-1 animate-in fade-in slide-in-from-bottom-2 duration-150">
+      <div className="w-[120px] bg-popover border border-border rounded-[var(--radius-button)] shadow-popover py-1 animate-in fade-in slide-in-from-bottom-2 duration-[var(--duration-normal)]">
         <div className="px-1 flex flex-col">
           {/* Assistant option */}
           <div
@@ -105,8 +105,11 @@ export function AtMentionPicker({
             <Button
               variant="ghost"
               size="xs"
+              onFocus={() => handleCategoryEnter('assistant')}
+              aria-expanded={activeCategory === 'assistant'}
+              aria-haspopup="true"
               className={cn(
-                "w-full justify-start gap-2 px-2.5 py-[7px] h-auto text-[11px]",
+                "w-full justify-start gap-2 px-2.5 py-[7px] h-auto text-xs",
                 activeCategory === 'assistant'
                   ? 'bg-accent/50 text-popover-foreground'
                   : 'text-muted-foreground hover:text-popover-foreground hover:bg-accent/50'
@@ -127,8 +130,11 @@ export function AtMentionPicker({
             <Button
               variant="ghost"
               size="xs"
+              onFocus={() => handleCategoryEnter('model')}
+              aria-expanded={activeCategory === 'model'}
+              aria-haspopup="true"
               className={cn(
-                "w-full justify-start gap-2 px-2.5 py-[7px] h-auto text-[11px]",
+                "w-full justify-start gap-2 px-2.5 py-[7px] h-auto text-xs",
                 activeCategory === 'model'
                   ? 'bg-accent/50 text-popover-foreground'
                   : 'text-muted-foreground hover:text-popover-foreground hover:bg-accent/50'
@@ -147,7 +153,7 @@ export function AtMentionPicker({
         <div
           onMouseEnter={handleSubpanelEnter}
           onMouseLeave={handleSubpanelLeave}
-          className="ml-1.5 bg-popover border border-border rounded-[var(--radius-button)] shadow-popover z-50 animate-in fade-in slide-in-from-left-1 duration-100 overflow-hidden max-h-[340px]"
+          className="ml-1.5 bg-popover border border-border rounded-[var(--radius-button)] shadow-popover z-[var(--z-popover)] animate-in fade-in slide-in-from-left-1 duration-[var(--duration-fast)] overflow-hidden max-h-[340px]"
         >
           <AssistantPickerPanel
             {...assistantPickerProps}
@@ -162,7 +168,7 @@ export function AtMentionPicker({
         <div
           onMouseEnter={handleSubpanelEnter}
           onMouseLeave={handleSubpanelLeave}
-          className="ml-1.5 bg-popover border border-border rounded-[var(--radius-button)] shadow-popover z-50 animate-in fade-in slide-in-from-left-1 duration-100 overflow-hidden w-[380px]"
+          className="ml-1.5 bg-popover border border-border rounded-[var(--radius-button)] shadow-popover z-[var(--z-popover)] animate-in fade-in slide-in-from-left-1 duration-[var(--duration-fast)] overflow-hidden w-[380px]"
         >
           <ModelPickerPanel
             {...modelPickerProps}

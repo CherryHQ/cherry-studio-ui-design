@@ -1,3 +1,5 @@
+"use client"
+
 import * as React from "react"
 import { ChevronRight, MoreHorizontal } from "lucide-react"
 import { Slot } from "radix-ui"
@@ -13,7 +15,7 @@ function BreadcrumbList({ className, ...props }: React.ComponentProps<"ol">) {
     <ol
       data-slot="breadcrumb-list"
       className={cn(
-        "flex flex-wrap items-center gap-1.5 text-[13px] tracking-tight break-words text-muted-foreground sm:gap-2.5",
+        "flex flex-wrap items-center gap-1.5 text-sm tracking-[-0.14px] break-words text-muted-foreground sm:gap-2.5",
         className
       )}
       {...props}

@@ -3,7 +3,6 @@
 import * as React from "react"
 import { cn } from "../../lib/utils"
 import { Avatar, AvatarFallback, AvatarBadge } from "./avatar"
-import { Badge } from "./badge"
 
 export interface NotificationItemProps {
   avatar?: React.ReactNode
@@ -40,12 +39,12 @@ function NotificationItem({
         }
       }}
       className={cn(
-        "flex gap-3 p-4 hover:bg-accent/50 transition-colors cursor-pointer tracking-tight",
+        "flex gap-3 p-4 hover:bg-accent/50 transition-colors cursor-pointer tracking-[-0.14px] border-b border-border/30 last:border-b-0 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50",
         className
       )}
     >
       <div className="relative shrink-0">
-        <Avatar className="size-12" data-slot="notification-item-avatar">
+        <Avatar className="size-10" data-slot="notification-item-avatar">
           <AvatarFallback className="bg-muted">
             {avatar}
           </AvatarFallback>
@@ -53,7 +52,7 @@ function NotificationItem({
         {badgeIcon && (
           <AvatarBadge
             data-slot="notification-item-badge"
-            className="size-[18px] border-2 border-popover bg-primary text-primary-foreground"
+            className="size-[18px] border-[1.5px] border-popover bg-primary text-primary-foreground"
           >
             {badgeIcon}
           </AvatarBadge>
@@ -61,7 +60,7 @@ function NotificationItem({
       </div>
       <div className="min-w-0 flex-1">
         <div className="flex items-start justify-between gap-2">
-          <p className="text-[13px] font-medium text-foreground truncate">{title}</p>
+          <p className="text-sm font-medium text-foreground truncate">{title}</p>
           <div className="flex shrink-0 items-center gap-1.5">
             {time && (
               <span className="text-xs text-muted-foreground whitespace-nowrap">
@@ -69,10 +68,9 @@ function NotificationItem({
               </span>
             )}
             {!read && (
-              <Badge
+              <span
                 data-slot="notification-item-unread"
-                variant="default"
-                className="size-2 min-w-0 p-0 rounded-full bg-accent-blue shrink-0"
+                className="size-2 rounded-full bg-primary shrink-0"
               />
             )}
           </div>

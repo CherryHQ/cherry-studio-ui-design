@@ -33,7 +33,7 @@ export function ChatInterfaceDemo() {
 >
   {messages.map(m => <ChatMessage key={m.id} message={m} />)}
 </ChatInterface>`}>
-        <div className="h-[400px] max-w-2xl border rounded-xl overflow-hidden bg-background">
+        <div className="h-[400px] max-w-2xl border rounded-[12px] overflow-hidden bg-background">
           <ChatInterface
             scrollDeps={[messages]}
             onSendMessage={handleSend}

@@ -27,7 +27,7 @@ export function CardDemo() {
         <Card>
           <CardHeader>
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+              <div className="w-10 h-10 rounded-[12px] bg-primary/10 flex items-center justify-center">
                 <Bot className="h-5 w-5 text-primary" />
               </div>
               <div>
@@ -53,7 +53,7 @@ export function CardDemo() {
         <Card>
           <CardHeader>
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-accent-violet-muted flex items-center justify-center">
+              <div className="w-10 h-10 rounded-[12px] bg-accent-violet-muted flex items-center justify-center">
                 <Sparkles className="h-5 w-5 text-accent-violet" />
               </div>
               <div>
@@ -79,7 +79,7 @@ export function CardDemo() {
         <Card>
           <CardHeader>
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-accent-amber-muted flex items-center justify-center">
+              <div className="w-10 h-10 rounded-[12px] bg-accent-amber-muted flex items-center justify-center">
                 <Zap className="h-5 w-5 text-accent-amber" />
               </div>
               <div>

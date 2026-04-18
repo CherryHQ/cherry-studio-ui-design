@@ -1,3 +1,5 @@
+"use client"
+
 import * as React from "react"
 import { Avatar as AvatarPrimitive } from "radix-ui"
 
@@ -15,7 +17,7 @@ function Avatar({
       data-slot="avatar"
       data-size={size}
       className={cn(
-        "group/avatar relative flex size-8 shrink-0 overflow-hidden rounded-full tracking-tight select-none data-[size=lg]:size-10 data-[size=sm]:size-6",
+        "group/avatar relative flex size-8 shrink-0 overflow-hidden rounded-full tracking-[-0.14px] select-none data-[size=lg]:size-10 data-[size=sm]:size-6",
         className
       )}
       {...props}

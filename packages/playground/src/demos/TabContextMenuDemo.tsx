@@ -47,11 +47,11 @@ export function TabContextMenuDemo() {
               <Button variant="ghost"
                 key={tab.id}
                 onContextMenu={(e) => handleContextMenu(e, tab.id)}
-                className="px-3 py-1.5 text-xs rounded-xl border hover:bg-accent/50 transition-colors flex items-center gap-1.5"
+                className="px-3 py-1.5 text-xs rounded-[12px] border hover:bg-accent/50 transition-colors flex items-center gap-1.5"
               >
                 <tab.icon size={12} />
                 {tab.title}
-                {pinnedIds.has(tab.id) && <span className="text-[9px] text-primary">pinned</span>}
+                {pinnedIds.has(tab.id) && <span className="text-xs text-primary">pinned</span>}
               </Button>
             ))}
           </div>

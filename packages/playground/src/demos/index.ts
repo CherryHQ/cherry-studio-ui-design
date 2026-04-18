@@ -43,6 +43,7 @@ import { InlineSelectDemo } from "./InlineSelectDemo"
 import { TreeNavDemo } from "./TreeNavDemo"
 import { FilterSidebarDemo } from "./FilterSidebarDemo"
 import { ComposerDemo } from "./ComposerDemo"
+import { PromptInputDemo } from "./PromptInputDemo"
 import { MessageBubbleDemo } from "./MessageBubbleDemo"
 import { ResourceCardDemo } from "./ResourceCardDemo"
 import { WorkflowStepsDemo } from "./WorkflowStepsDemo"
@@ -93,6 +94,7 @@ import { AppSidebarDemo } from "./AppSidebarDemo"
 import { AppTabBarDemo } from "./AppTabBarDemo"
 import { ChatMessageDemo } from "./ChatMessageDemo"
 import { ChatInterfaceDemo } from "./ChatInterfaceDemo"
+import { ChatReactionDemo } from "./ChatReactionDemo"
 import { ModelPickerPanelDemo } from "./ModelPickerPanelDemo"
 import { AssistantPickerPanelDemo } from "./AssistantPickerPanelDemo"
 import { NotificationPanelDemo } from "./NotificationPanelDemo"
@@ -110,6 +112,30 @@ import { ProviderStatusDemo } from "./ProviderStatusDemo"
 import { AISDKChatDemo } from "./AISDKChatDemo"
 import { ToolCallDemo } from "./ToolCallDemo"
 import { ToolbarDemo } from "./ToolbarDemo"
+import { SuggestionBoxDemo } from "./SuggestionBoxDemo"
+import { QuestionCardDemo } from "./QuestionCardDemo"
+import { TagDemo } from "./TagDemo"
+import { DeepSearchDemo } from "./DeepSearchDemo"
+import { EmojiPickerDemo } from "./EmojiPickerDemo"
+import { ContactsCardDemo } from "./ContactsCardDemo"
+import { SocialLoginButtonDemo } from "./SocialLoginButtonDemo"
+import { FloatingChatButtonDemo } from "./FloatingChatButtonDemo"
+import { ThreadViewDemo } from "./ThreadViewDemo"
+import { ListDemo } from "./ListDemo"
+import { CommentDemo } from "./CommentDemo"
+import { EditorDemo } from "./EditorDemo"
+import { ThreadDemo } from "./ThreadDemo"
+import { DetailOverlayDemo } from "./DetailOverlayDemo"
+import { SignInDemo } from "./SignInDemo"
+import { ProfileDemo } from "./ProfileDemo"
+import { UserDropdownDemo } from "./UserDropdownDemo"
+import { FileMenuDemo } from "./FileMenuDemo"
+import { VideoPlayerDemo } from "./VideoPlayerDemo"
+import { LikeButtonDemo } from "./LikeButtonDemo"
+import { TranslationPanelDemo } from "./TranslationPanelDemo"
+import { ImageCanvasDemo } from "./ImageCanvasDemo"
+import { AgentConfigPanelDemo } from "./AgentConfigPanelDemo"
+import { KBManagerDemo } from "./KBManagerDemo"
 
 export const demos = [
   // Forms
@@ -170,6 +196,7 @@ export const demos = [
   { id: "tree-nav", title: "TreeNav", category: "Cherry Composite", description: "树形导航组件（文件树/知识库）", component: TreeNavDemo },
   { id: "filter-sidebar", title: "FilterSidebar", category: "Cherry Composite", description: "筛选侧栏（文件/资源/库管理）", component: FilterSidebarDemo },
   { id: "composer", title: "Composer", category: "Cherry Composite", description: "聊天输入框（自适应高度/快捷键）", component: ComposerDemo },
+  { id: "prompt-input", title: "Prompt Input", category: "Cherry Composite", description: "Figma Brainwave 风格输入框（灵感弹层/模型选择/语音/附件）", component: PromptInputDemo },
   { id: "message-bubble", title: "Chat & MessageBubble", category: "Cherry Composite", description: "聊天界面/消息气泡/空状态", component: MessageBubbleDemo },
   { id: "resource-card", title: "ResourceCard / FileCard / StatusBadge", category: "Cherry Composite", description: "资源卡片/文件卡片/状态徽章", component: ResourceCardDemo },
   { id: "workflow-steps", title: "WorkflowSteps", category: "Cherry Composite", description: "工作流步骤面板（Agent 执行流程）", component: WorkflowStepsDemo },
@@ -194,9 +221,12 @@ export const demos = [
   { id: "search-dialog", title: "Search Dialog (⌘K)", category: "🖥️ Modules", description: "全局搜索对话框（Command + Dialog 组合）", component: SearchDialogDemo },
   { id: "tab-bar", title: "Tab Bar", category: "🖥️ Modules", description: "多标签管理（Tabs + 右键菜单 + 固定/关闭）", component: TabBarDemo },
   { id: "translate-module", title: "Translate Module", category: "🖥️ Modules", description: "翻译页面（双栏翻译 + 翻译专家选择）", component: TranslateModuleDemo },
+  { id: "translation-panel", title: "TranslationPanel", category: "Cherry Composite", description: "可复用翻译面板（双栏 + 语言选择 + 历史）", component: TranslationPanelDemo },
   { id: "note-module", title: "Note Editor Module", category: "🖥️ Modules", description: "笔记编辑器（文件树 + 编辑器 + AI 助手）", component: NoteModuleDemo },
   { id: "image-module", title: "Image Gen Module", category: "🖥️ Modules", description: "AI 绘画页面（参数控制 + 图片画廊）", component: ImageModuleDemo },
+  { id: "image-canvas", title: "ImageCanvas", category: "Cherry Composite", description: "图片生成画布（历史条 + 画布 + 控制面板 + 提示词）", component: ImageCanvasDemo },
   { id: "knowledge-module", title: "Knowledge Base Module", category: "🖥️ Modules", description: "知识库管理（数据源 + RAG 设置 + 检索测试）", component: KnowledgeModuleDemo },
+  { id: "kb-manager", title: "KB Manager", category: "Cherry Composite", description: "知识库管理组件（侧栏 + 数据源 + RAG + 检索测试）", component: KBManagerDemo },
   { id: "dashboard-module", title: "Dashboard Module", category: "🖥️ Modules", description: "数据仪表盘（统计卡片 + 图表 + 模型用量表）", component: DashboardModuleDemo },
   { id: "shortcut-editor", title: "Shortcut Editor", category: "🖥️ Modules", description: "快捷键编辑器（分组 Accordion + Kbd + Switch）", component: ShortcutEditorDemo },
 
@@ -215,6 +245,7 @@ export const demos = [
 
   // 🖥️ Modules (extended)
   { id: "agent-config", title: "Agent Config", category: "🖥️ Modules", description: "Agent 配置页（身份/模型/工具选择）", component: AgentConfigDemo },
+  { id: "agent-config-panel", title: "AgentConfigPanel", category: "Cherry Composite", description: "可复用 Agent 配置面板（Accordion + FormRow + 工具/知识库）", component: AgentConfigPanelDemo },
   { id: "assistant-config", title: "Assistant Config", category: "🖥️ Modules", description: "助手配置（资料/模型/知识库/工具）", component: AssistantConfigDemo },
   { id: "topic-history", title: "Topic History", category: "🖥️ Modules", description: "话题历史（搜索/网格列表切换/标签筛选）", component: TopicHistoryDemo },
   { id: "extensions", title: "Extensions Market", category: "🖥️ Modules", description: "扩展市场（安装/推荐/搜索）", component: ExtensionsDemo },
@@ -232,6 +263,13 @@ export const demos = [
   { id: "ai-sdk-chat", title: "AI SDK Chat", category: "Patterns", description: "AI SDK 聊天集成（Composer + MessageBubble + StreamingText）", component: AISDKChatDemo },
   { id: "tool-call", title: "Tool Call Card", category: "Patterns", description: "工具调用卡片（参数/状态/结果展示）", component: ToolCallDemo },
   { id: "toolbar", title: "Toolbar", category: "Cherry Composite", description: "工具栏（水平/垂直布局 + 分隔符）", component: ToolbarDemo },
+  { id: "suggestion-box", title: "SuggestionBox", category: "Cherry Composite", description: "建议卡片网格（聊天空状态/AI 建议）", component: SuggestionBoxDemo },
+  { id: "question-card", title: "QuestionCard", category: "Cherry Composite", description: "快捷问题卡片（纵向/横向滚动/分类标签）", component: QuestionCardDemo },
+  { id: "tag", title: "Tag", category: "Cherry Composite", description: "标签（可选/可删/颜色变体/分组/溢出省略）", component: TagDemo },
+  { id: "list", title: "List", category: "Cherry Composite", description: "通用列表（图标/操作/可选/分组）", component: ListDemo },
+  { id: "comment", title: "Comment", category: "Cherry Composite", description: "评论列表（嵌套回复/操作/@提及）", component: CommentDemo },
+  { id: "editor", title: "Editor", category: "Cherry Composite", description: "富文本编辑器（Toolbar + Markdown 预览）", component: EditorDemo },
+  { id: "thread", title: "Thread", category: "Cherry Composite", description: "会话线程（父消息/回复列表/嵌套深度）", component: ThreadDemo },
 
   // App Shell
   { id: "app-sidebar", title: "AppSidebar", category: "App Shell", description: "应用侧边栏（菜单/搜索/Logo/标签）", component: AppSidebarDemo },
@@ -244,6 +282,8 @@ export const demos = [
   // Chat Components
   { id: "chat-message", title: "ChatMessage", category: "Chat Components", description: "聊天消息（用户/助手/Markdown/操作）", component: ChatMessageDemo },
   { id: "chat-interface", title: "ChatInterface", category: "Chat Components", description: "完整聊天界面（MessageList + Composer）", component: ChatInterfaceDemo },
+  { id: "chat-reaction", title: "ChatReaction", category: "Chat Components", description: "消息表情反应栏（Emoji pill + 计数 + 添加按钮）", component: ChatReactionDemo },
+  { id: "like-button", title: "LikeButton", category: "Chat Components", description: "点赞按钮（Heart + 计数 + toggle）", component: LikeButtonDemo },
 
   // Picker Panels
   { id: "model-picker-panel", title: "ModelPickerPanel", category: "Picker Panels", description: "模型选择面板（分组/能力标签/多选）", component: ModelPickerPanelDemo },
@@ -262,6 +302,22 @@ export const demos = [
 
   // Pricing
   { id: "plan-card", title: "PlanCard", category: "Pricing", description: "定价卡片（Free/Creator/Studio）", component: PlanCardDemo },
+
+  // Figma Sync: New Components
+  { id: "deep-search", title: "DeepSearch", category: "Cherry Composite", description: "深度搜索 UI（多步搜索过程状态展示）", component: DeepSearchDemo },
+  { id: "emoji-picker", title: "EmojiPicker", category: "Cherry Composite", description: "表情选择器（分类/最近/网格）", component: EmojiPickerDemo },
+  { id: "contacts-card", title: "ContactsCard", category: "Cherry Composite", description: "联系人卡片（头像/状态/角色）", component: ContactsCardDemo },
+  { id: "social-login-button", title: "SocialLoginButton", category: "Cherry Composite", description: "OAuth 社交登录按钮（Google/Apple/GitHub/Microsoft）", component: SocialLoginButtonDemo },
+  { id: "floating-chat-button", title: "FloatingChatButton", category: "Cherry Composite", description: "浮动聊天入口按钮（未读计数）", component: FloatingChatButtonDemo },
+  { id: "thread-view", title: "ThreadView", category: "Cherry Composite", description: "消息线程回复链视图", component: ThreadViewDemo },
+
+  // Figma Sync: Pages
+  { id: "detail-overlay", title: "Detail Overlay", category: "Overlay", description: "全屏详情弹窗（图片预览/Prompt/变体/下载）", component: DetailOverlayDemo },
+  { id: "user-dropdown", title: "UserDropdown", category: "Cherry Composite", description: "用户头像下拉菜单（Profile/Settings/Sign out）", component: UserDropdownDemo },
+  { id: "sign-in", title: "Sign In Page", category: "🖥️ Modules", description: "登录页面（表单 + 社交登录 + Hero）", component: SignInDemo },
+  { id: "profile", title: "Profile Page", category: "🖥️ Modules", description: "个人主页（头像/统计/作品 Grid）", component: ProfileDemo },
+  { id: "file-menu", title: "File Menu & Dialogs", category: "Patterns", description: "文件右键菜单 + 移动/删除确认对话框", component: FileMenuDemo },
+  { id: "video-player", title: "VideoPlayer", category: "Cherry Composite", description: "视频播放控件（播放/暂停/进度/时长）", component: VideoPlayerDemo },
 
   // Theme
   { id: "theme", title: "Theme Preview", category: "Theme", description: "主题配色、间距、圆角、字体预览", component: ThemePreviewDemo },

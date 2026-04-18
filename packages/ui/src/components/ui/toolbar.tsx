@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import { cn } from "../../lib/utils"
+import { Separator } from './separator'
 
 export interface ToolbarProps extends React.ComponentProps<"div"> {
   orientation?: "horizontal" | "vertical"
@@ -19,7 +20,7 @@ function Toolbar({
       role="toolbar"
       aria-orientation={orientation}
       className={cn(
-        "rounded-[var(--radius-card)] bg-card border shadow-sm flex items-center gap-1 p-1.5",
+        "rounded-[var(--radius-panel)] bg-card border shadow-sm flex items-center gap-1 p-1.5",
         orientation === "vertical" && "flex-col",
         className
       )}
@@ -38,13 +39,13 @@ function ToolbarSeparator({
   ...props
 }: ToolbarSeparatorProps) {
   return (
-    <div
+    <Separator
       data-slot="toolbar-separator"
-      role="separator"
+      orientation={orientation === "horizontal" ? "vertical" : "horizontal"}
       className={cn(
         orientation === "horizontal"
-          ? "w-px h-5 bg-border mx-1"
-          : "h-px w-5 bg-border my-1",
+          ? "h-5 mx-1"
+          : "w-5 my-1",
         className
       )}
       {...props}

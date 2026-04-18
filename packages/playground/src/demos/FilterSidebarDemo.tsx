@@ -26,7 +26,7 @@ export function FilterSidebarDemo() {
     <FilterItem icon={<Star />} label="Starred" count={8} />
   </FilterSection>
 </FilterSidebar>`}>
-        <div className="h-[400px] rounded-xl border overflow-hidden">
+        <div className="h-[400px] rounded-[12px] border overflow-hidden">
           <FilterSidebar width={200}>
             <div className="p-2">
               <div className="relative">
@@ -75,7 +75,7 @@ export function FilterSidebarDemo() {
       </Section>
 
       <Section title="Library/Resource Sidebar">
-        <div className="h-[350px] rounded-xl border overflow-hidden">
+        <div className="h-[350px] rounded-[12px] border overflow-hidden">
           <FilterSidebar width={200}>
             <FilterSection>
               <FilterItem icon={<Inbox />} label="All Resources" count={86} active={libraryFilter === "all"} onClick={() => setLibraryFilter("all")} />
@@ -102,7 +102,7 @@ export function FilterSidebarDemo() {
       </Section>
 
       <Section title="Minimal Sidebar">
-        <div className="h-[250px] rounded-xl border overflow-hidden">
+        <div className="h-[250px] rounded-[12px] border overflow-hidden">
           <FilterSidebar width={180}>
             <FilterSection>
               <FilterItem label="Inbox" count={24} active />

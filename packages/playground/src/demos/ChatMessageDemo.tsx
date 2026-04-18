@@ -32,13 +32,13 @@ export function ChatMessageDemo() {
       ]} code={`import { ChatMessage } from "@cherry-studio/ui"
 
 <ChatMessage message={userMessage} />`}>
-        <div className="max-w-2xl border rounded-xl p-4 bg-background">
+        <div className="max-w-2xl border rounded-[12px] p-4 bg-background">
           <ChatMessage message={userMessage} />
         </div>
       </Section>
 
       <Section title="Assistant Message with Markdown">
-        <div className="max-w-2xl border rounded-xl p-4 bg-background">
+        <div className="max-w-2xl border rounded-[12px] p-4 bg-background">
           <ChatMessage
             message={assistantMessage}
             showActions

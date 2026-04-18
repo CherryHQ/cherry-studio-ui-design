@@ -54,7 +54,7 @@ function TreeNav({
   return (
     <div
       data-slot="tree-nav"
-      className={cn("space-y-0.5 tracking-tight", className)}
+      className={cn("space-y-0.5 tracking-[-0.14px]", className)}
       role="list"
       {...props}
     >
@@ -123,7 +123,7 @@ function TreeNavNode({
           <ChevronRight
             size={12}
             className={cn(
-              "flex-shrink-0 transition-transform duration-150",
+              "flex-shrink-0 transition-transform duration-[var(--duration-normal)]",
               isExpanded && "rotate-90"
             )}
           />
@@ -204,7 +204,7 @@ function TreeNavGroup({
           <ChevronRight
             size={10}
             className={cn(
-              "transition-transform duration-150",
+              "transition-transform duration-[var(--duration-normal)]",
               open && "rotate-90"
             )}
           />

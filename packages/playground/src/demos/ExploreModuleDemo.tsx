@@ -2,6 +2,7 @@ import React, { useState, useMemo, useCallback } from "react"
 import {
   Badge, Button, Dialog, DialogContent,
   Sheet, SheetContent, SheetHeader, SheetTitle, Input,
+  ExploreGalleryCard,
 } from "@cherry-studio/ui"
 import {
   Search, Bot, MessageCircle, BookOpen, Wrench,
@@ -127,7 +128,7 @@ function CardHoverOverlay({ onExperience, onFavorite, isFavorited }: { onExperie
           <Heart size={11} fill={isFavorited ? "currentColor" : "none"} />
         </Button>
         <Button variant="ghost" type="button" onClick={(e) => { e.stopPropagation(); onExperience() }}
-          className="h-auto px-0 py-0 font-normal tracking-normal flex items-center gap-1 px-2.5 py-1.5 rounded-full bg-foreground text-background text-[10px] hover:bg-foreground/90 transition-colors">
+          className="h-auto px-0 py-0 font-normal tracking-normal flex items-center gap-1 px-2.5 py-1.5 rounded-full bg-primary text-primary-foreground text-[10px] hover:bg-primary/90 transition-colors">
           <Play size={9} /><span>体验</span>
         </Button>
       </div>
@@ -139,36 +140,36 @@ function AgentCard({ agent, isFavorited, onClick, onExperience, onFavorite }: {
   agent: Agent; isFavorited?: boolean; onClick: () => void; onExperience: () => void; onFavorite: () => void
 }) {
   return (
-    <div className="group relative rounded-[24px] border border-border/20 bg-card hover:border-border/40 hover:shadow-lg hover:shadow-foreground/[0.03] transition-all duration-200 overflow-hidden cursor-pointer" onClick={onClick}>
+    <div className="group relative rounded-[24px] border border-border/40 bg-card hover:border-border/40 hover:shadow-lg transition-all duration-200 overflow-hidden cursor-pointer" onClick={onClick}>
       {isFavorited && <FavBadge />}
       <CardHoverOverlay onExperience={onExperience} onFavorite={onFavorite} isFavorited={!!isFavorited} />
       <div className="p-4 pb-3">
         <div className="flex items-start justify-between mb-3">
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-accent-violet/10 to-accent-blue/10 flex items-center justify-center text-lg">{agent.avatar}</div>
+            <div className="w-9 h-9 rounded-[12px] bg-gradient-to-br from-accent-violet/10 to-accent-blue/10 flex items-center justify-center text-lg">{agent.avatar}</div>
             <div>
-              <h3 className="text-[12px] text-foreground">{agent.name}</h3>
-              <span className="text-[9px] text-muted-foreground/35">{agent.subcategory} · {agent.author}</span>
+              <h3 className="text-xs text-foreground">{agent.name}</h3>
+              <span className="text-xs text-muted-foreground/35">{agent.subcategory} · {agent.author}</span>
             </div>
           </div>
-          <div className="flex items-center gap-0.5 text-[9px] text-muted-foreground/30">
+          <div className="flex items-center gap-0.5 text-xs text-muted-foreground/30">
             <Star size={8} className="text-accent-amber/60" /><span>{formatNumber(agent.stars)}</span>
           </div>
         </div>
-        <p className="text-[11px] text-muted-foreground/50 leading-relaxed line-clamp-2 mb-3">{agent.description}</p>
+        <p className="text-xs text-muted-foreground/50 leading-relaxed line-clamp-2 mb-3">{agent.description}</p>
         <div className="flex items-center gap-1 mb-3">
           {agent.integrations.slice(0, 4).map((intg) => (
             <div key={intg} className="w-6 h-6 rounded-[12px] bg-accent/60 flex items-center justify-center text-[10px]" title={intg}>{integrationIcons[intg] || "🔧"}</div>
           ))}
           <span className="flex-1" />
-          <span className="text-[9px] text-muted-foreground/25">{formatNumber(agent.runs)} 次运行</span>
+          <span className="text-xs text-muted-foreground/50">{formatNumber(agent.runs)} 次运行</span>
         </div>
         <div className="flex items-center gap-1">
-          {agent.tags.map((tag) => <span key={tag} className="text-[9px] px-1.5 py-px rounded-[12px] bg-accent/50 text-muted-foreground/40">{tag}</span>)}
+          {agent.tags.map((tag) => <Badge key={tag} variant="secondary" className="text-xs px-1.5 py-px">{tag}</Badge>)}
         </div>
       </div>
-      <div className="px-4 py-2.5 border-t border-border/10">
-        <Button variant="ghost" type="button" onClick={(e) => { e.stopPropagation(); onExperience() }} className="h-auto px-0 py-0 font-normal tracking-normal w-full flex items-center justify-center gap-1.5 py-1.5 rounded-[12px] text-[11px] text-foreground/70 hover:text-foreground bg-accent/30 hover:bg-accent/60 transition-colors group/btn">
+      <div className="px-4 py-2.5 border-t border-border/30">
+        <Button variant="ghost" type="button" onClick={(e) => { e.stopPropagation(); onExperience() }} className="h-auto px-0 py-0 font-normal tracking-normal w-full flex items-center justify-center gap-1.5 py-1.5 rounded-[12px] text-xs text-foreground/70 hover:text-foreground bg-accent/30 hover:bg-accent/60 transition-colors group/btn">
           <Play size={9} className="group-hover/btn:text-accent-violet transition-colors" /><span>体验智能体</span>
           <ArrowRight size={9} className="opacity-0 -translate-x-1 group-hover/btn:opacity-100 group-hover/btn:translate-x-0 transition-all" />
         </Button>
@@ -181,33 +182,33 @@ function AssistantCard({ assistant, isFavorited, onClick, onFavorite }: {
   assistant: Assistant; isFavorited?: boolean; onClick: () => void; onFavorite: () => void
 }) {
   return (
-    <div className="group relative rounded-[24px] border border-border/20 bg-card hover:border-border/40 hover:shadow-lg hover:shadow-foreground/[0.03] transition-all duration-200 overflow-hidden cursor-pointer" onClick={onClick}>
+    <div className="group relative rounded-[24px] border border-border/40 bg-card hover:border-border/40 hover:shadow-lg transition-all duration-200 overflow-hidden cursor-pointer" onClick={onClick}>
       {isFavorited && <FavBadge />}
       <CardHoverOverlay onExperience={onClick} onFavorite={onFavorite} isFavorited={!!isFavorited} />
       <div className="p-4 pb-3">
         <div className="flex items-start gap-3 mb-3">
-          <div className="w-10 h-10 rounded-[24px] bg-gradient-to-br from-foreground/[0.06] to-foreground/[0.06] flex items-center justify-center text-xl flex-shrink-0">{assistant.avatar}</div>
+          <div className="w-10 h-10 rounded-[24px] bg-gradient-to-br from-muted/30 to-muted/30 flex items-center justify-center text-xl flex-shrink-0">{assistant.avatar}</div>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-1.5">
-              <h3 className="text-[12px] text-foreground truncate">{assistant.name}</h3>
-              <div className="flex items-center gap-0.5 text-[9px] text-accent-amber/60 flex-shrink-0"><Star size={7} fill="currentColor" /><span>{assistant.rating}</span></div>
+              <h3 className="text-xs text-foreground truncate">{assistant.name}</h3>
+              <div className="flex items-center gap-0.5 text-xs text-accent-amber/60 flex-shrink-0"><Star size={7} fill="currentColor" /><span>{assistant.rating}</span></div>
             </div>
-            <p className="text-[9px] text-muted-foreground/35 mt-0.5">{assistant.author}</p>
+            <p className="text-xs text-muted-foreground/35 mt-0.5">{assistant.author}</p>
           </div>
         </div>
-        <p className="text-[11px] text-muted-foreground/50 leading-relaxed line-clamp-2 mb-2">{assistant.description}</p>
-        <div className="px-2.5 py-1.5 rounded-[12px] bg-accent/30 border border-border/10 mb-3">
+        <p className="text-xs text-muted-foreground/50 leading-relaxed line-clamp-2 mb-2">{assistant.description}</p>
+        <div className="px-2.5 py-1.5 rounded-[12px] bg-accent/30 border border-border/30 mb-3">
           <p className="text-[10px] text-muted-foreground/40 leading-relaxed line-clamp-2 italic">&quot;{assistant.persona}&quot;</p>
         </div>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-1">
-            {assistant.tags.map((tag) => <span key={tag} className="text-[9px] px-1.5 py-px rounded-[12px] bg-accent/50 text-muted-foreground/40">{tag}</span>)}
+            {assistant.tags.map((tag) => <Badge key={tag} variant="secondary" className="text-xs px-1.5 py-px">{tag}</Badge>)}
           </div>
-          <div className="flex items-center gap-0.5 text-[9px] text-muted-foreground/25"><MessageCircle size={8} /><span>{formatNumber(assistant.conversations)}</span></div>
+          <div className="flex items-center gap-0.5 text-xs text-muted-foreground/50"><MessageCircle size={8} /><span>{formatNumber(assistant.conversations)}</span></div>
         </div>
       </div>
-      <div className="px-4 py-2.5 border-t border-border/10">
-        <Button variant="ghost" type="button" onClick={(e) => { e.stopPropagation() }} className="h-auto px-0 py-0 font-normal tracking-normal w-full flex items-center justify-center gap-1.5 py-1.5 rounded-[12px] text-[11px] text-foreground/70 hover:text-foreground bg-accent/30 hover:bg-accent/60 transition-colors group/btn">
+      <div className="px-4 py-2.5 border-t border-border/30">
+        <Button variant="ghost" type="button" onClick={(e) => { e.stopPropagation() }} className="h-auto px-0 py-0 font-normal tracking-normal w-full flex items-center justify-center gap-1.5 py-1.5 rounded-[12px] text-xs text-foreground/70 hover:text-foreground bg-accent/30 hover:bg-accent/60 transition-colors group/btn">
           <MessageCircle size={9} /><span>开始对话</span>
           <ArrowRight size={9} className="opacity-0 -translate-x-1 group-hover/btn:opacity-100 group-hover/btn:translate-x-0 transition-all" />
         </Button>
@@ -220,25 +221,25 @@ function ToolCard({ item, metricLabel, metricValue, isFavorited, onClick, onFavo
   item: ToolItem; metricLabel: string; metricValue: string; isFavorited?: boolean; onClick: () => void; onFavorite: () => void
 }) {
   return (
-    <div className="group relative rounded-[24px] border border-border/20 bg-card hover:border-border/40 hover:shadow-lg hover:shadow-foreground/[0.03] transition-all duration-200 p-4 cursor-pointer overflow-hidden" onClick={onClick}>
+    <div className="group relative rounded-[24px] border border-border/40 bg-card hover:border-border/40 hover:shadow-lg transition-all duration-200 p-4 cursor-pointer overflow-hidden" onClick={onClick}>
       {isFavorited && <FavBadge />}
       <CardHoverOverlay onExperience={onClick} onFavorite={onFavorite} isFavorited={!!isFavorited} />
       <div className="flex items-start gap-3 mb-3">
-        <div className="w-9 h-9 rounded-xl bg-accent/60 flex items-center justify-center text-lg flex-shrink-0">{item.icon}</div>
+        <div className="w-9 h-9 rounded-[12px] bg-accent/60 flex items-center justify-center text-lg flex-shrink-0">{item.icon}</div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1.5">
-            <h3 className="text-[12px] text-foreground truncate">{item.name}</h3>
-            {item.version && <span className="text-[8px] text-muted-foreground/25 flex-shrink-0">v{item.version}</span>}
+            <h3 className="text-xs text-foreground truncate">{item.name}</h3>
+            {item.version && <span className="text-xs text-muted-foreground/50 flex-shrink-0">v{item.version}</span>}
           </div>
-          <p className="text-[9px] text-muted-foreground/35 mt-0.5">{item.author}</p>
+          <p className="text-xs text-muted-foreground/35 mt-0.5">{item.author}</p>
         </div>
       </div>
-      <p className="text-[11px] text-muted-foreground/50 leading-relaxed line-clamp-2 mb-3">{item.description}</p>
+      <p className="text-xs text-muted-foreground/50 leading-relaxed line-clamp-2 mb-3">{item.description}</p>
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-1">
-          {item.tags.map((tag) => <span key={tag} className="text-[9px] px-1.5 py-px rounded-[12px] bg-accent/50 text-muted-foreground/40">{tag}</span>)}
+          {item.tags.map((tag) => <Badge key={tag} variant="secondary" className="text-xs px-1.5 py-px">{tag}</Badge>)}
         </div>
-        <div className="flex items-center gap-0.5 text-[9px] text-muted-foreground/25"><Download size={8} /><span>{metricValue} {metricLabel}</span></div>
+        <div className="flex items-center gap-0.5 text-xs text-muted-foreground/50"><Download size={8} /><span>{metricValue} {metricLabel}</span></div>
       </div>
     </div>
   )
@@ -268,17 +269,17 @@ function PreviewContent({ resource, category, isFavorited, isSaved, onToggleFavo
             <Button variant="ghost" type="button" onClick={onClose} className="h-auto px-0 py-0 font-normal tracking-normal w-6 h-6 rounded-[12px] flex items-center justify-center text-muted-foreground/40 hover:text-foreground hover:bg-accent transition-colors"><X size={13} /></Button>
           </div>
           <div className="flex items-start gap-3.5">
-            <div className={`w-14 h-14 rounded-[24px] flex items-center justify-center text-2xl flex-shrink-0 ring-1 ring-border/10 ${isAgent ? "bg-gradient-to-br from-accent-violet/10 to-accent-blue/10" : isAssistant ? "bg-gradient-to-br from-foreground/[0.06] to-foreground/[0.06]" : "bg-accent/60"}`}>
+            <div className={`w-14 h-14 rounded-[24px] flex items-center justify-center text-2xl flex-shrink-0 ring-1 ring-border/10 ${isAgent ? "bg-gradient-to-br from-accent-violet/10 to-accent-blue/10" : isAssistant ? "bg-gradient-to-br from-muted/30 to-muted/30" : "bg-accent/60"}`}>
               {avatar}
             </div>
             <div className="flex-1 min-w-0 pt-0.5">
               <div className="flex items-center gap-2 mb-0.5">
-                <h2 className="text-[15px] text-foreground truncate">{resource.name}</h2>
-                <span className="text-[8px] px-1.5 py-px rounded-full bg-accent text-muted-foreground/50 uppercase tracking-wider flex-shrink-0">{catLabels[category]}</span>
+                <h2 className="text-base text-foreground truncate">{resource.name}</h2>
+                <Badge variant="secondary" className="text-xs px-1.5 py-px uppercase tracking-wider flex-shrink-0">{catLabels[category]}</Badge>
               </div>
               <div className="flex items-center gap-2.5 mt-1">
                 <div className="flex items-center gap-1 text-[10px] text-muted-foreground/40"><UserIcon size={9} /><span>{resource.author}</span></div>
-                {resource.version && <span className="text-[9px] text-muted-foreground/25 px-1.5 py-px rounded bg-accent/50">v{resource.version}</span>}
+                {resource.version && <Badge variant="secondary" className="text-xs px-1.5 py-px text-muted-foreground/50">v{resource.version}</Badge>}
                 <div className="flex items-center gap-1 text-[10px] text-muted-foreground/30"><Clock size={8} /><span>{resource.createdAt}</span></div>
               </div>
             </div>
@@ -289,26 +290,26 @@ function PreviewContent({ resource, category, isFavorited, isSaved, onToggleFavo
       {/* Body */}
       <div className="px-5 py-4 space-y-4">
         <div>
-          <div className="text-[9px] text-muted-foreground/30 uppercase tracking-wider mb-2">简介</div>
-          <p className="text-[12px] text-muted-foreground/60 leading-[1.7]">{resource.description}</p>
+          <div className="text-xs text-muted-foreground/30 uppercase tracking-wider mb-2">简介</div>
+          <p className="text-xs text-muted-foreground/60 leading-[1.7]">{resource.description}</p>
         </div>
 
         {isAssistant && resource.persona && (
           <div>
-            <div className="text-[9px] text-muted-foreground/30 uppercase tracking-wider mb-2">角色设定</div>
-            <div className="px-3.5 py-3 rounded-xl bg-gradient-to-r from-foreground/[0.03] to-foreground/[0.03] border border-border/10">
-              <p className="text-[11px] text-muted-foreground/50 leading-relaxed italic">&quot;{resource.persona}&quot;</p>
+            <div className="text-xs text-muted-foreground/30 uppercase tracking-wider mb-2">角色设定</div>
+            <div className="px-3.5 py-3 rounded-[12px] bg-gradient-to-r from-accent/20 to-accent/20 border border-border/30">
+              <p className="text-xs text-muted-foreground/50 leading-relaxed italic">&quot;{resource.persona}&quot;</p>
             </div>
           </div>
         )}
 
         {isAgent && resource.integrations && (
           <div>
-            <div className="text-[9px] text-muted-foreground/30 uppercase tracking-wider mb-2">集成工具</div>
+            <div className="text-xs text-muted-foreground/30 uppercase tracking-wider mb-2">集成工具</div>
             <div className="flex flex-wrap gap-1.5">
               {resource.integrations.map((intg: string) => (
-                <div key={intg} className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-[12px] bg-accent/40 border border-border/10">
-                  <span className="text-[12px]">{integrationIcons[intg] || "🔧"}</span>
+                <div key={intg} className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-[12px] bg-accent/40 border border-border/30">
+                  <span className="text-xs">{integrationIcons[intg] || "🔧"}</span>
                   <span className="text-[10px] text-muted-foreground/50">{intg}</span>
                 </div>
               ))}
@@ -318,7 +319,7 @@ function PreviewContent({ resource, category, isFavorited, isSaved, onToggleFavo
 
         {/* Stats */}
         <div>
-          <div className="text-[9px] text-muted-foreground/30 uppercase tracking-wider mb-2">数据概览</div>
+          <div className="text-xs text-muted-foreground/30 uppercase tracking-wider mb-2">数据概览</div>
           <div className="grid grid-cols-3 gap-2">
             {isAgent && <>
               <StatCard icon={<Star size={12} className="text-accent-amber/60" />} label="收藏" value={formatNumber(resource.stars)} />
@@ -340,27 +341,27 @@ function PreviewContent({ resource, category, isFavorited, isSaved, onToggleFavo
 
         {/* Tags */}
         <div>
-          <div className="text-[9px] text-muted-foreground/30 uppercase tracking-wider mb-2">标签</div>
+          <div className="text-xs text-muted-foreground/30 uppercase tracking-wider mb-2">标签</div>
           <div className="flex flex-wrap gap-1.5">
             {resource.tags.map((tag: string) => (
-              <span key={tag} className="text-[10px] px-2.5 py-1 rounded-[12px] bg-accent/40 text-muted-foreground/45 border border-border/8">{tag}</span>
+              <Badge key={tag} variant="secondary" className="text-[10px] px-2.5 py-1">{tag}</Badge>
             ))}
           </div>
         </div>
       </div>
 
       {/* Footer */}
-      <div className="px-5 py-3.5 border-t border-border/15 flex items-center gap-2 bg-accent/[0.03]">
-        <Button variant="ghost" type="button" onClick={onToggleFavorite} className={`h-auto px-0 py-0 font-normal tracking-normal flex items-center gap-1.5 px-3 py-1.5 rounded-[12px] text-[11px] transition-all active:scale-[0.97] ${isFavorited ? "bg-error/10 text-error border border-error/15" : "bg-accent/40 text-muted-foreground/50 border border-border/15 hover:text-foreground hover:border-border/40"}`}>
+      <div className="px-5 py-3.5 border-t border-border/30 flex items-center gap-2 bg-accent/[0.03]">
+        <Button variant="ghost" type="button" onClick={onToggleFavorite} className={`h-auto px-0 py-0 font-normal tracking-normal flex items-center gap-1.5 px-3 py-1.5 rounded-[12px] text-xs transition-all active:scale-[0.97] ${isFavorited ? "bg-error/10 text-error border border-error/15" : "bg-accent/40 text-muted-foreground/50 border border-border/30 hover:text-foreground hover:border-border/40"}`}>
           <Heart size={11} fill={isFavorited ? "currentColor" : "none"} /><span>{isFavorited ? "已收藏" : "收藏"}</span>
         </Button>
-        <Button variant="ghost" type="button" onClick={onSave} disabled={isSaved} className={`h-auto px-0 py-0 font-normal tracking-normal flex items-center gap-1.5 px-3 py-1.5 rounded-[12px] text-[11px] transition-all active:scale-[0.97] ${isSaved ? "bg-cherry-active-bg text-foreground border border-cherry-ring" : "bg-accent/40 text-muted-foreground/50 border border-border/15 hover:text-foreground hover:border-border/40"}`}>
+        <Button variant="ghost" type="button" onClick={onSave} disabled={isSaved} className={`h-auto px-0 py-0 font-normal tracking-normal flex items-center gap-1.5 px-3 py-1.5 rounded-[12px] text-xs transition-all active:scale-[0.97] ${isSaved ? "bg-cherry-active-bg text-foreground border border-cherry-ring" : "bg-accent/40 text-muted-foreground/50 border border-border/30 hover:text-foreground hover:border-border/40"}`}>
           {isSaved ? <Check size={11} /> : <BookmarkPlus size={11} />}
           <span>{isSaved ? "已添加" : "添加到资源库"}</span>
         </Button>
         <span className="flex-1" />
         {(isAgent || isAssistant) && (
-          <Button variant="ghost" type="button" onClick={onClose} className="h-auto px-0 py-0 font-normal tracking-normal flex items-center gap-1.5 px-4 py-1.5 rounded-[12px] bg-foreground text-background text-[11px] hover:bg-foreground/90 transition-colors active:scale-[0.97]">
+          <Button variant="ghost" type="button" onClick={onClose} className="h-auto px-0 py-0 font-normal tracking-normal flex items-center gap-1.5 px-4 py-1.5 rounded-[12px] bg-primary text-primary-foreground text-xs hover:bg-primary/90 transition-colors active:scale-[0.97]">
             {isAgent ? <Play size={10} /> : <MessageCircle size={10} />}
             <span>{isAgent ? "体验智能体" : "开始对话"}</span>
           </Button>
@@ -372,9 +373,9 @@ function PreviewContent({ resource, category, isFavorited, isSaved, onToggleFavo
 
 function StatCard({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
   return (
-    <div className="px-3 py-2.5 rounded-xl bg-accent/20 border border-border/8">
-      <div className="flex items-center gap-1.5 mb-1">{icon}<span className="text-[9px] text-muted-foreground/30">{label}</span></div>
-      <span className="text-[13px] text-foreground/80">{value}</span>
+    <div className="px-3 py-2.5 rounded-[12px] bg-accent/20 border border-border/30">
+      <div className="flex items-center gap-1.5 mb-1">{icon}<span className="text-xs text-muted-foreground/30">{label}</span></div>
+      <span className="text-sm text-foreground/80">{value}</span>
     </div>
   )
 }
@@ -396,19 +397,19 @@ function ExperienceModal({ resource, category, onSave, onClose }: {
   return (
     <div className="flex h-[420px]">
       {/* Left: resource info */}
-      <div className="w-[200px] shrink-0 border-r border-border/15 flex flex-col p-4 bg-accent/[0.03]">
+      <div className="w-[200px] shrink-0 border-r border-border/30 flex flex-col p-4 bg-accent/[0.03]">
         <div className="flex flex-col items-center text-center mb-4">
           <div className="w-14 h-14 rounded-[24px] bg-accent/50 flex items-center justify-center text-2xl mb-2.5">{avatar}</div>
-          <h3 className="text-[13px] text-foreground font-medium mb-0.5">{resource.name}</h3>
+          <h3 className="text-sm text-foreground font-medium mb-0.5">{resource.name}</h3>
           <p className="text-[10px] text-muted-foreground/40 leading-relaxed">{resource.description}</p>
         </div>
         <div className="flex flex-wrap gap-1 justify-center">
           {resource.tags?.map((tag: string) => (
-            <Badge key={tag} variant="outline" className="text-[9px] px-1.5 py-0">{tag}</Badge>
+            <Badge key={tag} variant="outline" className="text-xs px-1.5 py-0">{tag}</Badge>
           ))}
         </div>
         <div className="flex-1" />
-        <div className="space-y-1.5 pt-3 border-t border-border/10">
+        <div className="space-y-1.5 pt-3 border-t border-border/30">
           <Button size="xs" variant="outline" className="w-full gap-1 text-[10px]" onClick={onSave}>
             <BookmarkPlus size={10} /><span>保存到库</span>
           </Button>
@@ -426,7 +427,7 @@ function ExperienceModal({ resource, category, onSave, onClose }: {
               <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs shrink-0 ${msg.role === "user" ? "bg-foreground/10" : "bg-accent-violet/10"}`}>
                 {msg.role === "user" ? "👤" : avatar}
               </div>
-              <div className={`max-w-[75%] px-3 py-2 rounded-[24px] text-[11px] leading-relaxed ${msg.role === "user" ? "bg-foreground text-background rounded-tr-md" : "bg-accent/50 text-foreground/80 rounded-tl-md"}`}>
+              <div className={`max-w-[75%] px-3 py-2 rounded-[24px] text-xs leading-relaxed ${msg.role === "user" ? "bg-primary text-primary-foreground rounded-tr-md" : "bg-accent/50 text-foreground/80 rounded-tl-md"}`}>
                 {msg.text}
               </div>
             </div>
@@ -440,8 +441,8 @@ function ExperienceModal({ resource, category, onSave, onClose }: {
             </div>
           </div>
         </div>
-        <div className="shrink-0 border-t border-border/15 p-3 flex items-center gap-2">
-          <Input placeholder="输入消息体验对话..." className="flex-1 h-8 text-[11px]" readOnly />
+        <div className="shrink-0 border-t border-border/30 p-3 flex items-center gap-2">
+          <Input placeholder="输入消息体验对话..." className="flex-1 h-8 text-xs" readOnly />
           <Button size="xs" className="h-8 w-8 p-0"><Send size={12} /></Button>
         </div>
       </div>
@@ -502,24 +503,24 @@ export function ExploreModuleDemo() {
       { name: "subcategory", type: "string", default: '"全部"', description: "Subcategory filter" },
       { name: "searchQuery", type: "string", default: '""', description: "Search filter" },
     ] satisfies PropDef[]}>
-      <div className="rounded-xl border bg-background overflow-hidden">
+      <div className="rounded-[24px] border bg-background overflow-hidden">
         <div className="px-5 pt-5 pb-0">
           {/* Header */}
           <div className="flex items-end justify-between mb-5">
             <div>
               <h1 className="text-[20px] text-foreground tracking-tight mb-0.5">探索</h1>
-              <p className="text-[11px] text-muted-foreground/40">发现智能体、助手和工具，提升你的工作效率</p>
+              <p className="text-xs text-muted-foreground/40">发现智能体、助手和工具，提升你的工作效率</p>
             </div>
             <div className="flex items-center gap-2">
-              <Button variant="ghost" type="button" onClick={() => setShowFavorites(true)} className="h-auto px-0 py-0 font-normal tracking-normal relative flex items-center gap-1 px-2.5 py-1.5 rounded-[12px] border border-border/25 text-[11px] text-muted-foreground/50 hover:text-foreground hover:border-border/50 hover:bg-accent/30 transition-all">
+              <Button variant="ghost" type="button" onClick={() => setShowFavorites(true)} className="h-auto px-0 py-0 font-normal tracking-normal relative flex items-center gap-1 px-2.5 py-1.5 rounded-[12px] border border-border/25 text-xs text-muted-foreground/50 hover:text-foreground hover:border-border/50 hover:bg-accent/30 transition-all">
                 <Heart size={11} className={favorites.size > 0 ? "text-error/70" : ""} fill={favorites.size > 0 ? "currentColor" : "none"} />
                 <span>收藏夹</span>
-                {favorites.size > 0 && <span className="ml-0.5 px-1 py-px rounded-full bg-error/10 text-error text-[9px] tabular-nums">{favorites.size}</span>}
+                {favorites.size > 0 && <span className="ml-0.5 px-1 py-px rounded-full bg-error/10 text-error text-xs tabular-nums">{favorites.size}</span>}
               </Button>
               <div className="relative max-w-xs">
                 <Search size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground/30" />
-                <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="搜索资源..." className="w-full pl-7 pr-7 py-1.5 rounded-[12px] border border-border/25 bg-accent/15 text-[11px] text-foreground placeholder:text-muted-foreground/30 focus-visible:ring-0" />
-                {search && <Button variant="ghost" type="button" onClick={() => setSearch("")} className="h-auto px-0 py-0 font-normal tracking-normal absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground/25 hover:text-foreground"><X size={10} /></Button>}
+                <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="搜索资源..." className="w-full pl-7 pr-7 py-1.5 rounded-[12px] border border-border/25 bg-accent/15 text-xs text-foreground placeholder:text-muted-foreground/30 focus-visible:ring-0" />
+                {search && <Button variant="ghost" type="button" onClick={() => setSearch("")} className="h-auto px-0 py-0 font-normal tracking-normal absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground/50 hover:text-foreground"><X size={10} /></Button>}
               </div>
             </div>
           </div>
@@ -527,18 +528,18 @@ export function ExploreModuleDemo() {
           {/* Featured banner (agents only) */}
           {!search && category === "agents" && sub === "全部" && (
             <div className="relative rounded-[24px] overflow-hidden mb-5">
-              <div className="absolute inset-0 bg-gradient-to-r from-accent-violet/[0.08] via-accent-blue/[0.05] to-foreground/[0.05]" />
+              <div className="absolute inset-0 bg-gradient-to-r from-accent-violet/[0.15] via-accent-blue/[0.05] to-muted/30" />
               <div className="relative px-6 py-5">
                 <div className="flex items-center gap-2 mb-2">
-                  <div className="flex items-center gap-1 text-[9px] text-accent-violet/70 bg-accent-violet/[0.08] px-2 py-0.5 rounded-full"><TrendingUp size={8} /><span>本周热门</span></div>
+                  <div className="flex items-center gap-1 text-xs text-accent-violet/70 bg-accent-violet/[0.08] px-2 py-0.5 rounded-full"><TrendingUp size={8} /><span>本周热门</span></div>
                 </div>
-                <h3 className="text-[15px] text-foreground mb-1">{agents[3].name}</h3>
-                <p className="text-[11px] text-muted-foreground/50 leading-relaxed max-w-md mb-3">{agents[3].description}</p>
+                <h3 className="text-base text-foreground mb-1">{agents[3].name}</h3>
+                <p className="text-xs text-muted-foreground/50 leading-relaxed max-w-md mb-3">{agents[3].description}</p>
                 <div className="flex items-center gap-3">
-                  <Button variant="ghost" type="button" onClick={() => setExperienceResource({ resource: agents[3], category: "agents" })} className="h-auto px-0 py-0 font-normal tracking-normal flex items-center gap-1.5 px-3.5 py-1.5 rounded-[12px] bg-foreground text-background text-[11px] hover:bg-foreground/90 transition-colors active:scale-[0.97]">
+                  <Button variant="ghost" type="button" onClick={() => setExperienceResource({ resource: agents[3], category: "agents" })} className="h-auto px-0 py-0 font-normal tracking-normal flex items-center gap-1.5 px-3.5 py-1.5 rounded-[12px] bg-primary text-primary-foreground text-xs hover:bg-primary/90 transition-colors active:scale-[0.97]">
                     <Sparkles size={10} /><span>立即体验</span>
                   </Button>
-                  <div className="flex items-center gap-2 text-[9px] text-muted-foreground/30">
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground/30">
                     <span>{formatNumber(agents[3].stars)} 收藏</span><span>·</span><span>{formatNumber(agents[3].runs)} 次运行</span>
                   </div>
                 </div>
@@ -546,16 +547,28 @@ export function ExploreModuleDemo() {
             </div>
           )}
 
-          {/* Category filter tabs */}
-          <div className="flex items-center gap-0.5 overflow-x-auto [&::-webkit-scrollbar]:hidden border-b border-border/15 pb-px">
+          {/* Figma-style category pills with thumbnails */}
+          <div className="flex items-center gap-2.5 overflow-x-auto [&::-webkit-scrollbar]:hidden pb-3">
             {CATEGORIES.map((cat) => {
               const isActive = category === cat.id
               const Icon = cat.icon
               return (
-                <Button variant="ghost" type="button" key={cat.id} onClick={() => handleCategoryChange(cat.id)} className={`h-auto px-0 py-0 font-normal tracking-normal relative flex items-center gap-1.5 px-3 py-2 text-[11px] rounded-[12px] transition-all whitespace-nowrap ${isActive ? "text-foreground bg-accent/60" : "text-muted-foreground/50 hover:text-foreground hover:bg-accent/30"}`}>
-                  <Icon size={12} strokeWidth={1.6} /><span>{cat.label}</span>
-                  <span className={`text-[9px] tabular-nums ${isActive ? "text-muted-foreground/50" : "text-muted-foreground/25"}`}>{formatNumber(cat.count)}</span>
-                </Button>
+                <div
+                  key={cat.id}
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => handleCategoryChange(cat.id)}
+                  onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); handleCategoryChange(cat.id) } }}
+                  className={`shrink-0 flex items-center gap-3 rounded-[20px] border pl-1 pr-3 py-1 cursor-pointer transition-all focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 ${isActive ? "bg-popover border-border shadow-sm" : "bg-secondary border-border/30 hover:bg-popover hover:shadow-sm"}`}
+                >
+                  <div className="size-16 rounded-[var(--radius-button)] overflow-hidden bg-accent/40 flex items-center justify-center">
+                    <Icon size={24} strokeWidth={1.4} className={isActive ? "text-foreground" : "text-muted-foreground/60"} />
+                  </div>
+                  <div className="space-y-0.5">
+                    <p className="text-xs font-semibold tracking-[-0.12px]">{cat.label}</p>
+                    <p className="text-xs font-medium text-muted-foreground/80 tracking-[-0.12px]">{formatNumber(cat.count)} 个</p>
+                  </div>
+                </div>
               )
             })}
           </div>
@@ -563,12 +576,40 @@ export function ExploreModuleDemo() {
           {/* Subcategory tags */}
           <div className="flex items-center gap-1 overflow-x-auto [&::-webkit-scrollbar]:hidden py-2.5 px-0.5">
             {subs.map((s) => (
-              <Button variant="ghost" type="button" key={s} onClick={() => setSub(s)} className={`h-auto px-0 py-0 font-normal tracking-normal px-2.5 py-[3px] rounded-full text-[10px] whitespace-nowrap transition-all border ${s === sub ? "bg-foreground text-background border-foreground" : "bg-transparent text-muted-foreground/45 border-border/25 hover:border-border/50 hover:text-foreground"}`}>
+              <Button variant="ghost" type="button" key={s} onClick={() => setSub(s)} className={`h-auto px-0 py-0 font-normal tracking-normal px-2.5 py-[3px] rounded-full text-[10px] whitespace-nowrap transition-all border ${s === sub ? "bg-primary/10 text-primary border-primary/30" : "bg-transparent text-muted-foreground/45 border-border/25 hover:border-border/50 hover:text-foreground"}`}>
                 {s}
               </Button>
             ))}
           </div>
         </div>
+
+        {/* Gallery masonry (Figma style) */}
+        {!search && category === "agents" && sub === "全部" && (
+          <div className="px-5 pb-4">
+            <h3 className="text-xs font-medium text-muted-foreground/50 mb-3">精选作品</h3>
+            <div className="columns-3 gap-3">
+              {[
+                { id: "g1", image: "https://picsum.photos/seed/cherry1/400/500", author: "Alice Chen", ar: "3/4" },
+                { id: "g2", image: "https://picsum.photos/seed/cherry2/400/300", author: "Bob Li", ar: "4/3" },
+                { id: "g3", image: "https://picsum.photos/seed/cherry3/400/400", author: "Carol Wang", ar: "1/1" },
+                { id: "g4", image: "https://picsum.photos/seed/cherry4/400/600", author: "David Zhang", ar: "2/3" },
+                { id: "g5", image: "https://picsum.photos/seed/cherry5/400/350", author: "Eva Liu", ar: "4/3" },
+                { id: "g6", image: "https://picsum.photos/seed/cherry6/400/450", author: "Frank Wu", ar: "3/4" },
+              ].map(item => (
+                <ExploreGalleryCard
+                  key={item.id}
+                  image={item.image}
+                  author={item.author}
+                  onLike={() => toggleFav(item.id)}
+                  onComment={() => setPreview({ resource: { id: item.id, name: item.author, description: "Gallery item", avatar: "🖼️", tags: [], author: item.author }, category: "agents" })}
+                  onBookmark={() => saveItem(item.id)}
+                  className="break-inside-avoid mb-3"
+                  style={{ aspectRatio: item.ar }}
+                />
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Card grid */}
         <div className="px-5 pb-5">
@@ -667,7 +708,7 @@ export function ExploreModuleDemo() {
       <Sheet open={showFavorites} onOpenChange={setShowFavorites}>
         <SheetContent side="bottom" className="max-h-[60vh] rounded-t-2xl">
           <SheetHeader className="pb-3">
-            <SheetTitle className="text-[14px] flex items-center gap-2">
+            <SheetTitle className="text-md flex items-center gap-2">
               <Heart size={14} className="text-error" fill="currentColor" />
               收藏夹
               <span className="text-[10px] text-muted-foreground/40 font-normal">({favoritedResources.length})</span>
@@ -679,7 +720,7 @@ export function ExploreModuleDemo() {
                 const avatar = resource.avatar || resource.icon
                 return (
                   <div key={resource.id}
-                    className="group relative rounded-xl border border-border/20 bg-card p-3 hover:border-border/40 hover:shadow-sm transition-all cursor-pointer"
+                    className="group relative rounded-[12px] border border-border/40 bg-card p-3 hover:border-border/40 hover:shadow-sm transition-all cursor-pointer"
                     onClick={() => { setShowFavorites(false); setPreview({ resource, category: cat }) }}>
                     <Button variant="ghost" type="button" onClick={(e) => { e.stopPropagation(); toggleFav(resource.id) }}
                       className="h-auto px-0 py-0 font-normal tracking-normal absolute top-2 right-2 w-6 h-6 rounded-full flex items-center justify-center text-error/60 hover:text-error hover:bg-error/10 opacity-0 group-hover:opacity-100 transition-all">
@@ -688,8 +729,8 @@ export function ExploreModuleDemo() {
                     <div className="flex items-center gap-2.5 mb-1.5">
                       <div className="w-8 h-8 rounded-[12px] bg-accent/50 flex items-center justify-center text-base">{avatar}</div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-[11px] font-medium truncate">{resource.name}</p>
-                        <p className="text-[9px] text-muted-foreground/35">{resource.author}</p>
+                        <p className="text-xs font-medium truncate">{resource.name}</p>
+                        <p className="text-xs text-muted-foreground/35">{resource.author}</p>
                       </div>
                     </div>
                     <p className="text-[10px] text-muted-foreground/40 line-clamp-1">{resource.description}</p>
@@ -699,9 +740,9 @@ export function ExploreModuleDemo() {
             </div>
           ) : (
             <div className="flex flex-col items-center justify-center py-10 text-center">
-              <Heart size={20} className="text-muted-foreground/15 mb-2" />
-              <p className="text-[11px] text-muted-foreground/35">暂无收藏</p>
-              <p className="text-[10px] text-muted-foreground/20 mt-0.5">点击卡片上的心形图标添加收藏</p>
+              <Heart size={20} className="text-muted-foreground/40 mb-2" />
+              <p className="text-xs text-muted-foreground/35">暂无收藏</p>
+              <p className="text-[10px] text-muted-foreground/50 mt-0.5">点击卡片上的心形图标添加收藏</p>
             </div>
           )}
         </SheetContent>
@@ -713,11 +754,11 @@ export function ExploreModuleDemo() {
 function EmptySearch({ query, sub }: { query: string; sub: string }) {
   return (
     <div className="col-span-full flex flex-col items-center justify-center py-16">
-      <Search size={24} strokeWidth={1.2} className="text-muted-foreground/15 mb-2" />
-      <p className="text-[12px] text-muted-foreground/35 mb-0.5">
+      <Search size={24} strokeWidth={1.2} className="text-muted-foreground/40 mb-2" />
+      <p className="text-xs text-muted-foreground/35 mb-0.5">
         {query ? `未找到"${query}"相关结果` : sub !== "全部" ? `"${sub}" 分类暂无资源` : "暂无资源"}
       </p>
-      <p className="text-[10px] text-muted-foreground/20">请尝试其他搜索词或分类</p>
+      <p className="text-[10px] text-muted-foreground/50">请尝试其他搜索词或分类</p>
     </div>
   )
 }

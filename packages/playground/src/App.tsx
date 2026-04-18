@@ -67,7 +67,7 @@ export function App() {
 
       {/* Center: Preview */}
       <main className="flex-1 overflow-y-auto min-w-0">
-        <div className="max-w-3xl mx-auto px-6 py-8">
+        <div className="max-w-6xl mx-auto px-6 py-8">
           <div className="mb-6">
             <h1 className="text-xl font-semibold mb-1">{activeDemo?.title}</h1>
             <p className="text-sm text-muted-foreground">{activeDemo?.description}</p>

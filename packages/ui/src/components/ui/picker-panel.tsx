@@ -7,6 +7,7 @@ import { Badge } from "./badge"
 import { Button } from "./button"
 import { Checkbox } from "./checkbox"
 import { Input } from "./input"
+import { ScrollArea } from "./scroll-area"
 
 export interface PickerPanelItem {
   id: string
@@ -111,7 +112,7 @@ function PickerPanel({
       : Array.from(groups.values()).flat()
 
     return (
-      <div ref={ref} data-slot="picker-panel" className={cn("flex flex-col tracking-tight", className)}>
+      <div ref={ref} data-slot="picker-panel" className={cn("flex flex-col tracking-[-0.14px]", className)}>
         {/* Search */}
         <div className="p-2 pb-1.5">
           <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-[var(--radius-button)] bg-muted/50 border border-input">
@@ -141,31 +142,54 @@ function PickerPanel({
         {hasGroups ? (
           <div className="flex flex-1 min-h-0">
             {/* Left: groups */}
-            <div className="w-28 border-r border-border py-1 overflow-y-auto shrink-0">
-              {groupKeys.map((g) => {
-                const count = groups.get(g)?.length ?? 0
-                return (
-                  <Button
-                    key={g}
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setActiveGroup(g)}
-                    className={cn(
-                      "w-full justify-between px-2.5 py-1.5 text-xs",
-                      activeGroup === g
-                        ? "bg-accent text-foreground"
-                        : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
-                    )}
-                  >
-                    <span className="truncate">{g || "Other"}</span>
-                    <span className="text-xs text-muted-foreground/50 shrink-0 ml-1">{count}</span>
-                  </Button>
-                )
-              })}
-            </div>
+            <ScrollArea className="w-28 border-r border-border shrink-0">
+              <div className="py-1">
+                {groupKeys.map((g) => {
+                  const count = groups.get(g)?.length ?? 0
+                  return (
+                    <Button
+                      key={g}
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setActiveGroup(g)}
+                      className={cn(
+                        "w-full justify-between px-2.5 py-1.5 text-xs",
+                        activeGroup === g
+                          ? "bg-accent text-foreground"
+                          : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
+                      )}
+                    >
+                      <span className="truncate">{g || "Other"}</span>
+                      <span className="text-xs text-muted-foreground/50 shrink-0 ml-1">{count}</span>
+                    </Button>
+                  )
+                })}
+              </div>
+            </ScrollArea>
 
             {/* Right: items */}
-            <div className="flex-1 py-1 px-1 overflow-y-auto">
+            <ScrollArea className="flex-1">
+              <div className="py-1 px-1">
+                {activeItems.length === 0 ? (
+                  <div className="px-3 py-6 text-center text-xs text-muted-foreground">{emptyMessage}</div>
+                ) : (
+                  activeItems.map((item) => (
+                    <ItemRow
+                      key={item.id}
+                      item={item}
+                      selected={isSelected(item.id)}
+                      multi={isMulti}
+                      onSelect={handleSelect}
+                      renderItem={renderItem}
+                    />
+                  ))
+                )}
+              </div>
+            </ScrollArea>
+          </div>
+        ) : (
+          <ScrollArea className="flex-1">
+            <div className="py-1 px-1">
               {activeItems.length === 0 ? (
                 <div className="px-3 py-6 text-center text-xs text-muted-foreground">{emptyMessage}</div>
               ) : (
@@ -181,24 +205,7 @@ function PickerPanel({
                 ))
               )}
             </div>
-          </div>
-        ) : (
-          <div className="flex-1 py-1 px-1 overflow-y-auto">
-            {activeItems.length === 0 ? (
-              <div className="px-3 py-6 text-center text-xs text-muted-foreground">{emptyMessage}</div>
-            ) : (
-              activeItems.map((item) => (
-                <ItemRow
-                  key={item.id}
-                  item={item}
-                  selected={isSelected(item.id)}
-                  multi={isMulti}
-                  onSelect={handleSelect}
-                  renderItem={renderItem}
-                />
-              ))
-            )}
-          </div>
+          </ScrollArea>
         )}
       </div>
   )

@@ -28,12 +28,12 @@ function NotificationPanel({
       role="region"
       aria-label="Notifications"
       className={cn(
-        "w-[383px] rounded-[var(--radius-card)] border bg-popover shadow-popover backdrop-blur-[6px] tracking-tight",
+        "w-[383px] rounded-[var(--radius-card)] border bg-popover shadow-popover backdrop-blur-[6px] tracking-[-0.14px]",
         className
       )}
     >
       <div data-slot="notification-panel-header" className="px-4 pt-4 pb-2">
-        <h3 className="text-[13px] font-semibold text-foreground">{title}</h3>
+        <h3 className="text-sm font-semibold text-foreground">{title}</h3>
         {tabs && tabs.length > 0 && (
           <Tabs value={activeTab} onValueChange={onTabChange} className="mt-2">
             <TabsList variant="line" className="h-auto p-0 gap-1 border-0">

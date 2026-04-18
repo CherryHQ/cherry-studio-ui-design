@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react"
-import { Switch, Button, Input } from "@cherry-studio/ui"
+import { Switch, Button, Input, Kbd } from "@cherry-studio/ui"
 import { Section, type PropDef } from "../components/Section"
 import {
   Monitor, MessageCircle, MessagesSquare, Zap,
@@ -77,16 +77,16 @@ function Keycaps({ keys, isRecording, hasConflict }: {
 }) {
   if (isRecording) {
     return (
-      <span className="inline-flex items-center h-[20px] px-2.5 rounded-[12px] border border-foreground/[0.15] bg-foreground/[0.03]">
-        <span className="text-[9px] text-foreground/60 animate-pulse" style={{ fontWeight: 500 }}>录制中...</span>
+      <span className="inline-flex items-center h-[20px] px-2.5 rounded-[12px] border border-border/40 bg-accent/30">
+        <span className="text-xs text-foreground/60 animate-pulse" style={{ fontWeight: 500 }}>录制中...</span>
       </span>
     )
   }
 
   if (keys.length === 0) {
     return (
-      <span className="inline-flex items-center h-[20px] px-2 rounded-[12px] border border-dashed border-foreground/[0.07] cursor-pointer hover:border-foreground/[0.12] transition-colors">
-        <span className="text-[9px] text-foreground/[0.18]">未设置</span>
+      <span className="inline-flex items-center h-[20px] px-2 rounded-[12px] border border-dashed border-border/40 cursor-pointer hover:border-border/60 transition-colors">
+        <span className="text-xs text-muted-foreground/60">未设置</span>
       </span>
     )
   }
@@ -95,16 +95,14 @@ function Keycaps({ keys, isRecording, hasConflict }: {
     <span className="inline-flex items-center gap-[2px]">
       {keys.map((key, i) => (
         <span key={i} className="inline-flex items-center gap-[2px]">
-          <kbd
-            className={`inline-flex items-center justify-center min-w-[20px] h-[20px] px-[5px] rounded-[4px] text-[10px] border ${
-              hasConflict
-                ? "bg-error/5 border-error/20 text-error/70 shadow-[0_1px_0_0] shadow-error/10"
-                : "bg-foreground/[0.03] border-foreground/[0.08] text-foreground/50 shadow-[0_1px_0_0] shadow-foreground/[0.04]"
-            }`}
-            style={{ fontFamily: "system-ui, -apple-system, sans-serif", fontWeight: 500, lineHeight: 1 }}
+          <Kbd
+            className={hasConflict
+              ? "bg-error/5 border-error/20 text-error/70 shadow-[0_1px_0_0] shadow-error/10"
+              : ""
+            }
           >
             {key}
-          </kbd>
+          </Kbd>
         </span>
       ))}
     </span>
@@ -123,7 +121,7 @@ function ShortcutRow({ item, isRecording, onStartRecording, onReset, onToggle }:
     <div className={`flex items-center gap-3 py-[6px] px-1 group ${!item.enabled ? "opacity-35" : ""} transition-opacity`}>
       {/* Label */}
       <div className="flex-1 min-w-0 flex items-center gap-1.5">
-        <span className="text-[11px] text-foreground/65 truncate">{item.label}</span>
+        <span className="text-xs text-foreground/65 truncate">{item.label}</span>
         {item.conflict && !isRecording && (
           <AlertTriangle size={8} className="text-error/50 flex-shrink-0" />
         )}
@@ -138,7 +136,7 @@ function ShortcutRow({ item, isRecording, onStartRecording, onReset, onToggle }:
       <Button
         variant="ghost"
         onClick={onReset}
-        className="h-auto px-0 py-0 font-normal tracking-normal w-4 h-4 rounded-[6px] flex items-center justify-center text-foreground/0 group-hover:text-foreground/20 hover:!text-foreground/40 transition-colors flex-shrink-0"
+        className="h-auto px-0 py-0 font-normal tracking-normal w-4 h-4 rounded-[6px] flex items-center justify-center text-transparent group-hover:text-muted-foreground/60 hover:!text-muted-foreground transition-colors flex-shrink-0"
         title="重置"
       >
         <RotateCcw size={8} />
@@ -242,7 +240,7 @@ export function ShortcutEditorDemo() {
 </div>`}>
       <div className="flex border rounded-[24px] overflow-hidden bg-background" style={{ minHeight: 420 }}>
         {/* Left nav */}
-        <div className="w-[140px] flex-shrink-0 flex flex-col border-r border-foreground/[0.05] min-h-0">
+        <div className="w-[140px] flex-shrink-0 flex flex-col border-r border-border/30 min-h-0">
           <div className="px-3 pt-4 pb-2 flex-shrink-0">
             <p className="text-[10px] text-foreground/35" style={{ fontWeight: 500 }}>快捷键分组</p>
           </div>
@@ -256,7 +254,7 @@ export function ShortcutEditorDemo() {
                     key={cat.id}
                     onClick={() => { setSelectedId(cat.id); setRecordingId(null) }}
                     className={`h-auto px-0 py-0 font-normal tracking-normal w-full flex items-center justify-between px-2.5 py-[7px] rounded-[12px] transition-all text-left relative ${
-                      sel ? "bg-accent/60" : "border border-transparent hover:bg-foreground/[0.03]"
+                      sel ? "bg-accent/60" : "border border-transparent hover:bg-accent/30"
                     }`}
                   >
                     {sel && (
@@ -268,7 +266,7 @@ export function ShortcutEditorDemo() {
                         {cat.label}
                       </span>
                     </div>
-                    <ChevronRight size={8} className={`flex-shrink-0 ${sel ? "text-foreground/20" : "text-foreground/[0.08]"}`} />
+                    <ChevronRight size={8} className={`flex-shrink-0 ${sel ? "text-foreground/20" : "text-muted-foreground/30"}`} />
                   </Button>
                 )
               })}
@@ -280,11 +278,11 @@ export function ShortcutEditorDemo() {
         <div className="flex-1 flex flex-col min-w-0 min-h-0">
           {/* Header row */}
           <div className="flex items-center justify-between px-5 pt-4 pb-2 flex-shrink-0">
-            <h3 className="text-[12px] text-foreground/80" style={{ fontWeight: 500 }}>{selectedCategory.label}</h3>
+            <h3 className="text-xs text-foreground/80" style={{ fontWeight: 500 }}>{selectedCategory.label}</h3>
             <div className="flex items-center gap-1">
-              <Button variant="ghost" onClick={() => batchToggle(true)} className="h-auto px-0 py-0 font-normal tracking-normal px-2 py-[2px] rounded-[12px] text-[9px] text-foreground/30 hover:text-foreground/50 hover:bg-foreground/[0.04] transition-colors">全部启用</Button>
-              <Button variant="ghost" onClick={() => batchToggle(false)} className="h-auto px-0 py-0 font-normal tracking-normal px-2 py-[2px] rounded-[12px] text-[9px] text-foreground/30 hover:text-foreground/50 hover:bg-foreground/[0.04] transition-colors">全部禁用</Button>
-              <Button variant="ghost" onClick={handleResetGroup} className="h-auto px-0 py-0 font-normal tracking-normal flex items-center gap-0.5 px-2 py-[2px] rounded-[12px] text-[9px] text-foreground/40 hover:text-foreground/60 hover:bg-foreground/[0.03] transition-colors">
+              <Button variant="ghost" onClick={() => batchToggle(true)} className="h-auto px-0 py-0 font-normal tracking-normal px-2 py-[2px] rounded-[12px] text-xs text-foreground/30 hover:text-foreground/50 hover:bg-accent/40 transition-colors">全部启用</Button>
+              <Button variant="ghost" onClick={() => batchToggle(false)} className="h-auto px-0 py-0 font-normal tracking-normal px-2 py-[2px] rounded-[12px] text-xs text-foreground/30 hover:text-foreground/50 hover:bg-accent/40 transition-colors">全部禁用</Button>
+              <Button variant="ghost" onClick={handleResetGroup} className="h-auto px-0 py-0 font-normal tracking-normal flex items-center gap-0.5 px-2 py-[2px] rounded-[12px] text-xs text-foreground/40 hover:text-foreground/60 hover:bg-accent/30 transition-colors">
                 <RotateCcw size={7} />
                 <span>重置</span>
               </Button>
@@ -293,7 +291,7 @@ export function ShortcutEditorDemo() {
 
           {/* Search */}
           <div className="px-5 pb-1 flex-shrink-0">
-            <div className="flex items-center gap-2 px-3 py-[5px] bg-foreground/[0.02] border border-foreground/[0.05] rounded-[12px]">
+            <div className="flex items-center gap-2 px-3 py-[5px] bg-muted/30 border border-border/30 rounded-[12px]">
               <Search size={10} className="text-foreground/15 flex-shrink-0" />
               <Input
                 value={searchQuery}
@@ -308,11 +306,11 @@ export function ShortcutEditorDemo() {
           <div className="flex-1 overflow-y-auto px-5 pt-1 pb-4 [&::-webkit-scrollbar]:w-[3px] [&::-webkit-scrollbar-thumb]:bg-border/20">
             {filteredItems.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-12 text-center">
-                <Search size={14} className="text-foreground/[0.08] mb-1.5" />
-                <p className="text-[9px] text-foreground/[0.18]">没有匹配的快捷键</p>
+                <Search size={14} className="text-muted-foreground/30 mb-1.5" />
+                <p className="text-xs text-muted-foreground/50">没有匹配的快捷键</p>
               </div>
             ) : (
-              <div className="divide-y divide-foreground/[0.03]">
+              <div className="divide-y divide-border/30">
                 {filteredItems.map(item => (
                   <ShortcutRow
                     key={item.id}
@@ -327,13 +325,13 @@ export function ShortcutEditorDemo() {
             )}
 
             {recordingId && (
-              <div className="mt-2 flex items-center gap-2 px-3 py-[6px] bg-foreground/[0.02] border border-foreground/[0.06] rounded-[12px]">
+              <div className="mt-2 flex items-center gap-2 px-3 py-[6px] bg-muted/30 border border-border/40 rounded-[12px]">
                 <div className="w-1 h-1 rounded-full bg-foreground/50 animate-pulse flex-shrink-0" />
-                <p className="text-[9px] text-foreground/40 flex-1">请按下组合键。Esc 取消。</p>
+                <p className="text-xs text-foreground/40 flex-1">请按下组合键。Esc 取消。</p>
                 <Button
                   variant="ghost"
                   onClick={() => setRecordingId(null)}
-                  className="h-auto px-0 py-0 font-normal tracking-normal px-2 py-[2px] rounded-[12px] text-[9px] text-foreground/30 hover:text-foreground/50 hover:bg-foreground/[0.04] transition-colors flex-shrink-0"
+                  className="h-auto px-0 py-0 font-normal tracking-normal px-2 py-[2px] rounded-[12px] text-xs text-foreground/30 hover:text-foreground/50 hover:bg-accent/40 transition-colors flex-shrink-0"
                 >
                   取消
                 </Button>

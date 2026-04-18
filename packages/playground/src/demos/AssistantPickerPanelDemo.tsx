@@ -39,7 +39,7 @@ export function AssistantPickerPanelDemo() {
   onSelectAssistant={(id) => handleSelect(id)}
   emojiMap={emojiMap}
 />`}>
-        <div className="max-w-sm border rounded-xl overflow-hidden bg-popover">
+        <div className="max-w-sm border rounded-[12px] overflow-hidden bg-popover">
           <AssistantPickerPanel
             assistants={sampleAssistants}
             selectedAssistants={selected}

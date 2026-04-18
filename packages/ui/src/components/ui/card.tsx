@@ -1,3 +1,5 @@
+"use client"
+
 import * as React from "react"
 
 import { cn } from "@/lib/utils"
@@ -32,7 +34,7 @@ function CardTitle({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="card-title"
-      className={cn("text-xl font-medium tracking-tight leading-none", className)}
+      className={cn("text-xl font-medium tracking-[-0.3px] leading-none", className)}
       {...props}
     />
   )
@@ -42,7 +44,7 @@ function CardDescription({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="card-description"
-      className={cn("text-[13px] tracking-tight text-muted-foreground", className)}
+      className={cn("text-sm tracking-[-0.14px] text-muted-foreground", className)}
       {...props}
     />
   )

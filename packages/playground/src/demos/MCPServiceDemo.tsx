@@ -85,7 +85,7 @@ export function MCPServiceDemo() {
 
         <Accordion type="multiple" defaultValue={["filesystem"]} className="space-y-2">
           {services.map((service) => (
-            <AccordionItem key={service.id} value={service.id} className="border rounded-xl overflow-hidden">
+            <AccordionItem key={service.id} value={service.id} className="border rounded-[12px] overflow-hidden">
               <div className="flex items-center gap-2.5 px-3 py-0 border-b-0">
                 <span className="text-base">{service.icon}</span>
                 <AccordionTrigger className="flex-1 py-2.5 hover:no-underline">
@@ -93,7 +93,7 @@ export function MCPServiceDemo() {
                     <span className="text-xs font-medium">{service.name}</span>
                     <Badge
                       variant="outline"
-                      className={`text-[8px] px-1.5 py-0 ${
+                      className={`text-xs px-1.5 py-0 ${
                         service.status === "connected"
                           ? "bg-success-muted text-success border-success/20"
                           : "bg-error-muted text-error border-error/20"
@@ -101,7 +101,7 @@ export function MCPServiceDemo() {
                     >
                       {service.status}
                     </Badge>
-                    <Badge variant="secondary" className="text-[8px] px-1.5 py-0">v{service.version}</Badge>
+                    <Badge variant="secondary" className="text-xs px-1.5 py-0">v{service.version}</Badge>
                   </div>
                 </AccordionTrigger>
                 <Switch

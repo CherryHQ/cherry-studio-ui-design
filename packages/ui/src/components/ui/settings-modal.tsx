@@ -1,14 +1,15 @@
 "use client"
 
 import * as React from "react"
-import { cn } from "@/lib/utils"
+import { cn } from "../../lib/utils"
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
+} from "./dialog"
 import { Button } from "./button"
+import { ScrollArea } from "./scroll-area"
 
 export interface SettingsSection {
   id: string
@@ -42,7 +43,7 @@ function SettingsModal({
       <DialogContent
         data-slot="settings-modal"
         className={cn(
-          "rounded-[var(--radius-window)] shadow-popover sm:max-w-2xl p-0 gap-0 overflow-hidden tracking-tight",
+          "rounded-[var(--radius-window)] shadow-popover sm:max-w-2xl p-0 gap-0 overflow-hidden tracking-[-0.14px]",
           className
         )}
       >
@@ -50,7 +51,7 @@ function SettingsModal({
           {/* Sidebar */}
           <div
             data-slot="settings-modal-sidebar"
-            className="w-48 border-r bg-muted/30 flex flex-col"
+            className="w-48 border-r bg-muted/60 flex flex-col"
           >
             <DialogHeader className="px-4 pt-5 pb-3">
               <DialogTitle className="text-base">{title}</DialogTitle>
@@ -63,9 +64,9 @@ function SettingsModal({
                   data-slot="settings-modal-nav-item"
                   data-active={activeSection === section.id || undefined}
                   className={cn(
-                    "w-full justify-start gap-2 text-[13px] px-3 py-2",
+                    "w-full justify-start gap-2 text-sm px-3 py-2",
                     activeSection === section.id &&
-                      "bg-accent font-medium"
+                      "bg-accent font-medium border-l-2 border-primary"
                   )}
                   onClick={() => onSectionChange?.(section.id)}
                 >
@@ -81,12 +82,14 @@ function SettingsModal({
           </div>
 
           {/* Content */}
-          <div
-            data-slot="settings-modal-content"
-            className="flex-1 p-6 overflow-y-auto"
-          >
-            {children}
-          </div>
+          <ScrollArea className="flex-1">
+            <div
+              data-slot="settings-modal-content"
+              className="p-6"
+            >
+              {children}
+            </div>
+          </ScrollArea>
         </div>
       </DialogContent>
     </Dialog>

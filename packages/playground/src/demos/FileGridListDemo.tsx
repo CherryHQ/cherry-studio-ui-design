@@ -99,7 +99,7 @@ export function FileGridListDemo() {
           </div>
         ) : (
           /* List View */
-          <div className="rounded-xl border overflow-x-auto">
+          <div className="rounded-[12px] border overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -117,7 +117,7 @@ export function FileGridListDemo() {
                         {smallTypeIcons[file.type]}
                         <span className="text-xs font-medium">{file.name}</span>
                         {file.type === "folder" && (
-                          <Badge variant="secondary" className="text-[9px] px-1.5 py-0">folder</Badge>
+                          <Badge variant="secondary" className="text-xs px-1.5 py-0">folder</Badge>
                         )}
                       </div>
                     </TableCell>

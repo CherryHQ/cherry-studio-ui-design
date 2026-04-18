@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { cn } from "@/lib/utils"
+import { cn } from "../../lib/utils"
 import { Button } from "./button"
 import { Textarea } from "./textarea"
 
@@ -45,7 +45,7 @@ function CommentInput({
   return (
     <div
       data-slot="comment-input"
-      className={cn("flex items-end gap-2 p-3 border-t tracking-tight", className)}
+      className={cn("flex items-end gap-2 p-3 border-t tracking-[-0.14px]", className)}
     >
       <Textarea
         data-slot="comment-input-textarea"

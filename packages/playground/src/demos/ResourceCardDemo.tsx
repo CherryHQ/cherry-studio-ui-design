@@ -39,8 +39,8 @@ export function ResourceCardDemo() {
             description="An intelligent coding assistant that helps write, review, and debug code across multiple languages."
             tags={["Coding", "Review", "Debug"]}
             stats={<><Star className="h-3 w-3" /> 2.4k &middot; <Play className="h-3 w-3" /> 12k runs</>}
-            actions={<Button size="sm" className="h-7 text-[11px]">Try</Button>}
-            badge={<Badge className="text-[9px]">Featured</Badge>}
+            actions={<Button size="sm" className="h-7 text-xs">Try</Button>}
+            badge={<Badge className="text-xs">Featured</Badge>}
           />
           <ResourceCard
             avatar={<Avatar className="h-10 w-10"><AvatarFallback className="text-lg">📝</AvatarFallback></Avatar>}
@@ -49,7 +49,7 @@ export function ResourceCardDemo() {
             description="Helps improve your writing with grammar, style, and clarity suggestions."
             tags={["Writing", "Grammar"]}
             stats={<><Star className="h-3 w-3" /> 1.8k</>}
-            actions={<Button size="sm" variant="outline" className="h-7 text-[11px]">Use</Button>}
+            actions={<Button size="sm" variant="outline" className="h-7 text-xs">Use</Button>}
           />
           <ResourceCard
             avatar={<Avatar className="h-10 w-10"><AvatarFallback className="text-lg">📚</AvatarFallback></Avatar>}
@@ -58,7 +58,7 @@ export function ResourceCardDemo() {
             description="AI research papers and notes organized for quick retrieval."
             tags={["Research", "AI"]}
             stats={<><BookOpen className="h-3 w-3" /> 156 docs</>}
-            actions={<Button size="sm" variant="outline" className="h-7 text-[11px]">Open</Button>}
+            actions={<Button size="sm" variant="outline" className="h-7 text-xs">Open</Button>}
           />
         </div>
       </Section>
@@ -120,7 +120,7 @@ export function ResourceCardDemo() {
             { name: "broken-file.csv", size: "890 KB", chunks: 0, status: "error" as const, statusText: "Parse Error" },
             { name: "meeting-notes.docx", size: "340 KB", chunks: 0, status: "warning" as const, statusText: "Queued" },
           ].map((file) => (
-            <div key={file.name} className="flex items-center gap-3 rounded-xl border p-3 hover:bg-accent/30 transition-colors cursor-pointer">
+            <div key={file.name} className="flex items-center gap-3 rounded-[12px] border p-3 hover:bg-accent/30 transition-colors cursor-pointer">
               <FileText className="h-4 w-4 text-muted-foreground flex-shrink-0" />
               <div className="flex-1 min-w-0">
                 <p className="text-xs font-medium truncate">{file.name}</p>

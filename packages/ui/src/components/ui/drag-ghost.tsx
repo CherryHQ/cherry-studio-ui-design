@@ -1,3 +1,5 @@
+"use client"
+
 import React from 'react';
 
 export interface DragGhostTab {
@@ -27,17 +29,17 @@ export function DragGhost({ tabId, x, y, overSidebar, tabs }: DragGhostProps) {
     <div
       data-slot="drag-ghost"
       aria-hidden="true"
-      className={`fixed z-[500] pointer-events-none transition-shadow duration-100 tracking-tight ${overSidebar ? 'opacity-70 scale-95' : 'opacity-90'}`}
+      className={`fixed z-[var(--z-drag)] pointer-events-none transition-shadow duration-[var(--duration-fast)] tracking-[-0.14px] ${overSidebar ? 'opacity-70 scale-95' : 'opacity-90'}`}
       style={{ left: x - 50, top: y - 16 }}
     >
-      <div className={`flex items-center gap-1.5 h-8 px-2.5 rounded-[var(--radius-button)] border shadow-xl text-xs whitespace-nowrap
+      <div className={`flex items-center gap-1.5 h-8 px-2.5 rounded-[var(--radius-button)] border shadow-popover text-xs whitespace-nowrap
         ${overSidebar
           ? 'bg-primary/10 border-primary/40 text-primary'
           : 'bg-popover border-border text-popover-foreground'
         }`}>
         {ghostTab.miniAppId ? (
-          ghostTab.miniAppLogoUrl ? <img src={ghostTab.miniAppLogoUrl} alt="" className="w-3.5 h-3.5 rounded-[3px] object-cover" /> :
-          <div className="w-3.5 h-3.5 rounded-[3px] flex items-center justify-center text-primary-foreground text-[11px]" style={{ background: ghostTab.miniAppColor }}>{ghostTab.miniAppInitial}</div>
+          ghostTab.miniAppLogoUrl ? <img src={ghostTab.miniAppLogoUrl} alt="" className="w-3.5 h-3.5 rounded-[var(--radius-dot)] object-cover" /> :
+          <div className="w-3.5 h-3.5 rounded-[var(--radius-dot)] flex items-center justify-center text-primary-foreground text-xs" style={{ background: ghostTab.miniAppColor }}>{ghostTab.miniAppInitial}</div>
         ) : <GIcon size={13} strokeWidth={1.6} />}
         <span>{ghostTab.title}</span>
       </div>

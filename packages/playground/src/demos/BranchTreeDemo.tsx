@@ -17,8 +17,8 @@ interface BranchNode {
 }
 
 // ── Layout Constants ──
-const NODE_W = 140
-const NODE_H = 56
+const NODE_W = 160
+const NODE_H = 64
 const V_GAP = 24
 const H_GAP = 20
 const CURVE_R = 8
@@ -94,19 +94,20 @@ interface LayoutNode {
 }
 
 const handleCopyNode = (node: BranchNode) => {
-  void node
+  navigator.clipboard.writeText(node.content || node.label).catch(() => {})
 }
 
 const handleFavoriteNode = (node: BranchNode) => {
-  void node
+  alert(`${node.label}: toggled favorite`)
 }
 
 const handleCreateBranchFromNode = (node: BranchNode) => {
-  void node
+  alert(`New branch created from: ${node.label}`)
 }
 
 const handleEditNode = (node: BranchNode) => {
-  void node
+  const newLabel = window.prompt("Edit node:", node.label)
+  if (newLabel) alert(`Updated to: ${newLabel}`)
 }
 
 function collectActivePaths(node: BranchNode, branch: string): Set<string> {
@@ -195,8 +196,8 @@ function TreeNodeView({ layout, collapsed, onToggle, onSwitch }: {
     ? (active ? "border-cherry-user/60" : "border-cherry-user/20")
     : (active ? "border-cherry-assistant/50" : "border-cherry-assistant/20")
   const bg = isUser
-    ? (active ? "bg-cherry-user/8" : "bg-cherry-user/3")
-    : (active ? "bg-cherry-assistant/8" : "bg-cherry-assistant/3")
+    ? (active ? "bg-cherry-user/15" : "bg-cherry-user/15")
+    : (active ? "bg-cherry-assistant/15" : "bg-cherry-assistant/15")
 
   return (
     <>
@@ -212,17 +213,17 @@ function TreeNodeView({ layout, collapsed, onToggle, onSwitch }: {
                 <div className={isUser ? "text-cherry-user" : "text-cherry-assistant"}>
                   {isUser ? <User size={10} strokeWidth={2} /> : <Bot size={10} strokeWidth={1.5} />}
                 </div>
-                <span className={`text-[9px] truncate ${active ? "text-foreground/80" : "text-foreground/45"}`}>
+                <span className={`text-xs truncate ${active ? "text-foreground/80" : "text-foreground/45"}`}>
                   {node.assistantName || node.label}
                 </span>
-                {node.model && <span className="text-[7px] text-muted-foreground/25 truncate ml-auto">{node.model.split(" ").pop()}</span>}
+                {node.model && <span className="text-xs text-muted-foreground/50 truncate ml-auto">{node.model.split(" ").pop()}</span>}
               </div>
               <div className="px-2 pb-1.5">
-                <p className="text-[7px] text-foreground/30 leading-[1.4] line-clamp-2 break-all">{node.preview}</p>
+                <p className="text-xs text-foreground/60 leading-[1.4] line-clamp-2 break-all">{node.preview}</p>
               </div>
               {isCollapsed && node.children.length > 0 && (
-                <div className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-4 h-3 rounded-b-md bg-muted-foreground/5 border border-t-0 border-border/10 flex items-center justify-center">
-                  <span className="text-[6px] text-muted-foreground/30">{node.children.length}</span>
+                <div className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 min-w-[20px] h-4 px-1 rounded-b-md bg-muted-foreground/20 border border-t-0 border-border/30 flex items-center justify-center">
+                  <span className="text-xs text-muted-foreground/60">{node.children.length}</span>
                 </div>
               )}
               {active && (
@@ -294,15 +295,15 @@ export function BranchTreeDemo() {
     ]}>
       <div className="border rounded-[24px] overflow-hidden bg-background">
         {/* Toolbar */}
-        <div className="flex items-center gap-2 px-4 py-2.5 border-b border-border/15">
+        <div className="flex items-center gap-2 px-4 py-2.5 border-b border-border/30">
           <GitBranch size={13} className="text-muted-foreground/50" />
-          <span className="text-[11px] text-foreground tracking-tight font-medium">对话分支</span>
+          <span className="text-xs text-foreground tracking-tight font-medium">对话分支</span>
           <div className="flex-1" />
           {/* Branch switcher */}
           <div className="flex items-center gap-1">
             {branches.map(b => (
               <Badge key={b} variant={activeBranch === b ? "default" : "outline"}
-                className="cursor-pointer text-[9px] px-2 py-0"
+                className="cursor-pointer text-xs px-2 py-0"
                 onClick={() => setActiveBranch(b)}>
                 {activeBranch === b && <Star size={7} className="mr-0.5" />}
                 {branchLabels[b]}
@@ -311,7 +312,7 @@ export function BranchTreeDemo() {
           </div>
           <div className="flex items-center gap-0.5 ml-2">
             <Button variant="ghost" size="icon-xs" onClick={() => setZoom(z => Math.max(0.5, z - 0.1))}><ZoomOut size={12} /></Button>
-            <span className="text-[9px] text-muted-foreground/40 w-8 text-center">{Math.round(zoom * 100)}%</span>
+            <span className="text-xs text-muted-foreground/40 w-8 text-center">{Math.round(zoom * 100)}%</span>
             <Button variant="ghost" size="icon-xs" onClick={() => setZoom(z => Math.min(1.5, z + 0.1))}><ZoomIn size={12} /></Button>
             <Button variant="ghost" size="icon-xs" onClick={() => setZoom(1)}><Maximize2 size={12} /></Button>
           </div>

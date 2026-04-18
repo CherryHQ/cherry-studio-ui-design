@@ -25,6 +25,39 @@ const errorSteps: WorkflowStep[] = [
   { id: "3", label: "Deploy", icon: <Rocket />, status: "pending" },
 ]
 
+const collapsibleSteps: WorkflowStep[] = [
+  {
+    id: "1",
+    label: "Searching codebase",
+    icon: <Search />,
+    status: "done",
+    description: "Found 12 relevant files",
+    detail: (
+      <ul className="space-y-1 text-muted-foreground">
+        <li>src/components/Button.tsx</li>
+        <li>src/components/Modal.tsx</li>
+        <li>src/utils/helpers.ts</li>
+        <li className="text-muted-foreground/50">...and 9 more</li>
+      </ul>
+    ),
+  },
+  {
+    id: "2",
+    label: "Reviewing architecture",
+    icon: <Globe />,
+    status: "done",
+    description: "Analyzed project structure",
+    detail: (
+      <div className="space-y-1 text-muted-foreground">
+        <p>21 tool calls, 7 messages, 4 subagents</p>
+        <p>Identified 3 core modules and 2 shared utilities</p>
+      </div>
+    ),
+  },
+  { id: "3", label: "Writing implementation", icon: <Code2 />, status: "running", description: "Creating 3 new files" },
+  { id: "4", label: "Running tests", icon: <Rocket />, status: "pending" },
+]
+
 export function WorkflowStepsDemo() {
   const [liveSteps, setLiveSteps] = useState<WorkflowStep[]>([
     { id: "1", label: "Initialize", icon: <Settings />, status: "pending" },
@@ -116,6 +149,12 @@ const steps: WorkflowStep[] = [
             {running ? "Running..." : "Start Workflow"}
           </Button>
           <WorkflowSteps steps={liveSteps} />
+        </div>
+      </Section>
+
+      <Section title="Collapsible Details">
+        <div className="max-w-sm">
+          <WorkflowSteps steps={collapsibleSteps} />
         </div>
       </Section>
 

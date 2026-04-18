@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef, useCallback } from "react"
-import { SimpleTooltip, Button, Badge, Input, Textarea } from "@cherry-studio/ui"
+import React, { useState, useCallback } from "react"
+import { SimpleTooltip, Button, Badge, Input, Textarea, Label, Popover, PopoverTrigger, PopoverContent } from "@cherry-studio/ui"
 import { Section, type PropDef } from "../components/Section"
 import {
   ChevronDown, Sparkles, X, Check, Code2,
@@ -17,25 +17,25 @@ interface CLITool {
 }
 
 const cliTools: CLITool[] = [
-  { id: "claude", name: "Claude Code", desc: "Anthropic 官方 CLI", color: "#d97706", initial: "C", version: "v1.0.28", category: "official" },
+  { id: "claude", name: "Claude Code", desc: "Anthropic 官方 CLI", color: "#8755E9", initial: "C", version: "v1.0.28", category: "official" },
   { id: "qwen", name: "Qwen Code", desc: "通义千问代码助手", color: "#7c3aed", initial: "Q", version: "v2.3.1", category: "official" },
   { id: "gemini", name: "Gemini CLI", desc: "Google 代码工具", color: "#2563eb", initial: "G", version: "v0.8.5", category: "official" },
-  { id: "openai", name: "OpenAI Codex", desc: "OpenAI 编码引擎", color: "#10a37f", initial: "O", version: "v4.1.0", category: "official" },
-  { id: "iflow", name: "iFlow CLI", desc: "智能工作流 CLI", color: "#eab308", initial: "⚡", version: "v1.5.2", category: "official" },
+  { id: "openai", name: "OpenAI Codex", desc: "OpenAI 编码引擎", color: "#06b6d4", initial: "O", version: "v4.1.0", category: "official" },
+  { id: "iflow", name: "iFlow CLI", desc: "智能工作流 CLI", color: "#0ea5e9", initial: "⚡", version: "v1.5.2", category: "official" },
   { id: "copilot", name: "GitHub Copilot CLI", desc: "GitHub 编码助手", color: "#1a1a2e", initial: "GH", version: "v2.1.0", category: "official" },
   { id: "kimi", name: "Kimi CLI", desc: "Moonshot 代码工具", color: "#1a1a2e", initial: "K", version: "v0.9.3", category: "official" },
 ]
 
 const codeModels = [
-  { id: "cm1", name: "anthropic/claude-sonnet-4", provider: "CherryIN", color: "#d97706" },
-  { id: "cm2", name: "anthropic/claude-opus-4", provider: "CherryIN", color: "#d97706" },
+  { id: "cm1", name: "anthropic/claude-sonnet-4", provider: "CherryIN", color: "#8755E9" },
+  { id: "cm2", name: "anthropic/claude-opus-4", provider: "CherryIN", color: "#8755E9" },
   { id: "cm3", name: "deepseek/deepseek-r1(free)", provider: "CherryIN", color: "#3b82f6" },
   { id: "cm4", name: "deepseek/deepseek-v3(free)", provider: "CherryIN", color: "#3b82f6" },
   { id: "cm5", name: "google/gemini-2.5-flash-image", provider: "CherryIN", color: "#6366f1" },
   { id: "cm7", name: "google/gemini-2.5-pro", provider: "CherryIN", color: "#6366f1" },
   { id: "cm9", name: "google/gemini-3-pro-preview", provider: "CherryIN", color: "#6366f1" },
   { id: "cm10", name: "moonshotai/kimi-k2-0905", provider: "CherryIN", color: "#111" },
-  { id: "cm11", name: "openai/gpt-5.1", provider: "CherryIN", color: "#ec4899" },
+  { id: "cm11", name: "openai/gpt-5.1", provider: "CherryIN", color: "#a78bfa" },
   { id: "cm12", name: "qwen/qwen3-235b-a22b-instruct-2507(free)", provider: "CherryIN", color: "#8b5cf6" },
 ]
 
@@ -66,49 +66,39 @@ function SelectDropdown<T extends { id: string }>({
   placeholder?: string; maxHeight?: number
 }) {
   const [open, setOpen] = useState(false)
-  const ref = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    if (!open) return
-    const handler = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
-    }
-    document.addEventListener("mousedown", handler)
-    return () => document.removeEventListener("mousedown", handler)
-  }, [open])
-
   const selected = items.find(i => i.id === selectedId)
 
   return (
-    <div ref={ref} className="relative">
-      <Button
-        variant="outline"
-        onClick={() => setOpen(!open)}
-        className={`w-full flex items-center justify-between px-2.5 py-1.5 h-auto rounded-[12px] text-xs font-normal bg-transparent hover:bg-muted/30 ${open ? "border-primary/40 ring-1 ring-primary/15" : "border-border/40"}`}
-      >
-        <div className="flex items-center gap-2 min-w-0 flex-1 text-left">
-          {selected ? renderSelected(selected) : <span className="text-muted-foreground/50">{placeholder || "请选择..."}</span>}
-        </div>
-        <ChevronDown size={12} className={`text-muted-foreground/50 transition-transform flex-shrink-0 ml-2 ${open ? "rotate-180" : ""}`} />
-      </Button>
-      {open && (
-        <div
-          className="absolute top-full left-0 right-0 mt-1 bg-popover border border-border/40 rounded-[12px] shadow-lg z-50 p-1 overflow-y-auto animate-in fade-in slide-in-from-top-1 duration-150 [&::-webkit-scrollbar]:w-[3px] [&::-webkit-scrollbar-thumb]:bg-border/30 [&::-webkit-scrollbar-thumb]:rounded-full"
-          style={{ maxHeight }}
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button
+          variant="outline"
+          className={`w-full flex items-center justify-between px-2.5 py-1.5 h-auto rounded-[12px] text-xs font-normal bg-transparent hover:bg-muted/30 ${open ? "border-primary/40 ring-1 ring-primary/15" : "border-border/40"}`}
         >
-          {items.map(item => (
-            <Button
-              variant="ghost"
-              key={item.id}
-              onClick={() => { onSelect(item.id); setOpen(false) }}
-              className={`w-full justify-start h-auto px-2.5 py-1.5 text-xs font-normal rounded-[12px] ${selectedId === item.id ? "bg-primary/10 text-primary" : "text-foreground hover:bg-accent/60"}`}
-            >
-              {renderItem(item, selectedId === item.id)}
-            </Button>
-          ))}
-        </div>
-      )}
-    </div>
+          <div className="flex items-center gap-2 min-w-0 flex-1 text-left">
+            {selected ? renderSelected(selected) : <span className="text-muted-foreground/50">{placeholder || "请选择..."}</span>}
+          </div>
+          <ChevronDown size={12} className={`text-muted-foreground/50 transition-transform flex-shrink-0 ml-2 ${open ? "rotate-180" : ""}`} />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent
+        className="rounded-[12px] p-1 border-border/40 overflow-y-auto [&::-webkit-scrollbar]:w-[3px] [&::-webkit-scrollbar-thumb]:bg-border/30 [&::-webkit-scrollbar-thumb]:rounded-full"
+        align="start"
+        sideOffset={4}
+        style={{ maxHeight }}
+      >
+        {items.map(item => (
+          <Button
+            variant="ghost"
+            key={item.id}
+            onClick={() => { onSelect(item.id); setOpen(false) }}
+            className={`w-full justify-start h-auto px-2.5 py-1.5 text-xs font-normal rounded-[12px] ${selectedId === item.id ? "bg-primary/10 text-primary" : "text-foreground hover:bg-accent/60"}`}
+          >
+            {renderItem(item, selectedId === item.id)}
+          </Button>
+        ))}
+      </PopoverContent>
+    </Popover>
   )
 }
 
@@ -122,7 +112,7 @@ function FieldLabel({ children, hint }: { children: React.ReactNode; hint?: stri
       <span className="text-[10px] text-muted-foreground/50">{children}</span>
       {hint && (
         <SimpleTooltip content={hint} side="top">
-          <Info size={9} className="text-muted-foreground/25 cursor-help" />
+          <Info size={9} className="text-muted-foreground/50 cursor-help" />
         </SimpleTooltip>
       )}
     </div>
@@ -137,7 +127,7 @@ function CLIIcon({ tool, size = "md" }: { tool: CLITool; size?: "sm" | "md" }) {
   const px = size === "sm" ? 28 : 44
   return (
     <div
-      className="rounded-xl flex items-center justify-center text-primary-foreground flex-shrink-0"
+      className="rounded-[12px] flex items-center justify-center text-primary-foreground flex-shrink-0"
       style={{ width: px, height: px, background: tool.color, fontSize: size === "sm" ? 12 : 16, fontWeight: 600 }}
     >
       {tool.initial}
@@ -242,7 +232,7 @@ export function CodeToolDemo() {
               {displayedTools.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-16 text-muted-foreground/30">
                   <Code2 size={32} className="mb-3" />
-                  <p className="text-[12px]">{searchTerm ? "没有找到匹配的工具" : "暂无代码工具"}</p>
+                  <p className="text-xs">{searchTerm ? "没有找到匹配的工具" : "暂无代码工具"}</p>
                 </div>
               ) : (
                 <div>
@@ -258,7 +248,7 @@ export function CodeToolDemo() {
                             onClick={() => setSelectedCli(tool.id)}
                             className="flex flex-col items-center gap-1.5 h-auto p-1.5 font-normal tracking-normal group relative"
                           >
-                            <div className={`transition-transform group-hover:scale-110 shadow-sm ${selectedCli === tool.id ? "ring-2 ring-primary rounded-xl" : ""}`}>
+                            <div className={`transition-transform group-hover:scale-110 shadow-sm ${selectedCli === tool.id ? "ring-2 ring-primary rounded-[12px]" : ""}`}>
                               <CLIIcon tool={tool} />
                             </div>
                             <span className="text-[10px] text-muted-foreground group-hover:text-foreground transition-colors truncate max-w-[68px]">
@@ -282,7 +272,7 @@ export function CodeToolDemo() {
                             onClick={() => setSelectedCli(tool.id)}
                             className="flex flex-col items-center gap-1.5 h-auto p-1.5 font-normal tracking-normal group relative"
                           >
-                            <div className={`transition-transform group-hover:scale-110 shadow-sm ${selectedCli === tool.id ? "ring-2 ring-primary rounded-xl" : ""}`}>
+                            <div className={`transition-transform group-hover:scale-110 shadow-sm ${selectedCli === tool.id ? "ring-2 ring-primary rounded-[12px]" : ""}`}>
                               <CLIIcon tool={tool} />
                             </div>
                             <span className="text-[10px] text-muted-foreground group-hover:text-foreground transition-colors truncate max-w-[68px]">
@@ -311,12 +301,12 @@ export function CodeToolDemo() {
         {selectedCli && selectedTool && config && (
           <div className="absolute top-2 right-2 bottom-2 z-50 w-[400px] bg-card rounded-[24px] border border-border/30 shadow-2xl flex flex-col overflow-hidden">
             {/* Header */}
-            <div className="flex items-center justify-between px-4 h-11 flex-shrink-0 border-b border-border/15">
+            <div className="flex items-center justify-between px-4 h-11 flex-shrink-0 border-b border-border/30">
               <div className="flex items-center gap-2">
                 <CLIIcon tool={selectedTool} size="sm" />
                 <div>
-                  <span className="text-[11px] text-foreground">{selectedTool.name}</span>
-                  <span className="text-[9px] text-muted-foreground/35 ml-1.5">{selectedTool.version}</span>
+                  <span className="text-xs text-foreground">{selectedTool.name}</span>
+                  <span className="text-xs text-muted-foreground/35 ml-1.5">{selectedTool.version}</span>
                 </div>
               </div>
               <Button variant="ghost" size="icon-xs" onClick={() => setSelectedCli(null)}>
@@ -327,14 +317,14 @@ export function CodeToolDemo() {
             {/* Scrollable config */}
             <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4 [&::-webkit-scrollbar]:hidden">
               {/* Tool info card */}
-              <div className="flex items-center gap-3 p-3 rounded-xl bg-accent/5 border border-border/10">
+              <div className="flex items-center gap-3 p-3 rounded-[12px] bg-accent/5 border border-border/30">
                 <CLIIcon tool={selectedTool} />
                 <div className="flex-1 min-w-0">
-                  <div className="text-[11px] text-foreground">{selectedTool.name}</div>
+                  <div className="text-xs text-foreground">{selectedTool.name}</div>
                   <div className="text-[10px] text-muted-foreground/40">{selectedTool.desc}</div>
                   <div className="flex items-center gap-2 mt-1">
-                    <Badge variant="outline" className="text-[9px] py-0">{selectedTool.version}</Badge>
-                    <Badge variant="outline" className="text-[9px] py-0">
+                    <Badge variant="outline" className="text-xs py-0">{selectedTool.version}</Badge>
+                    <Badge variant="outline" className="text-xs py-0">
                       {selectedTool.category === "official" ? "官方" : "社区"}
                     </Badge>
                   </div>
@@ -362,7 +352,7 @@ export function CodeToolDemo() {
                         <Sparkles size={6} className="text-primary-foreground" />
                       </div>
                       <span className="truncate flex-1">{item.name}</span>
-                      <span className="text-muted-foreground/30 flex-shrink-0 text-[9px]">{item.provider}</span>
+                      <span className="text-muted-foreground/30 flex-shrink-0 text-xs">{item.provider}</span>
                       {isSelected && <Check size={11} className="text-primary flex-shrink-0 ml-0.5" />}
                     </div>
                   )}
@@ -379,16 +369,16 @@ export function CodeToolDemo() {
                   <Input
                     value={config.workDir}
                     onChange={e => updateConfig(selectedCli, { workDir: e.target.value })}
-                    className="flex-1 border-0 shadow-none focus-visible:ring-0 rounded-none p-0 py-1.5 pr-1 text-[11px] font-mono h-auto"
+                    className="flex-1 border-0 shadow-none focus-visible:ring-0 rounded-none p-0 py-1.5 pr-1 text-xs font-mono h-auto"
                     placeholder="选择工作目录..."
                   />
                   {config.workDir && (
-                    <Button variant="ghost" size="icon-xs" onClick={() => updateConfig(selectedCli, { workDir: "" })} className="text-muted-foreground/25">
+                    <Button variant="ghost" size="icon-xs" onClick={() => updateConfig(selectedCli, { workDir: "" })} className="text-muted-foreground/50">
                       <X size={10} />
                     </Button>
                   )}
                   <div className="w-px h-4 bg-border/20" />
-                  <Button variant="ghost" size="xs" className="text-[10px] text-muted-foreground/40 rounded-none h-auto py-1.5">
+                  <Button variant="ghost" size="xs" onClick={() => updateConfig(selectedCli, { workDir: "/Users/demo/projects" })} className="text-[10px] text-muted-foreground/40 rounded-none h-auto py-1.5">
                     选择
                   </Button>
                 </div>
@@ -424,28 +414,28 @@ export function CodeToolDemo() {
                   value={config.envVars}
                   onChange={e => updateConfig(selectedCli, { envVars: e.target.value })}
                   rows={2}
-                  className="w-full min-h-[unset] bg-transparent border border-border/30 rounded-[12px] px-2.5 py-1.5 text-[11px] text-foreground placeholder:text-muted-foreground/20 focus-visible:border-border/50 focus-visible:ring-0 transition-colors resize-none font-mono [&::-webkit-scrollbar]:w-[3px] [&::-webkit-scrollbar-thumb]:bg-border/30"
+                  className="w-full min-h-[unset] bg-transparent border border-border/30 rounded-[12px] px-2.5 py-1.5 text-xs text-foreground placeholder:text-muted-foreground/50 focus-visible:border-border/50 focus-visible:ring-0 transition-colors resize-none font-mono [&::-webkit-scrollbar]:w-[3px] [&::-webkit-scrollbar-thumb]:bg-border/30"
                   placeholder={"KEY1=value1\nKEY2=value2"}
                 />
               </div>
 
               {/* Check updates */}
-              <label className="flex items-center gap-2 cursor-pointer group">
+              <Label className="flex items-center gap-2 cursor-pointer group">
                 <Button
                   variant="ghost"
                   onClick={() => updateConfig(selectedCli, { checkUpdates: !config.checkUpdates })}
-                  className={`w-3.5 h-3.5 p-0 h-auto rounded border flex items-center justify-center flex-shrink-0 transition-colors ${config.checkUpdates ? "bg-primary border-primary" : "border-muted-foreground/20 hover:border-muted-foreground/35"}`}
+                  className={`w-3.5 h-3.5 p-0 h-auto rounded border flex items-center justify-center flex-shrink-0 transition-colors ${config.checkUpdates ? "bg-primary border-primary" : "border-border/40 hover:border-muted-foreground/35"}`}
                 >
                   {config.checkUpdates && <Check size={8} className="text-primary-foreground" />}
                 </Button>
                 <span className="text-[10px] text-muted-foreground/40 group-hover:text-foreground/50 transition-colors">检查更新并安装最新版本</span>
-              </label>
+              </Label>
             </div>
 
             {/* Footer */}
-            <div className="flex-shrink-0 border-t border-border/15 px-4 py-3 space-y-2.5">
+            <div className="flex-shrink-0 border-t border-border/30 px-4 py-3 space-y-2.5">
               {/* Summary */}
-              <div className="flex items-center gap-2 text-[9px] text-muted-foreground/30">
+              <div className="flex items-center gap-2 text-xs text-muted-foreground/30">
                 <div className="flex items-center gap-1">
                   <Cpu size={9} />
                   <span>{selectedTool.name}</span>
@@ -466,7 +456,7 @@ export function CodeToolDemo() {
               <Button
                 onClick={handleLaunch}
                 disabled={launching}
-                className={`w-full gap-2 text-[11px] ${
+                className={`w-full gap-2 text-xs ${
                   launchSuccess ? "bg-success text-success-foreground" : ""
                 }`}
               >

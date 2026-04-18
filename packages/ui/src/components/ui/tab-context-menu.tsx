@@ -62,14 +62,14 @@ export function TabContextMenu({
       ref={ref}
       data-slot="tab-context-menu"
       role="menu"
-      className="fixed z-[300] bg-popover border border-border rounded-[var(--radius-button)] shadow-xl p-0.5 min-w-[120px] text-[11px] tracking-tight"
+      className="fixed z-[var(--z-sticky)] bg-popover border border-border rounded-[var(--radius-button)] shadow-popover p-0.5 min-w-[120px] text-xs tracking-[-0.14px]"
       style={{ left: state.x, top: state.y }}
     >
       {!isHome && (
         <Button
           variant="ghost"
           size="sm"
-          className="w-full justify-start gap-1.5 px-2 py-[5px] text-[11px]"
+          className="w-full justify-start gap-1.5 px-2 py-[5px] text-xs"
           onClick={() => { onPin(state.tabId); onDismiss(); }}
         >
           <Pin size={11} />
@@ -80,7 +80,7 @@ export function TabContextMenu({
         <Button
           variant="ghost"
           size="sm"
-          className="w-full justify-start gap-1.5 px-2 py-[5px] text-[11px]"
+          className="w-full justify-start gap-1.5 px-2 py-[5px] text-xs"
           onClick={() => { onDock(state.tabId); onDismiss(); }}
         >
           <ChevronLeft size={11} />
@@ -91,7 +91,7 @@ export function TabContextMenu({
         <Button
           variant="ghost"
           size="sm"
-          className="w-full justify-start gap-1.5 px-2 py-[5px] text-[11px]"
+          className="w-full justify-start gap-1.5 px-2 py-[5px] text-xs"
           onClick={() => { onClose(state.tabId); onDismiss(); }}
         >
           <X size={11} />
@@ -99,7 +99,7 @@ export function TabContextMenu({
         </Button>
       )}
       {isHome && (
-        <div className="px-2.5 py-[5px] text-[11px] text-muted-foreground">首页（固定）</div>
+        <div className="px-2.5 py-[5px] text-xs text-muted-foreground">首页（固定）</div>
       )}
     </div>
   );

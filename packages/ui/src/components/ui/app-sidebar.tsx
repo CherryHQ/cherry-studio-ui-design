@@ -4,7 +4,11 @@ import * as React from "react"
 import { Search, X, ChevronRight, Settings2 } from "lucide-react"
 import { cn } from "../../lib/utils"
 import { Button } from "./button"
+import { Avatar, AvatarFallback, AvatarImage } from "./avatar"
+import { ScrollArea } from "./scroll-area"
+import { Separator } from "./separator"
 import { SimpleTooltip } from "./simple-tooltip"
+import { Kbd } from "./kbd"
 
 // ===========================
 // Local types (extracted from app types)
@@ -55,7 +59,7 @@ function getLayout(width: number): AppSidebarLayout {
 /** Mini app icon — logo image or colored initial */
 function MiniAppIcon({ tab, size = "sm" }: { tab: AppSidebarTab; size?: "sm" | "md" }) {
   const s = size === "sm" ? "w-3.5 h-3.5" : "w-4 h-4"
-  const fontSize = size === "sm" ? "text-[11px]" : "text-[11px]"
+  const fontSize = size === "sm" ? "text-xs" : "text-xs"
   if (tab.miniAppLogoUrl) {
     return <img src={tab.miniAppLogoUrl} alt="" className={`${s} rounded-[var(--radius-kbd)] object-cover flex-shrink-0`} />
   }
@@ -97,7 +101,7 @@ function FullMenuItems({
               size="sm"
               onClick={() => onItemClick(item.id)}
               className={cn(
-                "w-full justify-start gap-2.5 px-2.5 py-[7px] text-[13px] transition-all duration-150 relative",
+                "w-full justify-start gap-2.5 px-2.5 py-[7px] text-sm transition-all duration-[var(--duration-normal)] relative",
                 isActive
                   ? "bg-cherry-active-bg text-foreground"
                   : "text-muted-foreground hover:text-foreground hover:bg-accent/60"
@@ -106,7 +110,7 @@ function FullMenuItems({
               {isActive && (
                 <div className="absolute inset-0 rounded-[inherit] border border-cherry-active-border pointer-events-none" />
               )}
-              <Icon size={16} strokeWidth={1.6} />
+              <Icon size={16} strokeWidth={1.6} className={isActive ? "drop-shadow-[0_0_4px_rgba(18,18,18,0.1)]" : undefined} />
               <span className="truncate">{item.label}</span>
             </Button>
             {miniTabs.map(mt => (
@@ -116,7 +120,7 @@ function FullMenuItems({
                 size="sm"
                 onClick={() => onMiniAppTabClick?.(mt.id)}
                 className={cn(
-                  "w-full justify-start gap-2 pl-7 pr-2.5 py-[5px] text-xs transition-all duration-150 relative",
+                  "w-full justify-start gap-2 pl-7 pr-2.5 py-[5px] text-xs transition-all duration-[var(--duration-normal)] relative",
                   activeTabId === mt.id ? "bg-cherry-active-bg text-foreground" : "text-muted-foreground hover:text-foreground hover:bg-accent/40"
                 )}
               >
@@ -150,7 +154,9 @@ function FullDockedTabs({
 }) {
   if (dockedTabs.length === 0) return null
   return (
-    <div className="px-2 mt-1 pt-1 border-t border-border/30 space-y-0.5">
+    <>
+    <Separator className="mx-2 mt-1 bg-border/30" />
+    <div className="px-2 pt-1 space-y-0.5">
       {dockedTabs.map(dt => {
         const DtIcon = dt.icon
         const isActive = activeTabId === dt.id
@@ -158,7 +164,7 @@ function FullDockedTabs({
           <div
             key={dt.id}
             className={cn(
-              "group/dock flex items-center gap-2.5 px-2.5 py-[6px] rounded-[var(--radius-button)] text-xs tracking-tight transition-all duration-150 cursor-grab active:cursor-grabbing relative",
+              "group/dock flex items-center gap-2.5 px-2.5 py-[6px] rounded-[var(--radius-button)] text-xs tracking-[-0.12px] transition-all duration-[var(--duration-normal)] cursor-grab active:cursor-grabbing relative",
               isActive ? "bg-cherry-active-bg text-foreground" : "text-muted-foreground hover:text-foreground hover:bg-accent/40"
             )}
             onClick={() => onMiniAppTabClick?.(dt.id)}
@@ -175,12 +181,14 @@ function FullDockedTabs({
               variant="ghost"
               size="icon-xs"
               onClick={(e) => { e.stopPropagation(); onCloseDockedTab?.(dt.id) }}
+              aria-label="Close tab"
               className="w-4 h-4 hover:bg-foreground/10 opacity-0 group-hover/dock:opacity-100 transition-opacity flex-shrink-0"
-            ><X size={9} /></Button>
+            ><X size={12} /></Button>
           </div>
         )
       })}
     </div>
+    </>
   )
 }
 
@@ -205,7 +213,7 @@ function SidebarLogo({ logoSrc, logoAlt = "Logo", brandName, size = "md" }: AppS
       {logoSrc ? (
         <img src={logoSrc} alt={logoAlt} className={`${s} rounded-[var(--radius-button)] flex-shrink-0 object-cover`} />
       ) : (
-        <div className={cn(s, "rounded-[var(--radius-button)] flex-shrink-0 bg-primary/10 flex items-center justify-center text-primary text-xs font-semibold")}>
+        <div className={cn(s, "rounded-[var(--radius-button)] flex-shrink-0 bg-primary/10 flex items-center justify-center text-primary text-xs font-medium")}>
           {brandName?.charAt(0) ?? "C"}
         </div>
       )}
@@ -225,24 +233,24 @@ function FullBottomSection({
 }) {
   return (
     <div className="px-2 py-2 space-y-1">
-      <Button variant="ghost" size="sm" onClick={onSettingsClick} className="w-full justify-start gap-2.5 px-2.5 py-[7px] text-[13px] text-muted-foreground hover:text-foreground hover:bg-accent/60">
+      <Button variant="ghost" size="sm" onClick={onSettingsClick} className="w-full justify-start gap-2.5 px-2.5 py-[7px] text-sm text-muted-foreground hover:text-foreground hover:bg-accent/60">
         <Settings2 size={16} strokeWidth={1.6} />
         <span>{settingsLabel}</span>
       </Button>
       {user && (
         <div className="flex items-center gap-2.5 px-2.5 py-1.5 cursor-pointer rounded-[var(--radius-button)] hover:bg-accent/60 transition-colors">
-          <div className="w-7 h-7 rounded-full overflow-hidden ring-[1px] ring-border flex-shrink-0">
+          <Avatar className="w-7 h-7 ring-[1px] ring-border flex-shrink-0">
             {user.avatarUrl ? (
-              <img src={user.avatarUrl} alt="" className="w-full h-full object-cover" />
+              <AvatarImage src={user.avatarUrl} alt="" />
             ) : (
-              <div className="w-full h-full bg-gradient-to-br from-accent-blue to-accent-indigo flex items-center justify-center text-primary-foreground text-[11px]">
+              <AvatarFallback className="bg-gradient-to-br from-accent-blue to-accent-indigo text-primary-foreground text-xs">
                 {user.name?.charAt(0) ?? "U"}
-              </div>
+              </AvatarFallback>
             )}
-          </div>
+          </Avatar>
           <div className="flex-1 min-w-0">
-            <div className="text-[13px] tracking-tight text-sidebar-foreground truncate">{user.name}</div>
-            {user.email && <div className="text-[11px] text-muted-foreground truncate">{user.email}</div>}
+            <div className="text-sm tracking-[-0.14px] text-sidebar-foreground truncate">{user.name}</div>
+            {user.email && <div className="text-xs text-muted-foreground truncate">{user.email}</div>}
           </div>
           <ChevronRight size={14} className="text-muted-foreground flex-shrink-0" />
         </div>
@@ -353,6 +361,15 @@ export function AppSidebar({
     document.addEventListener("mouseup", onMouseUp)
   }, [setWidth])
 
+  // Cleanup resize listeners on unmount
+  React.useEffect(() => {
+    return () => {
+      isResizing.current = false
+      document.body.style.cursor = ""
+      document.body.style.userSelect = ""
+    }
+  }, [])
+
   // ===========================
   // Floating mode
   // ===========================
@@ -361,12 +378,14 @@ export function AppSidebar({
     return (
       <div
         data-slot="app-sidebar"
-        className="absolute inset-0 z-40"
+        className="absolute inset-0 z-[var(--z-overlay)]"
         onClick={handleDismiss}
       >
         <div
+          role="navigation"
+          aria-label="Main sidebar"
           className={cn(
-            "absolute left-0 top-0 bottom-0 bg-sidebar/70 backdrop-blur-[6px] backdrop-saturate-150 flex flex-col select-none shadow-2xl rounded-r-[var(--radius-card)] animate-in slide-in-from-left-2 duration-200",
+            "absolute left-0 top-0 bottom-0 bg-sidebar/70 backdrop-blur-[6px] backdrop-saturate-150 flex flex-col select-none shadow-popover rounded-r-[var(--radius-panel)] animate-in slide-in-from-left-2 duration-[var(--duration-slow)]",
             className
           )}
           style={{ width: BP_FULL }}
@@ -393,36 +412,39 @@ export function AppSidebar({
           {/* Logo area */}
           <div className="flex items-center h-14 px-4 gap-2.5 flex-shrink-0">
             <SidebarLogo logoSrc={logoSrc} logoAlt={logoAlt} brandName={brandName} size="md" />
-            <span className="text-[13px] tracking-tight text-sidebar-foreground truncate">{brandName}</span>
+            <span className="text-sm tracking-[-0.14px] text-sidebar-foreground truncate">{brandName}</span>
           </div>
 
           {/* Search */}
           <div className="px-3 py-2 flex-shrink-0">
-            <div onClick={() => { onSearchClick(); handleDismiss() }} className="flex items-center gap-2 px-2.5 py-1.5 rounded-[var(--radius-control)] bg-sidebar-accent/50 text-muted-foreground text-xs cursor-pointer hover:bg-accent transition-colors">
+            <div role="button" tabIndex={0} onClick={() => { onSearchClick(); handleDismiss() }} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onSearchClick(); handleDismiss() } }} className="flex items-center gap-2 px-2.5 py-1.5 rounded-[var(--radius-control)] bg-sidebar-accent/50 text-muted-foreground text-xs cursor-pointer hover:bg-accent transition-colors focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50">
               <Search size={13} />
-              <span>{searchLabel}</span>
+              <span className="flex-1">{searchLabel}</span>
+              <Kbd>⌘K</Kbd>
             </div>
           </div>
 
           {/* Menu items */}
-          <div className="flex-1 overflow-y-auto [&::-webkit-scrollbar]:hidden py-1">
-            <FullMenuItems
-              items={items}
-              activeItem={activeItem}
-              onItemClick={onItemClick}
-              activeMiniAppTabs={activeMiniAppTabs || []}
-              activeTabId={activeTabId}
-              onMiniAppTabClick={onMiniAppTabClick}
-              isFloating
-            />
-            <FullDockedTabs
-              dockedTabs={dockedTabs || []}
-              activeTabId={activeTabId}
-              onMiniAppTabClick={onMiniAppTabClick}
-              onStartSidebarDrag={onStartSidebarDrag}
-              onCloseDockedTab={onCloseDockedTab}
-            />
-          </div>
+          <ScrollArea className="flex-1">
+            <div className="py-1">
+              <FullMenuItems
+                items={items}
+                activeItem={activeItem}
+                onItemClick={onItemClick}
+                activeMiniAppTabs={activeMiniAppTabs || []}
+                activeTabId={activeTabId}
+                onMiniAppTabClick={onMiniAppTabClick}
+                isFloating
+              />
+              <FullDockedTabs
+                dockedTabs={dockedTabs || []}
+                activeTabId={activeTabId}
+                onMiniAppTabClick={onMiniAppTabClick}
+                onStartSidebarDrag={onStartSidebarDrag}
+                onCloseDockedTab={onCloseDockedTab}
+              />
+            </div>
+          </ScrollArea>
 
           {/* Bottom section */}
           <div className="flex-shrink-0">
@@ -445,7 +467,7 @@ export function AppSidebar({
       >
         {/* Hover trigger zone — shows floating sidebar */}
         <div
-          className="absolute left-0 top-0 bottom-0 w-[6px] z-50"
+          className="absolute left-0 top-0 bottom-0 w-[6px] z-[var(--z-sticky)]"
           onMouseEnter={() => {
             if (hoverTimeout.current) clearTimeout(hoverTimeout.current)
             hoverTimeout.current = setTimeout(() => onHoverChange(true), 200)
@@ -475,9 +497,11 @@ export function AppSidebar({
     <div
       ref={sidebarRef}
       data-slot="app-sidebar"
+      role="navigation"
+      aria-label="Main sidebar"
       style={{ width: actualWidth }}
       className={cn(
-        "h-full bg-sidebar flex flex-col flex-shrink-0 relative group/sidebar z-20 select-none",
+        "h-full bg-sidebar flex flex-col flex-shrink-0 relative group/sidebar z-[var(--z-sticky)] select-none rounded-[var(--radius-panel)]",
         className
       )}
     >
@@ -488,16 +512,17 @@ export function AppSidebar({
       )}>
         <SidebarLogo logoSrc={logoSrc} logoAlt={logoAlt} brandName={brandName} size={layout === "full" ? "md" : "sm"} />
         {layout === "full" && (
-          <span className="text-[13px] tracking-tight text-sidebar-foreground truncate">{brandName}</span>
+          <span className="text-sm tracking-[-0.14px] text-sidebar-foreground truncate">{brandName}</span>
         )}
       </div>
 
       {/* Search */}
       {layout === "full" ? (
         <div className="px-3 py-2 flex-shrink-0">
-          <div onClick={onSearchClick} className="flex items-center gap-2 px-2.5 py-1.5 rounded-[var(--radius-control)] bg-sidebar-accent text-muted-foreground text-xs cursor-pointer hover:bg-accent transition-colors">
+          <div role="button" tabIndex={0} onClick={onSearchClick} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onSearchClick() } }} className="flex items-center gap-2 px-2.5 py-1.5 rounded-[var(--radius-control)] bg-sidebar-accent text-muted-foreground text-xs cursor-pointer hover:bg-accent transition-colors focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50">
             <Search size={13} />
-            <span>{searchLabel}</span>
+            <span className="flex-1">{searchLabel}</span>
+            <Kbd>⌘K</Kbd>
           </div>
         </div>
       ) : (
@@ -511,7 +536,8 @@ export function AppSidebar({
       )}
 
       {/* Menu items */}
-      <div className="flex-1 overflow-y-auto [&::-webkit-scrollbar]:hidden py-1">
+      <ScrollArea className="flex-1">
+        <div className="py-1">
         {layout === "icon" && (
           <div className="flex flex-col items-center gap-0.5 px-1.5">
             {items.map((item) => {
@@ -526,7 +552,7 @@ export function AppSidebar({
                       size="icon-sm"
                       onClick={() => onItemClick(item.id)}
                       className={cn(
-                        "transition-all duration-150 relative",
+                        "transition-all duration-[var(--duration-normal)] relative",
                         isActive
                           ? "bg-cherry-active-bg text-foreground"
                           : "text-muted-foreground hover:text-foreground hover:bg-accent/60"
@@ -535,7 +561,7 @@ export function AppSidebar({
                       {isActive && (
                         <div className="absolute inset-0 rounded-[inherit] border border-cherry-active-border pointer-events-none" />
                       )}
-                      <Icon size={18} strokeWidth={1.6} />
+                      <Icon size={18} strokeWidth={1.6} className={isActive ? "drop-shadow-[0_0_4px_rgba(18,18,18,0.1)]" : undefined} />
                     </Button>
                   </SimpleTooltip>
                   {miniTabs.map(mt => (
@@ -545,7 +571,7 @@ export function AppSidebar({
                         size="icon-xs"
                         onClick={() => onMiniAppTabClick?.(mt.id)}
                         className={cn(
-                          "w-7 h-7 transition-all duration-150 relative",
+                          "w-7 h-7 transition-all duration-[var(--duration-normal)] relative",
                           activeTabId === mt.id ? "bg-cherry-active-bg" : "hover:bg-accent/50"
                         )}
                       >
@@ -575,7 +601,7 @@ export function AppSidebar({
                     size="sm"
                     onClick={() => onItemClick(item.id)}
                     className={cn(
-                      "w-full flex-col gap-0.5 py-2 transition-all duration-150 relative",
+                      "w-full flex-col gap-0.5 py-2 transition-all duration-[var(--duration-normal)] relative",
                       isActive
                         ? "bg-cherry-active-bg text-foreground"
                         : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
@@ -584,8 +610,8 @@ export function AppSidebar({
                     {isActive && (
                       <div className="absolute inset-0 rounded-[inherit] border border-cherry-active-border pointer-events-none" />
                     )}
-                    <Icon size={18} strokeWidth={1.6} />
-                    <span className="text-xs leading-tight tracking-tight">{item.label}</span>
+                    <Icon size={18} strokeWidth={1.6} className={isActive ? "drop-shadow-[0_0_4px_rgba(18,18,18,0.1)]" : undefined} />
+                    <span className="text-xs leading-tight tracking-[-0.12px]">{item.label}</span>
                   </Button>
                   {miniTabs.map(mt => (
                     <Button
@@ -594,7 +620,7 @@ export function AppSidebar({
                       size="sm"
                       onClick={() => onMiniAppTabClick?.(mt.id)}
                       className={cn(
-                        "w-full flex-col gap-0.5 py-1.5 transition-all duration-150 relative",
+                        "w-full flex-col gap-0.5 py-1.5 transition-all duration-[var(--duration-normal)] relative",
                         activeTabId === mt.id ? "bg-cherry-active-bg" : "hover:bg-accent/40"
                       )}
                     >
@@ -602,7 +628,7 @@ export function AppSidebar({
                         <div className="absolute inset-0 rounded-[inherit] border border-cherry-active-border pointer-events-none" />
                       )}
                       <MiniAppIcon tab={mt} size="md" />
-                      <span className="text-[11px] leading-tight tracking-tight text-muted-foreground truncate max-w-[50px]">{mt.title}</span>
+                      <span className="text-xs leading-tight tracking-[-0.12px] text-muted-foreground truncate max-w-[50px]">{mt.title}</span>
                     </Button>
                   ))}
                 </div>
@@ -625,8 +651,9 @@ export function AppSidebar({
         {/* Docked tabs */}
         {(dockedTabs || []).length > 0 && (
           <div>
-            {layout === "icon" && (
-              <div className="flex flex-col items-center gap-0.5 px-1.5 mt-1 pt-1 border-t border-border/30">
+            {layout === "icon" && (<>
+              <Separator className="mx-1.5 mt-1 bg-border/30" />
+              <div className="flex flex-col items-center gap-0.5 px-1.5 pt-1">
                 {(dockedTabs || []).map(dt => {
                   const DtIcon = dt.icon
                   const isActive = activeTabId === dt.id
@@ -639,7 +666,7 @@ export function AppSidebar({
                           onClick={() => onMiniAppTabClick?.(dt.id)}
                           onMouseDown={(e) => { e.stopPropagation(); onStartSidebarDrag?.(e, dt.id) }}
                           className={cn(
-                            "w-7 h-7 transition-all duration-150 cursor-grab active:cursor-grabbing relative",
+                            "w-7 h-7 transition-all duration-[var(--duration-normal)] cursor-grab active:cursor-grabbing relative",
                             isActive ? "bg-cherry-active-bg" : "hover:bg-accent/50"
                           )}
                         >
@@ -661,9 +688,10 @@ export function AppSidebar({
                   )
                 })}
               </div>
-            )}
-            {layout === "vertical-card" && (
-              <div className="flex flex-col items-center gap-0 px-1 mt-1 pt-1 border-t border-border/30">
+            </>)}
+            {layout === "vertical-card" && (<>
+              <Separator className="mx-1 mt-1 bg-border/30" />
+              <div className="flex flex-col items-center gap-0 px-1 pt-1">
                 {(dockedTabs || []).map(dt => {
                   const DtIcon = dt.icon
                   const isActive = activeTabId === dt.id
@@ -675,7 +703,7 @@ export function AppSidebar({
                         onClick={() => onMiniAppTabClick?.(dt.id)}
                         onMouseDown={(e) => { e.stopPropagation(); onStartSidebarDrag?.(e, dt.id) }}
                         className={cn(
-                          "w-full flex-col gap-0.5 py-1.5 transition-all duration-150 cursor-grab active:cursor-grabbing relative",
+                          "w-full flex-col gap-0.5 py-1.5 transition-all duration-[var(--duration-normal)] cursor-grab active:cursor-grabbing relative",
                           isActive ? "bg-cherry-active-bg" : "hover:bg-accent/40"
                         )}
                       >
@@ -685,7 +713,7 @@ export function AppSidebar({
                         {dt.miniAppId ? (
                           <MiniAppIcon tab={dt} size="md" />
                         ) : <DtIcon size={18} strokeWidth={1.6} />}
-                        <span className="text-[11px] leading-tight tracking-tight text-muted-foreground truncate max-w-[50px]">{dt.title}</span>
+                        <span className="text-xs leading-tight tracking-[-0.12px] text-muted-foreground truncate max-w-[50px]">{dt.title}</span>
                       </Button>
                       <Button
                         variant="ghost"
@@ -697,7 +725,7 @@ export function AppSidebar({
                   )
                 })}
               </div>
-            )}
+            </>)}
             {layout === "full" && (
               <FullDockedTabs
                 dockedTabs={dockedTabs || []}
@@ -709,7 +737,8 @@ export function AppSidebar({
             )}
           </div>
         )}
-      </div>
+        </div>
+      </ScrollArea>
 
       {/* Bottom section */}
       <div className="flex-shrink-0">
@@ -721,15 +750,15 @@ export function AppSidebar({
               </Button>
             </SimpleTooltip>
             {user && (
-              <div className="w-7 h-7 rounded-full overflow-hidden ring-[1px] ring-border">
+              <Avatar className="w-7 h-7 ring-[1px] ring-border">
                 {user.avatarUrl ? (
-                  <img src={user.avatarUrl} alt="" className="w-full h-full object-cover" />
+                  <AvatarImage src={user.avatarUrl} alt="" />
                 ) : (
-                  <div className="w-full h-full bg-gradient-to-br from-accent-blue to-accent-indigo flex items-center justify-center text-primary-foreground text-[11px]">
+                  <AvatarFallback className="bg-gradient-to-br from-accent-blue to-accent-indigo text-primary-foreground text-xs">
                     {user.name?.charAt(0) ?? "U"}
-                  </div>
+                  </AvatarFallback>
                 )}
-              </div>
+              </Avatar>
             )}
           </div>
         )}
@@ -738,18 +767,18 @@ export function AppSidebar({
           <div className="flex flex-col items-center gap-0 py-1.5 px-1">
             <Button variant="ghost" size="sm" onClick={onSettingsClick} className="w-full flex-col gap-0.5 py-2 text-muted-foreground hover:text-foreground hover:bg-accent/50">
               <Settings2 size={18} strokeWidth={1.6} />
-              <span className="text-[11px] leading-tight tracking-tight">{settingsLabel}</span>
+              <span className="text-xs leading-tight tracking-[-0.12px]">{settingsLabel}</span>
             </Button>
             {user && (
-              <div className="w-7 h-7 rounded-full overflow-hidden ring-[1px] ring-border mt-1">
+              <Avatar className="w-7 h-7 ring-[1px] ring-border mt-1">
                 {user.avatarUrl ? (
-                  <img src={user.avatarUrl} alt="" className="w-full h-full object-cover" />
+                  <AvatarImage src={user.avatarUrl} alt="" />
                 ) : (
-                  <div className="w-full h-full bg-gradient-to-br from-accent-blue to-accent-indigo flex items-center justify-center text-primary-foreground text-[11px]">
+                  <AvatarFallback className="bg-gradient-to-br from-accent-blue to-accent-indigo text-primary-foreground text-xs">
                     {user.name?.charAt(0) ?? "U"}
-                  </div>
+                  </AvatarFallback>
                 )}
-              </div>
+              </Avatar>
             )}
           </div>
         )}
@@ -760,7 +789,7 @@ export function AppSidebar({
       {/* Resize handle */}
       <div
         onMouseDown={startResizing}
-        className="absolute right-0 top-0 bottom-0 w-[3px] cursor-col-resize z-50 group/handle"
+        className="absolute right-0 top-0 bottom-0 w-[3px] cursor-col-resize z-[var(--z-sticky)] group/handle"
       >
         <div className="w-full h-full opacity-0 group-hover/handle:opacity-100 bg-primary/20 transition-opacity" />
       </div>

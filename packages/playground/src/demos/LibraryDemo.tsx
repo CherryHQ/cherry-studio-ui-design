@@ -4,6 +4,8 @@ import {
   TreeNav, type TreeNavItem,
   ToggleGroup, ToggleGroupItem,
   Dialog, DialogContent,
+  Popover, PopoverTrigger, PopoverContent,
+  ContextMenu, ContextMenuTrigger, ContextMenuContent, ContextMenuItem, ContextMenuSeparator,
 } from "@cherry-studio/ui"
 import { Section } from "../components/Section"
 import {
@@ -28,9 +30,9 @@ type SidebarFilter = { type: "all" } | { type: "resource"; resourceType: string 
 const TAGS = [
   { id: "t1", name: "生产力", color: "#3b82f6" },
   { id: "t2", name: "写作", color: "#8b5cf6" },
-  { id: "t3", name: "编程", color: "#10b981" },
-  { id: "t4", name: "翻译", color: "#f59e0b" },
-  { id: "t5", name: "设计", color: "#ec4899" },
+  { id: "t3", name: "编程", color: "#06b6d4" },
+  { id: "t4", name: "翻译", color: "#0ea5e9" },
+  { id: "t5", name: "设计", color: "#a78bfa" },
 ]
 
 // ── Mock Data ──
@@ -72,17 +74,6 @@ const MOCK_RESOURCES: ResourceItem[] = [
 
 const SORT_LABELS: Record<SortKey, string> = { updatedAt: "最近更新", name: "名称" }
 
-// ── Context Menu ──
-interface ContextMenuState { x: number; y: number; resourceId: string }
-
-const CONTEXT_ACTIONS: readonly { id: string; label: string; icon: React.ElementType | null; destructive?: boolean }[] = [
-  { id: "edit", label: "编辑", icon: Pencil },
-  { id: "copy", label: "复制", icon: Copy },
-  { id: "move", label: "移动到...", icon: Move },
-  { id: "sep", label: "", icon: null },
-  { id: "delete", label: "删除", icon: Trash2, destructive: true },
-]
-
 // ── Component ──
 export function LibraryDemo() {
   const [resources, setResources] = useState<ResourceItem[]>(MOCK_RESOURCES)
@@ -94,7 +85,6 @@ export function LibraryDemo() {
   const [showSort, setShowSort] = useState(false)
   const [showImport, setShowImport] = useState(false)
   const [importUrl, setImportUrl] = useState("")
-  const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null)
   const [folders, setFolders] = useState<TreeNavItem[]>(INITIAL_FOLDERS)
   const [addingFolder, setAddingFolder] = useState(false)
   const [newFolderName, setNewFolderName] = useState("")
@@ -133,25 +123,25 @@ export function LibraryDemo() {
     const active = (filter.type === "all" && f.type === "all") ||
       (filter.type === "resource" && f.type === "resource" && filter.resourceType === (f as any).resourceType) ||
       (filter.type === "folder" && f.type === "folder" && filter.folderId === (f as any).folderId)
-    return `flex items-center gap-2 w-full px-2.5 py-[6px] rounded-[12px] text-[11px] tracking-tight transition-all cursor-pointer ${
+    return `flex items-center gap-2 w-full px-2.5 py-[6px] rounded-[12px] text-xs tracking-tight transition-all cursor-pointer ${
       active ? "bg-accent/70 text-foreground" : "text-muted-foreground/70 hover:text-foreground hover:bg-accent/35"
     }`
   }
 
-  const handleContextMenu = (e: React.MouseEvent, resourceId: string) => {
-    e.preventDefault()
-    setContextMenu({ x: e.clientX, y: e.clientY, resourceId })
-  }
-
-  const handleContextAction = (action: string) => {
-    if (!contextMenu) return
-    const rid = contextMenu.resourceId
-    if (action === "delete") setResources(prev => prev.filter(r => r.id !== rid))
+  const handleContextAction = (action: string, resourceId: string) => {
+    if (action === "delete") setResources(prev => prev.filter(r => r.id !== resourceId))
     if (action === "copy") {
-      const src = resources.find(r => r.id === rid)
+      const src = resources.find(r => r.id === resourceId)
       if (src) setResources(prev => [{ ...src, id: `r-${Date.now()}`, name: `${src.name} (副本)` }, ...prev])
     }
-    setContextMenu(null)
+    if (action === "edit") {
+      const newName = prompt("重命名:", resources.find(r => r.id === resourceId)?.name)
+      if (newName) setResources(prev => prev.map(r => r.id === resourceId ? { ...r, name: newName } : r))
+    }
+    if (action === "move") {
+      const folder = prompt("移动到文件夹:", "默认")
+      if (folder) setResources(prev => prev.map(r => r.id === resourceId ? { ...r, folder } : r))
+    }
   }
 
   const handleImport = () => {
@@ -182,10 +172,10 @@ export function LibraryDemo() {
     ]}>
       <div className="flex gap-0 min-h-[480px] border rounded-[24px] overflow-hidden bg-background">
         {/* ── Sidebar ── */}
-        <div className="w-[200px] shrink-0 border-r border-border/15 flex flex-col bg-background/50">
+        <div className="w-[200px] shrink-0 border-r border-border/30 flex flex-col bg-background/50">
           <div className="px-4 pt-5 pb-3">
-            <h2 className="text-[13px] text-foreground tracking-tight font-medium">资源库</h2>
-            <p className="text-[11px] text-muted-foreground/50 mt-0.5">管理你的 AI 资源</p>
+            <h2 className="text-sm text-foreground tracking-tight font-medium">资源库</h2>
+            <p className="text-xs text-muted-foreground/50 mt-0.5">管理你的 AI 资源</p>
           </div>
 
           <div className="flex-1 overflow-y-auto px-2.5 pb-2">
@@ -194,7 +184,7 @@ export function LibraryDemo() {
               <Button variant="ghost" size="sm" onClick={() => setFilter({ type: "all" })} className={sidebarItemCls({ type: "all" })}>
                 <Layers size={12} strokeWidth={1.6} />
                 <span className="flex-1 text-left">所有资源</span>
-                <span className="text-[9px] text-muted-foreground/35 tabular-nums">{resources.length}</span>
+                <span className="text-xs text-muted-foreground/35 tabular-nums">{resources.length}</span>
               </Button>
             </div>
 
@@ -204,7 +194,7 @@ export function LibraryDemo() {
                 <Button key={rt.id} variant="ghost" size="sm" onClick={() => setFilter({ type: "resource", resourceType: rt.id })} className={sidebarItemCls({ type: "resource", resourceType: rt.id })}>
                   <rt.icon size={12} strokeWidth={1.6} />
                   <span className="flex-1 text-left">{rt.label}</span>
-                  {typeCounts[rt.id] != null && <span className="text-[9px] text-muted-foreground/35 tabular-nums">{typeCounts[rt.id]}</span>}
+                  {typeCounts[rt.id] != null && <span className="text-xs text-muted-foreground/35 tabular-nums">{typeCounts[rt.id]}</span>}
                 </Button>
               ))}
             </div>
@@ -214,7 +204,7 @@ export function LibraryDemo() {
             {/* Folders */}
             <div className="mb-3">
               <div className="flex items-center px-2 py-1">
-                <span className="text-[9px] text-muted-foreground/50 uppercase tracking-wider flex-1">文件夹</span>
+                <span className="text-xs text-muted-foreground/50 uppercase tracking-wider flex-1">文件夹</span>
                 <Button variant="ghost" size="icon-xs" onClick={() => setAddingFolder(true)} className="w-4 h-4 text-muted-foreground/30 hover:text-foreground">
                   <FolderPlus size={10} />
                 </Button>
@@ -243,26 +233,26 @@ export function LibraryDemo() {
             {/* Tags */}
             <div className="mb-3">
               <div className="flex items-center px-2 py-1">
-                <span className="text-[9px] text-muted-foreground/50 uppercase tracking-wider flex-1">标签</span>
+                <span className="text-xs text-muted-foreground/50 uppercase tracking-wider flex-1">标签</span>
               </div>
               {TAGS.map(tag => (
                 <Button key={tag.id} variant="ghost" size="sm"
                   onClick={() => setActiveTag(activeTag === tag.name ? null : tag.name)}
-                  className={`justify-start gap-2 w-full px-2.5 py-[5px] text-[11px] tracking-tight ${activeTag === tag.name ? "bg-accent/70 text-foreground" : "text-muted-foreground/70 hover:text-foreground hover:bg-accent/35"}`}>
+                  className={`justify-start gap-2 w-full px-2.5 py-[5px] text-xs tracking-tight ${activeTag === tag.name ? "bg-accent/70 text-foreground" : "text-muted-foreground/70 hover:text-foreground hover:bg-accent/35"}`}>
                   <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: tag.color }} />
                   <span className="flex-1 text-left">{tag.name}</span>
-                  <span className="text-[9px] text-muted-foreground/35 tabular-nums">{tagCounts[tag.id] || 0}</span>
+                  <span className="text-xs text-muted-foreground/35 tabular-nums">{tagCounts[tag.id] || 0}</span>
                 </Button>
               ))}
             </div>
           </div>
 
           {/* Bottom */}
-          <div className="shrink-0 border-t border-border/10 p-2.5 space-y-0.5">
-            <Button variant="ghost" size="sm" onClick={() => setShowImport(true)} className="justify-start gap-2 w-full px-2.5 py-[6px] text-[11px] text-muted-foreground/45 hover:text-foreground hover:bg-accent/35">
+          <div className="shrink-0 border-t border-border/30 p-2.5 space-y-0.5">
+            <Button variant="ghost" size="sm" onClick={() => setShowImport(true)} className="justify-start gap-2 w-full px-2.5 py-[6px] text-xs text-muted-foreground/45 hover:text-foreground hover:bg-accent/35">
               <Import size={12} strokeWidth={1.6} /><span>导入配置</span>
             </Button>
-            <Button variant="ghost" size="sm" className="justify-start gap-2 w-full px-2.5 py-[6px] text-[11px] text-muted-foreground/45 hover:text-foreground hover:bg-accent/35">
+            <Button variant="ghost" size="sm" onClick={() => alert("已订阅资源库更新")} className="justify-start gap-2 w-full px-2.5 py-[6px] text-xs text-muted-foreground/45 hover:text-foreground hover:bg-accent/35">
               <Rss size={12} strokeWidth={1.6} /><span>订阅资源库</span>
             </Button>
           </div>
@@ -277,7 +267,7 @@ export function LibraryDemo() {
               <div className="relative flex-1 max-w-[260px]">
                 <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground/50" />
                 <Input value={search} onChange={e => setSearch(e.target.value)} placeholder="搜索资源名称、描述..."
-                  className="pl-7 pr-7 h-8 text-[11px] border-border/40 bg-accent/20" />
+                  className="pl-7 pr-7 h-8 text-xs border-border/40 bg-accent/20" />
                 {search && (
                   <Button variant="ghost" size="icon-xs" onClick={() => setSearch("")} className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground/40">
                     <X size={10} />
@@ -286,25 +276,22 @@ export function LibraryDemo() {
               </div>
 
               {/* Sort */}
-              <div className="relative">
-                <Button variant="outline" size="xs" onClick={() => setShowSort(!showSort)}
-                  className="gap-1.5 text-[10px] border-border/40 text-muted-foreground/60 hover:text-foreground">
-                  <ArrowUpDown size={10} />{SORT_LABELS[sort]}
-                </Button>
-                {showSort && (
-                  <>
-                    <div className="fixed inset-0 z-40" onClick={() => setShowSort(false)} />
-                    <div className="absolute top-full left-0 mt-1 z-50 bg-popover border rounded-[12px] shadow-popover p-1 min-w-[110px]">
-                      {(Object.keys(SORT_LABELS) as SortKey[]).map(k => (
-                        <Button key={k} variant="ghost" size="xs" onClick={() => { setSort(k); setShowSort(false) }}
-                          className={`w-full justify-start px-2.5 py-[5px] text-[10px] tracking-tight ${sort === k ? "bg-accent text-foreground" : "text-muted-foreground/70 hover:bg-accent/50 hover:text-foreground"}`}>
-                          {SORT_LABELS[k]}
-                        </Button>
-                      ))}
-                    </div>
-                  </>
-                )}
-              </div>
+              <Popover open={showSort} onOpenChange={setShowSort}>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" size="xs"
+                    className="gap-1.5 text-[10px] border-border/40 text-muted-foreground/60 hover:text-foreground">
+                    <ArrowUpDown size={10} />{SORT_LABELS[sort]}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="rounded-[12px] p-1 min-w-[110px] w-auto" align="start" sideOffset={4}>
+                  {(Object.keys(SORT_LABELS) as SortKey[]).map(k => (
+                    <Button key={k} variant="ghost" size="xs" onClick={() => { setSort(k); setShowSort(false) }}
+                      className={`w-full justify-start px-2.5 py-[5px] text-[10px] tracking-tight ${sort === k ? "bg-accent text-foreground" : "text-muted-foreground/70 hover:bg-accent/50 hover:text-foreground"}`}>
+                      {SORT_LABELS[k]}
+                    </Button>
+                  ))}
+                </PopoverContent>
+              </Popover>
 
               {/* View toggle */}
               <ToggleGroup type="single" value={view} onValueChange={v => v && setView(v as ViewMode)}>
@@ -341,67 +328,89 @@ export function LibraryDemo() {
                 {filtered.map(r => {
                   const typeConfig = RESOURCE_TYPES.find(rt => rt.id === r.type)
                   const TypeIcon = typeConfig?.icon || FileText
+                  const menuContent = (
+                    <ContextMenuContent>
+                      <ContextMenuItem onClick={() => handleContextAction("edit", r.id)}>
+                        <Pencil size={12} className="mr-2 text-muted-foreground" />编辑
+                      </ContextMenuItem>
+                      <ContextMenuItem onClick={() => handleContextAction("copy", r.id)}>
+                        <Copy size={12} className="mr-2 text-muted-foreground" />复制
+                      </ContextMenuItem>
+                      <ContextMenuItem onClick={() => handleContextAction("move", r.id)}>
+                        <Move size={12} className="mr-2 text-muted-foreground" />移动到...
+                      </ContextMenuItem>
+                      <ContextMenuSeparator />
+                      <ContextMenuItem onClick={() => handleContextAction("delete", r.id)} className="text-destructive">
+                        <Trash2 size={12} className="mr-2" />删除
+                      </ContextMenuItem>
+                    </ContextMenuContent>
+                  )
                   return view === "grid" ? (
-                    <div key={r.id}
-                      onContextMenu={(e) => handleContextMenu(e, r.id)}
-                      className="group rounded-[12px] border border-border/30 bg-card p-3.5 hover:border-border/60 hover:shadow-sm transition-all cursor-pointer">
-                      <div className="flex items-start gap-3 mb-2.5">
-                        <div className="w-9 h-9 rounded-[10px] bg-accent/50 flex items-center justify-center text-lg shrink-0">{r.avatar}</div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-[12px] font-medium tracking-tight truncate">{r.name}</p>
-                          <p className="text-[10px] text-muted-foreground/60 flex items-center gap-1 mt-0.5">
-                            <TypeIcon size={9} />{typeConfig?.label} · {r.model}
-                          </p>
+                    <ContextMenu key={r.id}>
+                      <ContextMenuTrigger asChild>
+                        <div className="group rounded-[12px] border border-border/30 bg-card p-3.5 hover:border-border/60 hover:shadow-sm transition-all cursor-pointer">
+                          <div className="flex items-start gap-3 mb-2.5">
+                            <div className="w-9 h-9 rounded-[10px] bg-accent/50 flex items-center justify-center text-lg shrink-0">{r.avatar}</div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-xs font-medium tracking-tight truncate">{r.name}</p>
+                              <p className="text-[10px] text-muted-foreground/60 flex items-center gap-1 mt-0.5">
+                                <TypeIcon size={9} />{typeConfig?.label} · {r.model}
+                              </p>
+                            </div>
+                            <Button variant="ghost" size="icon-xs" className="opacity-0 group-hover:opacity-60 hover:!opacity-100 transition-opacity">
+                              <MoreHorizontal size={13} />
+                            </Button>
+                          </div>
+                          <p className="text-[10px] text-muted-foreground/50 line-clamp-2 mb-2.5 leading-relaxed">{r.description}</p>
+                          <div className="flex items-center gap-1.5">
+                            {r.tags.slice(0, 2).map(t => {
+                              const tagDef = TAGS.find(tg => tg.name === t)
+                              return (
+                                <Badge key={t} variant="outline" className="text-xs px-1.5 py-0 gap-1">
+                                  {tagDef && <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: tagDef.color }} />}
+                                  {t}
+                                </Badge>
+                              )
+                            })}
+                            <span className="flex-1" />
+                            <span className="text-xs text-muted-foreground/35">{r.updatedAt}</span>
+                          </div>
                         </div>
-                        <Button variant="ghost" size="icon-xs" className="opacity-0 group-hover:opacity-60 hover:!opacity-100 transition-opacity"
-                          onClick={(e) => { e.stopPropagation(); handleContextMenu(e, r.id) }}>
-                          <MoreHorizontal size={13} />
-                        </Button>
-                      </div>
-                      <p className="text-[10px] text-muted-foreground/50 line-clamp-2 mb-2.5 leading-relaxed">{r.description}</p>
-                      <div className="flex items-center gap-1.5">
-                        {r.tags.slice(0, 2).map(t => {
-                          const tagDef = TAGS.find(tg => tg.name === t)
-                          return (
-                            <Badge key={t} variant="outline" className="text-[9px] px-1.5 py-0 gap-1">
-                              {tagDef && <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: tagDef.color }} />}
-                              {t}
-                            </Badge>
-                          )
-                        })}
-                        <span className="flex-1" />
-                        <span className="text-[9px] text-muted-foreground/35">{r.updatedAt}</span>
-                      </div>
-                    </div>
+                      </ContextMenuTrigger>
+                      {menuContent}
+                    </ContextMenu>
                   ) : (
-                    <div key={r.id}
-                      onContextMenu={(e) => handleContextMenu(e, r.id)}
-                      className="group flex items-center gap-3 px-3 py-2 rounded-[12px] hover:bg-accent/30 transition-colors cursor-pointer">
-                      <div className="w-8 h-8 rounded-[10px] bg-accent/50 flex items-center justify-center text-base shrink-0">{r.avatar}</div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-[12px] font-medium tracking-tight truncate">{r.name}</p>
-                        <p className="text-[10px] text-muted-foreground/50 truncate">{r.description}</p>
-                      </div>
-                      <div className="flex items-center gap-1.5 shrink-0">
-                        {r.tags.slice(0, 1).map(t => {
-                          const tagDef = TAGS.find(tg => tg.name === t)
-                          return (
-                            <Badge key={t} variant="outline" className="text-[9px] px-1.5 py-0 gap-1">
-                              {tagDef && <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: tagDef.color }} />}
-                              {t}
-                            </Badge>
-                          )
-                        })}
-                        <span className="text-[9px] text-muted-foreground/35 w-16 text-right">{r.updatedAt}</span>
-                      </div>
-                    </div>
+                    <ContextMenu key={r.id}>
+                      <ContextMenuTrigger asChild>
+                        <div className="group flex items-center gap-3 px-3 py-2 rounded-[12px] hover:bg-accent/30 transition-colors cursor-pointer">
+                          <div className="w-8 h-8 rounded-[10px] bg-accent/50 flex items-center justify-center text-base shrink-0">{r.avatar}</div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-xs font-medium tracking-tight truncate">{r.name}</p>
+                            <p className="text-[10px] text-muted-foreground/50 truncate">{r.description}</p>
+                          </div>
+                          <div className="flex items-center gap-1.5 shrink-0">
+                            {r.tags.slice(0, 1).map(t => {
+                              const tagDef = TAGS.find(tg => tg.name === t)
+                              return (
+                                <Badge key={t} variant="outline" className="text-xs px-1.5 py-0 gap-1">
+                                  {tagDef && <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: tagDef.color }} />}
+                                  {t}
+                                </Badge>
+                              )
+                            })}
+                            <span className="text-xs text-muted-foreground/35 w-16 text-right">{r.updatedAt}</span>
+                          </div>
+                        </div>
+                      </ContextMenuTrigger>
+                      {menuContent}
+                    </ContextMenu>
                   )
                 })}
               </div>
             ) : (
               <div className="flex flex-col items-center justify-center py-16 text-center">
-                <Search size={24} className="text-muted-foreground/15 mb-3" />
-                <p className="text-[12px] text-muted-foreground/50">未找到资源</p>
+                <Search size={24} className="text-muted-foreground/40 mb-3" />
+                <p className="text-xs text-muted-foreground/50">未找到资源</p>
                 <p className="text-[10px] text-muted-foreground/30 mt-1">尝试调整搜索或筛选条件</p>
               </div>
             )}
@@ -409,41 +418,19 @@ export function LibraryDemo() {
         </div>
       </div>
 
-      {/* ── Context Menu ── */}
-      {contextMenu && (
-        <>
-          <div className="fixed inset-0 z-50" onClick={() => setContextMenu(null)} onContextMenu={(e) => { e.preventDefault(); setContextMenu(null) }} />
-          <div className="fixed z-50 bg-popover border rounded-[12px] shadow-popover p-1 min-w-[140px]"
-            style={{ left: contextMenu.x, top: contextMenu.y }}>
-            {CONTEXT_ACTIONS.map((action) => {
-              if (action.id === "sep") return <div key="sep" className="h-px bg-border/15 my-1 mx-1.5" />
-              const Icon = action.icon!
-              return (
-                <Button key={action.id} variant="ghost" size="xs" onClick={() => handleContextAction(action.id)}
-                  className={`justify-start gap-2 w-full px-2.5 py-[5px] text-[10px] tracking-tight ${
-                    action.destructive ? "text-destructive hover:bg-destructive/10" : "text-muted-foreground/70 hover:bg-accent/50 hover:text-foreground"
-                  }`}>
-                  <Icon size={11} /><span>{action.label}</span>
-                </Button>
-              )
-            })}
-          </div>
-        </>
-      )}
-
       {/* ── Import Modal ── */}
       <Dialog open={showImport} onOpenChange={setShowImport}>
         <DialogContent className="max-w-[420px]">
           <div className="space-y-4">
             <div>
-              <h3 className="text-[14px] font-medium text-foreground mb-1">导入资源</h3>
-              <p className="text-[11px] text-muted-foreground/50">从文件或 URL 导入资源配置</p>
+              <h3 className="text-md font-medium text-foreground mb-1">导入资源</h3>
+              <p className="text-xs text-muted-foreground/50">从文件或 URL 导入资源配置</p>
             </div>
 
             {/* Drop zone */}
-            <div className="flex flex-col items-center justify-center py-8 px-4 rounded-xl border-2 border-dashed border-border/30 bg-accent/10 hover:border-border/50 hover:bg-accent/20 transition-all cursor-pointer">
-              <Upload size={24} className="text-muted-foreground/25 mb-2.5" />
-              <p className="text-[12px] text-muted-foreground/50 mb-1">拖拽文件或点击选择</p>
+            <div className="flex flex-col items-center justify-center py-8 px-4 rounded-[12px] border-2 border-dashed border-border/30 bg-accent/10 hover:border-border/50 hover:bg-accent/20 transition-all cursor-pointer">
+              <Upload size={24} className="text-muted-foreground/50 mb-2.5" />
+              <p className="text-xs text-muted-foreground/50 mb-1">拖拽文件或点击选择</p>
               <p className="text-[10px] text-muted-foreground/30">支持 JSON, YAML, Markdown</p>
             </div>
 
@@ -455,7 +442,7 @@ export function LibraryDemo() {
               </div>
               <Input value={importUrl} onChange={e => setImportUrl(e.target.value)}
                 placeholder="https://example.com/resource.json"
-                className="h-8 text-[11px]" />
+                className="h-8 text-xs" />
             </div>
 
             {/* Actions */}

@@ -54,7 +54,7 @@ export function AtMentionPickerDemo() {
       {items.map(item => (
         <Button variant="ghost"
           key={item.id}
-          className="w-full flex items-center gap-2 p-1.5 rounded-xl hover:bg-accent/50 transition-colors text-left"
+          className="w-full flex items-center gap-2 p-1.5 rounded-[12px] hover:bg-accent/50 transition-colors text-left"
           onClick={() => handleSelect(item)}
         >
           <Avatar className="h-6 w-6">

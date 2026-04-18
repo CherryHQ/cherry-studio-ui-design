@@ -102,10 +102,10 @@ export function AccordionCollapsibleDemo() {
               <Button variant="ghost" size="sm"><ChevronsUpDown className="h-4 w-4" /></Button>
             </CollapsibleTrigger>
           </div>
-          <div className="rounded-xl border px-4 py-2 text-sm font-mono">@cherry-studio/ui</div>
+          <div className="rounded-[12px] border px-4 py-2 text-sm font-mono">@cherry-studio/ui</div>
           <CollapsibleContent className="space-y-2">
-            <div className="rounded-xl border px-4 py-2 text-sm font-mono">@cherry-studio/core</div>
-            <div className="rounded-xl border px-4 py-2 text-sm font-mono">@cherry-studio/cli</div>
+            <div className="rounded-[12px] border px-4 py-2 text-sm font-mono">@cherry-studio/core</div>
+            <div className="rounded-[12px] border px-4 py-2 text-sm font-mono">@cherry-studio/cli</div>
           </CollapsibleContent>
         </Collapsible>
       </Section>
@@ -116,9 +116,9 @@ export function AccordionCollapsibleDemo() {
             { title: "Model Configuration", count: 5, items: ["Default model", "Temperature", "Max tokens", "Top P", "Stream output"] },
             { title: "API Keys", count: 3, items: ["OpenAI", "Anthropic", "Google AI"] },
           ].map((group) => (
-            <Collapsible key={group.title} defaultOpen className="rounded-xl border">
+            <Collapsible key={group.title} defaultOpen className="rounded-[12px] border">
               <CollapsibleTrigger asChild>
-                <Button variant="ghost" className="flex w-full items-center justify-between p-3 text-sm font-medium hover:bg-accent rounded-xl transition-colors focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50">
+                <Button variant="ghost" className="flex w-full items-center justify-between p-3 text-sm font-medium hover:bg-accent rounded-[12px] transition-colors focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50">
                   <span>{group.title}</span>
                   <Badge variant="outline" className="text-xs">{group.count}</Badge>
                 </Button>

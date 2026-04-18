@@ -14,6 +14,7 @@
   --secondary-foreground: #121212;
   --muted: #f1f1f1;
   --muted-foreground: #7b7b7b;
+  --text-tertiary: #a8a8a8;
   --accent: #f1f1f1;
   --accent-foreground: #121212;
   --destructive: #dc2626;
@@ -24,7 +25,11 @@
   --input: #ececec;
   --input-background: #fcfcfc;
   --switch-background: #ececec;
+  /* Figma surface/stroke aliases → shadcn tokens */
+  --surface-01: var(--popover);
   --surface-02: #F8F7F7;
+  --surface-03: var(--muted);
+  --stroke-01: var(--border);
   --stroke-02: #E2E2E2;
   --shade-7: #323232;
   --shade-8: #222222;
@@ -62,11 +67,42 @@
   /* Figma radius system */
   --radius-window: 32px;
   --radius-card: 24px;
+  --radius-panel: 20px;
   --radius-button: 12px;
   --radius-control: 10px;
   --radius-track: 8px;
   --radius-kbd: 6px;
   --radius-dot: 4px;
+  --radius-asset: 16px;  /* asset thumbnails */
+  /* Z-index scale */
+  --z-floating: 100;
+  --z-dropdown: 200;
+  --z-sticky: 300;
+  --z-overlay: 400;
+  --z-modal: 500;
+  --z-popover: 600;
+  --z-tooltip: 700;
+  --z-drag: 900;
+  /* Figma Typography Size System */
+  --fs-xs: 11px;     /* micro: labels, badges, captions, metadata */
+  --fs-sm: 13px;     /* body-sm: menu items, descriptions, form text */
+  --fs-md: 14px;     /* body-md: command items, picker items */
+  --fs-base: 15px;   /* body: default text, inputs, buttons */
+  --fs-lg: 17px;     /* heading-sm: h4, section headers */
+  --fs-xl: 20px;     /* heading: h3, card titles */
+  --fs-2xl: 24px;    /* heading-lg: h2, dialog titles */
+  /* Figma font-size aliases (maps to Figma naming) */
+  --font-size-title: 15px;
+  --font-size-heading: 14px;
+  --font-size-body-large: 13px;
+  --font-size-body: 12px;
+  --font-size-body-small: 11px;
+  /* Figma tracking (letter-spacing) */
+  --tracking-title: -0.3px;
+  --tracking-heading: -0.14px;
+  --tracking-body-large: -0.13px;
+  --tracking-body: -0.12px;
+  --tracking-body-small: -0.11px;
   --sidebar: oklch(0.985 0 0);
   --sidebar-foreground: oklch(0.145 0 0);
   --sidebar-primary: #030213;
@@ -171,6 +207,7 @@
   --duration-normal: 150ms;
   --duration-slow: 200ms;
   --duration-slower: 300ms;
+  --duration-sheet: 500ms;
   --ease-default: cubic-bezier(0.4, 0, 0.2, 1);
   --ease-in: cubic-bezier(0.4, 0, 1, 1);
   --ease-out: cubic-bezier(0, 0, 0.2, 1);
@@ -189,6 +226,7 @@
   --secondary-foreground: oklch(0.985 0 0);
   --muted: oklch(0.269 0 0);
   --muted-foreground: oklch(0.708 0 0);
+  --text-tertiary: #666666;
   --accent: oklch(0.269 0 0);
   --accent-foreground: oklch(0.985 0 0);
   --destructive: #ef4444;
@@ -198,7 +236,10 @@
   --border: oklch(0.269 0 0);
   --input: oklch(0.269 0 0);
   --input-background: oklch(0.205 0 0);
+  --surface-01: var(--popover);
   --surface-02: oklch(0.205 0 0);
+  --surface-03: var(--muted);
+  --stroke-01: var(--border);
   --stroke-02: oklch(0.3 0 0);
   --shade-7: #c0c0c0;
   --shade-8: #a0a0a0;
@@ -229,6 +270,14 @@
 
   --font-weight-medium: 500;
   --font-weight-normal: 400;
+  /* Figma Typography Size System (dark — same values, explicit for theming) */
+  --fs-xs: 11px;
+  --fs-sm: 13px;
+  --fs-md: 14px;
+  --fs-base: 15px;
+  --fs-lg: 17px;
+  --fs-xl: 20px;
+  --fs-2xl: 24px;
   --chart-1: #60a5fa;
   --chart-2: #818cf8;
   --chart-3: #a78bfa;
@@ -326,6 +375,7 @@
   --color-secondary-foreground: var(--secondary-foreground);
   --color-muted: var(--muted);
   --color-muted-foreground: var(--muted-foreground);
+  --color-text-tertiary: var(--text-tertiary);
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
   --color-destructive: var(--destructive);
@@ -350,11 +400,20 @@
   --radius-xl: calc(var(--radius) + 4px);
   --radius-window: var(--radius-window);
   --radius-card: var(--radius-card);
+  --radius-panel: var(--radius-panel);
   --radius-button: var(--radius-button);
   --radius-control: var(--radius-control);
   --radius-track: var(--radius-track);
   --radius-kbd: var(--radius-kbd);
   --radius-dot: var(--radius-dot);
+  /* Typography size tokens (override Tailwind defaults with Figma values) */
+  --text-xs: var(--fs-xs);     /* Tailwind default 12px → Figma 11px */
+  --text-sm: var(--fs-sm);     /* Tailwind default 14px → Figma 13px */
+  --text-md: var(--fs-md);     /* 新增: Figma 14px (command, picker items) */
+  --text-base: var(--fs-base); /* Tailwind default 16px → Figma 15px */
+  --text-lg: var(--fs-lg);     /* Tailwind default 18px → Figma 17px */
+  --text-xl: var(--fs-xl);     /* Tailwind default 20px → Figma 20px */
+  --text-2xl: var(--fs-2xl);   /* Tailwind default 24px → Figma 24px */
   --color-sidebar: var(--sidebar);
   --color-sidebar-foreground: var(--sidebar-foreground);
   --color-sidebar-primary: var(--sidebar-primary);

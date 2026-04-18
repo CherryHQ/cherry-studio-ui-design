@@ -4,10 +4,13 @@ import React, { useState, useRef, useEffect, useMemo } from 'react';
 import {
   Search, X, Check, Plus, ChevronRight,
 } from 'lucide-react';
-import { cn } from '../../lib/utils';
+import { cn } from "../../lib/utils"
 import { Button } from './button';
 import { Checkbox } from './checkbox';
 import { Input } from './input';
+import { ScrollArea } from './scroll-area';
+import { Separator } from './separator';
+import { Switch } from './switch';
 
 // --- Local types ---
 
@@ -73,21 +76,21 @@ export function AssistantPickerPanel({
   };
 
   return (
-    <div data-slot="assistant-picker-panel" className={cn('flex flex-col overflow-hidden min-w-[260px] tracking-tight', className)}>
+    <div data-slot="assistant-picker-panel" className={cn('flex flex-col overflow-hidden min-w-[260px] tracking-[-0.14px]', className)}>
       {/* Search */}
       <div className="px-2 pt-1.5 pb-1.5">
-        <div className="flex items-center gap-1.5 px-2 py-[4px] rounded-[var(--radius-button)] bg-accent/15 border border-border/20">
-          <Search size={11} strokeWidth={1.5} className="text-muted-foreground/40 flex-shrink-0" />
+        <div className="flex items-center gap-1.5 px-2 py-[4px] rounded-[var(--radius-button)] bg-muted/30 border-[1.5px] border-input">
+          <Search size={11} strokeWidth={1.5} className="text-muted-foreground/60 flex-shrink-0" />
           <Input
             ref={searchRef}
             value={search}
             onChange={e => setSearch(e.target.value)}
             placeholder="搜索助手..."
-            className="flex-1 h-auto border-0 bg-transparent text-[11px] shadow-none px-0 py-0 rounded-none focus-visible:ring-0 focus-visible:border-transparent min-w-0"
+            className="flex-1 h-auto border-0 bg-transparent text-xs shadow-none px-0 py-0 rounded-none focus-visible:ring-0 focus-visible:border-transparent min-w-0"
           />
           {search && (
-            <Button variant="ghost" size="icon-xs" onClick={() => setSearch('')} className="w-4 h-4 text-muted-foreground/30 hover:text-muted-foreground/60">
-              <X size={9} />
+            <Button variant="ghost" size="icon-xs" onClick={() => setSearch('')} className="w-4 h-4 text-muted-foreground/50 hover:text-muted-foreground/60">
+              <X size={12} />
             </Button>
           )}
         </div>
@@ -97,69 +100,59 @@ export function AssistantPickerPanel({
       {multiAssistant && (
         <div className="px-3 pb-1 flex items-center justify-between">
           <span className="text-xs text-muted-foreground/50">多助手并行（与多模型互斥）</span>
-          <Button
-            variant="ghost"
-            size="xs"
-            onClick={onToggleMultiAssistant}
-            className={cn(
-              "relative w-[28px] h-[14px] p-0 rounded-full transition-colors duration-150 flex-shrink-0",
-              multiAssistant ? 'bg-cherry-primary hover:bg-cherry-primary/90' : 'bg-accent/40'
-            )}
-          >
-            <div className={`absolute top-[2px] w-[10px] h-[10px] rounded-full bg-background shadow-sm transition-transform duration-150 ${
-              multiAssistant ? 'left-[16px]' : 'left-[2px]'
-            }`} />
-          </Button>
+          <Switch checked={multiAssistant} onCheckedChange={() => onToggleMultiAssistant()} className="scale-75" />
         </div>
       )}
 
-      <div className="mx-2 border-t border-border/40 mb-0.5" />
+      <Separator className="mx-2 bg-border/40 mb-0.5" />
 
       {/* Assistant list */}
-      <div className="px-1 flex flex-col flex-1 min-h-0 overflow-y-auto [&::-webkit-scrollbar]:w-[3px] [&::-webkit-scrollbar-thumb]:bg-border/20">
-        {filteredAssistants.length === 0 ? (
-          <div className="px-3 py-4 text-center text-xs text-muted-foreground/40">无匹配结果</div>
-        ) : (
-          filteredAssistants.map(a => {
-            const selected = selectedAssistants.includes(a.id);
-            return (
-              <Button
-                key={a.id}
-                variant="ghost"
-                size="xs"
-                onClick={() => handleSelect(a.id)}
-                className={cn(
-                  "w-full justify-start gap-2 px-2 py-[5px] h-auto text-[11px] mb-px",
-                  selected
-                    ? 'bg-accent/40 text-popover-foreground'
-                    : 'text-popover-foreground hover:bg-accent/50'
-                )}
-              >
-                {multiAssistant && (
-                    <Checkbox checked={selected} className="size-3.5 pointer-events-none data-[state=checked]:border-cherry-primary data-[state=checked]:bg-cherry-primary" tabIndex={-1} />
-                )}
-                <div className={`w-5 h-5 rounded-[var(--radius-dot)] flex items-center justify-center flex-shrink-0 ${
-                  selected ? 'bg-foreground/10' : 'bg-accent/30'
-                }`}>
-                  <span className="text-[11px] leading-none">{emojiMap[a.name] || '\uD83E\uDD16'}</span>
-                </div>
-                <span className="flex-1 truncate text-left">{a.name}</span>
-                {!multiAssistant && selected && <Check size={10} className="text-cherry-primary flex-shrink-0" />}
-                {multiAssistant && a.modelProvider && <span className="text-xs text-muted-foreground/40 flex-shrink-0">{a.modelProvider}</span>}
-              </Button>
-            );
-          })
-        )}
-      </div>
+      <ScrollArea className="flex-1 min-h-0">
+        <div className="px-1 flex flex-col">
+          {filteredAssistants.length === 0 ? (
+            <div className="px-3 py-4 text-center text-xs text-muted-foreground/60">无匹配结果</div>
+          ) : (
+            filteredAssistants.map(a => {
+              const selected = selectedAssistants.includes(a.id);
+              return (
+                <Button
+                  key={a.id}
+                  variant="ghost"
+                  size="xs"
+                  onClick={() => handleSelect(a.id)}
+                  className={cn(
+                    "w-full justify-start gap-2 px-2 py-[5px] h-auto text-xs mb-px",
+                    selected
+                      ? 'bg-accent/40 text-popover-foreground'
+                      : 'text-popover-foreground hover:bg-accent/50'
+                  )}
+                >
+                  {multiAssistant && (
+                      <Checkbox checked={selected} className="size-3.5 pointer-events-none data-[state=checked]:border-cherry-primary data-[state=checked]:bg-cherry-primary" tabIndex={-1} />
+                  )}
+                  <div className={`w-5 h-5 rounded-[var(--radius-dot)] flex items-center justify-center flex-shrink-0 ${
+                    selected ? 'bg-foreground/10' : 'bg-accent/30'
+                  }`}>
+                    <span className="text-xs leading-none">{emojiMap[a.name] || '\uD83E\uDD16'}</span>
+                  </div>
+                  <span className="flex-1 truncate text-left">{a.name}</span>
+                  {!multiAssistant && selected && <Check size={10} className="text-cherry-primary flex-shrink-0" />}
+                  {multiAssistant && a.modelProvider && <span className="text-xs text-muted-foreground/60 flex-shrink-0">{a.modelProvider}</span>}
+                </Button>
+              );
+            })
+          )}
+        </div>
+      </ScrollArea>
 
       {/* Create link */}
-      <div className="mx-2 border-t border-border/40 mt-0.5" />
+      <Separator className="mx-2 bg-border/40 mt-0.5" />
       <div className="px-1 py-0.5">
         <Button
           variant="ghost"
           size="xs"
           onClick={() => { onClose?.(); onCreateAssistant?.(); }}
-          className="w-full justify-start gap-2 px-2 py-[5px] h-auto text-[11px] text-muted-foreground hover:text-popover-foreground hover:bg-accent/50"
+          className="w-full justify-start gap-2 px-2 py-[5px] h-auto text-xs text-muted-foreground hover:text-popover-foreground hover:bg-accent/50"
         >
           <Plus size={13} strokeWidth={1.5} className="flex-shrink-0" />
           <span className="flex-1 text-left">去资源库创建</span>

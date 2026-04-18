@@ -1,5 +1,6 @@
-import React, { useState, useEffect, useRef, useCallback } from "react"
-import { Button, Input, SimpleTooltip, Textarea, Badge, Separator } from "@cherry-studio/ui"
+import React, { useState, useRef, useCallback } from "react"
+import { Button, Input, SimpleTooltip, Textarea, Badge, Separator, Popover, PopoverTrigger, PopoverContent, NoteEditor } from "@cherry-studio/ui"
+import type { NoteEditorMode } from "@cherry-studio/ui"
 import { Section, type PropDef } from "../components/Section"
 import {
   NotebookPen, FilePlus, FolderPlus, PanelLeftClose, PanelLeftOpen,
@@ -7,10 +8,7 @@ import {
   FileText, ChevronRight, FolderOpen, Folder, PenLine,
   Brain, Sparkles, Check, Languages, Maximize2, MessageCircle, Hash,
   List, Send, Trash2, Download, Share2, MoreHorizontal,
-  X, Plus, ChevronDown, Tag,
-  Bold, Italic, Underline, Strikethrough, ListOrdered, Quote,
-  Code, Heading1, Heading2, Heading3, Undo2, Redo2,
-  Braces, Table, Minus, Link, Image as ImageIcon, Eye,
+  X, ChevronDown, Tag, Eye,
 } from "lucide-react"
 
 // ===========================
@@ -175,7 +173,7 @@ function NoteTreeItem({ item, depth = 0, selectedId, onSelect, expandedFolders, 
       <div>
         <Button variant="ghost" type="button"
           onClick={() => onToggleFolder(item.id)}
-          className="h-auto px-0 py-0 font-normal tracking-normal w-full flex items-center gap-1.5 py-[5px] px-2 rounded-[12px] text-[12px] hover:bg-accent/60 transition-colors group/folder"
+          className="h-auto px-0 py-0 font-normal tracking-normal w-full flex items-center gap-1.5 py-[5px] px-2 rounded-[12px] text-xs hover:bg-accent/60 transition-colors group/folder"
           style={{ paddingLeft: `${depth * 16 + 8}px` }}
         >
           <ChevronRight size={12} className={`text-muted-foreground/50 transition-transform flex-shrink-0 ${isExpanded ? "rotate-90" : ""}`} />
@@ -195,7 +193,7 @@ function NoteTreeItem({ item, depth = 0, selectedId, onSelect, expandedFolders, 
   return (
     <Button variant="ghost" type="button"
       onClick={() => onSelect(item.id)}
-      className={`h-auto px-0 py-0 font-normal tracking-normal w-full flex items-center gap-1.5 py-[5px] px-2 rounded-[12px] text-[12px] transition-colors group/file ${
+      className={`h-auto px-0 py-0 font-normal tracking-normal w-full flex items-center gap-1.5 py-[5px] px-2 rounded-[12px] text-xs transition-colors group/file ${
         isSelected ? "bg-accent text-foreground" : "text-foreground/70 hover:bg-accent/50 hover:text-foreground"
       }`}
       style={{ paddingLeft: `${depth * 16 + 8}px` }}
@@ -234,7 +232,7 @@ const noteProps: PropDef[] = [
 // Main Demo
 // ===========================
 export function NoteModuleDemo() {
-  const [notes] = useState<NoteItem[]>(mockNotes)
+  const [notes, setNotes] = useState<NoteItem[]>(mockNotes)
   const [selectedNoteId, setSelectedNoteId] = useState("n1")
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set(["f1", "f1-1", "f2", "f3"]))
   const [leftPanelOpen, setLeftPanelOpen] = useState(true)
@@ -242,12 +240,9 @@ export function NoteModuleDemo() {
   const [searchTerm, setSearchTerm] = useState("")
   const [filterStarred, setFilterStarred] = useState(false)
   const [sortBy, setSortBy] = useState<"name" | "date">("date")
-  const [editorMode, setEditorMode] = useState<"edit" | "markdown" | "preview">("markdown")
+  const [editorMode, setEditorMode] = useState<NoteEditorMode>("edit")
   const [noteContents, setNoteContents] = useState<Record<string, string>>({ n1: noteContent })
-  const [undoStack, setUndoStack] = useState<string[]>([])
-  const [redoStack, setRedoStack] = useState<string[]>([])
   const [savedIndicator, setSavedIndicator] = useState(false)
-  const editorRef = useRef<HTMLTextAreaElement>(null)
 
   // AI state
   const [aiMessages, setAiMessages] = useState<AIChatMsg[]>(mockAIChat)
@@ -258,7 +253,6 @@ export function NoteModuleDemo() {
   const [astTag, setAstTag] = useState<string | null>(null)
   const [activeActionCategory, setActiveActionCategory] = useState<string>("analyze")
   const [showAllActions, setShowAllActions] = useState(false)
-  const assistantPickerRef = useRef<HTMLDivElement>(null)
   const aiEndRef = useRef<HTMLDivElement>(null)
 
   const selectedAssistant = MOCK_ASSISTANTS.find(a => a.id === selectedAssistantId) || MOCK_ASSISTANTS[0]
@@ -271,15 +265,6 @@ export function NoteModuleDemo() {
 
   const allNotes = flattenNotes(notes)
   const selectedNote = allNotes.find(n => n.id === selectedNoteId)
-
-  // Click-outside: assistant picker
-  useEffect(() => {
-    const handler = (e: MouseEvent) => {
-      if (assistantPickerRef.current && !assistantPickerRef.current.contains(e.target as Node)) setShowAssistantPicker(false)
-    }
-    document.addEventListener("mousedown", handler)
-    return () => document.removeEventListener("mousedown", handler)
-  }, [])
 
   const toggleFolder = (id: string) => {
     setExpandedFolders(prev => {
@@ -295,52 +280,7 @@ export function NoteModuleDemo() {
   }, [selectedNoteId, noteContents, selectedNote])
 
   const updateContent = (val: string) => {
-    const prev = getCurrentContent()
-    setUndoStack(s => [...s.slice(-49), prev])
-    setRedoStack([])
     setNoteContents(c => ({ ...c, [selectedNoteId]: val }))
-    setSavedIndicator(true)
-    setTimeout(() => setSavedIndicator(false), 1500)
-  }
-
-  const handleUndo = () => {
-    if (undoStack.length === 0) return
-    const prev = undoStack[undoStack.length - 1]
-    setRedoStack(s => [...s, getCurrentContent()])
-    setUndoStack(s => s.slice(0, -1))
-    setNoteContents(c => ({ ...c, [selectedNoteId]: prev }))
-  }
-
-  const handleRedo = () => {
-    if (redoStack.length === 0) return
-    const next = redoStack[redoStack.length - 1]
-    setUndoStack(s => [...s, getCurrentContent()])
-    setRedoStack(s => s.slice(0, -1))
-    setNoteContents(c => ({ ...c, [selectedNoteId]: next }))
-  }
-
-  const insertMarkdown = (before: string, after?: string, placeholder?: string) => {
-    if (!editorRef.current) return
-    const ta = editorRef.current
-    const start = ta.selectionStart
-    const end = ta.selectionEnd
-    const content = getCurrentContent()
-    const selected = content.slice(start, end)
-    const insert = selected || placeholder || ""
-    const newContent = content.slice(0, start) + before + insert + (after || "") + content.slice(end)
-    updateContent(newContent)
-    setTimeout(() => { ta.focus(); ta.selectionStart = start + before.length; ta.selectionEnd = start + before.length + insert.length }, 0)
-  }
-
-  const insertLinePrefix = (prefix: string) => {
-    if (!editorRef.current) return
-    const ta = editorRef.current
-    const content = getCurrentContent()
-    const start = ta.selectionStart
-    const lineStart = content.lastIndexOf("\n", start - 1) + 1
-    const newContent = content.slice(0, lineStart) + prefix + content.slice(lineStart)
-    updateContent(newContent)
-    setTimeout(() => { ta.focus(); ta.selectionStart = ta.selectionEnd = start + prefix.length }, 0)
   }
 
   // AI actions
@@ -395,7 +335,7 @@ export function NoteModuleDemo() {
     <ChatInput />
   </div>
 </div>`}>
-      <div className="rounded-[24px] border bg-background overflow-hidden" style={{ height: 600 }}>
+      <div className="rounded-[24px] border bg-background overflow-hidden h-[600px]">
         <div className="flex h-full min-h-0">
 
           {/* ===== Left Panel - Note Directory ===== */}
@@ -406,8 +346,8 @@ export function NoteModuleDemo() {
                 <div className="h-11 flex items-center gap-1.5 px-3 flex-shrink-0">
                   <NotebookPen size={14} className="text-accent-orange flex-shrink-0" />
                   <span className="text-xs text-foreground flex-1 truncate">笔记</span>
-                  <SimpleTooltip content="新建笔记"><Button variant="ghost" type="button" className="h-auto px-0 py-0 font-normal tracking-normal w-6 h-6 rounded-[12px] flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"><FilePlus size={13} /></Button></SimpleTooltip>
-                  <SimpleTooltip content="新建文件夹"><Button variant="ghost" type="button" className="h-auto px-0 py-0 font-normal tracking-normal w-6 h-6 rounded-[12px] flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"><FolderPlus size={13} /></Button></SimpleTooltip>
+                  <SimpleTooltip content="新建笔记"><Button variant="ghost" type="button" onClick={() => { const id = `n${Date.now()}`; setNotes(prev => [...prev, { id, title: "新笔记", type: "file" as const, updatedAt: "刚刚" }]); setSelectedNoteId(id) }} className="h-auto px-0 py-0 font-normal tracking-normal w-6 h-6 rounded-[12px] flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"><FilePlus size={13} /></Button></SimpleTooltip>
+                  <SimpleTooltip content="新建文件夹"><Button variant="ghost" type="button" onClick={() => setNotes(prev => [...prev, { id: `f${Date.now()}`, title: "新文件夹", type: "folder" as const, children: [] }])} className="h-auto px-0 py-0 font-normal tracking-normal w-6 h-6 rounded-[12px] flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"><FolderPlus size={13} /></Button></SimpleTooltip>
                   <SimpleTooltip content="收起目录"><Button variant="ghost" type="button" onClick={() => setLeftPanelOpen(false)} className="h-auto px-0 py-0 font-normal tracking-normal w-6 h-6 rounded-[12px] flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"><PanelLeftClose size={13} /></Button></SimpleTooltip>
                 </div>
                 {/* Search & Filters */}
@@ -417,14 +357,14 @@ export function NoteModuleDemo() {
                     <Input type="text" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} placeholder="搜索笔记..." className="h-7 w-full rounded-[12px] border-0 bg-accent/40 pl-7 pr-2 text-xs text-foreground shadow-none placeholder:text-muted-foreground/40 focus:bg-accent/60 focus-visible:ring-1 focus-visible:ring-border/50" />
                   </div>
                   <div className="flex items-center gap-1">
-                    <Button variant="ghost" type="button" onClick={() => setFilterStarred(!filterStarred)} className={`h-auto px-0 py-0 font-normal tracking-normal flex items-center gap-1 px-2 py-1 rounded-[12px] text-[11px] transition-colors ${filterStarred ? "bg-accent-amber-muted text-accent-amber" : "text-muted-foreground hover:bg-accent/50 hover:text-foreground"}`}>
+                    <Button variant="ghost" type="button" onClick={() => setFilterStarred(!filterStarred)} className={`h-auto px-0 py-0 font-normal tracking-normal flex items-center gap-1 px-2 py-1 rounded-[12px] text-xs transition-colors ${filterStarred ? "bg-accent-amber-muted text-accent-amber" : "text-muted-foreground hover:bg-accent/50 hover:text-foreground"}`}>
                       <Star size={10} className={filterStarred ? "fill-accent-amber" : ""} /> 收藏
                     </Button>
-                    <Button variant="ghost" type="button" onClick={() => setSortBy(sortBy === "name" ? "date" : "name")} className="h-auto px-0 py-0 font-normal tracking-normal flex items-center gap-1 px-2 py-1 rounded-[12px] text-[11px] text-muted-foreground hover:bg-accent/50 hover:text-foreground transition-colors">
+                    <Button variant="ghost" type="button" onClick={() => setSortBy(sortBy === "name" ? "date" : "name")} className="h-auto px-0 py-0 font-normal tracking-normal flex items-center gap-1 px-2 py-1 rounded-[12px] text-xs text-muted-foreground hover:bg-accent/50 hover:text-foreground transition-colors">
                       <SortAsc size={10} /> {sortBy === "name" ? "名称" : "日期"}
                     </Button>
-                    <Button variant="ghost" type="button" className="h-auto px-0 py-0 font-normal tracking-normal flex items-center gap-1 px-2 py-1 rounded-[12px] text-[11px] text-muted-foreground hover:bg-accent/50 hover:text-foreground transition-colors">
-                      <Filter size={10} /> 筛选
+                    <Button variant="ghost" type="button" onClick={() => setFilterStarred(!filterStarred)} className="h-auto px-0 py-0 font-normal tracking-normal flex items-center gap-1 px-2 py-1 rounded-[12px] text-xs text-muted-foreground hover:bg-accent/50 hover:text-foreground transition-colors">
+                      <Filter size={10} /> {filterStarred ? "全部" : "筛选"}
                     </Button>
                   </div>
                 </div>
@@ -434,7 +374,7 @@ export function NoteModuleDemo() {
                     <NoteTreeItem key={item.id} item={item} selectedId={selectedNoteId} onSelect={setSelectedNoteId} expandedFolders={expandedFolders} onToggleFolder={toggleFolder} filterStarred={filterStarred} />
                   ))}
                   {filteredNotes.length === 0 && (
-                    <div className="py-6 text-center text-[11px] text-muted-foreground/40">没有找到笔记</div>
+                    <div className="py-6 text-center text-xs text-muted-foreground/40">没有找到笔记</div>
                   )}
                 </div>
                 {/* Footer */}
@@ -463,191 +403,96 @@ export function NoteModuleDemo() {
                   {selectedNote.tags.map(tag => (<Badge key={tag} variant="secondary" className="px-1.5 py-0.5 text-[10px] text-muted-foreground">#{tag}</Badge>))}
                 </div>
               )}
-              <div className="flex items-center gap-0.5 flex-shrink-0 ml-1">
-                <div className="flex items-center bg-accent/40 rounded-[12px] p-0.5 gap-0.5">
-                  <SimpleTooltip content="实时编辑"><Button variant="ghost" type="button" onClick={() => setEditorMode("edit")} className={`h-auto px-0 py-0 font-normal tracking-normal w-6 h-6 rounded-[12px] flex items-center justify-center transition-colors ${editorMode === "edit" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground/60 hover:text-foreground"}`}><PenLine size={11} /></Button></SimpleTooltip>
-                  <SimpleTooltip content="Markdown 源码"><Button variant="ghost" type="button" onClick={() => setEditorMode("markdown")} className={`h-auto px-0 py-0 font-normal tracking-normal w-6 h-6 rounded-[12px] flex items-center justify-center transition-colors ${editorMode === "markdown" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground/60 hover:text-foreground"}`}><Code size={11} /></Button></SimpleTooltip>
-                  <SimpleTooltip content="只读预览"><Button variant="ghost" type="button" onClick={() => setEditorMode("preview")} className={`h-auto px-0 py-0 font-normal tracking-normal w-6 h-6 rounded-[12px] flex items-center justify-center transition-colors ${editorMode === "preview" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground/60 hover:text-foreground"}`}><Eye size={11} /></Button></SimpleTooltip>
-                </div>
-              </div>
-              <div className="w-px h-4 bg-border/30 mx-1" />
+              <Separator orientation="vertical" className="h-4 bg-border/30 mx-1" />
               <div className="flex items-center gap-0.5 flex-shrink-0">
-                <SimpleTooltip content="导出"><Button variant="ghost" type="button" className="h-auto px-0 py-0 font-normal tracking-normal w-7 h-7 rounded-[12px] flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"><Download size={13} /></Button></SimpleTooltip>
-                <SimpleTooltip content="分享"><Button variant="ghost" type="button" className="h-auto px-0 py-0 font-normal tracking-normal w-7 h-7 rounded-[12px] flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"><Share2 size={13} /></Button></SimpleTooltip>
-                <SimpleTooltip content="更多"><Button variant="ghost" type="button" className="h-auto px-0 py-0 font-normal tracking-normal w-7 h-7 rounded-[12px] flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"><MoreHorizontal size={13} /></Button></SimpleTooltip>
-                <div className="w-px h-4 bg-border/30 mx-1" />
+                <SimpleTooltip content="导出"><Button variant="ghost" type="button" onClick={() => alert("Exported to Markdown")} className="h-auto px-0 py-0 font-normal tracking-normal w-7 h-7 rounded-[12px] flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"><Download size={13} /></Button></SimpleTooltip>
+                <SimpleTooltip content="分享"><Button variant="ghost" type="button" onClick={() => alert("Share link copied")} className="h-auto px-0 py-0 font-normal tracking-normal w-7 h-7 rounded-[12px] flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"><Share2 size={13} /></Button></SimpleTooltip>
+                <SimpleTooltip content="更多"><Button variant="ghost" type="button" onClick={() => alert("More options: Delete, Duplicate, Move to folder")} className="h-auto px-0 py-0 font-normal tracking-normal w-7 h-7 rounded-[12px] flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"><MoreHorizontal size={13} /></Button></SimpleTooltip>
+                <Separator orientation="vertical" className="h-4 bg-border/30 mx-1" />
                 <SimpleTooltip content={rightPanelOpen ? "关闭 AI 面板" : "打开 AI 面板"}>
                   <Button variant="ghost" type="button" onClick={() => setRightPanelOpen(!rightPanelOpen)} className={`h-auto px-0 py-0 font-normal tracking-normal w-7 h-7 rounded-[12px] flex items-center justify-center transition-colors ${rightPanelOpen ? "bg-primary/15 text-primary" : "text-muted-foreground hover:text-foreground hover:bg-accent"}`}><Sparkles size={13} /></Button>
                 </SimpleTooltip>
               </div>
             </div>
 
-            {/* Toolbar */}
-            {editorMode !== "preview" && (
-              <div className="h-9 flex items-center px-3 gap-0.5 flex-shrink-0 overflow-x-auto [&::-webkit-scrollbar]:hidden bg-muted/20 rounded-[12px] mx-3 mt-1">
-                <div className="flex items-center gap-0.5">
-                  <SimpleTooltip content="撤销"><Button variant="ghost" type="button" onClick={handleUndo} className={`h-auto px-0 py-0 font-normal tracking-normal w-7 h-7 rounded-[12px] flex items-center justify-center transition-colors ${undoStack.length > 0 ? "text-muted-foreground/60 hover:text-foreground hover:bg-accent" : "text-muted-foreground/20 cursor-not-allowed"}`}><Undo2 size={13} /></Button></SimpleTooltip>
-                  <SimpleTooltip content="重做"><Button variant="ghost" type="button" onClick={handleRedo} className={`h-auto px-0 py-0 font-normal tracking-normal w-7 h-7 rounded-[12px] flex items-center justify-center transition-colors ${redoStack.length > 0 ? "text-muted-foreground/60 hover:text-foreground hover:bg-accent" : "text-muted-foreground/20 cursor-not-allowed"}`}><Redo2 size={13} /></Button></SimpleTooltip>
-                </div>
-                <div className="w-px h-4 bg-border/20 mx-1" />
-                <div className="flex items-center gap-0.5">
-                  <SimpleTooltip content="标题 1"><Button variant="ghost" type="button" onClick={() => insertLinePrefix("# ")} className="h-auto px-0 py-0 font-normal tracking-normal w-7 h-7 rounded-[12px] flex items-center justify-center text-muted-foreground/60 hover:text-foreground hover:bg-accent transition-colors"><Heading1 size={13} /></Button></SimpleTooltip>
-                  <SimpleTooltip content="标题 2"><Button variant="ghost" type="button" onClick={() => insertLinePrefix("## ")} className="h-auto px-0 py-0 font-normal tracking-normal w-7 h-7 rounded-[12px] flex items-center justify-center text-muted-foreground/60 hover:text-foreground hover:bg-accent transition-colors"><Heading2 size={13} /></Button></SimpleTooltip>
-                  <SimpleTooltip content="标题 3"><Button variant="ghost" type="button" onClick={() => insertLinePrefix("### ")} className="h-auto px-0 py-0 font-normal tracking-normal w-7 h-7 rounded-[12px] flex items-center justify-center text-muted-foreground/60 hover:text-foreground hover:bg-accent transition-colors"><Heading3 size={13} /></Button></SimpleTooltip>
-                </div>
-                <div className="w-px h-4 bg-border/20 mx-1" />
-                <div className="flex items-center gap-0.5">
-                  <SimpleTooltip content="加粗"><Button variant="ghost" type="button" onClick={() => insertMarkdown("**", "**", "粗体文字")} className="h-auto px-0 py-0 font-normal tracking-normal w-7 h-7 rounded-[12px] flex items-center justify-center text-muted-foreground/60 hover:text-foreground hover:bg-accent transition-colors"><Bold size={13} /></Button></SimpleTooltip>
-                  <SimpleTooltip content="斜体"><Button variant="ghost" type="button" onClick={() => insertMarkdown("*", "*", "斜体文字")} className="h-auto px-0 py-0 font-normal tracking-normal w-7 h-7 rounded-[12px] flex items-center justify-center text-muted-foreground/60 hover:text-foreground hover:bg-accent transition-colors"><Italic size={13} /></Button></SimpleTooltip>
-                  <SimpleTooltip content="下划线"><Button variant="ghost" type="button" onClick={() => insertMarkdown("<u>", "</u>", "下划线文字")} className="h-auto px-0 py-0 font-normal tracking-normal w-7 h-7 rounded-[12px] flex items-center justify-center text-muted-foreground/60 hover:text-foreground hover:bg-accent transition-colors"><Underline size={13} /></Button></SimpleTooltip>
-                  <SimpleTooltip content="删除线"><Button variant="ghost" type="button" onClick={() => insertMarkdown("~~", "~~", "删除线文字")} className="h-auto px-0 py-0 font-normal tracking-normal w-7 h-7 rounded-[12px] flex items-center justify-center text-muted-foreground/60 hover:text-foreground hover:bg-accent transition-colors"><Strikethrough size={13} /></Button></SimpleTooltip>
-                </div>
-                <div className="w-px h-4 bg-border/20 mx-1" />
-                <div className="flex items-center gap-0.5">
-                  <SimpleTooltip content="无序列表"><Button variant="ghost" type="button" onClick={() => insertLinePrefix("- ")} className="h-auto px-0 py-0 font-normal tracking-normal w-7 h-7 rounded-[12px] flex items-center justify-center text-muted-foreground/60 hover:text-foreground hover:bg-accent transition-colors"><List size={13} /></Button></SimpleTooltip>
-                  <SimpleTooltip content="有序列表"><Button variant="ghost" type="button" onClick={() => insertLinePrefix("1. ")} className="h-auto px-0 py-0 font-normal tracking-normal w-7 h-7 rounded-[12px] flex items-center justify-center text-muted-foreground/60 hover:text-foreground hover:bg-accent transition-colors"><ListOrdered size={13} /></Button></SimpleTooltip>
-                  <SimpleTooltip content="引用"><Button variant="ghost" type="button" onClick={() => insertLinePrefix("> ")} className="h-auto px-0 py-0 font-normal tracking-normal w-7 h-7 rounded-[12px] flex items-center justify-center text-muted-foreground/60 hover:text-foreground hover:bg-accent transition-colors"><Quote size={13} /></Button></SimpleTooltip>
-                  <SimpleTooltip content="代码"><Button variant="ghost" type="button" onClick={() => insertMarkdown("`", "`", "code")} className="h-auto px-0 py-0 font-normal tracking-normal w-7 h-7 rounded-[12px] flex items-center justify-center text-muted-foreground/60 hover:text-foreground hover:bg-accent transition-colors"><Code size={13} /></Button></SimpleTooltip>
-                </div>
-                <div className="w-px h-4 bg-border/20 mx-1" />
-                <div className="flex items-center gap-0.5">
-                  <SimpleTooltip content="分割线"><Button variant="ghost" type="button" onClick={() => insertMarkdown("\n---\n")} className="h-auto px-0 py-0 font-normal tracking-normal w-7 h-7 rounded-[12px] flex items-center justify-center text-muted-foreground/60 hover:text-foreground hover:bg-accent transition-colors"><Minus size={13} /></Button></SimpleTooltip>
-                  <SimpleTooltip content="插入链接"><Button variant="ghost" type="button" onClick={() => insertMarkdown("[", "](url)", "链接文字")} className="h-auto px-0 py-0 font-normal tracking-normal w-7 h-7 rounded-[12px] flex items-center justify-center text-muted-foreground/60 hover:text-foreground hover:bg-accent transition-colors"><Link size={13} /></Button></SimpleTooltip>
-                  <SimpleTooltip content="插入图片"><Button variant="ghost" type="button" onClick={() => insertMarkdown("![", "](image-url)", "图片描述")} className="h-auto px-0 py-0 font-normal tracking-normal w-7 h-7 rounded-[12px] flex items-center justify-center text-muted-foreground/60 hover:text-foreground hover:bg-accent transition-colors"><ImageIcon size={13} /></Button></SimpleTooltip>
-                </div>
-                {editorMode === "markdown" && (
-                  <>
-                    <div className="w-px h-4 bg-border/20 mx-1" />
-                    <div className="flex items-center gap-0.5">
-                      <SimpleTooltip content="代码块"><Button variant="ghost" type="button" onClick={() => insertMarkdown("\n```\n", "\n```\n", "// 代码")} className="h-auto px-0 py-0 font-normal tracking-normal w-7 h-7 rounded-[12px] flex items-center justify-center text-muted-foreground/60 hover:text-foreground hover:bg-accent transition-colors"><Braces size={13} /></Button></SimpleTooltip>
-                      <SimpleTooltip content="表格"><Button variant="ghost" type="button" onClick={() => insertMarkdown("\n| 标题1 | 标题2 | 标题3 |\n| --- | --- | --- |\n| 内容 | 内容 | 内容 |\n")} className="h-auto px-0 py-0 font-normal tracking-normal w-7 h-7 rounded-[12px] flex items-center justify-center text-muted-foreground/60 hover:text-foreground hover:bg-accent transition-colors"><Table size={13} /></Button></SimpleTooltip>
-                      <SimpleTooltip content="任务列表"><Button variant="ghost" type="button" onClick={() => insertLinePrefix("- [ ] ")} className="h-auto px-0 py-0 font-normal tracking-normal w-7 h-7 rounded-[12px] flex items-center justify-center text-muted-foreground/60 hover:text-foreground hover:bg-accent transition-colors"><Check size={13} /></Button></SimpleTooltip>
-                    </div>
-                  </>
-                )}
+            {/* NoteEditor component */}
+            {selectedNote ? (
+              <NoteEditor
+                content={getCurrentContent()}
+                onChange={updateContent}
+                mode={editorMode}
+                onModeChange={setEditorMode}
+                onSave={() => { setSavedIndicator(true); setTimeout(() => setSavedIndicator(false), 1500) }}
+                lastSaved={savedIndicator ? "已保存" : undefined}
+                placeholder="开始编辑..."
+                className="flex-1 min-h-0"
+              />
+            ) : (
+              <div className="flex-1 flex flex-col items-center justify-center text-muted-foreground/40">
+                <NotebookPen size={32} className="mb-3" />
+                <p className="text-sm">选择一篇笔记开始编辑</p>
               </div>
             )}
-
-            {/* Editor Body */}
-            <div className="flex-1 overflow-y-auto [&::-webkit-scrollbar]:w-[4px] [&::-webkit-scrollbar-thumb]:bg-border/30 [&::-webkit-scrollbar-thumb]:rounded-full">
-              {selectedNote ? (
-                <div className="h-full">
-                  {editorMode === "markdown" && (
-                    <div className="flex h-full">
-                      <div className="flex-shrink-0 pt-8 pb-8 pl-4 pr-0 select-none">
-                        {getCurrentContent().split("\n").map((_, i) => (
-                          <div key={i} className="text-[11px] text-muted-foreground/25 text-right pr-3 leading-[22px] font-mono" style={{ minWidth: "32px" }}>{i + 1}</div>
-                        ))}
-                      </div>
-                      <Textarea
-                        ref={editorRef}
-                        value={getCurrentContent()}
-                        onChange={e => updateContent(e.target.value)}
-                        onKeyDown={e => {
-                          if ((e.metaKey || e.ctrlKey) && e.key === "z") { e.preventDefault(); if (e.shiftKey) handleRedo(); else handleUndo() }
-                          if (e.key === "Tab") {
-                            e.preventDefault()
-                            const start = e.currentTarget.selectionStart
-                            const end = e.currentTarget.selectionEnd
-                            const content = getCurrentContent()
-                            const newContent = content.slice(0, start) + "  " + content.slice(end)
-                            updateContent(newContent)
-                            setTimeout(() => { e.currentTarget.selectionStart = e.currentTarget.selectionEnd = start + 2 }, 0)
-                          }
-                        }}
-                        spellCheck={false}
-                        className="flex-1 bg-transparent border-0 shadow-none focus-visible:ring-0 rounded-none text-[13px] text-foreground font-mono leading-[22px] resize-none py-8 pr-10 placeholder:text-muted-foreground/30 [&::-webkit-scrollbar]:hidden"
-                        style={{ tabSize: 2 }}
-                      />
-                    </div>
-                  )}
-                  {(editorMode === "edit" || editorMode === "preview") && (
-                    <div className="max-w-[780px] mx-auto px-10 py-8 prose prose-sm dark:prose-invert max-w-none text-sm leading-relaxed whitespace-pre-wrap font-mono text-foreground/80">
-                      {getCurrentContent()}
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <div className="flex flex-col items-center justify-center h-full text-muted-foreground/40">
-                  <NotebookPen size={32} className="mb-3" />
-                  <p className="text-sm">选择一篇笔记开始编辑</p>
-                </div>
-              )}
-            </div>
-
-            {/* Status Bar */}
-            <div className="h-7 flex items-center px-4 text-[10px] text-muted-foreground/40 flex-shrink-0 gap-4">
-              <Badge variant="secondary" className={`px-1.5 py-0.5 ${editorMode === "markdown" || editorMode === "edit" ? "bg-primary/10 text-primary" : "bg-accent text-muted-foreground/60"}`}>
-                {editorMode === "markdown" ? "Markdown" : editorMode === "edit" ? "实时编辑" : "只读预览"}
-              </Badge>
-              <span>{getCurrentContent().split("\n").length} 行</span>
-              <span>{getCurrentContent().length} 字符</span>
-              {undoStack.length > 0 && <span className="text-muted-foreground/30">可撤销 {undoStack.length}</span>}
-              <div className="flex-1" />
-              {savedIndicator && (<span className="flex items-center gap-1 text-primary animate-in fade-in duration-200"><Check size={9} />已保存</span>)}
-              <span>UTF-8</span>
-              <span>自动保存</span>
-            </div>
           </div>
 
           {/* ===== Right Panel - AI Chat ===== */}
           {rightPanelOpen && (
             <div className="flex flex-col h-full flex-shrink-0 border-l border-border/40" style={{ width: 320 }}>
               {/* Header: Assistant Picker */}
-              <div className="h-11 flex items-center gap-2 px-3 flex-shrink-0 relative">
-                <div className="relative" ref={assistantPickerRef}>
-                  <Button variant="ghost" type="button" onClick={() => { setShowAssistantPicker(!showAssistantPicker); setAstSearch(""); setAstTag(null) }} className={`h-auto px-0 py-0 font-normal tracking-normal flex items-center gap-1.5 px-2 py-[4px] rounded-[12px] text-[10.5px] transition-all duration-100 ${showAssistantPicker ? "bg-accent/25 text-foreground" : "text-foreground/75 hover:text-foreground hover:bg-accent/15"}`}>
-                    <span className="text-[12px] leading-none flex-shrink-0">{selectedAssistant.emoji}</span>
-                    <span className="truncate max-w-[100px]">{selectedAssistant.name}</span>
-                    <ChevronDown size={8} className={`text-muted-foreground/50 flex-shrink-0 transition-transform duration-100 ${showAssistantPicker ? "rotate-180" : ""}`} />
-                  </Button>
-                  {showAssistantPicker && (
-                    <div className="absolute top-full left-0 mt-1 z-50 bg-popover border border-border/40 rounded-[12px] shadow-xl shadow-black/10 min-w-[260px]">
-                      <div className="px-2 pt-2 pb-1">
-                        <div className="flex items-center gap-1.5 px-2 py-[5px] rounded-[12px] bg-accent/15 border border-border/20">
-                          <Search size={10} className="text-muted-foreground/40 flex-shrink-0" />
-                          <Input value={astSearch} onChange={e => setAstSearch(e.target.value)} placeholder="搜索助手..." className="h-auto min-w-0 flex-1 border-0 bg-transparent p-0 text-[10px] text-foreground shadow-none placeholder:text-muted-foreground/30 focus-visible:ring-0" autoFocus />
-                          {astSearch && <Button variant="ghost" type="button" onClick={() => setAstSearch("")} className="h-auto px-0 py-0 font-normal tracking-normal text-muted-foreground/30 hover:text-muted-foreground/60"><X size={8} /></Button>}
-                        </div>
-                      </div>
-                      {allAstTags.length > 0 && (
-                        <div className="px-2 pb-1.5">
-                          <div className="flex items-center gap-1 flex-wrap">
-                            <Tag size={8} className="text-muted-foreground/30 flex-shrink-0" />
-                            {allAstTags.map(tag => (
-                              <Button variant="ghost" type="button" key={tag} onClick={() => setAstTag(astTag === tag ? null : tag)} className={`h-auto px-0 py-0 font-normal tracking-normal px-1.5 py-px rounded-full text-[8px] transition-all ${astTag === tag ? "bg-foreground/10 text-foreground/70 border border-border/40" : "bg-accent/20 text-muted-foreground/50 border border-transparent hover:bg-accent/40 hover:text-muted-foreground/70"}`}>{tag}</Button>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-                      <Separator className="mx-1 bg-border/20" />
-                      <div className="p-1.5 pt-1 max-h-[240px] overflow-y-auto [&::-webkit-scrollbar]:w-[3px] [&::-webkit-scrollbar-thumb]:bg-border/30 [&::-webkit-scrollbar-thumb]:rounded-full">
-                        {filteredAssistants.length === 0 ? (
-                          <div className="px-2.5 py-3 text-center text-[9px] text-muted-foreground/40">无匹配结果</div>
-                        ) : (
-                          filteredAssistants.map(a => {
-                            const isActive = selectedAssistant.id === a.id
-                            return (
-                              <Button variant="ghost" type="button" key={a.id} onClick={() => { setSelectedAssistantId(a.id); setShowAssistantPicker(false) }} className={`h-auto px-0 py-0 font-normal tracking-normal flex items-center gap-2 w-full px-2 py-[5px] rounded-[12px] text-[10.5px] transition-all duration-75 mb-px ${isActive ? "bg-accent/30 text-foreground ring-1 ring-border/30" : "text-foreground/75 hover:text-foreground hover:bg-accent/15"}`}>
-                                <div className={`w-5 h-5 rounded-[4px] flex items-center justify-center flex-shrink-0 ${isActive ? "bg-foreground/10" : "bg-accent/30"}`}>
-                                  <span className="text-[11px] leading-none">{a.emoji}</span>
-                                </div>
-                                <div className="flex-1 min-w-0 text-left">
-                                  <div className="text-[10.5px] text-foreground truncate">{a.name}</div>
-                                  <div className="text-[9px] text-muted-foreground/50 truncate">{a.systemPrompt.slice(0, 20)}</div>
-                                </div>
-                                {isActive && <Check size={10} className="text-primary flex-shrink-0" />}
-                              </Button>
-                            )
-                          })
-                        )}
-                      </div>
-                      <div className="border-t border-border/20 px-3 py-1.5">
-                        <p className="text-[9px] text-muted-foreground/40 leading-relaxed">切换助手将改变 AI 的分析视角和专业能力</p>
+              <div className="h-11 flex items-center gap-2 px-3 flex-shrink-0">
+                <Popover open={showAssistantPicker} onOpenChange={(v) => { setShowAssistantPicker(v); if (v) { setAstSearch(""); setAstTag(null) } }}>
+                  <PopoverTrigger asChild>
+                    <Button variant="ghost" type="button" className={`h-auto px-0 py-0 font-normal tracking-normal flex items-center gap-1.5 px-2 py-[4px] rounded-[12px] text-[10px] transition-all duration-100 ${showAssistantPicker ? "bg-accent/25 text-foreground" : "text-foreground/75 hover:text-foreground hover:bg-accent/15"}`}>
+                      <span className="text-xs leading-none flex-shrink-0">{selectedAssistant.emoji}</span>
+                      <span className="truncate max-w-[100px]">{selectedAssistant.name}</span>
+                      <ChevronDown size={8} className={`text-muted-foreground/50 flex-shrink-0 transition-transform duration-100 ${showAssistantPicker ? "rotate-180" : ""}`} />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="rounded-[12px] p-0 border-border/40 shadow-xl shadow-black/10 min-w-[260px]" align="start" sideOffset={4}>
+                    <div className="px-2 pt-2 pb-1">
+                      <div className="flex items-center gap-1.5 px-2 py-[5px] rounded-[12px] bg-accent/15 border border-border/20">
+                        <Search size={10} className="text-muted-foreground/40 flex-shrink-0" />
+                        <Input value={astSearch} onChange={e => setAstSearch(e.target.value)} placeholder="搜索助手..." className="h-auto min-w-0 flex-1 border-0 bg-transparent p-0 text-[10px] text-foreground shadow-none placeholder:text-muted-foreground/30 focus-visible:ring-0" autoFocus />
+                        {astSearch && <Button variant="ghost" type="button" onClick={() => setAstSearch("")} className="h-auto px-0 py-0 font-normal tracking-normal text-muted-foreground/30 hover:text-muted-foreground/60"><X size={8} /></Button>}
                       </div>
                     </div>
-                  )}
-                </div>
+                    {allAstTags.length > 0 && (
+                      <div className="px-2 pb-1.5">
+                        <div className="flex items-center gap-1 flex-wrap">
+                          <Tag size={8} className="text-muted-foreground/30 flex-shrink-0" />
+                          {allAstTags.map(tag => (
+                            <Button variant="ghost" type="button" key={tag} onClick={() => setAstTag(astTag === tag ? null : tag)} className={`h-auto px-0 py-0 font-normal tracking-normal px-1.5 py-px rounded-full text-xs transition-all ${astTag === tag ? "bg-foreground/10 text-foreground/70 border border-border/40" : "bg-accent/20 text-muted-foreground/50 border border-transparent hover:bg-accent/40 hover:text-muted-foreground/70"}`}>{tag}</Button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    <Separator className="mx-1 bg-border/20" />
+                    <div className="p-1.5 pt-1 max-h-[240px] overflow-y-auto [&::-webkit-scrollbar]:w-[3px] [&::-webkit-scrollbar-thumb]:bg-border/30 [&::-webkit-scrollbar-thumb]:rounded-full">
+                      {filteredAssistants.length === 0 ? (
+                        <div className="px-2.5 py-3 text-center text-xs text-muted-foreground/40">无匹配结果</div>
+                      ) : (
+                        filteredAssistants.map(a => {
+                          const isActive = selectedAssistant.id === a.id
+                          return (
+                            <Button variant="ghost" type="button" key={a.id} onClick={() => { setSelectedAssistantId(a.id); setShowAssistantPicker(false) }} className={`h-auto px-0 py-0 font-normal tracking-normal flex items-center gap-2 w-full px-2 py-[5px] rounded-[12px] text-[10px] transition-all duration-75 mb-px ${isActive ? "bg-accent/30 text-foreground ring-1 ring-border/30" : "text-foreground/75 hover:text-foreground hover:bg-accent/15"}`}>
+                              <div className={`w-5 h-5 rounded-[4px] flex items-center justify-center flex-shrink-0 ${isActive ? "bg-foreground/10" : "bg-accent/30"}`}>
+                                <span className="text-xs leading-none">{a.emoji}</span>
+                              </div>
+                              <div className="flex-1 min-w-0 text-left">
+                                <div className="text-[10px] text-foreground truncate">{a.name}</div>
+                                <div className="text-xs text-muted-foreground/50 truncate">{a.systemPrompt.slice(0, 20)}</div>
+                              </div>
+                              {isActive && <Check size={10} className="text-primary flex-shrink-0" />}
+                            </Button>
+                          )
+                        })
+                      )}
+                    </div>
+                    <div className="border-t border-border/20 px-3 py-1.5">
+                      <p className="text-xs text-muted-foreground/40 leading-relaxed">切换助手将改变 AI 的分析视角和专业能力</p>
+                    </div>
+                  </PopoverContent>
+                </Popover>
                 <div className="flex-1" />
                 <SimpleTooltip content="清空对话"><Button variant="ghost" type="button" onClick={() => setAiMessages([])} className="h-auto px-0 py-0 font-normal tracking-normal w-6 h-6 rounded-[12px] flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"><Trash2 size={12} /></Button></SimpleTooltip>
                 <SimpleTooltip content="关闭面板"><Button variant="ghost" type="button" onClick={() => setRightPanelOpen(false)} className="h-auto px-0 py-0 font-normal tracking-normal w-6 h-6 rounded-[12px] flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"><PanelRightClose size={12} /></Button></SimpleTooltip>
@@ -682,19 +527,19 @@ export function NoteModuleDemo() {
                 {/* Empty state */}
                 {aiMessages.length === 0 && (
                   <div className="flex flex-col items-center justify-center py-6 text-muted-foreground/30">
-                    <div className="w-10 h-10 rounded-xl bg-accent/40 flex items-center justify-center mb-3 opacity-60"><span className="text-[22px] leading-none">{selectedAssistant.emoji}</span></div>
-                    <p className="text-[11px] text-muted-foreground/50 mb-1">{selectedAssistant.name}</p>
+                    <div className="w-10 h-10 rounded-[12px] bg-accent/40 flex items-center justify-center mb-3 opacity-60"><span className="text-[22px] leading-none">{selectedAssistant.emoji}</span></div>
+                    <p className="text-xs text-muted-foreground/50 mb-1">{selectedAssistant.name}</p>
                     <p className="text-[10px] text-muted-foreground/30">{selectedAssistant.modelProvider} &middot; {selectedAssistant.model}</p>
-                    <p className="text-[10px] text-muted-foreground/20 mt-3">点击上方操作或输入问题开始</p>
+                    <p className="text-[10px] text-muted-foreground/50 mt-3">点击上方操作或输入问题开始</p>
                   </div>
                 )}
                 {/* Messages */}
                 {aiMessages.map((msg, i) => (
                   <div key={i} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"} gap-1.5`}>
                     {msg.role === "assistant" && (
-                      <div className="w-5 h-5 rounded-[12px] bg-accent/40 flex items-center justify-center flex-shrink-0 mt-0.5"><span className="text-[11px] leading-none">{selectedAssistant.emoji}</span></div>
+                      <div className="w-5 h-5 rounded-[12px] bg-accent/40 flex items-center justify-center flex-shrink-0 mt-0.5"><span className="text-xs leading-none">{selectedAssistant.emoji}</span></div>
                     )}
-                    <div className={`max-w-[85%] rounded-xl px-3 py-2 text-xs leading-relaxed ${msg.role === "user" ? "bg-primary text-primary-foreground rounded-br-sm" : "bg-accent/60 text-foreground rounded-bl-sm"}`}>
+                    <div className={`max-w-[85%] rounded-[12px] px-3 py-2 text-xs leading-relaxed ${msg.role === "user" ? "bg-primary text-primary-foreground rounded-br-sm" : "bg-accent/60 text-foreground rounded-bl-sm"}`}>
                       {msg.content.split("\n").map((line, li) => {
                         if (line.startsWith("```")) return <div key={li} className="font-mono text-[10px] bg-background/50 rounded px-1.5 py-0.5 my-1 text-muted-foreground">{line.replace(/```/g, "")}</div>
                         if (line.startsWith("**") && line.endsWith("**")) return <p key={li} className="text-foreground mt-1.5 mb-0.5">{line.replace(/\*\*/g, "")}</p>
@@ -716,11 +561,11 @@ export function NoteModuleDemo() {
 
               {/* AI Input */}
               <div className="px-3 pb-3 pt-1 flex-shrink-0">
-                <div className="flex items-end gap-1.5 bg-accent/40 rounded-xl px-3 py-2 border border-border/30 focus-within:border-primary/30 focus-within:bg-accent/60 transition-all">
+                <div className="flex items-end gap-1.5 bg-accent/40 rounded-[12px] px-3 py-2 border border-border/30 focus-within:border-primary/30 focus-within:bg-accent/60 transition-all">
                   <Textarea value={aiInput} onChange={e => setAiInput(e.target.value)} onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleAISend() } }} placeholder={`向 ${selectedAssistant.name} 提问...`} rows={1} className="flex-1 bg-transparent border-0 shadow-none focus-visible:ring-0 rounded-none text-xs text-foreground placeholder:text-muted-foreground/40 resize-none min-h-[20px] max-h-[80px] p-0" />
                   <Button variant="ghost" type="button" onClick={handleAISend} disabled={!aiInput.trim()} className={`h-auto px-0 py-0 font-normal tracking-normal w-6 h-6 rounded-[12px] flex items-center justify-center flex-shrink-0 transition-colors ${aiInput.trim() ? "bg-primary text-primary-foreground hover:bg-primary/90" : "bg-muted text-muted-foreground/30"}`}><Send size={11} /></Button>
                 </div>
-                <p className="text-[9px] text-muted-foreground/30 mt-1.5 text-center">{selectedAssistant.name} &middot; 基于笔记上下文 &middot; Enter 发送</p>
+                <p className="text-xs text-muted-foreground/30 mt-1.5 text-center">{selectedAssistant.name} &middot; 基于笔记上下文 &middot; Enter 发送</p>
               </div>
             </div>
           )}

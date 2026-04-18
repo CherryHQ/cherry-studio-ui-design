@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect, useRef } from "react"
-import { Button, Badge, Input, Slider, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@cherry-studio/ui"
+import { Button, Badge, Input, Slider, Separator, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Tabs, TabsList, TabsTrigger } from "@cherry-studio/ui"
 import { Section } from "../components/Section"
 import {
   BookOpen, Database, Settings2, Zap, FileText, Search, Plus,
@@ -51,10 +51,10 @@ interface ChunkResult {
 
 const initialKbs: KnowledgeBase[] = [
   { id: "kb1", name: "AI 技术文档", icon: "🤖", color: "#8b5cf6", docCount: 10, status: "ready", group: "工作", updatedAt: "2 小时前" },
-  { id: "kb2", name: "产品设计规范", icon: "🎨", color: "#ec4899", docCount: 5, status: "ready", group: "工作", updatedAt: "昨天" },
+  { id: "kb2", name: "产品设计规范", icon: "🎨", color: "#a78bfa", docCount: 5, status: "ready", group: "工作", updatedAt: "昨天" },
   { id: "kb3", name: "API 接口文档", icon: "📡", color: "#3b82f6", docCount: 6, status: "indexing", group: "工作", updatedAt: "30 分钟前" },
-  { id: "kb4", name: "阅读笔记", icon: "📚", color: "#10b981", docCount: 7, status: "ready", group: "个人", updatedAt: "1 天前" },
-  { id: "kb5", name: "Cherry Studio V2", icon: "🍒", color: "#ef4444", docCount: 8, status: "indexing", group: "项目", updatedAt: "1 小时前" },
+  { id: "kb4", name: "阅读笔记", icon: "📚", color: "#06b6d4", docCount: 7, status: "ready", group: "个人", updatedAt: "1 天前" },
+  { id: "kb5", name: "Cherry Studio V2", icon: "🍒", color: "#6d28d9", docCount: 8, status: "indexing", group: "项目", updatedAt: "1 小时前" },
 ]
 
 const initialSources: Record<string, DataSource[]> = {
@@ -161,10 +161,10 @@ function StatusBadge({ status, errorMsg }: { status: DataSource["status"]; error
       <div className="flex items-center gap-1.5">
         <div className="flex items-center gap-0.5">
           {[1, 2, 3].map((step) => (
-            <div key={step} className={`w-[5px] h-[5px] rounded-full transition-colors ${step < cfg.step ? "bg-primary" : step === cfg.step ? "bg-accent-amber animate-pulse" : "bg-border/40"}`} />
+            <div key={step} className={`w-1.5 h-1.5 rounded-full transition-colors ${step < cfg.step ? "bg-primary" : step === cfg.step ? "bg-accent-amber animate-pulse" : "bg-border/40"}`} />
           ))}
         </div>
-        <span className={`inline-flex items-center gap-0.5 text-[9px] ${cfg.color}`}>
+        <span className={`inline-flex items-center gap-0.5 text-xs ${cfg.color}`}>
           <Loader2 size={7} className="animate-spin" />
           <span>{cfg.label}</span>
         </span>
@@ -173,13 +173,13 @@ function StatusBadge({ status, errorMsg }: { status: DataSource["status"]; error
   }
   if (status === "error") {
     return (
-      <span className={`inline-flex items-center gap-0.5 text-[9px] ${cfg.color}`} title={errorMsg}>
+      <span className={`inline-flex items-center gap-0.5 text-xs ${cfg.color}`} title={errorMsg}>
         <AlertCircle size={8} /> {cfg.label}
       </span>
     )
   }
   return (
-    <span className="inline-flex items-center gap-0.5 text-[9px] text-primary">
+    <span className="inline-flex items-center gap-0.5 text-xs text-primary">
       <Check size={8} /> 就绪
     </span>
   )
@@ -203,12 +203,12 @@ function KnowledgeSidebar({ items, selectedId, onSelect }: {
     <div className="flex flex-col h-full select-none">
       {/* Header */}
       <div className="h-11 flex items-center justify-between px-3.5 flex-shrink-0">
-        <div className="flex items-center gap-1.5 text-[11px]">
+        <div className="flex items-center gap-1.5 text-xs">
           <BookOpen size={12} className="text-muted-foreground" strokeWidth={1.6} />
           <span className="text-foreground">知识库</span>
           <span className="text-muted-foreground/50 ml-0.5">{items.length}</span>
         </div>
-        <Button variant="ghost" type="button" className="h-auto px-0 py-0 font-normal tracking-normal w-5 h-5 rounded flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent transition-colors">
+        <Button variant="ghost" type="button" onClick={() => onSelect(`kb${Date.now()}`)} className="h-auto px-0 py-0 font-normal tracking-normal w-5 h-5 rounded flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent transition-colors">
           <Plus size={12} strokeWidth={1.8} />
         </Button>
       </div>
@@ -217,7 +217,7 @@ function KnowledgeSidebar({ items, selectedId, onSelect }: {
       <div className="px-2 pb-1.5 flex-shrink-0">
         <div className="flex items-center gap-1.5 px-2 py-[4px] rounded-[12px] bg-muted/50 border border-transparent focus-within:border-border/50 transition-colors">
           <Search size={10} className="text-muted-foreground/50 flex-shrink-0" />
-          <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="搜索知识库..." className="h-auto flex-1 border-0 bg-transparent p-0 text-[11px] text-foreground shadow-none placeholder:text-muted-foreground/40 focus-visible:ring-0" />
+          <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="搜索知识库..." className="h-auto flex-1 border-0 bg-transparent p-0 text-xs text-foreground shadow-none placeholder:text-muted-foreground/40 focus-visible:ring-0" />
           {search && <Button variant="ghost" type="button" onClick={() => setSearch("")} className="h-auto px-0 py-0 font-normal tracking-normal text-muted-foreground/30 hover:text-foreground"><X size={9} /></Button>}
         </div>
       </div>
@@ -245,13 +245,13 @@ function KnowledgeSidebar({ items, selectedId, onSelect }: {
                           {kb.icon}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <div className="text-[11px] truncate">{kb.name}</div>
+                          <div className="text-xs truncate">{kb.name}</div>
                           <div className="flex items-center gap-1 mt-px">
-                            <span className="text-[9px] text-muted-foreground/45">{kb.docCount} 文档</span>
-                            <span className={`w-1 h-1 rounded-full flex-shrink-0 ${kb.status === "ready" ? "bg-primary" : kb.status === "indexing" ? "bg-accent-amber animate-pulse" : "bg-error"}`} />
+                            <span className="text-xs text-muted-foreground/45">{kb.docCount} 文档</span>
+                            <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${kb.status === "ready" ? "bg-primary" : kb.status === "indexing" ? "bg-accent-amber animate-pulse" : "bg-error"}`} />
                           </div>
                         </div>
-                        <Button variant="ghost" type="button" className="h-auto px-0 py-0 font-normal tracking-normal w-4 h-4 rounded flex items-center justify-center text-muted-foreground/25 hover:text-foreground opacity-0 group-hover/kb:opacity-100 transition-all flex-shrink-0">
+                        <Button variant="ghost" type="button" onClick={(e) => { e.stopPropagation(); alert(`Options for: ${kb.name}`) }} className="h-auto px-0 py-0 font-normal tracking-normal w-4 h-4 rounded flex items-center justify-center text-muted-foreground/50 hover:text-foreground opacity-0 group-hover/kb:opacity-100 transition-all flex-shrink-0">
                           <MoreHorizontal size={9} />
                         </Button>
                       </div>
@@ -266,7 +266,7 @@ function KnowledgeSidebar({ items, selectedId, onSelect }: {
 
       {/* Bottom new button */}
       <div className="px-2 py-1.5 flex-shrink-0 border-t border-border/30">
-        <Button variant="ghost" type="button" className="h-auto px-0 py-0 font-normal tracking-normal w-full flex items-center justify-center gap-1 py-[5px] rounded-[12px] text-[11px] text-muted-foreground hover:text-foreground hover:bg-accent/60 transition-colors border border-dashed border-border/40 hover:border-border/70">
+        <Button variant="ghost" type="button" onClick={() => onSelect(`kb${Date.now()}`)} className="h-auto px-0 py-0 font-normal tracking-normal w-full flex items-center justify-center gap-1 py-[5px] rounded-[12px] text-xs text-muted-foreground hover:text-foreground hover:bg-accent/60 transition-colors border border-dashed border-border/40 hover:border-border/70">
           <Plus size={11} strokeWidth={1.8} /> 新建知识库
         </Button>
       </div>
@@ -297,7 +297,7 @@ function DataSourceListPanel({ sources, onDelete, onReindex }: {
             </Button>
           ))}
         </div>
-        <Button variant="ghost" type="button" className="h-auto px-0 py-0 font-normal tracking-normal h-6 px-2.5 rounded-[12px] text-[10px] text-foreground bg-primary/10 hover:bg-primary/20 transition-colors flex items-center gap-1">
+        <Button variant="ghost" type="button" onClick={() => alert("Add source dialog")} className="h-auto px-0 py-0 font-normal tracking-normal h-6 px-2.5 rounded-[12px] text-[10px] text-foreground bg-primary/10 hover:bg-primary/20 transition-colors flex items-center gap-1">
           <Upload size={9} /> 添加
         </Button>
       </div>
@@ -305,9 +305,9 @@ function DataSourceListPanel({ sources, onDelete, onReindex }: {
       {/* File list */}
       <div className="flex-1 overflow-y-auto px-3 pb-3 space-y-px [&::-webkit-scrollbar]:w-[3px] [&::-webkit-scrollbar-thumb]:bg-border/30 [&::-webkit-scrollbar-thumb]:rounded-full">
         {filtered.length === 0 && (
-          <div className="flex flex-col items-center justify-center py-12 text-muted-foreground/25">
+          <div className="flex flex-col items-center justify-center py-12 text-muted-foreground/50">
             <Database size={20} strokeWidth={1.2} className="mb-1.5" />
-            <p className="text-[11px]">暂无数据源</p>
+            <p className="text-xs">暂无数据源</p>
           </div>
         )}
         {filtered.map((src) => {
@@ -319,8 +319,8 @@ function DataSourceListPanel({ sources, onDelete, onReindex }: {
                 <TIcon size={10} strokeWidth={1.6} />
               </div>
               <div className="flex-1 min-w-0">
-                <div className="text-[11px] text-foreground truncate">{src.name}</div>
-                <div className="flex items-center gap-2 text-[9px] text-muted-foreground/35">
+                <div className="text-xs text-foreground truncate">{src.name}</div>
+                <div className="flex items-center gap-2 text-xs text-muted-foreground/35">
                   {src.format && <span className="uppercase">{src.format}</span>}
                   {src.size && <span>{src.size}</span>}
                   {src.url && <span className="truncate max-w-[120px]">{src.url}</span>}
@@ -328,7 +328,7 @@ function DataSourceListPanel({ sources, onDelete, onReindex }: {
                 </div>
               </div>
               <StatusBadge status={src.status} errorMsg={src.errorMsg} />
-              <span className="text-[9px] text-muted-foreground/25 flex-shrink-0 w-14 text-right">{src.updatedAt}</span>
+              <span className="text-xs text-muted-foreground/50 flex-shrink-0 w-14 text-right">{src.updatedAt}</span>
               <div className="flex items-center gap-0.5 opacity-0 group-hover/row:opacity-100 transition-all flex-shrink-0">
                 {src.status === "error" && (
                   <Button variant="ghost" type="button" onClick={() => onReindex(src.id)} className="h-auto px-0 py-0 font-normal tracking-normal w-4 h-4 rounded flex items-center justify-center text-muted-foreground/30 hover:text-foreground hover:bg-accent">
@@ -364,13 +364,13 @@ function RAGSettingsPanel() {
       <div className="max-w-[480px] mx-auto px-5 py-4 space-y-5">
         {/* 文档预处理 */}
         <div className="space-y-2.5">
-          <div className="flex items-center gap-1.5 text-[12px] text-foreground font-medium">
+          <div className="flex items-center gap-1.5 text-xs text-foreground font-medium">
             <Cpu size={13} strokeWidth={1.8} className="text-cherry-primary/70" /> 文档预处理
           </div>
           <div>
-            <div className="flex items-center gap-1 mb-1"><span className="text-[11px] text-foreground/75">处理服务商</span></div>
+            <div className="flex items-center gap-1 mb-1"><span className="text-xs text-foreground/75">处理服务商</span></div>
             <Select value={docProcessor} onValueChange={setDocProcessor}>
-              <SelectTrigger className="w-full h-auto px-2.5 py-[6px] rounded-[12px] border border-border/40 bg-transparent text-[11px] text-foreground">
+              <SelectTrigger className="w-full h-auto px-2.5 py-[6px] rounded-[12px] border border-border/40 bg-transparent text-xs text-foreground">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -380,33 +380,33 @@ function RAGSettingsPanel() {
           </div>
         </div>
 
-        <div className="border-t border-border/15" />
+        <Separator className="bg-border/15" />
 
         {/* 分块规则 */}
         <div className="space-y-2.5">
-          <div className="flex items-center gap-1.5 text-[12px] text-foreground font-medium">
+          <div className="flex items-center gap-1.5 text-xs text-foreground font-medium">
             <Layers size={13} strokeWidth={1.8} className="text-cherry-primary/70" /> 分块规则 (Chunking)
           </div>
           <div className="grid grid-cols-2 gap-2">
             <div>
-              <div className="flex items-center gap-1 mb-1"><span className="text-[11px] text-foreground/75">分段大小</span><Info size={9} className="text-muted-foreground/40" /></div>
+              <div className="flex items-center gap-1 mb-1"><span className="text-xs text-foreground/75">分段大小</span><Info size={9} className="text-muted-foreground/40" /></div>
               <div className="relative">
-                <Input value={chunkSize} onChange={(e) => setChunkSize(e.target.value)} className="w-full rounded-[12px] border border-border/40 bg-transparent px-2.5 py-[6px] text-[11px] text-foreground focus-visible:ring-0" />
-                <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[9px] text-muted-foreground/25 pointer-events-none">tokens</span>
+                <Input value={chunkSize} onChange={(e) => setChunkSize(e.target.value)} className="w-full rounded-[12px] border border-border/40 bg-transparent px-2.5 py-[6px] text-xs text-foreground focus-visible:ring-0" />
+                <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-xs text-muted-foreground/50 pointer-events-none">tokens</span>
               </div>
             </div>
             <div>
-              <div className="flex items-center gap-1 mb-1"><span className="text-[11px] text-foreground/75">重叠大小</span><Info size={9} className="text-muted-foreground/40" /></div>
+              <div className="flex items-center gap-1 mb-1"><span className="text-xs text-foreground/75">重叠大小</span><Info size={9} className="text-muted-foreground/40" /></div>
               <div className="relative">
-                <Input value={chunkOverlap} onChange={(e) => setChunkOverlap(e.target.value)} className="w-full rounded-[12px] border border-border/40 bg-transparent px-2.5 py-[6px] text-[11px] text-foreground focus-visible:ring-0" />
-                <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[9px] text-muted-foreground/25 pointer-events-none">tokens</span>
+                <Input value={chunkOverlap} onChange={(e) => setChunkOverlap(e.target.value)} className="w-full rounded-[12px] border border-border/40 bg-transparent px-2.5 py-[6px] text-xs text-foreground focus-visible:ring-0" />
+                <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-xs text-muted-foreground/50 pointer-events-none">tokens</span>
               </div>
             </div>
           </div>
           <div>
-            <div className="flex items-center gap-1 mb-1"><span className="text-[11px] text-foreground/75">分隔符规则</span></div>
+            <div className="flex items-center gap-1 mb-1"><span className="text-xs text-foreground/75">分隔符规则</span></div>
             <Select value={separator} onValueChange={setSeparator}>
-              <SelectTrigger className="w-full h-auto px-2.5 py-[6px] rounded-[12px] border border-border/40 bg-transparent text-[11px] text-foreground">
+              <SelectTrigger className="w-full h-auto px-2.5 py-[6px] rounded-[12px] border border-border/40 bg-transparent text-xs text-foreground">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -416,17 +416,17 @@ function RAGSettingsPanel() {
           </div>
         </div>
 
-        <div className="border-t border-border/15" />
+        <Separator className="bg-border/15" />
 
         {/* Embedding 模型 */}
         <div className="space-y-2.5">
-          <div className="flex items-center gap-1.5 text-[12px] text-foreground font-medium">
+          <div className="flex items-center gap-1.5 text-xs text-foreground font-medium">
             <Cpu size={13} strokeWidth={1.8} className="text-cherry-primary/70" /> Embedding 模型
           </div>
           <div>
-            <div className="flex items-center gap-1 mb-1"><span className="text-[11px] text-foreground/75">模型选择</span></div>
+            <div className="flex items-center gap-1 mb-1"><span className="text-xs text-foreground/75">模型选择</span></div>
             <Select value={embModel} onValueChange={setEmbModel}>
-              <SelectTrigger className="w-full h-auto px-2.5 py-[6px] rounded-[12px] border border-border/40 bg-transparent text-[11px] text-foreground">
+              <SelectTrigger className="w-full h-auto px-2.5 py-[6px] rounded-[12px] border border-border/40 bg-transparent text-xs text-foreground">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -436,33 +436,33 @@ function RAGSettingsPanel() {
           </div>
         </div>
 
-        <div className="border-t border-border/15" />
+        <Separator className="bg-border/15" />
 
         {/* 检索设置 */}
         <div className="space-y-2.5">
-          <div className="flex items-center gap-1.5 text-[12px] text-foreground font-medium">
+          <div className="flex items-center gap-1.5 text-xs text-foreground font-medium">
             <Search size={13} strokeWidth={1.8} className="text-cherry-primary/70" /> 检索设置
           </div>
           <div>
             <div className="flex items-center justify-between mb-1">
-              <span className="text-[11px] text-foreground/75">请求文档片段数 (Top K)</span>
-              <span className="text-[11px] text-foreground tabular-nums">{topK}</span>
+              <span className="text-xs text-foreground/75">请求文档片段数 (Top K)</span>
+              <span className="text-xs text-foreground tabular-nums">{topK}</span>
             </div>
             <Slider min={1} max={50} step={1} value={[topK]} onValueChange={([v]) => setTopK(v)} className="w-full" />
-            <div className="flex justify-between text-[8px] text-muted-foreground/25 mt-px"><span>1</span><span>50</span></div>
+            <div className="flex justify-between text-xs text-muted-foreground/50 mt-px"><span>1</span><span>50</span></div>
           </div>
           <div>
             <div className="flex items-center justify-between mb-1">
-              <span className="text-[11px] text-foreground/75">匹配度阈值</span>
-              <span className="text-[11px] text-foreground tabular-nums">{scoreThreshold.toFixed(2)}</span>
+              <span className="text-xs text-foreground/75">匹配度阈值</span>
+              <span className="text-xs text-foreground tabular-nums">{scoreThreshold.toFixed(2)}</span>
             </div>
             <Slider min={0} max={1} step={0.01} value={[scoreThreshold]} onValueChange={([v]) => setScoreThreshold(v)} className="w-full" />
-            <div className="flex justify-between text-[8px] text-muted-foreground/25 mt-px"><span>0.00</span><span>1.00</span></div>
+            <div className="flex justify-between text-xs text-muted-foreground/50 mt-px"><span>0.00</span><span>1.00</span></div>
           </div>
           <div>
-            <div className="flex items-center gap-1 mb-1"><span className="text-[11px] text-foreground/75">重排模型 (Rerank)</span></div>
+            <div className="flex items-center gap-1 mb-1"><span className="text-xs text-foreground/75">重排模型 (Rerank)</span></div>
             <Select value={rerankModel} onValueChange={setRerankModel}>
-              <SelectTrigger className="w-full h-auto px-2.5 py-[6px] rounded-[12px] border border-border/40 bg-transparent text-[11px] text-foreground">
+              <SelectTrigger className="w-full h-auto px-2.5 py-[6px] rounded-[12px] border border-border/40 bg-transparent text-xs text-foreground">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -473,11 +473,11 @@ function RAGSettingsPanel() {
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-end gap-2 pt-3 border-t border-border/15">
-          <Button variant="ghost" type="button" className="h-auto px-0 py-0 font-normal tracking-normal h-6 px-2.5 rounded-[12px] text-[11px] text-muted-foreground/50 hover:text-foreground hover:bg-accent transition-colors flex items-center gap-1">
+        <div className="flex items-center justify-end gap-2 pt-3 border-t border-border/30">
+          <Button variant="ghost" type="button" onClick={() => alert("Settings restored to defaults")} className="h-auto px-0 py-0 font-normal tracking-normal h-6 px-2.5 rounded-[12px] text-xs text-muted-foreground/50 hover:text-foreground hover:bg-accent transition-colors flex items-center gap-1">
             <RotateCcw size={9} /> 恢复默认
           </Button>
-          <Button variant="ghost" type="button" className="h-auto px-0 py-0 font-normal tracking-normal h-6 px-3 rounded-[12px] text-[11px] bg-primary text-primary-foreground hover:bg-primary/90 transition-colors">
+          <Button variant="ghost" type="button" onClick={() => alert("Settings saved")} className="h-auto px-0 py-0 font-normal tracking-normal h-6 px-3 rounded-[12px] text-xs bg-primary text-primary-foreground hover:bg-primary/90 transition-colors">
             保存
           </Button>
         </div>
@@ -523,15 +523,15 @@ function RetrievalTesterPanel() {
         <div className="flex items-center gap-1.5">
           <div className="flex-1 flex items-center gap-1.5 px-2.5 py-[5px] rounded-[12px] border border-border/40 bg-muted/20 focus-within:border-ring/40 focus-within:ring-1 focus-within:ring-ring/15 transition-all">
             <Search size={11} className="text-muted-foreground/35 flex-shrink-0" />
-            <Input value={query} onChange={(e) => setQuery(e.target.value)} onKeyDown={(e) => e.key === "Enter" && handleSearch()} placeholder="输入测试 Query..." className="h-auto flex-1 border-0 bg-transparent p-0 text-[11px] text-foreground shadow-none placeholder:text-muted-foreground/30 focus-visible:ring-0" />
+            <Input value={query} onChange={(e) => setQuery(e.target.value)} onKeyDown={(e) => e.key === "Enter" && handleSearch()} placeholder="输入测试 Query..." className="h-auto flex-1 border-0 bg-transparent p-0 text-xs text-foreground shadow-none placeholder:text-muted-foreground/30 focus-visible:ring-0" />
           </div>
-          <Button variant="ghost" type="button" onClick={handleSearch} disabled={loading || !query.trim()} className={`h-auto px-0 py-0 font-normal tracking-normal h-7 px-3 rounded-[12px] text-[11px] flex items-center gap-1 transition-all flex-shrink-0 ${loading ? "bg-primary/60 text-primary-foreground/60 cursor-wait" : "bg-primary text-primary-foreground hover:bg-primary/90"} disabled:opacity-40`}>
+          <Button variant="ghost" type="button" onClick={handleSearch} disabled={loading || !query.trim()} className={`h-auto px-0 py-0 font-normal tracking-normal h-7 px-3 rounded-[12px] text-xs flex items-center gap-1 transition-all flex-shrink-0 ${loading ? "bg-primary/60 text-primary-foreground/60 cursor-wait" : "bg-primary text-primary-foreground hover:bg-primary/90"} disabled:opacity-40`}>
             {loading ? <div className="w-2.5 h-2.5 border-[1.5px] border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" /> : <Zap size={10} />}
             <span>检索</span>
           </Button>
         </div>
         {elapsed !== null && results.length > 0 && (
-          <div className="flex items-center gap-2.5 mt-1.5 text-[9px] text-muted-foreground/35">
+          <div className="flex items-center gap-2.5 mt-1.5 text-xs text-muted-foreground/35">
             <span className="flex items-center gap-0.5"><Sparkles size={8} /> {results.length} 个结果</span>
             <span className="flex items-center gap-0.5"><Clock size={8} /> {elapsed}ms</span>
             <span>最高: {(results[0]?.score * 100).toFixed(0)}%</span>
@@ -542,16 +542,16 @@ function RetrievalTesterPanel() {
       {/* Results */}
       <div className="flex-1 overflow-y-auto px-3 pb-3 space-y-1.5 [&::-webkit-scrollbar]:w-[3px] [&::-webkit-scrollbar-thumb]:bg-border/30 [&::-webkit-scrollbar-thumb]:rounded-full">
         {results.length === 0 && !loading && (
-          <div className="flex flex-col items-center justify-center h-full text-muted-foreground/25 py-12">
+          <div className="flex flex-col items-center justify-center h-full text-muted-foreground/50 py-12">
             <Search size={22} strokeWidth={1.2} className="mb-1.5" />
-            <p className="text-[11px]">输入查询语句开始检索测试</p>
-            <p className="text-[9px] mt-0.5">结果将展示匹配的文档片段和分数</p>
+            <p className="text-xs">输入查询语句开始检索测试</p>
+            <p className="text-xs mt-0.5">结果将展示匹配的文档片段和分数</p>
           </div>
         )}
         {loading && (
           <div className="flex flex-col items-center justify-center py-12">
             <div className="w-5 h-5 border-2 border-primary/20 border-t-primary rounded-full animate-spin mb-2" />
-            <p className="text-[11px] text-muted-foreground/35">正在检索...</p>
+            <p className="text-xs text-muted-foreground/35">正在检索...</p>
           </div>
         )}
         {results.map((chunk, idx) => {
@@ -561,27 +561,27 @@ function RetrievalTesterPanel() {
           return (
             <div key={chunk.id} className="rounded-[12px] border border-border/20 hover:border-border/40 bg-muted/[0.03] transition-all group/chunk">
               <div className="flex items-center gap-1.5 px-2.5 py-1.5">
-                <span className="w-4 h-4 rounded bg-accent/50 flex items-center justify-center text-[9px] text-muted-foreground/50 flex-shrink-0">{idx + 1}</span>
+                <span className="w-4 h-4 rounded bg-accent/50 flex items-center justify-center text-xs text-muted-foreground/50 flex-shrink-0">{idx + 1}</span>
                 <div className="flex items-center gap-1 min-w-0 flex-1">
                   <FileText size={9} className="text-muted-foreground/35 flex-shrink-0" />
                   <span className="text-[10px] text-muted-foreground/50 truncate">{chunk.source}</span>
-                  <span className="text-[8px] text-muted-foreground/20 flex-shrink-0">#{chunk.chunkIndex}</span>
+                  <span className="text-xs text-muted-foreground/50 flex-shrink-0">#{chunk.chunkIndex}</span>
                 </div>
                 <div className="flex items-center gap-1.5">
-                  <div className="w-12 h-[3px] rounded-full bg-border/25 overflow-hidden">
+                  <div className="w-12 h-1 rounded-full bg-border/25 overflow-hidden">
                     <div className={`h-full rounded-full transition-all duration-500 ${pct >= 90 ? "bg-accent-blue" : pct >= 75 ? "bg-accent-sky" : "bg-accent-amber"}`} style={{ width: `${pct}%` }} />
                   </div>
-                  <span className="text-[9px] text-muted-foreground/50 tabular-nums w-6">{pct}%</span>
+                  <span className="text-xs text-muted-foreground/50 tabular-nums w-6">{pct}%</span>
                 </div>
-                <Button variant="ghost" type="button" onClick={() => handleCopy(chunk.id, chunk.content)} className="h-auto px-0 py-0 font-normal tracking-normal w-4 h-4 rounded flex items-center justify-center text-muted-foreground/20 hover:text-foreground hover:bg-accent opacity-0 group-hover/chunk:opacity-100 transition-all flex-shrink-0">
+                <Button variant="ghost" type="button" onClick={() => handleCopy(chunk.id, chunk.content)} className="h-auto px-0 py-0 font-normal tracking-normal w-4 h-4 rounded flex items-center justify-center text-muted-foreground/50 hover:text-foreground hover:bg-accent opacity-0 group-hover/chunk:opacity-100 transition-all flex-shrink-0">
                   {isCopied ? <Check size={8} className="text-primary" /> : <Copy size={8} />}
                 </Button>
-                <Button variant="ghost" type="button" onClick={() => setExpandedId(isExpanded ? null : chunk.id)} className="h-auto px-0 py-0 font-normal tracking-normal w-4 h-4 rounded flex items-center justify-center text-muted-foreground/20 hover:text-foreground hover:bg-accent transition-all flex-shrink-0">
+                <Button variant="ghost" type="button" onClick={() => setExpandedId(isExpanded ? null : chunk.id)} className="h-auto px-0 py-0 font-normal tracking-normal w-4 h-4 rounded flex items-center justify-center text-muted-foreground/50 hover:text-foreground hover:bg-accent transition-all flex-shrink-0">
                   {isExpanded ? <ChevronUp size={9} /> : <ChevronDown size={9} />}
                 </Button>
               </div>
               <div className={`px-2.5 pb-2 ${isExpanded ? "" : "line-clamp-2"}`}>
-                <p className="text-[11px] text-foreground/75 leading-relaxed">{chunk.content}</p>
+                <p className="text-xs text-foreground/75 leading-relaxed">{chunk.content}</p>
               </div>
             </div>
           )
@@ -623,7 +623,7 @@ export function KnowledgeModuleDemo() {
       { name: "selectedKbId", type: "string", description: "Currently selected knowledge base ID" },
       { name: "activeTab", type: "'sources' | 'settings' | 'test'", default: "'sources'", description: "Active detail tab" },
     ]}>
-      <div className="max-w-3xl rounded-xl border bg-background overflow-hidden">
+      <div className="rounded-[24px] border bg-background overflow-hidden">
         <div className="flex h-[520px]">
           {/* ─── Left: Sidebar ─── */}
           <div className="w-[220px] flex-shrink-0 h-full bg-muted/[0.15] border-r border-border/20">
@@ -635,56 +635,55 @@ export function KnowledgeModuleDemo() {
             {selectedKb ? (
               <>
                 {/* Header bar */}
-                <div className="h-11 flex items-center justify-between px-3.5 flex-shrink-0 border-b border-border/15">
+                <div className="h-11 flex items-center justify-between px-3.5 flex-shrink-0 border-b border-border/30">
                   <div className="flex items-center gap-2 min-w-0">
                     <div className="w-6 h-6 rounded flex items-center justify-center text-xs flex-shrink-0" style={{ background: `${selectedKb.color}20` }}>
                       {selectedKb.icon}
                     </div>
                     <div className="min-w-0">
                       <div className="flex items-center gap-1.5">
-                        <span className="text-[11px] text-foreground truncate">{selectedKb.name}</span>
-                        <span className={`w-1 h-1 rounded-full flex-shrink-0 ${selectedKb.status === "ready" ? "bg-primary" : selectedKb.status === "indexing" ? "bg-accent-amber animate-pulse" : "bg-error"}`} />
-                        <span className="text-[9px] text-muted-foreground/35">
+                        <span className="text-xs text-foreground truncate">{selectedKb.name}</span>
+                        <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${selectedKb.status === "ready" ? "bg-primary" : selectedKb.status === "indexing" ? "bg-accent-amber animate-pulse" : "bg-error"}`} />
+                        <span className="text-xs text-muted-foreground/60">
                           {selectedKb.status === "ready" ? "就绪" : selectedKb.status === "indexing" ? "索引中" : "错误"}
                         </span>
                       </div>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2.5 text-[9px] text-muted-foreground/50 flex-shrink-0">
+                  <div className="flex items-center gap-2.5 text-xs text-muted-foreground/60 flex-shrink-0">
                     <span className="flex items-center gap-0.5"><FileText size={9} />{selectedKb.docCount} 文档</span>
                     <span className="flex items-center gap-0.5"><Clock size={9} />{selectedKb.updatedAt}</span>
-                    <Button variant="ghost" type="button" className="h-auto px-0 py-0 font-normal tracking-normal w-5 h-5 rounded flex items-center justify-center text-muted-foreground/50 hover:text-foreground hover:bg-accent transition-colors">
+                    <Button variant="ghost" type="button" onClick={() => alert("KB options: Rename, Export, Delete")} className="h-auto px-0 py-0 font-normal tracking-normal w-5 h-5 rounded flex items-center justify-center text-muted-foreground/50 hover:text-foreground hover:bg-accent transition-colors">
                       <MoreHorizontal size={11} />
                     </Button>
                   </div>
                 </div>
 
-                {/* Tab bar */}
-                <div className="flex items-center gap-0 px-2.5 flex-shrink-0 border-b border-border/15">
-                  {detailTabs.map((tab) => {
-                    const isActive = activeTab === tab.id
-                    const TIcon = tab.icon
-                    return (
-                      <Button variant="ghost" type="button" key={tab.id} onClick={() => setActiveTab(tab.id)} className={`h-auto px-0 py-0 font-normal tracking-normal flex items-center gap-1 px-2.5 py-2 text-[10px] border-b-[1.5px] transition-colors ${isActive ? "border-primary text-foreground" : "border-transparent text-muted-foreground/60 hover:text-foreground"}`}>
-                        <TIcon size={10} strokeWidth={1.6} />
-                        <span>{tab.label}</span>
-                        {tab.id === "sources" && <span className="text-[8px] text-muted-foreground/40 ml-0.5">{sources.length}</span>}
-                      </Button>
-                    )
-                  })}
-                </div>
-
-                {/* Tab content */}
-                <div className="flex-1 min-h-0 flex flex-col">
-                  {activeTab === "sources" && <DataSourceListPanel sources={sources} onDelete={handleDeleteSource} onReindex={handleReindexSource} />}
-                  {activeTab === "settings" && <RAGSettingsPanel />}
-                  {activeTab === "test" && <RetrievalTesterPanel />}
-                </div>
+                {/* Tab bar + content */}
+                <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as DetailTab)} className="flex flex-col flex-1 min-h-0">
+                  <TabsList className="bg-transparent h-auto p-0 px-2.5 gap-0 border-b border-border/30 rounded-none justify-start">
+                    {detailTabs.map((tab) => {
+                      const TIcon = tab.icon
+                      return (
+                        <TabsTrigger key={tab.id} value={tab.id} className="rounded-none border-0 border-b-[1.5px] border-b-transparent data-[state=active]:border-b-primary data-[state=active]:shadow-none data-[state=active]:bg-transparent after:hidden flex items-center gap-1 px-2.5 py-2 text-xs">
+                          <TIcon size={10} strokeWidth={1.6} />
+                          <span>{tab.label}</span>
+                          {tab.id === "sources" && <span className="text-xs text-muted-foreground/60 ml-0.5">{sources.length}</span>}
+                        </TabsTrigger>
+                      )
+                    })}
+                  </TabsList>
+                  <div className="flex-1 min-h-0 flex flex-col">
+                    {activeTab === "sources" && <DataSourceListPanel sources={sources} onDelete={handleDeleteSource} onReindex={handleReindexSource} />}
+                    {activeTab === "settings" && <RAGSettingsPanel />}
+                    {activeTab === "test" && <RetrievalTesterPanel />}
+                  </div>
+                </Tabs>
               </>
             ) : (
-              <div className="flex-1 flex flex-col items-center justify-center text-muted-foreground/25">
+              <div className="flex-1 flex flex-col items-center justify-center text-muted-foreground/50">
                 <BookOpen size={24} strokeWidth={1.2} className="mb-2" />
-                <p className="text-[11px]">选择一个知识库开始</p>
+                <p className="text-xs">选择一个知识库开始</p>
               </div>
             )}
           </div>
