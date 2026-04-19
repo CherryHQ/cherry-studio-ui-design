@@ -32,7 +32,11 @@ export function SearchDialogDemo() {
   const [open, setOpen] = useState(false)
 
   return (
-    <Section title="Search Dialog (⌘K Pattern)" code={`import { Dialog, DialogContent, Command, CommandInput, CommandList, CommandGroup, CommandItem } from "@cherry-studio/ui"
+    <Section title="Search Dialog (⌘K Pattern)" props={[
+        { name: "open", type: "boolean", default: "false", description: "Whether the search dialog is open" },
+        { name: "onOpenChange", type: "(open: boolean) => void", default: "undefined", description: "Callback when dialog open state changes" },
+        { name: "placeholder", type: "string", default: '"Search..."', description: "Placeholder text for the search input" },
+      ]} code={`import { Dialog, DialogContent, Command, CommandInput, CommandList, CommandGroup, CommandItem } from "@cherry-studio/ui"
 
 <Dialog open={open} onOpenChange={setOpen}>
   <DialogContent className="p-0 max-w-lg">
@@ -104,7 +108,7 @@ export function SearchDialogDemo() {
                     <CommandItem key={item.id} className="gap-2" onSelect={() => setOpen(false)}>
                       {item.icon}
                       <span className="flex-1">{item.label}</span>
-                      <Badge variant="outline" className="text-[9px] font-mono px-1.5 py-0">{item.shortcut}</Badge>
+                      <Badge variant="outline" className="text-xs font-mono px-1.5 py-0">{item.shortcut}</Badge>
                     </CommandItem>
                   ))}
                 </CommandGroup>

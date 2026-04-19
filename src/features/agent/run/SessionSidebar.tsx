@@ -4,6 +4,7 @@ import {
   Copy, Archive, ChevronDown, MessageCircle, Clock,
   Sparkles,
 } from 'lucide-react';
+import { Button, Input } from '@cherry-studio/ui';
 import { motion, AnimatePresence } from 'motion/react';
 import type { AgentSession } from '@/app/types/agent';
 
@@ -56,18 +57,20 @@ function SessionContextMenu({ x, y, onClose, onDelete, onPin, isPinned }: {
           'divider' in item ? (
             <div key={i} className="h-px bg-border/10 my-1" />
           ) : (
-            <button
+            <Button
+              variant="ghost"
+              size="xs"
               key={i}
               onClick={item.action}
-              className={`flex items-center gap-2 w-full px-2.5 py-[5px] rounded-md text-[10.5px] transition-colors ${
+              className={`w-full justify-start gap-2 ${
                 'danger' in item && item.danger
-                  ? 'text-red-500/70 hover:bg-red-500/8'
+                  ? 'text-destructive/70 hover:bg-destructive/8'
                   : 'text-foreground/65 hover:bg-accent/15'
               }`}
             >
               <item.icon size={11} />
               <span>{item.label}</span>
-            </button>
+            </Button>
           )
         ))}
       </motion.div>
@@ -86,10 +89,11 @@ function SessionItem({ session, isActive, onClick, onContextMenu }: {
   onContextMenu: (e: React.MouseEvent) => void;
 }) {
   return (
-    <button
+    <Button
+      variant="ghost"
       onClick={onClick}
       onContextMenu={onContextMenu}
-      className={`flex flex-col gap-[3px] w-full text-left px-2.5 py-2 rounded-lg transition-all duration-100 group ${
+      className={`flex-col items-start gap-[3px] w-full px-2.5 py-2 h-auto font-normal rounded-lg group ${
         isActive
           ? 'bg-cherry-active-bg border border-cherry-ring'
           : 'border border-transparent hover:bg-accent/12'
@@ -102,7 +106,7 @@ function SessionItem({ session, isActive, onClick, onContextMenu }: {
         }`}>
           <Bot size={9} className={isActive ? 'text-cherry-primary/70' : 'text-muted-foreground/45'} />
         </div>
-        <span className={`text-[10px] flex-1 truncate ${
+        <span className={`text-xs flex-1 truncate ${
           isActive ? 'text-cherry-primary-dark/80' : 'text-muted-foreground/45'
         }`}>
           {session.agentName}
@@ -116,7 +120,7 @@ function SessionItem({ session, isActive, onClick, onContextMenu }: {
       </div>
 
       {/* Title */}
-      <span className={`text-[11px] truncate w-full pl-[22px] ${
+      <span className={`text-xs truncate w-full pl-[22px] ${
         isActive ? 'text-foreground/85' : 'text-foreground/65'
       }`}>
         {session.title}
@@ -124,7 +128,7 @@ function SessionItem({ session, isActive, onClick, onContextMenu }: {
 
       {/* Last message preview */}
       <div className="flex items-center gap-1.5 pl-[22px] w-full">
-        <span className="text-[10px] text-muted-foreground/35 truncate flex-1">
+        <span className="text-xs text-muted-foreground/35 truncate flex-1">
           {session.lastMessage}
         </span>
         <div className="flex items-center gap-0.5 flex-shrink-0">
@@ -140,7 +144,7 @@ function SessionItem({ session, isActive, onClick, onContextMenu }: {
           <span className="text-[9px] text-cherry-primary/50">{"运行中"}</span>
         </div>
       )}
-    </button>
+    </Button>
   );
 }
 
@@ -176,30 +180,31 @@ export function SessionSidebar({ sessions, activeSessionId, onSelectSession, onN
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-1.5">
             <Clock size={11} className="text-muted-foreground/40" />
-            <span className="text-[10px] text-muted-foreground/45 uppercase tracking-[0.06em]">{"会话"}</span>
+            <span className="text-xs text-muted-foreground/45 uppercase tracking-[0.06em]">{"会话"}</span>
           </div>
           <span className="text-[9px] text-muted-foreground/30 tabular-nums">{sessions.length}</span>
         </div>
 
         {/* New Session Button */}
-        <button
+        <Button
+          variant="outline"
           onClick={onNewSession}
-          className="flex items-center justify-center gap-1.5 w-full py-[6px] rounded-md border border-dashed border-border/20 text-[10.5px] text-muted-foreground/50 hover:text-foreground/70 hover:border-cherry-ring hover:bg-cherry-active-bg transition-all duration-150 group"
+          className="w-full py-[6px] h-auto border-dashed border-border/20 text-muted-foreground/50 hover:text-foreground/70 hover:border-cherry-ring hover:bg-cherry-active-bg group"
         >
           <Plus size={11} className="group-hover:text-cherry-primary/70 transition-colors" />
           {"新建会话"}
-        </button>
+        </Button>
       </div>
 
       {/* Search */}
       <div className="px-2.5 py-1.5 flex-shrink-0">
         <div className="flex items-center gap-1.5 px-2 py-[4px] rounded-md bg-accent/8 border border-border/8">
           <Search size={10} className="text-muted-foreground/30 flex-shrink-0" />
-          <input
+          <Input
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="搜索会话..."
-            className="flex-1 bg-transparent text-[10.5px] text-foreground/70 placeholder:text-muted-foreground/25 outline-none"
+            className="flex-1 h-auto border-0 bg-transparent shadow-none focus-visible:ring-0 focus-visible:border-transparent text-xs text-foreground/70 placeholder:text-muted-foreground/25 py-0 px-0 rounded-none"
           />
         </div>
       </div>
@@ -245,7 +250,7 @@ export function SessionSidebar({ sessions, activeSessionId, onSelectSession, onN
         {filteredPinned.length === 0 && filteredRecent.length === 0 && searchQuery && (
           <div className="flex flex-col items-center justify-center py-8">
             <Search size={16} className="text-muted-foreground/15 mb-2" />
-            <p className="text-[10px] text-muted-foreground/30">{"未找到会话"}</p>
+            <p className="text-xs text-muted-foreground/30">{"未找到会话"}</p>
           </div>
         )}
       </div>

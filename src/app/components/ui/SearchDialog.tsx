@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import {
   Search, X, Filter, MessageCircle, Settings,
 } from 'lucide-react';
+import { Button, Input, Dialog, DialogContent, DialogTitle } from '@cherry-studio/ui';
 import {
   searchFilterTabs, searchRecentItems, searchFileItems, searchQuickActions,
 } from '@/app/config/constants';
@@ -16,12 +17,7 @@ export function SearchDialog({ open, onClose }: { open: boolean; onClose: () => 
     setQuery('');
     setActiveFilter('全部');
     setTimeout(() => inputRef.current?.focus(), 50);
-    const handleKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
-    document.addEventListener('keydown', handleKey);
-    return () => document.removeEventListener('keydown', handleKey);
-  }, [open, onClose]);
-
-  if (!open) return null;
+  }, [open]);
 
   const filteredRecent = query
     ? searchRecentItems.filter(i => i.label.toLowerCase().includes(query.toLowerCase()))
@@ -31,41 +27,43 @@ export function SearchDialog({ open, onClose }: { open: boolean; onClose: () => 
     : searchFileItems;
 
   return (
-    <div className="fixed inset-0 z-[200] flex items-start justify-center pt-[10%]" onClick={onClose}>
-      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
-      <div onClick={(e) => e.stopPropagation()} className="relative w-full max-w-[540px] bg-popover border border-border rounded-xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150 flex flex-col">
+    <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
+      <DialogContent className="w-full max-w-[540px] p-0 gap-0 overflow-hidden flex flex-col" showCloseButton={false}>
+        <DialogTitle className="sr-only">搜索</DialogTitle>
         {/* Search input */}
         <div className="flex items-center gap-2 px-4 h-12">
           <Search size={16} className="text-muted-foreground flex-shrink-0" />
-          <input
+          <Input
             ref={inputRef}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="开始输入搜索..."
-            className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground/60 focus:outline-none"
+            className="flex-1 border-0 bg-transparent h-auto p-0 shadow-none focus-visible:ring-0"
           />
           {query && (
-            <button onClick={() => setQuery('')} className="w-5 h-5 rounded flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors">
+            <Button variant="ghost" size="icon-xs" onClick={() => setQuery('')} className="text-muted-foreground hover:text-foreground">
               <X size={12} />
-            </button>
+            </Button>
           )}
-          <button className="w-7 h-7 rounded-md flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"><Filter size={14} /></button>
+          <Button variant="ghost" size="icon-sm" className="text-muted-foreground hover:text-foreground hover:bg-accent"><Filter size={14} /></Button>
         </div>
 
         {/* Filter pills */}
         <div className="flex items-center gap-1.5 px-4 py-2.5 overflow-x-auto [&::-webkit-scrollbar]:hidden">
           {searchFilterTabs.map(f => (
-            <button
+            <Button
               key={f}
+              variant="ghost"
+              size="xs"
               onClick={() => setActiveFilter(f)}
-              className={`px-3 py-1 rounded-full text-xs whitespace-nowrap transition-colors
+              className={`px-3 py-1 h-auto rounded-full text-xs whitespace-nowrap
                 ${activeFilter === f
-                  ? 'bg-foreground text-background'
+                  ? 'bg-foreground text-background hover:bg-foreground/90'
                   : 'bg-accent/60 text-muted-foreground hover:bg-accent hover:text-foreground'
                 }`}
             >
               {f}
-            </button>
+            </Button>
           ))}
         </div>
 
@@ -74,7 +72,7 @@ export function SearchDialog({ open, onClose }: { open: boolean; onClose: () => 
           {/* Recent */}
           {filteredRecent.length > 0 && (
             <div className="px-4 pt-3 pb-1">
-              <p className="text-[11px] text-muted-foreground mb-1.5">最近 <span className="text-muted-foreground/60">{filteredRecent.length}</span></p>
+              <p className="text-xs text-muted-foreground mb-1.5">最近 <span className="text-muted-foreground/60">{filteredRecent.length}</span></p>
               {filteredRecent.map((item, i) => {
                 const Icon = item.icon;
                 return (
@@ -84,9 +82,9 @@ export function SearchDialog({ open, onClose }: { open: boolean; onClose: () => 
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="text-sm text-foreground truncate">{item.label}</div>
-                      <div className="text-[11px] text-muted-foreground truncate">{item.desc} · {item.time}</div>
+                      <div className="text-xs text-muted-foreground truncate">{item.desc} · {item.time}</div>
                     </div>
-                    <div className="flex items-center gap-1 text-[11px] text-muted-foreground/60 flex-shrink-0">
+                    <div className="flex items-center gap-1 text-xs text-muted-foreground/60 flex-shrink-0">
                       <MessageCircle size={10} />
                       <span>{item.count}</span>
                     </div>
@@ -99,7 +97,7 @@ export function SearchDialog({ open, onClose }: { open: boolean; onClose: () => 
           {/* Files */}
           {filteredFiles.length > 0 && (
             <div className="px-4 pt-2 pb-1">
-              <p className="text-[11px] text-muted-foreground mb-1.5">文件 <span className="text-muted-foreground/60">{filteredFiles.length}</span></p>
+              <p className="text-xs text-muted-foreground mb-1.5">文件 <span className="text-muted-foreground/60">{filteredFiles.length}</span></p>
               {filteredFiles.map((item, i) => {
                 const Icon = item.icon;
                 return (
@@ -109,7 +107,7 @@ export function SearchDialog({ open, onClose }: { open: boolean; onClose: () => 
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="text-sm text-foreground truncate">{item.label} <span className="text-muted-foreground">· {item.desc}</span></div>
-                      <div className="text-[11px] text-muted-foreground truncate">{item.meta}</div>
+                      <div className="text-xs text-muted-foreground truncate">{item.meta}</div>
                     </div>
                   </div>
                 );
@@ -119,7 +117,7 @@ export function SearchDialog({ open, onClose }: { open: boolean; onClose: () => 
 
           {/* Quick Actions */}
           <div className="px-4 pt-2 pb-2">
-            <p className="text-[11px] text-muted-foreground mb-1.5">快捷操作</p>
+            <p className="text-xs text-muted-foreground mb-1.5">快捷操作</p>
             {searchQuickActions.map((item, i) => {
               const Icon = item.icon;
               return (
@@ -128,7 +126,7 @@ export function SearchDialog({ open, onClose }: { open: boolean; onClose: () => 
                     <Icon size={15} className="text-muted-foreground" />
                   </div>
                   <span className="text-sm text-foreground flex-1">{item.label}</span>
-                  <kbd className="text-[11px] text-muted-foreground/70 bg-accent/60 px-1.5 py-0.5 rounded">{item.shortcut}</kbd>
+                  <kbd className="text-xs text-muted-foreground/70 bg-accent/60 px-1.5 py-0.5 rounded">{item.shortcut}</kbd>
                 </div>
               );
             })}
@@ -140,22 +138,22 @@ export function SearchDialog({ open, onClose }: { open: boolean; onClose: () => 
               <Search size={32} className="text-muted-foreground/30 mb-3" />
               <p className="text-sm text-foreground mb-1">未找到匹配结果</p>
               <p className="text-xs text-muted-foreground text-center">尝试调整关键词、筛选条件或检查是否有拼写错误。</p>
-              <button onClick={() => setQuery('')} className="mt-3 px-3 py-1.5 text-xs border border-border rounded-lg text-foreground hover:bg-accent transition-colors">
+              <Button variant="outline" size="sm" onClick={() => setQuery('')} className="mt-3">
                 清除筛选
-              </button>
+              </Button>
             </div>
           )}
         </div>
 
         {/* Bottom bar */}
-        <div className="flex items-center gap-4 px-4 py-2 border-t border-border/50 text-[11px] text-muted-foreground/60">
+        <div className="flex items-center gap-4 px-4 py-2 border-t border-border/50 text-xs text-muted-foreground/60">
           <span className="flex items-center gap-1"><kbd className="bg-accent/60 px-1 rounded">↑↓</kbd> 选择</span>
           <span className="flex items-center gap-1"><kbd className="bg-accent/60 px-1 rounded">↵</kbd> 打开</span>
           <span className="flex items-center gap-1"><kbd className="bg-accent/60 px-1 rounded">⌘R</kbd> 在新标签打开</span>
           <span className="flex items-center gap-1"><kbd className="bg-accent/60 px-1 rounded">ESC</kbd> 关闭</span>
           <span className="ml-auto"><Settings size={12} /></span>
         </div>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }

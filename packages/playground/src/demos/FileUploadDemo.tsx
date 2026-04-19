@@ -43,7 +43,7 @@ function DropZone({ onFiles, compact }: { onFiles: (files: File[]) => void; comp
       onDragLeave={() => setDragOver(false)}
       onDrop={handleDrop}
       onClick={() => inputRef.current?.click()}
-      className={`border-2 border-dashed rounded-xl transition-colors cursor-pointer flex flex-col items-center justify-center gap-2 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 ${
+      className={`border-2 border-dashed rounded-[12px] transition-colors cursor-pointer flex flex-col items-center justify-center gap-2 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 ${
         dragOver
           ? "border-primary bg-primary/5"
           : "border-border hover:border-primary/50 hover:bg-muted/30"
@@ -118,7 +118,7 @@ export function FileUploadDemo() {
       <Section title="Drag & Drop Zone" install="npm install @cherry-studio/ui" props={fileUploadProps} code={`import { Button } from "@cherry-studio/ui"
 import { Upload } from "lucide-react"
 
-<div className="border-2 border-dashed rounded-xl p-8 text-center cursor-pointer">
+<div className="border-2 border-dashed rounded-[12px] p-8 text-center cursor-pointer">
   <Upload className="mx-auto h-8 w-8 text-muted-foreground" />
   <p className="text-sm mt-2">Drop files here or click to browse</p>
 </div>`}>
@@ -139,7 +139,7 @@ import { Upload } from "lucide-react"
               {files.map((file) => {
                 const Icon = getFileIcon(file.name)
                 return (
-                  <div key={file.id} className="flex items-center gap-3 rounded-lg border p-3">
+                  <div key={file.id} className="flex items-center gap-3 rounded-[12px] border p-3">
                     <Icon className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                     <div className="flex-1 min-w-0 space-y-1">
                       <div className="flex items-center justify-between">
@@ -151,14 +151,14 @@ import { Upload } from "lucide-react"
                       )}
                     </div>
                     {file.status === "done" && (
-                      <CheckCircle className="h-4 w-4 text-green-500 shrink-0" />
+                      <CheckCircle className="h-4 w-4 text-success shrink-0" />
                     )}
                     {file.status === "uploading" && (
                       <span className="text-[10px] text-muted-foreground tabular-nums shrink-0">{file.progress}%</span>
                     )}
-                    <button onClick={() => removeFile(file.id)} className="p-0.5 rounded-sm text-muted-foreground/40 hover:text-foreground transition-colors shrink-0 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50">
+                    <Button variant="ghost" onClick={() => removeFile(file.id)} className="p-0.5 rounded-sm text-muted-foreground/40 hover:text-foreground transition-colors shrink-0 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50">
                       <X className="h-3.5 w-3.5" />
-                    </button>
+                    </Button>
                   </div>
                 )
               })}

@@ -8,6 +8,7 @@ import {
   Image as ImageIcon, Bot, BookOpen, LayoutGrid, Languages,
 } from 'lucide-react';
 import { Tooltip } from '@/app/components/Tooltip';
+import { Button, Switch } from '@cherry-studio/ui';
 
 export function HomePage() {
   const [inputText, setInputText] = useState('');
@@ -131,16 +132,17 @@ export function HomePage() {
                     const Icon = item.icon;
                     return (
                       <div key={item.id}>
-                        <button
+                        <Button
+                          variant="ghost"
                           onClick={() => setShowPlusMenu(false)}
-                          className="w-full flex items-center gap-2 px-2 py-[5px] text-[11px] text-popover-foreground hover:bg-accent/50 rounded-lg transition-colors"
+                          className="w-full flex items-center gap-2 px-2 py-[5px] h-auto text-xs text-popover-foreground hover:bg-accent/50 rounded-lg justify-start"
                         >
                           <Icon size={13} strokeWidth={1.5} className="text-muted-foreground flex-shrink-0" />
                           <span className="flex-1 text-left">{item.label}</span>
                           {item.shortcut && (
                             <span className="text-[9px] text-muted-foreground/60 tracking-wider">{item.shortcut}</span>
                           )}
-                        </button>
+                        </Button>
                         {(item as { separator?: boolean }).separator && idx < plusMenuItems.length - 1 && (
                           <div className="my-0.5 mx-1.5 border-t border-border/60" />
                         )}
@@ -150,15 +152,16 @@ export function HomePage() {
                   {/* 更多 - 级联子菜单 */}
                   <div className="my-0.5 mx-1.5 border-t border-border/60" />
                   <div className="relative">
-                    <button
+                    <Button
+                      variant="ghost"
                       onMouseEnter={() => setShowPlusMore(true)}
                       onMouseLeave={() => setShowPlusMore(false)}
-                      className="w-full flex items-center gap-2 px-2 py-[5px] text-[11px] text-muted-foreground hover:text-popover-foreground hover:bg-accent/50 rounded-lg transition-colors"
+                      className="w-full flex items-center gap-2 px-2 py-[5px] h-auto text-xs text-muted-foreground hover:text-popover-foreground hover:bg-accent/50 rounded-lg justify-start"
                     >
                       <MoreHorizontal size={13} strokeWidth={1.5} className="flex-shrink-0" />
                       <span className="flex-1 text-left">更多</span>
                       <ChevronRight size={12} />
-                    </button>
+                    </Button>
                     {showPlusMore && (
                       <div
                         onMouseEnter={() => setShowPlusMore(true)}
@@ -169,21 +172,22 @@ export function HomePage() {
                           {plusMenuSecondary.map(item => {
                             const Icon = item.icon;
                             return (
-                              <button
+                              <Button
                                 key={item.id}
+                                variant="ghost"
                                 onClick={() => {
                                   if (item.id === 'expand') { setIsExpanded(v => !v); }
                                   setShowPlusMenu(false);
                                   setShowPlusMore(false);
                                 }}
-                                className="w-full flex items-center gap-2 px-2 py-[5px] text-[11px] text-popover-foreground hover:bg-accent/50 rounded-lg transition-colors"
+                                className="w-full flex items-center gap-2 px-2 py-[5px] h-auto text-xs text-popover-foreground hover:bg-accent/50 rounded-lg justify-start"
                               >
                                 <Icon size={13} strokeWidth={1.5} className="text-muted-foreground flex-shrink-0" />
                                 <span className="flex-1 text-left">{item.label}</span>
                                 {item.shortcut && (
                                   <span className="text-[9px] text-muted-foreground/60 tracking-wider">{item.shortcut}</span>
                                 )}
-                              </button>
+                              </Button>
                             );
                           })}
                         </div>
@@ -208,27 +212,31 @@ export function HomePage() {
             {/* Bottom toolbar */}
             <div className="flex items-center justify-between px-3 pb-2.5 pt-0.5">
               <div className="flex items-center gap-0.5">
-                <button
+                <Button
                   ref={plusBtnRef}
+                  variant="ghost"
+                  size="icon-sm"
                   onClick={() => { setShowPlusMenu(v => !v); setShowAtMenu(false); }}
-                  className={`w-7 h-7 rounded-md flex items-center justify-center transition-colors ${
+                  className={`w-7 h-7 rounded-md transition-colors ${
                     showPlusMenu
                       ? 'bg-accent text-foreground'
                       : 'text-muted-foreground hover:text-foreground hover:bg-accent'
                   }`}
                 >
                   <Plus size={16} strokeWidth={1.6} />
-                </button>
+                </Button>
                 <div className="relative">
-                  <button
+                  <Button
                     ref={atBtnRef}
+                    variant="ghost"
+                    size="icon-sm"
                     onClick={() => { setShowAtMenu(v => !v); setShowPlusMenu(false); }}
-                    className={`w-7 h-7 rounded-md flex items-center justify-center transition-colors ${
+                    className={`w-7 h-7 rounded-md transition-colors ${
                       showAtMenu ? 'bg-accent text-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-accent'
                     }`}
                   >
                     <AtSign size={16} strokeWidth={1.6} />
-                  </button>
+                  </Button>
                   {showAtMenu && (
                     <div
                       ref={atMenuRef}
@@ -236,7 +244,7 @@ export function HomePage() {
                     >
                       {/* Title bar */}
                       <div className="px-4 pt-3 pb-1.5">
-                        <h3 className="text-[12px] text-foreground" style={{ fontWeight: 600 }}>模式与模型</h3>
+                        <h3 className="text-sm text-foreground font-semibold">模式与模型</h3>
                       </div>
                       {/* Two-panel body */}
                       <div className="flex flex-1 min-h-0">
@@ -246,15 +254,15 @@ export function HomePage() {
                             const MIcon = mode.icon;
                             const isActive = atMode === mode.id;
                             return (
-                              <button key={mode.id} onClick={() => setAtMode(mode.id)}
-                                className={`flex items-center gap-2 px-2.5 py-[5px] text-left rounded-md transition-colors text-[11px] ${
+                              <Button key={mode.id} variant="ghost" onClick={() => setAtMode(mode.id)}
+                                className={`flex items-center gap-2 px-2.5 py-[5px] h-auto text-left rounded-md text-xs justify-start ${
                                   isActive
                                     ? 'bg-accent text-foreground'
                                     : 'text-muted-foreground hover:bg-accent/40 hover:text-foreground'
                                 }`}>
                                 <MIcon size={13} strokeWidth={1.5} className="flex-shrink-0" />
                                 <span className="truncate">{mode.label}</span>
-                              </button>
+                              </Button>
                             );
                           })}
                         </div>
@@ -264,43 +272,41 @@ export function HomePage() {
                           <div className="pb-1.5">
                             <div className="flex items-center gap-1.5 px-2.5 h-[28px] bg-muted/30 rounded-md border border-border/40">
                               <Search size={12} className="text-muted-foreground/40 flex-shrink-0" />
-                              <input type="text" value={atSearchText} onChange={e => setAtSearchText(e.target.value)}
-                                placeholder="搜索" className="flex-1 bg-transparent text-[11px] text-foreground placeholder:text-muted-foreground/40 outline-none" autoFocus />
-                              {atSearchText && <button onClick={() => setAtSearchText('')} className="text-muted-foreground hover:text-foreground"><X size={10} /></button>}
+                              <Input type="text" value={atSearchText} onChange={e => setAtSearchText(e.target.value)}
+                                placeholder="搜索" className="flex-1 bg-transparent text-xs text-foreground placeholder:text-muted-foreground/40 border-0 h-auto p-0 focus-visible:ring-0" autoFocus />
+                              {atSearchText && <Button variant="ghost" size="icon-xs" onClick={() => setAtSearchText('')} className="text-muted-foreground hover:text-foreground w-auto h-auto p-0"><X size={10} /></Button>}
                             </div>
                           </div>
                           {/* Multi-select toggle row */}
                           <div className="flex items-center justify-between px-0.5 pb-1">
-                            <button onClick={() => setAtMultiSelect(v => !v)} className="flex items-center gap-1.5 text-[10px] text-muted-foreground hover:text-foreground transition-colors">
+                            <label className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground cursor-pointer">
                               <span>多选</span>
-                              <div className={`w-7 h-4 rounded-full transition-colors flex items-center px-[2px] ${atMultiSelect ? 'bg-primary' : 'bg-muted'}`}>
-                                <div className={`w-3 h-3 rounded-full bg-white shadow-sm transition-transform ${atMultiSelect ? 'translate-x-[11px]' : 'translate-x-0'}`} />
-                              </div>
-                            </button>
+                              <Switch checked={atMultiSelect} onCheckedChange={v => setAtMultiSelect(v)} />
+                            </label>
                             {selectedModels.length > 0 && (
-                              <span className="text-[10px] text-muted-foreground">已选 {selectedModels.length} 个</span>
+                              <span className="text-xs text-muted-foreground">已选 {selectedModels.length} 个</span>
                             )}
                           </div>
                           {/* Model items */}
                           <div className="flex-1 max-h-[200px] overflow-y-auto space-y-[1px] px-0.5 [&::-webkit-scrollbar]:w-[2px] [&::-webkit-scrollbar-thumb]:bg-border/20">
                             {filteredAtModels.length === 0 ? (
-                              <div className="py-6 text-center text-[11px] text-muted-foreground/50">无结果</div>
+                              <div className="py-6 text-center text-xs text-muted-foreground/50">无结果</div>
                             ) : filteredAtModels.map(item => {
                               const sel = selectedModels.includes(item.id);
                               return (
-                                <button key={item.id} onClick={() => toggleModel(item.id)}
-                                  className={`w-full flex items-center gap-2 px-2.5 py-[5px] text-left rounded-md transition-all group ${
+                                <Button key={item.id} variant="ghost" onClick={() => toggleModel(item.id)}
+                                  className={`w-full flex items-center gap-2 px-2.5 py-[5px] h-auto text-left rounded-md transition-all group justify-start ${
                                     sel ? 'bg-primary/10' : 'hover:bg-accent/40'
                                   }`}>
                                   <Sparkles size={12} strokeWidth={1.8} className={`flex-shrink-0 ${sel ? 'text-primary' : 'text-muted-foreground/30'}`} />
-                                  <span className={`flex-1 text-[11px] truncate ${sel ? 'text-foreground' : 'text-muted-foreground'}`}>{item.name}</span>
+                                  <span className={`flex-1 text-xs truncate ${sel ? 'text-foreground' : 'text-muted-foreground'}`}>{item.name}</span>
                                   <Globe size={10} className="text-muted-foreground/25 flex-shrink-0" />
                                   <div className={`w-4 h-4 rounded flex items-center justify-center flex-shrink-0 transition-all ${
                                     sel ? 'bg-primary text-white' : 'border border-border/50'
                                   }`}>
                                     {sel && <svg width="9" height="9" viewBox="0 0 10 10"><path d="M2 5l2.5 2.5L8 3" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round"/></svg>}
                                   </div>
-                                </button>
+                                </Button>
                               );
                             })}
                           </div>
@@ -312,7 +318,7 @@ export function HomePage() {
                           {/* Active mode pill */}
                           <div className="flex items-center gap-1 px-2 py-0.5 bg-muted/50 rounded-md">
                             {(() => { const am = atModes.find(m => m.id === atMode); const Icon = am?.icon || SlidersHorizontal; return <Icon size={11} strokeWidth={1.5} className="text-muted-foreground" />; })()}
-                            <span className="text-[10px] text-foreground">{atModes.find(m => m.id === atMode)?.label}</span>
+                            <span className="text-xs text-foreground">{atModes.find(m => m.id === atMode)?.label}</span>
                           </div>
                           {/* Selected model sparkles */}
                           {selectedModels.length > 0 && (
@@ -327,12 +333,12 @@ export function HomePage() {
                         </div>
                         <div className="flex items-center gap-2">
                           <div className="flex items-center gap-0.5">
-                            <span className="text-[10px] text-muted-foreground">x{Math.max(selectedModels.length, 1)}</span>
+                            <span className="text-xs text-muted-foreground">x{Math.max(selectedModels.length, 1)}</span>
                             <ChevronDown size={10} className="text-muted-foreground/50" />
                           </div>
-                          <button className="w-6 h-6 rounded-md flex items-center justify-center text-muted-foreground/50 hover:text-foreground hover:bg-accent/50 transition-colors">
+                          <Button variant="ghost" size="icon-xs" className="w-6 h-6 rounded-md text-muted-foreground/50 hover:text-foreground hover:bg-accent/50 transition-colors">
                             <Share2 size={12} strokeWidth={1.5} />
-                          </button>
+                          </Button>
                         </div>
                       </div>
                     </div>
@@ -342,14 +348,16 @@ export function HomePage() {
               <div className="flex items-center gap-1">
                 {/* Stats with tooltip */}
                 <div className="relative">
-                  <button
-                    className="flex items-center gap-1.5 px-1.5 h-7 rounded-md text-[11px] text-muted-foreground/70 hover:text-muted-foreground hover:bg-accent transition-colors select-none"
+                  <Button
+                    variant="ghost"
+                    size="xs"
+                    className="flex items-center gap-1.5 px-1.5 h-7 rounded-md text-xs text-muted-foreground/70 hover:text-muted-foreground hover:bg-accent transition-colors select-none"
                     onMouseEnter={() => setShowStatsTooltip(true)}
                     onMouseLeave={() => setShowStatsTooltip(false)}
                   >
                     <span className="flex items-center gap-0.5">{'\u2261'} 2/5</span>
                     <span className="flex items-center gap-0.5">{'\u2191'} 78/78</span>
-                  </button>
+                  </Button>
                   {showStatsTooltip && (
                     <div className="absolute bottom-full right-0 mb-2 w-48 bg-popover border border-border rounded-lg shadow-lg py-2 px-3 z-50 text-xs">
                       <div className="flex items-center justify-between py-1">
@@ -364,23 +372,25 @@ export function HomePage() {
                   )}
                 </div>
                 {/* Translate */}
-                <Tooltip content="翻译" side="bottom"><button className="w-7 h-7 rounded-md flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent transition-colors">
+                <Tooltip content="翻译" side="bottom"><Button variant="ghost" size="icon-sm" className="w-7 h-7 rounded-md text-muted-foreground hover:text-foreground hover:bg-accent transition-colors">
                   <Languages size={14} strokeWidth={1.6} />
-                </button></Tooltip>
+                </Button></Tooltip>
                 {/* Layout grid */}
-                <Tooltip content="布局" side="bottom"><button className="w-7 h-7 rounded-md flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent transition-colors">
+                <Tooltip content="布局" side="bottom"><Button variant="ghost" size="icon-sm" className="w-7 h-7 rounded-md text-muted-foreground hover:text-foreground hover:bg-accent transition-colors">
                   <LayoutGrid size={14} strokeWidth={1.6} />
-                </button></Tooltip>
+                </Button></Tooltip>
                 {/* Send */}
-                <button
-                  className={`w-7 h-7 rounded-full flex items-center justify-center transition-colors ml-0.5 ${
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
+                  className={`w-7 h-7 rounded-full transition-colors ml-0.5 ${
                     inputText.trim()
                       ? 'bg-foreground text-background hover:opacity-80'
                       : 'bg-muted text-muted-foreground/50'
                   }`}
                 >
                   <ArrowRight size={14} strokeWidth={2} />
-                </button>
+                </Button>
               </div>
             </div>
           </div>
@@ -391,10 +401,12 @@ export function HomePage() {
               const Icon = mode.icon;
               const isActive = activeMode === mode.id;
               return (
-                <button
+                <Button
                   key={mode.id}
+                  variant="ghost"
+                  size="xs"
                   onClick={() => setActiveMode(mode.id)}
-                  className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] transition-all border ${
+                  className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-xs transition-all border ${
                     isActive
                       ? 'border-border bg-background text-foreground shadow-sm'
                       : 'border-transparent text-muted-foreground hover:text-foreground hover:bg-accent/50'
@@ -402,7 +414,7 @@ export function HomePage() {
                 >
                   <Icon size={11} strokeWidth={1.8} />
                   <span>{mode.label}</span>
-                </button>
+                </Button>
               );
             })}
           </div>

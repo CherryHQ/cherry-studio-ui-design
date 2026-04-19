@@ -29,7 +29,7 @@ export interface SimpleTooltipProps {
  * Usage: `<SimpleTooltip content="Help text">{children}</SimpleTooltip>`
  *
  * This matches Cherry Studio's existing Tooltip API so it can be used as a
- * drop-in replacement for `@/app/components/Tooltip`.
+ * drop-in replacement for the app-level Tooltip wrapper.
  */
 function SimpleTooltip({
   children,
@@ -46,14 +46,14 @@ function SimpleTooltip({
   return (
     <TooltipProvider delayDuration={delayDuration}>
       <Tooltip>
-        <TooltipTrigger asChild>
+        <TooltipTrigger asChild data-slot="simple-tooltip">
           <span className="contents">{children}</span>
         </TooltipTrigger>
         <TooltipContent
           side={side}
           sideOffset={sideOffset}
           className={cn(
-            "z-50 text-xs px-2.5 py-1.5 rounded-lg max-w-60 leading-relaxed",
+            "z-[var(--z-tooltip)] text-xs px-2.5 py-1.5 rounded-[var(--radius-button)] max-w-60 tracking-[-0.14px] leading-relaxed",
             className
           )}
         >

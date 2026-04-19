@@ -1,5 +1,6 @@
 import React, { useState, useRef, useCallback } from 'react';
 import { Plus, Code2, FolderOpen, ArrowUp } from 'lucide-react';
+import { Button } from '@cherry-studio/ui';
 import { Tooltip } from '@/app/components/Tooltip';
 
 // ===========================
@@ -80,7 +81,7 @@ export function Composer({
           rows={1}
           autoFocus={autoFocus}
           disabled={disabled}
-          className={`w-full bg-transparent text-[12px] text-foreground placeholder:text-muted-foreground/60 outline-none resize-none leading-[1.6] ${
+          className={`w-full bg-transparent text-sm text-foreground placeholder:text-muted-foreground/60 outline-none resize-none leading-[1.6] ${
             isRounded
               ? 'min-h-[44px] px-4 pt-3.5 pb-[38px] placeholder:text-muted-foreground/35'
               : 'min-h-[36px] px-3.5 pt-[10px] pb-[36px]'
@@ -94,19 +95,19 @@ export function Composer({
             {leftActions || (
               <div className="flex items-center gap-0.5">
                 <Tooltip content={"\u6dfb\u52a0"} side="top">
-                  <button className="p-[5px] rounded-md text-muted-foreground hover:text-foreground hover:bg-accent/20 transition-colors">
+                  <Button variant="ghost" size="icon-xs" className="text-muted-foreground hover:text-foreground hover:bg-accent/20">
                     <Plus size={14} />
-                  </button>
+                  </Button>
                 </Tooltip>
                 <Tooltip content={"\u4ee3\u7801"} side="top">
-                  <button className="p-[5px] rounded-md text-muted-foreground hover:text-foreground hover:bg-accent/20 transition-colors">
+                  <Button variant="ghost" size="icon-xs" className="text-muted-foreground hover:text-foreground hover:bg-accent/20">
                     <Code2 size={14} />
-                  </button>
+                  </Button>
                 </Tooltip>
                 <Tooltip content={"\u6dfb\u52a0\u6587\u4ef6\u5939"} side="top">
-                  <button className="p-[5px] rounded-md text-muted-foreground hover:text-foreground hover:bg-accent/20 transition-colors">
+                  <Button variant="ghost" size="icon-xs" className="text-muted-foreground hover:text-foreground hover:bg-accent/20">
                     <FolderOpen size={14} />
-                  </button>
+                  </Button>
                 </Tooltip>
               </div>
             )}

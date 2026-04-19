@@ -14,8 +14,8 @@ function InputGroup({ className, ...props }: React.ComponentProps<"div">) {
       data-slot="input-group"
       role="group"
       className={cn(
-        "group/input-group border-input dark:bg-input/30 shadow-xs relative flex w-full items-center overflow-hidden rounded-md border outline-none transition-[color,box-shadow]",
-        "h-9 has-[>textarea]:h-auto",
+        "group/input-group border-input dark:bg-input/30 shadow-xs relative flex w-full items-center overflow-hidden rounded-[var(--radius-button)] border-[1.5px] outline-none tracking-[-0.14px] transition-[color,box-shadow]",
+        "h-10 has-[>textarea]:h-auto",
 
         // Variants based on alignment.
         "has-[>[data-align=inline-start]]:[&>input]:pl-2",
@@ -24,7 +24,7 @@ function InputGroup({ className, ...props }: React.ComponentProps<"div">) {
         "has-[>[data-align=block-end]]:h-auto has-[>[data-align=block-end]]:flex-col has-[>[data-align=block-end]]:[&>input]:pt-3",
 
         // Focus state.
-        "has-[[data-slot=input-group-control]:focus-visible]:ring-ring has-[[data-slot=input-group-control]:focus-visible]:ring-1",
+        "has-[[data-slot=input-group-control]:focus-visible]:border-ring has-[[data-slot=input-group-control]:focus-visible]:ring-[3px] has-[[data-slot=input-group-control]:focus-visible]:ring-ring/50",
 
         // Error state.
         "has-[[data-slot][aria-invalid=true]]:ring-destructive/20 has-[[data-slot][aria-invalid=true]]:border-destructive dark:has-[[data-slot][aria-invalid=true]]:ring-destructive/40",
@@ -37,7 +37,7 @@ function InputGroup({ className, ...props }: React.ComponentProps<"div">) {
 }
 
 const inputGroupAddonVariants = cva(
-  "text-muted-foreground flex h-auto cursor-text select-none items-center justify-center gap-2 py-1.5 text-sm font-medium group-data-[disabled=true]/input-group:opacity-50 [&>kbd]:rounded-[calc(var(--radius)-5px)] [&>svg:not([class*='size-'])]:size-4",
+  "text-muted-foreground flex h-auto cursor-text select-none items-center justify-center gap-2 py-1.5 text-sm font-medium group-data-[disabled=true]/input-group:opacity-30 [&>kbd]:rounded-[calc(var(--radius)-5px)] [&>svg:not([class*='size-'])]:size-4",
   {
     variants: {
       align: {
@@ -85,7 +85,7 @@ const inputGroupButtonVariants = cva(
     variants: {
       size: {
         xs: "h-6 gap-1 rounded-[calc(var(--radius)-5px)] px-2 has-[>svg]:px-2 [&>svg:not([class*='size-'])]:size-3.5",
-        sm: "h-8 gap-1.5 rounded-md px-2.5 has-[>svg]:px-2.5",
+        sm: "h-8 gap-1.5 rounded-[var(--radius-control)] px-2.5 has-[>svg]:px-2.5",
         "icon-xs":
           "size-6 rounded-[calc(var(--radius)-5px)] p-0 has-[>svg]:p-0",
         "icon-sm": "size-8 p-0 has-[>svg]:p-0",

@@ -11,7 +11,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { copyToClipboard } from '@/app/utils/clipboard';
-import { Button } from '@cherry-studio/ui';
+import { Button, Input, Switch, Slider } from '@cherry-studio/ui';
 import { EmptyState } from '@/app/components/ui/EmptyState';
 import { BrandLogo } from '@/app/components/ui/BrandLogos';
 
@@ -127,7 +127,7 @@ export function MiniAppsPage() {
   const ctxApp = ctxMenu ? allApps.find(a => a.id === ctxMenu.appId) : null;
 
   const AppIcon = ({ app, size = 'md' }: { app: CustomMiniApp; size?: 'sm' | 'md' | 'lg' }) => {
-    const dims = size === 'sm' ? 'w-5 h-5 rounded-md text-[8px]' : size === 'lg' ? 'w-16 h-16 rounded-2xl text-xl' : 'w-11 h-11 rounded-xl text-[11px]';
+    const dims = size === 'sm' ? 'w-5 h-5 rounded-md text-[8px]' : size === 'lg' ? 'w-16 h-16 rounded-2xl text-xl' : 'w-11 h-11 rounded-xl text-xs';
     const px = size === 'sm' ? 20 : size === 'lg' ? 64 : 44;
     if (app.logoUrl) return <img src={app.logoUrl} alt="" className={`${dims.split(' ').slice(0, 2).join(' ')} ${size === 'sm' ? 'rounded-md' : size === 'lg' ? 'rounded-2xl' : 'rounded-xl'} object-cover flex-shrink-0`} />;
     return <BrandLogo id={app.id} fallbackLetter={app.initial} fallbackColor={app.color} size={px} />;
@@ -147,19 +147,19 @@ export function MiniAppsPage() {
         <div className="flex items-center gap-1.5 text-xs">
           <Puzzle size={13} className="text-muted-foreground" />
           <span className="text-foreground">{'\u5c0f\u7a0b\u5e8f'}</span>
-          <span className="text-[10px] text-muted-foreground/40 ml-1">{displayedApps.length} {'\u4e2a'}</span>
+          <span className="text-xs text-muted-foreground/40 ml-1">{displayedApps.length} {'\u4e2a'}</span>
         </div>
         <div className="flex items-center gap-1">
-          <button onClick={openAddDialog} className="w-7 h-7 rounded-md flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"><Plus size={14} /></button>
-          <button onClick={() => setShowSettings(true)} className="w-7 h-7 rounded-md flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"><SlidersHorizontal size={14} /></button>
+          <Button variant="ghost" size="icon-xs" onClick={openAddDialog}><Plus size={14} /></Button>
+          <Button variant="ghost" size="icon-xs" onClick={() => setShowSettings(true)}><SlidersHorizontal size={14} /></Button>
         </div>
       </div>
 
       <div className="px-6 py-2">
         <div className="relative max-w-md mx-auto">
           <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground/40" />
-          <input type="text" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} placeholder={'\u641c\u7d22\u5c0f\u7a0b\u5e8f\u2026'} className="w-full pl-8 pr-7 py-1.5 rounded-lg border border-border/50 bg-muted/20 text-xs text-foreground outline-none placeholder:text-muted-foreground/30 focus:border-primary/30 transition-colors" />
-          {searchTerm && <button onClick={() => setSearchTerm('')} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground/30 hover:text-muted-foreground transition-colors"><X size={12} /></button>}
+          <Input type="text" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} placeholder={'\u641c\u7d22\u5c0f\u7a0b\u5e8f\u2026'} className="w-full pl-8 pr-7 py-1.5 rounded-lg border border-border/50 bg-muted/20 text-xs text-foreground outline-none placeholder:text-muted-foreground/30 focus:border-primary/30 transition-colors" />
+          {searchTerm && <Button variant="ghost" size="icon-xs" onClick={() => setSearchTerm('')} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground/30 hover:text-muted-foreground"><X size={12} /></Button>}
         </div>
       </div>
 
@@ -174,16 +174,16 @@ export function MiniAppsPage() {
           ) : (
             <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-x-2 gap-y-4">
               {displayedApps.map(app => (
-                <button key={app.id} onClick={() => handleOpenApp(app.id)} onContextMenu={e => { e.preventDefault(); setCtxMenu({ x: e.clientX, y: e.clientY, appId: app.id }); }} className="flex flex-col items-center gap-1.5 group relative">
+                <Button key={app.id} variant="ghost" onClick={() => handleOpenApp(app.id)} onContextMenu={e => { e.preventDefault(); setCtxMenu({ x: e.clientX, y: e.clientY, appId: app.id }); }} className="flex flex-col items-center gap-1.5 group relative h-auto p-1">
                   <div className="transition-transform group-hover:scale-110 shadow-sm"><AppIcon app={app} /></div>
-                  <span className="text-[10px] text-muted-foreground group-hover:text-foreground transition-colors truncate max-w-[60px]">{app.name}</span>
+                  <span className="text-xs text-muted-foreground group-hover:text-foreground transition-colors truncate max-w-[60px]">{app.name}</span>
                   {app.isCustom && <div className="absolute -top-0.5 -right-0.5 w-3 h-3 rounded-full bg-primary/80 flex items-center justify-center"><PenLine size={7} className="text-white" /></div>}
-                </button>
+                </Button>
               ))}
-              <button onClick={openAddDialog} className="flex flex-col items-center gap-1.5 group">
+              <Button variant="ghost" onClick={openAddDialog} className="flex flex-col items-center gap-1.5 group h-auto p-1">
                 <div className="w-11 h-11 rounded-xl flex items-center justify-center border border-dashed border-border/60 text-muted-foreground/40 group-hover:border-primary/40 group-hover:text-primary/60 transition-colors"><Plus size={16} /></div>
-                <span className="text-[10px] text-muted-foreground/40 group-hover:text-muted-foreground transition-colors">{'\u81ea\u5b9a\u4e49'}</span>
-              </button>
+                <span className="text-xs text-muted-foreground/40 group-hover:text-muted-foreground transition-colors">{'\u81ea\u5b9a\u4e49'}</span>
+              </Button>
             </div>
           )}
         </div>
@@ -191,14 +191,14 @@ export function MiniAppsPage() {
 
       {ctxMenu && ctxApp && (
         <div ref={ctxRef} className="fixed z-[60] bg-card rounded-xl border border-border/30 shadow-xl py-1 min-w-[140px]" style={{ left: ctxMenu.x, top: ctxMenu.y }} onClick={e => e.stopPropagation()}>
-          <button onClick={() => { handleOpenApp(ctxMenu.appId); setCtxMenu(null); }} className="w-full flex items-center gap-2.5 px-3 py-1.5 text-[11px] text-foreground hover:bg-accent transition-colors"><Globe size={12} className="text-muted-foreground" /> {'\u6253\u5f00'}</button>
-          <button onClick={() => { moveToHidden(ctxMenu.appId); setCtxMenu(null); }} className="w-full flex items-center gap-2.5 px-3 py-1.5 text-[11px] text-foreground hover:bg-accent transition-colors"><EyeOff size={12} className="text-muted-foreground" /> {'\u9690\u85cf'}</button>
-          <button onClick={() => { copyToClipboard(ctxApp.url); setCtxMenu(null); }} className="w-full flex items-center gap-2.5 px-3 py-1.5 text-[11px] text-foreground hover:bg-accent transition-colors"><Copy size={12} className="text-muted-foreground" /> {'\u590d\u5236\u94fe\u63a5'}</button>
+          <Button variant="ghost" size="xs" onClick={() => { handleOpenApp(ctxMenu.appId); setCtxMenu(null); }} className="w-full justify-start gap-2.5 px-3 py-1.5 text-xs text-foreground"><Globe size={12} className="text-muted-foreground" /> {'\u6253\u5f00'}</Button>
+          <Button variant="ghost" size="xs" onClick={() => { moveToHidden(ctxMenu.appId); setCtxMenu(null); }} className="w-full justify-start gap-2.5 px-3 py-1.5 text-xs text-foreground"><EyeOff size={12} className="text-muted-foreground" /> {'\u9690\u85cf'}</Button>
+          <Button variant="ghost" size="xs" onClick={() => { copyToClipboard(ctxApp.url); setCtxMenu(null); }} className="w-full justify-start gap-2.5 px-3 py-1.5 text-xs text-foreground"><Copy size={12} className="text-muted-foreground" /> {'\u590d\u5236\u94fe\u63a5'}</Button>
           {ctxApp.isCustom && (
             <div>
               <div className="border-t border-border/20 my-1" />
-              <button onClick={() => { openEditDialog(ctxApp); setCtxMenu(null); }} className="w-full flex items-center gap-2.5 px-3 py-1.5 text-[11px] text-foreground hover:bg-accent transition-colors"><PenLine size={12} className="text-muted-foreground" /> {'\u7f16\u8f91'}</button>
-              <button onClick={() => deleteCustomApp(ctxMenu.appId)} className="w-full flex items-center gap-2.5 px-3 py-1.5 text-[11px] text-red-400 hover:bg-red-500/10 transition-colors"><Trash2 size={12} /> {'\u5220\u9664'}</button>
+              <Button variant="ghost" size="xs" onClick={() => { openEditDialog(ctxApp); setCtxMenu(null); }} className="w-full justify-start gap-2.5 px-3 py-1.5 text-xs text-foreground"><PenLine size={12} className="text-muted-foreground" /> {'\u7f16\u8f91'}</Button>
+              <Button variant="destructive" size="xs" onClick={() => deleteCustomApp(ctxMenu.appId)} className="w-full justify-start gap-2.5 px-3 py-1.5 text-xs hover:bg-destructive/10"><Trash2 size={12} /> {'\u5220\u9664'}</Button>
             </div>
           )}
         </div>
@@ -227,10 +227,10 @@ export function MiniAppsPage() {
             className="absolute top-2 right-2 bottom-2 z-50 w-[380px] bg-card rounded-2xl border border-border/30 shadow-2xl flex flex-col overflow-hidden"
           >
             <div className="flex items-center justify-between px-4 h-11 flex-shrink-0 border-b border-border/15">
-              <span className="text-[11px] text-foreground">{editingApp ? '\u7f16\u8f91\u81ea\u5b9a\u4e49\u5c0f\u7a0b\u5e8f' : '\u6dfb\u52a0\u81ea\u5b9a\u4e49\u5c0f\u7a0b\u5e8f'}</span>
-              <button onClick={() => setShowAddDialog(false)} className="w-6 h-6 rounded-md flex items-center justify-center text-muted-foreground/40 hover:text-foreground hover:bg-accent transition-colors">
+              <span className="text-xs text-foreground">{editingApp ? '\u7f16\u8f91\u81ea\u5b9a\u4e49\u5c0f\u7a0b\u5e8f' : '\u6dfb\u52a0\u81ea\u5b9a\u4e49\u5c0f\u7a0b\u5e8f'}</span>
+              <Button variant="ghost" size="icon-xs" onClick={() => setShowAddDialog(false)}>
                 <X size={13} />
-              </button>
+              </Button>
             </div>
 
             <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4 [&::-webkit-scrollbar]:hidden">
@@ -245,64 +245,66 @@ export function MiniAppsPage() {
                     {formName.charAt(0).toUpperCase() || '?'}
                   </div>
                 )}
-                <span className="text-[11px] text-foreground/70 mt-2">{formName || '\u672a\u547d\u540d\u5e94\u7528'}</span>
+                <span className="text-xs text-foreground/70 mt-2">{formName || '\u672a\u547d\u540d\u5e94\u7528'}</span>
               </div>
 
               <div className="space-y-3">
                 <FormField label="ID" required>
-                  <input
+                  <Input
                     type="text" value={formId} onChange={e => setFormId(e.target.value)}
                     placeholder={'\u552f\u4e00\u6807\u8bc6\u7b26'}
                     disabled={!!editingApp}
-                    className="w-full px-3 py-2 rounded-lg border border-border/30 bg-accent/5 text-[11px] text-foreground outline-none placeholder:text-muted-foreground/25 focus:border-border/50 transition-colors disabled:opacity-40"
+                    className="w-full px-3 py-2 rounded-lg border border-border/30 bg-accent/5 text-xs text-foreground placeholder:text-muted-foreground/25 focus:border-border/50 disabled:opacity-40"
                   />
                 </FormField>
 
                 <FormField label={'\u540d\u79f0'} required>
-                  <input
+                  <Input
                     type="text" value={formName} onChange={e => setFormName(e.target.value)}
                     placeholder={'\u5e94\u7528\u663e\u793a\u540d\u79f0'}
-                    className="w-full px-3 py-2 rounded-lg border border-border/30 bg-accent/5 text-[11px] text-foreground outline-none placeholder:text-muted-foreground/25 focus:border-border/50 transition-colors"
+                    className="w-full px-3 py-2 rounded-lg border border-border/30 bg-accent/5 text-xs text-foreground placeholder:text-muted-foreground/25 focus:border-border/50"
                   />
                 </FormField>
 
                 <FormField label="URL" required>
-                  <input
+                  <Input
                     type="text" value={formUrl} onChange={e => setFormUrl(e.target.value)}
                     placeholder="https://example.com"
-                    className="w-full px-3 py-2 rounded-lg border border-border/30 bg-accent/5 text-[11px] text-foreground outline-none placeholder:text-muted-foreground/25 focus:border-border/50 transition-colors font-mono"
+                    className="w-full px-3 py-2 rounded-lg border border-border/30 bg-accent/5 text-xs text-foreground placeholder:text-muted-foreground/25 focus:border-border/50 font-mono"
                   />
                 </FormField>
 
                 <FormField label="Logo">
                   <div className="flex items-center gap-3 mb-2">
-                    <button
+                    <Button
+                      variant="ghost" size="xs"
                       onClick={() => setFormLogoMode('url')}
-                      className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] transition-colors ${
-                        formLogoMode === 'url' ? 'bg-accent text-foreground' : 'text-muted-foreground/40 hover:text-foreground'
+                      className={`gap-1.5 ${
+                        formLogoMode === 'url' ? 'bg-accent text-foreground' : 'text-muted-foreground/40'
                       }`}
                     >
                       <Link size={9} /> URL
-                    </button>
-                    <button
+                    </Button>
+                    <Button
+                      variant="ghost" size="xs"
                       onClick={() => setFormLogoMode('upload')}
-                      className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] transition-colors ${
-                        formLogoMode === 'upload' ? 'bg-accent text-foreground' : 'text-muted-foreground/40 hover:text-foreground'
+                      className={`gap-1.5 ${
+                        formLogoMode === 'upload' ? 'bg-accent text-foreground' : 'text-muted-foreground/40'
                       }`}
                     >
                       <Upload size={9} /> {'\u4e0a\u4f20'}
-                    </button>
+                    </Button>
                   </div>
                   {formLogoMode === 'url' ? (
-                    <input
+                    <Input
                       type="text" value={formLogoUrl} onChange={e => setFormLogoUrl(e.target.value)}
                       placeholder={'Logo \u56fe\u7247\u5730\u5740'}
-                      className="w-full px-3 py-2 rounded-lg border border-border/30 bg-accent/5 text-[11px] text-foreground outline-none placeholder:text-muted-foreground/25 focus:border-border/50 transition-colors font-mono"
+                      className="w-full px-3 py-2 rounded-lg border border-border/30 bg-accent/5 text-xs text-foreground placeholder:text-muted-foreground/25 focus:border-border/50 font-mono"
                     />
                   ) : (
                     <label className="flex items-center gap-2 px-3 py-2 rounded-lg border border-dashed border-border/30 bg-accent/5 cursor-pointer hover:border-border/50 transition-colors">
                       <Upload size={11} className="text-muted-foreground/30" />
-                      <span className="text-[10px] text-muted-foreground/40">{'\u9009\u62e9\u56fe\u7247\u6587\u4ef6'}</span>
+                      <span className="text-xs text-muted-foreground/40">{'\u9009\u62e9\u56fe\u7247\u6587\u4ef6'}</span>
                       <input type="file" accept="image/*" className="hidden" onChange={e => { const file = e.target.files?.[0]; if (file) { const reader = new FileReader(); reader.onload = ev => setFormLogoUrl(ev.target?.result as string); reader.readAsDataURL(file); } }} />
                       {formLogoUrl && formLogoMode === 'upload' && <img src={formLogoUrl} alt="" className="w-5 h-5 rounded object-cover ml-auto" />}
                     </label>
@@ -312,19 +314,19 @@ export function MiniAppsPage() {
             </div>
 
             <div className="flex items-center gap-2 px-4 py-3 border-t border-border/15 flex-shrink-0">
-              <button
+              <Button
+                variant="default" size="xs"
                 onClick={saveApp}
                 disabled={!formId.trim() || !formName.trim() || !formUrl.trim()}
-                className="px-4 py-1.5 rounded-lg bg-foreground text-background text-[11px] hover:bg-foreground/90 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
               >
                 {'\u4fdd\u5b58'}
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="ghost" size="xs"
                 onClick={() => setShowAddDialog(false)}
-                className="px-3 py-1.5 rounded-lg text-[11px] text-muted-foreground/50 hover:text-foreground hover:bg-accent transition-colors"
               >
                 {'\u53d6\u6d88'}
-              </button>
+              </Button>
             </div>
           </motion.div>
         )}
@@ -340,24 +342,24 @@ export function MiniAppsPage() {
             className="absolute top-2 right-2 bottom-2 z-50 w-[400px] bg-card rounded-2xl border border-border/30 shadow-2xl flex flex-col overflow-hidden"
           >
             <div className="flex items-center justify-between px-4 h-11 flex-shrink-0 border-b border-border/15">
-              <span className="text-[11px] text-foreground">{'\u663e\u793a\u8bbe\u7f6e'}</span>
+              <span className="text-xs text-foreground">{'\u663e\u793a\u8bbe\u7f6e'}</span>
               <div className="flex items-center gap-1">
-                <button onClick={swapAll} className="flex items-center gap-1 text-[10px] text-muted-foreground/40 hover:text-foreground px-2 py-1 rounded-md hover:bg-accent transition-colors">
+                <Button variant="ghost" size="xs" onClick={swapAll} className="gap-1 text-muted-foreground/40">
                   <ArrowLeftRight size={10} /> {'\u4ea4\u6362'}
-                </button>
-                <button onClick={resetAll} className="flex items-center gap-1 text-[10px] text-muted-foreground/40 hover:text-foreground px-2 py-1 rounded-md hover:bg-accent transition-colors">
+                </Button>
+                <Button variant="ghost" size="xs" onClick={resetAll} className="gap-1 text-muted-foreground/40">
                   <RotateCcw size={10} /> {'\u91cd\u7f6e'}
-                </button>
-                <button onClick={() => setShowSettings(false)} className="w-6 h-6 rounded-md flex items-center justify-center text-muted-foreground/40 hover:text-foreground hover:bg-accent transition-colors">
+                </Button>
+                <Button variant="ghost" size="icon-xs" onClick={() => setShowSettings(false)}>
                   <X size={13} />
-                </button>
+                </Button>
               </div>
             </div>
 
             <div className="flex-1 flex min-h-0 overflow-hidden">
               <div className="flex-1 flex flex-col min-h-0 border-r border-border/10">
                 <div className="flex items-center justify-between px-3 py-2 flex-shrink-0">
-                  <span className="text-[10px] text-muted-foreground/50">{'\u663e\u793a'}</span>
+                  <span className="text-xs text-muted-foreground/50">{'\u663e\u793a'}</span>
                   <span className="text-[9px] text-muted-foreground/25">{visibleApps.length}</span>
                 </div>
                 <div className="flex-1 overflow-y-auto [&::-webkit-scrollbar]:hidden">
@@ -371,7 +373,7 @@ export function MiniAppsPage() {
                         className="flex items-center gap-2 px-3 py-1.5 hover:bg-accent/30 cursor-pointer transition-colors group"
                       >
                         <AppIcon app={app} size="sm" />
-                        <span className="text-[10px] text-foreground flex-1 truncate">{app.name}</span>
+                        <span className="text-xs text-foreground flex-1 truncate">{app.name}</span>
                         <EyeOff size={9} className="text-muted-foreground/0 group-hover:text-muted-foreground/35 transition-colors flex-shrink-0" />
                       </div>
                     );
@@ -381,7 +383,7 @@ export function MiniAppsPage() {
 
               <div className="flex-1 flex flex-col min-h-0">
                 <div className="flex items-center justify-between px-3 py-2 flex-shrink-0">
-                  <span className="text-[10px] text-muted-foreground/50">{'\u9690\u85cf'}</span>
+                  <span className="text-xs text-muted-foreground/50">{'\u9690\u85cf'}</span>
                   <span className="text-[9px] text-muted-foreground/25">{hiddenApps.length}</span>
                 </div>
                 <div className="flex-1 overflow-y-auto [&::-webkit-scrollbar]:hidden">
@@ -400,7 +402,7 @@ export function MiniAppsPage() {
                         className="flex items-center gap-2 px-3 py-1.5 hover:bg-accent/30 cursor-pointer transition-colors group"
                       >
                         <AppIcon app={app} size="sm" />
-                        <span className="text-[10px] text-foreground/50 flex-1 truncate">{app.name}</span>
+                        <span className="text-xs text-foreground/50 flex-1 truncate">{app.name}</span>
                         <Eye size={9} className="text-muted-foreground/0 group-hover:text-muted-foreground/35 transition-colors flex-shrink-0" />
                       </div>
                     );
@@ -411,23 +413,23 @@ export function MiniAppsPage() {
 
             <div className="flex-shrink-0 border-t border-border/15 px-4 py-3 space-y-3">
               <div className="flex items-center justify-between">
-                <span className="text-[10px] text-foreground/70">{'\u5728\u6d4f\u89c8\u5668\u4e2d\u6253\u5f00\u65b0\u7a97\u53e3\u94fe\u63a5'}</span>
+                <span className="text-xs text-foreground/70">{'\u5728\u6d4f\u89c8\u5668\u4e2d\u6253\u5f00\u65b0\u7a97\u53e3\u94fe\u63a5'}</span>
                 <ToggleSwitch value={openInBrowser} onChange={setOpenInBrowser} />
               </div>
               <div className="flex items-center justify-between">
                 <div>
-                  <span className="text-[10px] text-foreground/70">{'\u5c0f\u7a0b\u5e8f\u7f13\u5b58\u6570\u91cf'}</span>
+                  <span className="text-xs text-foreground/70">{'\u5c0f\u7a0b\u5e8f\u7f13\u5b58\u6570\u91cf'}</span>
                   <p className="text-[9px] text-muted-foreground/30">{'\u540c\u65f6\u4fdd\u6301\u6d3b\u8dc3\u7684\u6700\u5927\u6570\u91cf'}</p>
                 </div>
                 <div className="flex items-center gap-2">
-                  <button onClick={() => setCacheCount(5)} className="text-muted-foreground/25 hover:text-foreground transition-colors"><RotateCcw size={9} /></button>
-                  <input type="range" min={1} max={10} value={cacheCount} onChange={e => setCacheCount(Number(e.target.value))} className="w-16 h-1 accent-cherry-primary cursor-pointer" />
+                  <Button variant="ghost" size="icon-xs" onClick={() => setCacheCount(5)}><RotateCcw size={9} /></Button>
+                  <Slider min={1} max={10} value={[cacheCount]} onValueChange={([v]) => setCacheCount(v)} className="w-16" />
                   <span className="text-[9px] text-muted-foreground/40 w-4 text-center">{cacheCount}</span>
                 </div>
               </div>
               <div className="flex items-center justify-between">
                 <div>
-                  <span className="text-[10px] text-foreground/70">{'\u4fa7\u8fb9\u680f\u663e\u793a\u6d3b\u8dc3\u5c0f\u7a0b\u5e8f'}</span>
+                  <span className="text-xs text-foreground/70">{'\u4fa7\u8fb9\u680f\u663e\u793a\u6d3b\u8dc3\u5c0f\u7a0b\u5e8f'}</span>
                   <p className="text-[9px] text-muted-foreground/30">{'\u5728\u4fa7\u8fb9\u680f\u5c55\u793a\u8fd0\u884c\u4e2d\u7684\u5c0f\u7a0b\u5e8f'}</p>
                 </div>
                 <ToggleSwitch value={showInSidebar} onChange={setShowInSidebar} />
@@ -443,8 +445,8 @@ export function MiniAppsPage() {
 function FormField({ label, required, children }: { label: string; required?: boolean; children: React.ReactNode }) {
   return (
     <div className="space-y-1">
-      <label className="text-[10px] text-muted-foreground/50 block">
-        {required && <span className="text-red-400/60 mr-0.5">*</span>}
+      <label className="text-xs text-muted-foreground/50 block">
+        {required && <span className="text-destructive/60 mr-0.5">*</span>}
         {label}
       </label>
       {children}
@@ -454,11 +456,9 @@ function FormField({ label, required, children }: { label: string; required?: bo
 
 function ToggleSwitch({ value, onChange }: { value: boolean; onChange: (v: boolean) => void }) {
   return (
-    <button
-      onClick={() => onChange(!value)}
-      className={`relative w-8 h-[18px] rounded-full transition-colors flex-shrink-0 ${value ? 'bg-cherry-text-muted' : 'bg-muted-foreground/15'}`}
-    >
-      <div className={`absolute top-[3px] w-3 h-3 rounded-full bg-white shadow-sm transition-transform ${value ? 'left-[15px]' : 'left-[3px]'}`} />
-    </button>
+    <Switch
+      checked={value}
+      onCheckedChange={onChange}
+    />
   );
 }

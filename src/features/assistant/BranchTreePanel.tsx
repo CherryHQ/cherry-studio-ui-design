@@ -5,6 +5,7 @@ import {
   Plus, Copy, Star, Pencil,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { Button, Input } from '@cherry-studio/ui';
 import type { Message } from '@/app/types/chat';
 
 // Backward-compatible alias
@@ -774,42 +775,47 @@ export function BranchTreePanel({ messages, onClose, assistantName, modelName, t
       <div className="flex items-center justify-between px-3 h-[36px] border-b border-border/20 flex-shrink-0">
         <div className="flex items-center gap-2 min-w-0">
           <GitBranch size={11} className="text-foreground/50 flex-shrink-0" />
-          <span className="text-[11px] text-foreground/75 flex-shrink-0">{'\u5206\u652f\u7ba1\u7406'}</span>
+          <span className="text-xs text-foreground/75 flex-shrink-0">{'\u5206\u652f\u7ba1\u7406'}</span>
           {topicName && (
             <span className="text-[9px] text-muted-foreground/30 truncate max-w-[120px]" title={topicName}>{'\u00b7'} {topicName}</span>
           )}
           <span className="text-[9px] text-muted-foreground/35 ml-0.5 flex-shrink-0">{branches.length} {'\u5206\u652f'} {'\u00b7'} {totalNodes} {'\u8282\u70b9'}</span>
         </div>
         <div className="flex items-center gap-0.5">
-          <button
+          <Button
+            variant="ghost"
+            size="icon-xs"
             onClick={() => setIsFullscreen(!isFullscreen)}
-            className="p-1 rounded text-muted-foreground/40 hover:text-foreground hover:bg-accent/15 transition-colors"
             title={isFullscreen ? '\u8fd8\u539f' : '\u6700\u5927\u5316'}
           >
             {isFullscreen ? <Minimize2 size={11} /> : <Maximize2 size={11} />}
-          </button>
-          <button onClick={onClose} className="p-1 rounded text-muted-foreground/40 hover:text-foreground hover:bg-accent/15 transition-colors">
+          </Button>
+          <Button variant="ghost" size="icon-xs" onClick={onClose}>
             <X size={12} />
-          </button>
+          </Button>
         </div>
       </div>
 
       {/* Branch tabs: only "活跃分支" by default; pinned branches show as named tabs */}
       <div className="flex items-center gap-0.5 px-2 py-1.5 border-b border-border/15 overflow-x-auto [&::-webkit-scrollbar]:h-0 flex-shrink-0">
         {/* Active branch tab — always visible */}
-        <button
+        <Button
+          variant="ghost"
+          size="xs"
           onClick={() => setActiveBranch(activeBranch)}
-          className="flex items-center gap-1 px-2 py-[3px] rounded-md text-[9px] transition-all whitespace-nowrap flex-shrink-0 bg-cherry-active-bg text-cherry-primary-dark border border-cherry-ring"
+          className="gap-1 px-2 py-[3px] text-[9px] whitespace-nowrap flex-shrink-0 bg-cherry-active-bg text-cherry-primary-dark border border-cherry-ring"
         >
           <Star size={8} className="text-cherry-primary flex-shrink-0" />
           {'\u6d3b\u8dc3\u5206\u652f'}
-        </button>
+        </Button>
         {/* Pinned branch tabs — appear when user pins from context menu */}
         {Array.from(pinnedBranches.entries()).map(([bid, displayName]) => {
           const isCurrent = activeBranch === bid;
           return (
-            <button
+            <Button
               key={bid}
+              variant="ghost"
+              size="xs"
               onClick={() => setActiveBranch(bid)}
               onContextMenu={(e) => {
                 e.preventDefault();
@@ -818,7 +824,7 @@ export function BranchTreePanel({ messages, onClose, assistantName, modelName, t
                   setBranchCtxMenu({ x: e.clientX - panelRect.left, y: e.clientY - panelRect.top, branchId: bid });
                 }
               }}
-              className={`flex items-center gap-1 px-2 py-[3px] rounded-md text-[9px] transition-all whitespace-nowrap flex-shrink-0 ${
+              className={`gap-1 px-2 py-[3px] text-[9px] whitespace-nowrap flex-shrink-0 ${
                 isCurrent
                   ? 'bg-accent/25 text-foreground/80 border border-border/30'
                   : 'text-muted-foreground/45 hover:text-foreground/60 hover:bg-accent/15 border border-transparent'
@@ -826,7 +832,9 @@ export function BranchTreePanel({ messages, onClose, assistantName, modelName, t
             >
               <GitBranch size={8} className={`flex-shrink-0 ${isCurrent ? 'text-foreground/60' : 'text-muted-foreground/30'}`} />
               {displayName}
-              <button
+              <Button
+                variant="ghost"
+                size="icon-xs"
                 onClick={(e) => {
                   e.stopPropagation();
                   setPinnedBranches(prev => {
@@ -835,11 +843,11 @@ export function BranchTreePanel({ messages, onClose, assistantName, modelName, t
                     return next;
                   });
                 }}
-                className="ml-0.5 p-0 text-muted-foreground/30 hover:text-foreground/60 transition-colors"
+                className="ml-0.5 p-0 text-muted-foreground/30 hover:text-foreground/60"
               >
                 <X size={7} />
-              </button>
-            </button>
+              </Button>
+            </Button>
           );
         })}
       </div>
@@ -858,25 +866,29 @@ export function BranchTreePanel({ messages, onClose, assistantName, modelName, t
               style={{ left: nodeCtxMenu.x, top: nodeCtxMenu.y }}
             >
               {/* 创建新节点 */}
-              <button
+              <Button
+                variant="ghost"
+                size="xs"
                 onClick={() => {
                   setNewNodeCounter(c => c + 1);
                   showToast(`\u5df2\u5728 ${nodeCtxMenu.node.label} \u4e0b\u521b\u5efa\u65b0\u8282\u70b9`);
                   setNodeCtxMenu(null);
                 }}
-                className="flex items-center gap-2.5 w-full px-3 py-[6px] text-[10.5px] text-foreground/80 hover:bg-accent/20 transition-colors"
+                className="flex items-center gap-2.5 w-full px-3 py-[6px] text-xs text-foreground/80 hover:bg-accent/20 rounded-none justify-start"
               >
                 <Plus size={11} className="text-cherry-primary" />
                 <span>{'\u521b\u5efa\u65b0\u8282\u70b9'}</span>
-              </button>
+              </Button>
               {/* 设置为活跃分支 */}
-              <button
+              <Button
+                variant="ghost"
+                size="xs"
                 onClick={() => {
                   setActiveBranch(nodeCtxMenu.node.branchId);
                   showToast(`\u5df2\u5207\u6362\u5230\u5206\u652f: ${nodeCtxMenu.node.branchId === 'main' ? '\u4e3b\u7ebf' : nodeCtxMenu.node.branchId}`);
                   setNodeCtxMenu(null);
                 }}
-                className={`flex items-center gap-2.5 w-full px-3 py-[6px] text-[10.5px] transition-colors ${
+                className={`flex items-center gap-2.5 w-full px-3 py-[6px] text-xs rounded-none justify-start ${
                   activeBranch === nodeCtxMenu.node.branchId
                     ? 'text-foreground/40 cursor-default'
                     : 'text-foreground/80 hover:bg-accent/20'
@@ -886,9 +898,11 @@ export function BranchTreePanel({ messages, onClose, assistantName, modelName, t
                 <Star size={11} className="text-amber-500/70" />
                 <span>{'\u8bbe\u7f6e\u4e3a\u6d3b\u8dc3\u5206\u652f'}</span>
                 {activeBranch === nodeCtxMenu.node.branchId && <Check size={9} className="text-cherry-primary ml-auto" />}
-              </button>
+              </Button>
               {/* 固定为标签 */}
-              <button
+              <Button
+                variant="ghost"
+                size="xs"
                 onClick={() => {
                   const bid = nodeCtxMenu.node.branchId;
                   if (!pinnedBranches.has(bid)) {
@@ -899,7 +913,7 @@ export function BranchTreePanel({ messages, onClose, assistantName, modelName, t
                   }
                   setNodeCtxMenu(null);
                 }}
-                className={`flex items-center gap-2.5 w-full px-3 py-[6px] text-[10.5px] transition-colors ${
+                className={`flex items-center gap-2.5 w-full px-3 py-[6px] text-xs rounded-none justify-start ${
                   pinnedBranches.has(nodeCtxMenu.node.branchId)
                     ? 'text-foreground/40 cursor-default'
                     : 'text-foreground/80 hover:bg-accent/20'
@@ -909,19 +923,21 @@ export function BranchTreePanel({ messages, onClose, assistantName, modelName, t
                 <Pencil size={11} className="text-muted-foreground" />
                 <span>{'\u56fa\u5b9a\u4e3a\u6807\u7b7e'}</span>
                 {pinnedBranches.has(nodeCtxMenu.node.branchId) && <Check size={9} className="text-cherry-primary ml-auto" />}
-              </button>
+              </Button>
               <div className="mx-2 my-1 border-t border-border/15" />
               {/* 复制为新话题 */}
-              <button
+              <Button
+                variant="ghost"
+                size="xs"
                 onClick={() => {
                   showToast(`\u5df2\u590d\u5236\u5206\u652f\u4e3a\u65b0\u8bdd\u9898`);
                   setNodeCtxMenu(null);
                 }}
-                className="flex items-center gap-2.5 w-full px-3 py-[6px] text-[10.5px] text-foreground/80 hover:bg-accent/20 transition-colors"
+                className="flex items-center gap-2.5 w-full px-3 py-[6px] text-xs text-foreground/80 hover:bg-accent/20 rounded-none justify-start"
               >
                 <Copy size={11} className="text-muted-foreground" />
                 <span>{'\u590d\u5236\u4e3a\u65b0\u8bdd\u9898'}</span>
-              </button>
+              </Button>
             </motion.div>
           </div>
         )}
@@ -943,12 +959,14 @@ export function BranchTreePanel({ messages, onClose, assistantName, modelName, t
                 top: branchCtxMenu.y,
               }}
             >
-              <button
+              <Button
+                variant="ghost"
+                size="xs"
                 onClick={() => {
                   setActiveBranch(branchCtxMenu.branchId);
                   setBranchCtxMenu(null);
                 }}
-                className={`flex items-center gap-2.5 w-full px-3 py-[6px] text-[10.5px] transition-colors ${
+                className={`flex items-center gap-2.5 w-full px-3 py-[6px] text-xs rounded-none justify-start ${
                   activeBranch === branchCtxMenu.branchId
                     ? 'text-foreground/40 cursor-default'
                     : 'text-foreground/80 hover:bg-accent/20'
@@ -958,13 +976,15 @@ export function BranchTreePanel({ messages, onClose, assistantName, modelName, t
                 <GitBranch size={11} className="text-muted-foreground" />
                 <span>{'\u5207\u6362\u5230\u6b64\u5206\u652f'}</span>
                 {activeBranch === branchCtxMenu.branchId && <Check size={9} className="text-cherry-primary ml-auto" />}
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="ghost"
+                size="xs"
                 onClick={() => {
                   setMainBranch(branchCtxMenu.branchId);
                   setBranchCtxMenu(null);
                 }}
-                className={`flex items-center gap-2.5 w-full px-3 py-[6px] text-[10.5px] transition-colors ${
+                className={`flex items-center gap-2.5 w-full px-3 py-[6px] text-xs rounded-none justify-start ${
                   mainBranch === branchCtxMenu.branchId
                     ? 'text-foreground/40 cursor-default'
                     : 'text-foreground/80 hover:bg-accent/20'
@@ -974,7 +994,7 @@ export function BranchTreePanel({ messages, onClose, assistantName, modelName, t
                 <Crown size={11} className="text-amber-500/70" />
                 <span>{'\u8bbe\u4e3a\u4e3b\u7ebf'}</span>
                 {mainBranch === branchCtxMenu.branchId && <Check size={9} className="text-cherry-primary ml-auto" />}
-              </button>
+              </Button>
             </motion.div>
           </div>
         )}
@@ -1041,21 +1061,21 @@ export function BranchTreePanel({ messages, onClose, assistantName, modelName, t
 
         {/* Bottom-left: Zoom & expand/collapse controls */}
         <div className="absolute bottom-3 left-3 flex flex-col bg-card/90 border border-border/25 rounded-lg overflow-hidden shadow-sm">
-          <button onClick={expandAll} className="p-1.5 hover:bg-accent/20 transition-colors border-b border-border/10" title={'\u5168\u90e8\u5c55\u5f00'}>
+          <Button variant="ghost" size="icon-xs" onClick={expandAll} className="p-1.5 rounded-none border-b border-border/10" title={'\u5168\u90e8\u5c55\u5f00'}>
             <UnfoldVertical size={11} className="text-foreground/60" />
-          </button>
-          <button onClick={collapseAll} className="p-1.5 hover:bg-accent/20 transition-colors border-b border-border/10" title={'\u5168\u90e8\u6298\u53e0'}>
+          </Button>
+          <Button variant="ghost" size="icon-xs" onClick={collapseAll} className="p-1.5 rounded-none border-b border-border/10" title={'\u5168\u90e8\u6298\u53e0'}>
             <FoldVertical size={11} className="text-foreground/60" />
-          </button>
-          <button onClick={zoomIn} className="p-1.5 hover:bg-accent/20 transition-colors border-b border-border/10">
+          </Button>
+          <Button variant="ghost" size="icon-xs" onClick={zoomIn} className="p-1.5 rounded-none border-b border-border/10">
             <ZoomIn size={11} className="text-foreground/60" />
-          </button>
-          <button onClick={zoomOut} className="p-1.5 hover:bg-accent/20 transition-colors border-b border-border/10">
+          </Button>
+          <Button variant="ghost" size="icon-xs" onClick={zoomOut} className="p-1.5 rounded-none border-b border-border/10">
             <ZoomOut size={11} className="text-foreground/60" />
-          </button>
-          <button onClick={fitView} className="p-1.5 hover:bg-accent/20 transition-colors">
+          </Button>
+          <Button variant="ghost" size="icon-xs" onClick={fitView} className="p-1.5 rounded-none">
             <Maximize2 size={10} className="text-foreground/60" />
-          </button>
+          </Button>
         </div>
 
         {/* Bottom-right: label */}
@@ -1096,8 +1116,8 @@ export function BranchTreePanel({ messages, onClose, assistantName, modelName, t
               transition={{ duration: 0.12 }}
               className="absolute z-[70] left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-popover border border-border/40 rounded-xl shadow-2xl p-4 w-[240px]"
             >
-              <p className="text-[11px] text-foreground/80 mb-2">{'\u8bbe\u7f6e\u5206\u652f\u6807\u7b7e\u540d\u79f0'}</p>
-              <input
+              <p className="text-xs text-foreground/80 mb-2">{'\u8bbe\u7f6e\u5206\u652f\u6807\u7b7e\u540d\u79f0'}</p>
+              <Input
                 ref={renameInputRef}
                 value={renameValue}
                 onChange={(e) => setRenameValue(e.target.value)}
@@ -1115,17 +1135,21 @@ export function BranchTreePanel({ messages, onClose, assistantName, modelName, t
                   if (e.key === 'Escape') setRenamingBranch(null);
                 }}
                 autoFocus
-                className="w-full px-2.5 py-1.5 text-[10px] rounded-lg border border-border/40 bg-background text-foreground/80 outline-none focus:border-cherry-ring transition-colors"
+                className="w-full px-2.5 py-1.5 text-xs"
                 placeholder={'\u8f93\u5165\u5206\u652f\u540d\u79f0'}
               />
               <div className="flex items-center gap-2 mt-3">
-                <button
+                <Button
+                  variant="ghost"
+                  size="xs"
                   onClick={() => setRenamingBranch(null)}
-                  className="flex-1 px-3 py-1.5 text-[9px] rounded-md border border-border/30 text-muted-foreground hover:bg-accent/15 transition-colors"
+                  className="flex-1 px-3 py-1.5 text-[9px] border border-border/30 text-muted-foreground"
                 >
                   {'\u53d6\u6d88'}
-                </button>
-                <button
+                </Button>
+                <Button
+                  variant="default"
+                  size="xs"
                   onClick={() => {
                     if (renameValue.trim() && renamingBranch) {
                       setPinnedBranches(prev => {
@@ -1138,10 +1162,10 @@ export function BranchTreePanel({ messages, onClose, assistantName, modelName, t
                       setRenamingBranch(null);
                     }
                   }}
-                  className="flex-1 px-3 py-1.5 text-[9px] rounded-md bg-cherry-primary text-white hover:opacity-90 transition-opacity"
+                  className="flex-1 px-3 py-1.5 text-[9px]"
                 >
                   {'\u786e\u5b9a'}
-                </button>
+                </Button>
               </div>
             </motion.div>
           </div>

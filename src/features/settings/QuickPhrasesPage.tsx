@@ -4,6 +4,7 @@ import {
   Plus, Pencil, Trash2, X, Check, MessageSquareText,
   Variable, CircleHelp, FileText, Search,
 } from 'lucide-react';
+import { Button, Input } from '@cherry-studio/ui';
 import { Toggle } from './shared';
 import {
   VarManagerPanel, SYSTEM_VARIABLES, VAR_TYPE_CONFIG,
@@ -61,8 +62,7 @@ function RichPromptPreview({ content, className, singleLine }: {
       return (
         <span
           key={i}
-          className="inline-flex items-center px-[5px] py-[0.5px] mx-[1px] rounded bg-violet-500/10 text-violet-500/80 text-[9px] font-mono align-baseline"
-          style={{ fontWeight: 500 }}
+          className="inline-flex items-center px-[5px] py-[0.5px] mx-[1px] rounded bg-violet-500/10 text-violet-500/80 text-[9px] font-mono align-baseline font-medium"
         >
           {'${' + match[1] + '}'}
         </span>
@@ -249,7 +249,7 @@ function RichPromptEditor({ value, onChange, onSlashCommand, placeholder }: {
   return (
     <div className="relative">
       {isEmpty && (
-        <div className="absolute inset-0 px-3 py-[9px] text-[11px] text-foreground/15 pointer-events-none leading-relaxed">
+        <div className="absolute inset-0 px-3 py-[9px] text-xs text-foreground/15 pointer-events-none leading-relaxed">
           {placeholder || '输入内容，使用 / 插入变量...'}
         </div>
       )}
@@ -261,7 +261,7 @@ function RichPromptEditor({ value, onChange, onSlashCommand, placeholder }: {
         onKeyDown={handleKeyDown}
         onCompositionStart={() => { isComposing.current = true; }}
         onCompositionEnd={() => { isComposing.current = false; handleInput(); }}
-        className="w-full bg-foreground/[0.04] border border-foreground/[0.08] rounded-xl px-3 py-[9px] text-[11px] text-foreground/70 outline-none focus:border-foreground/20 transition-colors leading-relaxed whitespace-pre-wrap break-words"
+        className="w-full bg-foreground/[0.04] border border-foreground/[0.08] rounded-xl px-3 py-[9px] text-xs text-foreground/70 outline-none focus:border-foreground/20 transition-colors leading-relaxed whitespace-pre-wrap break-words"
         style={{ minHeight: '140px' }}
       />
       <style>{`
@@ -328,34 +328,34 @@ function EditFormPanel({ open, onClose, item, onSave }: {
         <div className="flex items-center justify-between px-5 py-3.5 border-b border-foreground/[0.06] flex-shrink-0">
           <div className="flex items-center gap-2">
             {isAdd ? <Plus size={14} className="text-foreground/60" /> : <Pencil size={14} className="text-foreground/50" />}
-            <h3 className="text-[13px] text-foreground/90" style={{ fontWeight: 500 }}>{isAdd ? '添加短语' : '编辑短语'}</h3>
+            <h3 className="text-sm text-foreground/90 font-medium">{isAdd ? '添加短语' : '编辑短语'}</h3>
           </div>
-          <button onClick={onClose} className="w-6 h-6 rounded-lg flex items-center justify-center text-foreground/35 hover:text-foreground/70 hover:bg-foreground/[0.06] transition-colors">
+          <Button variant="ghost" size="icon" onClick={onClose} className="w-6 h-6 rounded-lg text-foreground/35 hover:text-foreground/70 hover:bg-foreground/[0.06]">
             <X size={14} />
-          </button>
+          </Button>
         </div>
 
         <div className="flex-1 overflow-y-auto px-5 py-4 space-y-4 [&::-webkit-scrollbar]:w-[3px] [&::-webkit-scrollbar-thumb]:bg-border/20">
           <div>
-            <p className="text-[10px] text-foreground/40 mb-2" style={{ fontWeight: 500 }}>标题</p>
-            <input value={title} onChange={e => setTitle(e.target.value)} className="w-full bg-foreground/[0.04] border border-foreground/[0.08] rounded-xl px-3 py-[8px] text-[11px] text-foreground/70 outline-none focus:border-foreground/20 transition-colors" placeholder="请输入短语标题" autoFocus onKeyDown={e => { if (e.key === 'Escape') onClose(); }} />
+            <p className="text-xs text-foreground/40 mb-2 font-medium">标题</p>
+            <Input value={title} onChange={e => setTitle(e.target.value)} className="w-full bg-foreground/[0.04] border border-foreground/[0.08] rounded-xl px-3 py-[8px] text-xs text-foreground/70 focus:border-foreground/20" placeholder="请输入短语标题" autoFocus onKeyDown={e => { if (e.key === 'Escape') onClose(); }} />
           </div>
           <div>
             <div className="flex items-center justify-between mb-2">
-              <p className="text-[10px] text-foreground/40" style={{ fontWeight: 500 }}>内容</p>
-              <button onClick={() => setShowVarPanel(true)} className="flex items-center gap-1 px-2 py-[2px] rounded-lg text-[9px] text-violet-500/70 hover:text-violet-500 hover:bg-violet-500/[0.06] transition-colors">
+              <p className="text-xs text-foreground/40 font-medium">内容</p>
+              <Button variant="ghost" size="sm" onClick={() => setShowVarPanel(true)} className="flex items-center gap-1 px-2 py-[2px] h-auto rounded-lg text-[9px] text-violet-500/70 hover:text-violet-500 hover:bg-violet-500/[0.06]">
                 <Variable size={10} /><span>插入变量</span>
-              </button>
+              </Button>
             </div>
             <RichPromptEditor value={content} onChange={setContent} onSlashCommand={() => setShowVarPanel(true)} placeholder="输入内容，使用 / 快速插入变量..." />
             <p className="text-[9px] text-foreground/20 mt-1.5">{'输入 / 或点击「插入变量」打开变量管理面板'}</p>
           </div>
           {extractVars(content).length > 0 && (
             <div>
-              <p className="text-[10px] text-foreground/40 mb-2" style={{ fontWeight: 500 }}>已引用变量</p>
+              <p className="text-xs text-foreground/40 mb-2 font-medium">已引用变量</p>
               <div className="flex flex-wrap gap-1.5">
                 {extractVars(content).map(v => (
-                  <span key={v} className="text-[9px] text-violet-500/70 bg-violet-500/[0.08] px-2 py-[2px] rounded font-mono" style={{ fontWeight: 500 }}>{v}</span>
+                  <span key={v} className="text-[9px] text-violet-500/70 bg-violet-500/[0.08] px-2 py-[2px] rounded font-mono font-medium">{v}</span>
                 ))}
               </div>
             </div>
@@ -363,10 +363,10 @@ function EditFormPanel({ open, onClose, item, onSave }: {
         </div>
 
         <div className="flex items-center justify-end gap-2 px-5 py-3.5 border-t border-foreground/[0.06] flex-shrink-0">
-          <button onClick={onClose} className="px-4 py-[5px] rounded-lg text-[11px] text-foreground/40 hover:text-foreground/60 hover:bg-foreground/[0.05] transition-colors">取消</button>
-          <button onClick={handleSave} disabled={!canSave} className={`px-4 py-[5px] rounded-lg text-[11px] transition-colors ${canSave ? 'bg-primary text-primary-foreground hover:bg-primary/90' : 'bg-foreground/15 text-white cursor-not-allowed'}`}>
+          <Button variant="ghost" size="sm" onClick={onClose} className="px-4 py-[5px] h-auto rounded-lg text-xs text-foreground/40 hover:text-foreground/60 hover:bg-foreground/[0.05]">取消</Button>
+          <Button onClick={handleSave} disabled={!canSave} size="sm" className={`px-4 py-[5px] h-auto rounded-lg text-xs ${canSave ? '' : 'bg-foreground/15 text-white cursor-not-allowed'}`}>
             {isAdd ? '添加' : '保存'}
-          </button>
+          </Button>
         </div>
       </motion.div>
 
@@ -415,14 +415,14 @@ export function QuickPhrasesPage() {
     <div className="relative flex flex-col h-full min-h-0">
       <div className={`flex-1 overflow-y-auto px-6 py-5 [&::-webkit-scrollbar]:w-[3px] [&::-webkit-scrollbar-thumb]:bg-border/20 transition-opacity duration-200 ${showFormPanel ? 'opacity-40 pointer-events-none' : ''}`}>
         <div className="mb-3">
-          <h3 className="text-[13px] text-foreground/90" style={{ fontWeight: 500 }}>快捷短语</h3>
-          <p className="text-[10px] text-foreground/35 mt-1">{'预设常用的 Prompt 模板，在对话中快速插入使用。支持变量占位符。'}</p>
+          <h3 className="text-sm text-foreground/90 font-medium">快捷短语</h3>
+          <p className="text-xs text-foreground/35 mt-1">{'预设常用的 Prompt 模板，在对话中快速插入使用。支持变量占位符。'}</p>
         </div>
 
         <div className="bg-foreground/[0.03] border border-foreground/[0.06] rounded-2xl px-3 py-2">
           <div className="flex items-center justify-between gap-2 px-2 py-2">
             <div className="flex items-center gap-1.5 flex-shrink-0">
-              <h4 className="text-[12px] text-foreground/70" style={{ fontWeight: 500 }}>短语列表</h4>
+              <h4 className="text-sm text-foreground/70 font-medium">短语列表</h4>
               <span className="text-[9px] text-foreground/25 bg-foreground/[0.04] px-1.5 py-[1px] rounded-md">
                 {isFiltered ? `${filteredPhrases.length} / ${phrases.length}` : phrases.length}
               </span>
@@ -430,16 +430,16 @@ export function QuickPhrasesPage() {
             <div className="flex items-center gap-1.5 flex-1 justify-end">
               <div className="relative flex items-center max-w-[200px] flex-1">
                 <Search size={11} className="absolute left-2.5 text-foreground/20 pointer-events-none" />
-                <input ref={searchRef} value={searchQuery} onChange={e => setSearchQuery(e.target.value)} placeholder="搜索标题、内容或变量..." className="w-full bg-foreground/[0.04] border border-transparent focus:border-foreground/[0.1] rounded-lg pl-7 pr-2 py-[5px] text-[10px] text-foreground/70 outline-none placeholder:text-foreground/20 transition-colors" />
+                <Input ref={searchRef} value={searchQuery} onChange={e => setSearchQuery(e.target.value)} placeholder="搜索标题、内容或变量..." className="w-full bg-foreground/[0.04] border border-transparent focus:border-foreground/[0.1] rounded-lg pl-7 pr-2 py-[5px] h-auto text-xs text-foreground/70 placeholder:text-foreground/20" />
                 {searchQuery && (
-                  <button onClick={() => { setSearchQuery(''); searchRef.current?.focus(); }} className="absolute right-1.5 w-4 h-4 rounded flex items-center justify-center text-foreground/25 hover:text-foreground/50 transition-colors">
+                  <Button variant="ghost" size="icon" onClick={() => { setSearchQuery(''); searchRef.current?.focus(); }} className="absolute right-1.5 w-4 h-4 rounded text-foreground/25 hover:text-foreground/50">
                     <X size={9} />
-                  </button>
+                  </Button>
                 )}
               </div>
-              <button onClick={openAdd} className="w-6 h-6 rounded-lg flex items-center justify-center text-primary hover:bg-primary/10 transition-colors flex-shrink-0" title="添加短语">
+              <Button variant="ghost" size="icon" onClick={openAdd} className="w-6 h-6 rounded-lg text-primary hover:bg-primary/10 flex-shrink-0" title="添加短语">
                 <Plus size={13} />
-              </button>
+              </Button>
             </div>
           </div>
 
@@ -453,28 +453,28 @@ export function QuickPhrasesPage() {
                   <MessageSquareText size={13} className="text-foreground/30 flex-shrink-0" />
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 min-w-0">
-                      <p className="text-[11px] text-foreground/80 truncate flex-shrink-0" style={{ fontWeight: 500 }}>{phrase.title}</p>
+                      <p className="text-xs text-foreground/80 truncate flex-shrink-0 font-medium">{phrase.title}</p>
                       {vars.length > 0 && (
                         <div className="flex items-center gap-1 flex-shrink min-w-0 overflow-hidden">
                           {vars.slice(0, 3).map(v => (
-                            <span key={v} className="text-[9px] text-foreground/50 bg-foreground/[0.05] px-1.5 py-[1px] rounded font-mono flex-shrink-0" style={{ fontWeight: 500 }}>{v}</span>
+                            <span key={v} className="text-[9px] text-foreground/50 bg-foreground/[0.05] px-1.5 py-[1px] rounded font-mono flex-shrink-0 font-medium">{v}</span>
                           ))}
                           {vars.length > 3 && <span className="text-[9px] text-foreground/25 flex-shrink-0">+{vars.length - 3}</span>}
                         </div>
                       )}
                     </div>
-                    <RichPromptPreview content={preview} singleLine className="text-[10px] text-foreground/30 mt-[3px] leading-normal" />
+                    <RichPromptPreview content={preview} singleLine className="text-xs text-foreground/30 mt-[3px] leading-normal" />
                   </div>
                   <div className="flex items-center gap-0.5 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" onClick={e => e.stopPropagation()}>
                     {isDeleting ? (
                       <div className="flex items-center gap-0.5">
-                        <button onClick={() => handleDelete(phrase.id)} className="w-5 h-5 rounded-md flex items-center justify-center text-red-400 hover:bg-red-500/10 transition-colors" title="确认删除"><Check size={10} /></button>
-                        <button onClick={() => setConfirmDeleteId(null)} className="w-5 h-5 rounded-md flex items-center justify-center text-foreground/25 hover:text-foreground/50 hover:bg-foreground/[0.06] transition-colors" title="取消"><X size={9} /></button>
+                        <Button variant="ghost" size="icon" onClick={() => handleDelete(phrase.id)} className="w-5 h-5 rounded-md text-destructive hover:bg-destructive/10" title="确认删除"><Check size={10} /></Button>
+                        <Button variant="ghost" size="icon" onClick={() => setConfirmDeleteId(null)} className="w-5 h-5 rounded-md text-foreground/25 hover:text-foreground/50 hover:bg-foreground/[0.06]" title="取消"><X size={9} /></Button>
                       </div>
                     ) : (
                       <div className="flex items-center gap-0.5">
-                        <button onClick={() => openEdit(phrase)} className="w-5 h-5 rounded-md flex items-center justify-center text-foreground/25 hover:text-foreground/55 hover:bg-foreground/[0.06] transition-colors" title="编辑"><Pencil size={10} /></button>
-                        <button onClick={() => setConfirmDeleteId(phrase.id)} className="w-5 h-5 rounded-md flex items-center justify-center text-foreground/25 hover:text-red-400 hover:bg-red-500/[0.06] transition-colors" title="删除"><Trash2 size={10} /></button>
+                        <Button variant="ghost" size="icon" onClick={() => openEdit(phrase)} className="w-5 h-5 rounded-md text-foreground/25 hover:text-foreground/55 hover:bg-foreground/[0.06]" title="编辑"><Pencil size={10} /></Button>
+                        <Button variant="ghost" size="icon" onClick={() => setConfirmDeleteId(phrase.id)} className="w-5 h-5 rounded-md text-foreground/25 hover:text-destructive hover:bg-destructive/[0.06]" title="删除"><Trash2 size={10} /></Button>
                       </div>
                     )}
                   </div>
@@ -488,17 +488,17 @@ export function QuickPhrasesPage() {
             {phrases.length === 0 && (
               <div className="py-6 text-center">
                 <FileText size={18} className="text-foreground/10 mx-auto mb-1.5" />
-                <p className="text-[10px] text-foreground/30">暂无短语</p>
-                <button onClick={openAdd} className="mt-2 flex items-center gap-1 px-3 py-[4px] rounded-lg text-[10px] text-foreground/60 hover:bg-foreground/[0.04] transition-colors mx-auto">
+                <p className="text-xs text-foreground/30">暂无短语</p>
+                <Button variant="ghost" size="sm" onClick={openAdd} className="mt-2 flex items-center gap-1 px-3 py-[4px] h-auto rounded-lg text-xs text-foreground/60 hover:bg-foreground/[0.04] mx-auto">
                   <Plus size={11} /><span>添加第一个短语</span>
-                </button>
+                </Button>
               </div>
             )}
 
             {phrases.length > 0 && filteredPhrases.length === 0 && (
               <div className="py-6 text-center">
                 <Search size={16} className="text-foreground/10 mx-auto mb-1.5" />
-                <p className="text-[10px] text-foreground/30">没有找到匹配的短语</p>
+                <p className="text-xs text-foreground/30">没有找到匹配的短语</p>
                 <p className="text-[9px] text-foreground/20 mt-0.5">尝试其他关键词，或清除搜索条件</p>
               </div>
             )}

@@ -74,7 +74,7 @@ export function SimpleTooltipDemo() {
       </Section>
 
       <Section title="Practical: Toolbar with Tooltips">
-        <div className="inline-flex items-center gap-0.5 rounded-lg border p-1">
+        <div className="inline-flex items-center gap-0.5 rounded-[12px] border p-1">
           {[
             { icon: Copy, label: "Copy" },
             { icon: Download, label: "Download" },
@@ -82,9 +82,9 @@ export function SimpleTooltipDemo() {
             { icon: Settings, label: "Settings" },
           ].map(({ icon: Icon, label }) => (
             <SimpleTooltip key={label} content={label} side="bottom" delayDuration={200}>
-              <button className="p-2 rounded-md text-muted-foreground hover:text-foreground hover:bg-accent transition-colors focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50">
+              <Button variant="ghost" className="p-2 rounded-[12px] text-muted-foreground hover:text-foreground hover:bg-accent transition-colors focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50">
                 <Icon className="h-4 w-4" />
-              </button>
+              </Button>
             </SimpleTooltip>
           ))}
         </div>

@@ -15,13 +15,16 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Tooltip } from '@/app/components/Tooltip';
+import { Button, Input, Switch } from '@cherry-studio/ui';
 import { FileExplorer } from './FileExplorer';
 import { ArtifactViewer } from './ArtifactViewer';
 import { EmptyState } from '@/app/components/ui/EmptyState';
 import { ChatPanel } from './ChatPanel';
 import type { AgentChatMessage, AgentSession, AgentSessionData } from '@/app/types/agent';
 import type { ModelCapability } from '@/app/types/chat';
-import { SessionHistoryPage } from './SessionHistoryPage';
+import { SessionHistoryPage, type SessionDisplayMode } from './SessionHistoryPage';
+import { HistorySidebar } from '@/app/components/shared/HistorySidebar';
+import { useHistorySidebar } from '@/app/hooks/useHistorySidebar';
 import {
   MOCK_SESSIONS, MODELS, SESSION_DATA_MAP, EMPTY_SESSION_DATA,
   DEFAULT_INITIAL_FILES, AGENT_MODEL_CAPABILITY_LABELS,
@@ -81,24 +84,28 @@ function AgentPicker({
     <div className="relative flex items-center">
       {/* Avatar — opens agent info panel */}
       <Tooltip content={"\u667a\u80fd\u4f53\u4fe1\u606f"} side="bottom">
-        <button
+        <Button
+          variant="ghost"
+          size="icon-xs"
           onClick={(e) => { e.stopPropagation(); onAvatarClick?.(); }}
-          className="w-6 h-6 rounded-lg bg-gradient-to-br from-accent/30 to-accent/10 border border-border/20 flex items-center justify-center text-[12px] flex-shrink-0 hover:from-accent/50 hover:to-accent/25 hover:border-border/40 transition-all duration-150 active:scale-95 mr-1"
+          className="w-6 h-6 rounded-lg bg-gradient-to-br from-accent/30 to-accent/10 border border-border/20 text-sm flex-shrink-0 hover:from-accent/50 hover:to-accent/25 hover:border-border/40 active:scale-95 mr-1 p-0"
         >
           {selectedAgent.avatar}
-        </button>
+        </Button>
       </Tooltip>
 
       {/* Name + Chevron — opens picker dropdown */}
-      <button
+      <Button
+        variant="ghost"
+        size="xs"
         onClick={handleOpen}
-        className={`flex items-center gap-1 px-1.5 py-[4px] rounded-md text-[10.5px] transition-all duration-100 ${
+        className={`gap-1 px-1.5 py-[3px] h-auto text-xs ${
           open ? 'bg-accent/25 text-foreground' : 'text-foreground/75 hover:text-foreground hover:bg-accent/15'
         }`}
       >
         <span className="truncate max-w-[160px]">{selectedAgent.name}</span>
         <ChevronDown size={8} className={`text-muted-foreground/50 flex-shrink-0 transition-transform duration-100 ${open ? 'rotate-180' : ''}`} />
-      </button>
+      </Button>
 
       <AnimatePresence>
         {open && (
@@ -116,17 +123,17 @@ function AgentPicker({
               <div className="px-2 pt-2 pb-1">
                 <div className="flex items-center gap-1.5 px-2 py-[5px] rounded-md bg-accent/15 border border-border/20">
                   <SearchIcon size={10} className="text-muted-foreground/40 flex-shrink-0" />
-                  <input
+                  <Input
                     ref={searchRef}
                     value={search}
                     onChange={e => setSearch(e.target.value)}
                     placeholder={"\u641c\u7d22\u667a\u80fd\u4f53..."}
-                    className="flex-1 bg-transparent text-[10px] text-foreground placeholder:text-muted-foreground/30 outline-none min-w-0"
+                    className="flex-1 h-auto border-0 bg-transparent shadow-none focus-visible:ring-0 text-xs text-foreground placeholder:text-muted-foreground/30 p-0 rounded-none min-w-0"
                   />
                   {search && (
-                    <button onClick={() => setSearch('')} className="text-muted-foreground/30 hover:text-muted-foreground/60">
+                    <Button variant="ghost" size="icon-xs" onClick={() => setSearch('')} className="w-auto h-auto p-0 text-muted-foreground/30 hover:text-muted-foreground/60 hover:bg-transparent">
                       <X size={8} />
-                    </button>
+                    </Button>
                   )}
                 </div>
               </div>
@@ -136,17 +143,19 @@ function AgentPicker({
                 <div className="flex items-center gap-1 flex-wrap">
                   <Tag size={8} className="text-muted-foreground/30 flex-shrink-0" />
                   {AGENT_TAGS.map(tag => (
-                    <button
+                    <Button
                       key={tag}
+                      variant="ghost"
+                      size="xs"
                       onClick={() => setActiveTag(activeTag === tag ? null : tag)}
-                      className={`px-1.5 py-px rounded-full text-[8px] transition-all ${
+                      className={`px-1.5 py-px h-auto rounded-full text-[8px] ${
                         activeTag === tag
                           ? 'bg-foreground/10 text-foreground/70 border border-border/40'
                           : 'bg-accent/20 text-muted-foreground/50 border border-transparent hover:bg-accent/40 hover:text-muted-foreground/70'
                       }`}
                     >
                       {tag}
-                    </button>
+                    </Button>
                   ))}
                 </div>
               </div>
@@ -159,38 +168,42 @@ function AgentPicker({
                   <div className="px-2.5 py-3 text-center text-[9px] text-muted-foreground/40">{"\u65e0\u5339\u914d\u7ed3\u679c"}</div>
                 ) : (
                   filtered.map(a => (
-                    <button
+                    <Button
                       key={a.id}
+                      variant="ghost"
+                      size="xs"
                       onClick={() => { onSelectAgent(a); setOpen(false); }}
-                      className={`flex items-center gap-2 w-full px-2 py-[5px] rounded-lg text-[10.5px] transition-all duration-75 mb-px ${
+                      className={`w-full justify-start gap-2 px-2 py-[5px] h-auto text-xs mb-px ${
                         selectedAgent.id === a.id
                           ? 'bg-accent/30 text-foreground ring-1 ring-border/30'
                           : 'text-foreground/75 hover:text-foreground hover:bg-accent/15'
                       }`}
                     >
-                      <span className="text-[11px] flex-shrink-0">{a.avatar}</span>
+                      <span className="text-xs flex-shrink-0">{a.avatar}</span>
                       <div className="flex flex-col items-start min-w-0 flex-1">
-                        <span className="truncate text-[10.5px]">{a.name}</span>
+                        <span className="truncate text-xs">{a.name}</span>
                         <span className="text-[9px] text-muted-foreground/45">{a.desc}</span>
                       </div>
                       {selectedAgent.id === a.id && (
                         <Check size={9} className="text-cherry-primary flex-shrink-0" />
                       )}
-                    </button>
+                    </Button>
                   ))
                 )}
               </div>
 
               <div className="h-px bg-border/25 mx-1" />
               <div className="p-1">
-                <button
+                <Button
+                  variant="ghost"
+                  size="xs"
                   onClick={() => { setOpen(false); onCreateNew(); }}
-                  className="flex items-center gap-2 w-full px-2.5 py-[6px] rounded-md text-[10.5px] text-muted-foreground hover:text-foreground hover:bg-accent/20 transition-colors"
+                  className="w-full justify-start gap-2 px-2.5 py-[6px] h-auto text-xs text-muted-foreground hover:text-foreground hover:bg-accent/20"
                 >
                   <Plus size={10} className="flex-shrink-0" />
                   <span>{"\u53bb\u8d44\u6e90\u5e93\u521b\u5efa"}</span>
                   <ChevronRight size={9} className="ml-auto text-muted-foreground/40" />
-                </button>
+                </Button>
               </div>
             </motion.div>
           </div>
@@ -254,8 +267,8 @@ function NewSessionEmpty({ onSendMessage }: { onSendMessage: (text: string) => v
           >
             <Sparkles size={18} strokeWidth={1.2} className="text-cherry-text-muted" />
           </motion.div>
-          <h2 className="text-[13px] text-foreground/90 tracking-[-0.02em]">{"\u9700\u8981\u6211\u5e2e\u4f60\u6784\u5efa\u4ec0\u4e48\uff1f"}</h2>
-          <p className="text-[10px] text-muted-foreground/45 text-center leading-[1.6] mt-1.5 mb-5">
+          <h2 className="text-sm text-foreground/90 tracking-[-0.02em]">{"\u9700\u8981\u6211\u5e2e\u4f60\u6784\u5efa\u4ec0\u4e48\uff1f"}</h2>
+          <p className="text-xs text-muted-foreground/45 text-center leading-[1.6] mt-1.5 mb-5">
             {"\u63cf\u8ff0\u4f60\u60f3\u8981\u6784\u5efa\u7684\u5185\u5bb9\uff0cAI \u5c06\u4e3a\u4f60\u5b8c\u6210\u5168\u8fc7\u7a0b"}
           </p>
 
@@ -275,31 +288,29 @@ function NewSessionEmpty({ onSendMessage }: { onSendMessage: (text: string) => v
                 placeholder={"\u8bf7\u8f93\u5165\u4f60\u60f3\u8981\u4e86\u89e3\u7684\u95ee\u9898"}
                 rows={1}
                 autoFocus
-                className="w-full bg-transparent text-[12px] text-foreground placeholder:text-muted-foreground/35 outline-none resize-none min-h-[44px] max-h-[120px] leading-[1.6] px-4 pt-3.5 pb-[38px]"
+                className="w-full bg-transparent text-sm text-foreground placeholder:text-muted-foreground/35 outline-none resize-none min-h-[44px] max-h-[120px] leading-[1.6] px-4 pt-3.5 pb-[38px]"
               />
               <div className="absolute bottom-[8px] left-3 right-3 flex items-center justify-between">
                 <div className="flex items-center gap-0.5">
-                  <Tooltip content={"\u6dfb\u52a0"} side="top"><button className="p-[4px] rounded-lg text-muted-foreground/40 hover:text-muted-foreground/70 hover:bg-accent/15 transition-colors">
+                  <Tooltip content={"\u6dfb\u52a0"} side="top"><Button variant="ghost" size="icon-xs" className="p-[4px] w-auto h-auto rounded-lg text-muted-foreground/40 hover:text-muted-foreground/70 hover:bg-accent/15">
                     <Plus size={13} />
-                  </button></Tooltip>
-                  <Tooltip content={"\u4ee3\u7801"} side="top"><button className="p-[4px] rounded-lg text-muted-foreground/40 hover:text-muted-foreground/70 hover:bg-accent/15 transition-colors">
+                  </Button></Tooltip>
+                  <Tooltip content={"\u4ee3\u7801"} side="top"><Button variant="ghost" size="icon-xs" className="p-[4px] w-auto h-auto rounded-lg text-muted-foreground/40 hover:text-muted-foreground/70 hover:bg-accent/15">
                     <Code2 size={12} />
-                  </button></Tooltip>
-                  <Tooltip content={"\u6dfb\u52a0\u6587\u4ef6\u5939"} side="top"><button className="p-[4px] rounded-lg text-muted-foreground/40 hover:text-muted-foreground/70 hover:bg-accent/15 transition-colors">
+                  </Button></Tooltip>
+                  <Tooltip content={"\u6dfb\u52a0\u6587\u4ef6\u5939"} side="top"><Button variant="ghost" size="icon-xs" className="p-[4px] w-auto h-auto rounded-lg text-muted-foreground/40 hover:text-muted-foreground/70 hover:bg-accent/15">
                     <Folder size={12} />
-                  </button></Tooltip>
+                  </Button></Tooltip>
                 </div>
-                <button
+                <Button
+                  variant="default"
+                  size="icon"
                   onClick={handleSend}
                   disabled={!input.trim()}
-                  className={`w-6 h-6 rounded-full flex items-center justify-center transition-all duration-150 ${
-                    input.trim()
-                      ? 'bg-cherry-primary text-white hover:bg-cherry-primary-hover active:scale-[0.92] shadow-sm shadow-cherry-shadow'
-                      : 'bg-accent/50 text-muted-foreground/25 cursor-not-allowed'
-                  }`}
+                  className="w-6 h-6 rounded-full"
                 >
                   <ArrowUp size={13} strokeWidth={2} />
-                </button>
+                </Button>
               </div>
             </div>
           </motion.div>
@@ -319,7 +330,7 @@ function NewSessionEmpty({ onSendMessage }: { onSendMessage: (text: string) => v
                   <s.icon size={11} strokeWidth={1.5} className="text-muted-foreground/50 group-hover:text-cherry-primary transition-colors" />
                 </div>
                 <div className="flex flex-col gap-0 min-w-0">
-                  <span className="text-[10.5px] text-foreground/65 group-hover:text-foreground/85 transition-colors truncate">{s.label}</span>
+                  <span className="text-xs text-foreground/65 group-hover:text-foreground/85 transition-colors truncate">{s.label}</span>
                   <span className="text-[9px] text-muted-foreground/35 leading-[1.3] truncate">{s.desc}</span>
                 </div>
               </motion.button>
@@ -336,81 +347,22 @@ function NewSessionEmpty({ onSendMessage }: { onSendMessage: (text: string) => v
 // ===========================
 
 function CompactSessionSelector({
-  sessions,
   activeSession,
-  onSelectSession,
-  onOpenHistory,
 }: {
   sessions: AgentSession[];
   activeSession: AgentSession | undefined;
   onSelectSession: (id: string) => void;
   onOpenHistory: () => void;
 }) {
-  const [open, setOpen] = useState(false);
-  const recentSessions = sessions.slice(0, 6);
-
   return (
-    <div className="relative">
-      <button
-        onClick={() => setOpen(!open)}
-        className={`flex items-center gap-1.5 px-2 py-[4px] rounded-md text-[10.5px] transition-all duration-100 max-w-[200px] ${
-          open ? 'bg-accent/25 text-foreground' : 'text-foreground/75 hover:text-foreground hover:bg-accent/15'
-        }`}
-      >
-        <Bot size={11} className="text-muted-foreground flex-shrink-0" />
-        <span className="truncate">
-          {activeSession ? activeSession.title : '\u65b0\u4f1a\u8bdd'}
-        </span>
-        <ChevronDown size={8} className={`text-muted-foreground/50 flex-shrink-0 transition-transform duration-100 ${open ? 'rotate-180' : ''}`} />
-      </button>
-
-      <AnimatePresence>
-        {open && (
-          <div>
-            <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
-            <motion.div
-              initial={{ opacity: 0, y: -3 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -3 }}
-              transition={{ duration: 0.1 }}
-              className="absolute top-full left-0 mt-1 z-50 bg-popover border border-border/40 rounded-lg shadow-xl shadow-black/10 p-1 min-w-[240px] max-w-[280px]"
-            >
-              {recentSessions.map(s => (
-                <button
-                  key={s.id}
-                  onClick={() => { onSelectSession(s.id); setOpen(false); }}
-                  className={`flex items-center gap-2 w-full px-2 py-[5px] rounded-lg text-[10.5px] transition-all duration-75 mb-px ${
-                    activeSession?.id === s.id
-                      ? 'bg-accent/30 text-foreground ring-1 ring-border/30'
-                      : 'text-foreground/75 hover:text-foreground hover:bg-accent/15'
-                  }`}
-                >
-                  <div className={`w-4 h-4 rounded-[3px] flex items-center justify-center flex-shrink-0 ${
-                    activeSession?.id === s.id ? 'bg-foreground/10' : 'bg-accent/30'
-                  }`}>
-                    <Bot size={8} className="text-muted-foreground" />
-                  </div>
-                  <span className="flex-1 truncate">{s.title}</span>
-                  {s.status === 'active' && (
-                    <span className="w-[5px] h-[5px] rounded-full bg-cherry-primary flex-shrink-0" />
-                  )}
-                  <span className="text-[9px] text-muted-foreground/55 flex-shrink-0">{s.timestamp}</span>
-                </button>
-              ))}
-
-              <div className="h-px bg-border/25 my-1" />
-              <button
-                onClick={() => { setOpen(false); onOpenHistory(); }}
-                className="flex items-center gap-2 w-full px-2.5 py-[6px] rounded-md text-[10.5px] text-muted-foreground hover:text-foreground hover:bg-accent/20 transition-colors"
-              >
-                <History size={10} className="flex-shrink-0" />
-                <span>{"\u67e5\u770b\u5168\u90e8\u5386\u53f2\u8bb0\u5f55"}</span>
-                <ChevronRight size={9} className="ml-auto text-muted-foreground/40" />
-              </button>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
+    <div className="flex items-center gap-1.5 px-2 py-[4px] text-xs text-foreground/75 max-w-[200px]">
+      <Bot size={11} className="text-muted-foreground flex-shrink-0" />
+      <span className="truncate">
+        {activeSession ? activeSession.title : '新会话'}
+      </span>
+      {activeSession?.status === 'active' && (
+        <span className="w-[5px] h-[5px] rounded-full bg-cherry-primary flex-shrink-0" />
+      )}
     </div>
   );
 }
@@ -420,20 +372,7 @@ function CompactSessionSelector({
 // ===========================
 
 function CapToggle({ checked, onChange }: { checked: boolean; onChange: (v: boolean) => void }) {
-  return (
-    <button
-      onClick={() => onChange(!checked)}
-      className={`w-[28px] h-[16px] rounded-full flex-shrink-0 transition-colors duration-150 relative ${
-        checked ? 'bg-cherry-primary' : 'bg-muted-foreground/20'
-      }`}
-    >
-      <motion.span
-        animate={{ x: checked ? 13 : 1 }}
-        transition={{ type: 'spring', stiffness: 500, damping: 30 }}
-        className="absolute top-[2px] w-[12px] h-[12px] rounded-full bg-white shadow-sm"
-      />
-    </button>
-  );
+  return <Switch checked={checked} onCheckedChange={onChange} />;
 }
 
 // ===========================
@@ -490,10 +429,10 @@ function AddCapabilityPanel({ tab, existingIds, onAdd, onClose, onBrowse }: {
     >
       {/* Header */}
       <div className="flex items-center gap-2 px-4 h-[38px] flex-shrink-0 border-b border-border/10">
-        <button onClick={onClose} className="p-1 rounded text-muted-foreground hover:text-foreground hover:bg-accent/15 transition-colors">
+        <Button variant="ghost" size="icon-xs" onClick={onClose} className="p-1 w-auto h-auto text-muted-foreground hover:text-foreground hover:bg-accent/15">
           <ArrowLeft size={12} />
-        </button>
-        <span className="text-[11px] text-foreground">{"\u6dfb\u52a0"}{tabLabel}</span>
+        </Button>
+        <span className="text-xs text-foreground">{"\u6dfb\u52a0"}{tabLabel}</span>
         <span className="text-[9px] text-muted-foreground/40 ml-auto">{catalog.length} {"\u9879\u53ef\u7528"}</span>
       </div>
 
@@ -501,17 +440,17 @@ function AddCapabilityPanel({ tab, existingIds, onAdd, onClose, onBrowse }: {
       <div className="px-3 pt-2.5 pb-1.5">
         <div className="flex items-center gap-1.5 px-2.5 py-[5px] rounded-lg bg-accent/15 border border-border/15">
           <SearchIcon size={10} className="text-muted-foreground/40 flex-shrink-0" />
-          <input
+          <Input
             ref={searchRef}
             value={search}
             onChange={e => setSearch(e.target.value)}
             placeholder={`\u641c\u7d22${tabLabel}...`}
-            className="flex-1 bg-transparent text-[10px] text-foreground placeholder:text-muted-foreground/30 outline-none min-w-0"
+            className="flex-1 h-auto border-0 bg-transparent shadow-none focus-visible:ring-0 text-xs text-foreground placeholder:text-muted-foreground/30 p-0 rounded-none min-w-0"
           />
           {search && (
-            <button onClick={() => setSearch('')} className="text-muted-foreground/30 hover:text-muted-foreground/60">
+            <Button variant="ghost" size="icon-xs" onClick={() => setSearch('')} className="w-auto h-auto p-0 text-muted-foreground/30 hover:text-muted-foreground/60 hover:bg-transparent">
               <X size={8} />
-            </button>
+            </Button>
           )}
         </div>
       </div>
@@ -520,17 +459,19 @@ function AddCapabilityPanel({ tab, existingIds, onAdd, onClose, onBrowse }: {
       {tab === 'tools' && (
         <div className="px-3 pb-1.5 flex items-center gap-1 flex-wrap">
           {BUILTIN_TOOL_CATEGORIES.map(cat => (
-            <button
+            <Button
               key={cat}
+              variant="ghost"
+              size="xs"
               onClick={() => setActiveCat(activeCat === cat ? null : cat)}
-              className={`px-1.5 py-px rounded-full text-[8.5px] transition-all border ${
+              className={`px-1.5 py-px h-auto rounded-full text-[8.5px] border ${
                 activeCat === cat
                   ? 'bg-foreground/8 text-foreground/70 border-border/40'
                   : 'bg-accent/15 text-muted-foreground/50 border-transparent hover:bg-accent/30'
               }`}
             >
               {cat}
-            </button>
+            </Button>
           ))}
         </div>
       )}
@@ -540,7 +481,7 @@ function AddCapabilityPanel({ tab, existingIds, onAdd, onClose, onBrowse }: {
         {filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-8 text-center">
             <SearchIcon size={16} className="text-muted-foreground/20 mb-2" />
-            <span className="text-[10px] text-muted-foreground/40">{"\u65e0\u5339\u914d\u7ed3\u679c"}</span>
+            <span className="text-xs text-muted-foreground/40">{"\u65e0\u5339\u914d\u7ed3\u679c"}</span>
           </div>
         ) : tab === 'tools' && grouped ? (
           Array.from(grouped.entries()).map(([cat, items]) => (
@@ -551,13 +492,13 @@ function AddCapabilityPanel({ tab, existingIds, onAdd, onClose, onBrowse }: {
                   <div key={item.id} className="flex items-center gap-2 px-2.5 py-[7px] rounded-lg hover:bg-accent/15 transition-colors group">
                     <Wrench size={10} className="text-muted-foreground/40 flex-shrink-0" />
                     <div className="flex-1 min-w-0">
-                      <div className="text-[10px] text-foreground/75 truncate">{item.name}</div>
+                      <div className="text-xs text-foreground/75 truncate">{item.name}</div>
                       <div className="text-[9px] text-muted-foreground/40 truncate">{item.desc}</div>
                     </div>
-                    <button onClick={() => onAdd(item.id)}
-                      className="p-[3px] rounded text-[10px] text-muted-foreground/30 hover:text-cherry-primary hover:bg-cherry-active-bg transition-colors opacity-0 group-hover:opacity-100">
+                    <Button variant="ghost" size="icon-xs" onClick={() => onAdd(item.id)}
+                      className="p-[3px] w-auto h-auto text-muted-foreground/30 hover:text-cherry-primary hover:bg-cherry-active-bg opacity-0 group-hover:opacity-100">
                       <Plus size={11} />
-                    </button>
+                    </Button>
                   </div>
                 ))}
               </div>
@@ -568,20 +509,20 @@ function AddCapabilityPanel({ tab, existingIds, onAdd, onClose, onBrowse }: {
             {filtered.map((item: any) => (
               <div key={item.id} className="flex items-center gap-2 px-2.5 py-[7px] rounded-lg hover:bg-accent/15 transition-colors group">
                 {tab === 'mcp' ? (
-                  <Cable size={10} className="text-blue-500/40 flex-shrink-0" />
+                  <Cable size={10} className="text-info/40 flex-shrink-0" />
                 ) : (
-                  <Zap size={10} className="text-amber-500/40 flex-shrink-0" />
+                  <Zap size={10} className="text-warning/40 flex-shrink-0" />
                 )}
                 <div className="flex-1 min-w-0">
-                  <div className="text-[10px] text-foreground/75 truncate">{item.name}</div>
+                  <div className="text-xs text-foreground/75 truncate">{item.name}</div>
                   <div className="text-[9px] text-muted-foreground/40 truncate">
                     {tab === 'mcp' ? item.author : item.desc}
                   </div>
                 </div>
-                <button onClick={() => onAdd(item.id)}
-                  className="p-[3px] rounded text-[10px] text-muted-foreground/30 hover:text-cherry-primary hover:bg-cherry-active-bg transition-colors opacity-0 group-hover:opacity-100">
+                <Button variant="ghost" size="icon-xs" onClick={() => onAdd(item.id)}
+                  className="p-[3px] w-auto h-auto text-muted-foreground/30 hover:text-cherry-primary hover:bg-cherry-active-bg opacity-0 group-hover:opacity-100">
                   <Plus size={11} />
-                </button>
+                </Button>
               </div>
             ))}
           </div>
@@ -590,21 +531,25 @@ function AddCapabilityPanel({ tab, existingIds, onAdd, onClose, onBrowse }: {
 
       {/* Bottom actions */}
       <div className="px-3 pb-3 pt-1.5 border-t border-border/10 space-y-1.5">
-        <button
+        <Button
+          variant="ghost"
+          size="xs"
           onClick={onBrowse}
-          className="flex items-center gap-2 w-full px-2.5 py-[7px] rounded-lg text-[10px] text-foreground/60 hover:text-foreground hover:bg-accent/15 transition-colors"
+          className="w-full justify-start gap-2 px-2.5 py-[7px] h-auto text-xs text-foreground/60 hover:text-foreground hover:bg-accent/15"
         >
           <Compass size={11} className="text-muted-foreground/50" />
           <span>{"\u53bb\u63a2\u7d22\u6d4f\u89c8"}</span>
           <ChevronRight size={9} className="ml-auto text-muted-foreground/30" />
-        </button>
-        <button
-          className="flex items-center gap-2 w-full px-2.5 py-[7px] rounded-lg text-[10px] text-foreground/60 hover:text-foreground hover:bg-accent/15 transition-colors"
+        </Button>
+        <Button
+          variant="ghost"
+          size="xs"
+          className="w-full justify-start gap-2 px-2.5 py-[7px] h-auto text-xs text-foreground/60 hover:text-foreground hover:bg-accent/15"
         >
           <PenTool size={10} className="text-muted-foreground/50" />
           <span>{"\u624b\u52a8\u6dfb\u52a0"}</span>
           <ChevronRight size={9} className="ml-auto text-muted-foreground/30" />
-        </button>
+        </Button>
       </div>
     </motion.div>
   );
@@ -678,17 +623,17 @@ function AgentInfoPanel({ agent, onClose, onEdit }: {
       <div className="flex items-center justify-between px-4 h-[38px] flex-shrink-0">
         <div className="flex items-center gap-2">
           <Bot size={12} className="text-muted-foreground" />
-          <span className="text-[11px] text-foreground">{"\u667a\u80fd\u4f53\u4fe1\u606f"}</span>
+          <span className="text-xs text-foreground">{"\u667a\u80fd\u4f53\u4fe1\u606f"}</span>
         </div>
         <div className="flex items-center gap-0.5">
           <Tooltip content={"\u5728\u8d44\u6e90\u5e93\u4e2d\u7f16\u8f91"} side="bottom">
-            <button onClick={onEdit} className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-accent/15 transition-colors">
+            <Button variant="ghost" size="icon-xs" onClick={onEdit} className="p-1.5 w-auto h-auto text-muted-foreground hover:text-foreground hover:bg-accent/15">
               <Edit3 size={11} />
-            </button>
+            </Button>
           </Tooltip>
-          <button onClick={onClose} className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-accent/15 transition-colors">
+          <Button variant="ghost" size="icon-xs" onClick={onClose} className="p-1.5 w-auto h-auto text-muted-foreground hover:text-foreground hover:bg-accent/15">
             <X size={12} />
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -696,12 +641,12 @@ function AgentInfoPanel({ agent, onClose, onEdit }: {
         <div className="p-4 space-y-3.5">
           {/* Avatar + Name + Desc */}
           <div className="flex items-start gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-accent/30 to-accent/10 border border-border/20 flex items-center justify-center text-[20px] flex-shrink-0">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-accent/30 to-accent/10 border border-border/20 flex items-center justify-center text-xl flex-shrink-0">
               {agent.avatar}
             </div>
             <div className="flex-1 min-w-0">
-              <h3 className="text-[13px] text-foreground mb-0.5">{agent.name}</h3>
-              <p className="text-[10px] text-muted-foreground/60 leading-[1.5]">{agent.desc}</p>
+              <h3 className="text-sm text-foreground mb-0.5">{agent.name}</h3>
+              <p className="text-xs text-muted-foreground/60 leading-[1.5]">{agent.desc}</p>
               <div className="flex items-center gap-2 text-[9px] text-muted-foreground/45 mt-1.5">
                 <Clock size={9} />
                 <span>{"\u6700\u8fd1\u4f7f\u7528"} {agent.updatedAt}</span>
@@ -720,29 +665,29 @@ function AgentInfoPanel({ agent, onClose, onEdit }: {
 
           {/* Info rows */}
           <div className="space-y-[6px]">
-            <div className="flex items-center justify-between text-[10px]">
+            <div className="flex items-center justify-between text-xs">
               <span className="text-muted-foreground/70">{"\u9ed8\u8ba4\u6a21\u578b"}</span>
               <div className="flex items-center gap-1.5 px-2 py-[3px] rounded-md bg-accent/20">
                 <Sparkles size={9} className="text-muted-foreground/50" />
                 <span className="text-foreground/80">{agent.model}</span>
               </div>
             </div>
-            <div className="flex items-center justify-between text-[10px]">
+            <div className="flex items-center justify-between text-xs">
               <span className="text-muted-foreground/70">{"\u8fd0\u884c\u6a21\u5f0f"}</span>
               <div className="flex items-center gap-1.5">
                 <Workflow size={9} className={modeInfo.color} />
                 <span className={modeInfo.color}>{modeInfo.label}</span>
               </div>
             </div>
-            <div className="flex items-center justify-between text-[10px]">
+            <div className="flex items-center justify-between text-xs">
               <span className="text-muted-foreground/70">{"\u6700\u5927\u8f6e\u6b21"}</span>
               <span className="text-foreground/70 tabular-nums">{agent.maxRounds}</span>
             </div>
-            <div className="flex items-center justify-between text-[10px]">
+            <div className="flex items-center justify-between text-xs">
               <span className="text-muted-foreground/70">{"\u5de5\u4f5c\u76ee\u5f55"}</span>
               <span className="text-foreground/60 font-mono text-[9px]">{agent.workDir}</span>
             </div>
-            <div className="flex items-center justify-between text-[10px]">
+            <div className="flex items-center justify-between text-xs">
               <span className="text-muted-foreground/70">{"\u81ea\u52a8\u6279\u51c6"}</span>
               <span className={agent.autoApprove ? 'text-cherry-primary' : 'text-muted-foreground/50'}>
                 {agent.autoApprove ? '\u5df2\u5f00\u542f' : '\u5df2\u5173\u95ed'}
@@ -752,19 +697,19 @@ function AgentInfoPanel({ agent, onClose, onEdit }: {
 
           {/* System prompt — collapsible */}
           <div className="rounded-lg bg-muted/15 overflow-hidden">
-            <button onClick={() => setPromptExpanded(!promptExpanded)}
-              className="flex items-center gap-2 w-full px-3 py-2 text-[10.5px] text-foreground/80 hover:bg-accent/10 transition-colors">
+            <Button variant="ghost" size="xs" onClick={() => setPromptExpanded(!promptExpanded)}
+              className="w-full justify-start gap-2 px-3 py-2 h-auto text-xs text-foreground/80 hover:bg-accent/10">
               <FileText size={10} className="text-muted-foreground flex-shrink-0" />
               <span className="flex-1 text-left">{"\u7cfb\u7edf\u63d0\u793a\u8bcd"}</span>
               <motion.div animate={{ rotate: promptExpanded ? 90 : 0 }} transition={{ duration: 0.1 }}>
                 <ChevronRight size={10} className="text-muted-foreground/50" />
               </motion.div>
-            </button>
+            </Button>
             <AnimatePresence initial={false}>
               {promptExpanded && (
                 <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.15 }} className="overflow-hidden">
                   <div className="px-3 pb-3">
-                    <pre className="text-[10px] text-foreground/60 leading-[1.7] whitespace-pre-wrap mt-1 font-sans">{agent.systemPrompt}</pre>
+                    <pre className="text-xs text-foreground/60 leading-[1.7] whitespace-pre-wrap mt-1 font-sans">{agent.systemPrompt}</pre>
                   </div>
                 </motion.div>
               )}
@@ -776,15 +721,13 @@ function AgentInfoPanel({ agent, onClose, onEdit }: {
             <div className="flex items-center justify-between mb-2.5">
               <div className="flex items-center gap-1.5">
                 <Layers size={10} className="text-muted-foreground" />
-                <span className="text-[10.5px] text-foreground/70">{"\u80fd\u529b\u6269\u5c55"}</span>
+                <span className="text-xs text-foreground/70">{"\u80fd\u529b\u6269\u5c55"}</span>
               </div>
               <Tooltip content={`\u6dfb\u52a0${capTab === 'tools' ? '\u5185\u7f6e\u5de5\u5177' : capTab === 'mcp' ? 'MCP Server' : 'Skill'}`} side="left">
-                <button
-                  onClick={() => setShowAddPanel(true)}
-                  className="p-[3px] rounded text-muted-foreground/40 hover:text-foreground/70 hover:bg-accent/20 transition-colors"
-                >
+                <Button variant="ghost" size="icon-xs" onClick={() => setShowAddPanel(true)}
+                  className="p-[3px] w-auto h-auto text-muted-foreground/40 hover:text-foreground/70 hover:bg-accent/20">
                   <Plus size={11} />
-                </button>
+                </Button>
               </Tooltip>
             </div>
 
@@ -796,10 +739,12 @@ function AgentInfoPanel({ agent, onClose, onEdit }: {
                   : `${enabledSkillCount}/${skills.length}`;
                 const active = capTab === t.key;
                 return (
-                  <button
+                  <Button
                     key={t.key}
+                    variant="ghost"
+                    size="xs"
                     onClick={() => setCapTab(t.key)}
-                    className={`relative px-2.5 pb-[7px] pt-[3px] text-[10px] transition-colors ${
+                    className={`relative px-2.5 pb-[7px] pt-[3px] h-auto rounded-none text-xs ${
                       active ? 'text-foreground' : 'text-muted-foreground/50 hover:text-muted-foreground/80'
                     }`}
                   >
@@ -812,7 +757,7 @@ function AgentInfoPanel({ agent, onClose, onEdit }: {
                         transition={{ type: 'spring', stiffness: 400, damping: 30 }}
                       />
                     )}
-                  </button>
+                  </Button>
                 );
               })}
             </div>
@@ -825,7 +770,7 @@ function AgentInfoPanel({ agent, onClose, onEdit }: {
                   <div className="flex flex-col items-center py-5 text-center">
                     <Wrench size={16} className="text-muted-foreground/15 mb-1.5" />
                     <span className="text-[9.5px] text-muted-foreground/35">{"\u672a\u6dfb\u52a0\u5185\u7f6e\u5de5\u5177"}</span>
-                    <button onClick={() => setShowAddPanel(true)} className="text-[9px] text-cherry-text-muted hover:text-cherry-primary mt-1 transition-colors">{"+ \u6dfb\u52a0\u5de5\u5177"}</button>
+                    <Button variant="ghost" size="xs" onClick={() => setShowAddPanel(true)} className="text-[9px] text-cherry-text-muted hover:text-cherry-primary mt-1 h-auto p-0">{"+ \u6dfb\u52a0\u5de5\u5177"}</Button>
                   </div>
                 ) : (
                   <div className="space-y-3">
@@ -862,17 +807,17 @@ function AgentInfoPanel({ agent, onClose, onEdit }: {
                   <div className="flex flex-col items-center py-5 text-center">
                     <Cable size={16} className="text-muted-foreground/15 mb-1.5" />
                     <span className="text-[9.5px] text-muted-foreground/35">{"\u672a\u6dfb\u52a0 MCP Server"}</span>
-                    <button onClick={() => setShowAddPanel(true)} className="text-[9px] text-cherry-text-muted hover:text-cherry-primary mt-1 transition-colors">{"+ \u6dfb\u52a0 MCP"}</button>
+                    <Button variant="ghost" size="xs" onClick={() => setShowAddPanel(true)} className="text-[9px] text-cherry-text-muted hover:text-cherry-primary mt-1 h-auto p-0">{"+ \u6dfb\u52a0 MCP"}</Button>
                   </div>
                 ) : (
                   <div className="space-y-0.5">
                     {mcpServices.map(svc => (
                       <div key={svc.id} className="flex items-center gap-2.5 px-2.5 py-[7px] rounded-lg hover:bg-accent/10 transition-colors group">
                         <div className="w-6 h-6 rounded-md bg-accent/20 flex items-center justify-center flex-shrink-0">
-                          <Cable size={11} className="text-blue-500/60" />
+                          <Cable size={11} className="text-info/60" />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <div className="text-[10px] text-foreground/75 truncate">{svc.name}</div>
+                          <div className="text-xs text-foreground/75 truncate">{svc.name}</div>
                           <div className="text-[8.5px] text-muted-foreground/35 truncate">{svc.desc}</div>
                         </div>
                         <span className={`w-[6px] h-[6px] rounded-full flex-shrink-0 ${
@@ -890,15 +835,15 @@ function AgentInfoPanel({ agent, onClose, onEdit }: {
                   <div className="flex flex-col items-center py-5 text-center">
                     <Zap size={16} className="text-muted-foreground/15 mb-1.5" />
                     <span className="text-[9.5px] text-muted-foreground/35">{"\u672a\u6dfb\u52a0 Skill"}</span>
-                    <button onClick={() => setShowAddPanel(true)} className="text-[9px] text-cherry-text-muted hover:text-cherry-primary mt-1 transition-colors">{"+ \u6dfb\u52a0 Skill"}</button>
+                    <Button variant="ghost" size="xs" onClick={() => setShowAddPanel(true)} className="text-[9px] text-cherry-text-muted hover:text-cherry-primary mt-1 h-auto p-0">{"+ \u6dfb\u52a0 Skill"}</Button>
                   </div>
                 ) : (
                   <div className="space-y-0.5">
                     {skills.map(skill => (
                       <div key={skill.id} className="flex items-center gap-2.5 px-2.5 py-[7px] rounded-lg hover:bg-accent/10 transition-colors">
-                        <Zap size={10} className={`flex-shrink-0 ${skill.enabled ? 'text-amber-500/60' : 'text-muted-foreground/25'}`} />
+                        <Zap size={10} className={`flex-shrink-0 ${skill.enabled ? 'text-warning/60' : 'text-muted-foreground/25'}`} />
                         <div className="flex-1 min-w-0">
-                          <div className={`text-[10px] truncate ${skill.enabled ? 'text-foreground/75' : 'text-muted-foreground/40'}`}>{skill.name}</div>
+                          <div className={`text-xs truncate ${skill.enabled ? 'text-foreground/75' : 'text-muted-foreground/40'}`}>{skill.name}</div>
                           <div className="text-[8.5px] text-muted-foreground/35 truncate">{skill.desc}</div>
                         </div>
                         <CapToggle checked={skill.enabled} onChange={() => {}} />
@@ -949,7 +894,8 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
   }, [activeProvider, mdlSearch, mdlCapFilter]);
   const [showExplorer, setShowExplorer] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
-  const [showHistory, setShowHistory] = useState(false);
+  const historySidebar = useHistorySidebar('hidden');
+  const [historyDisplayMode, setHistoryDisplayMode] = useState<SessionDisplayMode>('floating');
   const [selectedAgent, setSelectedAgent] = useState(AVAILABLE_AGENTS[0]);
   const [previewMaximized, setPreviewMaximized] = useState(false);
   const [showAgentInfo, setShowAgentInfo] = useState(false);
@@ -980,15 +926,10 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
     setActiveSessionId(id);
     const data = SESSION_DATA_MAP[id];
     if (data) {
-      setSelectedFile(null);
-      setShowPreview(true);
-      setShowExplorer(true);
       const firstKey = Object.keys(data.fileContents)[0] || null;
       setSelectedFile(firstKey);
     } else {
       setSelectedFile(null);
-      setShowPreview(true);
-      setShowExplorer(true);
     }
   }, []);
 
@@ -1099,37 +1040,73 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
   }
 
   return (
-    <div className="flex flex-col h-full bg-background select-none relative">
-      {/* ===== Header ===== */}
-      <header className="flex items-center justify-between px-3 border-b border-transparent flex-shrink-0 h-[40px]">
-        <div className="flex items-center gap-1.5">
-          {onBack && (
-            <button onClick={onBack}
-              className="p-1.5 rounded text-muted-foreground hover:text-foreground hover:bg-accent/20 transition-colors">
-              <ArrowLeft size={13} />
-            </button>
-          )}
+    <div className="flex h-full bg-background select-none relative">
+      {/* ===== Left: History Sidebar (compact) ===== */}
+      <AnimatePresence initial={false}>
+        {historySidebar.isCompact && (
+          <motion.div
+            initial={{ width: 0, opacity: 0 }}
+            animate={{ width: 220, opacity: 1 }}
+            exit={{ width: 0, opacity: 0 }}
+            transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
+            className="flex-shrink-0 min-w-0 overflow-hidden h-full"
+            style={{ width: 220 }}
+          >
+            <HistorySidebar
+              items={sessions}
+              activeItemId={activeSessionId}
+              onSelectItem={handleSelectSession}
+              onDeleteItem={handleDeleteSession}
+              onUpdateItem={handleUpdateSession}
+              onNewItem={handleNewSession}
+              onExpand={() => historySidebar.expand()}
+              onHide={historySidebar.hide}
+              entityLabel="会话"
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-          {/* Agent picker — always visible */}
-          <AgentPicker
-            selectedAgent={selectedAgent}
-            onSelectAgent={setSelectedAgent}
-            onCreateNew={() => onNavigateToLibrary?.()}
-            onAvatarClick={() => setShowAgentInfo(true)}
-          />
+      {/* ===== Right: Header + Content ===== */}
+      <div className="flex flex-col flex-1 min-w-0 relative">
+        {/* ===== Header ===== */}
+        <header className="flex items-center justify-between px-3 border-b border-transparent flex-shrink-0 h-[40px]">
+          <div className="flex items-center gap-1.5">
+            {onBack && (
+              <Button variant="ghost" size="icon-xs" onClick={onBack}
+                className="p-1.5 w-auto h-auto text-muted-foreground hover:text-foreground hover:bg-accent/20">
+                <ArrowLeft size={13} />
+              </Button>
+            )}
 
-          {/* Model picker — always visible */}
-          <div className="w-px h-3.5 bg-border/25" />
-          <div className="relative">
-            <button onClick={() => { setShowModelPicker(!showModelPicker); if (!showModelPicker) { setMdlSearch(''); setMdlCapFilter(null); setActiveProvider(selectedModel.provider); } }}
-              className={`flex items-center gap-1 px-1.5 py-[3px] rounded text-[9.5px] transition-all duration-100 ${
+            {/* History sidebar toggle */}
+            <Tooltip content={historySidebar.isCompact ? '收起会话列表' : '展开会话列表'} side="bottom">
+              <Button variant="ghost" size="icon-xs" onClick={() => historySidebar.toggle()}
+                className={`p-1.5 w-auto h-auto mr-0.5 ${historySidebar.isCompact ? 'text-foreground/60 hover:text-foreground hover:bg-accent/15' : 'text-foreground/35 hover:text-foreground/60 hover:bg-accent/15'}`}>
+                <History size={13} />
+              </Button>
+            </Tooltip>
+
+            {/* Agent picker — always visible */}
+            <AgentPicker
+              selectedAgent={selectedAgent}
+              onSelectAgent={setSelectedAgent}
+              onCreateNew={() => onNavigateToLibrary?.()}
+              onAvatarClick={() => setShowAgentInfo(true)}
+            />
+
+            {/* Model picker — always visible */}
+            <div className="w-px h-3.5 bg-border/25" />
+            <div className="relative">
+              <Button variant="ghost" size="xs" onClick={() => { setShowModelPicker(!showModelPicker); if (!showModelPicker) { setMdlSearch(''); setMdlCapFilter(null); setActiveProvider(selectedModel.provider); } }}
+                className={`gap-1 px-1.5 py-[3px] h-auto text-[9.5px] ${
                 showModelPicker
                   ? 'bg-accent/25 text-foreground'
                   : 'text-muted-foreground hover:text-foreground hover:bg-accent/15'
               }`}>
               <span>{selectedModel.name}</span>
               <ChevronDown size={7} className={`text-muted-foreground/50 transition-transform duration-100 ${showModelPicker ? 'rotate-180' : ''}`} />
-            </button>
+            </Button>
             <AnimatePresence>
               {showModelPicker && (
                 <div>
@@ -1146,10 +1123,10 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
                     <div className="px-2 pt-2 pb-1.5">
                       <div className="flex items-center gap-1.5 px-2 py-[5px] rounded-md bg-accent/15 border border-border/20">
                         <SearchIcon size={10} className="text-muted-foreground/40 flex-shrink-0" />
-                        <input ref={mdlSearchRef} value={mdlSearch} onChange={e => setMdlSearch(e.target.value)}
+                        <Input ref={mdlSearchRef} value={mdlSearch} onChange={e => setMdlSearch(e.target.value)}
                           placeholder={"\u641c\u7d22\u6a21\u578b..."}
-                          className="flex-1 bg-transparent text-[10px] text-foreground placeholder:text-muted-foreground/30 outline-none min-w-0" />
-                        {mdlSearch && <button onClick={() => setMdlSearch('')} className="text-muted-foreground/30 hover:text-muted-foreground/60"><X size={8} /></button>}
+                          className="flex-1 h-auto border-0 bg-transparent shadow-none focus-visible:ring-0 text-xs text-foreground placeholder:text-muted-foreground/30 p-0 rounded-none min-w-0" />
+                        {mdlSearch && <Button variant="ghost" size="icon-xs" onClick={() => setMdlSearch('')} className="w-auto h-auto p-0 text-muted-foreground/30 hover:text-muted-foreground/60 hover:bg-transparent"><X size={8} /></Button>}
                       </div>
                     </div>
                     {/* Tag filters */}
@@ -1158,15 +1135,15 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
                         const Icon = AGENT_CAP_TAG_ICONS[cap];
                         const active = mdlCapFilter === cap;
                         return (
-                          <button key={cap} onClick={() => setMdlCapFilter(active ? null : cap)}
-                            className={`flex items-center gap-1 px-1.5 py-[2px] rounded-full text-[9px] transition-all border ${
+                          <Button key={cap} variant="ghost" size="xs" onClick={() => setMdlCapFilter(active ? null : cap)}
+                            className={`gap-1 px-1.5 py-[2px] h-auto rounded-full text-[9px] border ${
                               active
                                 ? 'bg-foreground/8 text-foreground/80 border-border/50'
                                 : 'bg-accent/15 text-muted-foreground/55 border-transparent hover:bg-accent/30 hover:text-muted-foreground/75'
                             }`}>
                             <Icon size={9} />
                             <span>{AGENT_MODEL_CAPABILITY_LABELS[cap]}</span>
-                          </button>
+                          </Button>
                         );
                       })}
                     </div>
@@ -1179,16 +1156,16 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
                           const count = MODELS.filter(m => m.provider === p && (!mdlCapFilter || m.capabilities.includes(mdlCapFilter))).length;
                           const provColor = AGENT_PROVIDER_COLORS[p] || 'bg-gray-400';
                           return (
-                            <button key={p} onClick={() => setActiveProvider(p)}
-                              className={`flex items-center gap-1.5 w-full px-2.5 py-[6px] text-[10px] transition-all duration-75 ${
+                            <Button key={p} variant="ghost" size="xs" onClick={() => setActiveProvider(p)}
+                              className={`w-full justify-start gap-1.5 px-2.5 py-[6px] h-auto rounded-none text-xs ${
                                 activeProvider === p
                                   ? 'bg-accent/30 text-foreground'
                                   : 'text-foreground/60 hover:text-foreground hover:bg-accent/15'
                               }`}>
                               <span className={`w-[6px] h-[6px] rounded-full flex-shrink-0 ${provColor}`} />
-                              <span className="truncate flex-1">{p}</span>
+                              <span className="truncate flex-1 text-left">{p}</span>
                               <span className="text-[8px] text-muted-foreground/40 flex-shrink-0">{count}</span>
-                            </button>
+                            </Button>
                           );
                         })}
                       </div>
@@ -1200,8 +1177,8 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
                           providerModels.map(m => {
                             const selected = selectedModel.id === m.id;
                             return (
-                              <button key={m.id} onClick={() => { setSelectedModel(m); setShowModelPicker(false); }}
-                                className={`flex items-center gap-2 w-full px-2 py-[5px] rounded-lg text-[10px] transition-all duration-75 mb-px ${
+                              <Button key={m.id} variant="ghost" size="xs" onClick={() => { setSelectedModel(m); setShowModelPicker(false); }}
+                                className={`w-full justify-start gap-2 px-2 py-[5px] h-auto text-xs mb-px ${
                                   selected ? 'bg-accent/30 ring-1 ring-border/30' : 'text-foreground/70 hover:text-foreground hover:bg-accent/15'
                                 }`}>
                                 <span className={`flex-1 text-left truncate ${selected ? 'text-foreground' : ''}`}>{m.name}</span>
@@ -1213,7 +1190,7 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
                                   })}
                                 </div>
                                 {selected && <Check size={9} className="text-cherry-primary flex-shrink-0 ml-0.5" />}
-                              </button>
+                              </Button>
                             );
                           })
                         )}
@@ -1227,10 +1204,10 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
 
           {/* WorkDir — always visible */}
           <div className="w-px h-3.5 bg-border/25" />
-          <button className="flex items-center gap-1.5 px-1.5 py-0.5 rounded text-[9.5px] text-muted-foreground hover:text-foreground/80 hover:bg-accent/15 transition-colors font-mono">
+          <Button variant="ghost" size="xs" className="gap-1.5 px-1.5 py-0.5 h-auto text-[9.5px] text-muted-foreground hover:text-foreground/80 hover:bg-accent/15 font-mono">
             <FolderOpen size={9} />
             {sessionData.workDir || '~/projects'}
-          </button>
+          </Button>
 
           {/* Session-specific controls — only when working */}
           {hasMessages && (
@@ -1241,7 +1218,7 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
                 sessions={sessions}
                 activeSession={activeSession}
                 onSelectSession={handleSelectSession}
-                onOpenHistory={() => setShowHistory(true)}
+                onOpenHistory={() => historySidebar.expand()}
               />
 
               {sessionData.workDir && (
@@ -1259,38 +1236,33 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
 
         <div className="flex items-center gap-0.5">
           {hasMessages && (
-            <Tooltip content={"\u65b0\u5efa\u4f1a\u8bdd"} side="bottom"><button onClick={handleNewSession}
-              className="p-1.5 rounded text-muted-foreground hover:text-foreground hover:bg-accent/15 transition-colors">
+            <Tooltip content={"\u65b0\u5efa\u4f1a\u8bdd"} side="bottom"><Button variant="ghost" size="icon-xs" onClick={handleNewSession}
+              className="p-1.5 w-auto h-auto text-muted-foreground hover:text-foreground hover:bg-accent/15">
               <MessageCirclePlus size={13} />
-            </button></Tooltip>
+            </Button></Tooltip>
           )}
 
-          {/* History — always visible */}
-          <Tooltip content={"\u5386\u53f2\u8bb0\u5f55"} side="bottom"><button onClick={() => setShowHistory(true)}
-            className="p-1.5 rounded text-muted-foreground hover:text-foreground hover:bg-accent/15 transition-colors">
-            <History size={13} />
-          </button></Tooltip>
 
           {/* Show preview panel — when preview is hidden */}
           {!showPreview && (
             <div className="flex items-center gap-0.5">
               <div className="w-px h-3.5 bg-border/25 mx-0.5" />
-              <Tooltip content={"\u663e\u793a\u9884\u89c8\u9762\u677f"} side="bottom"><button onClick={() => { setShowPreview(true); setShowExplorer(true); }}
-                className="p-1.5 rounded text-muted-foreground hover:text-foreground hover:bg-accent/15 transition-colors">
+              <Tooltip content={"\u663e\u793a\u9884\u89c8\u9762\u677f"} side="bottom"><Button variant="ghost" size="icon-xs" onClick={() => { setShowPreview(true); }}
+                className="p-1.5 w-auto h-auto text-muted-foreground hover:text-foreground hover:bg-accent/15">
                 <Columns2 size={12} />
-              </button></Tooltip>
+              </Button></Tooltip>
             </div>
           )}
 
           {hasMessages && (
             <div className="flex items-center gap-0.5">
               <div className="w-px h-3.5 bg-border/25 mx-0.5" />
-              <Tooltip content={"\u5bfc\u51fa"} side="bottom"><button className="p-1.5 rounded text-muted-foreground hover:text-foreground hover:bg-accent/15 transition-colors">
+              <Tooltip content={"\u5bfc\u51fa"} side="bottom"><Button variant="ghost" size="icon-xs" className="p-1.5 w-auto h-auto text-muted-foreground hover:text-foreground hover:bg-accent/15">
                 <Download size={11} />
-              </button></Tooltip>
-              <Tooltip content={"\u5206\u4eab"} side="bottom"><button className="p-1.5 rounded text-muted-foreground hover:text-foreground hover:bg-accent/15 transition-colors">
+              </Button></Tooltip>
+              <Tooltip content={"\u5206\u4eab"} side="bottom"><Button variant="ghost" size="icon-xs" className="p-1.5 w-auto h-auto text-muted-foreground hover:text-foreground hover:bg-accent/15">
                 <Share2 size={11} />
-              </button></Tooltip>
+              </Button></Tooltip>
             </div>
           )}
         </div>
@@ -1298,6 +1270,31 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
 
       {/* ===== Main Content ===== */}
       <div className="flex flex-1 min-h-0 pl-2">
+
+        {!previewMaximized && (
+          !hasMessages ? (
+            <div
+              className={`overflow-hidden ${showPreview ? 'flex-shrink-0' : 'flex-1'}`}
+              style={showPreview ? { width: 330 } : undefined}
+            >
+              <NewSessionEmpty onSendMessage={handleSendMessage} />
+            </div>
+          ) : (
+            <div
+              className={`overflow-hidden ${showPreview ? 'flex-shrink-0' : 'flex-1'}`}
+              style={showPreview ? { width: 330 } : undefined}
+            >
+              <ChatPanel
+                messages={messages}
+                steps={sessionData.steps}
+                onSendMessage={handleSendMessage}
+                onResolveUI={handleResolveUI}
+                onAvatarClick={() => setShowAgentInfo(true)}
+              />
+            </div>
+          )
+        )}
+
         <AnimatePresence initial={false}>
           {showPreview && (
             <motion.div
@@ -1345,41 +1342,43 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
           )}
         </AnimatePresence>
 
-        {!previewMaximized && (
-          !hasMessages ? (
-            <div
-              className={`overflow-hidden ${showPreview ? 'flex-shrink-0' : 'flex-1'}`}
-              style={showPreview ? { width: 330 } : undefined}
+        {/* Docked History */}
+        <AnimatePresence initial={false}>
+          {historySidebar.isExpanded && historyDisplayMode === 'docked' && (
+            <motion.div
+              initial={{ width: 0, opacity: 0 }}
+              animate={{ width: 480, opacity: 1 }}
+              exit={{ width: 0, opacity: 0 }}
+              transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
+              className="flex-shrink-0 min-w-0 border-l border-border/30 overflow-hidden"
             >
-              <NewSessionEmpty onSendMessage={handleSendMessage} />
-            </div>
-          ) : (
-            <div
-              className={`overflow-hidden ${showPreview ? 'flex-shrink-0' : 'flex-1'}`}
-              style={showPreview ? { width: 330 } : undefined}
-            >
-              <ChatPanel
-                messages={messages}
-                steps={sessionData.steps}
-                onSendMessage={handleSendMessage}
-                onResolveUI={handleResolveUI}
-                onAvatarClick={() => setShowAgentInfo(true)}
+              <SessionHistoryPage
+                sessions={sessions}
+                activeSessionId={activeSessionId}
+                onSelectSession={handleSelectSession}
+                onDeleteSession={handleDeleteSession}
+                onUpdateSession={handleUpdateSession}
+                onClose={() => historySidebar.collapse()}
+                displayMode={historyDisplayMode}
+                onDisplayModeChange={setHistoryDisplayMode}
               />
-            </div>
-          )
-        )}
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
-      {/* ===== History Overlay ===== */}
+      {/* ===== History Floating Overlay ===== */}
       <AnimatePresence>
-        {showHistory && (
+        {historySidebar.isExpanded && historyDisplayMode === 'floating' && (
           <SessionHistoryPage
             sessions={sessions}
             activeSessionId={activeSessionId}
             onSelectSession={handleSelectSession}
             onDeleteSession={handleDeleteSession}
             onUpdateSession={handleUpdateSession}
-            onClose={() => setShowHistory(false)}
+            onClose={() => historySidebar.collapse()}
+            displayMode={historyDisplayMode}
+            onDisplayModeChange={setHistoryDisplayMode}
           />
         )}
       </AnimatePresence>
@@ -1394,6 +1393,7 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
           />
         )}
       </AnimatePresence>
+      </div>
     </div>
   );
 }

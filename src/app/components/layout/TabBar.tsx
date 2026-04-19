@@ -1,38 +1,33 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
-  Sun, Moon, Plus, X, Home, Settings,
+  Plus, X, ChevronDown,
 } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
 import { Tooltip } from '@/app/components/Tooltip';
 import type { Tab } from '@/app/types';
 
 interface TabBarProps {
   tabs: Tab[];
   activeTabId: string;
-  isDark: boolean;
   onTabClick: (tabId: string) => void;
   onTabClose: (tabId: string) => void;
   onTabContext: (e: React.MouseEvent, tabId: string) => void;
   onNewTab: () => void;
-  onToggleTheme: () => void;
-  onSettingsClick?: () => void;
   startTabDrag: (e: React.MouseEvent, tabId: string) => void;
 }
 
 export function TabBar({
   tabs,
   activeTabId,
-  isDark,
   onTabClick,
   onTabClose,
   onTabContext,
   onNewTab,
-  onToggleTheme,
-  onSettingsClick,
   startTabDrag,
 }: TabBarProps) {
-  const homeTab = tabs.find(t => t.id === 'home')!;
   const pinnedTabs = tabs.filter(t => t.pinned && t.id !== 'home' && !t.sidebarDocked);
   const unpinnedTabs = tabs.filter(t => !t.pinned && t.id !== 'home' && !t.sidebarDocked);
+  const [tabListOpen, setTabListOpen] = useState(false);
 
   return (
     <div className="h-11 bg-sidebar flex items-center select-none flex-shrink-0">
@@ -45,26 +40,6 @@ export function TabBar({
 
       {/* Tabs area */}
       <div className="flex-1 flex items-center gap-0.5 overflow-x-auto [&::-webkit-scrollbar]:hidden min-w-0 px-1">
-        {/* Home tab — always first, standalone icon */}
-        <Tooltip content={homeTab.title} side="bottom">
-          <div
-            onClick={() => onTabClick(homeTab.id)}
-            onContextMenu={(e) => onTabContext(e, homeTab.id)}
-            className={`w-8 h-8 rounded-md flex items-center justify-center cursor-pointer transition-all duration-150 flex-shrink-0
-              ${activeTabId === homeTab.id
-                ? 'bg-sidebar-accent text-sidebar-foreground'
-                : 'text-muted-foreground hover:bg-sidebar-accent/60 hover:text-sidebar-foreground'
-              }`}
-          >
-            <Home size={14} strokeWidth={1.6} />
-          </div>
-        </Tooltip>
-
-        {/* Separator after home if there are pinned tabs */}
-        {pinnedTabs.length > 0 && (
-          <div className="w-px h-4 bg-border/50 mx-0.5 flex-shrink-0" />
-        )}
-
         {/* Pinned tabs — grouped in a shared rounded container */}
         {pinnedTabs.length > 0 && (
           <div className="flex items-center bg-sidebar-accent/50 rounded-lg p-0.5 gap-0 flex-shrink-0">
@@ -142,24 +117,58 @@ export function TabBar({
         </button>
       </div>
 
-      {/* Right actions */}
-      <div className="flex items-center gap-1 px-2.5 flex-shrink-0">
-        <Tooltip content="设置" side="bottom">
+      {/* Right: All tabs dropdown */}
+      <div className="relative flex items-center px-2.5 flex-shrink-0">
+        <Tooltip content="全部标签页" side="bottom">
           <button
-            onClick={onSettingsClick}
-            className="w-7 h-7 rounded-md flex items-center justify-center text-muted-foreground hover:text-sidebar-foreground hover:bg-sidebar-accent transition-colors"
+            onClick={() => setTabListOpen(!tabListOpen)}
+            className={`w-7 h-7 rounded-md flex items-center justify-center transition-colors ${
+              tabListOpen ? 'bg-sidebar-accent text-sidebar-foreground' : 'text-muted-foreground hover:text-sidebar-foreground hover:bg-sidebar-accent'
+            }`}
           >
-            <Settings size={15} strokeWidth={1.6} />
+            <ChevronDown size={15} strokeWidth={1.6} />
           </button>
         </Tooltip>
-        <Tooltip content={isDark ? '浅模式' : '深色模式'} side="bottom">
-          <button
-            onClick={onToggleTheme}
-            className="w-7 h-7 rounded-md flex items-center justify-center text-muted-foreground hover:text-sidebar-foreground hover:bg-sidebar-accent transition-colors"
-          >
-            {isDark ? <Sun size={15} strokeWidth={1.6} /> : <Moon size={15} strokeWidth={1.6} />}
-          </button>
-        </Tooltip>
+        <AnimatePresence>
+          {tabListOpen && (
+            <>
+              <div className="fixed inset-0 z-40" onClick={() => setTabListOpen(false)} />
+              <motion.div
+                initial={{ opacity: 0, y: -4 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -4 }}
+                transition={{ duration: 0.12 }}
+                className="absolute top-full right-0 mt-1 z-50 w-[240px] bg-popover border border-border/40 rounded-xl shadow-xl shadow-black/10 overflow-hidden"
+              >
+                <div className="px-3 py-2 border-b border-border/25">
+                  <span className="text-[10px] text-muted-foreground uppercase tracking-wide">已打开的标签页 · {tabs.length}</span>
+                </div>
+                <div className="max-h-[300px] overflow-y-auto py-1 [&::-webkit-scrollbar]:w-[2px] [&::-webkit-scrollbar-thumb]:bg-border/25">
+                  {tabs.filter(t => !t.sidebarDocked).map(tab => {
+                    const Icon = tab.icon;
+                    const isActive = tab.id === activeTabId;
+                    return (
+                      <button
+                        key={tab.id}
+                        onClick={() => { onTabClick(tab.id); setTabListOpen(false); }}
+                        className={`w-full flex items-center gap-2 px-3 py-[5px] text-xs transition-colors ${
+                          isActive ? 'bg-accent/40 text-foreground' : 'text-muted-foreground hover:bg-accent/20 hover:text-foreground'
+                        }`}
+                      >
+                        {tab.miniAppId ? (
+                          tab.miniAppLogoUrl ? <img src={tab.miniAppLogoUrl} alt="" className="w-3.5 h-3.5 rounded-[3px] object-cover flex-shrink-0" /> :
+                          <div className="w-3.5 h-3.5 rounded-[3px] flex items-center justify-center text-white text-[6px] flex-shrink-0" style={{ background: tab.miniAppColor }}>{tab.miniAppInitial}</div>
+                        ) : <Icon size={12} strokeWidth={1.6} className="flex-shrink-0" />}
+                        <span className="truncate flex-1 text-left">{tab.title}</span>
+                        {isActive && <span className="w-1.5 h-1.5 rounded-full bg-foreground/40 flex-shrink-0" />}
+                      </button>
+                    );
+                  })}
+                </div>
+              </motion.div>
+            </>
+          )}
+        </AnimatePresence>
       </div>
     </div>
   );

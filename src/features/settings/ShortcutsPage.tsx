@@ -3,6 +3,7 @@ import {
   Monitor, MessageCircle, Zap, Search,
   RotateCcw, ChevronRight, AlertTriangle, MessagesSquare,
 } from 'lucide-react';
+import { Button, Input } from '@cherry-studio/ui';
 import { Toggle } from './shared';
 
 // ===========================
@@ -91,7 +92,7 @@ function Keycaps({ keys, isRecording, hasConflict }: {
   if (isRecording) {
     return (
       <span className="inline-flex items-center h-[20px] px-2.5 rounded-md border border-foreground/[0.15] bg-foreground/[0.03]">
-        <span className="text-[9px] text-foreground/60 animate-pulse" style={{ fontWeight: 500 }}>录制中...</span>
+        <span className="text-[9px] text-foreground/60 animate-pulse font-medium">录制中...</span>
       </span>
     );
   }
@@ -109,12 +110,12 @@ function Keycaps({ keys, isRecording, hasConflict }: {
       {keys.map((key, i) => (
         <span key={i} className="inline-flex items-center gap-[2px]">
           <kbd
-            className={`inline-flex items-center justify-center min-w-[20px] h-[20px] px-[5px] rounded-[4px] text-[10px] border ${
+            className={`inline-flex items-center justify-center min-w-[20px] h-[20px] px-[5px] rounded-[4px] text-xs font-medium border ${
               hasConflict
-                ? 'bg-red-500/[0.05] border-red-400/20 text-red-400/70 shadow-[0_1px_0_0] shadow-red-400/10'
+                ? 'bg-destructive/5 border-destructive/20 text-destructive/70 shadow-[0_1px_0_0] shadow-destructive/10'
                 : 'bg-foreground/[0.03] border-foreground/[0.08] text-foreground/50 shadow-[0_1px_0_0] shadow-foreground/[0.04]'
             }`}
-            style={{ fontFamily: 'system-ui, -apple-system, sans-serif', fontWeight: 500, lineHeight: 1 }}
+            style={{ fontFamily: 'system-ui, -apple-system, sans-serif', lineHeight: 1 }}
           >
             {key}
           </kbd>
@@ -140,25 +141,26 @@ function ShortcutRow({
     <div className={`flex items-center gap-3 py-[6px] px-1 group ${!item.enabled ? 'opacity-35' : ''} transition-opacity`}>
       {/* Label */}
       <div className="flex-1 min-w-0 flex items-center gap-1.5">
-        <span className="text-[11px] text-foreground/65 truncate">{item.label}</span>
+        <span className="text-xs text-foreground/65 truncate">{item.label}</span>
         {item.conflict && !isRecording && (
-          <AlertTriangle size={8} className="text-red-400/50 flex-shrink-0" />
+          <AlertTriangle size={8} className="text-destructive/50 flex-shrink-0" />
         )}
       </div>
 
       {/* Keycaps */}
-      <button onClick={onStartRecording} className="focus:outline-none flex-shrink-0">
+      <Button variant="ghost" onClick={onStartRecording} className="focus:outline-none flex-shrink-0 h-auto p-0">
         <Keycaps keys={item.keys} isRecording={isRecording} hasConflict={!!item.conflict} />
-      </button>
+      </Button>
 
       {/* Reset — show on hover */}
-      <button
+      <Button
+        variant="ghost"
         onClick={onReset}
-        className="w-4 h-4 rounded flex items-center justify-center text-foreground/0 group-hover:text-foreground/20 hover:!text-foreground/40 transition-colors flex-shrink-0"
+        className="w-4 h-4 p-0 rounded flex items-center justify-center text-foreground/0 group-hover:text-foreground/20 hover:!text-foreground/40 transition-colors flex-shrink-0"
         title="重置"
       >
         <RotateCcw size={8} />
-      </button>
+      </Button>
 
       {/* Toggle */}
       <Toggle checked={item.enabled} onChange={onToggle} />
@@ -214,17 +216,18 @@ export function ShortcutsPage() {
       {/* Left nav */}
       <div className="w-[140px] flex-shrink-0 flex flex-col border-r border-foreground/[0.05] min-h-0">
         <div className="px-3 pt-4 pb-2 flex-shrink-0">
-          <p className="text-[10px] text-foreground/35" style={{ fontWeight: 500 }}>快捷键分组</p>
+          <p className="text-xs text-foreground/35 font-medium">快捷键分组</p>
         </div>
         <div className="flex-1 overflow-y-auto px-2 pb-3 [&::-webkit-scrollbar]:w-[2px] [&::-webkit-scrollbar-thumb]:bg-border/20">
           <div className="space-y-[1px]">
             {categories.map(cat => {
               const sel = selectedId === cat.id;
               return (
-                <button
+                <Button
+                  variant="ghost"
                   key={cat.id}
                   onClick={() => { setSelectedId(cat.id); setRecordingId(null); }}
-                  className={`w-full flex items-center justify-between px-2.5 py-[7px] rounded-lg transition-all text-left relative ${
+                  className={`w-full flex items-center justify-between px-2.5 py-[7px] h-auto rounded-lg transition-all text-left relative ${
                     sel ? 'bg-cherry-active-bg' : 'border border-transparent hover:bg-foreground/[0.03]'
                   }`}
                 >
@@ -233,12 +236,12 @@ export function ShortcutsPage() {
                   )}
                   <div className="flex items-center gap-1.5 min-w-0 flex-1">
                     <span className={`flex-shrink-0 ${sel ? 'text-foreground/50' : 'text-foreground/30'}`}>{cat.icon}</span>
-                    <span className={`text-[10px] truncate ${sel ? 'text-foreground/80' : 'text-foreground/50'}`} style={{ fontWeight: sel ? 500 : 400 }}>
+                    <span className={`text-xs truncate ${sel ? 'text-foreground/80 font-medium' : 'text-foreground/50'}`}>
                       {cat.label}
                     </span>
                   </div>
                   <ChevronRight size={8} className={`flex-shrink-0 ${sel ? 'text-foreground/20' : 'text-foreground/8'}`} />
-                </button>
+                </Button>
               );
             })}
           </div>
@@ -249,14 +252,14 @@ export function ShortcutsPage() {
       <div className="flex-1 flex flex-col min-w-0 min-h-0">
         {/* Header row */}
         <div className="flex items-center justify-between px-5 pt-4 pb-2 flex-shrink-0">
-          <h3 className="text-[12px] text-foreground/80" style={{ fontWeight: 500 }}>{selectedCategory.label}</h3>
+          <h3 className="text-sm text-foreground/80 font-medium">{selectedCategory.label}</h3>
           <div className="flex items-center gap-1">
-            <button onClick={() => batchToggle(true)} className="px-2 py-[2px] rounded-md text-[9px] text-foreground/30 hover:text-foreground/50 hover:bg-foreground/[0.04] transition-colors">全部启用</button>
-            <button onClick={() => batchToggle(false)} className="px-2 py-[2px] rounded-md text-[9px] text-foreground/30 hover:text-foreground/50 hover:bg-foreground/[0.04] transition-colors">全部禁用</button>
-            <button onClick={handleResetGroup} className="flex items-center gap-0.5 px-2 py-[2px] rounded-md text-[9px] text-foreground/40 hover:text-foreground/60 hover:bg-foreground/[0.03] transition-colors">
+            <Button variant="ghost" onClick={() => batchToggle(true)} className="px-2 py-[2px] h-auto rounded-md text-[9px] text-foreground/30 hover:text-foreground/50 hover:bg-foreground/[0.04] transition-colors">全部启用</Button>
+            <Button variant="ghost" onClick={() => batchToggle(false)} className="px-2 py-[2px] h-auto rounded-md text-[9px] text-foreground/30 hover:text-foreground/50 hover:bg-foreground/[0.04] transition-colors">全部禁用</Button>
+            <Button variant="ghost" onClick={handleResetGroup} className="flex items-center gap-0.5 px-2 py-[2px] h-auto rounded-md text-[9px] text-foreground/40 hover:text-foreground/60 hover:bg-foreground/[0.03] transition-colors">
               <RotateCcw size={7} />
               <span>重置</span>
-            </button>
+            </Button>
           </div>
         </div>
 
@@ -264,11 +267,11 @@ export function ShortcutsPage() {
         <div className="px-5 pb-1 flex-shrink-0">
           <div className="flex items-center gap-2 px-3 py-[5px] bg-foreground/[0.02] border border-foreground/[0.05] rounded-lg">
             <Search size={10} className="text-foreground/15 flex-shrink-0" />
-            <input
+            <Input
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
               placeholder="搜索..."
-              className="flex-1 bg-transparent text-[10px] text-foreground/55 outline-none placeholder:text-foreground/15 min-w-0"
+              className="flex-1 bg-transparent text-xs text-foreground/55 outline-none placeholder:text-foreground/15 min-w-0 border-none shadow-none h-auto p-0"
             />
           </div>
         </div>
@@ -299,12 +302,13 @@ export function ShortcutsPage() {
             <div className="mt-2 flex items-center gap-2 px-3 py-[6px] bg-foreground/[0.02] border border-foreground/[0.06] rounded-lg">
               <div className="w-1 h-1 rounded-full bg-foreground/50 animate-pulse flex-shrink-0" />
               <p className="text-[9px] text-foreground/40 flex-1">请按下组合键。Esc 取消。</p>
-              <button
+              <Button
+                variant="ghost"
                 onClick={() => setRecordingId(null)}
-                className="px-2 py-[2px] rounded-md text-[9px] text-foreground/30 hover:text-foreground/50 hover:bg-foreground/[0.04] transition-colors flex-shrink-0"
+                className="px-2 py-[2px] h-auto rounded-md text-[9px] text-foreground/30 hover:text-foreground/50 hover:bg-foreground/[0.04] transition-colors flex-shrink-0"
               >
                 取消
-              </button>
+              </Button>
             </div>
           )}
         </div>

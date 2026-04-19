@@ -39,8 +39,8 @@ export function ResourceCardDemo() {
             description="An intelligent coding assistant that helps write, review, and debug code across multiple languages."
             tags={["Coding", "Review", "Debug"]}
             stats={<><Star className="h-3 w-3" /> 2.4k &middot; <Play className="h-3 w-3" /> 12k runs</>}
-            actions={<Button size="sm" className="h-7 text-[11px]">Try</Button>}
-            badge={<Badge className="text-[9px]">Featured</Badge>}
+            actions={<Button size="sm" className="h-7 text-xs">Try</Button>}
+            badge={<Badge className="text-xs">Featured</Badge>}
           />
           <ResourceCard
             avatar={<Avatar className="h-10 w-10"><AvatarFallback className="text-lg">📝</AvatarFallback></Avatar>}
@@ -49,7 +49,7 @@ export function ResourceCardDemo() {
             description="Helps improve your writing with grammar, style, and clarity suggestions."
             tags={["Writing", "Grammar"]}
             stats={<><Star className="h-3 w-3" /> 1.8k</>}
-            actions={<Button size="sm" variant="outline" className="h-7 text-[11px]">Use</Button>}
+            actions={<Button size="sm" variant="outline" className="h-7 text-xs">Use</Button>}
           />
           <ResourceCard
             avatar={<Avatar className="h-10 w-10"><AvatarFallback className="text-lg">📚</AvatarFallback></Avatar>}
@@ -58,7 +58,7 @@ export function ResourceCardDemo() {
             description="AI research papers and notes organized for quick retrieval."
             tags={["Research", "AI"]}
             stats={<><BookOpen className="h-3 w-3" /> 156 docs</>}
-            actions={<Button size="sm" variant="outline" className="h-7 text-[11px]">Open</Button>}
+            actions={<Button size="sm" variant="outline" className="h-7 text-xs">Open</Button>}
           />
         </div>
       </Section>
@@ -66,26 +66,26 @@ export function ResourceCardDemo() {
       <Section title="File Cards">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 max-w-2xl">
           <FileCard
-            icon={<FileText className="h-8 w-8 text-blue-500/50" />}
+            icon={<FileText className="h-8 w-8 text-accent-blue/50" />}
             name="README.md"
             size="2.4 KB"
             type="Markdown"
           />
           <FileCard
-            icon={<Image className="h-8 w-8 text-green-500/50" />}
+            icon={<Image className="h-8 w-8 text-accent-emerald/50" />}
             name="screenshot.png"
             size="1.2 MB"
             type="Image"
           />
           <FileCard
-            icon={<Code className="h-8 w-8 text-amber-500/50" />}
+            icon={<Code className="h-8 w-8 text-accent-amber/50" />}
             name="index.tsx"
             size="4.8 KB"
             type="TypeScript"
             status={<StatusBadge variant="success" dot={false}>New</StatusBadge>}
           />
           <FileCard
-            icon={<Music className="h-8 w-8 text-violet-500/50" />}
+            icon={<Music className="h-8 w-8 text-accent-violet/50" />}
             name="podcast.mp3"
             size="32 MB"
             type="Audio"
@@ -120,16 +120,16 @@ export function ResourceCardDemo() {
             { name: "broken-file.csv", size: "890 KB", chunks: 0, status: "error" as const, statusText: "Parse Error" },
             { name: "meeting-notes.docx", size: "340 KB", chunks: 0, status: "warning" as const, statusText: "Queued" },
           ].map((file) => (
-            <div key={file.name} className="flex items-center gap-3 rounded-lg border p-3 hover:bg-accent/30 transition-colors cursor-pointer">
+            <div key={file.name} className="flex items-center gap-3 rounded-[12px] border p-3 hover:bg-accent/30 transition-colors cursor-pointer">
               <FileText className="h-4 w-4 text-muted-foreground flex-shrink-0" />
               <div className="flex-1 min-w-0">
                 <p className="text-xs font-medium truncate">{file.name}</p>
                 <p className="text-[10px] text-muted-foreground">{file.size} &middot; {file.chunks} chunks</p>
               </div>
               <StatusBadge variant={file.status}>{file.statusText}</StatusBadge>
-              <button className="p-1 rounded text-muted-foreground hover:text-foreground hover:bg-accent transition-colors focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50">
+              <Button variant="ghost" className="p-1 rounded text-muted-foreground hover:text-foreground hover:bg-accent transition-colors focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50">
                 <MoreHorizontal size={14} />
-              </button>
+              </Button>
             </div>
           ))}
         </div>

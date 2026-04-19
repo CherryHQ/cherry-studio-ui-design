@@ -8,6 +8,7 @@ import {
   ChevronRight, User,
 } from 'lucide-react';
 import { Toggle, InlineSelect } from './shared';
+import { Button, Input, Popover, PopoverTrigger, PopoverContent } from '@cherry-studio/ui';
 
 // ===========================
 // Types
@@ -97,18 +98,18 @@ function EngineConfigPanel({ onClose }: { onClose: () => void }) {
       <div className="flex items-center justify-between px-4 py-3 border-b border-border/20 flex-shrink-0">
         <div className="flex items-center gap-2">
           <Settings2 size={12} className="text-foreground/40" />
-          <span className="text-[11px] text-foreground/80" style={{ fontWeight: 600 }}>记忆引擎配置</span>
+          <span className="text-xs text-foreground/80 font-semibold">记忆引擎配置</span>
         </div>
-        <button onClick={onClose} className="w-5 h-5 rounded-md flex items-center justify-center text-foreground/30 hover:text-foreground/60 hover:bg-accent transition-colors">
+        <Button variant="ghost" size="icon-xs" onClick={onClose} className="w-5 h-5 text-foreground/30 hover:text-foreground/60 hover:bg-accent">
           <X size={11} />
-        </button>
+        </Button>
       </div>
 
       <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4 [&::-webkit-scrollbar]:w-[2px] [&::-webkit-scrollbar-thumb]:bg-border/20">
         <div>
           <div className="flex items-center gap-1.5 mb-1.5">
-            <span className="text-[10px]">🧠</span>
-            <label className="text-[10px] text-foreground/60" style={{ fontWeight: 500 }}>提取模型 (LLM)</label>
+            <span className="text-xs">🧠</span>
+            <label className="text-xs text-foreground/60 font-medium">提取模型 (LLM)</label>
           </div>
           <InlineSelect
             value={llmModel}
@@ -126,8 +127,8 @@ function EngineConfigPanel({ onClose }: { onClose: () => void }) {
 
         <div>
           <div className="flex items-center gap-1.5 mb-1.5">
-            <span className="text-[10px]">📦</span>
-            <label className="text-[10px] text-foreground/60" style={{ fontWeight: 500 }}>嵌入模型 (Embedding)</label>
+            <span className="text-xs">📦</span>
+            <label className="text-xs text-foreground/60 font-medium">嵌入模型 (Embedding)</label>
           </div>
           <InlineSelect
             value={embeddingModel}
@@ -143,13 +144,13 @@ function EngineConfigPanel({ onClose }: { onClose: () => void }) {
         </div>
 
         <div>
-          <label className="text-[10px] text-foreground/60 mb-1.5 block" style={{ fontWeight: 500 }}>向量维度</label>
+          <label className="text-xs text-foreground/60 mb-1.5 block font-medium">向量维度</label>
           <div className="flex items-center px-2.5 py-[5px] bg-foreground/[0.03] rounded-lg border border-border/30">
-            <input
+            <Input
               type="text"
               value={dimensions}
               onChange={e => setDimensions(e.target.value)}
-              className="flex-1 bg-transparent text-[10px] text-foreground/60 outline-none min-w-0"
+              className="flex-1 bg-transparent text-xs text-foreground/60 min-w-0 border-0 h-auto p-0 focus-visible:ring-0"
             />
           </div>
           <p className="text-[8px] text-foreground/25 mt-1.5">修改维度将需要重新索引所有现有记忆。</p>
@@ -157,12 +158,12 @@ function EngineConfigPanel({ onClose }: { onClose: () => void }) {
       </div>
 
       <div className="px-4 py-3 border-t border-border/20 flex items-center gap-2 flex-shrink-0">
-        <button onClick={onClose} className="flex-1 py-[5px] rounded-lg text-[10px] text-foreground/45 hover:text-foreground/65 hover:bg-accent transition-colors border border-border/25">
+        <Button variant="outline" onClick={onClose} className="flex-1 py-[5px] h-auto rounded-lg text-xs text-foreground/45 hover:text-foreground/65 border-border/25">
           取消
-        </button>
-        <button onClick={onClose} className="flex-1 py-[5px] rounded-lg text-[10px] text-white bg-cherry-primary hover:bg-cherry-primary-dark transition-colors">
+        </Button>
+        <Button onClick={onClose} className="flex-1 py-[5px] h-auto rounded-lg text-xs text-white bg-cherry-primary hover:bg-cherry-primary-dark">
           保存配置
-        </button>
+        </Button>
       </div>
     </motion.div>
   );
@@ -191,54 +192,54 @@ function NewUserPanel({ onClose, onAdd }: { onClose: () => void; onAdd: (userId:
       onClick={e => e.stopPropagation()}
     >
       <div className="flex items-center justify-between px-4 py-3 border-b border-border/20 flex-shrink-0">
-        <span className="text-[11px] text-foreground/80" style={{ fontWeight: 600 }}>新建用户空间</span>
-        <button onClick={onClose} className="w-5 h-5 rounded-md flex items-center justify-center text-foreground/30 hover:text-foreground/60 hover:bg-accent transition-colors">
+        <span className="text-xs text-foreground/80 font-semibold">新建用户空间</span>
+        <Button variant="ghost" size="icon-xs" onClick={onClose} className="w-5 h-5 text-foreground/30 hover:text-foreground/60 hover:bg-accent">
           <X size={11} />
-        </button>
+        </Button>
       </div>
 
       <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4 [&::-webkit-scrollbar]:w-[2px] [&::-webkit-scrollbar-thumb]:bg-border/20">
         <div>
-          <label className="text-[10px] text-foreground/60 mb-1.5 block" style={{ fontWeight: 500 }}>用户 ID / 命名空间</label>
+          <label className="text-xs text-foreground/60 mb-1.5 block font-medium">用户 ID / 命名空间</label>
           <div className="flex items-center px-2.5 py-[5px] bg-foreground/[0.03] rounded-lg border border-border/30">
-            <input
+            <Input
               autoFocus
               type="text"
               value={userId}
               onChange={e => setUserId(e.target.value)}
               placeholder="例如: user_002 或 project_beta"
-              className="flex-1 bg-transparent text-[10px] text-foreground/60 outline-none placeholder:text-foreground/20 min-w-0"
+              className="flex-1 bg-transparent text-xs text-foreground/60 placeholder:text-foreground/20 min-w-0 border-0 h-auto p-0 focus-visible:ring-0"
             />
           </div>
           <p className="text-[8px] text-foreground/25 mt-1.5">唯一标识符，用于隔离记忆数据。</p>
         </div>
         <div>
-          <label className="text-[10px] text-foreground/60 mb-1.5 block" style={{ fontWeight: 500 }}>显示名称 (可选)</label>
+          <label className="text-xs text-foreground/60 mb-1.5 block font-medium">显示名称 (可选)</label>
           <div className="flex items-center px-2.5 py-[5px] bg-foreground/[0.03] rounded-lg border border-border/30">
-            <input
+            <Input
               type="text"
               value={displayName}
               onChange={e => setDisplayName(e.target.value)}
               placeholder="例如: Work Profile"
-              className="flex-1 bg-transparent text-[10px] text-foreground/60 outline-none placeholder:text-foreground/20 min-w-0"
+              className="flex-1 bg-transparent text-xs text-foreground/60 placeholder:text-foreground/20 min-w-0 border-0 h-auto p-0 focus-visible:ring-0"
             />
           </div>
         </div>
       </div>
 
       <div className="px-4 py-3 border-t border-border/20 flex items-center gap-2 flex-shrink-0">
-        <button onClick={onClose} className="flex-1 py-[5px] rounded-lg text-[10px] text-foreground/45 hover:text-foreground/65 hover:bg-accent transition-colors border border-border/25">
+        <Button variant="outline" onClick={onClose} className="flex-1 py-[5px] h-auto rounded-lg text-xs text-foreground/45 hover:text-foreground/65 border-border/25">
           取消
-        </button>
-        <button
+        </Button>
+        <Button
           onClick={handleCreate}
           disabled={!userId.trim()}
-          className={`flex-1 py-[5px] rounded-lg text-[10px] text-white transition-colors ${
+          className={`flex-1 py-[5px] h-auto rounded-lg text-xs text-white ${
             userId.trim() ? 'bg-cherry-primary hover:bg-cherry-primary-dark' : 'bg-cherry-primary/30 cursor-not-allowed'
           }`}
         >
           创建
-        </button>
+        </Button>
       </div>
     </motion.div>
   );
@@ -271,47 +272,47 @@ function AddMemoryPanel({ userName, onClose, onAdd }: {
     >
       <div className="flex items-center justify-between px-4 py-3 border-b border-border/20 flex-shrink-0">
         <div>
-          <span className="text-[11px] text-foreground/80" style={{ fontWeight: 600 }}>添加记忆</span>
+          <span className="text-xs text-foreground/80 font-semibold">添加记忆</span>
           <p className="text-[8px] text-foreground/30 mt-0.5">添加至 {userName}</p>
         </div>
-        <button onClick={onClose} className="w-5 h-5 rounded-md flex items-center justify-center text-foreground/30 hover:text-foreground/60 hover:bg-accent transition-colors">
+        <Button variant="ghost" size="icon-xs" onClick={onClose} className="w-5 h-5 text-foreground/30 hover:text-foreground/60 hover:bg-accent">
           <X size={11} />
-        </button>
+        </Button>
       </div>
 
       <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3 [&::-webkit-scrollbar]:w-[2px] [&::-webkit-scrollbar-thumb]:bg-border/20">
         <div>
-          <label className="text-[10px] text-foreground/60 mb-1.5 block" style={{ fontWeight: 500 }}>记忆内容</label>
+          <label className="text-xs text-foreground/60 mb-1.5 block font-medium">记忆内容</label>
           <textarea
             autoFocus
             value={content}
             onChange={e => setContent(e.target.value)}
             placeholder="输入要记住的事实或偏好..."
             rows={5}
-            className="w-full px-2.5 py-2 bg-foreground/[0.03] rounded-lg border border-border/30 text-[10px] text-foreground/60 outline-none resize-none placeholder:text-foreground/20 [&::-webkit-scrollbar]:w-[2px] [&::-webkit-scrollbar-thumb]:bg-border/20"
+            className="w-full px-2.5 py-2 bg-foreground/[0.03] rounded-lg border border-border/30 text-xs text-foreground/60 outline-none resize-none placeholder:text-foreground/20 [&::-webkit-scrollbar]:w-[2px] [&::-webkit-scrollbar-thumb]:bg-border/20"
           />
         </div>
         <div className="bg-foreground/[0.03] border border-foreground/[0.06] rounded-lg p-2.5">
           <p className="text-[9px] text-foreground/35">
-            <span className="text-foreground/50" style={{ fontWeight: 500 }}>提示：</span>
+            <span className="text-foreground/50 font-medium">提示：</span>
             手动添加的记忆将标记为 "Manual" 来源，可随时编辑或删除。
           </p>
         </div>
       </div>
 
       <div className="px-4 py-3 border-t border-border/20 flex items-center gap-2 flex-shrink-0">
-        <button onClick={onClose} className="flex-1 py-[5px] rounded-lg text-[10px] text-foreground/45 hover:text-foreground/65 hover:bg-accent transition-colors border border-border/25">
+        <Button variant="outline" onClick={onClose} className="flex-1 py-[5px] h-auto rounded-lg text-xs text-foreground/45 hover:text-foreground/65 border-border/25">
           取消
-        </button>
-        <button
+        </Button>
+        <Button
           onClick={handleAdd}
           disabled={!content.trim()}
-          className={`flex-1 py-[5px] rounded-lg text-[10px] text-white transition-colors ${
+          className={`flex-1 py-[5px] h-auto rounded-lg text-xs text-white ${
             content.trim() ? 'bg-cherry-primary hover:bg-cherry-primary-dark' : 'bg-cherry-primary/30 cursor-not-allowed'
           }`}
         >
           添加记忆
-        </button>
+        </Button>
       </div>
     </motion.div>
   );
@@ -344,49 +345,38 @@ function MoreMenu({ onRefresh, onClearUser, onDeleteUser }: {
   onDeleteUser: () => void;
 }) {
   const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    if (!open) return;
-    const h = (e: MouseEvent) => { if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false); };
-    document.addEventListener('mousedown', h);
-    return () => document.removeEventListener('mousedown', h);
-  }, [open]);
 
   return (
-    <div ref={ref} className="relative">
-      <button
-        onClick={() => setOpen(v => !v)}
-        className="w-6 h-6 rounded-lg flex items-center justify-center text-foreground/30 hover:text-foreground/60 hover:bg-accent transition-colors"
-      >
-        <MoreHorizontal size={13} />
-      </button>
-      {open && (
-        <div className="absolute top-full right-0 mt-1 w-[140px] bg-popover border border-border rounded-lg shadow-lg p-0.5 z-50 animate-in fade-in slide-in-from-top-1 duration-100">
-          <button
-            onClick={() => { onRefresh(); setOpen(false); }}
-            className="w-full text-left px-2.5 py-[5px] rounded-md text-[10px] text-foreground/55 hover:bg-accent/50 transition-colors flex items-center gap-2"
-          >
-            <RefreshCw size={9} />
-            <span>刷新列表</span>
-          </button>
-          <button
-            onClick={() => { onClearUser(); setOpen(false); }}
-            className="w-full text-left px-2.5 py-[5px] rounded-md text-[10px] text-foreground/55 hover:bg-accent/50 transition-colors flex items-center gap-2"
-          >
-            <Trash2 size={9} />
-            <span>清空当前用户</span>
-          </button>
-          <div className="h-px bg-foreground/[0.06] mx-1.5 my-0.5" />
-          <button
-            onClick={() => { onDeleteUser(); setOpen(false); }}
-            className="w-full text-left px-2.5 py-[5px] rounded-md text-[10px] text-red-500/70 hover:bg-red-500/5 transition-colors flex items-center gap-2"
-          >
-            <AlertTriangle size={9} />
-            <span>删除此用户</span>
-          </button>
-        </div>
-      )}
-    </div>
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button
+          variant="ghost"
+          size="icon-xs"
+          className="w-6 h-6 text-foreground/30 hover:text-foreground/60 hover:bg-accent"
+        >
+          <MoreHorizontal size={13} />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent align="end" className="w-[140px] p-0.5">
+        <Button variant="ghost" onClick={() => { onRefresh(); setOpen(false); }} className="w-full text-left px-2.5 py-[5px] h-auto rounded-md text-xs text-foreground/55 hover:bg-accent/50 justify-start">
+          <RefreshCw size={9} />
+          <span>刷新列表</span>
+        </Button>
+        <Button variant="ghost" onClick={() => { onClearUser(); setOpen(false); }} className="w-full text-left px-2.5 py-[5px] h-auto rounded-md text-xs text-foreground/55 hover:bg-accent/50 justify-start">
+          <Trash2 size={9} />
+          <span>清空当前用户</span>
+        </Button>
+        <div className="h-px bg-foreground/[0.06] mx-1.5 my-0.5" />
+        <Button
+          variant="ghost"
+          onClick={() => { onDeleteUser(); setOpen(false); }}
+          className="w-full text-left px-2.5 py-[5px] h-auto rounded-md text-xs text-destructive/70 hover:bg-destructive/5 justify-start"
+        >
+          <AlertTriangle size={9} />
+          <span>删除此用户</span>
+        </Button>
+      </PopoverContent>
+    </Popover>
   );
 }
 
@@ -459,35 +449,37 @@ export function MemoriesPage() {
       <div className="w-[160px] flex-shrink-0 flex flex-col border-r border-foreground/[0.05] min-h-0">
         {/* Header */}
         <div className="px-3.5 pt-4 pb-2 flex items-center justify-between flex-shrink-0">
-          <p className="text-[11px] text-foreground/40" style={{ fontWeight: 500 }}>记忆管理</p>
+          <p className="text-xs text-foreground/40 font-medium">记忆管理</p>
           <Toggle checked={enabled} onChange={setEnabled} />
         </div>
 
         <div className="flex-1 overflow-y-auto px-2.5 pb-3 [&::-webkit-scrollbar]:w-[2px] [&::-webkit-scrollbar-thumb]:bg-border/20">
           <div className="space-y-[2px]">
             {/* Engine Config */}
-            <button
+            <Button
+              variant="ghost"
               onClick={() => setShowEngineConfig(true)}
-              className="w-full flex items-center justify-between px-3 py-[8px] rounded-xl transition-all text-left border border-transparent hover:bg-foreground/[0.03]"
+              className="w-full flex items-center justify-between px-3 py-[8px] h-auto rounded-xl text-left border border-transparent hover:bg-foreground/[0.03] justify-start"
             >
               <div className="flex items-center gap-2 min-w-0 flex-1">
                 <span className="flex-shrink-0 text-foreground/30"><Settings2 size={14} /></span>
-                <span className="text-[10px] text-foreground/55" style={{ fontWeight: 400 }}>引擎配置</span>
+                <span className="text-xs text-foreground/55">引擎配置</span>
               </div>
               <ChevronRight size={9} className="flex-shrink-0 text-foreground/10" />
-            </button>
+            </Button>
 
             {/* Users section label */}
-            <p className="text-[8px] text-foreground/25 tracking-wider px-3 pt-2.5 pb-1" style={{ fontWeight: 500 }}>用户</p>
+            <p className="text-[8px] text-foreground/25 tracking-wider px-3 pt-2.5 pb-1 font-medium">用户</p>
 
             {/* Users */}
             {users.map(user => {
               const isSelected = selectedUserId === user.id;
               return (
-                <button
+                <Button
                   key={user.id}
+                  variant="ghost"
                   onClick={() => setSelectedUserId(user.id)}
-                  className={`w-full flex items-center justify-between px-3 py-[8px] rounded-xl transition-all text-left relative ${
+                  className={`w-full flex items-center justify-between px-3 py-[8px] h-auto rounded-xl text-left relative justify-start ${
                     isSelected
                       ? 'bg-cherry-active-bg'
                       : 'border border-transparent hover:bg-foreground/[0.03]'
@@ -498,22 +490,23 @@ export function MemoriesPage() {
                   )}
                   <div className="flex items-center gap-2 min-w-0 flex-1">
                     <span className={`flex-shrink-0 ${isSelected ? 'text-foreground/50' : 'text-foreground/30'}`}><User size={14} /></span>
-                    <span className={`text-[10px] truncate ${isSelected ? 'text-foreground/85' : 'text-foreground/55'}`} style={{ fontWeight: isSelected ? 500 : 400 }}>{user.displayName}</span>
+                    <span className={`text-xs truncate ${isSelected ? 'text-foreground/85 font-medium' : 'text-foreground/55 font-normal'}`}>{user.displayName}</span>
                   </div>
                   <ChevronRight size={9} className={`flex-shrink-0 ${isSelected ? 'text-foreground/25' : 'text-foreground/10'}`} />
-                </button>
+                </Button>
               );
             })}
 
             {/* Add user */}
-            <button
+            <Button
+              variant="ghost"
               onClick={() => setShowNewUser(true)}
-              className="w-full flex items-center gap-1.5 px-3 py-[8px] rounded-xl text-[10px] text-foreground/30 hover:text-foreground/50 hover:bg-foreground/[0.03] transition-colors border border-transparent"
+              className="w-full flex items-center gap-1.5 px-3 py-[8px] h-auto rounded-xl text-xs text-foreground/30 hover:text-foreground/50 hover:bg-foreground/[0.03] border border-transparent justify-start"
             >
               <span className="w-4 flex-shrink-0" />
               <Plus size={9} />
               <span>添加用户</span>
-            </button>
+            </Button>
           </div>
         </div>
       </div>
@@ -525,13 +518,13 @@ export function MemoriesPage() {
           {/* User info */}
           <div className="flex items-center gap-2 flex-shrink-0">
             <div
-              className="w-6 h-6 rounded-lg flex items-center justify-center text-white"
-              style={{ fontWeight: 600, fontSize: selectedUser.avatar.length > 2 ? 7 : 9, background: selectedUser.avatarColor }}
+              className="w-6 h-6 rounded-lg flex items-center justify-center text-white font-semibold"
+              style={{ fontSize: selectedUser.avatar.length > 2 ? 7 : 9, background: selectedUser.avatarColor }}
             >
               {selectedUser.avatar}
             </div>
             <div>
-              <p className="text-[11px] text-foreground/80" style={{ fontWeight: 500 }}>{selectedUser.displayName}</p>
+              <p className="text-xs text-foreground/80 font-medium">{selectedUser.displayName}</p>
               <p className="text-[8px] text-foreground/25" style={{ fontFamily: 'ui-monospace, monospace' }}>user_id: {selectedUser.userId}</p>
             </div>
           </div>
@@ -539,22 +532,22 @@ export function MemoriesPage() {
           {/* Search */}
           <div className="flex-1 flex items-center gap-2 px-2.5 py-[4px] bg-foreground/[0.03] rounded-lg border border-border/25 mx-3">
             <Search size={10} className="text-foreground/25 flex-shrink-0" />
-            <input
+            <Input
               value={search}
               onChange={e => setSearch(e.target.value)}
               placeholder="搜索记忆内容..."
-              className="flex-1 bg-transparent text-[10px] text-foreground/60 outline-none placeholder:text-foreground/20 min-w-0"
+              className="flex-1 bg-transparent text-xs text-foreground/60 placeholder:text-foreground/20 min-w-0 border-0 h-auto p-0 focus-visible:ring-0"
             />
           </div>
 
           {/* Actions */}
-          <button
+          <Button
             onClick={() => setShowAddMemory(true)}
-            className="flex items-center gap-1.5 px-2.5 py-[4px] rounded-lg text-[10px] text-white bg-cherry-primary hover:bg-cherry-primary-dark transition-colors flex-shrink-0"
+            className="flex items-center gap-1.5 px-2.5 py-[4px] h-auto rounded-lg text-xs text-white bg-cherry-primary hover:bg-cherry-primary-dark flex-shrink-0"
           >
             <Plus size={9} />
             <span>添加记忆</span>
-          </button>
+          </Button>
           <MoreMenu
             onRefresh={() => {}}
             onClearUser={() => {
@@ -580,7 +573,7 @@ export function MemoriesPage() {
           {filteredMemories.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-16 text-center">
               <Brain size={24} className="text-foreground/10 mb-3" />
-              <p className="text-[11px] text-foreground/35 mb-1" style={{ fontWeight: 500 }}>
+              <p className="text-xs text-foreground/35 mb-1 font-medium">
                 {search ? '没有匹配的记忆' : '暂无记忆'}
               </p>
               <p className="text-[9px] text-foreground/20">
@@ -601,19 +594,21 @@ export function MemoriesPage() {
                   <div className="flex items-center gap-1.5">
                     <SourceBadge source={memory.source} />
                     <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <button className="w-5 h-5 rounded-md flex items-center justify-center text-foreground/20 hover:text-foreground/50 hover:bg-accent transition-colors">
+                      <Button variant="ghost" size="icon-xs" className="w-5 h-5 text-foreground/20 hover:text-foreground/50 hover:bg-accent">
                         <Copy size={9} />
-                      </button>
-                      <button
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon-xs"
                         onClick={() => handleDeleteMemory(memory.id)}
-                        className="w-5 h-5 rounded-md flex items-center justify-center text-foreground/20 hover:text-red-500/60 hover:bg-red-500/5 transition-colors"
+                        className="w-5 h-5 text-foreground/20 hover:text-destructive/60 hover:bg-destructive/5"
                       >
                         <Trash2 size={9} />
-                      </button>
+                      </Button>
                     </div>
                   </div>
                 </div>
-                <p className="text-[10px] text-foreground/60 leading-relaxed">{memory.content}</p>
+                <p className="text-xs text-foreground/60 leading-relaxed">{memory.content}</p>
               </div>
             ))
           )}

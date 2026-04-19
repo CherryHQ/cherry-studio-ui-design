@@ -3,14 +3,15 @@ import {
   Search, X, Check,
   Eye, Brain, Hammer, Globe,
 } from 'lucide-react';
+import { Button, Input, Switch } from '@cherry-studio/ui';
 import type { ModelCapability } from '@/app/types/chat';
 import { ASSISTANT_MODELS, PROVIDER_COLORS, MODEL_CAPABILITY_LABELS } from '@/app/config/models';
 
 const CAP_ICONS: Record<ModelCapability, { icon: typeof Eye; color: string }> = {
   vision: { icon: Eye, color: 'text-foreground/60' },
-  tools: { icon: Hammer, color: 'text-amber-500' },
+  tools: { icon: Hammer, color: 'text-warning' },
   reasoning: { icon: Brain, color: 'text-violet-500' },
-  web: { icon: Globe, color: 'text-blue-500' },
+  web: { icon: Globe, color: 'text-info' },
 };
 
 const CAP_TAG_ICONS: Record<ModelCapability, typeof Eye> = {
@@ -89,17 +90,17 @@ export function ModelPickerPanel({
       <div className="px-2 pt-2 pb-1.5">
         <div className="flex items-center gap-1.5 px-2 py-[5px] rounded-md bg-accent/15 border border-border/20">
           <Search size={10} className="text-muted-foreground/40 flex-shrink-0" />
-          <input
+          <Input
             ref={searchRef}
             value={search}
             onChange={e => setSearch(e.target.value)}
             placeholder="搜索模型..."
-            className="flex-1 bg-transparent text-[10px] text-foreground placeholder:text-muted-foreground/30 outline-none min-w-0"
+            className="flex-1 h-auto border-0 bg-transparent shadow-none focus-visible:ring-0 text-xs text-foreground placeholder:text-muted-foreground/30 p-0 rounded-none min-w-0"
           />
           {search && (
-            <button onClick={() => setSearch('')} className="text-muted-foreground/30 hover:text-muted-foreground/60">
+            <Button variant="ghost" size="icon-xs" onClick={() => setSearch('')} className="w-auto h-auto p-0 text-muted-foreground/30 hover:text-muted-foreground/60 hover:bg-transparent">
               <X size={8} />
-            </button>
+            </Button>
           )}
         </div>
       </div>
@@ -129,16 +130,7 @@ export function ModelPickerPanel({
       {/* Multi-model switch */}
       <div className="flex items-center justify-between px-2.5 py-1.5">
         <span className="text-[9px] text-muted-foreground/50">多模型并行（与多助手互斥）</span>
-        <button
-          onClick={onToggleMultiModel}
-          className={`relative w-[28px] h-[14px] rounded-full transition-colors duration-150 flex-shrink-0 ${
-            multiModel ? 'bg-cherry-primary' : 'bg-accent/40'
-          }`}
-        >
-          <div className={`absolute top-[2px] w-[10px] h-[10px] rounded-full bg-white shadow-sm transition-transform duration-150 ${
-            multiModel ? 'left-[16px]' : 'left-[2px]'
-          }`} />
-        </button>
+        <Switch checked={multiModel} onCheckedChange={onToggleMultiModel} />
       </div>
 
       <div className="h-px bg-border/20" />
@@ -156,7 +148,7 @@ export function ModelPickerPanel({
               <button
                 key={p}
                 onClick={() => setActiveProvider(p)}
-                className={`flex items-center gap-1.5 w-full px-2.5 py-[6px] text-[10px] transition-all duration-75 ${
+                className={`flex items-center gap-1.5 w-full px-2.5 py-[6px] text-xs transition-all duration-75 ${
                   activeProvider === p
                     ? 'bg-accent/30 text-foreground'
                     : 'text-foreground/60 hover:text-foreground hover:bg-accent/15'
@@ -181,7 +173,7 @@ export function ModelPickerPanel({
                 <button
                   key={m.id}
                   onClick={() => handleSelect(m.id)}
-                  className={`flex items-center gap-2 w-full px-2 py-[5px] rounded-lg text-[10px] transition-all duration-75 mb-px ${
+                  className={`flex items-center gap-2 w-full px-2 py-[5px] rounded-lg text-xs transition-all duration-75 mb-px ${
                     selected ? 'bg-accent/30 ring-1 ring-border/30' : 'text-foreground/70 hover:text-foreground hover:bg-accent/15'
                   }`}
                 >

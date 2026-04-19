@@ -4,6 +4,7 @@ import {
   Brain, GitBranch, Download, ZoomIn,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { Button } from '@cherry-studio/ui';
 import { copyToClipboard } from '@/app/utils/clipboard';
 import { highlightLine } from '@/app/utils/syntaxHighlight';
 import { shakeAnimation } from '@/app/config/animations';
@@ -19,21 +20,21 @@ export function ThinkingBlock({ content }: { content: string }) {
 
   return (
     <div className="my-1.5">
-      <button
+      <Button variant="ghost" size="sm"
         onClick={() => setExpanded(!expanded)}
-        className="flex items-center gap-2 w-full px-2.5 py-[6px] rounded-lg text-left hover:bg-accent/10 transition-colors text-[10px] group"
+        className="flex items-center gap-2 w-full justify-start text-left text-xs group h-auto"
       >
         <motion.div {...shakeAnimation} className="flex items-center justify-center flex-shrink-0">
           <Brain size={11} className="text-purple-500/70" />
         </motion.div>
-        <span className="text-foreground/60 text-[10px]">思考过程</span>
+        <span className="text-foreground/60 text-xs">思考过程</span>
         <span className="flex-1 text-muted-foreground/40 truncate text-[9px]">
           {!expanded && previewLines + '...'}
         </span>
         <motion.div animate={{ rotate: expanded ? 90 : 0 }} transition={{ duration: 0.1 }}>
           <ChevronRight size={9} className="text-muted-foreground/40" />
         </motion.div>
-      </button>
+      </Button>
       <AnimatePresence initial={false}>
         {expanded && (
           <motion.div
@@ -44,7 +45,7 @@ export function ThinkingBlock({ content }: { content: string }) {
             className="overflow-hidden"
           >
             <div className="px-3 pb-2 ml-5">
-              <pre className="text-[10px] text-muted-foreground/50 leading-[1.7] whitespace-pre-wrap font-sans">
+              <pre className="text-xs text-muted-foreground/50 leading-[1.7] whitespace-pre-wrap font-sans">
                 {content}
               </pre>
             </div>
@@ -73,11 +74,11 @@ export function InlineCodeBlock({ language, code }: { language: string; code: st
     <div className="my-2.5 rounded-lg overflow-hidden border border-border/30">
       <div className="flex items-center justify-between px-3 py-1.5 bg-muted/40 border-b border-border/20">
         <span className="text-[9px] text-muted-foreground">{language}</span>
-        <button onClick={handleCopy} className="p-1 rounded text-muted-foreground/50 hover:text-foreground transition-colors text-[10px]">
+        <Button variant="ghost" size="icon-xs" onClick={handleCopy} className="text-muted-foreground/50 hover:text-foreground">
           {copied ? <Check size={10} className="text-cherry-primary" /> : <Copy size={10} />}
-        </button>
+        </Button>
       </div>
-      <pre className="px-3 py-2.5 overflow-x-auto text-[10.5px] leading-[1.7] font-mono bg-muted/15 max-h-[300px] overflow-y-auto [&::-webkit-scrollbar]:w-[2px] [&::-webkit-scrollbar-thumb]:bg-border/20">
+      <pre className="px-3 py-2.5 overflow-x-auto text-xs leading-[1.7] font-mono bg-muted/15 max-h-[300px] overflow-y-auto [&::-webkit-scrollbar]:w-[2px] [&::-webkit-scrollbar-thumb]:bg-border/20">
         {lines.map((line, i) => (
           <div key={i} className="flex">
             <span className="w-7 text-right pr-2 text-[9px] text-muted-foreground/25 select-none flex-shrink-0 tabular-nums">{i + 1}</span>
@@ -120,17 +121,17 @@ export function MermaidBlock({ code }: { code: string }) {
           <GitBranch size={10} className="text-muted-foreground/60" />
           <span className="text-[9px] text-muted-foreground/60">Mermaid 图表</span>
         </div>
-        <button onClick={() => { copyToClipboard(code); setCopied(true); setTimeout(() => setCopied(false), 1500); }}
-          className="p-1 rounded text-muted-foreground/50 hover:text-foreground transition-colors">
+        <Button variant="ghost" size="icon-xs" onClick={() => { copyToClipboard(code); setCopied(true); setTimeout(() => setCopied(false), 1500); }}
+          className="w-5 h-5 text-muted-foreground/50 hover:text-foreground">
           {copied ? <Check size={10} className="text-cherry-primary" /> : <Copy size={10} />}
-        </button>
+        </Button>
       </div>
       <div className="p-4 bg-muted/8 min-h-[120px]">
         <div className="flex flex-col items-center gap-3">
           {nodes.slice(0, 8).map((node, i) => (
             <div key={node.id} className="flex flex-col items-center gap-3">
               {i > 0 && <div className="w-px h-3 bg-border/30" />}
-              <div className={`px-3 py-1.5 rounded-lg border text-[10px] text-center min-w-[100px] ${
+              <div className={`px-3 py-1.5 rounded-lg border text-xs text-center min-w-[100px] ${
                 i === 0 ? 'bg-accent/30 border-border/40 text-foreground/80' :
                 'bg-accent/15 border-border/25 text-foreground/65'
               }`}>
@@ -182,8 +183,8 @@ export function ImageGallery({ images }: { images: string[] }) {
             <img src={url} alt={`Generated ${i + 1}`} className="w-full h-[140px] object-cover" />
             <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all flex items-center justify-center">
               <div className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
-                <button className="p-1.5 rounded-full bg-black/50 text-white"><ZoomIn size={12} /></button>
-                <button className="p-1.5 rounded-full bg-black/50 text-white"><Download size={12} /></button>
+                <Button variant="ghost" size="icon-xs" className="p-1.5 rounded-full bg-black/50 text-white hover:bg-black/70"><ZoomIn size={12} /></Button>
+                <Button variant="ghost" size="icon-xs" className="p-1.5 rounded-full bg-black/50 text-white hover:bg-black/70"><Download size={12} /></Button>
               </div>
             </div>
           </div>
@@ -202,10 +203,10 @@ export function ImageGallery({ images }: { images: string[] }) {
               className="max-w-full max-h-full rounded-xl object-contain"
               onClick={e => e.stopPropagation()}
             />
-            <button onClick={() => setLightbox(null)}
-              className="absolute top-6 right-6 p-2 rounded-full bg-white/10 text-white hover:bg-white/20 transition-colors">
+            <Button variant="ghost" size="icon-sm" onClick={() => setLightbox(null)}
+              className="absolute top-6 right-6 rounded-full bg-white/10 text-white hover:bg-white/20">
               <X size={16} />
-            </button>
+            </Button>
           </motion.div>
         )}
       </AnimatePresence>

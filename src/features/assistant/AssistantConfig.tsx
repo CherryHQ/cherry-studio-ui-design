@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { ArrowLeft, Save, Settings, FileText, BookOpen, ChevronRight, Wrench } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { Button } from '@cherry-studio/ui';
 import type { ResourceItem } from '@/app/types';
 import { BasicSection } from './sections/BasicSection';
 import { PromptSection } from './sections/PromptSection';
@@ -30,32 +31,33 @@ export function AssistantConfig({ resource, onBack }: Props) {
   return (
     <div className="flex-1 flex flex-col min-h-0">
       <div className="flex items-center gap-3 px-5 py-3 border-b border-border/15 flex-shrink-0">
-        <button onClick={onBack} className="w-7 h-7 rounded-lg flex items-center justify-center text-muted-foreground/40 hover:text-foreground hover:bg-accent/40 transition-colors"><ArrowLeft size={14} /></button>
-        <div className="flex items-center gap-1 text-[10px] text-muted-foreground/50">
+        <Button variant="ghost" size="icon-xs" onClick={onBack} className="w-7 h-7 text-muted-foreground/40"><ArrowLeft size={14} /></Button>
+        <div className="flex items-center gap-1 text-xs text-muted-foreground/50">
           <span className="hover:text-foreground cursor-pointer transition-colors" onClick={onBack}>资源库</span>
           <ChevronRight size={9} />
           <span className="text-foreground">{resource.name}</span>
         </div>
         <div className="flex-1" />
         <AnimatePresence>
-          {saved && <motion.span initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0 }} className="text-[10px] text-cherry-primary">已保存</motion.span>}
+          {saved && <motion.span initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0 }} className="text-xs text-cherry-primary">已保存</motion.span>}
         </AnimatePresence>
-        <button onClick={onBack} className="px-3 py-1.5 rounded-lg text-[11px] text-muted-foreground/50 hover:text-foreground hover:bg-accent/30 border border-border/20 transition-all">取消</button>
-        <button onClick={handleSave} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-foreground text-background text-[11px] hover:bg-foreground/90 transition-colors active:scale-[0.97]"><Save size={10} /><span>保存</span></button>
+        <Button variant="outline" size="xs" onClick={onBack} className="text-muted-foreground/50">取消</Button>
+        <Button variant="default" size="xs" onClick={handleSave} className="active:scale-[0.97]"><Save size={10} /><span>保存</span></Button>
       </div>
       <div className="flex flex-1 min-h-0">
         <div className="w-[180px] flex-shrink-0 border-r border-border/10 p-3">
           {sections.map(s => {
             const Icon = s.icon; const active = activeSection === s.id;
             return (
-              <button key={s.id} onClick={() => setActiveSection(s.id)}
-                className={`flex items-start gap-2.5 w-full px-3 py-2.5 rounded-xl text-left transition-all mb-1 ${active ? 'bg-accent/60 text-foreground' : 'text-muted-foreground/60 hover:text-foreground hover:bg-accent/25'}`}>
+              <Button key={s.id} variant="ghost" size="sm"
+                onClick={() => setActiveSection(s.id)}
+                className={`flex items-start gap-2.5 w-full h-auto px-3 py-2.5 rounded-xl text-left mb-1 ${active ? 'bg-accent/60 text-foreground' : 'text-muted-foreground/60'}`}>
                 <Icon size={13} strokeWidth={1.6} className="mt-0.5 flex-shrink-0" />
                 <div className="min-w-0">
-                  <div className="text-[11px]">{s.label}</div>
+                  <div className="text-xs">{s.label}</div>
                   <div className={`text-[9px] mt-px ${active ? 'text-muted-foreground/50' : 'text-muted-foreground/45'}`}>{s.desc}</div>
                 </div>
-              </button>
+              </Button>
             );
           })}
         </div>

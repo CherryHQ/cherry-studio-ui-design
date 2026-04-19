@@ -6,7 +6,7 @@ import {
   Volume2, Copy, FileUp, ArrowLeftRight, ArrowRight,
   Star, Repeat, Clock, ChevronRight, PenLine, Plus
 } from 'lucide-react';
-import { Button } from '@cherry-studio/ui';
+import { Button, Input, Switch, Popover, PopoverTrigger, PopoverContent } from '@cherry-studio/ui';
 import { Tooltip } from '@/components/common/Tooltip';
 import { motion, AnimatePresence } from 'motion/react';
 import { copyToClipboard } from '@/lib/utils/clipboard';
@@ -238,21 +238,23 @@ export function TranslatePage() {
             <span className="text-muted-foreground/30 flex-shrink-0">·</span>
             {/* Expert dropdown */}
             <div className="relative flex-shrink-0" ref={expertDropdownRef}>
-              <button
+              <Button
+                variant="ghost" size="xs"
                 onClick={() => { setShowExpertDropdown(v => !v); setShowModelDropdown(false); }}
-                className="flex items-center gap-1 px-1.5 py-0.5 rounded-md hover:bg-accent/50 transition-colors text-muted-foreground hover:text-foreground"
+                className="flex items-center gap-1 px-1.5 py-0.5 text-muted-foreground hover:text-foreground"
               >
                 <Brain size={11} className="text-primary/60" />
-                <span className="max-w-[110px] truncate text-[11px]">{currentExpert.label}</span>
+                <span className="max-w-[110px] truncate text-xs">{currentExpert.label}</span>
                 <ChevronDown size={9} className="text-muted-foreground/40" />
-              </button>
+              </Button>
               {showExpertDropdown && (
                 <div className="absolute top-full left-0 mt-1 w-48 bg-popover border border-border rounded-xl shadow-2xl z-50 py-1 max-h-[340px] overflow-y-auto">
                   {expertList.map(e => (
-                    <button
+                    <Button
+                      variant="ghost" size="xs"
                       key={e.id}
                       onClick={() => { setSelectedExpert(e.id); setShowExpertDropdown(false); }}
-                      className="w-full text-left px-1.5 py-[2px] text-[11px]"
+                      className="w-full text-left px-1.5 py-[2px] text-xs justify-start"
                     >
                       <div className={`flex items-center gap-1.5 px-2 py-[5px] rounded-lg transition-colors ${
                         e.id === selectedExpert ? 'bg-accent text-foreground' : 'text-foreground hover:bg-accent/50'
@@ -260,7 +262,7 @@ export function TranslatePage() {
                         {e.id === selectedExpert ? <Check size={11} className="text-primary flex-shrink-0" /> : <span className="w-[11px] flex-shrink-0" />}
                         <span>{e.label}</span>
                       </div>
-                    </button>
+                    </Button>
                   ))}
                 </div>
               )}
@@ -268,41 +270,44 @@ export function TranslatePage() {
             {/* Model icon selector */}
             <div className="relative flex-shrink-0" ref={modelDropdownRef}>
               <Tooltip content={currentModel.name} side="bottom">
-                <button
+                <Button
+                  variant="ghost" size="icon-xs"
                   onClick={() => { setShowModelDropdown(v => !v); setShowExpertDropdown(false); }}
-                  className={`w-7 h-7 rounded-md flex items-center justify-center transition-colors ${
+                  className={`w-7 h-7 ${
                     showModelDropdown ? 'bg-accent text-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
                   }`}
                 >
                   <Sparkles size={13} className="text-primary/70" />
-                </button>
+                </Button>
               </Tooltip>
               {showModelDropdown && (
                 <div className="absolute top-full left-1/2 -translate-x-1/2 mt-1 w-[340px] bg-popover border border-border rounded-xl shadow-2xl z-50 overflow-hidden">
                   {/* Search */}
                   <div className="flex items-center gap-2 px-3 py-2.5 border-b border-border/30">
                     <Search size={13} className="text-muted-foreground/50 flex-shrink-0" />
-                    <input
+                    <Input
                       value={modelSearch}
                       onChange={e => setModelSearch(e.target.value)}
                       placeholder="搜索模型..."
-                      className="flex-1 bg-transparent text-xs text-foreground placeholder:text-muted-foreground/40 outline-none"
+                      className="flex-1 bg-transparent text-xs text-foreground placeholder:text-muted-foreground/40 outline-none border-0 shadow-none h-auto p-0"
                       autoFocus
                     />
                   </div>
                   {/* Tag filters */}
                   <div className="flex items-center gap-1.5 px-3 py-2 border-b border-border/20 flex-wrap">
-                    <button
+                    <Button
+                      variant="ghost" size="xs"
                       onClick={() => setModelTagFilter(null)}
-                      className={`text-[10px] px-2 py-0.5 rounded-full border transition-colors ${
+                      className={`text-xs px-2 py-0.5 rounded-full border ${
                         !modelTagFilter ? 'bg-primary/10 border-primary/30 text-primary' : 'border-border/50 text-muted-foreground hover:bg-accent/50'
                       }`}
-                    >按标签筛选</button>
+                    >按标签筛选</Button>
                     {allModelTags.map(tag => (
-                      <button
+                      <Button
+                        variant="ghost" size="xs"
                         key={tag}
                         onClick={() => setModelTagFilter(modelTagFilter === tag ? null : tag)}
-                        className={`text-[10px] px-2 py-0.5 rounded-full border transition-colors flex items-center gap-1 ${
+                        className={`text-xs px-2 py-0.5 rounded-full border flex items-center gap-1 ${
                           modelTagFilter === tag ? 'bg-primary/10 border-primary/30 text-primary' : 'border-border/50 text-muted-foreground hover:bg-accent/50'
                         }`}
                       >
@@ -312,21 +317,22 @@ export function TranslatePage() {
                         {tag === '联网' && <Globe size={9} />}
                         {tag === '免费' && '🆓'}
                         {tag}
-                      </button>
+                      </Button>
                     ))}
                   </div>
                   {/* Model list */}
                   <div className="max-h-[280px] overflow-y-auto py-1">
                     {filteredModels.map(m => (
-                      <button
+                      <Button
+                        variant="ghost" size="xs"
                         key={m.id}
                         onClick={() => { setSelectedModelId(m.id); setShowModelDropdown(false); setModelSearch(''); }}
-                        className="w-full text-left px-1.5 py-[2px] text-xs"
+                        className="w-full text-left px-1.5 py-[2px] text-xs justify-start"
                       >
                         <div className={`flex items-center gap-2 px-2 py-1.5 rounded-lg transition-colors ${
                           m.id === selectedModelId ? 'bg-accent text-foreground' : 'text-foreground hover:bg-accent/50'
                         }`}>
-                          <span className="w-5 h-5 rounded flex items-center justify-center text-[11px] flex-shrink-0">{m.icon}</span>
+                          <span className="w-5 h-5 rounded flex items-center justify-center text-xs flex-shrink-0">{m.icon}</span>
                           <span className="flex-1 truncate">{m.name}</span>
                           <div className="flex items-center gap-1 flex-shrink-0">
                             {m.tags.map(t => (
@@ -336,7 +342,7 @@ export function TranslatePage() {
                             ))}
                           </div>
                         </div>
-                      </button>
+                      </Button>
                     ))}
                     {filteredModels.length === 0 && (
                       <div className="px-3 py-4 text-center text-xs text-muted-foreground/40">无匹配模型</div>
@@ -347,22 +353,24 @@ export function TranslatePage() {
             </div>
           </div>
           <div className="flex items-center gap-1">
-            <button
+            <Button
+              variant="ghost" size="icon-xs"
               onClick={() => setHistoryOpen(v => !v)}
-              className={`w-7 h-7 rounded-md flex items-center justify-center transition-colors ${
+              className={`w-7 h-7 ${
                 historyOpen ? 'bg-accent text-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-accent'
               }`}
             >
               <History size={14} strokeWidth={1.6} />
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="ghost" size="icon-xs"
               onClick={() => setSettingsOpen(v => !v)}
-              className={`w-7 h-7 rounded-md flex items-center justify-center transition-colors ${
+              className={`w-7 h-7 ${
                 settingsOpen ? 'bg-accent text-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-accent'
               }`}
             >
               <SlidersHorizontal size={14} strokeWidth={1.6} />
-            </button>
+            </Button>
           </div>
         </div>
 
@@ -372,45 +380,45 @@ export function TranslatePage() {
             {/* Language selector row */}
             <div className="flex items-center h-10 px-2 flex-shrink-0">
               <div className="flex-1 relative">
-                <button onClick={() => { setShowLangDropdownSrc(v => !v); setShowLangDropdownTgt(false); }}
-                  className="w-full h-full flex items-center justify-center gap-1.5 text-xs text-foreground hover:bg-accent/30 rounded-lg transition-colors py-1.5">
-                  <span className="text-[10px] text-muted-foreground/40 mr-0.5">源语言</span>
+                <Button variant="ghost" size="sm" onClick={() => { setShowLangDropdownSrc(v => !v); setShowLangDropdownTgt(false); }}
+                  className="w-full h-full flex items-center justify-center gap-1.5 text-xs text-foreground hover:bg-accent/30 py-1.5">
+                  <span className="text-xs text-muted-foreground/40 mr-0.5">源语言</span>
                   <span className="text-sm leading-none">{langFlags[sourceLang] || '🌐'}</span>
                   <span>{sourceLang}</span>
                   <ChevronDown size={11} className="text-muted-foreground/50" />
-                </button>
+                </Button>
                 {showLangDropdownSrc && (
                   <div className="absolute top-full left-2 mt-1 w-40 bg-popover border border-border rounded-xl shadow-xl z-50 py-1 max-h-[240px] overflow-y-auto">
                     {languages.map(l => (
-                      <button key={l} onClick={() => { setSourceLang(l); setShowLangDropdownSrc(false); }}
-                        className={`w-full text-left text-xs transition-colors ${l === sourceLang ? 'text-foreground' : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground'}`}>
+                      <Button variant="ghost" size="sm" key={l} onClick={() => { setSourceLang(l); setShowLangDropdownSrc(false); }}
+                        className={`w-full text-left text-xs justify-start ${l === sourceLang ? 'text-foreground' : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground'}`}>
                         <span className={`flex items-center gap-2 px-3 py-[6px] ${l === sourceLang ? 'bg-accent rounded-lg mx-1 my-0.5 px-2' : ''}`}><span className="text-sm leading-none">{langFlags[l] || '🌐'}</span>{l}</span>
-                      </button>
+                      </Button>
                     ))}
                   </div>
                 )}
               </div>
-              <button onClick={handleSwapLangs}
-                className={`w-8 h-8 rounded-full flex items-center justify-center transition-all flex-shrink-0 ${
+              <Button variant="ghost" size="icon-xs" onClick={handleSwapLangs}
+                className={`w-8 h-8 rounded-full flex-shrink-0 ${
                   sourceLang === '自动检测' ? 'text-muted-foreground/20 cursor-not-allowed' : 'text-muted-foreground hover:text-foreground hover:bg-accent active:scale-90'
                 }`}>
                 <ArrowLeftRight size={14} />
-              </button>
+              </Button>
               <div className="flex-1 relative">
-                <button onClick={() => { setShowLangDropdownTgt(v => !v); setShowLangDropdownSrc(false); }}
-                  className="w-full h-full flex items-center justify-center gap-1.5 text-xs text-foreground hover:bg-accent/30 rounded-lg transition-colors py-1.5">
-                  <span className="text-[10px] text-muted-foreground/40 mr-0.5">目标语言</span>
+                <Button variant="ghost" size="sm" onClick={() => { setShowLangDropdownTgt(v => !v); setShowLangDropdownSrc(false); }}
+                  className="w-full h-full flex items-center justify-center gap-1.5 text-xs text-foreground hover:bg-accent/30 py-1.5">
+                  <span className="text-xs text-muted-foreground/40 mr-0.5">目标语言</span>
                   <span className="text-sm leading-none">{langFlags[targetLang] || '🌐'}</span>
                   <span>{targetLang}</span>
                   <ChevronDown size={11} className="text-muted-foreground/50" />
-                </button>
+                </Button>
                 {showLangDropdownTgt && (
                   <div className="absolute top-full right-2 mt-1 w-40 bg-popover border border-border rounded-xl shadow-xl z-50 py-1 max-h-[240px] overflow-y-auto">
                     {targetLanguages.map(l => (
-                      <button key={l} onClick={() => { setTargetLang(l); setShowLangDropdownTgt(false); }}
-                        className={`w-full text-left text-xs transition-colors ${l === targetLang ? 'text-foreground' : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground'}`}>
+                      <Button variant="ghost" size="sm" key={l} onClick={() => { setTargetLang(l); setShowLangDropdownTgt(false); }}
+                        className={`w-full text-left text-xs justify-start ${l === targetLang ? 'text-foreground' : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground'}`}>
                         <span className={`flex items-center gap-2 px-3 py-[6px] ${l === targetLang ? 'bg-accent rounded-lg mx-1 my-0.5 px-2' : ''}`}><span className="text-sm leading-none">{langFlags[l] || '🌐'}</span>{l}</span>
-                      </button>
+                      </Button>
                     ))}
                   </div>
                 )}
@@ -427,37 +435,37 @@ export function TranslatePage() {
                     onChange={e => setSourceText(e.target.value)}
                     onKeyDown={e => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) handleTranslate(); }}
                     placeholder="输入需要翻译的文本..."
-                    className="w-full h-full resize-none bg-transparent px-4 py-3 text-[13px] text-foreground placeholder:text-muted-foreground/40 outline-none"
+                    className="w-full h-full resize-none bg-transparent px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground/40 outline-none"
                   />
                   {sourceText && (
-                    <button onClick={() => { setSourceText(''); setTranslatedText(''); }}
-                      className="absolute top-2.5 right-2.5 w-5 h-5 rounded-full flex items-center justify-center text-muted-foreground/40 hover:text-muted-foreground hover:bg-accent/50 transition-colors">
+                    <Button variant="ghost" size="icon-xs" onClick={() => { setSourceText(''); setTranslatedText(''); }}
+                      className="absolute top-2.5 right-2.5 w-5 h-5 rounded-full text-muted-foreground/40 hover:text-muted-foreground hover:bg-accent/50">
                       <X size={11} />
-                    </button>
+                    </Button>
                   )}
                 </div>
                 {/* Source toolbar */}
                 <div className="flex items-center justify-between px-3 py-1.5 flex-shrink-0">
                   <div className="flex items-center gap-0.5">
-                    <button className="w-6 h-6 rounded-md flex items-center justify-center text-muted-foreground/40 hover:text-muted-foreground hover:bg-accent/30 transition-colors">
+                    <Button variant="ghost" size="icon-xs" className="w-6 h-6 text-muted-foreground/40 hover:text-muted-foreground hover:bg-accent/30">
                       <Volume2 size={12} />
-                    </button>
-                    <button onClick={() => sourceText && handleCopy(sourceText)}
-                      className="w-6 h-6 rounded-md flex items-center justify-center text-muted-foreground/40 hover:text-muted-foreground hover:bg-accent/30 transition-colors">
+                    </Button>
+                    <Button variant="ghost" size="icon-xs" onClick={() => sourceText && handleCopy(sourceText)}
+                      className="w-6 h-6 text-muted-foreground/40 hover:text-muted-foreground hover:bg-accent/30">
                       <Copy size={12} />
-                    </button>
-                    <button className="w-6 h-6 rounded-md flex items-center justify-center text-muted-foreground/40 hover:text-muted-foreground hover:bg-accent/30 transition-colors">
+                    </Button>
+                    <Button variant="ghost" size="icon-xs" className="w-6 h-6 text-muted-foreground/40 hover:text-muted-foreground hover:bg-accent/30">
                       <FileUp size={12} />
-                    </button>
+                    </Button>
                   </div>
-                  <span className="text-[10px] text-muted-foreground/30">{sourceText.length}</span>
+                  <span className="text-xs text-muted-foreground/30">{sourceText.length}</span>
                 </div>
               </div>
               {/* Center divider - subtle */}
               <div className="w-px bg-border/20 my-3 flex-shrink-0" />
               {/* Target */}
               <div className="flex-1 flex flex-col min-h-0 bg-muted/10 rounded-br-2xl">
-                <div className="flex-1 px-4 py-3 text-[13px] min-h-0 overflow-y-auto">
+                <div className="flex-1 px-4 py-3 text-sm min-h-0 overflow-y-auto">
                   {isTranslating ? (
                     <div className="flex items-center gap-2 text-muted-foreground/60">
                       <div className="w-4 h-4 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
@@ -472,27 +480,28 @@ export function TranslatePage() {
                 {/* Target toolbar */}
                 <div className="flex items-center justify-between px-3 py-1.5 flex-shrink-0">
                   <div className="flex items-center gap-0.5">
-                    <button className="w-6 h-6 rounded-md flex items-center justify-center text-muted-foreground/40 hover:text-muted-foreground hover:bg-accent/30 transition-colors">
+                    <Button variant="ghost" size="icon-xs" className="w-6 h-6 text-muted-foreground/40 hover:text-muted-foreground hover:bg-accent/30">
                       <Volume2 size={12} />
-                    </button>
-                    <button onClick={() => translatedText && handleCopy(translatedText)}
-                      className="w-6 h-6 rounded-md flex items-center justify-center text-muted-foreground/40 hover:text-muted-foreground hover:bg-accent/30 transition-colors">
+                    </Button>
+                    <Button variant="ghost" size="icon-xs" onClick={() => translatedText && handleCopy(translatedText)}
+                      className="w-6 h-6 text-muted-foreground/40 hover:text-muted-foreground hover:bg-accent/30">
                       {copied ? <Check size={12} className="text-primary" /> : <Copy size={12} />}
-                    </button>
+                    </Button>
                   </div>
                   <div className="flex items-center gap-2">
-                    {translatedText && <span className="text-[10px] text-muted-foreground/30">{translatedText.length}</span>}
-                    <button
+                    {translatedText && <span className="text-xs text-muted-foreground/30">{translatedText.length}</span>}
+                    <Button
+                      variant="default" size="sm"
                       onClick={handleTranslate}
                       disabled={!sourceText.trim() || isTranslating}
-                      className={`px-3 py-1 rounded-lg text-[11px] flex items-center gap-1.5 transition-all ${
-                        sourceText.trim() && !isTranslating
-                          ? 'bg-primary text-primary-foreground hover:opacity-90'
-                          : 'bg-muted text-muted-foreground/40 cursor-not-allowed'
+                      className={`px-3 py-1 text-xs flex items-center gap-1.5 ${
+                        !sourceText.trim() || isTranslating
+                          ? 'bg-muted text-muted-foreground/40 cursor-not-allowed'
+                          : ''
                       }`}>
                       <Languages size={12} />
                       <span>翻译</span>
-                    </button>
+                    </Button>
                   </div>
                 </div>
               </div>
@@ -520,81 +529,82 @@ export function TranslatePage() {
                   <span className="text-muted-foreground/40 ml-0.5">({displayedHistory.length})</span>
                 </h3>
                 <div className="flex items-center gap-0.5">
-                  <button
+                  <Button
+                    variant="ghost" size="icon-xs"
                     onClick={() => setFilterStarred(v => !v)}
-                    className={`w-6 h-6 rounded-md flex items-center justify-center transition-colors ${
-                      filterStarred ? 'text-amber-500 bg-amber-500/10' : 'text-muted-foreground/50 hover:text-amber-500 hover:bg-accent/30'
+                    className={`w-6 h-6 ${
+                      filterStarred ? 'text-warning bg-warning/10' : 'text-muted-foreground/50 hover:text-warning hover:bg-accent/30'
                     }`}
                   >
-                    <Star size={12} className={filterStarred ? 'fill-amber-500' : ''} />
-                  </button>
-                  <button onClick={() => { setHistoryOpen(false); setSelectedHistoryId(null); }}
-                    className="w-6 h-6 rounded-md flex items-center justify-center text-muted-foreground/50 hover:text-foreground hover:bg-accent/30 transition-colors">
+                    <Star size={12} className={filterStarred ? 'fill-current' : ''} />
+                  </Button>
+                  <Button variant="ghost" size="icon-xs" onClick={() => { setHistoryOpen(false); setSelectedHistoryId(null); }}
+                    className="w-6 h-6 text-muted-foreground/50 hover:text-foreground hover:bg-accent/30">
                     <X size={12} />
-                  </button>
+                  </Button>
                 </div>
               </div>
               <div className="flex-1 min-h-0 overflow-y-auto">
                 {selectedHistoryItem ? (
                   <div className="p-3">
-                    <button onClick={() => setSelectedHistoryId(null)}
-                      className="flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground transition-colors mb-3">
+                    <Button variant="ghost" size="xs" onClick={() => setSelectedHistoryId(null)}
+                      className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground mb-3">
                       <ChevronRight size={11} className="rotate-180" />
                       <span>返回列表</span>
-                    </button>
+                    </Button>
                     <div className="space-y-3">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-accent/60 text-muted-foreground">{selectedHistoryItem.srcLang}</span>
+                        <span className="text-xs px-1.5 py-0.5 rounded-md bg-accent/60 text-muted-foreground">{selectedHistoryItem.srcLang}</span>
                         <ArrowRight size={10} className="text-muted-foreground/40" />
-                        <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-primary/10 text-primary">{selectedHistoryItem.tgtLang}</span>
+                        <span className="text-xs px-1.5 py-0.5 rounded-md bg-primary/10 text-primary">{selectedHistoryItem.tgtLang}</span>
                         <span className="flex-1" />
-                        <button onClick={() => toggleStar(selectedHistoryItem.id)}
-                          className={`w-5 h-5 rounded flex items-center justify-center transition-colors ${starredIds.has(selectedHistoryItem.id) ? 'text-amber-500' : 'text-muted-foreground/30 hover:text-amber-500'}`}>
-                          <Star size={11} className={starredIds.has(selectedHistoryItem.id) ? 'fill-amber-500' : ''} />
-                        </button>
-                        <span className="text-[10px] text-muted-foreground/40">{selectedHistoryItem.time}</span>
+                        <Button variant="ghost" size="icon-xs" onClick={() => toggleStar(selectedHistoryItem.id)}
+                          className={`w-5 h-5 ${starredIds.has(selectedHistoryItem.id) ? 'text-warning' : 'text-muted-foreground/30 hover:text-warning'}`}>
+                          <Star size={11} className={starredIds.has(selectedHistoryItem.id) ? 'fill-current' : ''} />
+                        </Button>
+                        <span className="text-xs text-muted-foreground/40">{selectedHistoryItem.time}</span>
                       </div>
-                      <div className="flex items-center gap-3 text-[10px] text-muted-foreground/60">
+                      <div className="flex items-center gap-3 text-xs text-muted-foreground/60">
                         <span className="flex items-center gap-1">
                           <Brain size={10} />
                           <span>{selectedHistoryItem.expert}</span>
                         </span>
                         <span className="flex items-center gap-1">
-                          <span className="text-[10px]">{selectedHistoryItem.modelIcon}</span>
+                          <span className="text-xs">{selectedHistoryItem.modelIcon}</span>
                           <span className="truncate max-w-[120px]">{selectedHistoryItem.model}</span>
                         </span>
                       </div>
                       <div className="bg-muted/30 rounded-xl p-3">
                         <div className="flex items-center justify-between mb-2">
-                          <span className="text-[10px] text-muted-foreground/50">原文</span>
-                          <button onClick={() => handleCopy(selectedHistoryItem.source)}
-                            className="w-5 h-5 rounded flex items-center justify-center text-muted-foreground/30 hover:text-muted-foreground transition-colors">
+                          <span className="text-xs text-muted-foreground/50">原文</span>
+                          <Button variant="ghost" size="icon-xs" onClick={() => handleCopy(selectedHistoryItem.source)}
+                            className="w-5 h-5 text-muted-foreground/30 hover:text-muted-foreground">
                             <Copy size={10} />
-                          </button>
+                          </Button>
                         </div>
-                        <p className="text-[12px] text-foreground leading-relaxed">{selectedHistoryItem.source}</p>
+                        <p className="text-sm text-foreground leading-relaxed">{selectedHistoryItem.source}</p>
                       </div>
                       <div className="bg-primary/5 rounded-xl p-3 border border-primary/10">
                         <div className="flex items-center justify-between mb-2">
-                          <span className="text-[10px] text-primary/70">译文</span>
-                          <button onClick={() => handleCopy(selectedHistoryItem.translated)}
-                            className="w-5 h-5 rounded flex items-center justify-center text-muted-foreground/30 hover:text-primary transition-colors">
+                          <span className="text-xs text-primary/70">译文</span>
+                          <Button variant="ghost" size="icon-xs" onClick={() => handleCopy(selectedHistoryItem.translated)}
+                            className="w-5 h-5 text-muted-foreground/30 hover:text-primary">
                             <Copy size={10} />
-                          </button>
+                          </Button>
                         </div>
-                        <p className="text-[12px] text-foreground leading-relaxed">{selectedHistoryItem.translated}</p>
+                        <p className="text-sm text-foreground leading-relaxed">{selectedHistoryItem.translated}</p>
                       </div>
                       <div className="flex gap-2 pt-1">
-                        <button onClick={() => { setSourceText(selectedHistoryItem.source); setTranslatedText(''); setSelectedHistoryId(null); setHistoryOpen(false); }}
-                          className="flex-1 flex items-center justify-center gap-1.5 py-[6px] rounded-lg text-[11px] text-muted-foreground bg-accent/50 hover:bg-accent transition-colors">
+                        <Button variant="ghost" size="sm" onClick={() => { setSourceText(selectedHistoryItem.source); setTranslatedText(''); setSelectedHistoryId(null); setHistoryOpen(false); }}
+                          className="flex-1 flex items-center justify-center gap-1.5 text-xs text-muted-foreground bg-accent/50 hover:bg-accent">
                           <Repeat size={11} />
                           <span>重新翻译</span>
-                        </button>
-                        <button onClick={() => handleCopy(selectedHistoryItem.translated)}
-                          className="flex-1 flex items-center justify-center gap-1.5 py-[6px] rounded-lg text-[11px] text-primary-foreground bg-primary hover:opacity-90 transition-colors">
+                        </Button>
+                        <Button variant="default" size="sm" onClick={() => handleCopy(selectedHistoryItem.translated)}
+                          className="flex-1 flex items-center justify-center gap-1.5 text-xs">
                           <Copy size={11} />
                           <span>复制译文</span>
-                        </button>
+                        </Button>
                       </div>
                     </div>
                   </div>
@@ -603,7 +613,7 @@ export function TranslatePage() {
                     {displayedHistory.length === 0 ? (
                       <div className="flex flex-col items-center justify-center py-8 text-muted-foreground/30">
                         <Star size={20} className="mb-2" />
-                        <span className="text-[11px]">暂无收藏记录</span>
+                        <span className="text-xs">暂无收藏记录</span>
                       </div>
                     ) : displayedHistory.map(item => (
                       <div
@@ -611,22 +621,22 @@ export function TranslatePage() {
                         className="relative p-2.5 rounded-xl hover:bg-accent/40 transition-colors group cursor-pointer"
                         onClick={() => setSelectedHistoryId(item.id)}
                       >
-                        <button
+                        <Button variant="ghost" size="icon-xs"
                           onClick={e => { e.stopPropagation(); toggleStar(item.id); }}
-                          className={`absolute top-2 right-2 w-5 h-5 rounded flex items-center justify-center transition-all ${
-                            starredIds.has(item.id) ? 'text-amber-500' : 'text-muted-foreground/20 opacity-0 group-hover:opacity-100 hover:text-amber-500'
+                          className={`absolute top-2 right-2 w-5 h-5 transition-all ${
+                            starredIds.has(item.id) ? 'text-warning' : 'text-muted-foreground/20 opacity-0 group-hover:opacity-100 hover:text-warning'
                           }`}
                         >
-                          <Star size={10} className={starredIds.has(item.id) ? 'fill-amber-500' : ''} />
-                        </button>
+                          <Star size={10} className={starredIds.has(item.id) ? 'fill-current' : ''} />
+                        </Button>
                         <div className="flex items-center gap-1.5 mb-1.5 pr-5">
                           <span className="text-[9px] px-1 py-[1px] rounded bg-accent/70 text-muted-foreground">{item.srcLang}</span>
                           <ArrowRight size={8} className="text-muted-foreground/30" />
                           <span className="text-[9px] px-1 py-[1px] rounded bg-primary/10 text-primary">{item.tgtLang}</span>
                           <span className="text-[9px] text-muted-foreground/30 ml-auto">{item.time}</span>
                         </div>
-                        <p className="text-[11px] text-muted-foreground line-clamp-1 mb-1">{item.source}</p>
-                        <p className="text-[11px] text-foreground line-clamp-1">{item.translated}</p>
+                        <p className="text-xs text-muted-foreground line-clamp-1 mb-1">{item.source}</p>
+                        <p className="text-xs text-foreground line-clamp-1">{item.translated}</p>
                         <div className="flex items-center gap-3 mt-1.5 text-[9px] text-muted-foreground/40">
                           <span className="flex items-center gap-1">
                             <Brain size={9} />
@@ -659,10 +669,10 @@ export function TranslatePage() {
                 <SlidersHorizontal size={12} className="text-muted-foreground" />
                 <span>翻译设置</span>
               </h3>
-              <button onClick={() => setSettingsOpen(false)}
-                className="w-6 h-6 rounded-md flex items-center justify-center text-muted-foreground/50 hover:text-foreground hover:bg-accent/30 transition-colors">
+              <Button variant="ghost" size="icon-xs" onClick={() => setSettingsOpen(false)}
+                className="w-6 h-6 text-muted-foreground/50 hover:text-foreground hover:bg-accent/30">
                 <X size={12} />
-              </button>
+              </Button>
             </div>
             <div className="flex-1 min-h-0 overflow-y-auto" onClick={() => { setShowBiDropA(false); setShowBiDropB(false); }}>
               <div className="p-4 space-y-5">
@@ -673,12 +683,7 @@ export function TranslatePage() {
                 ].map(item => (
                   <div key={item.label} className="flex items-center justify-between">
                     <span className="text-xs text-foreground">{item.label}</span>
-                    <button
-                      onClick={() => item.set(!item.value)}
-                      className={`w-9 h-5 rounded-full transition-colors relative ${item.value ? 'bg-primary' : 'bg-muted-foreground/20'}`}
-                    >
-                      <div className={`w-3.5 h-3.5 rounded-full bg-white shadow-sm absolute top-[3px] transition-all ${item.value ? 'left-[19px]' : 'left-[3px]'}`} />
-                    </button>
+                    <Switch checked={item.value} onCheckedChange={() => item.set(!item.value)} />
                   </div>
                 ))}
 
@@ -693,7 +698,7 @@ export function TranslatePage() {
                   <select
                     value={detectMethod}
                     onChange={e => setDetectMethod(e.target.value as 'auto'|'algo'|'llm')}
-                    className="px-2.5 py-1 rounded-lg border border-border/50 bg-card text-[11px] text-foreground outline-none cursor-pointer hover:border-border transition-colors"
+                    className="px-2.5 py-1 rounded-lg border border-border/50 bg-card text-xs text-foreground outline-none cursor-pointer hover:border-border transition-colors"
                   >
                     <option value="auto">自动</option>
                     <option value="algo">算法</option>
@@ -710,35 +715,30 @@ export function TranslatePage() {
                         <span className="w-3.5 h-3.5 rounded-full border border-muted-foreground/30 flex items-center justify-center text-[8px] text-muted-foreground/50 cursor-help">?</span>
                       </Tooltip>
                     </div>
-                    <button
-                      onClick={() => setBiDirectional(!biDirectional)}
-                      className={`w-9 h-5 rounded-full transition-colors relative ${biDirectional ? 'bg-primary' : 'bg-muted-foreground/20'}`}
-                    >
-                      <div className={`w-3.5 h-3.5 rounded-full bg-white shadow-sm absolute top-[3px] transition-all ${biDirectional ? 'left-[19px]' : 'left-[3px]'}`} />
-                    </button>
+                    <Switch checked={biDirectional} onCheckedChange={setBiDirectional} />
                   </div>
                   {biDirectional && (
                     <div className="flex items-center gap-2">
                       {/* Lang A dropdown */}
                       <div className="flex-1 relative">
-                        <button onClick={() => { setShowBiDropA(v => !v); setShowBiDropB(false); }}
-                          className="w-full flex items-center gap-1 px-2 py-1.5 rounded-lg border border-border/50 bg-card text-[11px] text-foreground hover:border-border transition-colors">
+                        <Button variant="outline" size="xs" onClick={() => { setShowBiDropA(v => !v); setShowBiDropB(false); }}
+                          className="w-full flex items-center gap-1 px-2 py-1.5 rounded-lg border-border/50 bg-card text-xs text-foreground hover:border-border h-auto justify-between">
                           <span className="flex-1 text-left truncate">{biLangA.length ? biLangA.join(', ') : '选择语言'}</span>
                           <ChevronDown size={10} className="text-muted-foreground/40 flex-shrink-0" />
-                        </button>
+                        </Button>
                         {showBiDropA && (
                           <div className="absolute top-full left-0 right-0 mt-1 z-10 bg-popover border border-border rounded-lg shadow-lg max-h-[140px] overflow-y-auto py-1">
                             {targetLanguages.map(lang => (
-                              <button key={lang}
+                              <Button variant="ghost" size="xs" key={lang}
                                 onClick={() => setBiLangA(prev => prev.includes(lang) ? prev.filter(l => l !== lang) : [...prev, lang])}
-                                className="w-full px-1 py-[1px] text-[11px]">
+                                className="w-full px-1 py-[1px] text-xs justify-start h-auto">
                                 <div className={`flex items-center gap-2 px-2 py-1 rounded-md transition-colors ${biLangA.includes(lang) ? 'bg-accent text-foreground' : 'text-foreground hover:bg-accent/50'}`}>
                                   <div className={`w-3 h-3 rounded border flex items-center justify-center flex-shrink-0 ${biLangA.includes(lang) ? 'bg-primary border-primary' : 'border-border'}`}>
                                     {biLangA.includes(lang) && <Check size={8} className="text-white" />}
                                   </div>
                                   <span>{lang}</span>
                                 </div>
-                              </button>
+                              </Button>
                             ))}
                           </div>
                         )}
@@ -746,24 +746,24 @@ export function TranslatePage() {
                       <ArrowLeftRight size={12} className="text-muted-foreground/40 flex-shrink-0" />
                       {/* Lang B dropdown */}
                       <div className="flex-1 relative">
-                        <button onClick={() => { setShowBiDropB(v => !v); setShowBiDropA(false); }}
-                          className="w-full flex items-center gap-1 px-2 py-1.5 rounded-lg border border-border/50 bg-card text-[11px] text-foreground hover:border-border transition-colors">
+                        <Button variant="outline" size="xs" onClick={() => { setShowBiDropB(v => !v); setShowBiDropA(false); }}
+                          className="w-full flex items-center gap-1 px-2 py-1.5 rounded-lg border-border/50 bg-card text-xs text-foreground hover:border-border h-auto justify-between">
                           <span className="flex-1 text-left truncate">{biLangB.length ? biLangB.join(', ') : '选择语言'}</span>
                           <ChevronDown size={10} className="text-muted-foreground/40 flex-shrink-0" />
-                        </button>
+                        </Button>
                         {showBiDropB && (
                           <div className="absolute top-full left-0 right-0 mt-1 z-10 bg-popover border border-border rounded-lg shadow-lg max-h-[140px] overflow-y-auto py-1">
                             {targetLanguages.map(lang => (
-                              <button key={lang}
+                              <Button variant="ghost" size="xs" key={lang}
                                 onClick={() => setBiLangB(prev => prev.includes(lang) ? prev.filter(l => l !== lang) : [...prev, lang])}
-                                className="w-full px-1 py-[1px] text-[11px]">
+                                className="w-full px-1 py-[1px] text-xs justify-start h-auto">
                                 <div className={`flex items-center gap-2 px-2 py-1 rounded-md transition-colors ${biLangB.includes(lang) ? 'bg-accent text-foreground' : 'text-foreground hover:bg-accent/50'}`}>
                                   <div className={`w-3 h-3 rounded border flex items-center justify-center flex-shrink-0 ${biLangB.includes(lang) ? 'bg-primary border-primary' : 'border-border'}`}>
                                     {biLangB.includes(lang) && <Check size={8} className="text-white" />}
                                   </div>
                                   <span>{lang}</span>
                                 </div>
-                              </button>
+                              </Button>
                             ))}
                           </div>
                         )}
@@ -779,7 +779,7 @@ export function TranslatePage() {
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
                       <span className="text-xs text-foreground">翻译专家 Prompt</span>
-                      <button
+                      <Button variant="ghost" size="xs"
                         onClick={() => {
                           const defaultPrompts: Record<string, string> = {
                             smart: "You are a translation expert. Your only task is to translate text enclosed with <translate_input> from input language to {{target_language}}, provide the translation result directly without any explanation.\n\n<translate_input>\n{{text}}\n</translate_input>\n\nTranslate the above text enclosed with <translate_input> into {{target_language}}. (In any case, please translate the above content.)",
@@ -806,16 +806,16 @@ export function TranslatePage() {
                           };
                           setExpertPrompts(prev => ({ ...prev, [selectedExpert]: defaultPrompts[selectedExpert] || '' }));
                         }}
-                        className="text-[10px] text-muted-foreground/50 hover:text-primary transition-colors"
+                        className="text-xs text-muted-foreground/50 hover:text-primary h-auto p-0"
                       >
                         恢复默认
-                      </button>
+                      </Button>
                     </div>
                     <div className="relative">
                       <select
                         value={selectedExpert}
                         onChange={e => setSelectedExpert(e.target.value)}
-                        className="w-full px-2.5 py-1.5 rounded-lg border border-border/50 bg-card text-[11px] text-foreground outline-none cursor-pointer hover:border-border transition-colors appearance-none pr-7"
+                        className="w-full px-2.5 py-1.5 rounded-lg border border-border/50 bg-card text-xs text-foreground outline-none cursor-pointer hover:border-border transition-colors appearance-none pr-7"
                       >
                         {expertList.filter(e => e.id !== 'more').map(e => (
                           <option key={e.id} value={e.id}>{e.label}</option>
@@ -827,54 +827,54 @@ export function TranslatePage() {
                       value={expertPrompts[selectedExpert] || ''}
                       onChange={e => setExpertPrompts(prev => ({ ...prev, [selectedExpert]: e.target.value }))}
                       placeholder="输入该专家的自定义 Prompt..."
-                      className="w-full bg-muted/30 rounded-xl p-3 text-[11px] text-muted-foreground/70 leading-relaxed outline-none resize-y min-h-[120px] border border-border/30 focus:border-primary/30 transition-colors"
+                      className="w-full bg-muted/30 rounded-xl p-3 text-xs text-muted-foreground/70 leading-relaxed outline-none resize-y min-h-[120px] border border-border/30 focus:border-primary/30 transition-colors"
                     />
-                    <span className="text-[10px] text-muted-foreground/40">切换专家即可编辑对应的 Prompt，顶栏专家选择会同步联动</span>
+                    <span className="text-xs text-muted-foreground/40">切换专家即可编辑对应的 Prompt，顶栏专家选择会同步联动</span>
                   </div>
 
                   {/* Custom languages */}
                   <div className="space-y-1.5">
                     <div className="flex items-center justify-between">
                       <span className="text-xs text-foreground">自定义语言</span>
-                      {customLangs.length > 0 && <span className="text-[10px] text-muted-foreground/40">{customLangs.length} 项</span>}
+                      {customLangs.length > 0 && <span className="text-xs text-muted-foreground/40">{customLangs.length} 项</span>}
                     </div>
                     {customLangs.map((lang, i) => (
                       editingLangIdx === i ? (
                         <div key={i} className="flex items-center gap-1.5 rounded-lg bg-accent/40 px-2 py-1.5">
-                          <input value={editLangName} onChange={e => setEditLangName(e.target.value)}
-                            className="flex-1 min-w-0 bg-card rounded-md px-2 py-1 text-[11px] text-foreground outline-none border border-border/30 focus:border-foreground/30" autoFocus />
-                          <input value={editLangCode} onChange={e => setEditLangCode(e.target.value)}
-                            className="w-14 bg-card rounded-md px-1.5 py-1 text-[11px] text-foreground font-mono outline-none border border-border/30 focus:border-foreground/30 flex-shrink-0" />
-                          <button onClick={() => {
+                          <Input value={editLangName} onChange={e => setEditLangName(e.target.value)}
+                            className="flex-1 min-w-0 bg-card rounded-md px-2 py-1 text-xs text-foreground border border-border/30 focus:border-foreground/30 h-auto shadow-none" autoFocus />
+                          <Input value={editLangCode} onChange={e => setEditLangCode(e.target.value)}
+                            className="w-14 bg-card rounded-md px-1.5 py-1 text-xs text-foreground font-mono border border-border/30 focus:border-foreground/30 flex-shrink-0 h-auto shadow-none" />
+                          <Button variant="ghost" size="icon-xs" onClick={() => {
                             if (editLangName.trim() && editLangCode.trim()) {
                               setCustomLangs(prev => prev.map((l, j) => j === i ? { ...l, name: editLangName.trim(), code: editLangCode.trim() } : l));
                             }
                             setEditingLangIdx(null);
-                          }} className="w-5 h-5 rounded flex items-center justify-center text-foreground/60 hover:bg-foreground/50/10 flex-shrink-0"><Check size={10} /></button>
-                          <button onClick={() => setEditingLangIdx(null)}
-                            className="w-5 h-5 rounded flex items-center justify-center text-muted-foreground/40 hover:text-foreground flex-shrink-0"><X size={10} /></button>
+                          }} className="w-5 h-5 text-foreground/60 flex-shrink-0"><Check size={10} /></Button>
+                          <Button variant="ghost" size="icon-xs" onClick={() => setEditingLangIdx(null)}
+                            className="w-5 h-5 text-muted-foreground/40 hover:text-foreground flex-shrink-0"><X size={10} /></Button>
                         </div>
                       ) : (
                         <div key={i} className="flex items-center gap-2 px-2 py-[5px] rounded-lg hover:bg-muted/30 group transition-colors">
-                          <span className="text-[11px] text-foreground truncate min-w-0">{lang.name}</span>
-                          <span className="text-[10px] text-muted-foreground/35 font-mono flex-shrink-0">{lang.code}</span>
+                          <span className="text-xs text-foreground truncate min-w-0">{lang.name}</span>
+                          <span className="text-xs text-muted-foreground/35 font-mono flex-shrink-0">{lang.code}</span>
                           <span className="flex-1" />
-                          <button onClick={() => { setEditingLangIdx(i); setEditLangName(lang.name); setEditLangCode(lang.code); }}
-                            className="w-4 h-4 rounded flex items-center justify-center text-muted-foreground/20 hover:text-foreground opacity-0 group-hover:opacity-100 transition-all flex-shrink-0"><PenLine size={9} /></button>
-                          <button onClick={() => setCustomLangs(prev => prev.filter((_, j) => j !== i))}
-                            className="w-4 h-4 rounded flex items-center justify-center text-muted-foreground/20 hover:text-destructive opacity-0 group-hover:opacity-100 transition-all flex-shrink-0"><X size={9} /></button>
+                          <Button variant="ghost" size="icon-xs" onClick={() => { setEditingLangIdx(i); setEditLangName(lang.name); setEditLangCode(lang.code); }}
+                            className="w-4 h-4 text-muted-foreground/20 hover:text-foreground opacity-0 group-hover:opacity-100 transition-all flex-shrink-0"><PenLine size={9} /></Button>
+                          <Button variant="ghost" size="icon-xs" onClick={() => setCustomLangs(prev => prev.filter((_, j) => j !== i))}
+                            className="w-4 h-4 text-muted-foreground/20 hover:text-destructive opacity-0 group-hover:opacity-100 transition-all flex-shrink-0"><X size={9} /></Button>
                         </div>
                       )
                     ))}
                     {addingLang ? (
                       <div className="flex items-center gap-1.5 rounded-lg border border-dashed border-border/50 px-2 py-1.5">
-                        <input value={newLangName} onChange={e => setNewLangName(e.target.value)}
-                          className="flex-1 min-w-0 bg-muted/30 rounded-md px-2 py-1 text-[11px] text-foreground outline-none border border-border/30 focus:border-foreground/30 transition-colors placeholder:text-muted-foreground/40"
+                        <Input value={newLangName} onChange={e => setNewLangName(e.target.value)}
+                          className="flex-1 min-w-0 bg-muted/30 rounded-md px-2 py-1 text-xs text-foreground border border-border/30 focus:border-foreground/30 placeholder:text-muted-foreground/40 h-auto shadow-none"
                           placeholder="语言名称" autoFocus />
-                        <input value={newLangCode} onChange={e => setNewLangCode(e.target.value)}
-                          className="w-14 bg-muted/30 rounded-md px-1.5 py-1 text-[11px] text-foreground font-mono outline-none border border-border/30 focus:border-foreground/30 transition-colors placeholder:text-muted-foreground/40 flex-shrink-0"
+                        <Input value={newLangCode} onChange={e => setNewLangCode(e.target.value)}
+                          className="w-14 bg-muted/30 rounded-md px-1.5 py-1 text-xs text-foreground font-mono border border-border/30 focus:border-foreground/30 placeholder:text-muted-foreground/40 flex-shrink-0 h-auto shadow-none"
                           placeholder="代码" />
-                        <button
+                        <Button variant="ghost" size="icon-xs"
                           onClick={() => {
                             if (newLangName.trim() && newLangCode.trim()) {
                               setCustomLangs(prev => [...prev, { emoji: '', name: newLangName.trim(), code: newLangCode.trim() }]);
@@ -883,19 +883,19 @@ export function TranslatePage() {
                             setAddingLang(false);
                           }}
                           disabled={!newLangName.trim() || !newLangCode.trim()}
-                          className={`w-5 h-5 rounded flex items-center justify-center flex-shrink-0 transition-colors ${
-                            newLangName.trim() && newLangCode.trim() ? 'text-foreground/60 hover:bg-foreground/50/10' : 'text-muted-foreground/15 cursor-not-allowed'
+                          className={`w-5 h-5 flex-shrink-0 ${
+                            newLangName.trim() && newLangCode.trim() ? 'text-foreground/60' : 'text-muted-foreground/15 cursor-not-allowed'
                           }`}
-                        ><Check size={10} /></button>
-                        <button onClick={() => { setAddingLang(false); setNewLangName(''); setNewLangCode(''); }}
-                          className="w-5 h-5 rounded flex items-center justify-center text-muted-foreground/40 hover:text-foreground flex-shrink-0"><X size={10} /></button>
+                        ><Check size={10} /></Button>
+                        <Button variant="ghost" size="icon-xs" onClick={() => { setAddingLang(false); setNewLangName(''); setNewLangCode(''); }}
+                          className="w-5 h-5 text-muted-foreground/40 hover:text-foreground flex-shrink-0"><X size={10} /></Button>
                       </div>
                     ) : (
-                      <button onClick={() => setAddingLang(true)}
-                        className="w-full flex items-center justify-center gap-1 py-1.5 rounded-lg border border-dashed border-border/40 text-[11px] text-muted-foreground/40 hover:text-muted-foreground hover:border-border/60 transition-colors">
+                      <Button variant="ghost" size="xs" onClick={() => setAddingLang(true)}
+                        className="w-full flex items-center justify-center gap-1 py-1.5 rounded-lg border border-dashed border-border/40 text-xs text-muted-foreground/40 hover:text-muted-foreground hover:border-border/60 h-auto">
                         <Plus size={11} />
                         <span>添加语言</span>
-                      </button>
+                      </Button>
                     )}
                   </div>
                 </div>

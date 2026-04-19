@@ -8,6 +8,7 @@ import {
   BookOpen, Wrench, FileText, Database, Code, Image,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { Button } from '@cherry-studio/ui';
 import {
   VarManagerPanel, SYSTEM_VARIABLES, SYSTEM_VAR_ICONS, VAR_TYPE_CONFIG,
   type VariableDef, type VarType,
@@ -564,22 +565,24 @@ export function PromptSection({ hideFewShot }: { hideFewShot?: boolean } = {}) {
   return (
     <div className="max-w-2xl space-y-6">
       <div>
-        <h3 className="text-[14px] text-foreground mb-1">提示词配置</h3>
-        <p className="text-[10px] text-muted-foreground/55">{hideFewShot ? '定义 System Prompt 和变量' : '定义 System Prompt、变量和对话样本'}</p>
+        <h3 className="text-sm text-foreground mb-1">提示词配置</h3>
+        <p className="text-xs text-muted-foreground/55">{hideFewShot ? '定义 System Prompt 和变量' : '定义 System Prompt、变量和对话样本'}</p>
       </div>
 
       {/* System Prompt */}
       <div>
         <div className="flex items-center mb-1.5">
-          <label className="text-[11px] text-foreground/80">系统提示词</label>
+          <label className="text-xs text-foreground/80">系统提示词</label>
           <div className="flex-1" />
-          <button
+          <Button
+            variant="ghost"
+            size="xs"
             onClick={() => setShowVarPanel(true)}
-            className="flex items-center gap-1 px-2 py-0.5 rounded-md text-[9px] text-violet-500/70 bg-violet-500/8 hover:bg-violet-500/15 hover:text-violet-500 border border-violet-500/15 transition-all"
+            className="gap-1 px-2 py-0.5 rounded-md text-[9px] text-violet-500/70 bg-violet-500/8 hover:bg-violet-500/15 hover:text-violet-500 border border-violet-500/15 transition-all h-auto"
           >
             <Variable size={9} />
             <span>变量管理</span>
-          </button>
+          </Button>
         </div>
         <div className="relative">
           {/* ContentEditable Editor */}
@@ -594,11 +597,11 @@ export function PromptSection({ hideFewShot }: { hideFewShot?: boolean } = {}) {
               onCompositionStart={() => { isComposing.current = true; }}
               onCompositionEnd={() => { isComposing.current = false; handleEditorInput(); }}
               spellCheck={false}
-              className="w-full px-4 py-3 text-[11px] text-foreground outline-none font-mono leading-relaxed overflow-y-auto [&::-webkit-scrollbar]:w-[3px] [&::-webkit-scrollbar-thumb]:bg-border/30 [&::-webkit-scrollbar-thumb]:rounded-full"
+              className="w-full px-4 py-3 text-xs text-foreground outline-none font-mono leading-relaxed overflow-y-auto [&::-webkit-scrollbar]:w-[3px] [&::-webkit-scrollbar-thumb]:bg-border/30 [&::-webkit-scrollbar-thumb]:rounded-full"
               style={{ minHeight: 120, height: editorHeight }}
             />
             {editorEmpty && (
-              <div className="absolute top-3 left-4 text-[11px] text-muted-foreground/25 font-mono pointer-events-none select-none">
+              <div className="absolute top-3 left-4 text-xs text-muted-foreground/25 font-mono pointer-events-none select-none">
                 输入 / 快速插入变量、知识库、MCP 工具...
               </div>
             )}
@@ -630,10 +633,12 @@ export function PromptSection({ hideFewShot }: { hideFewShot?: boolean } = {}) {
                       const TabIcon = tab.icon;
                       const isActive = slashTab === tab.id;
                       return (
-                        <button
+                        <Button
+                          variant="ghost"
+                          size="xs"
                           key={tab.id}
                           onClick={() => { setSlashTab(tab.id); setSlashIndex(0); }}
-                          className={`flex items-center gap-1 px-2.5 py-1.5 rounded-t-lg text-[9px] transition-all border-b-2 ${
+                          className={`gap-1 px-2.5 py-1.5 rounded-t-lg text-[9px] transition-all border-b-2 h-auto ${
                             isActive
                               ? 'text-foreground border-foreground/40 bg-accent/30'
                               : 'text-muted-foreground/45 border-transparent hover:text-foreground/70 hover:bg-accent/15'
@@ -641,7 +646,7 @@ export function PromptSection({ hideFewShot }: { hideFewShot?: boolean } = {}) {
                         >
                           <TabIcon size={9} />
                           <span>{tab.label}</span>
-                        </button>
+                        </Button>
                       );
                     })}
                     {slashSearch && (
@@ -670,18 +675,20 @@ export function PromptSection({ hideFewShot }: { hideFewShot?: boolean } = {}) {
                         const idx = filteredSlashVars.indexOf(v);
                         const SysIcon = SYSTEM_VAR_ICONS[v.name] || Variable;
                         return (
-                          <button
+                          <Button
+                            variant="ghost"
+                            size="xs"
                             key={v.id}
                             data-active={idx === slashIndex}
                             onClick={() => insertVariable(v.name)}
-                            className={`flex items-center gap-2 w-full px-3 py-[6px] text-left transition-colors ${
+                            className={`gap-2 w-full px-3 py-[6px] justify-start h-auto ${
                               idx === slashIndex ? 'bg-accent/60 text-foreground' : 'text-muted-foreground/70 hover:bg-accent/30 hover:text-foreground'
                             }`}
                           >
                             <SysIcon size={11} className="text-teal-400/60 flex-shrink-0" />
-                            <span className="text-[10px] font-mono flex-shrink-0">{v.name}</span>
+                            <span className="text-xs font-mono flex-shrink-0">{v.name}</span>
                             <span className="text-[9px] text-muted-foreground/40 truncate ml-auto">{v.description}</span>
-                          </button>
+                          </Button>
                         );
                       })}
                       {/* User variables */}
@@ -695,18 +702,20 @@ export function PromptSection({ hideFewShot }: { hideFewShot?: boolean } = {}) {
                         const tc = VAR_TYPE_CONFIG[v.type];
                         const TypeIcon = tc.icon;
                         return (
-                          <button
+                          <Button
+                            variant="ghost"
+                            size="xs"
                             key={v.id}
                             data-active={idx === slashIndex}
                             onClick={() => insertVariable(v.name)}
-                            className={`flex items-center gap-2 w-full px-3 py-[6px] text-left transition-colors ${
+                            className={`gap-2 w-full px-3 py-[6px] justify-start h-auto ${
                               idx === slashIndex ? 'bg-accent/60 text-foreground' : 'text-muted-foreground/70 hover:bg-accent/30 hover:text-foreground'
                             }`}
                           >
                             <TypeIcon size={11} className={`flex-shrink-0 ${tc.color.split(' ')[0]}`} />
-                            <span className="text-[10px] font-mono flex-shrink-0">{v.name}</span>
+                            <span className="text-xs font-mono flex-shrink-0">{v.name}</span>
                             <span className="text-[9px] text-muted-foreground/40 truncate ml-auto">{v.description || v.defaultValue}</span>
-                          </button>
+                          </Button>
                         );
                       })}
                     </div>
@@ -719,18 +728,20 @@ export function PromptSection({ hideFewShot }: { hideFewShot?: boolean } = {}) {
                         <div className="px-3 py-4 text-center text-[9px] text-muted-foreground/35">无匹配知识库</div>
                       )}
                       {filteredSlashKB.map((kb, i) => (
-                        <button
+                        <Button
+                          variant="ghost"
+                          size="xs"
                           key={kb.id}
                           data-active={i === slashIndex}
                           onClick={() => insertBadge(kb.name, 'kb')}
-                          className={`flex items-center gap-2 w-full px-3 py-[6px] text-left transition-colors ${
+                          className={`gap-2 w-full px-3 py-[6px] justify-start h-auto ${
                             i === slashIndex ? 'bg-accent/60 text-foreground' : 'text-muted-foreground/70 hover:bg-accent/30 hover:text-foreground'
                           }`}
                         >
-                          <BookOpen size={11} className="text-blue-400/60 flex-shrink-0" />
-                          <span className="text-[10px] flex-shrink-0">{kb.name}</span>
+                          <BookOpen size={11} className="text-info/60 flex-shrink-0" />
+                          <span className="text-xs flex-shrink-0">{kb.name}</span>
                           <span className="text-[9px] text-muted-foreground/40 truncate ml-auto">{kb.docCount} 篇</span>
-                        </button>
+                        </Button>
                       ))}
                     </div>
                   )}
@@ -744,18 +755,20 @@ export function PromptSection({ hideFewShot }: { hideFewShot?: boolean } = {}) {
                       {filteredSlashMCP.map((tool, i) => {
                         const ToolIcon = tool.icon;
                         return (
-                          <button
+                          <Button
+                            variant="ghost"
+                            size="xs"
                             key={tool.id}
                             data-active={i === slashIndex}
                             onClick={() => insertBadge(tool.name, 'mcp')}
-                            className={`flex items-center gap-2 w-full px-3 py-[6px] text-left transition-colors ${
+                            className={`gap-2 w-full px-3 py-[6px] justify-start h-auto ${
                               i === slashIndex ? 'bg-accent/60 text-foreground' : 'text-muted-foreground/70 hover:bg-accent/30 hover:text-foreground'
                             }`}
                           >
-                            <ToolIcon size={11} className="text-amber-400/60 flex-shrink-0" />
-                            <span className="text-[10px] font-mono flex-shrink-0">{tool.name}</span>
+                            <ToolIcon size={11} className="text-warning/60 flex-shrink-0" />
+                            <span className="text-xs font-mono flex-shrink-0">{tool.name}</span>
                             <span className="text-[9px] text-muted-foreground/40 truncate ml-auto">{tool.description}</span>
-                          </button>
+                          </Button>
                         );
                       })}
                     </div>
@@ -783,13 +796,13 @@ export function PromptSection({ hideFewShot }: { hideFewShot?: boolean } = {}) {
       {/* Few-shot Examples */}
       {!hideFewShot && (
         <div className="border border-border/15 rounded-xl overflow-hidden">
-          <button onClick={() => setFsOpen(!fsOpen)}
-            className="flex items-center gap-2 w-full px-4 py-3 text-left hover:bg-accent/10 transition-colors">
+          <Button variant="ghost" size="sm" onClick={() => setFsOpen(!fsOpen)}
+            className="flex items-center gap-2 w-full px-4 py-3 justify-start h-auto hover:bg-accent/10 transition-colors">
             {fsOpen ? <ChevronDown size={11} className="text-muted-foreground/45" /> : <ChevronRight size={11} className="text-muted-foreground/45" />}
             <MessageCircle size={12} className="text-foreground/45" />
-            <span className="text-[11px] text-foreground">对话样本 (Few-Shot)</span>
+            <span className="text-xs text-foreground">对话样本 (Few-Shot)</span>
             <span className="text-[9px] text-muted-foreground/40 ml-1">{fewShots.length}</span>
-          </button>
+          </Button>
           <AnimatePresence>
             {fsOpen && (
               <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
@@ -798,27 +811,27 @@ export function PromptSection({ hideFewShot }: { hideFewShot?: boolean } = {}) {
                     <div key={fs.id} className="group border border-border/10 rounded-xl p-3 space-y-2 relative hover:border-border/25 transition-colors">
                       <div className="flex items-center justify-between mb-1">
                         <span className="text-[9px] text-muted-foreground/40">样本 {i + 1}</span>
-                        <button onClick={() => removeFewShot(fs.id)}
-                          className="w-5 h-5 rounded-md flex items-center justify-center text-muted-foreground/25 hover:text-red-500 hover:bg-red-500/10 opacity-0 group-hover:opacity-100 transition-all">
+                        <Button variant="ghost" size="icon-xs" onClick={() => removeFewShot(fs.id)}
+                          className="w-5 h-5 rounded-md text-muted-foreground/25 hover:text-destructive hover:bg-destructive/10 opacity-0 group-hover:opacity-100 transition-all">
                           <Trash2 size={9} />
-                        </button>
+                        </Button>
                       </div>
                       <div>
-                        <label className="text-[9px] text-blue-500/50 mb-1 block">用户</label>
+                        <label className="text-[9px] text-info/50 mb-1 block">用户</label>
                         <textarea value={fs.user} onChange={e => updateFewShot(fs.id, 'user', e.target.value)} rows={2}
-                          className="w-full px-2.5 py-1.5 rounded-lg border border-border/15 bg-accent/10 text-[10px] text-foreground outline-none focus:border-border/40 transition-all resize-none" />
+                          className="w-full px-2.5 py-1.5 rounded-lg border border-border/15 bg-accent/10 text-xs text-foreground outline-none focus:border-border/40 transition-all resize-none" />
                       </div>
                       <div>
                         <label className="text-[9px] text-foreground/40 mb-1 block">助手</label>
                         <textarea value={fs.assistant} onChange={e => updateFewShot(fs.id, 'assistant', e.target.value)} rows={2}
-                          className="w-full px-2.5 py-1.5 rounded-lg border border-border/15 bg-accent/10 text-[10px] text-foreground outline-none focus:border-border/40 transition-all resize-none" />
+                          className="w-full px-2.5 py-1.5 rounded-lg border border-border/15 bg-accent/10 text-xs text-foreground outline-none focus:border-border/40 transition-all resize-none" />
                       </div>
                     </div>
                   ))}
-                  <button onClick={addFewShot}
-                    className="flex items-center gap-1 px-2 py-1.5 rounded-lg text-[10px] text-muted-foreground/45 hover:text-foreground hover:bg-accent/30 transition-colors">
+                  <Button variant="ghost" size="xs" onClick={addFewShot}
+                    className="gap-1 px-2 py-1.5 rounded-lg text-xs text-muted-foreground/45 hover:text-foreground hover:bg-accent/30 transition-colors h-auto">
                     <Plus size={10} /> 添加对话样本
-                  </button>
+                  </Button>
                 </div>
               </motion.div>
             )}

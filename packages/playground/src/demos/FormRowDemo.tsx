@@ -1,6 +1,6 @@
 import React, { useState } from "react"
 import {
-  FormRow, SectionHeader, Switch, Input, Button, Slider, Badge
+  FormRow, SectionHeader, Switch, Input, Textarea, Button, Slider, Badge
 } from "@cherry-studio/ui"
 import { Section, type PropDef } from "../components/Section"
 
@@ -69,8 +69,8 @@ export function FormRowDemo() {
             <Input type="password" placeholder="sk-..." className="font-mono text-xs" />
           </FormRow>
           <FormRow label="System Prompt" direction="vertical">
-            <textarea
-              className="w-full rounded-md border border-input bg-background px-3 py-2 text-xs min-h-[60px] resize-none focus:outline-none focus:ring-1 focus:ring-ring"
+            <Textarea
+              className="w-full rounded-[12px] border border-input bg-background px-3 py-2 text-xs min-h-[60px] resize-none"
               placeholder="You are a helpful assistant..."
             />
           </FormRow>
@@ -92,7 +92,7 @@ export function FormRowDemo() {
       </Section>
 
       <Section title="Practical: Settings Panel">
-        <div className="max-w-md rounded-xl border bg-card p-4 space-y-0">
+        <div className="max-w-md rounded-[12px] border bg-card p-4 space-y-0">
           <SectionHeader title="Chat Settings" />
           <FormRow label="Auto-scroll" desc="Scroll to bottom on new messages">
             <Switch defaultChecked />

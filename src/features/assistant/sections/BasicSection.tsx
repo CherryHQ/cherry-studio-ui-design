@@ -1,7 +1,8 @@
 import React, { useState, useRef } from 'react';
-import { ChevronDown, X, Tag, Check } from 'lucide-react';
+import { X, Tag, Check } from 'lucide-react';
 import type { ResourceItem } from '@/app/types';
 import { MODEL_PROVIDERS, PROVIDER_MODELS, AVATAR_OPTIONS } from '@/app/config/constants';
+import { Button, Input, InlineSelect } from '@cherry-studio/ui';
 
 // ===========================
 // Tag presets
@@ -49,8 +50,6 @@ export function BasicSection({ resource }: Props) {
   const [temperature, setTemperature] = useState(0.7);
   const [topP, setTopP] = useState(0.9);
   const [maxTokens, setMaxTokens] = useState(4096);
-  const [showProviderDrop, setShowProviderDrop] = useState(false);
-  const [showModelDrop, setShowModelDrop] = useState(false);
 
   // Tags state
   const [tags, setTags] = useState<string[]>(resource.tags || ['标签']);
@@ -78,8 +77,8 @@ export function BasicSection({ resource }: Props) {
   return (
     <div className="max-w-lg space-y-6">
       <div>
-        <h3 className="text-[14px] text-foreground mb-1">基础设置</h3>
-        <p className="text-[10px] text-muted-foreground/55">配置助手的身份信息和模型参数</p>
+        <h3 className="text-sm text-foreground mb-1">基础设置</h3>
+        <p className="text-xs text-muted-foreground/55">配置助手的身份信息和模型参数</p>
       </div>
 
       <FieldGroup label="头像">
@@ -87,21 +86,21 @@ export function BasicSection({ resource }: Props) {
           <div className="w-12 h-12 rounded-xl bg-accent/50 flex items-center justify-center text-xl">{avatar}</div>
           <div className="flex flex-wrap gap-1">
             {AVATAR_OPTIONS.map(a => (
-              <button key={a} onClick={() => setAvatar(a)}
-                className={`w-7 h-7 rounded-lg flex items-center justify-center text-sm transition-all ${avatar === a ? 'bg-accent ring-1 ring-primary/20' : 'hover:bg-accent/40'}`}>{a}</button>
+              <Button key={a} variant="ghost" size="icon-xs" onClick={() => setAvatar(a)}
+                className={`w-7 h-7 rounded-lg flex items-center justify-center text-sm transition-all ${avatar === a ? 'bg-accent ring-1 ring-primary/20' : 'hover:bg-accent/40'}`}>{a}</Button>
             ))}
           </div>
         </div>
       </FieldGroup>
 
       <FieldGroup label="名称">
-        <input value={name} onChange={e => setName(e.target.value)}
-          className="w-full px-3 py-2 rounded-xl border border-border/20 bg-accent/10 text-[11px] text-foreground outline-none focus:border-border/40 focus:bg-accent/15 transition-all" />
+        <Input value={name} onChange={e => setName(e.target.value)}
+          className="w-full px-3 py-2 rounded-xl border-border/20 bg-accent/10 text-xs text-foreground focus:border-border/40 focus:bg-accent/15 transition-all" />
       </FieldGroup>
 
       <FieldGroup label="简介">
         <textarea value={description} onChange={e => setDescription(e.target.value)} rows={3}
-          className="w-full px-3 py-2 rounded-xl border border-border/20 bg-accent/10 text-[11px] text-foreground outline-none focus:border-border/40 focus:bg-accent/15 transition-all resize-none" />
+          className="w-full px-3 py-2 rounded-xl border border-border/20 bg-accent/10 text-xs text-foreground outline-none focus:border-border/40 focus:bg-accent/15 transition-all resize-none" />
       </FieldGroup>
 
       {/* Tags */}
@@ -110,18 +109,20 @@ export function BasicSection({ resource }: Props) {
           {tags.map(tag => (
             <span
               key={tag}
-              className={`inline-flex items-center gap-1 px-1.5 py-[2px] rounded-md border text-[10px] ${getTagColor(tag)}`}
+              className={`inline-flex items-center gap-1 px-1.5 py-[2px] rounded-md border text-xs ${getTagColor(tag)}`}
             >
               {tag}
-              <button
+              <Button
+                variant="ghost"
+                size="icon-xs"
                 onClick={() => removeTag(tag)}
-                className="ml-0.5 text-current opacity-40 hover:opacity-100 transition-opacity"
+                className="ml-0.5 text-current opacity-40 hover:opacity-100 transition-opacity w-auto h-auto p-0"
               >
                 <X size={7} />
-              </button>
+              </Button>
             </span>
           ))}
-          <input
+          <Input
             ref={tagInputRef}
             value={tagInput}
             onChange={e => setTagInput(e.target.value)}
@@ -130,7 +131,7 @@ export function BasicSection({ resource }: Props) {
               if (e.key === 'Backspace' && !tagInput && tags.length > 0) removeTag(tags[tags.length - 1]);
             }}
             placeholder={tags.length === 0 ? '输入标签，回车添加' : ''}
-            className="flex-1 min-w-[80px] bg-transparent text-[10px] text-foreground placeholder:text-muted-foreground/35 outline-none"
+            className="flex-1 min-w-[80px] bg-transparent text-xs text-foreground placeholder:text-muted-foreground/35 border-0 h-auto p-0 focus-visible:ring-0"
           />
         </div>
         {/* Preset row */}
@@ -138,16 +139,18 @@ export function BasicSection({ resource }: Props) {
           {TAG_PRESETS.slice(0, 8).map(preset => {
             const selected = tags.includes(preset.tag);
             return (
-              <button
+              <Button
                 key={preset.tag}
+                variant="ghost"
+                size="xs"
                 onClick={() => togglePresetTag(preset.tag)}
-                className={`inline-flex items-center gap-0.5 px-1.5 py-[2px] rounded-md border text-[9px] transition-all ${preset.color} ${
+                className={`inline-flex items-center gap-0.5 px-1.5 py-[2px] rounded-md border text-[9px] transition-all h-auto ${preset.color} ${
                   selected ? 'ring-1 ring-foreground/10' : 'opacity-50 hover:opacity-80'
                 }`}
               >
                 {selected && <Check size={7} className="text-current" />}
                 {preset.tag}
-              </button>
+              </Button>
             );
           })}
         </div>
@@ -157,42 +160,20 @@ export function BasicSection({ resource }: Props) {
 
       <div className="grid grid-cols-2 gap-3">
         <FieldGroup label="模型提供商">
-          <div className="relative">
-            <button onClick={() => { setShowProviderDrop(!showProviderDrop); setShowModelDrop(false); }}
-              className="w-full flex items-center justify-between px-3 py-2 rounded-xl border border-border/20 bg-accent/10 text-[11px] text-foreground hover:border-border/40 transition-all">
-              <span>{provider}</span><ChevronDown size={10} className="text-muted-foreground/45" />
-            </button>
-            {showProviderDrop && (
-              <div className="contents">
-                <div className="fixed inset-0 z-40" onClick={() => setShowProviderDrop(false)} />
-                <div className="absolute top-full left-0 mt-1 z-50 w-full bg-popover border border-border/30 rounded-xl shadow-xl p-1">
-                  {MODEL_PROVIDERS.map(p => (
-                    <button key={p} onClick={() => { setProvider(p); setModel(PROVIDER_MODELS[p][0]); setShowProviderDrop(false); }}
-                      className={`w-full text-left px-2.5 py-[5px] rounded-md text-[10px] transition-colors ${provider === p ? 'bg-accent text-foreground' : 'text-muted-foreground/60 hover:bg-accent/50 hover:text-foreground'}`}>{p}</button>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
+          <InlineSelect
+            value={provider}
+            onChange={(v) => { setProvider(v); setModel(PROVIDER_MODELS[v][0]); }}
+            options={MODEL_PROVIDERS.map(p => ({ value: p, label: p }))}
+            fullWidth
+          />
         </FieldGroup>
         <FieldGroup label="模型">
-          <div className="relative">
-            <button onClick={() => { setShowModelDrop(!showModelDrop); setShowProviderDrop(false); }}
-              className="w-full flex items-center justify-between px-3 py-2 rounded-xl border border-border/20 bg-accent/10 text-[11px] text-foreground hover:border-border/40 transition-all">
-              <span>{model}</span><ChevronDown size={10} className="text-muted-foreground/45" />
-            </button>
-            {showModelDrop && (
-              <div className="contents">
-                <div className="fixed inset-0 z-40" onClick={() => setShowModelDrop(false)} />
-                <div className="absolute top-full left-0 mt-1 z-50 w-full bg-popover border border-border/30 rounded-xl shadow-xl p-1 max-h-[180px] overflow-y-auto">
-                  {(PROVIDER_MODELS[provider] || []).map(m => (
-                    <button key={m} onClick={() => { setModel(m); setShowModelDrop(false); }}
-                      className={`w-full text-left px-2.5 py-[5px] rounded-md text-[10px] transition-colors ${model === m ? 'bg-accent text-foreground' : 'text-muted-foreground/60 hover:bg-accent/50 hover:text-foreground'}`}>{m}</button>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
+          <InlineSelect
+            value={model}
+            onChange={setModel}
+            options={(PROVIDER_MODELS[provider] || []).map(m => ({ value: m, label: m }))}
+            fullWidth
+          />
         </FieldGroup>
       </div>
 
@@ -208,8 +189,8 @@ export function BasicSection({ resource }: Props) {
       </FieldGroup>
 
       <FieldGroup label="最大 Token 数">
-        <input type="number" value={maxTokens} onChange={e => setMaxTokens(parseInt(e.target.value) || 0)}
-          className="w-full px-3 py-2 rounded-xl border border-border/20 bg-accent/10 text-[11px] text-foreground outline-none focus:border-border/40 focus:bg-accent/15 transition-all tabular-nums" />
+        <Input type="number" value={maxTokens} onChange={e => setMaxTokens(parseInt(e.target.value) || 0)}
+          className="w-full px-3 py-2 rounded-xl border-border/20 bg-accent/10 text-xs text-foreground focus:border-border/40 focus:bg-accent/15 transition-all tabular-nums" />
       </FieldGroup>
     </div>
   );
@@ -218,7 +199,7 @@ export function BasicSection({ resource }: Props) {
 function FieldGroup({ label, children }: { label: React.ReactNode; children: React.ReactNode }) {
   return (
     <div>
-      <label className="text-[10px] text-muted-foreground/60 mb-1.5 block">{label}</label>
+      <label className="text-xs text-muted-foreground/60 mb-1.5 block">{label}</label>
       {children}
     </div>
   );

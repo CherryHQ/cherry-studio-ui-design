@@ -10,32 +10,30 @@ export interface ConfigSectionProps extends React.HTMLAttributes<HTMLDivElement>
   disabled?: boolean
 }
 
-const ConfigSection = React.forwardRef<HTMLDivElement, ConfigSectionProps>(
-  ({ title, hint, actions, disabled, className, children, ...props }, ref) => {
-    return (
-      <div
-        ref={ref}
-        className={cn(
-          "bg-muted/50 border border-border rounded-xl px-3.5 py-3 space-y-2",
-          disabled && "opacity-50 pointer-events-none",
-          className
-        )}
-        {...props}
-      >
-        <div className="flex items-start justify-between">
-          <div>
-            <p className="text-xs text-muted-foreground font-medium">{title}</p>
-            {hint && (
-              <p className="text-xs text-muted-foreground mt-0.5">{hint}</p>
-            )}
-          </div>
-          {actions}
+function ConfigSection({ title, hint, actions, disabled, className, children, ref, ...props }: ConfigSectionProps & { ref?: React.Ref<HTMLDivElement> }) {
+  return (
+    <div
+      ref={ref}
+      data-slot="config-section"
+      className={cn(
+        "bg-muted/50 border border-border rounded-[var(--radius-button)] px-3.5 py-3 space-y-2 tracking-[-0.14px]",
+        disabled && "opacity-50 pointer-events-none",
+        className
+      )}
+      {...props}
+    >
+      <div className="flex items-start justify-between">
+        <div>
+          <p className="text-xs text-muted-foreground font-medium">{title}</p>
+          {hint && (
+            <p className="text-xs text-muted-foreground mt-0.5">{hint}</p>
+          )}
         </div>
-        {children}
+        {actions}
       </div>
-    )
-  }
-)
-ConfigSection.displayName = "ConfigSection"
+      {children}
+    </div>
+  )
+}
 
 export { ConfigSection }

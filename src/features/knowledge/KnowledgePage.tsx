@@ -11,6 +11,7 @@ import { RetrievalTester } from '@/features/knowledge/RetrievalTester';
 import type { KnowledgeBase } from '@/features/knowledge/KnowledgeSidebar';
 import type { DataSource } from '@/features/knowledge/DataSourceList';
 import { EmptyState } from '@/app/components/ui/EmptyState';
+import { Button, Input, Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@cherry-studio/ui';
 
 // ===========================
 // Initial mock data (complete for all KBs)
@@ -114,18 +115,19 @@ function ConfirmDialog({ title, message, confirmLabel, danger, onConfirm, onCanc
   title: string; message: string; confirmLabel: string; danger?: boolean;
   onConfirm: () => void; onCancel: () => void;
 }) {
-  const ref = useRef<HTMLDivElement>(null);
   return (
-    <div ref={ref} className="fixed inset-0 z-[500] flex items-center justify-center bg-black/40" onClick={e => { if (e.target === ref.current) onCancel(); }}>
-      <div className="bg-popover border border-border rounded-xl shadow-2xl w-[300px] p-4 animate-in fade-in zoom-in-95 duration-150" onClick={e => e.stopPropagation()}>
-        <p className="text-xs text-foreground mb-1">{title}</p>
-        <p className="text-[11px] text-muted-foreground/50 mb-3">{message}</p>
-        <div className="flex justify-end gap-1.5">
-          <button onClick={onCancel} className="h-6 px-2.5 rounded-md text-[11px] text-muted-foreground hover:text-foreground hover:bg-accent transition-colors">取消</button>
-          <button onClick={onConfirm} className={`h-6 px-2.5 rounded-md text-[11px] transition-colors ${danger ? 'bg-red-500 text-white hover:bg-red-600' : 'bg-primary text-primary-foreground hover:bg-primary/90'}`}>{confirmLabel}</button>
-        </div>
-      </div>
-    </div>
+    <Dialog open onOpenChange={open => { if (!open) onCancel(); }}>
+      <DialogContent className="w-[300px] p-4">
+        <DialogHeader>
+          <DialogTitle className="text-xs text-foreground">{title}</DialogTitle>
+        </DialogHeader>
+        <p className="text-xs text-muted-foreground/50 mb-3">{message}</p>
+        <DialogFooter className="flex justify-end gap-1.5">
+          <Button variant="ghost" size="xs" onClick={onCancel} className="h-6 px-2.5 text-xs text-muted-foreground hover:text-foreground">取消</Button>
+          <Button variant={danger ? 'destructive' : 'default'} size="xs" onClick={onConfirm} className="h-6 px-2.5 text-xs">{confirmLabel}</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -133,22 +135,23 @@ function RenameDialog({ title, value, onConfirm, onCancel }: {
   title: string; value: string; onConfirm: (v: string) => void; onCancel: () => void;
 }) {
   const [text, setText] = useState(value);
-  const ref = useRef<HTMLDivElement>(null);
   return (
-    <div ref={ref} className="fixed inset-0 z-[500] flex items-center justify-center bg-black/40" onClick={e => { if (e.target === ref.current) onCancel(); }}>
-      <div className="bg-popover border border-border rounded-xl shadow-2xl w-[300px] p-4 animate-in fade-in zoom-in-95 duration-150" onClick={e => e.stopPropagation()}>
-        <p className="text-xs text-foreground mb-2.5">{title}</p>
-        <input
+    <Dialog open onOpenChange={open => { if (!open) onCancel(); }}>
+      <DialogContent className="w-[300px] p-4">
+        <DialogHeader>
+          <DialogTitle className="text-xs text-foreground">{title}</DialogTitle>
+        </DialogHeader>
+        <Input
           autoFocus value={text} onChange={e => setText(e.target.value)}
           onKeyDown={e => { if (e.key === 'Enter' && text.trim()) onConfirm(text.trim()); if (e.key === 'Escape') onCancel(); }}
-          className="w-full px-2 py-[5px] rounded-md border border-border/40 bg-transparent text-[11px] text-foreground outline-none focus:border-primary/40 focus:ring-1 focus:ring-primary/15 transition-all mb-3"
+          className="w-full px-2 py-[5px] rounded-md text-xs mb-3"
         />
-        <div className="flex justify-end gap-1.5">
-          <button onClick={onCancel} className="h-6 px-2.5 rounded-md text-[11px] text-muted-foreground hover:text-foreground hover:bg-accent transition-colors">取消</button>
-          <button onClick={() => { if (text.trim()) onConfirm(text.trim()); }} disabled={!text.trim()} className="h-6 px-2.5 rounded-md text-[11px] bg-primary text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-40">确认</button>
-        </div>
-      </div>
-    </div>
+        <DialogFooter className="flex justify-end gap-1.5">
+          <Button variant="ghost" size="xs" onClick={onCancel} className="h-6 px-2.5 text-xs text-muted-foreground hover:text-foreground">取消</Button>
+          <Button variant="default" size="xs" onClick={() => { if (text.trim()) onConfirm(text.trim()); }} disabled={!text.trim()} className="h-6 px-2.5 text-xs">确认</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -310,7 +313,7 @@ export function KnowledgePage() {
                 </div>
                 <div className="min-w-0">
                   <div className="flex items-center gap-1.5">
-                    <span className="text-[11px] text-foreground truncate">{selectedKb.name}</span>
+                    <span className="text-xs text-foreground truncate">{selectedKb.name}</span>
                     <span className={`w-1 h-1 rounded-full flex-shrink-0 ${selectedKb.status === 'ready' ? 'bg-cherry-primary' : selectedKb.status === 'indexing' ? 'bg-amber-500 animate-pulse' : 'bg-red-500'}`} />
                     <span className="text-[9px] text-muted-foreground/35">
                       {selectedKb.status === 'ready' ? '就绪' : selectedKb.status === 'indexing' ? '索引中' : '错误'}
@@ -323,18 +326,18 @@ export function KnowledgePage() {
                 <span className="flex items-center gap-0.5"><Clock size={9} />{selectedKb.updatedAt}</span>
                 <div className="relative" ref={headerMenuRef}>
                   <Tooltip content="更多操作" side="bottom">
-                    <button onClick={() => setHeaderMenuOpen(!headerMenuOpen)} className="w-5 h-5 rounded flex items-center justify-center text-muted-foreground/50 hover:text-foreground hover:bg-accent transition-colors">
+                    <Button variant="ghost" size="icon-xs" onClick={() => setHeaderMenuOpen(!headerMenuOpen)} className="w-5 h-5 rounded text-muted-foreground/50 hover:text-foreground">
                       <MoreHorizontal size={11} />
-                    </button>
+                    </Button>
                   </Tooltip>
                   {headerMenuOpen && (
                     <div className="absolute right-0 top-6 z-30 bg-popover border border-border rounded-lg shadow-xl p-1 min-w-[110px] animate-in fade-in zoom-in-95 duration-100">
-                      <button onClick={() => { setHeaderRenaming(true); setHeaderMenuOpen(false); }} className="w-full flex items-center gap-1.5 px-2 py-1 text-[10px] text-popover-foreground hover:bg-accent rounded-md transition-colors text-left">
+                      <Button variant="ghost" onClick={() => { setHeaderRenaming(true); setHeaderMenuOpen(false); }} className="w-full flex items-center gap-1.5 px-2 py-1 text-xs text-popover-foreground hover:bg-accent rounded-md text-left h-auto justify-start">
                         <Pencil size={9} /> 重命名
-                      </button>
-                      <button onClick={() => { setHeaderDeleting(true); setHeaderMenuOpen(false); }} className="w-full flex items-center gap-1.5 px-2 py-1 text-[10px] text-red-500 hover:bg-red-500/10 rounded-md transition-colors text-left">
+                      </Button>
+                      <Button variant="ghost" onClick={() => { setHeaderDeleting(true); setHeaderMenuOpen(false); }} className="w-full flex items-center gap-1.5 px-2 py-1 text-xs text-destructive hover:bg-destructive/10 rounded-md text-left h-auto justify-start">
                         <Trash2 size={9} /> 删除知识库
-                      </button>
+                      </Button>
                     </div>
                   )}
                 </div>
@@ -346,11 +349,11 @@ export function KnowledgePage() {
                 const isActive = activeTab === tab.id;
                 const TIcon = tab.icon;
                 return (
-                  <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={`flex items-center gap-1 px-2.5 py-2 text-[10px] border-b-[1.5px] transition-colors ${isActive ? 'border-primary text-foreground' : 'border-transparent text-muted-foreground/60 hover:text-foreground'}`}>
+                  <Button variant="ghost" size="sm" key={tab.id} onClick={() => setActiveTab(tab.id)} className={`flex items-center gap-1 px-2.5 py-2 text-xs border-b-[1.5px] rounded-none h-auto ${isActive ? 'border-primary text-foreground' : 'border-transparent text-muted-foreground/60 hover:text-foreground'}`}>
                     <TIcon size={10} strokeWidth={1.6} />
                     <span>{tab.label}</span>
                     {tab.id === 'sources' && <span className="text-[8px] text-muted-foreground/40 ml-0.5">{sources.length}</span>}
-                  </button>
+                  </Button>
                 );
               })}
             </div>

@@ -8,6 +8,11 @@ import { Settings, Trash2, Copy, Eye, EyeOff } from "lucide-react"
 
 export function ConfigSectionDemo() {
   const [showKey, setShowKey] = useState(false)
+  const [autoSave, setAutoSave] = useState(true)
+  const [spellCheck, setSpellCheck] = useState(false)
+  const [debugMode, setDebugMode] = useState(false)
+  const [verboseLogging, setVerboseLogging] = useState(false)
+  const [compactMode, setCompactMode] = useState(false)
 
   return (
     <>
@@ -29,19 +34,19 @@ export function ConfigSectionDemo() {
         <div className="max-w-md space-y-3">
           <ConfigSection title="General" hint="Basic application settings">
             <FormRow label="Auto-save">
-              <Switch defaultChecked />
+              <Switch checked={autoSave} onCheckedChange={setAutoSave} />
             </FormRow>
             <FormRow label="Spell Check">
-              <Switch />
+              <Switch checked={spellCheck} onCheckedChange={setSpellCheck} />
             </FormRow>
           </ConfigSection>
 
           <ConfigSection title="Advanced" hint="Experimental features">
             <FormRow label="Debug Mode">
-              <Switch />
+              <Switch checked={debugMode} onCheckedChange={setDebugMode} />
             </FormRow>
             <FormRow label="Verbose Logging">
-              <Switch />
+              <Switch checked={verboseLogging} onCheckedChange={setVerboseLogging} />
             </FormRow>
           </ConfigSection>
         </div>
@@ -53,7 +58,7 @@ export function ConfigSectionDemo() {
             title="OpenAI"
             hint="Configure your OpenAI API connection"
             actions={
-              <Badge variant="outline" className="bg-green-500/15 text-green-700 border-green-500/20 dark:text-green-400 text-[10px]">
+              <Badge variant="outline" className="bg-success-muted text-success border-success/20 text-[10px]">
                 Connected
               </Badge>
             }
@@ -63,12 +68,12 @@ export function ConfigSectionDemo() {
                 <span className="text-[10px] font-mono text-foreground/40">
                   {showKey ? "sk-proj-abc123...xyz" : "sk-****...****"}
                 </span>
-                <button
+                <Button variant="ghost"
                   onClick={() => setShowKey(!showKey)}
                   className="text-foreground/30 hover:text-foreground/60 transition-colors focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
                 >
                   {showKey ? <EyeOff size={11} /> : <Eye size={11} />}
-                </button>
+                </Button>
               </div>
             </FormRow>
             <FormRow label="Base URL">
@@ -110,7 +115,7 @@ export function ConfigSectionDemo() {
 
       <Section title="Panel Header">
         <div className="max-w-md space-y-4">
-          <div className="rounded-xl border p-4">
+          <div className="rounded-[12px] border p-4">
             <PanelHeader
               icon="⚙️"
               title="General Settings"
@@ -122,12 +127,12 @@ export function ConfigSectionDemo() {
                 <Badge variant="outline" className="text-[10px]">System</Badge>
               </FormRow>
               <FormRow label="Compact Mode">
-                <Switch />
+                <Switch checked={compactMode} onCheckedChange={setCompactMode} />
               </FormRow>
             </ConfigSection>
           </div>
 
-          <div className="rounded-xl border p-4">
+          <div className="rounded-[12px] border p-4">
             <PanelHeader
               icon="🤖"
               title="Model Services"
@@ -136,7 +141,7 @@ export function ConfigSectionDemo() {
             <p className="text-xs text-muted-foreground">3 providers configured</p>
           </div>
 
-          <div className="rounded-xl border p-4">
+          <div className="rounded-[12px] border p-4">
             <PanelHeader
               icon={<Settings className="h-4 w-4 text-muted-foreground" />}
               title="With React Node Icon"

@@ -1,31 +1,44 @@
 "use client"
 
 import * as React from "react"
-import { Slot } from "@radix-ui/react-slot"
 import { cva, type VariantProps } from "class-variance-authority"
+import { Slot } from "radix-ui"
 
 import { cn } from "../../lib/utils"
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
+  "inline-flex shrink-0 items-center justify-center gap-2 rounded-[var(--radius-button)] text-sm font-medium tracking-[-0.14px] whitespace-nowrap transition-all outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-30 aria-invalid:border-destructive-border aria-invalid:ring-destructive-ring dark:aria-invalid:ring-destructive-ring [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground hover:bg-primary/90",
-        destructive:
-          "bg-destructive text-destructive-foreground hover:bg-destructive/90",
-        outline:
-          "border border-input bg-background hover:bg-accent hover:text-accent-foreground",
+        default:
+          "relative bg-gradient-to-b from-[var(--btn-primary-from)] to-[var(--btn-primary-to)] text-primary-foreground shadow-[var(--btn-primary-shadow)] overflow-hidden " +
+          "before:absolute before:inset-0 before:rounded-[inherit] before:shadow-[var(--btn-primary-inset)] before:pointer-events-none " +
+          "hover:from-[var(--btn-primary-hover-from)] hover:to-[var(--btn-primary-hover-to)]",
         secondary:
-          "bg-secondary text-secondary-foreground hover:bg-secondary/80",
-        ghost: "hover:bg-accent hover:text-accent-foreground",
-        link: "text-primary underline-offset-4 hover:underline",
+          "relative bg-gradient-to-b from-[var(--btn-default-from)] to-[var(--btn-default-to)] text-foreground shadow-[var(--btn-default-shadow)] overflow-hidden " +
+          "before:absolute before:inset-0 before:rounded-[inherit] before:shadow-[var(--btn-default-inset)] before:pointer-events-none " +
+          "hover:from-[var(--btn-default-hover-from)] hover:to-[var(--btn-default-hover-to)]",
+        destructive:
+          "relative bg-gradient-to-b from-[var(--btn-destructive-from)] to-[var(--btn-destructive-to)] text-destructive-foreground overflow-hidden " +
+          "shadow-[var(--btn-destructive-shadow)] " +
+          "before:absolute before:inset-0 before:rounded-[inherit] before:shadow-[var(--btn-destructive-inset)] before:pointer-events-none " +
+          "hover:from-[var(--btn-destructive-hover-from)] hover:to-[var(--btn-destructive-hover-to)] focus-visible:ring-destructive-ring",
+        outline:
+          "border bg-background shadow-button hover:bg-accent hover:text-accent-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50",
+        ghost:
+          "hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50",
+        link: "text-accent-blue underline-offset-4 hover:underline",
       },
       size: {
-        default: "h-10 px-4 py-2",
-        sm: "h-9 rounded-md px-3",
-        lg: "h-11 rounded-md px-8",
-        icon: "h-10 w-10",
+        default: "h-10 px-6 py-2.5 has-[>svg]:px-4",
+        xs: "h-6 gap-1 rounded-[var(--radius-control)] px-2 text-xs has-[>svg]:px-1.5 [&_svg:not([class*='size-'])]:size-3",
+        sm: "h-9 gap-1.5 rounded-[var(--radius-control)] px-5 has-[>svg]:px-3",
+        lg: "h-11 rounded-[var(--radius-button)] px-8 has-[>svg]:px-5",
+        icon: "size-10",
+        "icon-xs": "size-6 rounded-[var(--radius-control)] [&_svg:not([class*='size-'])]:size-3",
+        "icon-sm": "size-9",
+        "icon-lg": "size-10",
       },
     },
     defaultVariants: {
@@ -35,24 +48,27 @@ const buttonVariants = cva(
   }
 )
 
-export interface ButtonProps
-  extends React.ButtonHTMLAttributes<HTMLButtonElement>,
-    VariantProps<typeof buttonVariants> {
-  asChild?: boolean
-}
+function Button({
+  className,
+  variant = "default",
+  size = "default",
+  asChild = false,
+  ...props
+}: React.ComponentProps<"button"> &
+  VariantProps<typeof buttonVariants> & {
+    asChild?: boolean
+  }) {
+  const Comp = asChild ? Slot.Root : "button"
 
-const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant, size, asChild = false, ...props }, ref) => {
-    const Comp = asChild ? Slot : "button"
-    return (
-      <Comp
-        className={cn(buttonVariants({ variant, size, className }))}
-        ref={ref}
-        {...props}
-      />
-    )
-  }
-)
-Button.displayName = "Button"
+  return (
+    <Comp
+      data-slot="button"
+      data-variant={variant}
+      data-size={size}
+      className={cn(buttonVariants({ variant, size, className }))}
+      {...props}
+    />
+  )
+}
 
 export { Button, buttonVariants }

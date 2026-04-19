@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import {
   Palette, Monitor, ShieldCheck, Code2,
-  ChevronRight, ChevronDown, Check, ExternalLink, Info,
+  ChevronRight, ExternalLink,
 } from 'lucide-react';
-import { Tooltip } from '@/app/components/Tooltip';
+import { Button, InlineSelect as UIInlineSelect, Slider } from '@cherry-studio/ui';
 import { useSettings } from '@/app/context/SettingsContext';
 import { Toggle, FormRow, SectionHeader } from './shared';
 
@@ -11,61 +11,6 @@ import { Toggle, FormRow, SectionHeader } from './shared';
 // Types
 // ===========================
 type SubPage = 'appearance' | 'system' | 'privacy' | 'custom-css';
-
-// ===========================
-// Shared UI
-// ===========================
-function SelectField({ value, options, onChange, width }: {
-  value: string;
-  options: { value: string; label: string; icon?: string }[];
-  onChange: (v: string) => void;
-  width?: string;
-}) {
-  const [open, setOpen] = useState(false);
-  const ref = React.useRef<HTMLDivElement>(null);
-  React.useEffect(() => {
-    if (!open) return;
-    const h = (e: MouseEvent) => { if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false); };
-    document.addEventListener('mousedown', h);
-    return () => document.removeEventListener('mousedown', h);
-  }, [open]);
-  const selected = options.find(o => o.value === value);
-  return (
-    <div ref={ref} className="relative" style={{ width: width || 'auto' }}>
-      <button
-        onClick={() => setOpen(v => !v)}
-        className={`w-full flex items-center gap-1.5 px-2.5 py-[5px] rounded-lg border text-[10px] transition-colors justify-between ${
-          open ? 'border-foreground/20 bg-accent text-foreground/70' : 'border-border/40 text-foreground/55 hover:border-foreground/15'
-        }`}
-      >
-        <span className="flex items-center gap-1.5 truncate">
-          {selected?.icon && <span className="text-[11px]">{selected.icon}</span>}
-          {selected?.label || value}
-        </span>
-        <ChevronDown size={9} className={`flex-shrink-0 transition-transform ${open ? 'rotate-180' : ''}`} />
-      </button>
-      {open && (
-        <div className="absolute top-full right-0 mt-1 w-full min-w-[130px] bg-popover border border-border rounded-lg shadow-lg p-0.5 z-50 animate-in fade-in slide-in-from-top-1 duration-100">
-          {options.map(opt => (
-            <button
-              key={opt.value}
-              onClick={() => { onChange(opt.value); setOpen(false); }}
-              className={`w-full text-left px-2.5 py-[5px] rounded-md text-[10px] transition-colors flex items-center justify-between gap-2 ${
-                value === opt.value ? 'bg-accent text-foreground/75' : 'text-foreground/55 hover:bg-accent/50'
-              }`}
-            >
-              <span className="flex items-center gap-1.5">
-                {opt.icon && <span className="text-[11px]">{opt.icon}</span>}
-                {opt.label}
-              </span>
-              {value === opt.value && <Check size={9} className="text-cherry-primary" />}
-            </button>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
 
 // ===========================
 // Nav config
@@ -118,31 +63,29 @@ function AppearancePanel() {
 
   return (
     <div>
-      <h3 className="text-[13px] text-foreground/80 mb-3" style={{ fontWeight: 500 }}>{'外观与显示'}</h3>
+      <h3 className="text-sm text-foreground/80 mb-3 font-medium">{'外观与显示'}</h3>
 
       <FormRow label={'语言 (Language)'} desc={'设置应用程序显示的语言。'}>
-        <SelectField
+        <UIInlineSelect
           value={settings.language}
           onChange={v => updateSetting('language', v)}
-          width="140px"
           options={[
-            { value: 'zh-CN', label: '简体中文', icon: '🇨🇳' },
-            { value: 'zh-TW', label: '繁體中文', icon: '🇹🇼' },
-            { value: 'en', label: 'English', icon: '🇺🇸' },
-            { value: 'ja', label: '日本語', icon: '🇯🇵' },
+            { value: 'zh-CN', label: '简体中文' },
+            { value: 'zh-TW', label: '繁體中文' },
+            { value: 'en', label: 'English' },
+            { value: 'ja', label: '日本語' },
           ]}
         />
       </FormRow>
 
       <FormRow label="应用主题">
-        <SelectField
+        <UIInlineSelect
           value={settings.theme}
           onChange={v => updateSetting('theme', v as 'light' | 'dark' | 'system')}
-          width="130px"
           options={[
-            { value: 'light', label: '浅色', icon: '☀️' },
-            { value: 'dark', label: '深色', icon: '🌙' },
-            { value: 'system', label: '跟随系统', icon: '💻' },
+            { value: 'light', label: '浅色' },
+            { value: 'dark', label: '深色' },
+            { value: 'system', label: '跟随系统' },
           ]}
         />
       </FormRow>
@@ -179,24 +122,22 @@ function AppearancePanel() {
 
       <FormRow label="界面缩放" desc={'调整 UI 元素的大小。'}>
         <div className="flex items-center gap-2.5">
-          <span className="text-[10px] text-foreground/50 tabular-nums w-[32px] text-right">{settings.zoom}%</span>
-          <input
-            type="range"
+          <span className="text-xs text-foreground/50 tabular-nums w-[32px] text-right">{settings.zoom}%</span>
+          <Slider
             min={75}
             max={150}
             step={5}
-            value={settings.zoom}
-            onChange={e => updateSetting('zoom', Number(e.target.value))}
-            className="w-[100px] h-[3px] accent-blue-500 appearance-auto cursor-pointer"
+            value={[settings.zoom]}
+            onValueChange={([v]) => updateSetting('zoom', v)}
+            className="w-[100px]"
           />
         </div>
       </FormRow>
 
       <FormRow label="全局字体">
-        <SelectField
+        <UIInlineSelect
           value={settings.globalFont}
           onChange={v => updateSetting('globalFont', v)}
-          width="130px"
           options={[
             { value: 'system', label: '系统默认' },
             { value: 'inter', label: 'Inter' },
@@ -207,10 +148,9 @@ function AppearancePanel() {
       </FormRow>
 
       <FormRow label="代码字体" noBorder>
-        <SelectField
+        <UIInlineSelect
           value={settings.codeFont}
           onChange={v => updateSetting('codeFont', v)}
-          width="140px"
           options={[
             { value: 'jetbrains', label: 'JetBrains Mono' },
             { value: 'fira', label: 'Fira Code' },
@@ -251,10 +191,9 @@ function SystemPanel() {
       {/* Network & Performance */}
       <SectionHeader title="网络与性能" />
       <FormRow label="代理模式" desc="配置应用的网络连接方式">
-        <SelectField
+        <UIInlineSelect
           value={settings.proxyMode}
           onChange={v => updateSetting('proxyMode', v)}
-          width="120px"
           options={[
             { value: 'system', label: '系统代理' },
             { value: 'none', label: '无代理' },
@@ -311,20 +250,20 @@ function CustomCSSPanel() {
   return (
     <div>
       <div className="flex items-center justify-between mb-3">
-        <h3 className="text-[13px] text-foreground/80" style={{ fontWeight: 500 }}>{'自定义 CSS'}</h3>
-        <button className="flex items-center gap-1 text-[10px] text-cherry-primary hover:text-cherry-primary-dark transition-colors">
+        <h3 className="text-sm text-foreground/80 font-medium">{'自定义 CSS'}</h3>
+        <Button variant="ghost" size="sm" className="h-auto px-1.5 py-0.5 text-xs text-cherry-primary hover:text-cherry-primary-dark">
           <span>获取样式代码</span>
           <ExternalLink size={9} />
-        </button>
+        </Button>
       </div>
 
-      <p className="text-[10px] text-foreground/40 mb-3">{'在此处输入 CSS 代码可覆盖默认界面样式。'}</p>
+      <p className="text-xs text-foreground/40 mb-3">{'在此处输入 CSS 代码可覆盖默认界面样式。'}</p>
 
       <textarea
         value={settings.customCSS}
         onChange={e => updateSetting('customCSS', e.target.value)}
         spellCheck={false}
-        className="w-full h-[260px] px-4 py-3 bg-foreground/[0.03] border border-foreground/[0.06] rounded-xl text-[11px] text-foreground/60 outline-none resize-y font-mono leading-relaxed placeholder:text-foreground/15 [&::-webkit-scrollbar]:w-[3px] [&::-webkit-scrollbar-thumb]:bg-border/20 focus:border-foreground/[0.12] transition-colors"
+        className="w-full h-[260px] px-4 py-3 bg-foreground/[0.03] border border-foreground/[0.06] rounded-xl text-xs text-foreground/60 outline-none resize-y font-mono leading-relaxed placeholder:text-foreground/15 [&::-webkit-scrollbar]:w-[3px] [&::-webkit-scrollbar-thumb]:bg-border/20 focus:border-foreground/[0.12] transition-colors"
       />
     </div>
   );
@@ -351,7 +290,7 @@ export function GeneralSettingsPage() {
       {/* Middle Column: Navigation */}
       <div className="w-[160px] flex-shrink-0 flex flex-col border-r border-foreground/[0.05] min-h-0">
         <div className="px-3.5 pt-4 pb-2 flex-shrink-0">
-          <p className="text-[11px] text-foreground/40" style={{ fontWeight: 500 }}>通用配置</p>
+          <p className="text-xs text-foreground/40 font-medium">通用配置</p>
         </div>
 
         <div className="flex-1 overflow-y-auto px-2.5 pb-3 [&::-webkit-scrollbar]:w-[2px] [&::-webkit-scrollbar-thumb]:bg-border/20">
@@ -359,10 +298,12 @@ export function GeneralSettingsPage() {
             {NAV_ITEMS.map(item => {
               const isSelected = selectedId === item.id;
               return (
-                <button
+                <Button
                   key={item.id}
+                  variant="ghost"
+                  size="sm"
                   onClick={() => setSelectedId(item.id)}
-                  className={`w-full flex items-center justify-between px-3 py-[8px] rounded-xl transition-all text-left relative ${
+                  className={`w-full flex items-center justify-between px-3 py-[8px] rounded-xl transition-all text-left relative h-auto ${
                     isSelected
                       ? 'bg-cherry-active-bg'
                       : 'border border-transparent hover:bg-foreground/[0.03]'
@@ -373,12 +314,12 @@ export function GeneralSettingsPage() {
                   )}
                   <div className="flex items-center gap-2 min-w-0 flex-1">
                     <span className={`flex-shrink-0 ${isSelected ? 'text-foreground/50' : 'text-foreground/30'}`}>{item.icon}</span>
-                    <span className={`text-[10px] truncate ${isSelected ? 'text-foreground/85' : 'text-foreground/55'}`} style={{ fontWeight: isSelected ? 500 : 400 }}>
+                    <span className={`text-xs truncate ${isSelected ? 'text-foreground/85 font-medium' : 'text-foreground/55'}`}>
                       {item.label}
                     </span>
                   </div>
                   <ChevronRight size={9} className={`flex-shrink-0 ${isSelected ? 'text-foreground/25' : 'text-foreground/10'}`} />
-                </button>
+                </Button>
               );
             })}
           </div>

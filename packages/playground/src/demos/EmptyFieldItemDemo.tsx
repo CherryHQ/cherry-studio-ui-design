@@ -1,4 +1,4 @@
-import React from "react"
+import React, { useState } from "react"
 import {
   Empty, EmptyMedia, EmptyHeader, EmptyTitle, EmptyDescription, EmptyContent,
   Field, FieldSet, FieldLegend, FieldGroup, FieldLabel, FieldContent, FieldTitle, FieldDescription, FieldError, FieldSeparator,
@@ -13,6 +13,9 @@ const emptyProps: PropDef[] = [
 ]
 
 export function EmptyFieldItemDemo() {
+  const [terms, setTerms] = useState(false)
+  const [newsletter, setNewsletter] = useState(true)
+
   return (
     <>
       {/* ─── Empty ─── */}
@@ -142,12 +145,12 @@ import { Inbox } from "lucide-react"
           <FieldGroup>
             <Field data-invalid="true">
               <FieldLabel htmlFor="f-err">Email</FieldLabel>
-              <Input id="f-err" defaultValue="invalid" className="border-destructive" />
+              <Input id="f-err" defaultValue="invalid" aria-invalid="true" />
               <FieldError>Please enter a valid email address.</FieldError>
             </Field>
             <Field data-invalid="true">
               <FieldLabel htmlFor="f-err2">Password</FieldLabel>
-              <Input id="f-err2" type="password" className="border-destructive" />
+              <Input id="f-err2" type="password" aria-invalid="true" />
               <FieldError errors={[
                 { message: "Must be at least 8 characters" },
                 { message: "Must contain a number" },
@@ -181,16 +184,16 @@ import { Inbox } from "lucide-react"
         <div className="max-w-md">
           <FieldGroup>
             <Field orientation="horizontal">
-              <Checkbox id="f-terms" />
+              <Checkbox id="f-terms" checked={terms} onCheckedChange={(v) => setTerms(v === true)} />
               <FieldContent>
-                <FieldTitle>Accept terms</FieldTitle>
+                <FieldTitle>Accept terms {terms && <Badge variant="outline" className="ml-1 text-xs">Accepted</Badge>}</FieldTitle>
                 <FieldDescription>You agree to our Terms of Service and Privacy Policy.</FieldDescription>
               </FieldContent>
             </Field>
             <Field orientation="horizontal">
-              <Checkbox id="f-news" defaultChecked />
+              <Checkbox id="f-news" checked={newsletter} onCheckedChange={(v) => setNewsletter(v === true)} />
               <FieldContent>
-                <FieldTitle>Newsletter</FieldTitle>
+                <FieldTitle>Newsletter {newsletter && <Badge variant="outline" className="ml-1 text-xs">Subscribed</Badge>}</FieldTitle>
                 <FieldDescription>Receive product updates and news.</FieldDescription>
               </FieldContent>
             </Field>
@@ -230,14 +233,14 @@ import { Inbox } from "lucide-react"
       <Section title="Item — Variants">
         <div className="max-w-lg space-y-3">
           <Item variant="outline">
-            <ItemMedia variant="icon"><FileText className="text-blue-500" /></ItemMedia>
+            <ItemMedia variant="icon"><FileText className="text-accent-blue" /></ItemMedia>
             <ItemContent>
               <ItemTitle>Outline Variant</ItemTitle>
               <ItemDescription>Item with visible border</ItemDescription>
             </ItemContent>
           </Item>
           <Item variant="muted">
-            <ItemMedia variant="icon"><Image className="text-green-500" /></ItemMedia>
+            <ItemMedia variant="icon"><Image className="text-accent-emerald" /></ItemMedia>
             <ItemContent>
               <ItemTitle>Muted Variant</ItemTitle>
               <ItemDescription>Item with muted background</ItemDescription>

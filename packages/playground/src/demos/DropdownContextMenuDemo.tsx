@@ -46,7 +46,7 @@ export function DropdownContextMenuDemo() {
 
       <Section title="Context Menu (right-click the area)">
         <ContextMenu>
-          <ContextMenuTrigger className="flex h-[150px] w-full items-center justify-center rounded-md border border-dashed text-sm text-muted-foreground">
+          <ContextMenuTrigger className="flex h-[150px] w-full items-center justify-center rounded-[12px] border border-dashed text-sm text-muted-foreground">
             Right click here
           </ContextMenuTrigger>
           <ContextMenuContent className="w-56">

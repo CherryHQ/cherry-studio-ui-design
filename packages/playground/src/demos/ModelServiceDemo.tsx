@@ -9,7 +9,7 @@ import { Eye, EyeOff, Copy, Check, TestTube, CircleDot } from "lucide-react"
 const providers = [
   {
     name: "OpenAI",
-    color: "bg-green-500",
+    color: "bg-success",
     status: "connected",
     apiKey: "sk-proj-abc...xyz",
     models: [
@@ -21,7 +21,7 @@ const providers = [
   },
   {
     name: "Anthropic",
-    color: "bg-amber-500",
+    color: "bg-accent-amber",
     status: "connected",
     apiKey: "sk-ant-abc...xyz",
     models: [
@@ -33,9 +33,9 @@ const providers = [
 ]
 
 const capColors: Record<string, string> = {
-  vision: "bg-blue-500/10 text-blue-600 border-blue-500/20 dark:text-blue-400",
-  tools: "bg-amber-500/10 text-amber-600 border-amber-500/20 dark:text-amber-400",
-  reasoning: "bg-violet-500/10 text-violet-600 border-violet-500/20 dark:text-violet-400",
+  vision: "bg-info-muted text-info border-info/20",
+  tools: "bg-accent-amber-muted text-accent-amber border-accent-amber/20",
+  reasoning: "bg-accent-violet-muted text-accent-violet border-accent-violet/20",
 }
 
 export function ModelServiceDemo() {
@@ -50,7 +50,11 @@ export function ModelServiceDemo() {
   }
 
   return (
-    <Section title="Model Service Configuration" code={`// Compose with: Card, Input, Switch, Table, Badge, Button, BrandLogos`}>
+    <Section title="Model Service Configuration" props={[
+        { name: "providers", type: "Provider[]", default: "[]", description: "List of AI model providers" },
+        { name: "onTestConnection", type: "(providerName: string) => void", default: "undefined", description: "Callback to test a provider API key" },
+        { name: "onModelToggle", type: "(providerName: string, modelName: string, enabled: boolean) => void", default: "undefined", description: "Callback when a model is enabled/disabled" },
+      ]} code={`// Compose with: Card, Input, Switch, Table, Badge, Button, BrandLogos`}>
       <div className="max-w-3xl space-y-4">
         {providers.map((p) => (
           <Card key={p.name} className="overflow-hidden">
@@ -58,8 +62,8 @@ export function ModelServiceDemo() {
             <div className="flex items-center gap-3 px-4 py-3 border-b bg-muted/30">
               <div className={`size-3 rounded-full ${p.color}`} />
               <span className="text-sm font-medium flex-1">{p.name}</span>
-              <CircleDot className="size-3 text-green-500" />
-              <Badge variant="outline" className="text-[9px] bg-green-500/10 text-green-600 border-green-500/20 dark:text-green-400">
+              <CircleDot className="size-3 text-success" />
+              <Badge variant="outline" className="text-xs bg-success-muted text-success border-success/20">
                 {p.status}
               </Badge>
             </div>
@@ -100,7 +104,7 @@ export function ModelServiceDemo() {
                     <TableCell>
                       <div className="flex gap-1">
                         {m.caps.map((c) => (
-                          <Badge key={c} variant="outline" className={`text-[8px] px-1.5 py-0 ${capColors[c] || ""}`}>{c}</Badge>
+                          <Badge key={c} variant="outline" className={`text-xs px-1.5 py-0 ${capColors[c] || ""}`}>{c}</Badge>
                         ))}
                       </div>
                     </TableCell>

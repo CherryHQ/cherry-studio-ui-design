@@ -1,5 +1,5 @@
 import React, { useState } from "react"
-import { InputOTP, InputOTPGroup, InputOTPSlot, InputOTPSeparator, Badge } from "@cherry-studio/ui"
+import { InputOTP, InputOTPGroup, InputOTPSlot, InputOTPSeparator, Badge, Button, } from "@cherry-studio/ui"
 import { Section, type PropDef } from "../components/Section"
 
 export function InputOtpDemo() {
@@ -14,7 +14,7 @@ export function InputOtpDemo() {
         { name: "value", type: "string", default: "undefined", description: "Controlled value" },
         { name: "onChange", type: "(value) => void", default: "undefined", description: "Change handler" },
         { name: "onComplete", type: "() => void", default: "undefined", description: "Called when all slots filled" },
-      ]} code={`import { InputOTP, InputOTPGroup, InputOTPSlot, InputOTPSeparator } from "@cherry-studio/ui"
+      ]} code={`import { InputOTP, InputOTPGroup, InputOTPSlot, InputOTPSeparator Button, } from "@cherry-studio/ui"
 
 <InputOTP maxLength={6} value={value} onChange={setValue}>
   <InputOTPGroup>
@@ -83,7 +83,7 @@ export function InputOtpDemo() {
             </InputOTPGroup>
           </InputOTP>
           {completed && (
-            <p className="text-sm text-green-600 dark:text-green-400 font-medium">
+            <p className="text-sm text-success font-medium">
               Verification code submitted!
             </p>
           )}
@@ -107,7 +107,7 @@ export function InputOtpDemo() {
       </Section>
 
       <Section title="Practical: Verification Flow">
-        <div className="max-w-sm space-y-4 rounded-lg border p-6">
+        <div className="max-w-sm space-y-4 rounded-[12px] border p-6">
           <div className="space-y-1.5 text-center">
             <h4 className="text-lg font-semibold">Verify your email</h4>
             <p className="text-sm text-muted-foreground">
@@ -131,7 +131,7 @@ export function InputOtpDemo() {
           </div>
           <p className="text-center text-sm text-muted-foreground">
             Didn't receive the code?{" "}
-            <button className="text-primary hover:underline font-medium focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50">Resend</button>
+            <Button variant="ghost" className="text-primary hover:underline font-medium focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50">Resend</Button>
           </p>
         </div>
       </Section>

@@ -88,7 +88,7 @@ import { Bold } from "lucide-react"
       </Section>
 
       <Section title="Practical: Text Editor Toolbar">
-        <div className="inline-flex items-center gap-1 rounded-lg border p-1">
+        <div className="inline-flex items-center gap-1 rounded-[12px] border p-1">
           <ToggleGroup type="multiple" defaultValue={["bold"]}>
             <ToggleGroupItem value="bold" size="sm" aria-label="Bold"><Bold className="h-3.5 w-3.5" /></ToggleGroupItem>
             <ToggleGroupItem value="italic" size="sm" aria-label="Italic"><Italic className="h-3.5 w-3.5" /></ToggleGroupItem>

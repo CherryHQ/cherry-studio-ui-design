@@ -6,6 +6,11 @@ import {
 } from 'lucide-react';
 import { BrandLogo } from '@/app/components/ui/BrandLogos';
 import { Toggle } from './shared';
+import {
+  Button, Input,
+  Tabs, TabsList, TabsTrigger, TabsContent,
+  Popover, PopoverTrigger, PopoverContent,
+} from '@cherry-studio/ui';
 
 // ===========================
 // Types
@@ -225,29 +230,33 @@ function ServerListPanel({ servers, onSelectServer }: {
       {/* Header */}
       <div className="flex items-center justify-between px-5 pt-4 pb-1.5 flex-shrink-0">
         <div className="flex items-center gap-2">
-          <h3 className="text-[15px] text-foreground/85" style={{ fontWeight: 600 }}>MCP {'\u670d\u52a1\u5668'}</h3>
-          <span className="text-[10px] text-foreground/25 tabular-nums">{enabledCount}/{items.length}</span>
+          <h3 className="text-base text-foreground/85 font-semibold">MCP {'\u670d\u52a1\u5668'}</h3>
+          <span className="text-xs text-foreground/25 tabular-nums">{enabledCount}/{items.length}</span>
         </div>
         <div className="flex items-center gap-1">
-          <button
+          <Button
+            variant="ghost"
+            size="icon-xs"
             onClick={() => setShowSearch(v => !v)}
-            className={`w-6 h-6 rounded-md flex items-center justify-center transition-colors ${showSearch ? 'bg-accent text-foreground/60' : 'text-foreground/30 hover:text-foreground/50 hover:bg-accent'}`}
+            className={showSearch ? 'bg-accent text-foreground/60' : 'text-foreground/30 hover:text-foreground/50 hover:bg-accent'}
           >
             <Search size={12} />
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="ghost"
+            size="xs"
             onClick={() => setIsEditing(v => !v)}
-            className={`flex items-center gap-1 px-2 py-[4px] rounded-md text-[10px] transition-colors ${
+            className={`text-xs ${
               isEditing ? 'text-cherry-primary-dark bg-cherry-active-bg' : 'text-foreground/40 hover:text-foreground/60 hover:bg-accent'
             }`}
           >
             <Pencil size={9} />
             <span>{isEditing ? '\u5b8c\u6210' : '\u7f16\u8f91'}</span>
-          </button>
-          <button className="flex items-center gap-1 px-2 py-[4px] rounded-md text-[10px] text-cherry-primary-dark bg-cherry-active-bg hover:bg-cherry-active-border transition-colors">
+          </Button>
+          <Button variant="ghost" size="xs" className="text-xs text-cherry-primary-dark bg-cherry-active-bg hover:bg-cherry-active-border">
             <Plus size={9} />
             <span>{'\u6dfb\u52a0'}</span>
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -256,36 +265,37 @@ function ServerListPanel({ servers, onSelectServer }: {
         {showSearch && (
           <div className="relative">
             <Search size={11} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-foreground/25" />
-            <input
+            <Input
               type="text"
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
               placeholder={'\u641c\u7d22\u670d\u52a1\u5668...'}
               autoFocus
-              className="w-full pl-7 pr-7 py-[5px] rounded-lg bg-foreground/[0.03] border border-foreground/[0.06] text-[10px] text-foreground/70 outline-none placeholder:text-foreground/20 focus:border-foreground/[0.12] transition-colors"
+              className="w-full pl-7 pr-7 py-[5px] rounded-lg bg-foreground/[0.03] border border-foreground/[0.06] text-xs text-foreground/70 placeholder:text-foreground/20 focus:border-foreground/[0.12] transition-colors h-auto"
             />
             {searchQuery && (
-              <button onClick={() => setSearchQuery('')} className="absolute right-2 top-1/2 -translate-y-1/2 text-foreground/20 hover:text-foreground/40 transition-colors">
+              <Button variant="ghost" size="icon-xs" onClick={() => setSearchQuery('')} className="absolute right-2 top-1/2 -translate-y-1/2 w-5 h-5 text-foreground/20 hover:text-foreground/40">
                 <X size={10} />
-              </button>
+              </Button>
             )}
           </div>
         )}
         {/* Filter chips */}
         <div className="flex items-center gap-1 flex-wrap">
           {filters.map(f => (
-            <button
+            <Button
               key={f.id}
+              variant="ghost"
+              size="xs"
               onClick={() => setActiveFilter(f.id)}
-              className={`px-2 py-[3px] rounded-md text-[9px] transition-colors ${
+              className={`px-2 py-[3px] h-auto rounded-md text-[9px] ${
                 activeFilter === f.id
-                  ? (f.id === 'enabled' ? 'bg-primary/10 text-primary border border-primary/15' : 'bg-foreground/[0.06] text-foreground/70 border border-foreground/[0.1]')
+                  ? (f.id === 'enabled' ? 'bg-primary/10 text-primary border border-primary/15 font-medium' : 'bg-foreground/[0.06] text-foreground/70 border border-foreground/[0.1] font-medium')
                   : 'text-foreground/35 hover:text-foreground/55 hover:bg-foreground/[0.04] border border-transparent'
               }`}
-              style={{ fontWeight: activeFilter === f.id ? 500 : 400 }}
             >
               {f.label}
-            </button>
+            </Button>
           ))}
         </div>
       </div>
@@ -295,7 +305,7 @@ function ServerListPanel({ servers, onSelectServer }: {
         {filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12 text-center">
             <Server size={18} className="text-foreground/10 mb-2" />
-            <p className="text-[10px] text-foreground/25">{'\u6ca1\u6709\u5339\u914d\u7684\u670d\u52a1\u5668'}</p>
+            <p className="text-xs text-foreground/25">{'\u6ca1\u6709\u5339\u914d\u7684\u670d\u52a1\u5668'}</p>
           </div>
         ) : (
           <div className="space-y-[1px]">
@@ -316,7 +326,7 @@ function ServerListPanel({ servers, onSelectServer }: {
 
                   {/* Name + inline tags */}
                   <div className="flex-1 min-w-0 flex items-center gap-1.5">
-                    <span className="text-[11px] text-foreground/75 truncate" style={{ fontWeight: 500 }}>{server.name}</span>
+                    <span className="text-xs text-foreground/75 truncate font-medium">{server.name}</span>
                     {server.tags && server.tags.map((tag, i) => {
                       const isVersion = new RegExp('^' + String.fromCharCode(92) + 'd').test(tag);
                       const isType = tag === 'STDIO' || tag === 'SSE';
@@ -324,16 +334,15 @@ function ServerListPanel({ servers, onSelectServer }: {
                       return (
                         <span
                           key={i}
-                          className={`px-1 py-0 rounded text-[7px] flex-shrink-0 whitespace-nowrap ${
+                          className={`px-1 py-0 rounded text-[7px] flex-shrink-0 whitespace-nowrap font-medium ${
                             isBuiltin
-                              ? 'bg-blue-500/10 text-blue-400'
+                              ? 'bg-info/10 text-info'
                               : isVersion
                                 ? 'bg-foreground/[0.06] text-foreground/60'
                                 : isType
                                   ? 'bg-foreground/[0.05] text-foreground/30'
                                   : 'bg-foreground/[0.05] text-foreground/30'
                           }`}
-                          style={{ fontWeight: 500 }}
                         >
                           {tag}
                         </span>
@@ -344,20 +353,24 @@ function ServerListPanel({ servers, onSelectServer }: {
                   {/* Actions */}
                   <div className="flex items-center gap-1.5 flex-shrink-0" onClick={e => e.stopPropagation()}>
                     {isEditing && (
-                      <button
+                      <Button
+                        variant="ghost"
+                        size="icon-xs"
                         onClick={() => handleDelete(server.id)}
-                        className="w-5 h-5 rounded-md flex items-center justify-center text-foreground/15 hover:text-red-500 hover:bg-red-500/[0.06] transition-colors"
+                        className="w-5 h-5 text-foreground/15 hover:text-destructive hover:bg-destructive/[0.06]"
                       >
                         <Trash2 size={10} />
-                      </button>
+                      </Button>
                     )}
                     <Toggle checked={server.enabled} onChange={v => handleToggle(server.id, v)} />
-                    <button
+                    <Button
+                      variant="ghost"
+                      size="icon-xs"
                       onClick={() => onSelectServer(server)}
-                      className="w-5 h-5 rounded-md flex items-center justify-center text-foreground/10 hover:text-foreground/35 transition-colors opacity-0 group-hover:opacity-100"
+                      className="w-5 h-5 text-foreground/10 hover:text-foreground/35 opacity-0 group-hover:opacity-100"
                     >
                       <ChevronRight size={11} />
-                    </button>
+                    </Button>
                   </div>
                 </div>
               );
@@ -408,8 +421,8 @@ function BuiltinServersPanel() {
       <div className="px-5 pt-4 pb-1.5 flex-shrink-0">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <h3 className="text-[15px] text-foreground/85" style={{ fontWeight: 600 }}>{'\u5185\u7f6e\u670d\u52a1\u5668'}</h3>
-            <span className="text-[10px] text-foreground/25 tabular-nums">{installedCount}/{items.length}</span>
+            <h3 className="text-base text-foreground/85 font-semibold">{'\u5185\u7f6e\u670d\u52a1\u5668'}</h3>
+            <span className="text-xs text-foreground/25 tabular-nums">{installedCount}/{items.length}</span>
           </div>
         </div>
       </div>
@@ -417,33 +430,34 @@ function BuiltinServersPanel() {
       <div className="px-5 pb-2 flex-shrink-0 space-y-1.5">
         <div className="relative">
           <Search size={11} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-foreground/25" />
-          <input
+          <Input
             type="text"
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
             placeholder={'\u641c\u7d22\u5185\u7f6e\u670d\u52a1\u5668...'}
-            className="w-full pl-7 pr-7 py-[5px] rounded-lg bg-foreground/[0.03] border border-foreground/[0.06] text-[10px] text-foreground/70 outline-none placeholder:text-foreground/20 focus:border-foreground/[0.12] transition-colors"
+            className="w-full pl-7 pr-7 py-[5px] rounded-lg bg-foreground/[0.03] border border-foreground/[0.06] text-xs text-foreground/70 placeholder:text-foreground/20 focus:border-foreground/[0.12] transition-colors h-auto"
           />
           {searchQuery && (
-            <button onClick={() => setSearchQuery('')} className="absolute right-2 top-1/2 -translate-y-1/2 text-foreground/20 hover:text-foreground/40 transition-colors">
+            <Button variant="ghost" size="icon-xs" onClick={() => setSearchQuery('')} className="absolute right-2 top-1/2 -translate-y-1/2 w-5 h-5 text-foreground/20 hover:text-foreground/40">
               <X size={10} />
-            </button>
+            </Button>
           )}
         </div>
         <div className="flex items-center gap-1">
           {builtinFilters.map(f => (
-            <button
+            <Button
               key={f.id}
+              variant="ghost"
+              size="xs"
               onClick={() => setFilterMode(f.id)}
-              className={`px-2 py-[3px] rounded-md text-[9px] transition-colors ${
+              className={`px-2 py-[3px] h-auto rounded-md text-[9px] ${
                 filterMode === f.id
-                  ? 'bg-foreground/[0.06] text-foreground/70 border border-foreground/[0.1]'
+                  ? 'bg-foreground/[0.06] text-foreground/70 border border-foreground/[0.1] font-medium'
                   : 'text-foreground/35 hover:text-foreground/55 hover:bg-foreground/[0.04] border border-transparent'
               }`}
-              style={{ fontWeight: filterMode === f.id ? 500 : 400 }}
             >
               {f.label}
-            </button>
+            </Button>
           ))}
         </div>
       </div>
@@ -451,7 +465,7 @@ function BuiltinServersPanel() {
         {filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12 text-center">
             <Package size={18} className="text-foreground/10 mb-2" />
-            <p className="text-[10px] text-foreground/25">{'\u6ca1\u6709\u5339\u914d\u7684\u670d\u52a1\u5668'}</p>
+            <p className="text-xs text-foreground/25">{'\u6ca1\u6709\u5339\u914d\u7684\u670d\u52a1\u5668'}</p>
           </div>
         ) : (
           <div className="space-y-[1px]">
@@ -466,18 +480,17 @@ function BuiltinServersPanel() {
                 {/* Name + description + tags */}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-1.5">
-                    <span className="text-[11px] text-foreground/75 truncate" style={{ fontWeight: 500 }}>
+                    <span className="text-xs text-foreground/75 truncate font-medium">
                       {server.name.replace('@cherry/', '')}
                     </span>
                     {server.tags.map((tag, i) => (
                       <span
                         key={i}
-                        className={`px-1 py-0 rounded text-[7px] flex-shrink-0 whitespace-nowrap ${
+                        className={`px-1 py-0 rounded text-[7px] flex-shrink-0 whitespace-nowrap font-medium ${
                           tag === '\u5185\u7f6e'
-                            ? 'bg-amber-500/10 text-amber-500'
+                            ? 'bg-warning-muted text-warning'
                             : 'bg-orange-500/10 text-orange-500'
                         }`}
-                        style={{ fontWeight: 500 }}
                       >
                         {tag}
                       </span>
@@ -489,25 +502,27 @@ function BuiltinServersPanel() {
                 {/* Install / Installed action */}
                 <div className="flex-shrink-0">
                   {server.installed ? (
-                    <button
+                    <Button
+                      variant="ghost"
+                      size="xs"
                       onClick={() => handleUninstall(server.id)}
-                      className="flex items-center gap-1 px-2 py-[3px] rounded-md text-[9px] text-cherry-primary bg-cherry-active-bg hover:bg-red-500/[0.08] hover:text-red-500 transition-colors group/btn"
-                      style={{ fontWeight: 500 }}
+                      className="px-2 py-[3px] h-auto rounded-md text-[9px] text-cherry-primary bg-cherry-active-bg hover:bg-destructive/[0.08] hover:text-destructive font-medium group/btn"
                     >
                       <Check size={9} className="group-hover/btn:hidden" />
                       <X size={9} className="hidden group-hover/btn:block" />
                       <span className="group-hover/btn:hidden">{'\u5df2\u5b89\u88c5'}</span>
                       <span className="hidden group-hover/btn:block">{'\u5378\u8f7d'}</span>
-                    </button>
+                    </Button>
                   ) : (
-                    <button
+                    <Button
+                      variant="ghost"
+                      size="xs"
                       onClick={() => handleInstall(server.id)}
-                      className="flex items-center gap-1 px-2 py-[3px] rounded-md text-[9px] text-foreground/35 hover:text-cherry-primary hover:bg-cherry-active-bg transition-colors"
-                      style={{ fontWeight: 500 }}
+                      className="px-2 py-[3px] h-auto rounded-md text-[9px] text-foreground/35 hover:text-cherry-primary hover:bg-cherry-active-bg font-medium"
                     >
                       <Plus size={9} />
                       <span>{'\u5b89\u88c5'}</span>
-                    </button>
+                    </Button>
                   )}
                 </div>
               </div>
@@ -533,26 +548,26 @@ function MarketplacePanel() {
     <div className="h-full flex flex-col">
       <div className="px-5 pt-4 pb-1.5 flex-shrink-0">
         <div className="flex items-center gap-2">
-          <h3 className="text-[15px] text-foreground/85" style={{ fontWeight: 600 }}>{'\u66f4\u591a MCP'}</h3>
-          <span className="text-[10px] text-foreground/25 tabular-nums">{MOCK_MARKETPLACE.length}</span>
+          <h3 className="text-base text-foreground/85 font-semibold">{'\u66f4\u591a MCP'}</h3>
+          <span className="text-xs text-foreground/25 tabular-nums">{MOCK_MARKETPLACE.length}</span>
         </div>
-        <p className="text-[10px] text-foreground/25 mt-0.5">{'\u63a2\u7d22\u793e\u533a MCP \u670d\u52a1\u5668\u548c\u5de5\u5177'}</p>
+        <p className="text-xs text-foreground/25 mt-0.5">{'\u63a2\u7d22\u793e\u533a MCP \u670d\u52a1\u5668\u548c\u5de5\u5177'}</p>
       </div>
       {/* Search */}
       <div className="px-5 pb-2 flex-shrink-0">
         <div className="relative">
           <Search size={11} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-foreground/25" />
-          <input
+          <Input
             type="text"
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
             placeholder={'\u641c\u7d22\u5e02\u573a...'}
-            className="w-full pl-7 pr-7 py-[5px] rounded-lg bg-foreground/[0.03] border border-foreground/[0.06] text-[10px] text-foreground/70 outline-none placeholder:text-foreground/20 focus:border-foreground/[0.12] transition-colors"
+            className="w-full pl-7 pr-7 py-[5px] rounded-lg bg-foreground/[0.03] border border-foreground/[0.06] text-xs text-foreground/70 placeholder:text-foreground/20 focus:border-foreground/[0.12] transition-colors h-auto"
           />
           {searchQuery && (
-            <button onClick={() => setSearchQuery('')} className="absolute right-2 top-1/2 -translate-y-1/2 text-foreground/20 hover:text-foreground/40 transition-colors">
+            <Button variant="ghost" size="icon-xs" onClick={() => setSearchQuery('')} className="absolute right-2 top-1/2 -translate-y-1/2 w-5 h-5 text-foreground/20 hover:text-foreground/40">
               <X size={10} />
-            </button>
+            </Button>
           )}
         </div>
       </div>
@@ -560,7 +575,7 @@ function MarketplacePanel() {
         {filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12 text-center">
             <Store size={18} className="text-foreground/10 mb-2" />
-            <p className="text-[10px] text-foreground/25">{'\u6ca1\u6709\u5339\u914d\u7684\u7ed3\u679c'}</p>
+            <p className="text-xs text-foreground/25">{'\u6ca1\u6709\u5339\u914d\u7684\u7ed3\u679c'}</p>
           </div>
         ) : (
           <div className="space-y-[1px]">
@@ -570,13 +585,13 @@ function MarketplacePanel() {
                 className="flex items-center gap-2.5 px-3 py-[9px] rounded-lg transition-all cursor-pointer group hover:bg-foreground/[0.03]"
               >
                 {/* Icon */}
-                <div className="w-5 h-5 rounded-md bg-foreground/[0.04] flex items-center justify-center text-[11px] flex-shrink-0">
+                <div className="w-5 h-5 rounded-md bg-foreground/[0.04] flex items-center justify-center text-xs flex-shrink-0">
                   {site.icon}
                 </div>
 
                 {/* Name + description */}
                 <div className="flex-1 min-w-0">
-                  <span className="text-[11px] text-foreground/75" style={{ fontWeight: 500 }}>{site.name}</span>
+                  <span className="text-xs text-foreground/75 font-medium">{site.name}</span>
                   <p className="text-[9px] text-foreground/25 mt-0.5 truncate">{site.description}</p>
                 </div>
 
@@ -602,36 +617,38 @@ function ProviderPanel({ provider }: { provider: Provider }) {
     <div className="h-full flex flex-col">
       <div className="flex items-center justify-between px-5 pt-4 pb-3 flex-shrink-0">
         <div className="flex items-center gap-2">
-          <h3 className="text-[15px] text-foreground/85" style={{ fontWeight: 600 }}>{provider.name}</h3>
+          <h3 className="text-base text-foreground/85 font-semibold">{provider.name}</h3>
           <ExternalLink size={10} className="text-foreground/25" />
         </div>
-        <button className="flex items-center gap-1 px-2.5 py-[4px] rounded-lg border border-border/30 text-[10px] text-foreground/45 hover:text-foreground/65 hover:bg-accent transition-colors">
+        <Button variant="outline" size="xs" className="px-2.5 py-[4px] h-auto rounded-lg border-border/30 text-xs text-foreground/45 hover:text-foreground/65 hover:bg-accent">
           <span>{'\u83b7\u53d6\u670d\u52a1\u5668'}</span>
-        </button>
+        </Button>
       </div>
       <div className="flex-1 overflow-y-auto px-5 pb-4 [&::-webkit-scrollbar]:w-[3px] [&::-webkit-scrollbar-thumb]:bg-border/20">
         <div className="max-w-[560px]">
-          <p className="text-[12px] text-foreground/70 mb-2" style={{ fontWeight: 600 }}>API {'\u5bc6\u94a5'}</p>
+          <p className="text-sm text-foreground/70 mb-2 font-semibold">API {'\u5bc6\u94a5'}</p>
           <div className="flex items-center gap-2">
             <div className="flex-1 flex items-center px-3 py-[7px] bg-foreground/[0.03] rounded-lg border border-foreground/[0.06]">
-              <input
+              <Input
                 type={showKey ? 'text' : 'password'}
                 value={apiKey}
                 onChange={e => setApiKey(e.target.value)}
                 placeholder={'\u5728\u6b64\u8f93\u5165 API \u4ee4\u724c'}
-                className="flex-1 bg-transparent text-[11px] text-foreground/60 outline-none placeholder:text-foreground/20 min-w-0"
+                className="flex-1 bg-transparent text-xs text-foreground/60 placeholder:text-foreground/20 min-w-0 border-0 h-auto p-0 focus-visible:ring-0"
               />
-              <button
+              <Button
+                variant="ghost"
+                size="icon-xs"
                 onClick={() => setShowKey(v => !v)}
-                className="text-foreground/20 hover:text-foreground/45 transition-colors ml-2"
+                className="w-5 h-5 text-foreground/20 hover:text-foreground/45 ml-2"
               >
                 {showKey ? <EyeOff size={11} /> : <Eye size={11} />}
-              </button>
+              </Button>
             </div>
           </div>
-          <button className="text-[10px] text-blue-500 hover:text-blue-600 mt-2 transition-colors">
+          <Button variant="link" size="xs" className="text-xs text-info hover:text-info mt-2 p-0 h-auto">
             {'\u70b9\u51fb\u8fd9\u91cc\u83b7\u53d6\u5bc6\u94a5'}
-          </button>
+          </Button>
         </div>
       </div>
     </div>
@@ -670,29 +687,31 @@ function ServerDetailPanel({ server, onBack }: { server: MCPServer; onBack: () =
     <div className="h-full flex flex-col">
       {/* Back + header */}
       <div className="px-5 pt-3 pb-0 flex-shrink-0">
-        <button
+        <Button
+          variant="ghost"
+          size="icon-xs"
           onClick={onBack}
-          className="p-1 -ml-1 mb-2 rounded-md text-foreground/30 hover:text-foreground/60 hover:bg-accent transition-colors"
+          className="p-1 -ml-1 mb-2 text-foreground/30 hover:text-foreground/60 hover:bg-accent"
         >
           <ArrowLeft size={15} />
-        </button>
+        </Button>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <h3 className="text-[13px] text-foreground/85" style={{ fontWeight: 600 }}>{name}</h3>
+            <h3 className="text-sm text-foreground/85 font-semibold">{name}</h3>
             {server.version && (
-              <span className="px-2 py-[2px] rounded-md bg-cherry-primary text-white text-[10px]" style={{ fontWeight: 500 }}>{server.version}</span>
+              <span className="px-2 py-[2px] rounded-md bg-cherry-primary text-white text-xs font-medium">{server.version}</span>
             )}
-            <button className="text-[11px] text-foreground/40 hover:text-foreground/60 transition-colors">{'\u65e5\u5fd7'}</button>
-            <button className="p-0.5 rounded-md text-foreground/20 hover:text-red-500 transition-colors">
+            <Button variant="ghost" size="xs" className="text-xs text-foreground/40 hover:text-foreground/60 p-0 h-auto">{'\u65e5\u5fd7'}</Button>
+            <Button variant="ghost" size="icon-xs" className="w-5 h-5 text-foreground/20 hover:text-destructive">
               <Trash2 size={11} />
-            </button>
+            </Button>
           </div>
           <div className="flex items-center gap-3">
             <Toggle checked={enabled} onChange={setEnabled} />
-            <button className="flex items-center gap-1.5 px-3 py-[5px] rounded-lg border border-border/30 text-[11px] text-foreground/45 hover:text-foreground/65 hover:bg-accent transition-colors">
+            <Button variant="outline" size="sm" className="px-3 py-[5px] h-auto rounded-lg border-border/30 text-xs text-foreground/45 hover:text-foreground/65 hover:bg-accent">
               <Save size={10} />
               <span>{'\u4fdd\u5b58'}</span>
-            </button>
+            </Button>
           </div>
         </div>
 
@@ -701,19 +720,20 @@ function ServerDetailPanel({ server, onBack }: { server: MCPServer; onBack: () =
           {tabs.map(tab => {
             const isActive = activeTab === tab.id;
             return (
-              <button
+              <Button
                 key={tab.id}
+                variant="ghost"
+                size="sm"
                 onClick={() => setActiveTab(tab.id)}
-                className={`px-3.5 pb-2.5 pt-1 text-[12px] transition-colors relative ${
-                  isActive ? 'text-blue-500' : 'text-foreground/40 hover:text-foreground/60'
+                className={`px-3.5 pb-2.5 pt-1 h-auto rounded-none text-sm relative ${
+                  isActive ? 'text-primary font-medium' : 'text-foreground/40 hover:text-foreground/60'
                 }`}
-                style={{ fontWeight: isActive ? 500 : 400 }}
               >
                 {tab.label}{tab.count !== undefined ? ` (${tab.count})` : ''}
                 {isActive && (
-                  <div className="absolute bottom-0 left-3.5 right-3.5 h-[2px] bg-blue-500 rounded-full" />
+                  <div className="absolute bottom-0 left-3.5 right-3.5 h-[2px] bg-primary rounded-full" />
                 )}
-              </button>
+              </Button>
             );
           })}
         </div>
@@ -762,84 +782,80 @@ function GeneralTab({ name, setName, desc, setDesc, serverType, setServerType, t
   envVars: string; setEnvVars: (v: string) => void;
   longRunning: boolean; setLongRunning: (v: boolean) => void;
 }) {
-  const typeRef = React.useRef<HTMLDivElement>(null);
-  React.useEffect(() => {
-    if (!typeOpen) return;
-    const h = (e: MouseEvent) => { if (typeRef.current && !typeRef.current.contains(e.target as Node)) setTypeOpen(false); };
-    document.addEventListener('mousedown', h);
-    return () => document.removeEventListener('mousedown', h);
-  }, [typeOpen, setTypeOpen]);
-
   return (
     <div className="max-w-[560px] space-y-5">
       {/* Name */}
       <div>
-        <label className="text-[13px] text-foreground/70 mb-1.5 flex items-center gap-0.5" style={{ fontWeight: 500 }}>
-          <span className="text-red-400">*</span> {'\u540d\u79f0'}
+        <label className="text-sm text-foreground/70 mb-1.5 flex items-center gap-0.5 font-medium">
+          <span className="text-destructive">*</span> {'\u540d\u79f0'}
         </label>
-        <input
+        <Input
           value={name}
           onChange={e => setName(e.target.value)}
-          className="w-full px-3 py-[8px] bg-foreground/[0.02] rounded-lg border border-border/30 text-[12px] text-foreground/70 outline-none focus:border-foreground/15 transition-colors"
+          className="w-full px-3 py-[8px] bg-foreground/[0.02] rounded-lg border border-border/30 text-sm text-foreground/70 focus:border-foreground/15 transition-colors h-auto"
         />
       </div>
 
       {/* Description */}
       <div>
-        <label className="text-[13px] text-foreground/70 mb-1.5 block" style={{ fontWeight: 500 }}>{'\u63cf\u8ff0'}</label>
-        <input
+        <label className="text-sm text-foreground/70 mb-1.5 block font-medium">{'\u63cf\u8ff0'}</label>
+        <Input
           value={desc}
           onChange={e => setDesc(e.target.value)}
           placeholder={'\u63cf\u8ff0'}
-          className="w-full px-3 py-[8px] bg-foreground/[0.02] rounded-lg border border-border/30 text-[12px] text-foreground/70 outline-none placeholder:text-foreground/20 focus:border-foreground/15 transition-colors"
+          className="w-full px-3 py-[8px] bg-foreground/[0.02] rounded-lg border border-border/30 text-sm text-foreground/70 placeholder:text-foreground/20 focus:border-foreground/15 transition-colors h-auto"
         />
       </div>
 
       {/* Type */}
-      <div ref={typeRef} className="relative">
-        <label className="text-[13px] text-foreground/70 mb-1.5 flex items-center gap-0.5" style={{ fontWeight: 500 }}>
-          <span className="text-red-400">*</span> {'\u7c7b\u578b'}
+      <div>
+        <label className="text-sm text-foreground/70 mb-1.5 flex items-center gap-0.5 font-medium">
+          <span className="text-destructive">*</span> {'\u7c7b\u578b'}
         </label>
-        <button
-          onClick={() => setTypeOpen(!typeOpen)}
-          className="w-full flex items-center justify-between px-3 py-[8px] bg-foreground/[0.02] rounded-lg border border-border/30 text-[12px] text-foreground/60 hover:border-foreground/15 transition-colors"
-        >
-          <span>{serverType === 'stdio' ? '\u6807\u51c6\u8f93\u5165 / \u8f93\u51fa (stdio)' : 'Server-Sent Events (SSE)'}</span>
-          <ChevronDown size={10} className={`transition-transform ${typeOpen ? 'rotate-180' : ''}`} />
-        </button>
-        {typeOpen && (
-          <div className="absolute top-full left-0 mt-1 w-full bg-popover border border-border rounded-lg shadow-lg p-0.5 z-50">
+        <Popover open={typeOpen} onOpenChange={setTypeOpen}>
+          <PopoverTrigger asChild>
+            <Button
+              variant="outline"
+              className="w-full flex items-center justify-between px-3 py-[8px] h-auto bg-foreground/[0.02] rounded-lg border-border/30 text-sm text-foreground/60 hover:border-foreground/15"
+            >
+              <span>{serverType === 'stdio' ? '\u6807\u51c6\u8f93\u5165 / \u8f93\u51fa (stdio)' : 'Server-Sent Events (SSE)'}</span>
+              <ChevronDown size={10} className={`transition-transform ${typeOpen ? 'rotate-180' : ''}`} />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent align="start" className="w-[var(--radix-popover-trigger-width)] p-0.5">
             {['stdio', 'sse'].map(t => (
-              <button
+              <Button
                 key={t}
+                variant="ghost"
+                size="xs"
                 onClick={() => { setServerType(t); setTypeOpen(false); }}
-                className={`w-full text-left px-3 py-[6px] rounded-md text-[10px] transition-colors flex items-center justify-between ${
+                className={`w-full text-left px-3 py-[6px] h-auto rounded-md text-xs justify-between ${
                   serverType === t ? 'bg-accent text-foreground/75' : 'text-foreground/55 hover:bg-accent/50'
                 }`}
               >
                 <span>{t === 'stdio' ? '\u6807\u51c6\u8f93\u5165 / \u8f93\u51fa (stdio)' : 'Server-Sent Events (SSE)'}</span>
                 {serverType === t && <Check size={9} className="text-cherry-primary" />}
-              </button>
+              </Button>
             ))}
-          </div>
-        )}
+          </PopoverContent>
+        </Popover>
       </div>
 
       {/* Command */}
       <div>
-        <label className="text-[13px] text-foreground/70 mb-1.5 flex items-center gap-0.5" style={{ fontWeight: 500 }}>
-          <span className="text-red-400">*</span> {'\u547d\u4ee4'}
+        <label className="text-sm text-foreground/70 mb-1.5 flex items-center gap-0.5 font-medium">
+          <span className="text-destructive">*</span> {'\u547d\u4ee4'}
         </label>
-        <input
+        <Input
           value={command}
           onChange={e => setCommand(e.target.value)}
-          className="w-full px-3 py-[8px] bg-foreground/[0.02] rounded-lg border border-border/30 text-[12px] text-foreground/70 outline-none font-mono focus:border-foreground/15 transition-colors"
+          className="w-full px-3 py-[8px] bg-foreground/[0.02] rounded-lg border border-border/30 text-sm text-foreground/70 font-mono focus:border-foreground/15 transition-colors h-auto"
         />
       </div>
 
       {/* Package Source */}
       <div>
-        <label className="text-[13px] text-foreground/70 mb-1.5 flex items-center gap-1" style={{ fontWeight: 500 }}>
+        <label className="text-sm text-foreground/70 mb-1.5 flex items-center gap-1 font-medium">
           {'\u5305\u7ba1\u7406\u6e90'}
           <Info size={11} className="text-foreground/20" />
         </label>
@@ -851,7 +867,7 @@ function GeneralTab({ name, setName, desc, setDesc, serverType, setServerType, t
               }`}>
                 {pkgSource === src && <div className="w-1.5 h-1.5 rounded-full bg-cherry-primary" />}
               </div>
-              <span className="text-[12px] text-foreground/55">{src}</span>
+              <span className="text-sm text-foreground/55">{src}</span>
             </label>
           ))}
         </div>
@@ -859,20 +875,20 @@ function GeneralTab({ name, setName, desc, setDesc, serverType, setServerType, t
 
       {/* Args */}
       <div>
-        <label className="text-[13px] text-foreground/70 mb-1.5 flex items-center gap-1" style={{ fontWeight: 500 }}>
+        <label className="text-sm text-foreground/70 mb-1.5 flex items-center gap-1 font-medium">
           {'\u53c2\u6570'}
           <Info size={11} className="text-foreground/20" />
         </label>
-        <input
+        <Input
           value={args}
           onChange={e => setArgs(e.target.value)}
-          className="w-full px-3 py-[8px] bg-foreground/[0.02] rounded-lg border border-border/30 text-[12px] text-foreground/70 outline-none font-mono focus:border-foreground/15 transition-colors"
+          className="w-full px-3 py-[8px] bg-foreground/[0.02] rounded-lg border border-border/30 text-sm text-foreground/70 font-mono focus:border-foreground/15 transition-colors h-auto"
         />
       </div>
 
       {/* Env Vars */}
       <div>
-        <label className="text-[13px] text-foreground/70 mb-1.5 flex items-center gap-1" style={{ fontWeight: 500 }}>
+        <label className="text-sm text-foreground/70 mb-1.5 flex items-center gap-1 font-medium">
           {'\u73af\u5883\u53d8\u91cf'}
           <Info size={11} className="text-foreground/20" />
         </label>
@@ -881,14 +897,14 @@ function GeneralTab({ name, setName, desc, setDesc, serverType, setServerType, t
           onChange={e => setEnvVars(e.target.value)}
           placeholder={'KEY1=value1\nKEY2=value2'}
           rows={3}
-          className="w-full px-3 py-2.5 bg-foreground/[0.02] rounded-lg border border-border/30 text-[12px] text-foreground/70 outline-none font-mono placeholder:text-foreground/15 resize-y focus:border-foreground/15 transition-colors [&::-webkit-scrollbar]:w-[2px] [&::-webkit-scrollbar-thumb]:bg-border/20"
+          className="w-full px-3 py-2.5 bg-foreground/[0.02] rounded-lg border border-border/30 text-sm text-foreground/70 outline-none font-mono placeholder:text-foreground/15 resize-y focus:border-foreground/15 transition-colors [&::-webkit-scrollbar]:w-[2px] [&::-webkit-scrollbar-thumb]:bg-border/20"
         />
       </div>
 
       {/* Long running */}
       <div className="flex items-center justify-between py-2">
         <div className="flex items-center gap-1.5">
-          <span className="text-[13px] text-foreground/70" style={{ fontWeight: 500 }}>{'\u957f\u65f6\u95f4\u8fd0\u884c\u6a21\u5f0f'}</span>
+          <span className="text-sm text-foreground/70 font-medium">{'\u957f\u65f6\u95f4\u8fd0\u884c\u6a21\u5f0f'}</span>
           <Info size={11} className="text-foreground/20" />
         </div>
         <Toggle checked={longRunning} onChange={setLongRunning} />
@@ -917,7 +933,7 @@ function ToolsTab({ tools, setTools }: { tools: MCPTool[]; setTools: (t: MCPTool
         <div className="w-10 h-10 rounded-2xl bg-foreground/[0.04] flex items-center justify-center mb-3">
           <Settings2 size={16} className="text-foreground/15" />
         </div>
-        <p className="text-[11px] text-foreground/35">{'\u6682\u65e0\u53ef\u7528\u5de5\u5177'}</p>
+        <p className="text-xs text-foreground/35">{'\u6682\u65e0\u53ef\u7528\u5de5\u5177'}</p>
         <p className="text-[9px] text-foreground/20 mt-1">{'\u8bf7\u786e\u8ba4\u670d\u52a1\u5668\u5df2\u542f\u52a8\u5e76\u6b63\u786e\u914d\u7f6e'}</p>
       </div>
     );
@@ -928,14 +944,14 @@ function ToolsTab({ tools, setTools }: { tools: MCPTool[]; setTools: (t: MCPTool
       {/* Header row */}
       <div className="flex items-center justify-between pb-3 border-b border-foreground/[0.06]">
         <div className="flex items-center gap-2">
-          <p className="text-[13px] text-foreground/70" style={{ fontWeight: 600 }}>{'\u53ef\u7528\u5de5\u5177'}</p>
-          <button className="p-0.5 rounded-md text-foreground/20 hover:text-foreground/40 transition-colors">
+          <p className="text-sm text-foreground/70 font-semibold">{'\u53ef\u7528\u5de5\u5177'}</p>
+          <Button variant="ghost" size="icon-xs" className="w-5 h-5 text-foreground/20 hover:text-foreground/40">
             <Filter size={10} />
-          </button>
+          </Button>
         </div>
         <div className="flex items-center gap-6">
-          <span className="text-[10px] text-foreground/35">{'\u542f\u7528\u5de5\u5177'}</span>
-          <span className="text-[10px] text-foreground/35">{'\u81ea\u52a8\u6279\u51c6'}</span>
+          <span className="text-xs text-foreground/35">{'\u542f\u7528\u5de5\u5177'}</span>
+          <span className="text-xs text-foreground/35">{'\u81ea\u52a8\u6279\u51c6'}</span>
         </div>
       </div>
 
@@ -946,21 +962,23 @@ function ToolsTab({ tools, setTools }: { tools: MCPTool[]; setTools: (t: MCPTool
             <div className="flex items-center justify-between py-3.5 gap-4">
               <div className="flex items-start gap-2 flex-1 min-w-0">
                 {tool.params && tool.params.length > 0 ? (
-                  <button
+                  <Button
+                    variant="ghost"
+                    size="icon-xs"
                     onClick={() => setExpandedTool(expandedTool === tool.name ? null : tool.name)}
-                    className="mt-0.5 p-0.5 rounded text-foreground/25 hover:text-foreground/50 transition-colors flex-shrink-0"
+                    className="mt-0.5 w-5 h-5 text-foreground/25 hover:text-foreground/50 flex-shrink-0"
                   >
                     <ChevronRight size={10} className={`transition-transform ${expandedTool === tool.name ? 'rotate-90' : ''}`} />
-                  </button>
+                  </Button>
                 ) : (
                   <span className="mt-0.5 w-4 text-center text-foreground/15 flex-shrink-0">{'\u2014'}</span>
                 )}
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-1.5">
-                    <p className="text-[12px] text-foreground/75" style={{ fontWeight: 600 }}>{tool.name}</p>
+                    <p className="text-sm text-foreground/75 font-semibold">{tool.name}</p>
                     <Info size={9} className="text-foreground/15" />
                   </div>
-                  <p className="text-[10px] text-foreground/35 mt-0.5 leading-relaxed">{tool.description}</p>
+                  <p className="text-xs text-foreground/35 mt-0.5 leading-relaxed">{tool.description}</p>
                 </div>
               </div>
               <div className="flex items-center gap-6 flex-shrink-0">
@@ -974,7 +992,7 @@ function ToolsTab({ tools, setTools }: { tools: MCPTool[]; setTools: (t: MCPTool
               <div className="ml-6 mb-3">
                 {tool.params.map(param => (
                   <div key={param.name} className="flex items-center gap-3 px-3 py-2 bg-foreground/[0.02] rounded-lg border border-foreground/[0.04] mb-1">
-                    <span className="text-[10px] text-foreground/60 font-mono flex-1">{param.name}</span>
+                    <span className="text-xs text-foreground/60 font-mono flex-1">{param.name}</span>
                     <span className="flex items-center gap-1 text-[9px] text-foreground/60">
                       <span className="w-1 h-1 rounded-full bg-foreground/50" />
                       {param.type}
@@ -1000,18 +1018,18 @@ function PromptsTab({ prompts }: { prompts: MCPPrompt[] }) {
         <div className="w-10 h-10 rounded-2xl bg-foreground/[0.04] flex items-center justify-center mb-3">
           <FileText size={16} className="text-foreground/15" />
         </div>
-        <p className="text-[11px] text-foreground/35">{'\u6682\u65e0\u63d0\u793a\u6a21\u677f'}</p>
+        <p className="text-xs text-foreground/35">{'\u6682\u65e0\u63d0\u793a\u6a21\u677f'}</p>
       </div>
     );
   }
 
   return (
     <div>
-      <p className="text-[13px] text-foreground/70 pb-3 border-b border-foreground/[0.06] mb-1" style={{ fontWeight: 600 }}>{'\u53ef\u7528\u63d0\u793a'}</p>
+      <p className="text-sm text-foreground/70 pb-3 border-b border-foreground/[0.06] mb-1 font-semibold">{'\u53ef\u7528\u63d0\u793a'}</p>
       {prompts.map(p => (
         <div key={p.name} className="py-3 last:border-b-0">
-          <p className="text-[12px] text-foreground/75" style={{ fontWeight: 500 }}>{p.name}</p>
-          <p className="text-[10px] text-foreground/35 mt-0.5">{p.description}</p>
+          <p className="text-sm text-foreground/75 font-medium">{p.name}</p>
+          <p className="text-xs text-foreground/35 mt-0.5">{p.description}</p>
         </div>
       ))}
     </div>
@@ -1030,32 +1048,33 @@ function ResourcesTab({ resources }: { resources: MCPResource[] }) {
         <div className="w-10 h-10 rounded-2xl bg-foreground/[0.04] flex items-center justify-center mb-3">
           <Server size={16} className="text-foreground/15" />
         </div>
-        <p className="text-[11px] text-foreground/35">{'\u6682\u65e0\u53ef\u7528\u8d44\u6e90'}</p>
+        <p className="text-xs text-foreground/35">{'\u6682\u65e0\u53ef\u7528\u8d44\u6e90'}</p>
       </div>
     );
   }
 
   return (
     <div>
-      <p className="text-[13px] text-foreground/70 pb-3 border-b border-foreground/[0.06] mb-1" style={{ fontWeight: 600 }}>{'\u53ef\u7528\u8d44\u6e90'}</p>
+      <p className="text-sm text-foreground/70 pb-3 border-b border-foreground/[0.06] mb-1 font-semibold">{'\u53ef\u7528\u8d44\u6e90'}</p>
       {resources.map(r => (
         <div key={r.name} className="last:border-b-0">
-          <button
+          <Button
+            variant="ghost"
             onClick={() => setExpanded(expanded === r.name ? null : r.name)}
-            className="w-full flex items-center gap-2 py-3 text-left"
+            className="w-full flex items-center gap-2 py-3 h-auto text-left justify-start"
           >
             <ChevronRight size={10} className={`text-foreground/30 transition-transform ${expanded === r.name ? 'rotate-90' : ''}`} />
             <div className="flex-1 min-w-0">
-              <p className="text-[12px] text-foreground/75" style={{ fontWeight: 500 }}>
+              <p className="text-sm text-foreground/75 font-medium">
                 {r.name} <span className="text-foreground/30 font-mono">({r.uri})</span>
               </p>
-              <p className="text-[10px] text-foreground/35 mt-0.5">{r.description}</p>
+              <p className="text-xs text-foreground/35 mt-0.5">{r.description}</p>
             </div>
-          </button>
+          </Button>
           {expanded === r.name && (
             <div className="ml-6 mb-3 flex items-center gap-4 px-3 py-2.5 bg-foreground/[0.02] rounded-lg border border-foreground/[0.04]">
-              <span className="text-[10px] text-foreground/45 flex-1">MIME {'\u7c7b\u578b'}</span>
-              <span className="px-2 py-[2px] rounded-md bg-blue-500/10 text-blue-600 text-[9px] border border-blue-500/15" style={{ fontWeight: 500 }}>{r.mimeType}</span>
+              <span className="text-xs text-foreground/45 flex-1">MIME {'\u7c7b\u578b'}</span>
+              <span className="px-2 py-[2px] rounded-md bg-info/10 text-info text-[9px] border border-info/15 font-medium">{r.mimeType}</span>
             </div>
           )}
         </div>
@@ -1109,15 +1128,16 @@ export function MCPServicePage() {
       {/* Middle Column: Navigation */}
       <div className="w-[160px] flex-shrink-0 flex flex-col border-r border-foreground/[0.05] min-h-0">
         <div className="px-3.5 pt-4 pb-2 flex-shrink-0">
-          <p className="text-[11px] text-foreground/40" style={{ fontWeight: 500 }}>MCP {'\u670d\u52a1'}</p>
+          <p className="text-xs text-foreground/40 font-medium">MCP {'\u670d\u52a1'}</p>
         </div>
 
         <div className="flex-1 overflow-y-auto px-2.5 pb-3 [&::-webkit-scrollbar]:w-[2px] [&::-webkit-scrollbar-thumb]:bg-border/20">
           <div className="space-y-[2px]">
             {/* Top item */}
-            <button
+            <Button
+              variant="ghost"
               onClick={() => { setSelectedNav('servers'); setSelectedServer(null); }}
-              className={`w-full flex items-center justify-between px-3 py-[8px] rounded-xl transition-all text-left relative ${
+              className={`w-full flex items-center justify-between px-3 py-[8px] h-auto rounded-xl text-left relative justify-start ${
                 selectedNav === 'servers' && !selectedServer
                   ? 'bg-cherry-active-bg'
                   : 'border border-transparent hover:bg-foreground/[0.03]'
@@ -1128,23 +1148,24 @@ export function MCPServicePage() {
               )}
               <div className="flex items-center gap-2 min-w-0 flex-1">
                 <span className={`flex-shrink-0 ${selectedNav === 'servers' && !selectedServer ? 'text-foreground/50' : 'text-foreground/30'}`}><Server size={14} /></span>
-                <span className={`text-[10px] ${selectedNav === 'servers' && !selectedServer ? 'text-foreground/85' : 'text-foreground/55'}`} style={{ fontWeight: selectedNav === 'servers' ? 500 : 400 }}>MCP {'\u670d\u52a1\u5668'}</span>
+                <span className={`text-xs ${selectedNav === 'servers' && !selectedServer ? 'text-foreground/85 font-medium' : 'text-foreground/55'}`}>MCP {'\u670d\u52a1\u5668'}</span>
               </div>
               <ChevronRight size={9} className={`flex-shrink-0 ${selectedNav === 'servers' && !selectedServer ? 'text-foreground/25' : 'text-foreground/10'}`} />
-            </button>
+            </Button>
 
             {/* Discover */}
-            <p className="text-[8px] text-foreground/25 tracking-wider px-3 pt-2.5 pb-1" style={{ fontWeight: 500 }}>{'\u53d1\u73b0'}</p>
+            <p className="text-[8px] text-foreground/25 tracking-wider px-3 pt-2.5 pb-1 font-medium">{'\u53d1\u73b0'}</p>
             {[
               { id: 'builtin' as const, label: '\u5185\u7f6e\u670d\u52a1\u5668', icon: <Package size={14} /> },
               { id: 'marketplace' as const, label: '\u5e02\u573a', icon: <Store size={14} /> },
             ].map(item => {
               const isSelected = selectedNav === item.id;
               return (
-                <button
+                <Button
                   key={item.id}
+                  variant="ghost"
                   onClick={() => { setSelectedNav(item.id); setSelectedServer(null); }}
-                  className={`w-full flex items-center justify-between px-3 py-[8px] rounded-xl transition-all text-left relative ${
+                  className={`w-full flex items-center justify-between px-3 py-[8px] h-auto rounded-xl text-left relative justify-start ${
                     isSelected
                       ? 'bg-cherry-active-bg'
                       : 'border border-transparent hover:bg-foreground/[0.03]'
@@ -1155,22 +1176,23 @@ export function MCPServicePage() {
                   )}
                   <div className="flex items-center gap-2 min-w-0 flex-1">
                     <span className={`flex-shrink-0 ${isSelected ? 'text-foreground/50' : 'text-foreground/30'}`}>{item.icon}</span>
-                    <span className={`text-[10px] ${isSelected ? 'text-foreground/85' : 'text-foreground/55'}`} style={{ fontWeight: isSelected ? 500 : 400 }}>{item.label}</span>
+                    <span className={`text-xs ${isSelected ? 'text-foreground/85 font-medium' : 'text-foreground/55'}`}>{item.label}</span>
                   </div>
                   <ChevronRight size={9} className={`flex-shrink-0 ${isSelected ? 'text-foreground/25' : 'text-foreground/10'}`} />
-                </button>
+                </Button>
               );
             })}
 
             {/* Providers */}
-            <p className="text-[8px] text-foreground/25 tracking-wider px-3 pt-2.5 pb-1" style={{ fontWeight: 500 }}>{'\u63d0\u4f9b\u5546'}</p>
+            <p className="text-[8px] text-foreground/25 tracking-wider px-3 pt-2.5 pb-1 font-medium">{'\u63d0\u4f9b\u5546'}</p>
             {MOCK_PROVIDERS.map(provider => {
               const isSelected = selectedNav === provider.id;
               return (
-                <button
+                <Button
                   key={provider.id}
+                  variant="ghost"
                   onClick={() => { setSelectedNav(provider.id); setSelectedServer(null); }}
-                  className={`w-full flex items-center justify-between px-3 py-[8px] rounded-xl transition-all text-left relative ${
+                  className={`w-full flex items-center justify-between px-3 py-[8px] h-auto rounded-xl text-left relative justify-start ${
                     isSelected
                       ? 'bg-cherry-active-bg'
                       : 'border border-transparent hover:bg-foreground/[0.03]'
@@ -1181,10 +1203,10 @@ export function MCPServicePage() {
                   )}
                   <div className="flex items-center gap-2 min-w-0 flex-1">
                     <span className="flex-shrink-0"><BrandLogo id={provider.id} fallbackLetter={provider.icon} fallbackColor="#6b7280" size={15} /></span>
-                    <span className={`text-[10px] truncate ${isSelected ? 'text-foreground/85' : 'text-foreground/55'}`} style={{ fontWeight: isSelected ? 500 : 400 }}>{provider.name}</span>
+                    <span className={`text-xs truncate ${isSelected ? 'text-foreground/85 font-medium' : 'text-foreground/55'}`}>{provider.name}</span>
                   </div>
                   <ChevronRight size={9} className={`flex-shrink-0 ${isSelected ? 'text-foreground/25' : 'text-foreground/10'}`} />
-                </button>
+                </Button>
               );
             })}
           </div>

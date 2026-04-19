@@ -5,6 +5,7 @@ import {
 } from 'lucide-react';
 import { ModelPickerPanel } from './ModelPickerPanel';
 import { AssistantPickerPanel } from './AssistantPickerPanel';
+import { Button } from '@cherry-studio/ui';
 
 type ActiveCategory = 'assistant' | 'model' | null;
 
@@ -104,8 +105,8 @@ export function AtMentionPicker({
             onMouseEnter={() => handleCategoryEnter('assistant')}
             onMouseLeave={handleCategoryLeave}
           >
-            <button
-              className={`w-full flex items-center gap-2 px-2.5 py-[7px] text-[11px] rounded-lg transition-colors ${
+            <Button variant="ghost" size="xs"
+              className={`w-full justify-start gap-2 ${
                 activeCategory === 'assistant'
                   ? 'bg-accent/50 text-popover-foreground'
                   : 'text-muted-foreground hover:text-popover-foreground hover:bg-accent/50'
@@ -114,7 +115,7 @@ export function AtMentionPicker({
               <Bot size={14} strokeWidth={1.5} className="flex-shrink-0" />
               <span className="flex-1 text-left">助手</span>
               <ChevronRight size={12} className="flex-shrink-0 text-muted-foreground/50" />
-            </button>
+            </Button>
           </div>
 
           {/* Model option */}
@@ -123,8 +124,8 @@ export function AtMentionPicker({
             onMouseEnter={() => handleCategoryEnter('model')}
             onMouseLeave={handleCategoryLeave}
           >
-            <button
-              className={`w-full flex items-center gap-2 px-2.5 py-[7px] text-[11px] rounded-lg transition-colors ${
+            <Button variant="ghost" size="xs"
+              className={`w-full justify-start gap-2 ${
                 activeCategory === 'model'
                   ? 'bg-accent/50 text-popover-foreground'
                   : 'text-muted-foreground hover:text-popover-foreground hover:bg-accent/50'
@@ -133,7 +134,7 @@ export function AtMentionPicker({
               <Cpu size={14} strokeWidth={1.5} className="flex-shrink-0" />
               <span className="flex-1 text-left">模型</span>
               <ChevronRight size={12} className="flex-shrink-0 text-muted-foreground/50" />
-            </button>
+            </Button>
           </div>
         </div>
       </div>

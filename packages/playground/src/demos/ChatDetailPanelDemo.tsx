@@ -7,10 +7,10 @@ import { Section } from "../components/Section"
 import { Copy, Check, Clock, Zap, Hash } from "lucide-react"
 
 const tokenStats = [
-  { label: "Input", value: "1,247", color: "text-blue-600 dark:text-blue-400" },
-  { label: "Output", value: "3,891", color: "text-green-600 dark:text-green-400" },
-  { label: "Thinking", value: "12,450", color: "text-violet-600 dark:text-violet-400" },
-  { label: "Cache", value: "890", color: "text-amber-600 dark:text-amber-400" },
+  { label: "Input", value: "1,247", color: "text-info" },
+  { label: "Output", value: "3,891", color: "text-success" },
+  { label: "Thinking", value: "12,450", color: "text-accent-violet" },
+  { label: "Cache", value: "890", color: "text-accent-amber" },
 ]
 
 const requestJson = `{
@@ -54,12 +54,16 @@ export function ChatDetailPanelDemo() {
   }
 
   return (
-    <Section title="Chat Detail Panel" code={`// Compose with: Tabs, Badge, CodeBlock, Card, Button`}>
-      <div className="max-w-lg rounded-xl border bg-background p-4 space-y-4">
+    <Section title="Chat Detail Panel" props={[
+        { name: "messageId", type: "string", default: '""', description: "ID of the message to display details for" },
+        { name: "model", type: "string", default: '""', description: "Model used to generate the response" },
+        { name: "tokenUsage", type: "{ input: number; output: number; thinking?: number }", default: "undefined", description: "Token usage statistics for the message" },
+      ]} code={`// Compose with: Tabs, Badge, CodeBlock, Card, Button`}>
+      <div className="max-w-lg rounded-[12px] border bg-background p-4 space-y-4">
         {/* Header */}
         <div className="flex items-center justify-between">
           <p className="text-sm font-medium">Message Details</p>
-          <Badge variant="outline" className="text-[9px]">Assistant</Badge>
+          <Badge variant="outline" className="text-xs">Assistant</Badge>
         </div>
 
         {/* Meta info */}
@@ -67,12 +71,12 @@ export function ChatDetailPanelDemo() {
           <div className="flex items-center gap-2 text-xs">
             <Hash className="size-3 text-muted-foreground" />
             <span className="text-muted-foreground">Session</span>
-            <button
+            <Button variant="ghost"
               onClick={() => handleCopy("sess_abc123")}
               className="font-mono text-[10px] text-foreground/70 hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 rounded-sm"
             >
               {copied ? <Check className="size-3 text-primary inline" /> : "sess_abc123"}
-            </button>
+            </Button>
           </div>
           <div className="flex items-center gap-2 text-xs">
             <Zap className="size-3 text-muted-foreground" />
@@ -86,7 +90,7 @@ export function ChatDetailPanelDemo() {
           </div>
           <div className="flex items-center gap-2 text-xs">
             <span className="text-muted-foreground">Status</span>
-            <Badge variant="outline" className="text-[9px] bg-green-500/10 text-green-600 border-green-500/20">Complete</Badge>
+            <Badge variant="outline" className="text-xs bg-success-muted text-success border-success/20">Complete</Badge>
           </div>
         </div>
 
@@ -97,7 +101,7 @@ export function ChatDetailPanelDemo() {
             {tokenStats.map((s) => (
               <div key={s.label} className="text-center">
                 <p className={`text-sm font-semibold tabular-nums ${s.color}`}>{s.value}</p>
-                <p className="text-[9px] text-muted-foreground">{s.label}</p>
+                <p className="text-xs text-muted-foreground">{s.label}</p>
               </div>
             ))}
           </div>

@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import React from 'react';
 import {
   MessageCircle, Palette, Languages,
-  Home, Puzzle, MousePointerClick,
+  Puzzle, MousePointerClick,
 } from 'lucide-react';
 import type { Tab, MenuItem } from '@/app/types';
 import { menuItems, MULTI_INSTANCE_ITEMS } from '@/app/config/constants';
@@ -22,7 +22,6 @@ interface SerializableTab extends Omit<Tab, 'icon'> {
 /** Map of menuItemId -> icon for icon reconstruction */
 const ICON_MAP: Record<string, React.ElementType> = {};
 menuItems.forEach(m => { ICON_MAP[m.id] = m.icon; });
-ICON_MAP['home'] = Home;
 ICON_MAP['miniapp-fallback'] = Puzzle;
 
 function serializeTabs(tabs: Tab[]): string {
@@ -47,7 +46,6 @@ function deserializeTabs(json: string): Tab[] | null {
 }
 
 const DEFAULT_TABS: Tab[] = [
-  { id: 'home', title: '首页', icon: Home, closeable: false },
   { id: 'p1', title: '聊天', icon: MessageCircle, closeable: true, pinned: true, menuItemId: 'chat' },
   { id: 'p2', title: '聊天', icon: MessageCircle, closeable: true, pinned: true, menuItemId: 'chat' },
   { id: 'p3', title: '聊天', icon: MessageCircle, closeable: true, pinned: true, menuItemId: 'chat' },

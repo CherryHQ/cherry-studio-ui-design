@@ -149,7 +149,7 @@ function DataTable<TData, TValue>({
   })
 
   return (
-    <div className={cn("space-y-4", className)}>
+    <div data-slot="data-table" className={cn("space-y-4 tracking-[-0.14px]", className)}>
       {searchKey && enableFiltering && (
         <Input
           placeholder={searchPlaceholder}
@@ -158,7 +158,7 @@ function DataTable<TData, TValue>({
           className="max-w-sm h-8"
         />
       )}
-      <div className="rounded-md border">
+      <div className="rounded-[var(--radius-button)] border">
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (

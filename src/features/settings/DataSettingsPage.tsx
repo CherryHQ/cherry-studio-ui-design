@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Button, Input } from '@cherry-studio/ui';
 import {
   BrandLogo
 } from '@/app/components/ui/BrandLogos';
@@ -84,7 +85,7 @@ function FormRow({ label, desc, children, noBorder }: {
     <div className={`flex items-center justify-between gap-4 py-[5px] ${noBorder ? '' : ''}`}>
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-1.5">
-          <p className="text-[11px] text-foreground/65" style={{ fontWeight: 400 }}>{label}</p>
+          <p className="text-xs text-foreground/65 font-normal">{label}</p>
           {desc && (
             <Tooltip content={desc} side="top">
               <span className="text-muted-foreground/25 hover:text-muted-foreground/50 transition-colors cursor-help flex-shrink-0">
@@ -111,14 +112,14 @@ function DataDirPanel() {
         title="数据备份与恢复"
         actions={
           <div className="flex items-center gap-1.5">
-            <button className="flex items-center gap-1.5 px-2.5 py-[4px] rounded-lg border border-border/30 text-[10px] text-foreground/50 hover:text-foreground/70 hover:bg-accent transition-colors">
+            <Button variant="outline" size="xs">
               <UploadIcon size={9} />
               <span>备份</span>
-            </button>
-            <button className="flex items-center gap-1.5 px-2.5 py-[4px] rounded-lg border border-border/30 text-[10px] text-foreground/50 hover:text-foreground/70 hover:bg-accent transition-colors">
+            </Button>
+            <Button variant="outline" size="xs">
               <Download size={9} />
               <span>恢复</span>
-            </button>
+            </Button>
           </div>
         }
       >
@@ -126,45 +127,45 @@ function DataDirPanel() {
           <Toggle checked={true} onChange={() => {}} />
         </FormRow>
         <FormRow label="导出至手机" noBorder>
-          <button className="flex items-center gap-1.5 px-2.5 py-[4px] rounded-lg border border-border/30 text-[10px] text-foreground/50 hover:text-foreground/70 hover:bg-accent transition-colors">
+          <Button variant="outline" size="xs">
             <Smartphone size={9} />
             <span>局域网传输</span>
-          </button>
+          </Button>
         </FormRow>
       </ConfigSection>
 
       <ConfigSection title="数据目录">
         <FormRow label="应用数据" desc="/Users/user/Library/Application Support/CherryStudio">
-          <button className="flex items-center gap-1.5 px-2.5 py-[4px] rounded-lg border border-border/30 text-[10px] text-foreground/50 hover:text-foreground/70 hover:bg-accent transition-colors">
+          <Button variant="outline" size="xs">
             <FolderOpen size={9} />
             <span>修改目录</span>
-          </button>
+          </Button>
         </FormRow>
         <FormRow label="应用日志" desc=".../CherryStudio/logs">
-          <button className="flex items-center gap-1.5 px-2.5 py-[4px] rounded-lg border border-border/30 text-[10px] text-foreground/50 hover:text-foreground/70 hover:bg-accent transition-colors">
+          <Button variant="outline" size="xs">
             <FileText size={9} />
             <span>打开日志</span>
-          </button>
+          </Button>
         </FormRow>
         <FormRow label="知识库文件">
-          <button className="flex items-center gap-1.5 px-2.5 py-[4px] rounded-lg border border-border/30 text-[10px] text-foreground/50 hover:text-foreground/70 hover:bg-accent transition-colors">
+          <Button variant="outline" size="xs">
             <Trash2 size={9} />
             <span>删除文件</span>
-          </button>
+          </Button>
         </FormRow>
         <FormRow label="清除缓存 (0.33MB)" noBorder>
-          <button className="flex items-center gap-1.5 px-2.5 py-[4px] rounded-lg border border-border/30 text-[10px] text-foreground/50 hover:text-foreground/70 hover:bg-accent transition-colors">
+          <Button variant="outline" size="xs">
             <RefreshCw size={9} />
             <span>清除缓存</span>
-          </button>
+          </Button>
         </FormRow>
       </ConfigSection>
 
-      <div className="bg-red-500/[0.04] border border-red-500/10 rounded-xl px-3.5 py-3">
+      <div className="bg-destructive/[0.04] border border-destructive/10 rounded-xl px-3.5 py-3">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-[11px] text-red-500/70" style={{ fontWeight: 500 }}>重置数据</p>
-            <p className="text-[9px] text-red-500/40 mt-0.5">清空所有配置和聊天记录，恢复出厂设置。此操作不可逆。</p>
+            <p className="text-xs text-destructive/70 font-medium">重置数据</p>
+            <p className="text-[9px] text-destructive/40 mt-0.5">清空所有配置和聊天记录，恢复出厂设置。此操作不可逆。</p>
           </div>
           <ActionButton variant="danger">重置数据</ActionButton>
         </div>
@@ -189,14 +190,14 @@ function LocalBackupPanel() {
         desc="将数据备份到本地磁盘。"
         actions={
           <div className="flex items-center gap-1.5">
-            <button className="flex items-center gap-1.5 px-2.5 py-[4px] rounded-lg border border-border/30 text-[10px] text-foreground/50 hover:text-foreground/70 hover:bg-accent transition-colors">
+            <Button variant="outline" size="xs">
               <UploadIcon size={9} />
               <span>立即备份</span>
-            </button>
-            <button className="flex items-center gap-1.5 px-2.5 py-[4px] rounded-lg border border-border/30 text-[10px] text-foreground/50 hover:text-foreground/70 hover:bg-accent transition-colors">
+            </Button>
+            <Button variant="outline" size="xs">
               <FolderOpen size={9} />
               <span>管理备份</span>
-            </button>
+            </Button>
           </div>
         }
       />
@@ -254,14 +255,14 @@ function WebDAVPanel() {
         title="WebDAV 同步"
         actions={
           <div className="flex items-center gap-1.5">
-            <button className="flex items-center gap-1.5 px-2.5 py-[4px] rounded-lg border border-border/30 text-[10px] text-foreground/50 hover:text-foreground/70 hover:bg-accent transition-colors">
+            <Button variant="outline" size="xs">
               <RefreshCw size={9} />
               <span>检查更新</span>
-            </button>
-            <button className="flex items-center gap-1.5 px-2.5 py-[4px] rounded-lg bg-cherry-primary text-white text-[10px] hover:bg-cherry-primary-dark transition-colors">
+            </Button>
+            <Button size="xs" className="bg-cherry-primary text-white hover:bg-cherry-primary-dark">
               <UploadIcon size={9} />
               <span>立即备份</span>
-            </button>
+            </Button>
           </div>
         }
       />
@@ -270,48 +271,48 @@ function WebDAVPanel() {
       <div className="flex items-center gap-2.5 px-3.5 py-2.5 bg-cherry-active-bg border border-cherry-ring rounded-xl">
         <CheckCircle2 size={13} className="text-cherry-primary flex-shrink-0" />
         <div className="flex-1 min-w-0">
-          <p className="text-[10px] text-cherry-primary-dark" style={{ fontWeight: 500 }}>服务已连接</p>
+          <p className="text-xs text-cherry-primary-dark font-medium">服务已连接</p>
           <p className="text-[8px] text-cherry-text-muted mt-0.5">上次成功备份：今天 14:30 · 大小 4.2MB</p>
         </div>
-        <button className="px-2 py-[3px] rounded-lg border border-cherry-ring text-[9px] text-cherry-text-muted hover:bg-cherry-active-bg transition-colors">
+        <Button variant="outline" size="xs" className="border-cherry-ring text-cherry-text-muted hover:bg-cherry-active-bg">
           查看日志
-        </button>
+        </Button>
       </div>
 
       <ConfigSection title="服务器配置" hint="推荐使用坚果云或自建 NAS">
         <div className="space-y-2.5">
           <div>
-            <label className="text-[10px] text-foreground/55 mb-1 block">WebDAV 地址</label>
+            <label className="text-xs text-foreground/55 mb-1 block">WebDAV 地址</label>
             <TextInput value={url} onChange={setUrl} mono />
           </div>
           <div>
-            <label className="text-[10px] text-foreground/55 mb-1 block">用户名</label>
+            <label className="text-xs text-foreground/55 mb-1 block">用户名</label>
             <TextInput value={user} onChange={setUser} mono />
           </div>
           <div>
-            <label className="text-[10px] text-foreground/55 mb-1 block">密码 / 应用令牌</label>
+            <label className="text-xs text-foreground/55 mb-1 block">密码 / 应用令牌</label>
             <div className="flex items-center px-2.5 py-[5px] bg-foreground/[0.03] rounded-lg border border-border/30">
-              <input
+              <Input
                 type={showPwd ? 'text' : 'password'}
                 value={pwd}
                 onChange={e => setPwd(e.target.value)}
-                className="flex-1 bg-transparent text-[10px] text-foreground/60 outline-none min-w-0 font-mono"
+                className="flex-1 bg-transparent text-xs text-foreground/60 min-w-0 font-mono border-0 h-auto p-0 focus-visible:ring-0"
               />
-              <button onClick={() => setShowPwd(v => !v)} className="text-foreground/20 hover:text-foreground/40 transition-colors ml-1.5">
+              <Button variant="ghost" size="icon-xs" onClick={() => setShowPwd(v => !v)} className="text-foreground/20 hover:text-foreground/40 ml-1.5">
                 {showPwd ? <EyeOff size={10} /> : <Eye size={10} />}
-              </button>
+              </Button>
             </div>
           </div>
           <div>
-            <label className="text-[10px] text-foreground/55 mb-1 block">存储路径</label>
+            <label className="text-xs text-foreground/55 mb-1 block">存储路径</label>
             <div className="flex items-center gap-1.5">
               <div className="flex-1">
                 <TextInput value={path} onChange={setPath} mono />
               </div>
-              <button className="flex items-center gap-1.5 px-2.5 py-[5px] rounded-lg border border-border/30 text-[10px] text-foreground/50 hover:text-foreground/70 hover:bg-accent transition-colors flex-shrink-0">
+              <Button variant="outline" size="xs" className="flex-shrink-0">
                 <Activity size={9} />
                 <span>验证连接</span>
-              </button>
+              </Button>
             </div>
           </div>
         </div>
@@ -358,29 +359,29 @@ function JianguoyunPanel() {
       <ConfigSection title="账户信息" hint={'请在坚果云设置中生成「应用密码」'}>
         <div className="space-y-2.5">
           <div>
-            <label className="text-[10px] text-foreground/55 mb-1 block">坚果云账号</label>
+            <label className="text-xs text-foreground/55 mb-1 block">坚果云账号</label>
             <TextInput value={account} onChange={setAccount} placeholder="your@email.com" />
           </div>
           <div>
-            <label className="text-[10px] text-foreground/55 mb-1 block">应用密码</label>
+            <label className="text-xs text-foreground/55 mb-1 block">应用密码</label>
             <div className="flex items-center px-2.5 py-[5px] bg-foreground/[0.03] rounded-lg border border-border/30">
-              <input
+              <Input
                 type={showPwd ? 'text' : 'password'}
                 value={appPwd}
                 onChange={e => setAppPwd(e.target.value)}
                 placeholder="在坚果云安全设置中生成"
-                className="flex-1 bg-transparent text-[10px] text-foreground/60 outline-none placeholder:text-foreground/20 min-w-0"
+                className="flex-1 bg-transparent text-xs text-foreground/60 placeholder:text-foreground/20 min-w-0 border-0 h-auto p-0 focus-visible:ring-0"
               />
-              <button onClick={() => setShowPwd(v => !v)} className="text-foreground/20 hover:text-foreground/40 transition-colors ml-1.5">
+              <Button variant="ghost" size="icon-xs" onClick={() => setShowPwd(v => !v)} className="text-foreground/20 hover:text-foreground/40 ml-1.5">
                 {showPwd ? <EyeOff size={10} /> : <Eye size={10} />}
-              </button>
+              </Button>
             </div>
             <a href="#" className="text-[9px] text-cherry-primary/60 hover:text-cherry-primary transition-colors mt-1 inline-flex items-center gap-1">
               如何获取应用密码？ <ExternalLink size={7} />
             </a>
           </div>
           <div>
-            <label className="text-[10px] text-foreground/55 mb-1 block">同步目录</label>
+            <label className="text-xs text-foreground/55 mb-1 block">同步目录</label>
             <TextInput value={path} onChange={setPath} mono />
           </div>
         </div>
@@ -446,16 +447,16 @@ function S3Panel() {
         <FormRow label="Secret Access Key">
           <div className="w-[240px]">
             <div className="flex items-center px-2.5 py-[5px] bg-foreground/[0.03] rounded-lg border border-border/30">
-              <input
+              <Input
                 type={showSecret ? 'text' : 'password'}
                 value={secretKey}
                 onChange={e => setSecretKey(e.target.value)}
                 placeholder="Secret Access Key"
-                className="flex-1 bg-transparent text-[10px] text-foreground/60 outline-none placeholder:text-foreground/20 min-w-0 font-mono"
+                className="flex-1 bg-transparent text-xs text-foreground/60 placeholder:text-foreground/20 min-w-0 font-mono border-0 h-auto p-0 focus-visible:ring-0"
               />
-              <button onClick={() => setShowSecret(v => !v)} className="text-foreground/20 hover:text-foreground/40 transition-colors ml-1.5">
+              <Button variant="ghost" size="icon-xs" onClick={() => setShowSecret(v => !v)} className="text-foreground/20 hover:text-foreground/40 ml-1.5">
                 {showSecret ? <EyeOff size={10} /> : <Eye size={10} />}
-              </button>
+              </Button>
             </div>
           </div>
         </FormRow>
@@ -466,14 +467,14 @@ function S3Panel() {
         </FormRow>
         <FormRow label="备份操作">
           <div className="flex items-center gap-1.5">
-            <button className="flex items-center gap-1.5 px-2.5 py-[4px] rounded-lg border border-border/30 text-[10px] text-foreground/50 hover:text-foreground/70 hover:bg-accent transition-colors">
+            <Button variant="outline" size="xs">
               <UploadIcon size={9} />
               <span>立即备份</span>
-            </button>
-            <button className="flex items-center gap-1.5 px-2.5 py-[4px] rounded-lg border border-border/30 text-[10px] text-foreground/50 hover:text-foreground/70 hover:bg-accent transition-colors">
+            </Button>
+            <Button variant="outline" size="xs">
               <FolderOpen size={9} />
               <span>管理备份</span>
-            </button>
+            </Button>
           </div>
         </FormRow>
         <FormRow label="自动同步">
@@ -517,21 +518,21 @@ function ImportPanel() {
 
       <ConfigSection title="导入 ChatGPT 数据">
         <div className="flex items-center justify-between">
-          <p className="text-[10px] text-foreground/50">从 ChatGPT 导出的 JSON 文件导入对话记录。</p>
-          <button className="flex items-center gap-1.5 px-3 py-[5px] rounded-lg border border-border/30 text-[10px] text-foreground/50 hover:text-foreground/70 hover:bg-accent transition-colors flex-shrink-0">
+          <p className="text-xs text-foreground/50">从 ChatGPT 导出的 JSON 文件导入对话记录。</p>
+          <Button variant="outline" size="xs" className="flex-shrink-0">
             <UploadIcon size={9} />
             <span>导入文件</span>
-          </button>
+          </Button>
         </div>
       </ConfigSection>
 
       <ConfigSection title="导入 Cherry Studio 备份">
         <div className="flex items-center justify-between">
-          <p className="text-[10px] text-foreground/50">恢复之前导出的 Cherry Studio 备份包。</p>
-          <button className="flex items-center gap-1.5 px-3 py-[5px] rounded-lg border border-border/30 text-[10px] text-foreground/50 hover:text-foreground/70 hover:bg-accent transition-colors flex-shrink-0">
+          <p className="text-xs text-foreground/50">恢复之前导出的 Cherry Studio 备份包。</p>
+          <Button variant="outline" size="xs" className="flex-shrink-0">
             <UploadIcon size={9} />
             <span>选择备份</span>
-          </button>
+          </Button>
         </div>
       </ConfigSection>
 
@@ -569,10 +570,10 @@ function ExportPanel() {
         icon="📤"
         title="导出设置 (Export)"
         actions={
-          <button className="flex items-center gap-1.5 px-2.5 py-[4px] rounded-lg border border-border/30 text-[10px] text-foreground/40 hover:text-foreground/60 hover:bg-accent transition-colors">
+          <Button variant="outline" size="xs" className="text-foreground/40 hover:text-foreground/60">
             <RotateCcw size={9} />
             <span>恢复默认</span>
-          </button>
+          </Button>
         }
       />
 
@@ -583,9 +584,9 @@ function ExportPanel() {
               <div className="w-[170px]">
                 <TextInput value={exportPath} onChange={setExportPath} mono />
               </div>
-              <button className="px-2 py-[5px] rounded-lg border border-border/30 text-[10px] text-foreground/45 hover:text-foreground/65 hover:bg-accent transition-colors flex-shrink-0">
+              <Button variant="outline" size="xs" className="flex-shrink-0">
                 选择
-              </button>
+              </Button>
             </div>
           </FormRow>
           <FormRow label="强制使用 LaTeX 公式 ($$)" desc="将所有数学公式转换为标准 LaTeX 格式，便于 Notion 等软件识别。">
@@ -616,11 +617,11 @@ function ExportPanel() {
             <div key={item.label} className={`flex items-center justify-between py-[5px]`}>
               <div className="flex items-center gap-2">
                 {item.isText ? (
-                  <span className="w-4 h-4 rounded bg-foreground/[0.05] flex items-center justify-center text-[9px] text-foreground/50" style={{ fontWeight: 600 }}>{item.icon}</span>
+                  <span className="w-4 h-4 rounded bg-foreground/[0.05] flex items-center justify-center text-[9px] text-foreground/50 font-semibold">{item.icon}</span>
                 ) : (
-                  <span className="text-[11px]">{item.icon}</span>
+                  <span className="text-xs">{item.icon}</span>
                 )}
-                <span className="text-[11px] text-foreground/65" style={{ fontWeight: 400 }}>{item.label}</span>
+                <span className="text-xs text-foreground/65 font-normal">{item.label}</span>
               </div>
               <Toggle checked={item.checked} onChange={item.onChange} />
             </div>
@@ -647,34 +648,34 @@ function NotionPanel() {
         title="Notion 集成"
         desc="将对话记录一键导出到 Notion 数据库。"
         actions={
-          <button className="flex items-center gap-1.5 px-2.5 py-[4px] rounded-lg border border-border/30 text-[10px] text-foreground/50 hover:text-foreground/70 hover:bg-accent transition-colors">
+          <Button variant="outline" size="xs">
             <BookOpen size={9} />
             <span>查看指南</span>
-          </button>
+          </Button>
         }
       />
 
       {/* Connection Status */}
       <div className="flex items-center gap-2.5 px-3.5 py-2.5 bg-primary/[0.06] border border-primary/15 rounded-xl">
         <CheckCircle2 size={13} className="text-primary flex-shrink-0" />
-        <p className="text-[10px] text-primary flex-1" style={{ fontWeight: 500 }}>Notion 已连接</p>
+        <p className="text-xs text-primary flex-1 font-medium">Notion 已连接</p>
       </div>
 
       <ConfigSection title="授权配置">
         <div className="space-y-2.5">
           <div>
-            <label className="text-[10px] text-foreground/55 mb-1 block">Notion Integration Token</label>
+            <label className="text-xs text-foreground/55 mb-1 block">Notion Integration Token</label>
             <div className="flex items-center gap-1.5">
               <div className="flex-1">
                 <TextInput value={token} onChange={setToken} mono />
               </div>
-              <button className="px-2.5 py-[5px] rounded-lg border border-border/30 text-[10px] text-foreground/45 hover:text-foreground/65 hover:bg-accent transition-colors flex-shrink-0">
+              <Button variant="outline" size="xs" className="flex-shrink-0">
                 验证
-              </button>
+              </Button>
             </div>
           </div>
           <div>
-            <label className="text-[10px] text-foreground/55 mb-1 block">Database ID</label>
+            <label className="text-xs text-foreground/55 mb-1 block">Database ID</label>
             <TextInput value={dbId} onChange={setDbId} placeholder="从 Notion 链接中获取..." mono />
           </div>
         </div>
@@ -715,12 +716,12 @@ function ThirdPartyPanel({ icon, name, desc, fields }: {
       {connected ? (
         <div className="flex items-center gap-2.5 px-3.5 py-2.5 bg-primary/[0.06] border border-primary/15 rounded-xl">
           <CheckCircle2 size={13} className="text-primary flex-shrink-0" />
-          <p className="text-[10px] text-primary flex-1" style={{ fontWeight: 500 }}>{name} 已连接</p>
+          <p className="text-xs text-primary flex-1 font-medium">{name} 已连接</p>
         </div>
       ) : (
         <div className="flex items-center gap-2.5 px-3.5 py-2.5 bg-foreground/[0.03] border border-foreground/[0.06] rounded-xl">
           <div className="w-2 h-2 rounded-full bg-foreground/15 flex-shrink-0" />
-          <p className="text-[10px] text-foreground/40 flex-1">未连接</p>
+          <p className="text-xs text-foreground/40 flex-1">未连接</p>
         </div>
       )}
 
@@ -728,7 +729,7 @@ function ThirdPartyPanel({ icon, name, desc, fields }: {
         <div className="space-y-2.5">
           {fields.map(field => (
             <div key={field.label}>
-              <label className="text-[10px] text-foreground/55 mb-1 block">{field.label}</label>
+              <label className="text-xs text-foreground/55 mb-1 block">{field.label}</label>
               <TextInput
                 value={values[field.label] || ''}
                 onChange={v => setValues(prev => ({ ...prev, [field.label]: v }))}
@@ -741,13 +742,10 @@ function ThirdPartyPanel({ icon, name, desc, fields }: {
       </ConfigSection>
 
       <div className="flex items-center gap-2 justify-end">
-        <button
-          onClick={() => setConnected(v => !v)}
-          className="flex items-center gap-1.5 px-3 py-[5px] rounded-lg border border-border/30 text-[10px] text-foreground/50 hover:text-foreground/70 hover:bg-accent transition-colors"
-        >
+        <Button variant="outline" size="xs" onClick={() => setConnected(v => !v)}>
           <Activity size={9} />
           <span>检测连接</span>
-        </button>
+        </Button>
         <ActionButton variant="primary">保存配置</ActionButton>
       </div>
     </div>
@@ -811,21 +809,23 @@ export function DataSettingsPage() {
       {/* Middle Column: Navigation */}
       <div className="w-[160px] flex-shrink-0 flex flex-col border-r border-foreground/[0.05] min-h-0">
         <div className="px-3.5 pt-4 pb-2 flex-shrink-0">
-          <p className="text-[11px] text-foreground/40" style={{ fontWeight: 500 }}>数据与存储</p>
+          <p className="text-xs text-foreground/40 font-medium">数据与存储</p>
         </div>
 
         <div className="flex-1 overflow-y-auto px-2.5 pb-3 [&::-webkit-scrollbar]:w-[2px] [&::-webkit-scrollbar-thumb]:bg-border/20">
           {NAV_GROUPS.map((group, gi) => (
             <div key={gi}>
-              <p className="text-[8px] text-foreground/25 tracking-wider px-3 pt-2.5 pb-1" style={{ fontWeight: 500 }}>{group.label}</p>
+              <p className="text-[8px] text-foreground/25 tracking-wider px-3 pt-2.5 pb-1 font-medium">{group.label}</p>
               <div className="space-y-[2px]">
                 {group.items.map(item => {
                   const isSelected = selectedId === item.id;
                   return (
-                    <button
+                    <Button
                       key={item.id}
+                      variant="ghost"
+                      size="sm"
                       onClick={() => setSelectedId(item.id)}
-                      className={`w-full flex items-center justify-between px-3 py-[8px] rounded-xl transition-all text-left relative ${
+                      className={`w-full flex items-center justify-between px-3 py-[8px] h-auto rounded-xl transition-all text-left relative ${
                         isSelected
                           ? 'bg-cherry-active-bg'
                           : 'border border-transparent hover:bg-foreground/[0.03]'
@@ -840,12 +840,12 @@ export function DataSettingsPage() {
                             <BrandLogo id={item.icon} fallbackLetter={item.icon[0].toUpperCase()} fallbackColor="#6b7280" size={15} />
                           ) : item.lucideIcon ? item.lucideIcon : null}
                         </span>
-                        <span className={`text-[10px] truncate ${isSelected ? 'text-foreground/85' : 'text-foreground/55'}`} style={{ fontWeight: isSelected ? 500 : 400 }}>
+                        <span className={`text-xs truncate ${isSelected ? 'text-foreground/85 font-medium' : 'text-foreground/55 font-normal'}`}>
                           {item.label}
                         </span>
                       </div>
                       <ChevronRight size={9} className={`flex-shrink-0 ${isSelected ? 'text-foreground/25' : 'text-foreground/10'}`} />
-                    </button>
+                    </Button>
                   );
                 })}
               </div>

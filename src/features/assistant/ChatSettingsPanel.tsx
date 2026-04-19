@@ -1,66 +1,7 @@
 import React, { useState } from 'react';
-import { X, ChevronDown, ChevronRight, HelpCircle, SlidersHorizontal } from 'lucide-react';
+import { X, ChevronDown, ChevronRight, SlidersHorizontal } from 'lucide-react';
 import { motion } from 'motion/react';
-
-// ===========================
-// Toggle Switch
-// ===========================
-function Toggle({ checked, onChange }: { checked: boolean; onChange: (v: boolean) => void }) {
-  return (
-    <button
-      onClick={() => onChange(!checked)}
-      className={`relative w-[34px] h-[18px] rounded-full transition-colors flex-shrink-0 ${checked ? 'bg-cherry-primary' : 'bg-foreground/15'}`}
-    >
-      <div className={`absolute top-[2px] w-[14px] h-[14px] rounded-full bg-white shadow-sm transition-transform ${checked ? 'left-[17px]' : 'left-[2px]'}`} />
-    </button>
-  );
-}
-
-// ===========================
-// Select Dropdown
-// ===========================
-function MiniSelect({ value, options, onChange }: { value: string; options: string[]; onChange: (v: string) => void }) {
-  const [open, setOpen] = useState(false);
-  return (
-    <div className="relative">
-      <button
-        onClick={() => setOpen(v => !v)}
-        className="flex items-center gap-1 text-[11px] text-foreground/70 hover:text-foreground transition-colors"
-      >
-        <span>{value}</span>
-        <ChevronDown size={10} className="text-muted-foreground/40" />
-      </button>
-      {open && (
-        <div className="absolute top-full right-0 mt-1 w-28 bg-popover border border-border rounded-lg shadow-xl z-50 py-0.5">
-          {options.map(opt => (
-            <button
-              key={opt}
-              onClick={() => { onChange(opt); setOpen(false); }}
-              className={`w-full text-left px-2.5 py-[5px] text-[10px] transition-colors ${opt === value ? 'text-foreground bg-foreground/8' : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground'}`}
-            >
-              {opt}
-            </button>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
-
-// ===========================
-// Form Row
-// ===========================
-function FormRow({ label, help, children }: { label: string; help?: boolean; children: React.ReactNode }) {
-  return (
-    <div className="flex items-center justify-between py-[7px] min-h-[32px]">
-      <span className="text-[11px] text-foreground/70 flex items-center gap-1">
-        {label}
-        {help && <HelpCircle size={10} className="text-muted-foreground/30" />}
-      </span>
-      <div className="flex items-center">{children}</div>
-    </div>
-  );
-}
+import { Button, Input, Switch, Slider, InlineSelect, FormRow } from '@cherry-studio/ui';
 
 // ===========================
 // Collapsible Section
@@ -71,10 +12,10 @@ function Section({ title, defaultOpen = true, children }: { title: string; defau
     <div className="border-b border-border/15 last:border-b-0">
       <button
         onClick={() => setOpen(v => !v)}
-        className="flex items-center gap-1.5 py-2.5 w-full text-left text-[11px] text-foreground/80 hover:text-foreground transition-colors"
+        className="flex items-center gap-1.5 py-2.5 w-full text-left text-xs text-muted-foreground hover:text-foreground transition-colors"
       >
         {open ? <ChevronDown size={11} /> : <ChevronRight size={11} />}
-        <span>{title}</span>
+        <span className="font-medium">{title}</span>
       </button>
       {open && <div className="pb-2">{children}</div>}
     </div>
@@ -132,6 +73,8 @@ export function ChatSettingsPanel({ onClose }: { onClose: () => void }) {
   const [targetLang, setTargetLang] = useState('简体中文');
   const [sendKey, setSendKey] = useState('Enter');
 
+  const toOpts = (arr: string[]) => arr.map(v => ({ value: v, label: v }));
+
   return (
     <motion.div
       initial={{ opacity: 0, x: 20 }}
@@ -142,126 +85,119 @@ export function ChatSettingsPanel({ onClose }: { onClose: () => void }) {
     >
       {/* Header */}
       <div className="h-[38px] flex items-center justify-between px-3 flex-shrink-0 border-b border-border/30">
-        <span className="text-[11px] text-foreground/80 flex items-center gap-1.5">
+        <span className="text-xs text-foreground/80 flex items-center gap-1.5">
           <SlidersHorizontal size={11} className="text-muted-foreground/60" />
           参数设置
         </span>
-        <button
+        <Button
+          variant="ghost"
           onClick={onClose}
-          className="w-6 h-6 rounded-md flex items-center justify-center text-muted-foreground/50 hover:text-foreground hover:bg-accent/30 transition-colors"
+          className="w-6 h-6 rounded-md p-0 text-muted-foreground/50 hover:text-foreground hover:bg-accent/30"
         >
           <X size={12} />
-        </button>
+        </Button>
       </div>
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto px-4 py-1 [&::-webkit-scrollbar]:w-[3px] [&::-webkit-scrollbar-thumb]:bg-border/25 [&::-webkit-scrollbar-thumb]:rounded-full">
         {/* OpenAI Settings */}
         <Section title="OpenAI 设置">
-          <FormRow label="服务层级" help>
-            <MiniSelect value={serviceLevel} options={['忽略', '低', '中', '高']} onChange={setServiceLevel} />
+          <FormRow label="服务层级" desc=" ">
+            <InlineSelect value={serviceLevel} options={toOpts(['忽略', '低', '中', '高'])} onChange={setServiceLevel} />
           </FormRow>
-          <FormRow label="摘要模式" help>
-            <MiniSelect value={summaryMode} options={['关闭', '自动', '简洁', '详细']} onChange={setSummaryMode} />
+          <FormRow label="摘要模式" desc=" ">
+            <InlineSelect value={summaryMode} options={toOpts(['关闭', '自动', '简洁', '详细'])} onChange={setSummaryMode} />
           </FormRow>
-          <FormRow label="详细程度" help>
-            <MiniSelect value={detailLevel} options={['忽略', '简洁', '普通', '详细']} onChange={setDetailLevel} />
+          <FormRow label="详细程度" desc=" ">
+            <InlineSelect value={detailLevel} options={toOpts(['忽略', '简洁', '普通', '详细'])} onChange={setDetailLevel} />
           </FormRow>
-          <FormRow label="包含用量" help>
-            <MiniSelect value={includeUsage} options={['忽略', '开启', '关闭']} onChange={setIncludeUsage} />
+          <FormRow label="包含用量" desc=" ">
+            <InlineSelect value={includeUsage} options={toOpts(['忽略', '开启', '关闭'])} onChange={setIncludeUsage} />
           </FormRow>
         </Section>
 
         {/* Message Settings */}
         <Section title="消息设置">
-          <FormRow label="显示提示词"><Toggle checked={showPrompt} onChange={setShowPrompt} /></FormRow>
-          <FormRow label="使用衬线字体"><Toggle checked={useSerif} onChange={setUseSerif} /></FormRow>
-          <FormRow label="思考内容自动折叠" help><Toggle checked={autoFoldThinking} onChange={setAutoFoldThinking} /></FormRow>
-          <FormRow label="显示消息大纲"><Toggle checked={showOutline} onChange={setShowOutline} /></FormRow>
+          <FormRow label="显示提示词"><Switch checked={showPrompt} onCheckedChange={setShowPrompt} /></FormRow>
+          <FormRow label="使用衬线字体"><Switch checked={useSerif} onCheckedChange={setUseSerif} /></FormRow>
+          <FormRow label="思考内容自动折叠" desc=" "><Switch checked={autoFoldThinking} onCheckedChange={setAutoFoldThinking} /></FormRow>
+          <FormRow label="显示消息大纲"><Switch checked={showOutline} onCheckedChange={setShowOutline} /></FormRow>
           <FormRow label="消息样式">
-            <MiniSelect value={msgStyle} options={['气泡', '卡片', '紧凑']} onChange={setMsgStyle} />
+            <InlineSelect value={msgStyle} options={toOpts(['气泡', '卡片', '紧凑'])} onChange={setMsgStyle} />
           </FormRow>
           <FormRow label="多模型回答样式">
-            <MiniSelect value={multiModelStyle} options={['横向排列', '纵向排列', '标签切换']} onChange={setMultiModelStyle} />
+            <InlineSelect value={multiModelStyle} options={toOpts(['横向排列', '纵向排列', '标签切换'])} onChange={setMultiModelStyle} />
           </FormRow>
           <FormRow label="对话导航按钮">
-            <MiniSelect value={navButton} options={['上下按钮', '滚动条', '隐藏']} onChange={setNavButton} />
+            <InlineSelect value={navButton} options={toOpts(['上下按钮', '滚动条', '隐藏'])} onChange={setNavButton} />
           </FormRow>
-          <div className="py-[7px]">
-            <span className="text-[11px] text-foreground/70">消息字体大小</span>
-            <div className="mt-2">
-              <input
-                type="range"
-                min={0}
-                max={100}
-                value={fontSize}
-                onChange={e => setFontSize(Number(e.target.value))}
-                className="w-full h-[3px] rounded-full appearance-none bg-foreground/10 accent-cherry-primary [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-cherry-primary [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:shadow-sm"
-              />
-              <div className="flex items-center justify-between mt-1.5">
-                <span className="text-[10px] text-muted-foreground/40">A</span>
-                <span className="text-[10px] text-muted-foreground/50 px-1.5 py-[1px] rounded bg-accent/40">默认</span>
-                <span className="text-[12px] text-muted-foreground/40">A</span>
-              </div>
+          <FormRow label="消息字体大小" direction="vertical">
+            <div className="flex items-center gap-3">
+              <span className="text-xs text-muted-foreground/40">A</span>
+              <Slider value={[fontSize]} onValueChange={v => setFontSize(v[0])} max={100} step={1} className="flex-1" />
+              <span className="text-sm text-muted-foreground/40">A</span>
             </div>
-          </div>
+            <div className="text-center">
+              <span className="text-xs text-muted-foreground/50 px-1.5 py-[1px] rounded bg-accent/40">默认</span>
+            </div>
+          </FormRow>
         </Section>
 
         {/* Math Formula Settings */}
         <Section title="数学公式设置" defaultOpen={false}>
           <FormRow label="数学公式引擎">
-            <MiniSelect value={mathEngine} options={['KaTeX', 'MathJax']} onChange={setMathEngine} />
+            <InlineSelect value={mathEngine} options={toOpts(['KaTeX', 'MathJax'])} onChange={setMathEngine} />
           </FormRow>
-          <FormRow label="启用 $...$ " help><Toggle checked={enableDollar} onChange={setEnableDollar} /></FormRow>
+          <FormRow label="启用 $...$ " desc=" "><Switch checked={enableDollar} onCheckedChange={setEnableDollar} /></FormRow>
         </Section>
 
         {/* Code Block Settings */}
         <Section title="代码块设置" defaultOpen={false}>
           <FormRow label="代码风格">
-            <MiniSelect value={codeStyle} options={['auto', 'monokai', 'github', 'dracula', 'nord']} onChange={setCodeStyle} />
+            <InlineSelect value={codeStyle} options={toOpts(['auto', 'monokai', 'github', 'dracula', 'nord'])} onChange={setCodeStyle} />
           </FormRow>
-          <FormRow label="花式代码块" help><Toggle checked={fancyCode} onChange={setFancyCode} /></FormRow>
-          <FormRow label="代码执行" help><Toggle checked={codeExec} onChange={setCodeExec} /></FormRow>
+          <FormRow label="花式代码块" desc=" "><Switch checked={fancyCode} onCheckedChange={setFancyCode} /></FormRow>
+          <FormRow label="代码执行" desc=" "><Switch checked={codeExec} onCheckedChange={setCodeExec} /></FormRow>
           {codeExec && (
-            <FormRow label="超时时间" help>
+            <FormRow label="超时时间" desc=" ">
               <div className="flex items-center gap-1">
-                <input
+                <Input
                   type="number"
                   value={execTimeout}
                   onChange={e => setExecTimeout(Number(e.target.value))}
-                  className="w-8 text-right text-[11px] text-foreground/70 bg-transparent outline-none"
+                  className="w-8 text-right text-xs text-foreground/70 bg-transparent h-auto py-0 px-0 border-0 shadow-none focus-visible:ring-0"
                   min={1}
                   max={60}
                 />
               </div>
             </FormRow>
           )}
-          <FormRow label="代码编辑器"><Toggle checked={codeEditor} onChange={setCodeEditor} /></FormRow>
-          <FormRow label="高亮当前行"><Toggle checked={highlightLine} onChange={setHighlightLine} /></FormRow>
-          <FormRow label="折叠控件"><Toggle checked={foldControl} onChange={setFoldControl} /></FormRow>
-          <FormRow label="自动补全"><Toggle checked={autoComplete} onChange={setAutoComplete} /></FormRow>
-          <FormRow label="快捷键"><Toggle checked={shortcutKeys} onChange={setShortcutKeys} /></FormRow>
-          <FormRow label="代码显示行号"><Toggle checked={showLineNum} onChange={setShowLineNum} /></FormRow>
-          <FormRow label="代码块可折叠"><Toggle checked={codeFoldable} onChange={setCodeFoldable} /></FormRow>
-          <FormRow label="代码块可换行"><Toggle checked={codeWrap} onChange={setCodeWrap} /></FormRow>
-          <FormRow label="启用预览工具" help><Toggle checked={previewTool} onChange={setPreviewTool} /></FormRow>
+          <FormRow label="代码编辑器"><Switch checked={codeEditor} onCheckedChange={setCodeEditor} /></FormRow>
+          <FormRow label="高亮当前行"><Switch checked={highlightLine} onCheckedChange={setHighlightLine} /></FormRow>
+          <FormRow label="折叠控件"><Switch checked={foldControl} onCheckedChange={setFoldControl} /></FormRow>
+          <FormRow label="自动补全"><Switch checked={autoComplete} onCheckedChange={setAutoComplete} /></FormRow>
+          <FormRow label="快捷键"><Switch checked={shortcutKeys} onCheckedChange={setShortcutKeys} /></FormRow>
+          <FormRow label="代码显示行号"><Switch checked={showLineNum} onCheckedChange={setShowLineNum} /></FormRow>
+          <FormRow label="代码块可折叠"><Switch checked={codeFoldable} onCheckedChange={setCodeFoldable} /></FormRow>
+          <FormRow label="代码块可换行"><Switch checked={codeWrap} onCheckedChange={setCodeWrap} /></FormRow>
+          <FormRow label="启用预览工具" desc=" "><Switch checked={previewTool} onCheckedChange={setPreviewTool} /></FormRow>
         </Section>
 
         {/* Input Settings */}
         <Section title="输入设置" defaultOpen={false}>
-          <FormRow label="显示预估 Token 数"><Toggle checked={showTokenCount} onChange={setShowTokenCount} /></FormRow>
-          <FormRow label="长文本粘贴为文件"><Toggle checked={longTextAsFile} onChange={setLongTextAsFile} /></FormRow>
-          <FormRow label="Markdown 渲染输入消息"><Toggle checked={mdInput} onChange={setMdInput} /></FormRow>
-          <FormRow label="3 个空格快速翻译"><Toggle checked={spaceTranslate} onChange={setSpaceTranslate} /></FormRow>
-          <FormRow label="显示翻译确认对话框"><Toggle checked={showTranslateConfirm} onChange={setShowTranslateConfirm} /></FormRow>
-          <FormRow label="启用 / 和 @ 触发快捷菜单"><Toggle checked={enableAtMenu} onChange={setEnableAtMenu} /></FormRow>
-          <FormRow label="删除消息前确认"><Toggle checked={deleteConfirm} onChange={setDeleteConfirm} /></FormRow>
-          <FormRow label="重新生成消息前确认"><Toggle checked={regenerateConfirm} onChange={setRegenerateConfirm} /></FormRow>
+          <FormRow label="显示预估 Token 数"><Switch checked={showTokenCount} onCheckedChange={setShowTokenCount} /></FormRow>
+          <FormRow label="长文本粘贴为文件"><Switch checked={longTextAsFile} onCheckedChange={setLongTextAsFile} /></FormRow>
+          <FormRow label="Markdown 渲染输入消息"><Switch checked={mdInput} onCheckedChange={setMdInput} /></FormRow>
+          <FormRow label="3 个空格快速翻译"><Switch checked={spaceTranslate} onCheckedChange={setSpaceTranslate} /></FormRow>
+          <FormRow label="显示翻译确认对话框"><Switch checked={showTranslateConfirm} onCheckedChange={setShowTranslateConfirm} /></FormRow>
+          <FormRow label="启用 / 和 @ 触发快捷菜单"><Switch checked={enableAtMenu} onCheckedChange={setEnableAtMenu} /></FormRow>
+          <FormRow label="删除消息前确认"><Switch checked={deleteConfirm} onCheckedChange={setDeleteConfirm} /></FormRow>
+          <FormRow label="重新生成消息前确认"><Switch checked={regenerateConfirm} onCheckedChange={setRegenerateConfirm} /></FormRow>
           <FormRow label="目标语言">
-            <MiniSelect value={targetLang} options={['简体中文', '英语', '日语', '韩语', '法语', '德语']} onChange={setTargetLang} />
+            <InlineSelect value={targetLang} options={toOpts(['简体中文', '英语', '日语', '韩语', '法语', '德语'])} onChange={setTargetLang} />
           </FormRow>
           <FormRow label="发送快捷键">
-            <MiniSelect value={sendKey} options={['Enter', 'Ctrl+Enter', 'Shift+Enter']} onChange={setSendKey} />
+            <InlineSelect value={sendKey} options={toOpts(['Enter', 'Ctrl+Enter', 'Shift+Enter'])} onChange={setSendKey} />
           </FormRow>
         </Section>
 

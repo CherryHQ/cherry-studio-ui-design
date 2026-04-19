@@ -3,6 +3,7 @@ import {
   Search, Zap, Clock, FileText, ChevronDown, ChevronUp,
   Copy, Check, Sparkles, History, X, Trash2,
 } from 'lucide-react';
+import { Button, Input } from '@cherry-studio/ui';
 import { copyToClipboard } from '@/app/utils/clipboard';
 
 interface ChunkResult {
@@ -128,28 +129,31 @@ export function RetrievalTester() {
         <div className="flex items-center gap-1.5">
           <div className="flex-1 flex items-center gap-1.5 px-2.5 py-[5px] rounded-lg border border-border/40 bg-muted/20 focus-within:border-cherry-primary/40 focus-within:ring-1 focus-within:ring-cherry-primary/15 transition-all relative">
             <Search size={11} className="text-muted-foreground/35 flex-shrink-0" />
-            <input
+            <Input
               value={query}
               onChange={e => setQuery(e.target.value)}
               onKeyDown={e => { if (e.key === 'Enter') handleSearch(); }}
               onFocus={() => { if (history.length > 0 && !results.length) setShowHistory(true); }}
               placeholder="输入测试 Query..."
-              className="flex-1 bg-transparent outline-none text-[11px] text-foreground placeholder:text-muted-foreground/30"
+              className="border-none shadow-none focus-visible:ring-0 h-auto p-0 bg-transparent text-xs flex-1 text-foreground placeholder:text-muted-foreground/30"
             />
             {history.length > 0 && (
-              <button
+              <Button
+                variant="ghost"
+                size="icon-xs"
                 onClick={() => setShowHistory(!showHistory)}
                 className={`text-muted-foreground/30 hover:text-foreground transition-colors ${showHistory ? 'text-cherry-primary' : ''}`}
               >
                 <History size={11} />
-              </button>
+              </Button>
             )}
           </div>
-          <button
+          <Button
+            size="sm"
             onClick={handleSearch}
             disabled={loading || !query.trim()}
-            className={`h-7 px-3 rounded-lg text-[11px] flex items-center gap-1 transition-all flex-shrink-0 ${
-              loading ? 'bg-cherry-primary/60 text-white/60 cursor-wait' : 'bg-cherry-primary text-white hover:bg-cherry-primary-dark active:scale-[0.97]'
+            className={`bg-cherry-primary text-xs flex items-center gap-1 transition-all flex-shrink-0 ${
+              loading ? 'bg-cherry-primary/60 text-white/60 cursor-wait' : 'text-white hover:bg-cherry-primary-dark active:scale-[0.97]'
             } disabled:opacity-40`}
           >
             {loading ? (
@@ -158,7 +162,7 @@ export function RetrievalTester() {
               <Zap size={10} />
             )}
             <span>检索</span>
-          </button>
+          </Button>
         </div>
 
         {/* History dropdown */}
@@ -166,10 +170,12 @@ export function RetrievalTester() {
           <div className="mt-1 bg-popover border border-border/40 rounded-lg shadow-lg p-1 max-h-[180px] overflow-y-auto animate-in fade-in slide-in-from-top-1 duration-150 [&::-webkit-scrollbar]:w-[3px] [&::-webkit-scrollbar-thumb]:bg-border/30 [&::-webkit-scrollbar-thumb]:rounded-full">
             <div className="flex items-center justify-between px-2 py-0.5 mb-0.5">
               <span className="text-[9px] text-muted-foreground/30">搜索历史</span>
-              <button
+              <Button
+                variant="ghost"
+                size="xs"
                 onClick={() => { setHistory([]); setShowHistory(false); }}
-                className="text-[9px] text-muted-foreground/25 hover:text-red-500 transition-colors"
-              >清空</button>
+                className="text-[9px] text-muted-foreground/25 hover:text-destructive transition-colors"
+              >清空</Button>
             </div>
             {history.map(h => (
               <div
@@ -178,15 +184,17 @@ export function RetrievalTester() {
                 className="w-full flex items-center gap-2 px-2 py-[4px] rounded-md text-left hover:bg-accent/50 transition-colors group/hist cursor-pointer"
               >
                 <History size={9} className="text-muted-foreground/25 flex-shrink-0" />
-                <span className="text-[11px] text-foreground truncate flex-1">{h.query}</span>
+                <span className="text-xs text-foreground truncate flex-1">{h.query}</span>
                 <span className="text-[9px] text-muted-foreground/25 flex-shrink-0">{h.resultCount}条 · {h.elapsed}ms</span>
                 <span className="text-[9px] text-muted-foreground/20 flex-shrink-0">{h.time}</span>
-                <button
+                <Button
+                  variant="ghost"
+                  size="icon-xs"
                   onClick={e => handleDeleteHistory(h.id, e)}
-                  className="opacity-0 group-hover/hist:opacity-100 text-muted-foreground/20 hover:text-red-500 transition-all flex-shrink-0"
+                  className="opacity-0 group-hover/hist:opacity-100 text-muted-foreground/20 hover:text-destructive transition-all flex-shrink-0"
                 >
                   <X size={8} />
-                </button>
+                </Button>
               </div>
             ))}
           </div>
@@ -213,7 +221,7 @@ export function RetrievalTester() {
         {results.length === 0 && !loading && !showHistory && (
           <div className="flex flex-col items-center justify-center h-full text-muted-foreground/25 py-12">
             <Search size={22} strokeWidth={1.2} className="mb-1.5" />
-            <p className="text-[11px]">输入查询语句开始检索测试</p>
+            <p className="text-xs">输入查询语句开始检索测试</p>
             <p className="text-[9px] mt-0.5">结果将展示匹配的文档片段和分数</p>
           </div>
         )}
@@ -221,7 +229,7 @@ export function RetrievalTester() {
         {loading && (
           <div className="flex flex-col items-center justify-center py-12">
             <div className="w-5 h-5 border-2 border-cherry-primary/20 border-t-cherry-primary rounded-full animate-spin mb-2" />
-            <p className="text-[11px] text-muted-foreground/35">正在检索...</p>
+            <p className="text-xs text-muted-foreground/35">正在检索...</p>
           </div>
         )}
 
@@ -239,25 +247,29 @@ export function RetrievalTester() {
                 </span>
                 <div className="flex items-center gap-1 min-w-0 flex-1">
                   <FileText size={9} className="text-muted-foreground/35 flex-shrink-0" />
-                  <span className="text-[10px] text-muted-foreground/50 truncate">{chunk.source}</span>
+                  <span className="text-xs text-muted-foreground/50 truncate">{chunk.source}</span>
                   <span className="text-[8px] text-muted-foreground/20 flex-shrink-0">#{chunk.chunkIndex}</span>
                 </div>
                 <ScoreBar score={chunk.score} />
-                <button
+                <Button
+                  variant="ghost"
+                  size="icon-xs"
                   onClick={() => handleCopy(chunk.id, chunk.content)}
                   className="w-4 h-4 rounded flex items-center justify-center text-muted-foreground/20 hover:text-foreground hover:bg-accent opacity-0 group-hover/chunk:opacity-100 transition-all flex-shrink-0"
                 >
                   {isCopied ? <Check size={8} className="text-cherry-primary" /> : <Copy size={8} />}
-                </button>
-                <button
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon-xs"
                   onClick={() => setExpandedId(isExpanded ? null : chunk.id)}
                   className="w-4 h-4 rounded flex items-center justify-center text-muted-foreground/20 hover:text-foreground hover:bg-accent transition-all flex-shrink-0"
                 >
                   {isExpanded ? <ChevronUp size={9} /> : <ChevronDown size={9} />}
-                </button>
+                </Button>
               </div>
               <div className={`px-2.5 pb-2 ${isExpanded ? '' : 'line-clamp-2'}`}>
-                <p className="text-[11px] text-foreground/75 leading-relaxed">
+                <p className="text-xs text-foreground/75 leading-relaxed">
                   {highlightQuery(chunk.content, query)}
                 </p>
               </div>

@@ -1,6 +1,7 @@
 import React, { useState, useRef, useCallback } from 'react';
 import { X, Package, FileJson, FileText, Archive, CheckCircle2, AlertCircle, Upload } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { Button, Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@cherry-studio/ui';
 import type { ResourceType, ResourceItem } from '@/app/types';
 
 interface Props {
@@ -128,29 +129,15 @@ export function SkillPluginImportModal({ open, importType, onClose, onImportComp
     }, 800);
   }, [parsedFile, importType, onImportComplete, resetState]);
 
-  if (!open) return null;
-
   const FileIcon = parsedFile?.type === 'zip' ? Archive : parsedFile?.type === 'json' ? FileJson : FileText;
 
   return (
-    <AnimatePresence>
-      <motion.div
-        initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-        className="fixed inset-0 z-[500] flex items-center justify-center bg-black/40 backdrop-blur-sm"
-        onClick={handleClose}
-      >
-        <motion.div
-          initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }}
-          className="bg-popover rounded-2xl border border-border/30 shadow-2xl w-[440px] max-h-[85vh] overflow-hidden"
-          onClick={e => e.stopPropagation()}
-        >
+    <Dialog open={open} onOpenChange={v => { if (!v) handleClose(); }}>
+      <DialogContent className="w-[440px] p-0">
           {/* Header */}
-          <div className="flex items-center justify-between px-5 py-4 border-b border-border/10">
-            <h3 className="text-[13px] text-foreground">{cfg.title}</h3>
-            <button onClick={handleClose} className="w-6 h-6 rounded-lg flex items-center justify-center text-muted-foreground/30 hover:text-foreground hover:bg-accent/40 transition-colors">
-              <X size={12} />
-            </button>
-          </div>
+          <DialogHeader className="px-5 py-4 border-b border-border/10">
+            <DialogTitle className="text-sm">{cfg.title}</DialogTitle>
+          </DialogHeader>
 
           {/* Content */}
           <div className="p-5">
@@ -171,7 +158,7 @@ export function SkillPluginImportModal({ open, importType, onClose, onImportComp
                 `}
               >
                 <Package size={28} strokeWidth={1.2} className={`mb-4 transition-colors ${dragOver ? 'text-primary/50' : 'text-muted-foreground/15'}`} />
-                <p className="text-[11px] text-muted-foreground/50 mb-1.5">{cfg.desc}</p>
+                <p className="text-xs text-muted-foreground/50 mb-1.5">{cfg.desc}</p>
                 <p className="text-[9px] text-muted-foreground/25">{cfg.formats}</p>
                 <input ref={inputRef} type="file" accept={accept} onChange={handleFileSelect} className="hidden" />
               </div>
@@ -183,30 +170,30 @@ export function SkillPluginImportModal({ open, importType, onClose, onImportComp
                     <FileIcon size={18} strokeWidth={1.3} className="text-muted-foreground/40" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-[11px] text-foreground truncate">{parsedFile.rawName}</p>
+                    <p className="text-xs text-foreground truncate">{parsedFile.rawName}</p>
                     <div className="flex items-center gap-2 mt-0.5">
                       <span className="text-[9px] text-muted-foreground/30">{parsedFile.size}</span>
                       <span className="text-[9px] px-1.5 py-px rounded-full bg-accent/40 text-muted-foreground/35 uppercase">{parsedFile.type}</span>
                     </div>
                   </div>
-                  <button onClick={resetState} className="w-6 h-6 rounded-lg flex items-center justify-center text-muted-foreground/20 hover:text-foreground hover:bg-accent/40 transition-colors flex-shrink-0">
+                  <Button variant="ghost" size="icon-xs" onClick={resetState} className="text-muted-foreground/20 hover:text-foreground hover:bg-accent/40 flex-shrink-0">
                     <X size={10} />
-                  </button>
+                  </Button>
                 </div>
 
                 {/* Parsed meta preview */}
                 <div className="px-4 py-3 rounded-xl border border-border/15 bg-accent/5 space-y-2">
                   <div className="flex items-center gap-2">
                     <span className="text-[9px] text-muted-foreground/30 w-12 flex-shrink-0">名称</span>
-                    <span className="text-[10px] text-foreground">{parsedFile.name.replace(reDashUnderscore, ' ').replace(reWordBoundary, c => c.toUpperCase())}</span>
+                    <span className="text-xs text-foreground">{parsedFile.name.replace(reDashUnderscore, ' ').replace(reWordBoundary, c => c.toUpperCase())}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="text-[9px] text-muted-foreground/30 w-12 flex-shrink-0">类型</span>
-                    <span className="text-[10px] text-foreground">{importType === 'skill' ? '技能' : '插件'}</span>
+                    <span className="text-xs text-foreground">{importType === 'skill' ? '技能' : '插件'}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="text-[9px] text-muted-foreground/30 w-12 flex-shrink-0">格式</span>
-                    <span className="text-[10px] text-foreground font-mono">.{parsedFile.type}</span>
+                    <span className="text-xs text-foreground font-mono">.{parsedFile.type}</span>
                   </div>
                 </div>
               </div>
@@ -216,23 +203,24 @@ export function SkillPluginImportModal({ open, importType, onClose, onImportComp
             <AnimatePresence>
               {error && (
                 <motion.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-                  className="flex items-center gap-2 mt-3 px-3 py-2 rounded-lg bg-red-500/5 border border-red-500/15">
-                  <AlertCircle size={11} className="text-red-500/60 flex-shrink-0" />
-                  <span className="text-[10px] text-red-500/70">{error}</span>
+                  className="flex items-center gap-2 mt-3 px-3 py-2 rounded-lg bg-destructive/5 border border-destructive/15">
+                  <AlertCircle size={11} className="text-destructive/60 flex-shrink-0" />
+                  <span className="text-xs text-destructive/70">{error}</span>
                 </motion.div>
               )}
             </AnimatePresence>
           </div>
 
           {/* Footer */}
-          <div className="flex items-center justify-between px-5 py-4 border-t border-border/10">
-            <button onClick={handleClose} className="px-3 py-1.5 rounded-lg text-[11px] text-muted-foreground/50 hover:text-foreground hover:bg-accent/30 transition-colors">
+          <DialogFooter className="px-5 py-4 border-t border-border/10">
+            <Button variant="ghost" size="sm" onClick={handleClose}>
               取消
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="default"
+              size="sm"
               onClick={handleImport}
               disabled={!parsedFile || importing}
-              className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-foreground text-background text-[11px] hover:bg-foreground/90 transition-colors disabled:opacity-30 disabled:cursor-not-allowed active:scale-[0.97]"
             >
               {importing ? (
                 <div className="contents">
@@ -245,10 +233,9 @@ export function SkillPluginImportModal({ open, importType, onClose, onImportComp
                   <span>确认导入</span>
                 </div>
               )}
-            </button>
-          </div>
-        </motion.div>
-      </motion.div>
-    </AnimatePresence>
+            </Button>
+          </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }

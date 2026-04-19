@@ -54,7 +54,11 @@ export function ParallelResponseDemo() {
     "grid grid-cols-2 gap-3"
 
   return (
-    <Section title="Parallel Response Pattern" code={`// Multiple model responses side-by-side
+    <Section title="Parallel Response Pattern" props={[
+        { name: "models", type: "string[]", default: "[]", description: "List of model IDs to query in parallel" },
+        { name: "layout", type: '"columns" | "rows" | "grid"', default: '"columns"', description: "Layout arrangement for response cards" },
+        { name: "showThinking", type: "boolean", default: "true", description: "Show thinking/reasoning process blocks" },
+      ]} code={`// Multiple model responses side-by-side
 // Compose with: Card, Avatar, ThinkingBlock, CodeBlock, ToggleGroup, Badge`}>
       <div className="max-w-4xl space-y-3">
         <div className="flex items-center justify-between">
@@ -75,7 +79,7 @@ export function ParallelResponseDemo() {
                   <p className="text-xs font-medium truncate">{r.model}</p>
                   <p className="text-[10px] text-muted-foreground">{r.provider}</p>
                 </div>
-                <Badge variant="outline" className="text-[9px] tabular-nums">{r.tokens.output} tok</Badge>
+                <Badge variant="outline" className="text-xs tabular-nums">{r.tokens.output} tok</Badge>
               </div>
 
               {r.thinking && (
@@ -95,7 +99,7 @@ export function ParallelResponseDemo() {
                 </Button>
                 <Button variant="ghost" size="icon" className="size-6"><ThumbsUp className="size-3" /></Button>
                 <div className="flex-1" />
-                <span className="text-[9px] text-muted-foreground tabular-nums">{r.tokens.input}→{r.tokens.output}</span>
+                <span className="text-xs text-muted-foreground tabular-nums">{r.tokens.input}→{r.tokens.output}</span>
               </div>
             </Card>
           ))}

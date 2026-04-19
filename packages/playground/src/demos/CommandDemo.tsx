@@ -2,7 +2,7 @@ import React, { useState } from "react"
 import {
   Command, CommandEmpty, CommandGroup, CommandInput, CommandItem,
   CommandList, CommandSeparator, CommandShortcut, Badge, Button,
-  Dialog, DialogContent, DialogTitle
+  Dialog, DialogContent, DialogTitle, Kbd
 } from "@cherry-studio/ui"
 import { Section, type PropDef } from "../components/Section"
 import {
@@ -22,7 +22,7 @@ export function CommandDemo() {
         { name: "onValueChange", type: "(value) => void", description: "Selection handler" },
       ]} code={`import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@cherry-studio/ui"
 
-<Command className="rounded-lg border shadow-md">
+<Command className="rounded-[24px] border shadow-popover">
   <CommandInput placeholder="Type a command..." />
   <CommandList>
     <CommandEmpty>No results found.</CommandEmpty>
@@ -32,7 +32,7 @@ export function CommandDemo() {
     </CommandGroup>
   </CommandList>
 </Command>`}>
-        <Command className="rounded-lg border shadow-md max-w-lg">
+        <Command className="rounded-[24px] border shadow-popover max-w-lg">
           <CommandInput placeholder="Type a command or search..." />
           <CommandList>
             <CommandEmpty>No results found.</CommandEmpty>
@@ -55,9 +55,9 @@ export function CommandDemo() {
         <div className="space-y-3">
           <Button variant="outline" className="w-full max-w-lg justify-between text-muted-foreground" onClick={() => setOpen(true)}>
             <span className="flex items-center"><Search className="mr-2 h-4 w-4" /> Search commands...</span>
-            <kbd className="pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground">
+            <Kbd className="pointer-events-none select-none gap-1 font-mono">
               <span className="text-xs">⌘</span>K
-            </kbd>
+            </Kbd>
           </Button>
           <Dialog open={open} onOpenChange={setOpen}>
             <DialogContent className="p-0 overflow-hidden max-w-lg">
@@ -97,7 +97,7 @@ export function CommandDemo() {
       </Section>
 
       <Section title="With Selection Feedback">
-        <Command className="rounded-lg border shadow-md max-w-lg">
+        <Command className="rounded-[24px] border shadow-popover max-w-lg">
           <CommandInput placeholder="Select a model..." />
           <CommandList>
             <CommandEmpty>No model found.</CommandEmpty>

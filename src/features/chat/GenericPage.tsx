@@ -1,5 +1,6 @@
 import React from 'react';
 import { Settings } from 'lucide-react';
+import { Button } from '@cherry-studio/ui';
 import type { Tab } from '@/app/types';
 
 export function GenericPage({ tab }: { tab: Tab }) {
@@ -22,9 +23,9 @@ export function GenericPage({ tab }: { tab: Tab }) {
           <Icon size={13} className="text-muted-foreground" />
           <span className="text-foreground">{tab.title}</span>
         </div>
-        <button className="w-7 h-7 rounded-md flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent transition-colors">
+        <Button variant="ghost" size="icon-sm" className="w-7 h-7">
           <Settings size={14} strokeWidth={1.6} />
-        </button>
+        </Button>
       </div>
       <div className="flex-1 flex flex-col items-center justify-center px-4 overflow-y-auto">
         <div className="text-center max-w-sm">

@@ -2,6 +2,7 @@ import React from 'react';
 import {
   ExternalLink, ChevronLeft, ChevronRight, RotateCcw, Pin, Link, Copy
 } from 'lucide-react';
+import { Button } from '@cherry-studio/ui';
 import { useGlobalActions } from '@/app/context/GlobalActionContext';
 import type { Tab } from '@/app/types';
 
@@ -15,19 +16,20 @@ export function MiniAppEmbedPage({ tab }: { tab: Tab }) {
       {/* Browser-like toolbar */}
       <div className="h-10 flex items-center px-3 flex-shrink-0 border-b border-border/30">
         {/* Left: open externally */}
-        <button className="w-6 h-6 rounded-md flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"><ExternalLink size={13} /></button>
+        <Button variant="ghost" size="icon-xs" className="w-6 h-6"><ExternalLink size={13} /></Button>
         <div className="flex-1" />
         {/* Right: nav + actions */}
         <div className="flex items-center gap-0.5">
-          <button className="w-6 h-6 rounded-md flex items-center justify-center text-muted-foreground/40 cursor-not-allowed"><ChevronLeft size={14} /></button>
-          <button className="w-6 h-6 rounded-md flex items-center justify-center text-muted-foreground/40 cursor-not-allowed"><ChevronRight size={14} /></button>
-          <button className="w-6 h-6 rounded-md flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"><RotateCcw size={12} /></button>
-          <button
+          <Button variant="ghost" size="icon-xs" className="w-6 h-6 text-muted-foreground/40 cursor-not-allowed" disabled><ChevronLeft size={14} /></Button>
+          <Button variant="ghost" size="icon-xs" className="w-6 h-6 text-muted-foreground/40 cursor-not-allowed" disabled><ChevronRight size={14} /></Button>
+          <Button variant="ghost" size="icon-xs" className="w-6 h-6"><RotateCcw size={12} /></Button>
+          <Button
+            variant="ghost" size="icon-xs"
             onClick={() => onPinTab(tab.id)}
-            className={`w-6 h-6 rounded-md flex items-center justify-center transition-colors ${tab.pinned ? 'text-foreground bg-accent' : 'text-muted-foreground hover:text-foreground hover:bg-accent'}`}
-          ><Pin size={12} /></button>
-          <button className="w-6 h-6 rounded-md flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"><Link size={12} /></button>
-          <button className="w-6 h-6 rounded-md flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"><Copy size={12} /></button>
+            className={`w-6 h-6 ${tab.pinned ? 'text-foreground bg-accent' : ''}`}
+          ><Pin size={12} /></Button>
+          <Button variant="ghost" size="icon-xs" className="w-6 h-6"><Link size={12} /></Button>
+          <Button variant="ghost" size="icon-xs" className="w-6 h-6"><Copy size={12} /></Button>
         </div>
       </div>
       {/* Content area */}
@@ -39,8 +41,8 @@ export function MiniAppEmbedPage({ tab }: { tab: Tab }) {
             <div className="w-16 h-16 rounded-2xl mx-auto flex items-center justify-center text-white text-xl" style={{ background: tab.miniAppColor }}>{tab.miniAppInitial}</div>
           )}
           <p className="text-sm text-foreground">{tab.title}</p>
-          <p className="text-[11px] text-muted-foreground">{tab.miniAppUrl}</p>
-          <p className="text-[10px] text-muted-foreground/50">由于安全策略限制，嵌入式预览不可用</p>
+          <p className="text-xs text-muted-foreground">{tab.miniAppUrl}</p>
+          <p className="text-xs text-muted-foreground/50">由于安全策略限制，嵌入式预览不可用</p>
         </div>
       </div>
     </div>

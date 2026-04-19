@@ -4,6 +4,7 @@ import {
   ArrowRight, Heart,
 } from 'lucide-react';
 import { motion } from 'motion/react';
+import { Button } from '@cherry-studio/ui';
 import type { Agent, Assistant, KnowledgeBase } from './ExploreData';
 import { integrationIcons, formatNumber } from './ExploreData';
 import { ImageWithFallback } from '@/app/components/figma/ImageWithFallback';
@@ -15,7 +16,7 @@ import { ImageWithFallback } from '@/app/components/figma/ImageWithFallback';
 function FavBadge() {
   return (
     <div className="absolute top-2.5 left-2.5 z-10 w-5 h-5 rounded-full bg-red-500/10 flex items-center justify-center backdrop-blur-sm border border-red-500/15 shadow-sm">
-      <Heart size={9} className="text-red-500" fill="currentColor" />
+      <Heart size={9} className="text-destructive" fill="currentColor" />
     </div>
   );
 }
@@ -42,21 +43,21 @@ export function AgentCard({ agent, onTry, onClick, isFavorited }: {
               {agent.avatar}
             </div>
             <div>
-              <h3 className="text-[12px] text-foreground group-hover:text-foreground transition-colors">{agent.name}</h3>
+              <h3 className="text-sm text-foreground group-hover:text-foreground transition-colors">{agent.name}</h3>
               <span className="text-[9px] text-muted-foreground/35">{agent.subcategory} · {agent.author}</span>
             </div>
           </div>
           <div className="flex items-center gap-0.5 text-[9px] text-muted-foreground/30">
-            <Star size={8} className="text-amber-500/60" />
+            <Star size={8} className="text-warning/60" />
             <span>{formatNumber(agent.stars)}</span>
           </div>
         </div>
 
-        <p className="text-[11px] text-muted-foreground/50 leading-relaxed line-clamp-2 mb-3">{agent.description}</p>
+        <p className="text-xs text-muted-foreground/50 leading-relaxed line-clamp-2 mb-3">{agent.description}</p>
 
         <div className="flex items-center gap-1 mb-3">
           {agent.integrations.slice(0, 4).map(intg => (
-            <div key={intg} className="w-6 h-6 rounded-lg bg-accent/60 flex items-center justify-center text-[10px]" title={intg}>
+            <div key={intg} className="w-6 h-6 rounded-lg bg-accent/60 flex items-center justify-center text-xs" title={intg}>
               {integrationIcons[intg] || '\uD83D\uDD27'}
             </div>
           ))}
@@ -75,14 +76,16 @@ export function AgentCard({ agent, onTry, onClick, isFavorited }: {
       </div>
 
       <div className="px-4 py-2.5 border-t border-border/10">
-        <button
+        <Button
+          variant="ghost"
+          size="xs"
           onClick={e => { e.stopPropagation(); onTry(); }}
-          className="w-full flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-[11px] text-foreground/70 hover:text-foreground bg-accent/30 hover:bg-accent/60 transition-colors group/btn"
+          className="w-full flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs text-foreground/70 hover:text-foreground bg-accent/30 hover:bg-accent/60 group/btn"
         >
           <Play size={9} className="group-hover/btn:text-violet-500 transition-colors" />
           <span>体验智能体</span>
           <ArrowRight size={9} className="opacity-0 -translate-x-1 group-hover/btn:opacity-100 group-hover/btn:translate-x-0 transition-all" />
-        </button>
+        </Button>
       </div>
     </motion.div>
   );
@@ -110,8 +113,8 @@ export function AssistantCard({ assistant, onChat, onClick, isFavorited }: {
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-1.5">
-              <h3 className="text-[12px] text-foreground truncate">{assistant.name}</h3>
-              <div className="flex items-center gap-0.5 text-[9px] text-amber-500/60 flex-shrink-0">
+              <h3 className="text-sm text-foreground truncate">{assistant.name}</h3>
+              <div className="flex items-center gap-0.5 text-[9px] text-warning/60 flex-shrink-0">
                 <Star size={7} fill="currentColor" />
                 <span>{assistant.rating}</span>
               </div>
@@ -120,10 +123,10 @@ export function AssistantCard({ assistant, onChat, onClick, isFavorited }: {
           </div>
         </div>
 
-        <p className="text-[11px] text-muted-foreground/50 leading-relaxed line-clamp-2 mb-2">{assistant.description}</p>
+        <p className="text-xs text-muted-foreground/50 leading-relaxed line-clamp-2 mb-2">{assistant.description}</p>
 
         <div className="px-2.5 py-1.5 rounded-lg bg-accent/30 border border-border/10 mb-3">
-          <p className="text-[10px] text-muted-foreground/40 leading-relaxed line-clamp-2 italic">"{assistant.persona}"</p>
+          <p className="text-xs text-muted-foreground/40 leading-relaxed line-clamp-2 italic">"{assistant.persona}"</p>
         </div>
 
         <div className="flex items-center justify-between">
@@ -140,14 +143,16 @@ export function AssistantCard({ assistant, onChat, onClick, isFavorited }: {
       </div>
 
       <div className="px-4 py-2.5 border-t border-border/10">
-        <button
+        <Button
+          variant="ghost"
+          size="xs"
           onClick={e => { e.stopPropagation(); onChat(); }}
-          className="w-full flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-[11px] text-foreground/70 hover:text-foreground bg-accent/30 hover:bg-accent/60 transition-colors group/btn"
+          className="w-full flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs text-foreground/70 hover:text-foreground bg-accent/30 hover:bg-accent/60 group/btn"
         >
           <MessageCircle size={9} className="group-hover/btn:text-foreground/60 transition-colors" />
           <span>开始对话</span>
           <ArrowRight size={9} className="opacity-0 -translate-x-1 group-hover/btn:opacity-100 group-hover/btn:translate-x-0 transition-all" />
-        </button>
+        </Button>
       </div>
     </motion.div>
   );
@@ -175,11 +180,11 @@ export function KnowledgeCard({ kb, onClick, isFavorited }: { kb: KnowledgeBase;
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
         <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
         <div className="absolute bottom-2 left-3 right-3">
-          <h3 className="text-[12px] text-white truncate">{kb.name}</h3>
+          <h3 className="text-sm text-white truncate">{kb.name}</h3>
         </div>
       </div>
       <div className="p-3.5">
-        <p className="text-[11px] text-muted-foreground/50 leading-relaxed line-clamp-2 mb-2.5">{kb.description}</p>
+        <p className="text-xs text-muted-foreground/50 leading-relaxed line-clamp-2 mb-2.5">{kb.description}</p>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-1">
             {kb.tags.map(tag => (
@@ -221,14 +226,14 @@ export function ToolCard({ item, metricLabel, metricValue, onClick, isFavorited 
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1.5">
-            <h3 className="text-[12px] text-foreground truncate">{item.name}</h3>
+            <h3 className="text-sm text-foreground truncate">{item.name}</h3>
             {item.version && <span className="text-[8px] text-muted-foreground/25 flex-shrink-0">v{item.version}</span>}
           </div>
           <p className="text-[9px] text-muted-foreground/35 mt-0.5">{item.author}</p>
         </div>
       </div>
 
-      <p className="text-[11px] text-muted-foreground/50 leading-relaxed line-clamp-2 mb-3">{item.description}</p>
+      <p className="text-xs text-muted-foreground/50 leading-relaxed line-clamp-2 mb-3">{item.description}</p>
 
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-1">

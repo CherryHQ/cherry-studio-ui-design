@@ -23,19 +23,19 @@ interface ThemeVars {
 interface Preset { name: string; light: ThemeVars; dark: ThemeVars }
 
 const CHERRY_LIGHT: ThemeVars = {
-  "--primary": "#00b96b", "--primary-foreground": "#ffffff",
-  "--background": "#ffffff", "--foreground": "oklch(0.145 0 0)",
-  "--card": "#ffffff", "--card-foreground": "oklch(0.145 0 0)",
-  "--popover": "oklch(1 0 0)", "--popover-foreground": "oklch(0.145 0 0)",
-  "--secondary": "oklch(0.95 0.0058 264.53)", "--secondary-foreground": "#030213",
-  "--muted": "#ececf0", "--muted-foreground": "#717182",
-  "--accent": "#e9ebef", "--accent-foreground": "#030213",
-  "--destructive": "#d4183d", "--destructive-foreground": "#ffffff",
-  "--border": "oklch(0.922 0 0)", "--input": "oklch(0.922 0 0)", "--ring": "oklch(0.708 0 0)",
-  "--radius": "0.625rem",
-  "--input-background": "#f3f3f5", "--switch-background": "#cbced4",
+  "--primary": "#323232", "--primary-foreground": "#fcfcfc",
+  "--background": "#f4f4f4", "--foreground": "#121212",
+  "--card": "#fcfcfc", "--card-foreground": "#121212",
+  "--popover": "#fcfcfc", "--popover-foreground": "#121212",
+  "--secondary": "#f1f1f1", "--secondary-foreground": "#121212",
+  "--muted": "#f1f1f1", "--muted-foreground": "#7b7b7b",
+  "--accent": "#f1f1f1", "--accent-foreground": "#121212",
+  "--destructive": "#dc2626", "--destructive-foreground": "#ffffff",
+  "--border": "#ececec", "--input": "#ececec", "--ring": "#323232",
+  "--radius": "0.75rem",
+  "--input-background": "#fcfcfc", "--switch-background": "#ececec",
   "--sidebar": "oklch(0.985 0 0)", "--sidebar-foreground": "oklch(0.145 0 0)",
-  "--sidebar-primary": "#030213", "--sidebar-primary-foreground": "oklch(0.985 0 0)",
+  "--sidebar-primary": "#323232", "--sidebar-primary-foreground": "#fcfcfc",
   "--sidebar-accent": "oklch(0.97 0 0)", "--sidebar-accent-foreground": "oklch(0.205 0 0)",
   "--sidebar-border": "oklch(0.922 0 0)", "--sidebar-ring": "oklch(0.708 0 0)",
   "--chart-1": "oklch(0.646 0.222 41.116)", "--chart-2": "oklch(0.6 0.118 184.704)",
@@ -44,19 +44,19 @@ const CHERRY_LIGHT: ThemeVars = {
 }
 
 const CHERRY_DARK: ThemeVars = {
-  "--primary": "#00b96b", "--primary-foreground": "#ffffff",
+  "--primary": "#e5e5e5", "--primary-foreground": "#121212",
   "--background": "oklch(0.145 0 0)", "--foreground": "oklch(0.985 0 0)",
   "--card": "oklch(0.145 0 0)", "--card-foreground": "oklch(0.985 0 0)",
   "--popover": "oklch(0.145 0 0)", "--popover-foreground": "oklch(0.985 0 0)",
   "--secondary": "oklch(0.269 0 0)", "--secondary-foreground": "oklch(0.985 0 0)",
   "--muted": "oklch(0.269 0 0)", "--muted-foreground": "oklch(0.708 0 0)",
   "--accent": "oklch(0.269 0 0)", "--accent-foreground": "oklch(0.985 0 0)",
-  "--destructive": "oklch(0.396 0.141 25.723)", "--destructive-foreground": "#ffffff",
-  "--border": "oklch(0.269 0 0)", "--input": "oklch(0.269 0 0)", "--ring": "oklch(0.439 0 0)",
-  "--radius": "0.625rem",
+  "--destructive": "#ef4444", "--destructive-foreground": "#ffffff",
+  "--border": "oklch(0.269 0 0)", "--input": "oklch(0.269 0 0)", "--ring": "#e5e5e5",
+  "--radius": "0.75rem",
   "--input-background": "oklch(0.205 0 0)", "--switch-background": "oklch(0.355 0 0)",
   "--sidebar": "oklch(0.205 0 0)", "--sidebar-foreground": "oklch(0.985 0 0)",
-  "--sidebar-primary": "oklch(0.488 0.243 264.376)", "--sidebar-primary-foreground": "oklch(0.985 0 0)",
+  "--sidebar-primary": "#e5e5e5", "--sidebar-primary-foreground": "#121212",
   "--sidebar-accent": "oklch(0.269 0 0)", "--sidebar-accent-foreground": "oklch(0.985 0 0)",
   "--sidebar-border": "oklch(0.269 0 0)", "--sidebar-ring": "oklch(0.439 0 0)",
   "--chart-1": "oklch(0.488 0.243 264.376)", "--chart-2": "oklch(0.696 0.17 162.48)",
@@ -274,14 +274,14 @@ function PanelGroup({ title, defaultOpen = false, badge, children }: { title: st
   const [open, setOpen] = useState(defaultOpen)
   return (
     <div className="border-b border-border/50">
-      <button onClick={() => setOpen(!open)} className="w-full flex items-center justify-between px-4 py-2.5 text-[11px] font-medium text-foreground/70 hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50">
+      <button onClick={() => setOpen(!open)} className="w-full flex items-center justify-between px-5 py-2.5 text-[11px] font-medium text-foreground/70 hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50">
         <span className="flex items-center gap-1.5">
           {title}
           {badge && <span className="text-[8px] text-muted-foreground/50 bg-muted/50 px-1 py-0.5 rounded font-normal">{badge}</span>}
         </span>
         <ChevronDown size={12} className={`transition-transform ${open ? "rotate-180" : ""}`} />
       </button>
-      {open && <div className="px-4 pb-3">{children}</div>}
+      {open && <div className="px-5 pb-3">{children}</div>}
     </div>
   )
 }
@@ -372,7 +372,7 @@ export function ThemePanel({ dark, onToggleDark }: { dark: boolean; onToggleDark
   const [fontWeightNormal, setFontWeightNormal] = useState(400)
   const [fontWeightHeading, setFontWeightHeading] = useState(600)
   const [borderWidth, setBorderWidth] = useState(1)
-  const [shadows, setShadows] = useState({ ...DEFAULT_SHADOWS })
+  const [shadows, setShadows] = useState<Record<string, string>>({ ...DEFAULT_SHADOWS })
   const [spacingXs, setSpacingXs] = useState(4)
   const [spacingSm, setSpacingSm] = useState(8)
   const [spacingMd, setSpacingMd] = useState(16)
@@ -403,14 +403,39 @@ export function ThemePanel({ dark, onToggleDark }: { dark: boolean; onToggleDark
   }, [dark, lightVars, darkVars])
 
   const updateVar = (key: string, val: string) => {
-    setCurrentVars((prev) => ({ ...prev, [key]: val }))
+    setCurrentVars((prev) => {
+      const next = { ...prev, [key]: val }
+      // When primary changes, derive border/input/ring
+      if (key === "--primary") {
+        const bg = next["--background"] || "#f4f4f4"
+        next["--border"] = `color-mix(in srgb, ${val} 12%, ${bg})`
+        next["--input"] = `color-mix(in srgb, ${val} 12%, ${bg})`
+        next["--switch-background"] = `color-mix(in srgb, ${val} 15%, ${bg})`
+        next["--ring"] = val
+      }
+      return next
+    })
   }
 
   const applyPreset = (preset: Preset) => {
-    setLightVars({ ...preset.light })
-    setDarkVars({ ...preset.dark })
-    initialLight.current = { ...preset.light }
-    initialDark.current = { ...preset.dark }
+    // Derive border/input/switch from primary using color-mix
+    const deriveVars = (vars: ThemeVars): ThemeVars => {
+      const bg = vars["--background"] || "#f4f4f4"
+      const primary = vars["--primary"] || "#323232"
+      return {
+        ...vars,
+        "--border": `color-mix(in srgb, ${primary} 12%, ${bg})`,
+        "--input": `color-mix(in srgb, ${primary} 12%, ${bg})`,
+        "--switch-background": `color-mix(in srgb, ${primary} 15%, ${bg})`,
+        "--ring": primary,
+      }
+    }
+    const light = deriveVars(preset.light)
+    const darkVarsComputed = deriveVars(preset.dark)
+    setLightVars(light)
+    setDarkVars(darkVarsComputed)
+    initialLight.current = light
+    initialDark.current = darkVarsComputed
     setActivePreset(preset.name)
   }
 
@@ -562,7 +587,7 @@ export function ThemePanel({ dark, onToggleDark }: { dark: boolean; onToggleDark
   return (
     <aside className="w-[270px] flex-shrink-0 border-l border-border bg-muted/20 flex flex-col overflow-hidden">
       {/* Header */}
-      <div className="px-4 py-3 border-b border-border flex items-center justify-between">
+      <div className="px-5 py-3 border-b border-border flex items-center justify-between">
         <span className="text-xs font-semibold">Theme</span>
         <button onClick={reset} className="text-[10px] text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1 rounded focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50">
           <RotateCcw size={10} /> Reset
@@ -571,7 +596,7 @@ export function ThemePanel({ dark, onToggleDark }: { dark: boolean; onToggleDark
 
       <div className="flex-1 overflow-y-auto [&::-webkit-scrollbar]:w-[3px] [&::-webkit-scrollbar-thumb]:bg-border/30">
         {/* Mode Toggle */}
-        <div className="px-4 py-3 border-b border-border/50">
+        <div className="px-5 py-3 border-b border-border/50">
           <div className="flex rounded-lg bg-muted/50 p-0.5">
             <button onClick={() => dark && onToggleDark()} className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-md text-[10px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 ${!dark ? "bg-background text-foreground shadow-sm" : "text-muted-foreground"}`}>
               <Sun size={11} /> Light
@@ -777,12 +802,12 @@ export function ThemePanel({ dark, onToggleDark }: { dark: boolean; onToggleDark
       </div>
 
       {/* Export Footer */}
-      <div className="px-3 py-3 border-t border-border space-y-1.5">
+      <div className="px-5 py-3 border-t border-border space-y-1.5">
         <button onClick={exportCSS} className="w-full flex items-center justify-center gap-1.5 py-2 rounded-md bg-primary text-primary-foreground text-[11px] font-medium hover:bg-primary/90 transition-colors focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50">
           {copied === "css" ? <><Check size={12} /> Copied!</> : <><Copy size={12} /> Export CSS</>}
         </button>
         <button onClick={exportAIPrompt} className="w-full flex items-center justify-center gap-1.5 py-1.5 rounded-md bg-muted/50 text-[10px] text-muted-foreground hover:bg-muted hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50">
-          {copied === "ai" ? <><Check size={12} className="text-green-500" /> Copied!</> : <><Bot size={12} /> Copy AI Prompt (diff only)</>}
+          {copied === "ai" ? <><Check size={12} className="text-success" /> Copied!</> : <><Bot size={12} /> Copy AI Prompt (diff only)</>}
         </button>
       </div>
     </aside>

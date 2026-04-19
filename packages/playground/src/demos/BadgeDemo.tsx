@@ -33,17 +33,17 @@ export function BadgeDemo() {
 
       <Section title="Status Indicators">
         <div className="flex flex-wrap gap-3">
-          <Badge variant="outline" className="bg-green-500/15 text-green-700 border-green-500/20 hover:bg-green-500/25 dark:text-green-400">
-            <span className="mr-1.5 h-1.5 w-1.5 rounded-full bg-green-500 inline-block" /> Online
+          <Badge variant="outline" className="bg-success-muted text-success border-success/20 hover:bg-success-muted">
+            <span className="mr-1.5 h-1.5 w-1.5 rounded-full bg-success inline-block" /> Online
           </Badge>
-          <Badge variant="outline" className="bg-yellow-500/15 text-yellow-700 border-yellow-500/20 hover:bg-yellow-500/25 dark:text-yellow-400">
-            <span className="mr-1.5 h-1.5 w-1.5 rounded-full bg-yellow-500 inline-block" /> Away
+          <Badge variant="outline" className="bg-warning-muted text-warning border-warning/20 hover:bg-warning-muted">
+            <span className="mr-1.5 h-1.5 w-1.5 rounded-full bg-warning inline-block" /> Away
           </Badge>
-          <Badge variant="outline" className="bg-red-500/15 text-red-700 border-red-500/20 hover:bg-red-500/25 dark:text-red-400">
-            <span className="mr-1.5 h-1.5 w-1.5 rounded-full bg-red-500 inline-block" /> Offline
+          <Badge variant="outline" className="bg-error-muted text-error border-error/20 hover:bg-error-muted">
+            <span className="mr-1.5 h-1.5 w-1.5 rounded-full bg-error inline-block" /> Offline
           </Badge>
-          <Badge variant="outline" className="bg-blue-500/15 text-blue-700 border-blue-500/20 hover:bg-blue-500/25 dark:text-blue-400">
-            <span className="mr-1.5 h-1.5 w-1.5 rounded-full bg-blue-500 animate-pulse inline-block" /> Syncing
+          <Badge variant="outline" className="bg-info-muted text-info border-info/20 hover:bg-info-muted">
+            <span className="mr-1.5 h-1.5 w-1.5 rounded-full bg-info animate-pulse inline-block" /> Syncing
           </Badge>
         </div>
       </Section>
@@ -82,7 +82,7 @@ export function BadgeDemo() {
       <Section title="Practical: Version & Change Indicator">
         <div className="flex flex-wrap items-center gap-3">
           <Badge variant="outline">v2.1.0</Badge>
-          <Badge variant="outline" className="bg-green-500/15 text-green-700 border-green-500/20 hover:bg-green-500/25 dark:text-green-400">
+          <Badge variant="outline" className="bg-success-muted text-success border-success/20 hover:bg-success-muted">
             <ArrowUp className="mr-1 h-3 w-3" /> +12.5%
           </Badge>
           <Badge variant="secondary"><Zap className="mr-1 h-3 w-3" /> New</Badge>

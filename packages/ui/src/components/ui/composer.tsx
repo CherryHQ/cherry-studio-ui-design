@@ -1,8 +1,10 @@
 "use client"
 
 import * as React from "react"
-import { ArrowUp } from "lucide-react"
+import { ArrowUp, Paperclip, Square, X } from "lucide-react"
 import { cn } from "../../lib/utils"
+import { Button } from "./button"
+import { Textarea } from "./textarea"
 
 export interface ComposerProps extends React.HTMLAttributes<HTMLDivElement> {
   onSendMessage: (text: string) => void
@@ -18,120 +20,263 @@ export interface ComposerProps extends React.HTMLAttributes<HTMLDivElement> {
   autoFocus?: boolean
   /** Max height for textarea */
   maxHeight?: number
+  /** Controlled input value (from useChat) */
+  input?: string
+  /** Input change handler (from useChat) */
+  onInputChange?: (value: string) => void
+  /** Form submit handler (from useChat) */
+  onSubmit?: (e: React.FormEvent) => void
+  /** Loading state (from useChat) */
+  isLoading?: boolean
+  /** Stop generation handler (from useChat) */
+  onStop?: () => void
+  /** File upload handler – called when files are dropped or selected */
+  onFileUpload?: (files: File[]) => void
+  /** List of attached files to display */
+  attachments?: { id: string; name: string; size?: string; type?: string }[]
+  /** Remove an attachment by id */
+  onRemoveAttachment?: (id: string) => void
+  /** Called when user types @query in the textarea */
+  onMention?: (query: string) => void
+  /** Mention suggestion items */
+  mentionItems?: { id: string; name: string; avatar?: React.ReactNode }[]
+  /** Called when user selects a mention item */
+  onSelectMention?: (item: { id: string; name: string }) => void
 }
 
-const Composer = React.forwardRef<HTMLDivElement, ComposerProps>(
-  (
-    {
-      onSendMessage,
-      placeholder = "Type a message...",
-      disabled = false,
-      leftActions,
-      rightInfo,
-      variant = "default",
-      autoFocus = false,
-      maxHeight = 140,
-      className,
-      ...props
-    },
-    ref
-  ) => {
-    const [input, setInput] = React.useState("")
-    const textareaRef = React.useRef<HTMLTextAreaElement>(null)
+function Composer({
+  onSendMessage,
+  placeholder = "Type a message...",
+  disabled = false,
+  leftActions,
+  rightInfo,
+  variant = "default",
+  autoFocus = false,
+  maxHeight = 140,
+  input: controlledInput,
+  onInputChange,
+  onSubmit,
+  isLoading = false,
+  onStop,
+  onFileUpload,
+  attachments,
+  onRemoveAttachment,
+  onMention,
+  mentionItems,
+  onSelectMention,
+  className,
+  ref,
+  ...props
+}: ComposerProps & { ref?: React.Ref<HTMLDivElement> }) {
+  const [internalInput, setInternalInput] = React.useState("")
+  const [isDragOver, setIsDragOver] = React.useState(false)
+  const textareaRef = React.useRef<HTMLTextAreaElement>(null)
 
-    const handleSend = React.useCallback(() => {
-      if (input.trim() && !disabled) {
-        onSendMessage(input.trim())
-        setInput("")
-        if (textareaRef.current) {
-          textareaRef.current.style.height = "auto"
+  const isControlled = controlledInput !== undefined
+  const inputValue = isControlled ? controlledInput : internalInput
+
+  const handleSend = React.useCallback(() => {
+    if (inputValue.trim() && !disabled && !isLoading) {
+      onSendMessage(inputValue.trim())
+      if (!isControlled) {
+        setInternalInput("")
+      }
+      if (textareaRef.current) {
+        textareaRef.current.style.height = "auto"
+      }
+    }
+  }, [inputValue, disabled, isLoading, isControlled, onSendMessage])
+
+  // Sync textarea height when value is cleared externally
+  React.useEffect(() => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = "auto"
+      textareaRef.current.style.height = Math.min(textareaRef.current.scrollHeight, maxHeight ?? 140) + "px"
+    }
+  }, [inputValue, maxHeight])
+
+  const handleFormSubmit = React.useCallback(
+    (e: React.FormEvent) => {
+      e.preventDefault()
+      if (onSubmit) {
+        onSubmit(e)
+      } else {
+        handleSend()
+      }
+    },
+    [onSubmit, handleSend]
+  )
+
+  const handleKeyDown = React.useCallback(
+    (e: React.KeyboardEvent) => {
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault()
+        handleFormSubmit(e as unknown as React.FormEvent)
+      }
+    },
+    [handleFormSubmit]
+  )
+
+  const handleInput = React.useCallback(
+    (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+      const value = e.target.value
+      if (!isControlled) {
+        setInternalInput(value)
+      }
+      if (onInputChange) {
+        onInputChange(value)
+      }
+      // Detect @mention queries
+      if (onMention) {
+        const cursorPos = e.target.selectionStart ?? value.length
+        const textBeforeCursor = value.slice(0, cursorPos)
+        const mentionMatch = textBeforeCursor.match(/@(\w*)$/)
+        if (mentionMatch) {
+          onMention(mentionMatch[1])
         }
       }
-    }, [input, disabled, onSendMessage])
+      const el = e.target
+      el.style.height = "auto"
+      el.style.height = Math.min(el.scrollHeight, maxHeight) + "px"
+    },
+    [maxHeight, isControlled, onInputChange, onMention]
+  )
 
-    const handleKeyDown = React.useCallback(
-      (e: React.KeyboardEvent) => {
-        if (e.key === "Enter" && !e.shiftKey) {
-          e.preventDefault()
-          handleSend()
-        }
-      },
-      [handleSend]
-    )
+  const handleDragOver = React.useCallback(
+    (e: React.DragEvent) => {
+      e.preventDefault()
+      e.stopPropagation()
+      setIsDragOver(true)
+    },
+    []
+  )
 
-    const handleInput = React.useCallback(
-      (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-        setInput(e.target.value)
-        const el = e.target
-        el.style.height = "auto"
-        el.style.height = Math.min(el.scrollHeight, maxHeight) + "px"
-      },
-      [maxHeight]
-    )
+  const handleDragLeave = React.useCallback(
+    (e: React.DragEvent) => {
+      e.preventDefault()
+      e.stopPropagation()
+      setIsDragOver(false)
+    },
+    []
+  )
 
-    const isRounded = variant === "rounded"
-    const canSend = input.trim() && !disabled
+  const handleDrop = React.useCallback(
+    (e: React.DragEvent) => {
+      e.preventDefault()
+      e.stopPropagation()
+      setIsDragOver(false)
+      if (onFileUpload && e.dataTransfer.files.length > 0) {
+        onFileUpload(Array.from(e.dataTransfer.files))
+      }
+    },
+    [onFileUpload]
+  )
 
-    return (
-      <div ref={ref} className={cn("flex-shrink-0 px-3 pb-3", className)} {...props}>
+  const isRounded = variant === "rounded"
+  const canSend = inputValue.trim() && !disabled && !isLoading
+
+  return (
+    <div
+      ref={ref}
+      data-slot="composer"
+      className={cn("flex-shrink-0 px-3 pb-3", className)}
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
+      {...props}
+    >
+      <div
+        className={cn(
+          "relative border border-border bg-popover backdrop-blur-[6px] shadow-popover focus-within:border-border/80 transition-all duration-[var(--duration-normal)]",
+          "before:absolute before:inset-0 before:rounded-[inherit] before:shadow-[inset_0_2px_0_0_var(--surface-01,white)] dark:before:shadow-none before:pointer-events-none",
+          isRounded
+            ? "rounded-[var(--radius-card)]"
+            : "rounded-[var(--radius-button)]",
+          isDragOver && "border-primary ring-[3px] ring-primary/20"
+        )}
+      >
+        <Textarea
+          ref={textareaRef}
+          value={inputValue}
+          onChange={handleInput}
+          onKeyDown={handleKeyDown}
+          placeholder={placeholder}
+          rows={1}
+          autoFocus={autoFocus}
+          disabled={disabled}
+          className={cn(
+            "w-full bg-transparent text-base tracking-[-0.14px] leading-6 text-foreground placeholder:text-muted-foreground border-0 shadow-none focus-visible:ring-0 rounded-none p-0 resize-none max-h-36",
+            isRounded
+              ? "min-h-11 px-4 pt-3.5 pb-10 placeholder:text-muted-foreground"
+              : "min-h-9 px-3.5 pt-2.5 pb-9"
+          )}
+        />
+        {attachments && attachments.length > 0 && (
+          <div className="flex flex-wrap gap-2 px-3 pb-2">
+            {attachments.map((att) => (
+              <div key={att.id} className="flex items-center gap-1.5 rounded-[var(--radius-button)] bg-muted px-2.5 py-1 text-xs">
+                <Paperclip className="size-3" />
+                <span className="truncate max-w-[120px]">{att.name}</span>
+                {onRemoveAttachment && (
+                  <Button variant="ghost" size="icon-xs" onClick={() => onRemoveAttachment(att.id)} aria-label="Remove attachment" className="size-4">
+                    <X className="size-3" />
+                  </Button>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
         <div
           className={cn(
-            "relative border bg-background shadow-sm focus-within:border-border/80 transition-all duration-150",
+            "absolute flex items-center justify-between",
             isRounded
-              ? "rounded-2xl border-border/40 bg-card/80 shadow-black/5 focus-within:shadow-md focus-within:shadow-black/8"
-              : "rounded-xl border-border/50"
+              ? "bottom-2 left-3 right-3"
+              : "bottom-2 left-2.5 right-2.5"
           )}
         >
-          <textarea
-            ref={textareaRef}
-            value={input}
-            onChange={handleInput}
-            onKeyDown={handleKeyDown}
-            placeholder={placeholder}
-            rows={1}
-            autoFocus={autoFocus}
-            disabled={disabled}
-            className={cn(
-              "w-full bg-transparent text-sm text-foreground placeholder:text-muted-foreground outline-none resize-none leading-[1.6] max-h-36",
-              isRounded
-                ? "min-h-11 px-4 pt-3.5 pb-10 placeholder:text-muted-foreground"
-                : "min-h-9 px-3.5 pt-2.5 pb-9"
-            )}
-          />
-          <div
-            className={cn(
-              "absolute flex items-center justify-between",
-              isRounded
-                ? "bottom-2 left-3 right-3"
-                : "bottom-2 left-2.5 right-2.5"
-            )}
-          >
-            <div className="flex items-center gap-0.5">{leftActions}</div>
-            <div className="flex items-center gap-2">
-              {rightInfo}
-              <button
+          <div className="flex items-center gap-0.5">{leftActions}</div>
+          <div className="flex items-center gap-2">
+            {rightInfo}
+            {isLoading && onStop ? (
+              <Button
+                variant="destructive"
+                size="icon"
+                onClick={onStop}
+                className={cn(
+                  "size-10 active:scale-[0.92]",
+                  isRounded
+                    ? "shadow-sm"
+                    : "bg-foreground text-background hover:bg-foreground/90"
+                )}
+                aria-label="Stop generation"
+              >
+                <Square size={10} strokeWidth={2} fill="currentColor" />
+              </Button>
+            ) : (
+              <Button
+                size="icon"
                 onClick={handleSend}
                 disabled={!canSend}
+                aria-label="Send message"
                 className={cn(
-                  "w-7 h-7 rounded-full flex items-center justify-center transition-all duration-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                  "size-10 active:scale-[0.92]",
                   canSend
                     ? isRounded
-                      ? "bg-primary text-primary-foreground hover:bg-primary/90 active:scale-[0.92] shadow-sm shadow-primary/25"
-                      : "bg-foreground text-background hover:bg-foreground/90 active:scale-[0.92]"
+                      ? "shadow-sm shadow-primary/25"
+                      : "bg-foreground text-background hover:bg-foreground/90"
                     : isRounded
-                      ? "bg-accent/50 text-muted-foreground cursor-not-allowed"
-                      : "bg-accent text-muted-foreground cursor-not-allowed"
+                      ? "bg-accent/50 text-muted-foreground"
+                      : "bg-accent text-muted-foreground"
                 )}
               >
                 <ArrowUp size={14} strokeWidth={2} />
-              </button>
-            </div>
+              </Button>
+            )}
           </div>
         </div>
       </div>
-    )
-  }
-)
-Composer.displayName = "Composer"
+    </div>
+  )
+}
 
 export { Composer }

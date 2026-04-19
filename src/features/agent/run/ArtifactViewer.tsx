@@ -2,9 +2,10 @@ import React, { useState, useMemo } from 'react';
 import {
   Monitor, Code2, RotateCw, ExternalLink, Smartphone, Tablet,
   Copy, Check, ChevronDown, ChevronRight, Eye,
-  PanelLeftClose, PanelLeftOpen, X,
+  FolderOpen, X,
   Maximize2, Minimize2,
 } from 'lucide-react';
+import { Button } from '@cherry-studio/ui';
 import { motion, AnimatePresence } from 'motion/react';
 import { copyToClipboard } from '@/app/utils/clipboard';
 import { Tooltip } from '@/app/components/Tooltip';
@@ -103,7 +104,7 @@ function CodeBlock({ code }: { code: string }) {
   const gutterWidth = String(lines.length).length * 8 + 24;
 
   return (
-    <div className="font-mono text-[11px] leading-[20px]">
+    <div className="font-mono text-xs leading-[20px]">
       {lines.map((line, i) => (
         <div key={i} className="flex hover:bg-accent/12">
           <span
@@ -134,8 +135,8 @@ function EmptyState() {
       <div className="w-16 h-16 rounded-2xl bg-accent/25 flex items-center justify-center mb-4">
         <Monitor size={24} strokeWidth={1.2} className="text-muted-foreground/30" />
       </div>
-      <p className="text-[12px] text-muted-foreground mb-1">{"准备就绪"}</p>
-      <p className="text-[10px] text-muted-foreground/55 max-w-[260px] text-center leading-[1.6]">
+      <p className="text-sm text-muted-foreground mb-1">{"准备就绪"}</p>
+      <p className="text-xs text-muted-foreground/55 max-w-[260px] text-center leading-[1.6]">
         {"开始与智能体对话，生成的代码和实时预览将在此处显示。"}
       </p>
     </motion.div>
@@ -170,103 +171,85 @@ export function ArtifactViewer({ fileContent, fileName, previewUrl, hasArtifact,
         <div className="flex items-center gap-1.5">
           {/* File tree toggle - left side */}
           {onToggleExplorer && (
-            <Tooltip content="文件树" side="bottom"><button onClick={onToggleExplorer}
-              className={`p-1 rounded transition-colors ${showExplorer ? 'text-foreground/80 bg-accent/25' : 'text-muted-foreground hover:text-foreground/70'}`}>
-              {showExplorer ? <PanelLeftClose size={11} /> : <PanelLeftOpen size={11} />}
-            </button></Tooltip>
+            <Tooltip content="文件树" side="bottom"><Button variant="ghost" size="icon-xs" onClick={onToggleExplorer}
+              className={showExplorer ? 'text-foreground/80 bg-accent/25' : 'text-muted-foreground hover:text-foreground/70'}>
+              <FolderOpen size={11} />
+            </Button></Tooltip>
           )}
 
-          <div className="inline-flex items-center bg-accent/20 rounded-lg p-[3px]">
-            {/* Preview Tab */}
-            <button
+          <div className="flex items-center gap-0.5">
+            <Tooltip content="预览" side="bottom"><Button variant="ghost" size="icon-xs"
               onClick={() => setActiveTab('preview')}
-              className={`flex items-center gap-1.5 px-2.5 py-[4px] rounded-md text-[10px] transition-all duration-150 ${
-                activeTab === 'preview'
-                  ? 'bg-background text-foreground shadow-sm shadow-black/5'
-                  : 'text-muted-foreground/60 hover:text-muted-foreground'
-              }`}
-            >
-              <Eye size={10} />
-              {"预览"}
-            </button>
-
-            {/* Code Tab */}
-            <button
+              className={`p-1.5 w-auto h-auto rounded-md ${
+                activeTab === 'preview' ? 'bg-accent/20 text-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-accent/10'
+              }`}>
+              <Eye className="h-3.5 w-3.5" />
+            </Button></Tooltip>
+            <Tooltip content="代码" side="bottom"><Button variant="ghost" size="icon-xs"
               onClick={() => setActiveTab('code')}
-              className={`flex items-center gap-1.5 px-2.5 py-[4px] rounded-md text-[10px] transition-all duration-150 ${
-                activeTab === 'code'
-                  ? 'bg-background text-foreground shadow-sm shadow-black/5'
-                  : 'text-muted-foreground/60 hover:text-muted-foreground'
-              }`}
-            >
-              <Code2 size={10} />
-              {"代码"}
-              {fileName && (
-                <span className="text-[9px] text-muted-foreground/50 ml-0.5 max-w-[100px] truncate">
-                  {fileName.split('/').pop()}
-                </span>
-              )}
-            </button>
+              className={`p-1.5 w-auto h-auto rounded-md ${
+                activeTab === 'code' ? 'bg-accent/20 text-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-accent/10'
+              }`}>
+              <Code2 className="h-3.5 w-3.5" />
+            </Button></Tooltip>
           </div>
+          {activeTab === 'code' && fileName && (
+            <span className="text-[9px] text-muted-foreground/50 ml-1 max-w-[100px] truncate">
+              {fileName.split('/').pop()}
+            </span>
+          )}
         </div>
 
         {/* Right controls */}
         <div className="flex items-center gap-0.5">
           {activeTab === 'preview' && (
             <div className="contents">
-              {/* Device selectors */}
-              <Tooltip content="桌面" side="bottom"><button onClick={() => setDevice('desktop')}
-                className={`p-1 rounded transition-colors ${device === 'desktop' ? 'text-foreground/80 bg-accent/25' : 'text-muted-foreground hover:text-foreground/70'}`}>
-                <Monitor size={10} />
-              </button></Tooltip>
-              <Tooltip content="平板" side="bottom"><button onClick={() => setDevice('tablet')}
-                className={`p-1 rounded transition-colors ${device === 'tablet' ? 'text-foreground/80 bg-accent/25' : 'text-muted-foreground hover:text-foreground/70'}`}>
-                <Tablet size={10} />
-              </button></Tooltip>
-              <Tooltip content="手机" side="bottom"><button onClick={() => setDevice('mobile')}
-                className={`p-1 rounded transition-colors ${device === 'mobile' ? 'text-foreground/80 bg-accent/25' : 'text-muted-foreground hover:text-foreground/70'}`}>
-                <Smartphone size={10} />
-              </button></Tooltip>
+              {/* Device selector */}
+              <Button variant="ghost" size="icon-xs"
+                onClick={() => setDevice(d => d === 'desktop' ? 'tablet' : d === 'tablet' ? 'mobile' : 'desktop')}
+                className="text-muted-foreground hover:text-foreground/70 p-1.5 w-auto h-auto">
+                {device === 'desktop' ? <Monitor size={11} /> : device === 'tablet' ? <Tablet size={11} /> : <Smartphone size={11} />}
+              </Button>
 
               <div className="w-px h-3 bg-border/25 mx-1" />
 
-              <Tooltip content="刷新" side="bottom"><button onClick={() => setPreviewKey(k => k + 1)}
-                className="p-1 rounded text-muted-foreground hover:text-foreground/70 transition-colors">
+              <Tooltip content="刷新" side="bottom"><Button variant="ghost" size="icon-xs" onClick={() => setPreviewKey(k => k + 1)}
+                className="text-muted-foreground hover:text-foreground/70">
                 <RotateCw size={10} />
-              </button></Tooltip>
-              <Tooltip content="新窗口打开" side="bottom"><button className="p-1 rounded text-muted-foreground hover:text-foreground/70 transition-colors">
+              </Button></Tooltip>
+              <Tooltip content="新窗口打开" side="bottom"><Button variant="ghost" size="icon-xs" className="text-muted-foreground hover:text-foreground/70">
                 <ExternalLink size={10} />
-              </button></Tooltip>
+              </Button></Tooltip>
             </div>
           )}
 
           {activeTab === 'code' && fileContent && (
-            <button onClick={handleCopy}
-              className="flex items-center gap-1 px-2 py-1 rounded text-[9px] text-muted-foreground hover:text-foreground/80 hover:bg-accent/15 transition-colors">
+            <Button variant="ghost" size="xs" onClick={handleCopy}
+              className="gap-1 text-muted-foreground hover:text-foreground/80 hover:bg-accent/15">
               {copied ? <Check size={9} className="text-cherry-primary-dark" /> : <Copy size={9} />}
               {copied ? '已复制' : '复制'}
-            </button>
+            </Button>
           )}
 
           {/* Maximize toggle */}
           {onToggleMaximize && (
-            <div>
-              <div className="w-px h-3 bg-border/25 mx-1 inline-block align-middle" />
-              <Tooltip content={maximized ? '退出最大化' : '最大化'} side="bottom"><button onClick={onToggleMaximize}
-                className={`p-1 rounded transition-colors ${maximized ? 'text-foreground/80 bg-accent/25' : 'text-muted-foreground hover:text-foreground/70'}`}>
+            <div className="flex items-center">
+              <div className="w-px h-3 bg-border/25 mx-1" />
+              <Tooltip content={maximized ? '退出最大化' : '最大化'} side="bottom"><Button variant="ghost" size="icon-xs" onClick={onToggleMaximize}
+                className={maximized ? 'text-foreground/80 bg-accent/25' : 'text-muted-foreground hover:text-foreground/70'}>
                 {maximized ? <Minimize2 size={10} /> : <Maximize2 size={10} />}
-              </button></Tooltip>
+              </Button></Tooltip>
             </div>
           )}
 
           {/* Close preview panel */}
           {onTogglePreview && (
-            <div>
-              <div className="w-px h-3 bg-border/25 mx-1 inline-block align-middle" />
-              <Tooltip content="关闭预览" side="bottom"><button onClick={onTogglePreview}
-                className="p-1 rounded text-muted-foreground hover:text-foreground/70 hover:bg-accent/15 transition-colors">
+            <div className="flex items-center">
+              <div className="w-px h-3 bg-border/25 mx-1" />
+              <Tooltip content="关闭预览" side="bottom"><Button variant="ghost" size="icon-xs" onClick={onTogglePreview}
+                className="text-muted-foreground hover:text-foreground/70 hover:bg-accent/15">
                 <X size={11} />
-              </button></Tooltip>
+              </Button></Tooltip>
             </div>
           )}
         </div>
@@ -305,7 +288,7 @@ export function ArtifactViewer({ fileContent, fileName, previewUrl, hasArtifact,
               ) : (
                 <div className="flex flex-col items-center justify-center h-full gap-2">
                   <Monitor size={20} strokeWidth={1.2} className="text-muted-foreground/30" />
-                  <p className="text-[10px] text-muted-foreground/50">{"暂无预览"}</p>
+                  <p className="text-xs text-muted-foreground/50">{"暂无预览"}</p>
                 </div>
               )}
             </motion.div>
@@ -324,7 +307,7 @@ export function ArtifactViewer({ fileContent, fileName, previewUrl, hasArtifact,
                 ) : (
                   <div className="flex flex-col items-center justify-center h-full gap-2">
                     <Code2 size={20} strokeWidth={1.2} className="text-muted-foreground/30" />
-                    <p className="text-[10px] text-muted-foreground/50">{"选择文件以查看代码"}</p>
+                    <p className="text-xs text-muted-foreground/50">{"选择文件以查看代码"}</p>
                   </div>
                 )}
               </div>

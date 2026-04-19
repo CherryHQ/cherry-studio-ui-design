@@ -3,6 +3,7 @@
 import * as React from "react"
 import { FileText, Image, X } from "lucide-react"
 import { cn } from "../../lib/utils"
+import { Button } from "./button"
 
 export interface AttachmentItem {
   id: string
@@ -28,48 +29,47 @@ function isImage(type?: string): boolean {
   return !!type && type.startsWith("image/")
 }
 
-const AttachmentList = React.forwardRef<HTMLDivElement, AttachmentListProps>(
-  ({ items, onRemove, className }, ref) => {
-    if (items.length === 0) return null
+function AttachmentList({ items, onRemove, className, ref }: AttachmentListProps & { ref?: React.Ref<HTMLDivElement> }) {
+  if (items.length === 0) return null
 
-    return (
-      <div ref={ref} className={cn("flex flex-wrap gap-2", className)}>
-        {items.map((item) => (
-          <div
-            key={item.id}
-            className="flex items-center gap-2 rounded-lg border border-input bg-muted/30 px-2.5 py-1.5 text-xs group"
-          >
-            {isImage(item.type) ? (
-              <Image className="size-3.5 text-primary/70 shrink-0" />
-            ) : (
-              <FileText className="size-3.5 text-muted-foreground/70 shrink-0" />
-            )}
-            <span className="truncate max-w-40">{item.name}</span>
-            {item.size != null && (
-              <span className="text-xs text-muted-foreground/50 shrink-0">
-                {formatSize(item.size)}
-              </span>
-            )}
-            {item.progress != null && item.progress < 100 && (
-              <span className="text-xs text-muted-foreground/50 tabular-nums shrink-0">
-                {item.progress}%
-              </span>
-            )}
-            {onRemove && (
-              <button
-                onClick={() => onRemove(item.id)}
-                aria-label={`Remove ${item.name}`}
-                className="p-0.5 rounded-sm text-muted-foreground/40 hover:text-foreground transition-colors shrink-0 opacity-0 group-hover:opacity-100 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
-              >
-                <X className="size-3" />
-              </button>
-            )}
-          </div>
-        ))}
-      </div>
-    )
-  }
-)
-AttachmentList.displayName = "AttachmentList"
+  return (
+    <div ref={ref} data-slot="attachment-list" className={cn("flex flex-wrap gap-2 tracking-[-0.14px]", className)}>
+      {items.map((item) => (
+        <div
+          key={item.id}
+          className="flex items-center gap-2 rounded-[var(--radius-button)] border border-input bg-muted/30 px-2.5 py-1.5 text-xs group"
+        >
+          {isImage(item.type) ? (
+            <Image className="size-3.5 text-accent-blue/70 shrink-0" />
+          ) : (
+            <FileText className="size-3.5 text-muted-foreground/70 shrink-0" />
+          )}
+          <span className="truncate max-w-40">{item.name}</span>
+          {item.size != null && (
+            <span className="text-xs text-muted-foreground/50 shrink-0">
+              {formatSize(item.size)}
+            </span>
+          )}
+          {item.progress != null && item.progress < 100 && (
+            <span className="text-xs text-muted-foreground/50 tabular-nums shrink-0">
+              {item.progress}%
+            </span>
+          )}
+          {onRemove && (
+            <Button
+              variant="ghost"
+              size="icon-xs"
+              onClick={() => onRemove(item.id)}
+              aria-label={`Remove ${item.name}`}
+              className="text-muted-foreground/60 hover:text-foreground shrink-0 opacity-0 group-hover:opacity-100 focus-visible:opacity-100"
+            >
+              <X className="size-3" />
+            </Button>
+          )}
+        </div>
+      ))}
+    </div>
+  )
+}
 
 export { AttachmentList }

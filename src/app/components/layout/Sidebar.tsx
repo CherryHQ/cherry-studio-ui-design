@@ -1,6 +1,6 @@
 import React, { useRef, useCallback } from 'react';
 import {
-  Search, X, ChevronRight, Settings2,
+  Search, X, ChevronRight, Settings, Sun, Moon,
 } from 'lucide-react';
 import cherryLogoImg from "figma:asset/323a8e579278901c878705f686c0f633dc0f4c7d.png";
 import { Tooltip } from '@/app/components/Tooltip';
@@ -141,23 +141,74 @@ function FullDockedTabs({
   );
 }
 
-/** Full-layout bottom section */
-function FullBottomSection({ onSettingsClick }: { onSettingsClick?: () => void }) {
+/** Full-layout bottom section — horizontal avatar + icons */
+function FullBottomSection({ onSettingsClick, isDark, onToggleTheme }: {
+  onSettingsClick?: () => void;
+  isDark?: boolean;
+  onToggleTheme?: () => void;
+}) {
+  const [userMenuOpen, setUserMenuOpen] = React.useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const avatarRef = useRef<HTMLButtonElement>(null);
+
+  React.useEffect(() => {
+    if (!userMenuOpen) return;
+    const handler = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node) &&
+          avatarRef.current && !avatarRef.current.contains(e.target as Node)) {
+        setUserMenuOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [userMenuOpen]);
+
   return (
-    <div className="px-2 py-2 space-y-1">
-      <button onClick={onSettingsClick} className="w-full flex items-center gap-2.5 px-2.5 py-[7px] rounded-lg text-[13px] text-muted-foreground hover:text-foreground hover:bg-accent/60 transition-colors">
-        <Settings2 size={16} strokeWidth={1.6} />
-        <span>设置</span>
-      </button>
-      <div className="flex items-center gap-2.5 px-2.5 py-1.5 cursor-pointer rounded-lg hover:bg-accent/60 transition-colors">
-        <div className="w-7 h-7 rounded-full overflow-hidden ring-1 ring-border flex-shrink-0">
+    <div className="relative px-2.5 py-2.5">
+      {/* User menu popover */}
+      {userMenuOpen && (
+        <div
+          ref={menuRef}
+          className="absolute bottom-full left-2 right-2 mb-1.5 bg-popover border border-border rounded-xl shadow-lg p-1.5 z-50 animate-in fade-in slide-in-from-bottom-2 duration-150"
+        >
+          <div className="flex items-center gap-2.5 px-2.5 py-2 mb-1">
+            <div className="w-8 h-8 rounded-full overflow-hidden ring-1 ring-border flex-shrink-0">
+              <div className="w-full h-full bg-gradient-to-br from-blue-400 to-indigo-500 flex items-center justify-center text-white text-xs">S</div>
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="text-sm text-popover-foreground truncate">Siin</div>
+              <div className="text-xs text-muted-foreground truncate">siin@gmail.com</div>
+            </div>
+          </div>
+          <div className="border-t border-border/30 pt-1 space-y-0.5">
+            <button
+              onClick={() => { onSettingsClick?.(); setUserMenuOpen(false); }}
+              className="w-full flex items-center gap-2.5 px-2.5 py-[7px] rounded-lg text-xs text-popover-foreground hover:bg-accent/60 transition-colors"
+            >
+              <Settings size={14} strokeWidth={1.6} className="text-muted-foreground" />
+              <span>设置</span>
+            </button>
+            <button
+              onClick={() => { onToggleTheme?.(); }}
+              className="w-full flex items-center gap-2.5 px-2.5 py-[7px] rounded-lg text-xs text-popover-foreground hover:bg-accent/60 transition-colors"
+            >
+              {isDark ? <Sun size={14} strokeWidth={1.6} className="text-muted-foreground" /> : <Moon size={14} strokeWidth={1.6} className="text-muted-foreground" />}
+              <span>{isDark ? '浅色模式' : '深色模式'}</span>
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Bottom bar: avatar + name */}
+      <div className="flex items-center gap-2.5">
+        <button
+          ref={avatarRef}
+          onClick={() => setUserMenuOpen(v => !v)}
+          className="w-7 h-7 rounded-full overflow-hidden ring-1 ring-border flex-shrink-0 hover:ring-2 hover:ring-primary/30 transition-all"
+        >
           <div className="w-full h-full bg-gradient-to-br from-blue-400 to-indigo-500 flex items-center justify-center text-white text-[10px]">S</div>
-        </div>
-        <div className="flex-1 min-w-0">
-          <div className="text-[13px] text-sidebar-foreground truncate">Siin</div>
-          <div className="text-[10px] text-muted-foreground truncate">siin@gmail.com</div>
-        </div>
-        <ChevronRight size={14} className="text-muted-foreground flex-shrink-0" />
+        </button>
+        <span className="text-xs text-sidebar-foreground truncate">Siin</span>
       </div>
     </div>
   );
@@ -185,6 +236,8 @@ interface SidebarProps {
   onCloseDockedTab?: (tabId: string) => void;
   isFloating?: boolean;
   onDismiss?: () => void;
+  isDark?: boolean;
+  onToggleTheme?: () => void;
 }
 
 export function Sidebar({
@@ -205,6 +258,8 @@ export function Sidebar({
   onCloseDockedTab,
   isFloating,
   onDismiss,
+  isDark,
+  onToggleTheme,
 }: SidebarProps) {
   const isResizing = useRef(false);
   const sidebarRef = useRef<HTMLDivElement>(null);
@@ -564,7 +619,12 @@ export function Sidebar({
           <div className="flex flex-col items-center gap-1 py-2 px-1.5">
             <Tooltip content="设置">
               <button onClick={onSettingsClick} className="w-9 h-9 rounded-lg flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent/60 transition-colors">
-                <Settings2 size={18} strokeWidth={1.6} />
+                <Settings size={18} strokeWidth={1.6} />
+              </button>
+            </Tooltip>
+            <Tooltip content={isDark ? '浅色模式' : '深色模式'}>
+              <button onClick={onToggleTheme} className="w-9 h-9 rounded-lg flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent/60 transition-colors">
+                {isDark ? <Sun size={18} strokeWidth={1.6} /> : <Moon size={18} strokeWidth={1.6} />}
               </button>
             </Tooltip>
             <div className="w-7 h-7 rounded-full overflow-hidden ring-1 ring-border">
@@ -576,8 +636,12 @@ export function Sidebar({
         {layout === 'vertical-card' && (
           <div className="flex flex-col items-center gap-0 py-1.5 px-1">
             <button onClick={onSettingsClick} className="w-full flex flex-col items-center gap-0.5 py-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-colors">
-              <Settings2 size={18} strokeWidth={1.6} />
+              <Settings size={18} strokeWidth={1.6} />
               <span className="text-[9px] leading-tight">设置</span>
+            </button>
+            <button onClick={onToggleTheme} className="w-full flex flex-col items-center gap-0.5 py-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-colors">
+              {isDark ? <Sun size={18} strokeWidth={1.6} /> : <Moon size={18} strokeWidth={1.6} />}
+              <span className="text-[9px] leading-tight">{isDark ? '浅色' : '深色'}</span>
             </button>
             <div className="w-7 h-7 rounded-full overflow-hidden ring-1 ring-border mt-1">
               <div className="w-full h-full bg-gradient-to-br from-blue-400 to-indigo-500 flex items-center justify-center text-white text-[10px]">S</div>
@@ -585,7 +649,7 @@ export function Sidebar({
           </div>
         )}
 
-        {layout === 'full' && <FullBottomSection onSettingsClick={onSettingsClick} />}
+        {layout === 'full' && <FullBottomSection onSettingsClick={onSettingsClick} isDark={isDark} onToggleTheme={onToggleTheme} />}
       </div>
 
       {/* Resize handle */}

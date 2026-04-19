@@ -100,9 +100,9 @@ export function DataTableDemo() {
 
   const statusBadge = (status: DataRow["status"]) => {
     const styles = {
-      active: "bg-green-500/15 text-green-700 border-green-500/20 dark:text-green-400",
+      active: "bg-success-muted text-success border-success/20",
       inactive: "bg-secondary text-secondary-foreground",
-      error: "bg-red-500/15 text-red-700 border-red-500/20 dark:text-red-400",
+      error: "bg-error-muted text-error border-error/20",
     }
     return <Badge className={`text-[10px] ${styles[status]}`}>{status}</Badge>
   }
@@ -150,14 +150,14 @@ export function DataTableDemo() {
         {selected.size > 0 && (
           <div className="flex items-center gap-2 text-xs">
             <span className="text-muted-foreground">{selected.size} selected</span>
-            <Button variant="outline" size="sm" className="h-7 text-[11px]" onClick={() => setSelected(new Set())}>Clear</Button>
-            <Button variant="destructive" size="sm" className="h-7 text-[11px]"><Trash2 className="h-3 w-3 mr-1" />Delete</Button>
+            <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => setSelected(new Set())}>Clear</Button>
+            <Button variant="destructive" size="sm" className="h-7 text-xs"><Trash2 className="h-3 w-3 mr-1" />Delete</Button>
           </div>
         )}
       </div>
 
       {/* Table */}
-      <div className="rounded-md border">
+      <div className="rounded-[12px] border">
         <Table>
           <TableHeader>
             <TableRow>
@@ -165,21 +165,21 @@ export function DataTableDemo() {
                 <Checkbox checked={allSelected ? true : someSelected ? "indeterminate" : false} onCheckedChange={toggleAll} />
               </TableHead>
               <TableHead>
-                <button className="flex items-center hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50" onClick={() => handleSort("name")}>
+                <Button variant="ghost" className="flex items-center hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50" onClick={() => handleSort("name")}>
                   Model <SortIcon field="name" />
-                </button>
+                </Button>
               </TableHead>
               <TableHead>Provider</TableHead>
               <TableHead>Context</TableHead>
               <TableHead>
-                <button className="flex items-center hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50" onClick={() => handleSort("calls")}>
+                <Button variant="ghost" className="flex items-center hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50" onClick={() => handleSort("calls")}>
                   API Calls <SortIcon field="calls" />
-                </button>
+                </Button>
               </TableHead>
               <TableHead>
-                <button className="flex items-center hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50" onClick={() => handleSort("cost")}>
+                <Button variant="ghost" className="flex items-center hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50" onClick={() => handleSort("cost")}>
                   Cost <SortIcon field="cost" />
-                </button>
+                </Button>
               </TableHead>
               <TableHead>Status</TableHead>
               <TableHead className="w-10" />

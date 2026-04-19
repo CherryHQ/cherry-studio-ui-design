@@ -6,6 +6,7 @@ import {
   Circle, ListFilter, Share2,
   Loader2,
 } from 'lucide-react';
+import { Button } from '@cherry-studio/ui';
 import { motion, AnimatePresence } from 'motion/react';
 import { shakeAnimation } from '@/app/config/animations';
 import type { WorkflowStep } from '@/app/types/chat';
@@ -68,8 +69,8 @@ export function StatusDot({ status, size = 10 }: { status: 'done' | 'running' | 
   }
   if (status === 'error') {
     return (
-      <div className="w-4 h-4 rounded-[4px] bg-red-500/15 flex items-center justify-center flex-shrink-0">
-        <X size={size} className="text-red-500" />
+      <div className="w-4 h-4 rounded-[4px] bg-destructive/15 flex items-center justify-center flex-shrink-0">
+        <X size={size} className="text-destructive" />
       </div>
     );
   }
@@ -88,7 +89,7 @@ function TaskItem({ step }: { step: WorkflowStep }) {
   return (
     <div className="flex items-center gap-2 py-[5px] px-1">
       <StatusDot status={step.status} />
-      <span className={`text-[11px] flex-1 truncate ${
+      <span className={`text-xs flex-1 truncate ${
         step.status === 'done'
           ? 'text-foreground/80'
           : step.status === 'running'
@@ -113,7 +114,7 @@ function ProcessDetail({ step }: { step: WorkflowStep }) {
     <div className="ml-6 mb-1">
       {step.description && (
         <div className="bg-muted/60 rounded-md px-3 py-2 mb-1">
-          <p className="text-[10px] text-foreground/60 leading-[1.6]">{step.description}</p>
+          <p className="text-xs text-foreground/60 leading-[1.6]">{step.description}</p>
         </div>
       )}
       {step.details && step.details.length > 0 && (
@@ -121,7 +122,7 @@ function ProcessDetail({ step }: { step: WorkflowStep }) {
           {step.detailLabel && (
             <div className="flex items-center justify-between px-3 py-1.5 border-b border-border/40">
               <div className="flex items-center gap-1.5">
-                <span className="text-[10px] text-muted-foreground">{step.detailLabel}</span>
+                <span className="text-xs text-muted-foreground">{step.detailLabel}</span>
                 <span className="text-[9px] text-muted-foreground/60">{step.details.length}</span>
               </div>
               <Share2 size={9} className="text-muted-foreground/50" />
@@ -131,11 +132,11 @@ function ProcessDetail({ step }: { step: WorkflowStep }) {
             {step.details.map((item, i) => (
               <div key={i} className="flex items-center gap-2 px-3 py-[4px] hover:bg-muted/80 transition-colors">
                 {item.icon && (
-                  <span className="text-[10px] w-4 h-4 flex items-center justify-center flex-shrink-0 rounded bg-muted">
+                  <span className="text-xs w-4 h-4 flex items-center justify-center flex-shrink-0 rounded bg-muted">
                     {item.icon}
                   </span>
                 )}
-                <span className="text-[10.5px] text-foreground/70 flex-1 truncate">{item.label}</span>
+                <span className="text-xs text-foreground/70 flex-1 truncate">{item.label}</span>
                 {item.meta && (
                   <span className="text-[9px] text-muted-foreground/60 flex-shrink-0">{item.meta}</span>
                 )}
@@ -163,9 +164,10 @@ export function WorkflowPanel({ steps }: { steps: WorkflowStep[] }) {
   return (
     <div className="mx-3 mt-3 mb-1 rounded-xl border border-border/60 shadow-[0_1px_4px_rgba(0,0,0,0.06)] bg-card overflow-hidden flex-shrink-0">
       {/* Collapsible header */}
-      <button
+      <Button
+        variant="ghost"
         onClick={() => setPanelExpanded(!panelExpanded)}
-        className="flex items-center gap-2 w-full px-3.5 py-2.5 hover:bg-muted/50 transition-colors"
+        className="w-full justify-start gap-2 px-3.5 py-2.5 h-auto font-normal hover:bg-muted/50 rounded-none"
       >
         <motion.div
           animate={{ rotate: panelExpanded ? 0 : -90 }}
@@ -174,12 +176,12 @@ export function WorkflowPanel({ steps }: { steps: WorkflowStep[] }) {
         >
           <ChevronDown size={10} className="text-muted-foreground" />
         </motion.div>
-        <span className={`text-[10.5px] text-foreground/85 text-left ${panelExpanded ? 'flex-1' : 'flex-shrink-0'}`}>{"任务"}</span>
+        <span className={`text-xs text-foreground/85 text-left ${panelExpanded ? 'flex-1' : 'flex-shrink-0'}`}>{"任务"}</span>
         {/* Collapsed: show current task inline */}
         {!panelExpanded && currentStep && (
           <span className="flex items-center gap-1.5 flex-1 min-w-0">
             <StatusDot status={currentStep.status} size={8} />
-            <span className={`text-[10px] truncate ${
+            <span className={`text-xs truncate ${
               currentStep.status === 'running' ? 'text-foreground' : 'text-foreground/70'
             }`}>
               {currentStep.label}
@@ -187,7 +189,7 @@ export function WorkflowPanel({ steps }: { steps: WorkflowStep[] }) {
           </span>
         )}
         <span className="text-[9px] text-muted-foreground tabular-nums flex-shrink-0">{doneCount}/{steps.length}</span>
-      </button>
+      </Button>
 
       <AnimatePresence initial={false}>
         {panelExpanded && (
@@ -208,9 +210,10 @@ export function WorkflowPanel({ steps }: { steps: WorkflowStep[] }) {
             {/* Process section (collapsible) */}
             {hasAnyProcess && (
               <div>
-                <button
+                <Button
+                  variant="ghost"
                   onClick={(e) => { e.stopPropagation(); setProcessExpanded(!processExpanded); }}
-                  className="flex items-center gap-2 w-full px-4 py-2 hover:bg-muted/50 transition-colors border-t border-border/40"
+                  className="w-full justify-start gap-2 px-4 py-2 h-auto font-normal hover:bg-muted/50 rounded-none border-t border-border/40"
                 >
                   <motion.div
                     animate={{ rotate: processExpanded ? 0 : -90 }}
@@ -219,8 +222,8 @@ export function WorkflowPanel({ steps }: { steps: WorkflowStep[] }) {
                   >
                     <ChevronDown size={9} className="text-muted-foreground/60" />
                   </motion.div>
-                  <span className="text-[10px] text-muted-foreground flex-1 text-left">{"执行过程详情"}</span>
-                </button>
+                  <span className="text-xs text-muted-foreground flex-1 text-left">{"执行过程详情"}</span>
+                </Button>
                 <AnimatePresence initial={false}>
                   {processExpanded && (
                     <motion.div
@@ -235,7 +238,7 @@ export function WorkflowPanel({ steps }: { steps: WorkflowStep[] }) {
                           <div key={step.id} className="mb-1.5">
                             <div className="flex items-center gap-1.5 mb-1 px-1">
                               <StepIcon type={step.icon} status={step.status} size={10} />
-                              <span className="text-[10px] text-muted-foreground">{step.label}</span>
+                              <span className="text-xs text-muted-foreground">{step.label}</span>
                             </div>
                             <ProcessDetail step={step} />
                           </div>
@@ -250,15 +253,15 @@ export function WorkflowPanel({ steps }: { steps: WorkflowStep[] }) {
             {/* Bottom bar */}
             <div className="flex items-center gap-2 px-3.5 py-2 border-t border-border/40">
               <ListFilter size={11} className="text-muted-foreground/60 flex-shrink-0" />
-              <span className="text-[10px] text-muted-foreground flex-1">
+              <span className="text-xs text-muted-foreground flex-1">
                 {doneCount}/{steps.length} {"任务已完成"}
               </span>
-              <button className="p-0.5 text-cherry-primary-dark hover:text-cherry-text transition-colors">
+              <Button variant="ghost" size="icon-xs" className="p-0.5 text-cherry-primary-dark hover:text-cherry-text">
                 <X size={10} />
-              </button>
-              <button className="p-0.5 text-cherry-primary-dark hover:text-cherry-text transition-colors">
+              </Button>
+              <Button variant="ghost" size="icon-xs" className="p-0.5 text-cherry-primary-dark hover:text-cherry-text">
                 <Check size={11} />
-              </button>
+              </Button>
             </div>
           </motion.div>
         )}

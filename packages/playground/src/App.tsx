@@ -31,9 +31,13 @@ export function App() {
 
   // Toggle dark mode — single source of truth on <html>
   const toggleDark = useCallback(() => {
+    // Disable all CSS transitions during theme switch to prevent flash
+    const css = document.createElement("style")
+    css.textContent = "*, *::before, *::after { transition: none !important; }"
+    document.head.appendChild(css)
+
     setDark((prev) => {
       const next = !prev
-      // Synchronously update DOM class before React re-render
       if (next) {
         document.documentElement.classList.add("dark")
       } else {
@@ -41,10 +45,17 @@ export function App() {
       }
       return next
     })
+
+    // Re-enable transitions after a frame
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        document.head.removeChild(css)
+      })
+    })
   }, [])
 
   return (
-    <div className="flex h-screen bg-background text-foreground overflow-hidden">
+    <div className="flex h-screen bg-background text-foreground">
       {/* Left: Sidebar */}
       <Sidebar
         demos={demos}
@@ -56,7 +67,7 @@ export function App() {
 
       {/* Center: Preview */}
       <main className="flex-1 overflow-y-auto min-w-0">
-        <div className="max-w-3xl mx-auto px-6 py-8">
+        <div className="max-w-6xl mx-auto px-6 py-8">
           <div className="mb-6">
             <h1 className="text-xl font-semibold mb-1">{activeDemo?.title}</h1>
             <p className="text-sm text-muted-foreground">{activeDemo?.description}</p>

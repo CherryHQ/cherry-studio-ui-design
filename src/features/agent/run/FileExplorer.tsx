@@ -4,6 +4,7 @@ import {
   FileJson, FileCode, FileText, Image as ImageIcon, Settings,
   FileSpreadsheet, Presentation, FileType, Download, CheckCircle2, Loader2,
 } from 'lucide-react';
+import { Button } from '@cherry-studio/ui';
 import { motion, AnimatePresence } from 'motion/react';
 import type { FileNode, OutputFile } from '@/app/types/agent';
 
@@ -40,10 +41,10 @@ function getFileIcon(name: string, size = 13) {
 function getOutputIcon(format: string, size = 14) {
   const cls = "flex-shrink-0";
   switch (format) {
-    case 'docx': case 'doc': return <FileType size={size} className={`text-blue-500 ${cls}`} />;
+    case 'docx': case 'doc': return <FileType size={size} className={`text-info ${cls}`} />;
     case 'pptx': case 'ppt': return <Presentation size={size} className={`text-orange-500 ${cls}`} />;
     case 'xlsx': case 'xls': case 'csv': return <FileSpreadsheet size={size} className={`text-cyan-500 ${cls}`} />;
-    case 'pdf': return <FileText size={size} className={`text-red-500 ${cls}`} />;
+    case 'pdf': return <FileText size={size} className={`text-destructive ${cls}`} />;
     case 'md': return <FileText size={size} className={`text-muted-foreground ${cls}`} />;
     default: return <File size={size} className={`text-muted-foreground ${cls}`} />;
   }
@@ -69,10 +70,12 @@ function TreeNode({ node, depth, path, selectedFile, onSelectFile, defaultOpen }
   if (node.type === 'folder') {
     return (
       <div>
-        <button
+        <Button
+          variant="ghost"
           onClick={() => setOpen(!open)}
-          className={`flex items-center gap-[5px] w-full py-[3px] rounded text-[10.5px] transition-all duration-75
-            ${isSelected ? 'bg-accent/35 text-foreground' : 'text-foreground/75 hover:bg-accent/20 hover:text-foreground'}`}
+          className={`w-full justify-start gap-[5px] py-[3px] h-auto font-normal rounded text-xs ${
+            isSelected ? 'bg-accent/35 text-foreground' : 'text-foreground/75 hover:bg-accent/20 hover:text-foreground'
+          }`}
           style={{ paddingLeft: indent, paddingRight: 8 }}
         >
           <span className="flex-shrink-0 w-3 flex items-center justify-center">
@@ -84,7 +87,7 @@ function TreeNode({ node, depth, path, selectedFile, onSelectFile, defaultOpen }
             ? <FolderOpen size={13} className="text-muted-foreground flex-shrink-0" />
             : <Folder size={13} className="text-muted-foreground flex-shrink-0" />}
           <span className="truncate flex-1 text-left">{node.name}</span>
-        </button>
+        </Button>
         <AnimatePresence initial={false}>
           {open && node.children && (
             <motion.div
@@ -106,17 +109,19 @@ function TreeNode({ node, depth, path, selectedFile, onSelectFile, defaultOpen }
   }
 
   return (
-    <button
+    <Button
+      variant="ghost"
       onClick={() => onSelectFile(fullPath)}
-      className={`flex items-center gap-[5px] w-full py-[3px] rounded text-[10.5px] transition-all duration-75
-        ${isSelected
+      className={`w-full justify-start gap-[5px] py-[3px] h-auto font-normal rounded text-xs ${
+        isSelected
           ? 'bg-cherry-active-bg text-cherry-text'
-          : 'text-foreground/75 hover:bg-accent/20 hover:text-foreground'}`}
+          : 'text-foreground/75 hover:bg-accent/20 hover:text-foreground'
+      }`}
       style={{ paddingLeft: indent + 16, paddingRight: 8 }}
     >
       {getFileIcon(node.name)}
       <span className="truncate flex-1 text-left">{node.name}</span>
-    </button>
+    </Button>
   );
 }
 
@@ -144,7 +149,7 @@ function OutputFileItem({ file, isSelected, onSelect }: {
     >
       {getOutputIcon(file.format)}
       <div className="flex-1 min-w-0 text-left">
-        <div className={`text-[10.5px] truncate ${isSelected ? 'text-cherry-text' : 'text-foreground/75'}`}>
+        <div className={`text-xs truncate ${isSelected ? 'text-cherry-text' : 'text-foreground/75'}`}>
           {file.name}
         </div>
         <div className="flex items-center gap-2 mt-[1px]">
@@ -154,7 +159,7 @@ function OutputFileItem({ file, isSelected, onSelect }: {
       </div>
       <div className="flex items-center gap-1.5 flex-shrink-0">
         {isGenerating ? (
-          <span className="flex items-center gap-1 text-[9px] text-amber-500">
+          <span className="flex items-center gap-1 text-[9px] text-warning">
             <Loader2 size={10} className="animate-spin" />
             <span>{"生成中"}</span>
           </span>
@@ -165,12 +170,14 @@ function OutputFileItem({ file, isSelected, onSelect }: {
           </span>
         )}
         {!isGenerating && (
-          <button
+          <Button
+            variant="ghost"
+            size="icon-xs"
             onClick={e => { e.stopPropagation(); }}
-            className="p-0.5 rounded opacity-0 group-hover:opacity-100 text-muted-foreground/40 hover:text-foreground transition-all"
+            className="p-0.5 opacity-0 group-hover:opacity-100 text-muted-foreground/40 hover:text-foreground"
           >
             <Download size={10} />
-          </button>
+          </Button>
         )}
       </div>
     </div>
@@ -187,34 +194,30 @@ export function FileExplorer({ files, outputFiles = [], selectedFile, onSelectFi
   return (
     <div className="flex flex-col h-full select-none">
       {/* Tab bar */}
-      <div className="px-2.5 pt-2 pb-1 flex-shrink-0">
-        <div className="inline-flex items-center bg-accent/20 rounded-lg p-[3px]">
-          <button
-            onClick={() => setTab('output')}
-            className={`px-2.5 py-[4px] text-[10px] rounded-md transition-all duration-150 flex items-center gap-1.5 ${
-              tab === 'output'
-                ? 'bg-background text-foreground shadow-sm shadow-black/5'
-                : 'text-muted-foreground/60 hover:text-muted-foreground'
-            }`}
-          >
-            {"结果"}
-            {outputFiles.length > 0 && (
-              <span className={`text-[8.5px] min-w-[14px] h-[14px] px-1 rounded-full flex items-center justify-center ${
-                tab === 'output' ? 'bg-cherry-active-bg text-cherry-primary-dark' : 'bg-accent/40 text-muted-foreground/60'
-              }`}>{outputFiles.length}</span>
-            )}
-          </button>
-          <button
-            onClick={() => setTab('all')}
-            className={`px-2.5 py-[4px] text-[10px] rounded-md transition-all duration-150 ${
-              tab === 'all'
-                ? 'bg-background text-foreground shadow-sm shadow-black/5'
-                : 'text-muted-foreground/60 hover:text-muted-foreground'
-            }`}
-          >
-            {"全部文件"}
-          </button>
-        </div>
+      <div className="px-3 pt-2.5 pb-1 flex-shrink-0 flex items-center gap-3 border-b border-border/10">
+        <button
+          onClick={() => setTab('output')}
+          className={`text-xs pb-1.5 border-b-[1.5px] transition-colors ${
+            tab === 'output'
+              ? 'text-foreground border-foreground/60'
+              : 'text-muted-foreground/50 border-transparent hover:text-foreground/70'
+          }`}
+        >
+          {"结果"}
+          {outputFiles.length > 0 && (
+            <span className="text-[9px] text-muted-foreground/50 ml-1">{outputFiles.length}</span>
+          )}
+        </button>
+        <button
+          onClick={() => setTab('all')}
+          className={`text-xs pb-1.5 border-b-[1.5px] transition-colors ${
+            tab === 'all'
+              ? 'text-foreground border-foreground/60'
+              : 'text-muted-foreground/50 border-transparent hover:text-foreground/70'
+          }`}
+        >
+          {"全部文件"}
+        </button>
       </div>
 
       {/* Content */}
@@ -231,7 +234,7 @@ export function FileExplorer({ files, outputFiles = [], selectedFile, onSelectFi
             {outputFiles.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-8 text-center">
                 <File size={16} className="text-muted-foreground/25 mb-2" />
-                <span className="text-[10px] text-muted-foreground/40">{"暂无结果文件"}</span>
+                <span className="text-xs text-muted-foreground/40">{"暂无结果文件"}</span>
               </div>
             ) : (
               outputFiles.map(f => (

@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Tooltip } from '@/app/components/Tooltip';
 import { Toggle } from './shared';
+import { Button, Input, Popover, PopoverTrigger, PopoverContent } from '@cherry-studio/ui';
 import {
   Zap, Scissors, ShieldAlert, Languages, Search, FileText,
   Sparkles, Plus, Pencil, ChevronRight, Info,
@@ -71,18 +72,19 @@ function SegmentedControl({ value, options, onChange, disabled }: {
   return (
     <div className={`flex bg-foreground/[0.04] rounded-lg p-[2px] border border-foreground/[0.06] ${disabled ? 'opacity-40 pointer-events-none' : ''}`}>
       {options.map(opt => (
-        <button
+        <Button
           key={opt.value}
+          variant="ghost"
+          size="xs"
           onClick={() => onChange(opt.value)}
-          className={`px-3 py-[4px] rounded-md text-[10px] transition-all duration-150 ${
+          className={`px-3 py-[4px] rounded-md text-xs h-auto transition-all duration-150 ${
             value === opt.value
-              ? 'bg-cherry-primary text-white shadow-sm border border-cherry-primary'
-              : 'text-foreground/40 hover:text-foreground/55 border border-transparent'
+              ? 'bg-cherry-primary text-white shadow-sm border border-cherry-primary font-medium'
+              : 'text-foreground/40 hover:text-foreground/55 border border-transparent font-normal'
           }`}
-          style={{ fontWeight: value === opt.value ? 500 : 400 }}
         >
           {opt.label}
-        </button>
+        </Button>
       ))}
     </div>
   );
@@ -95,7 +97,7 @@ function FormRow({ label, desc, children, disabled }: {
     <div className={`flex items-center justify-between gap-4 py-[5px] ${disabled ? 'opacity-40' : ''}`}>
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-1.5">
-          <p className="text-[11px] text-foreground/75" style={{ fontWeight: 400 }}>{label}</p>
+          <p className="text-xs text-foreground/75 font-normal">{label}</p>
           {desc && (
             <Tooltip content={desc} side="top">
               <span className="text-muted-foreground/25 hover:text-muted-foreground/50 transition-colors cursor-help flex-shrink-0">
@@ -111,7 +113,7 @@ function FormRow({ label, desc, children, disabled }: {
 }
 
 function SectionHeader({ title }: { title: string }) {
-  return <h4 className="text-[12px] text-foreground/70 mb-2" style={{ fontWeight: 500 }}>{title}</h4>;
+  return <h4 className="text-sm text-foreground/70 mb-2 font-medium">{title}</h4>;
 }
 
 function SectionCard({ children, className }: { children: React.ReactNode; className?: string }) {
@@ -127,55 +129,39 @@ function SectionCard({ children, className }: { children: React.ReactNode; class
 // ===========================
 function IconPicker({ value, onChange }: { value: string; onChange: (v: string) => void }) {
   const [show, setShow] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
   const CurrentIcon = getActionIcon(value);
 
-  useEffect(() => {
-    if (!show) return;
-    const h = (e: MouseEvent) => {
-      if (ref.current?.contains(e.target as Node)) return;
-      setShow(false);
-    };
-    setTimeout(() => document.addEventListener('mousedown', h), 0);
-    return () => document.removeEventListener('mousedown', h);
-  }, [show]);
-
   return (
-    <div className="relative" ref={ref}>
-      <button
-        onClick={() => setShow(!show)}
-        className="w-9 h-9 rounded-xl bg-foreground/[0.06] hover:bg-foreground/[0.1] flex items-center justify-center transition-colors flex-shrink-0"
-      >
-        <CurrentIcon size={16} className="text-foreground/50" />
-      </button>
-      <AnimatePresence>
-        {show && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.95 }}
-            transition={{ type: 'spring', damping: 25, stiffness: 400 }}
-            className="absolute top-full left-0 mt-1 bg-popover border border-border/60 rounded-xl shadow-2xl p-2 z-50 grid grid-cols-4 gap-1 w-[140px]"
-          >
-            {ICON_OPTIONS.map(opt => {
-              const Icon = getActionIcon(opt.value);
-              return (
-                <button
-                  key={opt.value}
-                  onClick={() => { onChange(opt.value); setShow(false); }}
-                  className={`w-7 h-7 rounded-lg flex items-center justify-center transition-colors ${
-                    value === opt.value ? 'bg-cherry-active-bg text-cherry-primary' : 'text-foreground/40 hover:bg-foreground/[0.06] hover:text-foreground/60'
-                  }`}
-                  title={opt.label}
-                >
-                  <Icon size={13} />
-                </button>
-              );
-            })}
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
+    <Popover open={show} onOpenChange={setShow}>
+      <PopoverTrigger asChild>
+        <Button
+          variant="outline"
+          size="icon-sm"
+          className="w-9 h-9 rounded-xl bg-foreground/[0.06] hover:bg-foreground/[0.1] border-0 flex-shrink-0"
+        >
+          <CurrentIcon size={16} className="text-foreground/50" />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent align="start" className="grid grid-cols-4 gap-1 w-[140px] p-2">
+        {ICON_OPTIONS.map(opt => {
+          const Icon = getActionIcon(opt.value);
+          return (
+            <Button
+              key={opt.value}
+              variant="ghost"
+              size="icon-xs"
+              onClick={() => { onChange(opt.value); setShow(false); }}
+              className={`w-7 h-7 rounded-lg ${
+                value === opt.value ? 'bg-cherry-active-bg text-cherry-primary' : 'text-foreground/40 hover:bg-foreground/[0.06] hover:text-foreground/60'
+              }`}
+              title={opt.label}
+            >
+              <Icon size={13} />
+            </Button>
+          );
+        })}
+      </PopoverContent>
+    </Popover>
   );
 }
 
@@ -193,9 +179,9 @@ const INITIAL_MENU_ITEMS: MenuItem[] = [
 // Nav config
 // ===========================
 const NAV_ITEMS: { id: SubPage; label: string; icon: React.ReactNode; iconColor: string }[] = [
-  { id: 'trigger', label: '触发与显示', icon: <Zap size={13} />, iconColor: 'text-amber-400' },
+  { id: 'trigger', label: '触发与显示', icon: <Zap size={13} />, iconColor: 'text-warning' },
   { id: 'menu', label: '功能菜单', icon: <Scissors size={13} />, iconColor: 'text-foreground/40' },
-  { id: 'rules', label: '规则与过滤', icon: <ShieldAlert size={13} />, iconColor: 'text-red-400' },
+  { id: 'rules', label: '规则与过滤', icon: <ShieldAlert size={13} />, iconColor: 'text-destructive' },
 ];
 
 // ===========================
@@ -261,29 +247,26 @@ function EditFormPanel({ open, onClose, item, onSave }: {
       <div className="flex items-center justify-between px-5 py-3.5 border-b border-foreground/[0.06] flex-shrink-0">
         <div className="flex items-center gap-2">
           {isAdd ? <Plus size={14} className="text-cherry-primary" /> : <Pencil size={14} className="text-foreground/50" />}
-          <h3 className="text-[13px] text-foreground/90" style={{ fontWeight: 500 }}>
+          <h3 className="text-sm text-foreground/90 font-medium">
             {isAdd ? '添加功能' : '编辑功能'}
           </h3>
         </div>
-        <button
-          onClick={onClose}
-          className="w-6 h-6 rounded-lg flex items-center justify-center text-foreground/35 hover:text-foreground/70 hover:bg-foreground/[0.06] transition-colors"
-        >
+        <Button variant="ghost" size="icon-xs" onClick={onClose} className="text-foreground/35 hover:text-foreground/70">
           <X size={14} />
-        </button>
+        </Button>
       </div>
 
       {/* Form */}
       <div className="flex-1 overflow-y-auto px-5 py-4 space-y-4 [&::-webkit-scrollbar]:w-[3px] [&::-webkit-scrollbar-thumb]:bg-border/20">
         {/* Icon + Name */}
         <div>
-          <p className="text-[10px] text-foreground/40 mb-2" style={{ fontWeight: 500 }}>图标和名称</p>
+          <p className="text-xs text-foreground/40 mb-2 font-medium">图标和名称</p>
           <div className="flex items-center gap-2.5">
             <IconPicker value={icon} onChange={setIcon} />
-            <input
+            <Input
               value={name}
               onChange={e => setName(e.target.value)}
-              className="flex-1 bg-foreground/[0.05] border border-foreground/[0.08] rounded-xl px-3 py-[8px] text-[11px] text-foreground/70 outline-none focus:border-cherry-primary/30 transition-colors"
+              className="flex-1 bg-foreground/[0.05] border border-foreground/[0.08] rounded-xl px-3 py-[8px] text-xs text-foreground/70 focus:border-cherry-primary/30"
               placeholder="功能名称"
               autoFocus
               onKeyDown={e => { if (e.key === 'Enter' && canSave) handleSave(); if (e.key === 'Escape') onClose(); }}
@@ -293,13 +276,13 @@ function EditFormPanel({ open, onClose, item, onSave }: {
 
         {/* Prompt */}
         <div>
-          <p className="text-[10px] text-foreground/40 mb-2" style={{ fontWeight: 500 }}>提示词模板</p>
+          <p className="text-xs text-foreground/40 mb-2 font-medium">提示词模板</p>
           <div
             ref={promptRef}
             contentEditable
             onInput={handlePromptInput}
             data-placeholder={'可选，例如：请将以下文本翻译为中文：{{text}}'}
-            className="w-full bg-foreground/[0.05] border border-foreground/[0.08] rounded-xl px-3 py-[8px] text-[11px] text-foreground/50 outline-none focus:border-cherry-primary/30 transition-colors min-h-[120px] whitespace-pre-wrap break-words empty:before:content-[attr(data-placeholder)] empty:before:text-foreground/15"
+            className="w-full bg-foreground/[0.05] border border-foreground/[0.08] rounded-xl px-3 py-[8px] text-xs text-foreground/50 outline-none focus:border-cherry-primary/30 transition-colors min-h-[120px] whitespace-pre-wrap break-words empty:before:content-[attr(data-placeholder)] empty:before:text-foreground/15"
           />
           <p className="text-[9px] text-foreground/20 mt-1.5">{'使用 {{text}} 代表用户选中的文本'}</p>
         </div>
@@ -307,21 +290,19 @@ function EditFormPanel({ open, onClose, item, onSave }: {
 
       {/* Footer */}
       <div className="flex items-center justify-end gap-2 px-5 py-3.5 border-t border-foreground/[0.06] flex-shrink-0">
-        <button
-          onClick={onClose}
-          className="px-4 py-[5px] rounded-lg text-[11px] text-foreground/40 hover:text-foreground/60 hover:bg-foreground/[0.05] transition-colors"
-        >
+        <Button variant="ghost" size="xs" onClick={onClose} className="text-foreground/40 hover:text-foreground/60">
           取消
-        </button>
-        <button
+        </Button>
+        <Button
+          size="xs"
           onClick={handleSave}
           disabled={!canSave}
-          className={`px-4 py-[5px] rounded-lg text-[11px] text-white transition-colors ${
+          className={`text-white ${
             canSave ? 'bg-cherry-primary hover:bg-cherry-primary-dark' : 'bg-foreground/15 cursor-not-allowed'
           }`}
         >
           {isAdd ? '添加' : '保存'}
-        </button>
+        </Button>
       </div>
     </motion.div>
   );
@@ -343,8 +324,8 @@ function TriggerPanel({ disabled, enabledItems, compact, setCompact }: {
   return (
     <div className={`space-y-3 ${disabled ? 'opacity-50 pointer-events-none' : ''}`}>
       <div className="mb-1">
-        <h3 className="text-[13px] text-foreground/90" style={{ fontWeight: 500 }}>触发与显示</h3>
-        <p className="text-[10px] text-foreground/35 mt-1">配置划词工具栏的唤起方式和窗口行为。</p>
+        <h3 className="text-sm text-foreground/90 font-medium">触发与显示</h3>
+        <p className="text-xs text-foreground/35 mt-1">配置划词工具栏的唤起方式和窗口行为。</p>
       </div>
 
       {/* Toolbar preview */}
@@ -376,7 +357,7 @@ function TriggerPanel({ disabled, enabledItems, compact, setCompact }: {
                     }`}
                   >
                     <Icon size={11} className={`flex-shrink-0 ${i === 0 ? 'text-foreground/50' : 'text-foreground/25'}`} />
-                    <span className={`text-[10px] ${i === 0 ? 'text-foreground/65' : 'text-foreground/35'}`} style={{ fontWeight: i === 0 ? 500 : 400 }}>
+                    <span className={`text-xs ${i === 0 ? 'text-foreground/65 font-medium' : 'text-foreground/35 font-normal'}`}>
                       {item.name}
                     </span>
                   </div>
@@ -385,7 +366,7 @@ function TriggerPanel({ disabled, enabledItems, compact, setCompact }: {
             </div>
           ) : (
             <div className="py-2 text-center">
-              <p className="text-[10px] text-foreground/20">暂无启用的功能</p>
+              <p className="text-xs text-foreground/20">暂无启用的功能</p>
             </div>
           )}
         </div>
@@ -477,24 +458,20 @@ function MenuPanel({ disabled, showFormPanel, setShowFormPanel, editingItem, set
   return (
     <div className={`space-y-3 ${disabled ? 'opacity-50 pointer-events-none' : ''}`}>
       <div className="mb-1">
-        <h3 className="text-[13px] text-foreground/90" style={{ fontWeight: 500 }}>功能菜单</h3>
-        <p className="text-[10px] text-foreground/35 mt-1">管理划词工具栏上的功能按钮，点击编辑或添加自定义功能。</p>
+        <h3 className="text-sm text-foreground/90 font-medium">功能菜单</h3>
+        <p className="text-xs text-foreground/35 mt-1">管理划词工具栏上的功能按钮，点击编辑或添加自定义功能。</p>
       </div>
 
       {/* Function list */}
       <SectionCard className="!px-3 !py-2">
         <div className="flex items-center justify-between px-2 py-2">
           <div className="flex items-center gap-1.5">
-            <h4 className="text-[12px] text-foreground/70" style={{ fontWeight: 500 }}>功能列表</h4>
+            <h4 className="text-sm text-foreground/70 font-medium">功能列表</h4>
             <span className="text-[9px] text-foreground/25 bg-foreground/[0.04] px-1.5 py-[1px] rounded-md">{items.length}</span>
           </div>
-          <button
-            onClick={openAdd}
-            className="w-6 h-6 rounded-lg flex items-center justify-center text-cherry-primary hover:bg-cherry-active-bg transition-colors"
-            title="添加功能"
-          >
+          <Button variant="ghost" size="icon-xs" onClick={openAdd} className="text-cherry-primary hover:bg-cherry-active-bg" title="添加功能">
             <Plus size={13} />
-          </button>
+          </Button>
         </div>
 
         <div className="pb-1">
@@ -509,43 +486,27 @@ function MenuPanel({ disabled, showFormPanel, setShowFormPanel, editingItem, set
                 }`}
               >
                 <Icon size={13} className="text-foreground/40 flex-shrink-0" />
-                <span className="text-[11px] text-foreground/65 flex-1 truncate">{item.name}</span>
+                <span className="text-xs text-foreground/65 flex-1 truncate">{item.name}</span>
 
                 {/* Hover actions */}
                 <div className="flex items-center gap-0.5 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
                   {isDeleting ? (
                     <div className="flex items-center gap-0.5">
-                      <button
-                        onClick={() => handleDelete(item.id)}
-                        className="w-5 h-5 rounded-md flex items-center justify-center text-red-400 hover:bg-red-500/10 transition-colors"
-                        title="确认删除"
-                      >
+                      <Button variant="ghost" size="icon-xs" onClick={() => handleDelete(item.id)} className="w-5 h-5 text-destructive hover:bg-destructive/10" title="确认删除">
                         <Check size={10} />
-                      </button>
-                      <button
-                        onClick={() => setConfirmDeleteId(null)}
-                        className="w-5 h-5 rounded-md flex items-center justify-center text-foreground/25 hover:text-foreground/50 hover:bg-foreground/[0.06] transition-colors"
-                        title="取消"
-                      >
+                      </Button>
+                      <Button variant="ghost" size="icon-xs" onClick={() => setConfirmDeleteId(null)} className="w-5 h-5 text-foreground/25 hover:text-foreground/50" title="取消">
                         <X size={9} />
-                      </button>
+                      </Button>
                     </div>
                   ) : (
                     <div className="flex items-center gap-0.5">
-                      <button
-                        onClick={() => openEdit(item)}
-                        className="w-5 h-5 rounded-md flex items-center justify-center text-foreground/20 hover:text-foreground/50 hover:bg-foreground/[0.06] transition-colors"
-                        title="编辑"
-                      >
+                      <Button variant="ghost" size="icon-xs" onClick={() => openEdit(item)} className="w-5 h-5 text-foreground/20 hover:text-foreground/50" title="编辑">
                         <Pencil size={10} />
-                      </button>
-                      <button
-                        onClick={() => setConfirmDeleteId(item.id)}
-                        className="w-5 h-5 rounded-md flex items-center justify-center text-foreground/20 hover:text-red-400 hover:bg-red-500/[0.06] transition-colors"
-                        title="删除"
-                      >
+                      </Button>
+                      <Button variant="ghost" size="icon-xs" onClick={() => setConfirmDeleteId(item.id)} className="w-5 h-5 text-foreground/20 hover:text-destructive hover:bg-destructive/[0.06]" title="删除">
                         <Trash2 size={10} />
-                      </button>
+                      </Button>
                     </div>
                   )}
                 </div>
@@ -558,14 +519,11 @@ function MenuPanel({ disabled, showFormPanel, setShowFormPanel, editingItem, set
           {items.length === 0 && (
             <div className="py-6 text-center">
               <Layers size={18} className="text-foreground/10 mx-auto mb-1.5" />
-              <p className="text-[10px] text-foreground/25">暂无功能</p>
-              <button
-                onClick={openAdd}
-                className="mt-2 flex items-center gap-1 px-3 py-[4px] rounded-lg text-[10px] text-cherry-primary hover:bg-cherry-active-bg transition-colors mx-auto"
-              >
+              <p className="text-xs text-foreground/25">暂无功能</p>
+              <Button variant="ghost" size="xs" onClick={openAdd} className="mt-2 text-xs text-cherry-primary hover:bg-cherry-active-bg mx-auto">
                 <Plus size={11} />
                 <span>添加第一个功能</span>
-              </button>
+              </Button>
             </div>
           )}
         </div>
@@ -607,8 +565,8 @@ function RulesPanel({ disabled }: { disabled: boolean }) {
   return (
     <div className={`space-y-3 ${disabled ? 'opacity-50 pointer-events-none' : ''}`}>
       <div className="mb-1">
-        <h3 className="text-[13px] text-foreground/90" style={{ fontWeight: 500 }}>规则与过滤</h3>
-        <p className="text-[10px] text-foreground/35 mt-1">控制划词助手在哪些应用中生效，以及文本过滤条件。</p>
+        <h3 className="text-sm text-foreground/90 font-medium">规则与过滤</h3>
+        <p className="text-xs text-foreground/35 mt-1">控制划词助手在哪些应用中生效，以及文本过滤条件。</p>
       </div>
 
       <SectionCard>
@@ -631,21 +589,18 @@ function RulesPanel({ disabled }: { disabled: boolean }) {
           <div className="px-1 pb-3">
             <div className="flex items-center gap-2 mb-2 mt-1">
               <div className="flex-1 flex items-center px-3 py-[6px] bg-foreground/[0.03] rounded-lg border border-dashed border-foreground/[0.1]">
-                <input
+                <Input
                   value={inputVal}
                   onChange={e => setInputVal(e.target.value)}
                   onKeyDown={e => e.key === 'Enter' && handleAdd()}
                   placeholder={`添加应用到${listLabel}...`}
-                  className="flex-1 bg-transparent text-[10px] text-foreground/60 outline-none placeholder:text-foreground/20 min-w-0"
+                  className="flex-1 bg-transparent text-xs text-foreground/60 placeholder:text-foreground/20 min-w-0 border-0 h-auto p-0 focus-visible:ring-0"
                 />
               </div>
               {inputVal.trim() && (
-                <button
-                  onClick={handleAdd}
-                  className="px-2.5 py-[5px] rounded-lg bg-cherry-primary text-white text-[10px] hover:bg-cherry-primary-dark transition-colors flex-shrink-0"
-                >
+                <Button size="xs" onClick={handleAdd} className="bg-cherry-primary text-white hover:bg-cherry-primary-dark flex-shrink-0">
                   添加
-                </button>
+                </Button>
               )}
             </div>
 
@@ -653,19 +608,16 @@ function RulesPanel({ disabled }: { disabled: boolean }) {
               <div className="space-y-1">
                 {blacklist.map(app => (
                   <div key={app} className="flex items-center justify-between px-3 py-[6px] bg-foreground/[0.02] rounded-lg border border-foreground/[0.04]">
-                    <span className="text-[10px] text-foreground/55">{app}</span>
-                    <button
-                      onClick={() => handleRemove(app)}
-                      className="p-0.5 rounded text-foreground/15 hover:text-red-500/60 transition-colors"
-                    >
+                    <span className="text-xs text-foreground/55">{app}</span>
+                    <Button variant="ghost" size="icon-xs" onClick={() => handleRemove(app)} className="w-5 h-5 text-foreground/15 hover:text-destructive/60">
                       <X size={9} />
-                    </button>
+                    </Button>
                   </div>
                 ))}
               </div>
             ) : (
               <div className="py-4 text-center border border-dashed border-foreground/[0.06] rounded-lg">
-                <p className="text-[10px] text-foreground/20">{listLabel}为空</p>
+                <p className="text-xs text-foreground/20">{listLabel}为空</p>
                 <p className="text-[9px] text-foreground/12 mt-0.5">输入应用名称后按 Enter 添加</p>
               </div>
             )}
@@ -678,11 +630,10 @@ function RulesPanel({ disabled }: { disabled: boolean }) {
           <SectionHeader title="文本过滤" />
           <FormRow label="最少选中字符" desc="低于该字数时不触发划词工具栏。">
             <div className="w-[60px]">
-              <input
+              <Input
                 value={minLen}
                 onChange={e => setMinLen(e.target.value)}
-                className="w-full px-2.5 py-[5px] bg-foreground/[0.03] rounded-lg border border-foreground/[0.06] text-[10px] text-foreground/60 outline-none text-center min-w-0"
-                style={{ fontFamily: 'ui-monospace, monospace' }}
+                className="w-full px-2.5 py-[5px] bg-foreground/[0.03] rounded-lg border border-foreground/[0.06] text-xs text-foreground/60 text-center min-w-0 font-mono h-auto"
               />
             </div>
           </FormRow>
@@ -734,7 +685,7 @@ export function SelectionAssistantPage() {
       {/* Left nav */}
       <div className={`w-[160px] flex-shrink-0 flex flex-col border-r border-foreground/[0.05] min-h-0 transition-opacity duration-200 ${showFormPanel ? 'opacity-40 pointer-events-none' : ''}`}>
         <div className="px-3.5 pt-4 pb-2 flex items-center justify-between flex-shrink-0">
-          <p className="text-[11px] text-foreground/40" style={{ fontWeight: 500 }}>划词助手</p>
+          <p className="text-xs text-foreground/40 font-medium">划词助手</p>
           <Toggle checked={masterEnabled} onChange={setMasterEnabled} />
         </div>
 
@@ -743,13 +694,15 @@ export function SelectionAssistantPage() {
             {NAV_ITEMS.map(item => {
               const isSelected = selectedId === item.id;
               return (
-                <button
+                <Button
                   key={item.id}
+                  variant="ghost"
+                  size="sm"
                   onClick={() => {
                     setSelectedId(item.id);
                     setShowFormPanel(false);
                   }}
-                  className={`w-full flex items-center justify-between px-3 py-[8px] rounded-xl transition-all text-left relative ${
+                  className={`w-full flex items-center justify-between px-3 py-[8px] h-auto rounded-xl transition-all text-left relative ${
                     isSelected
                       ? 'bg-cherry-active-bg'
                       : 'border border-transparent hover:bg-foreground/[0.03]'
@@ -760,12 +713,12 @@ export function SelectionAssistantPage() {
                   )}
                   <div className="flex items-center gap-2 min-w-0 flex-1">
                     <span className={`flex-shrink-0 ${isSelected ? 'text-foreground/50' : item.iconColor}`}>{item.icon}</span>
-                    <span className={`text-[10px] truncate ${isSelected ? 'text-foreground/85' : 'text-foreground/55'}`} style={{ fontWeight: isSelected ? 500 : 400 }}>
+                    <span className={`text-xs truncate ${isSelected ? 'text-foreground/85 font-medium' : 'text-foreground/55 font-normal'}`}>
                       {item.label}
                     </span>
                   </div>
                   <ChevronRight size={9} className={`flex-shrink-0 ${isSelected ? 'text-foreground/25' : 'text-foreground/10'}`} />
-                </button>
+                </Button>
               );
             })}
           </div>

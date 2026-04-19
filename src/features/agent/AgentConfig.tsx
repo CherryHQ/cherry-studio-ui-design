@@ -11,7 +11,7 @@ import {
   Download, MessageSquare, Zap, Bug,
   Layers, Sparkles, BookOpen, FolderOpen,
 } from 'lucide-react';
-import { Button, Input } from '@cherry-studio/ui';
+import { Button, Input, Slider } from '@cherry-studio/ui';
 import { motion, AnimatePresence } from 'motion/react';
 import type { ResourceItem, MCPServerStatus } from '@/app/types';
 import { PromptSection } from '@/app/components/assistant/sections/PromptSection';
@@ -36,7 +36,7 @@ const ALL_MODELS = Object.entries(PROVIDER_MODELS).flatMap(([provider, models]) 
 const TAG_PRESETS: { tag: string; color: string }[] = [
   { tag: '编程', color: 'bg-cyan-500/12 text-cyan-700 border-cyan-500/20' },
   { tag: '数据分析', color: 'bg-indigo-500/12 text-indigo-700 border-indigo-500/20' },
-  { tag: '写作', color: 'bg-amber-500/12 text-amber-700 border-amber-500/20' },
+  { tag: '写作', color: 'bg-warning-muted text-warning border-warning/20' },
   { tag: '工具', color: 'bg-orange-500/12 text-orange-700 border-orange-500/20' },
   { tag: '自动化', color: 'bg-foreground/[0.07] text-foreground/80 border-foreground/[0.1]' },
   { tag: '研究', color: 'bg-violet-500/12 text-violet-700 border-violet-500/20' },
@@ -55,18 +55,18 @@ export function AgentConfig({ resource, onBack }: Props) {
   return (
     <div className="flex-1 flex flex-col min-h-0">
       <div className="flex items-center gap-3 px-5 py-3 border-b border-border/15 flex-shrink-0">
-        <button onClick={onBack} className="w-7 h-7 rounded-lg flex items-center justify-center text-muted-foreground/40 hover:text-foreground hover:bg-accent/40 transition-colors"><ArrowLeft size={14} /></button>
-        <div className="flex items-center gap-1 text-[10px] text-muted-foreground/50">
+        <Button variant="ghost" size="icon-xs" onClick={onBack} className="text-muted-foreground/40"><ArrowLeft size={14} /></Button>
+        <div className="flex items-center gap-1 text-xs text-muted-foreground/50">
           <span className="hover:text-foreground cursor-pointer transition-colors" onClick={onBack}>{"资源库"}</span>
           <ChevronRight size={9} /><span className="text-foreground">{resource.name}</span>
           <span className="text-muted-foreground/35 ml-1">{"(智能体)"}</span>
         </div>
         <div className="flex-1" />
         <AnimatePresence>
-          {saved && <motion.span initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0 }} className="text-[10px] text-cherry-primary">{"已保存"}</motion.span>}
+          {saved && <motion.span initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0 }} className="text-xs text-cherry-primary">{"已保存"}</motion.span>}
         </AnimatePresence>
-        <button onClick={onBack} className="px-3 py-1.5 rounded-lg text-[11px] text-muted-foreground/50 hover:text-foreground hover:bg-accent/30 border border-border/20 transition-all">{"取消"}</button>
-        <button onClick={handleSave} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-foreground text-background text-[11px] hover:bg-foreground/90 transition-colors active:scale-[0.97]"><Save size={10} /><span>{"保存"}</span></button>
+        <Button variant="outline" size="sm" onClick={onBack} className="text-muted-foreground/50 hover:text-foreground hover:bg-accent/30 border-border/20">{"取消"}</Button>
+        <Button size="sm" onClick={handleSave} className="active:scale-[0.97]"><Save size={10} /><span>{"保存"}</span></Button>
       </div>
       <div className="flex flex-1 min-h-0">
         <div className="w-[180px] flex-shrink-0 border-r border-border/10 p-3 overflow-y-auto">
@@ -74,14 +74,14 @@ export function AgentConfig({ resource, onBack }: Props) {
             const active = activeSection === s.id;
             const Icon = s.icon;
             return (
-              <button key={s.id} onClick={() => setActiveSection(s.id)}
-                className={`flex items-center gap-2.5 w-full px-3 py-2.5 rounded-lg text-left transition-all mb-0.5 ${active ? 'bg-accent/50 text-foreground' : 'text-muted-foreground/60 hover:text-foreground hover:bg-accent/20'}`}>
+              <Button variant="ghost" key={s.id} onClick={() => setActiveSection(s.id)}
+                className={`w-full justify-start gap-2.5 px-3 py-2.5 h-auto font-normal rounded-lg mb-0.5 ${active ? 'bg-accent/50 text-foreground' : 'text-muted-foreground/60 hover:text-foreground hover:bg-accent/20'}`}>
                 <Icon size={14} strokeWidth={1.5} className={`flex-shrink-0 ${active ? 'text-foreground/60' : 'text-muted-foreground/35'}`} />
-                <div className="flex-1 min-w-0">
-                  <div className="text-[11px]">{s.label}</div>
+                <div className="flex-1 min-w-0 text-left">
+                  <div className="text-xs">{s.label}</div>
                   <div className={`text-[8px] truncate ${active ? 'text-muted-foreground/50' : 'text-muted-foreground/25'}`}>{s.desc}</div>
                 </div>
-              </button>
+              </Button>
             );
           })}
         </div>
@@ -112,21 +112,21 @@ function ModelSelector({ label, value, onChange, hint }: { label: string; value:
   return (
     <div>
       <div className="flex items-center justify-between mb-1.5">
-        <label className="text-[10px] text-muted-foreground/60">{label}</label>
+        <label className="text-xs text-muted-foreground/60">{label}</label>
         <span className="text-[8px] text-muted-foreground/30">{hint}</span>
       </div>
       <div className="relative">
-        <button onClick={() => setOpen(!open)} className="w-full flex items-center justify-between px-3 py-2 rounded-xl border border-border/20 bg-accent/10 text-[11px] text-foreground hover:border-border/40 transition-all">
+        <Button variant="outline" onClick={() => setOpen(!open)} className="w-full justify-between px-3 py-2 h-auto border-border/20 bg-accent/10 text-xs text-foreground hover:border-border/40">
           <span className="truncate">{value}</span><ChevronDown size={10} className="text-muted-foreground/45 flex-shrink-0" />
-        </button>
+        </Button>
         {open && (
           <div>
             <div className="fixed inset-0 z-40" onClick={() => { setOpen(false); setSearch(''); }} />
             <div className="absolute top-full left-0 mt-1 z-50 w-full bg-popover border border-border/30 rounded-xl shadow-xl overflow-hidden">
-              <div className="px-2 pt-2 pb-1"><div className="relative"><Search size={10} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground/30" /><input value={search} onChange={e => setSearch(e.target.value)} placeholder="搜索模型..." className="w-full pl-7 pr-2 py-1.5 rounded-lg border border-border/15 bg-accent/10 text-[10px] text-foreground outline-none focus:border-border/40 transition-all" autoFocus /></div></div>
+              <div className="px-2 pt-2 pb-1"><div className="relative"><Search size={10} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground/30" /><Input value={search} onChange={e => setSearch(e.target.value)} placeholder="搜索模型..." className="w-full pl-7 pr-2 py-1.5 h-auto rounded-lg border-border/15 bg-accent/10 text-xs text-foreground focus-visible:border-border/40 focus-visible:ring-0 shadow-none" autoFocus /></div></div>
               <div className="max-h-[200px] overflow-y-auto p-1 [&::-webkit-scrollbar]:w-[3px] [&::-webkit-scrollbar-thumb]:bg-border/30 [&::-webkit-scrollbar-thumb]:rounded-full">
-                {Object.entries(grouped).map(([provider, models]) => (<div key={provider}><div className="px-2.5 py-1 text-[8px] text-muted-foreground/35 uppercase tracking-wider">{provider}</div>{models.map(m => (<button key={m.label} onClick={() => { onChange(m.label); setOpen(false); setSearch(''); }} className={`w-full text-left px-2.5 py-[5px] rounded-md text-[10px] transition-colors ${value === m.label ? 'bg-accent text-foreground' : 'text-muted-foreground/60 hover:bg-accent/50 hover:text-foreground'}`}>{m.label}</button>))}</div>))}
-                {Object.keys(grouped).length === 0 && <p className="text-[10px] text-muted-foreground/35 text-center py-3">{"无匹配结果"}</p>}
+                {Object.entries(grouped).map(([provider, models]) => (<div key={provider}><div className="px-2.5 py-1 text-[8px] text-muted-foreground/35 uppercase tracking-wider">{provider}</div>{models.map(m => (<Button variant="ghost" size="xs" key={m.label} onClick={() => { onChange(m.label); setOpen(false); setSearch(''); }} className={`w-full justify-start ${value === m.label ? 'bg-accent text-foreground' : 'text-muted-foreground/60 hover:bg-accent/50 hover:text-foreground'}`}>{m.label}</Button>))}</div>))}
+                {Object.keys(grouped).length === 0 && <p className="text-xs text-muted-foreground/35 text-center py-3">{"无匹配结果"}</p>}
               </div>
             </div>
           </div>
@@ -154,17 +154,17 @@ function AgentBasicSection({ resource }: { resource: ResourceItem }) {
   const togglePresetTag = (tag: string) => { if (tags.includes(tag)) removeTag(tag); else setTags(prev => [...prev, tag]); };
   return (
     <div className="max-w-lg space-y-5">
-      <div><h3 className="text-[14px] text-foreground mb-1">{"基础设置"}</h3><p className="text-[10px] text-muted-foreground/55">{"配置智能体的身份信息和模型"}</p></div>
-      <FieldGroup label="头像"><div className="flex items-center gap-2"><div className="w-12 h-12 rounded-xl bg-accent/50 flex items-center justify-center text-xl">{avatar}</div><div className="flex flex-wrap gap-1">{AVATAR_OPTIONS.map(a => (<button key={a} onClick={() => setAvatar(a)} className={`w-7 h-7 rounded-lg flex items-center justify-center text-sm transition-all ${avatar === a ? 'bg-accent ring-1 ring-primary/20' : 'hover:bg-accent/40'}`}>{a}</button>))}</div></div></FieldGroup>
-      <FieldGroup label="名称"><input value={name} onChange={e => setName(e.target.value)} className="w-full px-3 py-2 rounded-xl border border-border/20 bg-accent/10 text-[11px] text-foreground outline-none focus:border-border/40 focus:bg-accent/15 transition-all" /></FieldGroup>
-      <div className="space-y-3"><div className="flex items-center gap-2 mb-1"><span className="text-[10px] text-muted-foreground/60">{"模型配置"}</span><div className="flex-1 h-px bg-border/10" /></div><ModelSelector label="规划模型" value={planningModel} onChange={setPlanningModel} hint="负责任务拆解和决策" /><ModelSelector label="常规模型" value={regularModel} onChange={setRegularModel} hint="负责主要推理和执行" /><ModelSelector label="快速模型" value={fastModel} onChange={setFastModel} hint="负责简单判断和格式化" /></div>
-      <FieldGroup label="简介"><textarea value={description} onChange={e => setDescription(e.target.value)} rows={2} className="w-full px-3 py-2 rounded-xl border border-border/20 bg-accent/10 text-[11px] text-foreground outline-none focus:border-border/40 focus:bg-accent/15 transition-all resize-none" /></FieldGroup>
+      <div><h3 className="text-sm text-foreground mb-1">{"基础设置"}</h3><p className="text-xs text-muted-foreground/55">{"配置智能体的身份信息和模型"}</p></div>
+      <FieldGroup label="头像"><div className="flex items-center gap-2"><div className="w-12 h-12 rounded-xl bg-accent/50 flex items-center justify-center text-xl">{avatar}</div><div className="flex flex-wrap gap-1">{AVATAR_OPTIONS.map(a => (<Button variant="ghost" size="icon-xs" key={a} onClick={() => setAvatar(a)} className={`text-sm ${avatar === a ? 'bg-accent ring-1 ring-primary/20' : ''}`}>{a}</Button>))}</div></div></FieldGroup>
+      <FieldGroup label="名称"><Input value={name} onChange={e => setName(e.target.value)} className="w-full px-3 py-2 h-auto rounded-xl border-border/20 bg-accent/10 text-xs text-foreground focus-visible:border-border/40 focus-visible:ring-0 shadow-none" /></FieldGroup>
+      <div className="space-y-3"><div className="flex items-center gap-2 mb-1"><span className="text-xs text-muted-foreground/60">{"模型配置"}</span><div className="flex-1 h-px bg-border/10" /></div><ModelSelector label="规划模型" value={planningModel} onChange={setPlanningModel} hint="负责任务拆解和决策" /><ModelSelector label="常规模型" value={regularModel} onChange={setRegularModel} hint="负责主要推理和执行" /><ModelSelector label="快速模型" value={fastModel} onChange={setFastModel} hint="负责简单判断和格式化" /></div>
+      <FieldGroup label="简介"><textarea value={description} onChange={e => setDescription(e.target.value)} rows={2} className="w-full px-3 py-2 rounded-xl border border-border/20 bg-accent/10 text-xs text-foreground outline-none focus:border-border/40 focus:bg-accent/15 transition-all resize-none" /></FieldGroup>
       <FieldGroup label="标签">
         <div className="min-h-[36px] px-2.5 py-2 rounded-xl border border-border/20 bg-accent/10 flex flex-wrap items-center gap-1.5">
-          {tags.map(tag => (<span key={tag} className={`inline-flex items-center gap-1 px-1.5 py-[2px] rounded-md border text-[10px] ${getTagColor(tag)}`}>{tag}<button onClick={() => removeTag(tag)} className="ml-0.5 text-current opacity-40 hover:opacity-100 transition-opacity"><X size={7} /></button></span>))}
-          <input ref={tagInputRef} value={tagInput} onChange={e => setTagInput(e.target.value)} onKeyDown={e => { if (e.key === 'Enter' && tagInput.trim()) { e.preventDefault(); addTag(tagInput); } if (e.key === 'Backspace' && !tagInput && tags.length > 0) removeTag(tags[tags.length - 1]); }} placeholder={tags.length === 0 ? '输入标签，回车添加' : ''} className="flex-1 min-w-[80px] bg-transparent text-[10px] text-foreground placeholder:text-muted-foreground/35 outline-none" />
+          {tags.map(tag => (<span key={tag} className={`inline-flex items-center gap-1 px-1.5 py-[2px] rounded-md border text-xs ${getTagColor(tag)}`}>{tag}<Button variant="ghost" size="icon-xs" onClick={() => removeTag(tag)} className="ml-0.5 w-auto h-auto p-0 text-current opacity-40 hover:opacity-100 hover:bg-transparent"><X size={7} /></Button></span>))}
+          <Input ref={tagInputRef} value={tagInput} onChange={e => setTagInput(e.target.value)} onKeyDown={e => { if (e.key === 'Enter' && tagInput.trim()) { e.preventDefault(); addTag(tagInput); } if (e.key === 'Backspace' && !tagInput && tags.length > 0) removeTag(tags[tags.length - 1]); }} placeholder={tags.length === 0 ? '输入标签，回车添加' : ''} className="flex-1 min-w-[80px] h-auto border-0 bg-transparent shadow-none focus-visible:ring-0 focus-visible:border-transparent text-xs text-foreground placeholder:text-muted-foreground/35 py-0 px-0 rounded-none" />
         </div>
-        <div className="flex flex-wrap gap-1 mt-2">{TAG_PRESETS.map(preset => { const selected = tags.includes(preset.tag); return (<button key={preset.tag} onClick={() => togglePresetTag(preset.tag)} className={`inline-flex items-center gap-0.5 px-1.5 py-[2px] rounded-md border text-[9px] transition-all ${preset.color} ${selected ? 'ring-1 ring-foreground/10' : 'opacity-50 hover:opacity-80'}`}>{selected && <Check size={7} className="text-current" />}{preset.tag}</button>); })}</div>
+        <div className="flex flex-wrap gap-1 mt-2">{TAG_PRESETS.map(preset => { const selected = tags.includes(preset.tag); return (<Button variant="outline" size="xs" key={preset.tag} onClick={() => togglePresetTag(preset.tag)} className={`h-auto py-[2px] px-1.5 text-[9px] gap-0.5 ${preset.color} ${selected ? 'ring-1 ring-foreground/10' : 'opacity-50 hover:opacity-80'}`}>{selected && <Check size={7} className="text-current" />}{preset.tag}</Button>); })}</div>
       </FieldGroup>
     </div>
   );
@@ -280,20 +280,20 @@ const ALL_SKILLS_CATALOG: SkillCatalogItem[] = [
 const statusConfig: Record<MCPServerStatus, { label: string; color: string }> = {
   connected: { label: '已连接', color: 'text-cherry-primary' },
   disconnected: { label: '未连接', color: 'text-muted-foreground/30' },
-  error: { label: '错误', color: 'text-red-500' },
+  error: { label: '错误', color: 'text-destructive' },
 };
 
 function CircleToggle({ enabled }: { enabled: boolean }) {
-  return (<div className={`w-[18px] h-[18px] rounded-full flex items-center justify-center flex-shrink-0 transition-all ${enabled ? 'bg-cherry-primary shadow-[0_0_6px_var(--cherry-shadow)]' : 'border border-border/30 bg-transparent'}`}>{enabled && <Check size={10} className="text-white" strokeWidth={2.5} />}</div>);
+  return (<div className={`w-[18px] h-[18px] rounded-full flex items-center justify-center flex-shrink-0 transition-all ${enabled ? 'bg-cherry-primary shadow-[0_0_6px_var(--cherry-shadow)]' : 'border border-border/30 bg-transparent'}`}>{enabled && <Check size={10} className="text-primary-foreground" strokeWidth={2.5} />}</div>);
 }
 
 // Tag pill filter bar
 function TagFilter({ tags, selected, onToggle }: { tags: readonly string[]; selected: string | null; onToggle: (t: string | null) => void }) {
   return (
     <div className="flex flex-wrap gap-1 mb-3">
-      <button onClick={() => onToggle(null)} className={`px-2 py-[3px] rounded-full text-[9px] border transition-all ${selected === null ? 'bg-foreground/8 border-border/30 text-foreground' : 'border-transparent text-muted-foreground/40 hover:text-foreground/60 hover:bg-accent/10'}`}>{"全部"}</button>
+      <Button variant="ghost" size="xs" onClick={() => onToggle(null)} className={`h-auto px-2 py-[3px] rounded-full text-[9px] ${selected === null ? 'bg-foreground/8 border border-border/30 text-foreground' : 'border border-transparent text-muted-foreground/40 hover:text-foreground/60 hover:bg-accent/10'}`}>{"全部"}</Button>
       {tags.map(tag => (
-        <button key={tag} onClick={() => onToggle(selected === tag ? null : tag)} className={`px-2 py-[3px] rounded-full text-[9px] border transition-all ${selected === tag ? 'bg-foreground/8 border-border/30 text-foreground' : 'border-transparent text-muted-foreground/40 hover:text-foreground/60 hover:bg-accent/10'}`}>{tag}</button>
+        <Button variant="ghost" size="xs" key={tag} onClick={() => onToggle(selected === tag ? null : tag)} className={`h-auto px-2 py-[3px] rounded-full text-[9px] ${selected === tag ? 'bg-foreground/8 border border-border/30 text-foreground' : 'border border-transparent text-muted-foreground/40 hover:text-foreground/60 hover:bg-accent/10'}`}>{tag}</Button>
       ))}
     </div>
   );
@@ -303,9 +303,9 @@ function TabEmptyState({ icon: Icon, label, onAdd }: { icon: React.ElementType; 
   return (
     <div className="flex flex-col items-center justify-center py-14 text-center">
       <div className="w-12 h-12 rounded-2xl bg-accent/15 flex items-center justify-center mb-3"><Icon size={20} strokeWidth={1.2} className="text-muted-foreground/20" /></div>
-      <p className="text-[11px] text-muted-foreground/40 mb-1">{"尚未添加任何"}{label}</p>
+      <p className="text-xs text-muted-foreground/40 mb-1">{"尚未添加任何"}{label}</p>
       <p className="text-[9px] text-muted-foreground/25 mb-4 max-w-[240px]">{"点击右上角 + 按钮从资源库中添加，或手动添加"}</p>
-      <button onClick={onAdd} className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-[10px] text-cherry-primary-dark bg-cherry-active-bg hover:bg-cherry-active-border border border-cherry-active-border transition-colors"><Plus size={10} /><span>{"添加"}{label}</span></button>
+      <Button size="xs" onClick={onAdd} className="text-cherry-primary-dark bg-cherry-active-bg hover:bg-cherry-active-border border border-cherry-active-border"><Plus size={10} /><span>{"添加"}{label}</span></Button>
     </div>
   );
 }
@@ -346,28 +346,28 @@ function AddResourcePanel({ activeTab, addedIds, onAdd, onClose, onExplore }: { 
 
   const getIcon = (item: any) => {
     if (activeTab === 'tools') { const I = item.icon; return <I size={11} strokeWidth={1.5} className="text-foreground/40" />; }
-    if (activeTab === 'mcp') return <Network size={11} className="text-blue-500/50" />;
-    const I = item.icon; return <I size={11} strokeWidth={1.5} className="text-amber-500/50" />;
+    if (activeTab === 'mcp') return <Network size={11} className="text-info/50" />;
+    const I = item.icon; return <I size={11} strokeWidth={1.5} className="text-warning/50" />;
   };
   return (
     <motion.div initial={{ x: 20, opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: 20, opacity: 0 }} transition={{ type: 'spring', stiffness: 400, damping: 30 }}
       className="w-[240px] flex-shrink-0 bg-background rounded-2xl border border-border/20 shadow-2xl flex flex-col overflow-hidden self-start" style={{ maxHeight: 'min(580px, calc(100vh - 140px))' }}>
       <div className="flex items-center justify-between px-3.5 h-[36px] flex-shrink-0 border-b border-border/10">
-        <span className="text-[11px] text-foreground">{"添加"}{tabLabel}</span>
-        <button onClick={onClose} className="p-1 rounded text-muted-foreground/40 hover:text-foreground hover:bg-accent/15 transition-colors"><X size={11} /></button>
+        <span className="text-xs text-foreground">{"添加"}{tabLabel}</span>
+        <Button variant="ghost" size="icon-xs" onClick={onClose} className="text-muted-foreground/40"><X size={11} /></Button>
       </div>
       <div className="px-2.5 pt-2 pb-1.5">
         <div className="flex items-center gap-1.5 px-2 py-[5px] rounded-lg bg-accent/10 border border-border/12">
           <Search size={10} className="text-muted-foreground/30 flex-shrink-0" />
-          <input ref={searchRef} value={search} onChange={e => setSearch(e.target.value)} placeholder={`搜索${tabLabel}...`} className="flex-1 bg-transparent text-[10px] text-foreground placeholder:text-muted-foreground/25 outline-none min-w-0" />
-          {search && <button onClick={() => setSearch('')} className="text-muted-foreground/25 hover:text-muted-foreground/50"><X size={8} /></button>}
+          <Input ref={searchRef} value={search} onChange={e => setSearch(e.target.value)} placeholder={`搜索${tabLabel}...`} className="flex-1 h-auto border-0 bg-transparent shadow-none focus-visible:ring-0 focus-visible:border-transparent text-xs text-foreground placeholder:text-muted-foreground/25 py-0 px-0 rounded-none min-w-0" />
+          {search && <Button variant="ghost" size="icon-xs" onClick={() => setSearch('')} className="w-auto h-auto p-0 text-muted-foreground/25 hover:text-muted-foreground/50 hover:bg-transparent"><X size={8} /></Button>}
         </div>
       </div>
       {/* Tag filter pills in add panel */}
       {(activeTab === 'mcp' || activeTab === 'skills') && (
         <div className="px-2.5 pb-1.5 flex flex-wrap gap-1">
-          <button onClick={() => setTagFilter(null)} className={`px-1.5 py-[2px] rounded-full text-[8px] border transition-all ${tagFilter === null ? 'bg-foreground/8 border-border/30 text-foreground' : 'border-transparent text-muted-foreground/35 hover:text-foreground/50'}`}>{"全部"}</button>
-          {availableTags.map(t => (<button key={t} onClick={() => setTagFilter(tagFilter === t ? null : t)} className={`px-1.5 py-[2px] rounded-full text-[8px] border transition-all ${tagFilter === t ? 'bg-foreground/8 border-border/30 text-foreground' : 'border-transparent text-muted-foreground/35 hover:text-foreground/50'}`}>{t}</button>))}
+          <Button variant="ghost" size="xs" onClick={() => setTagFilter(null)} className={`h-auto px-1.5 py-[2px] rounded-full text-[8px] ${tagFilter === null ? 'bg-foreground/8 border border-border/30 text-foreground' : 'border border-transparent text-muted-foreground/35 hover:text-foreground/50'}`}>{"全部"}</Button>
+          {availableTags.map(t => (<Button variant="ghost" size="xs" key={t} onClick={() => setTagFilter(tagFilter === t ? null : t)} className={`h-auto px-1.5 py-[2px] rounded-full text-[8px] ${tagFilter === t ? 'bg-foreground/8 border border-border/30 text-foreground' : 'border border-transparent text-muted-foreground/35 hover:text-foreground/50'}`}>{t}</Button>))}
         </div>
       )}
       <div className="flex-1 overflow-y-auto px-1.5 pb-1.5 [&::-webkit-scrollbar]:w-[3px] [&::-webkit-scrollbar-thumb]:bg-border/25 [&::-webkit-scrollbar-thumb]:rounded-full">
@@ -377,12 +377,12 @@ function AddResourcePanel({ activeTab, addedIds, onAdd, onClose, onExplore }: { 
           Array.from(groupedCatalog.entries()).map(([cat, items]) => (
             <div key={cat} className="mb-1.5">
               <div className="text-[8px] text-muted-foreground/35 px-2 py-1 uppercase tracking-wider">{cat}</div>
-              {items.map((item: any) => (<div key={item.id} className="flex items-center gap-2 px-2 py-[6px] rounded-md hover:bg-accent/12 transition-colors group cursor-pointer" onClick={() => onAdd(item)}><div className="w-5 h-5 rounded bg-accent/12 flex items-center justify-center flex-shrink-0">{getIcon(item)}</div><div className="flex-1 min-w-0"><div className="text-[10px] text-foreground/75 truncate">{item.name}</div><div className="text-[8px] text-muted-foreground/30 truncate">{item.desc}</div></div><Plus size={10} className="text-muted-foreground/20 group-hover:text-cherry-primary transition-colors flex-shrink-0" /></div>))}
+              {items.map((item: any) => (<div key={item.id} className="flex items-center gap-2 px-2 py-[6px] rounded-md hover:bg-accent/12 transition-colors group cursor-pointer" onClick={() => onAdd(item)}><div className="w-5 h-5 rounded bg-accent/12 flex items-center justify-center flex-shrink-0">{getIcon(item)}</div><div className="flex-1 min-w-0"><div className="text-xs text-foreground/75 truncate">{item.name}</div><div className="text-[8px] text-muted-foreground/30 truncate">{item.desc}</div></div><Plus size={10} className="text-muted-foreground/20 group-hover:text-cherry-primary transition-colors flex-shrink-0" /></div>))}
             </div>
           ))
         ) : (
           <div className="space-y-0.5">
-            {catalog.map((item: any) => (<div key={item.id} className="flex items-center gap-2 px-2 py-[6px] rounded-md hover:bg-accent/12 transition-colors group cursor-pointer" onClick={() => onAdd(item)}><div className="w-5 h-5 rounded bg-accent/12 flex items-center justify-center flex-shrink-0">{getIcon(item)}</div><div className="flex-1 min-w-0"><div className="text-[10px] text-foreground/75 truncate">{item.name}</div><div className="text-[8px] text-muted-foreground/30 truncate">{item.author ? `@${item.author}` : item.desc}</div></div><Plus size={10} className="text-muted-foreground/20 group-hover:text-cherry-primary transition-colors flex-shrink-0" /></div>))}
+            {catalog.map((item: any) => (<div key={item.id} className="flex items-center gap-2 px-2 py-[6px] rounded-md hover:bg-accent/12 transition-colors group cursor-pointer" onClick={() => onAdd(item)}><div className="w-5 h-5 rounded bg-accent/12 flex items-center justify-center flex-shrink-0">{getIcon(item)}</div><div className="flex-1 min-w-0"><div className="text-xs text-foreground/75 truncate">{item.name}</div><div className="text-[8px] text-muted-foreground/30 truncate">{item.author ? `@${item.author}` : item.desc}</div></div><Plus size={10} className="text-muted-foreground/20 group-hover:text-cherry-primary transition-colors flex-shrink-0" /></div>))}
           </div>
         )}
       </div>
@@ -392,11 +392,11 @@ function AddResourcePanel({ activeTab, addedIds, onAdd, onClose, onExplore }: { 
             <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.2 }} className="overflow-hidden">
               <div className="mb-2 p-2.5 rounded-lg bg-accent/8 border border-border/10 space-y-2">
                 <div className="text-[9px] text-muted-foreground/50 mb-1">{activeTab === 'mcp' ? '手动添加 MCP Server' : activeTab === 'skills' ? '手动添加 Skill' : '手动添加工具'}</div>
-                <input value={manualName} onChange={e => setManualName(e.target.value)} placeholder="名称" className="w-full px-2 py-[5px] rounded-md border border-border/15 bg-background text-[10px] text-foreground outline-none focus:border-border/30 placeholder:text-muted-foreground/25 transition-all" />
-                {activeTab === 'mcp' && <input value={manualUrl} onChange={e => setManualUrl(e.target.value)} placeholder="Server URL (如 https://... 或 npx @mcp/...)" className="w-full px-2 py-[5px] rounded-md border border-border/15 bg-background text-[10px] text-foreground font-mono outline-none focus:border-border/30 placeholder:text-muted-foreground/25 transition-all" />}
-                <input value={manualDesc} onChange={e => setManualDesc(e.target.value)} placeholder="简要描述 (可选)" className="w-full px-2 py-[5px] rounded-md border border-border/15 bg-background text-[10px] text-foreground outline-none focus:border-border/30 placeholder:text-muted-foreground/25 transition-all" />
+                <Input value={manualName} onChange={e => setManualName(e.target.value)} placeholder="名称" className="w-full px-2 py-[5px] h-auto rounded-md border-border/15 bg-background text-xs text-foreground focus-visible:border-border/30 focus-visible:ring-0 shadow-none placeholder:text-muted-foreground/25" />
+                {activeTab === 'mcp' && <Input value={manualUrl} onChange={e => setManualUrl(e.target.value)} placeholder="Server URL (如 https://... 或 npx @mcp/...)" className="w-full px-2 py-[5px] h-auto rounded-md border-border/15 bg-background text-xs text-foreground font-mono focus-visible:border-border/30 focus-visible:ring-0 shadow-none placeholder:text-muted-foreground/25" />}
+                <Input value={manualDesc} onChange={e => setManualDesc(e.target.value)} placeholder="简要描述 (可选)" className="w-full px-2 py-[5px] h-auto rounded-md border-border/15 bg-background text-xs text-foreground focus-visible:border-border/30 focus-visible:ring-0 shadow-none placeholder:text-muted-foreground/25" />
                 <div className="flex items-center gap-1.5 pt-0.5">
-                  <button disabled={!manualName.trim() || (activeTab === 'mcp' && !manualUrl.trim())} onClick={() => {
+                  <Button size="xs" disabled={!manualName.trim() || (activeTab === 'mcp' && !manualUrl.trim())} onClick={() => {
                     if (activeTab === 'mcp') {
                       onAdd({ id: `custom-mcp-${Date.now()}`, name: manualName.trim(), desc: manualDesc.trim() || '自定义 Server', author: 'custom', url: manualUrl.trim(), tags: [], tools: [] });
                     } else if (activeTab === 'skills') {
@@ -405,16 +405,16 @@ function AddResourcePanel({ activeTab, addedIds, onAdd, onClose, onExplore }: { 
                       onAdd({ id: `custom-tool-${Date.now()}`, name: manualName.trim(), desc: manualDesc.trim() || '自定义工具', icon: Wrench, category: '系统集成' });
                     }
                     setManualName(''); setManualUrl(''); setManualDesc(''); setShowManualForm(false);
-                  }} className="flex-1 py-[5px] rounded-md bg-cherry-primary text-white text-[9px] hover:bg-cherry-primary-dark disabled:opacity-30 disabled:cursor-not-allowed transition-all">{"确认添加"}</button>
-                  <button onClick={() => { setShowManualForm(false); setManualName(''); setManualUrl(''); setManualDesc(''); }} className="px-2.5 py-[5px] rounded-md text-[9px] text-muted-foreground/50 hover:text-foreground hover:bg-accent/15 transition-colors">{"取消"}</button>
+                  }} className="flex-1 py-[5px] rounded-md bg-cherry-primary text-primary-foreground text-[9px] hover:bg-cherry-primary-dark disabled:opacity-30 disabled:cursor-not-allowed transition-all">{"确认添加"}</Button>
+                  <Button variant="ghost" size="xs" onClick={() => { setShowManualForm(false); setManualName(''); setManualUrl(''); setManualDesc(''); }} className="text-muted-foreground/50 hover:text-foreground hover:bg-accent/15">{"取消"}</Button>
                 </div>
               </div>
             </motion.div>
           )}
         </AnimatePresence>
         <div className="space-y-0.5">
-          <button onClick={onExplore} className="flex items-center gap-2 w-full px-2 py-[6px] rounded-md text-[10px] text-foreground/50 hover:text-foreground hover:bg-accent/10 transition-colors"><ExternalLink size={9} className="text-muted-foreground/35" /><span>{"去探索浏览"}</span></button>
-          <button onClick={() => setShowManualForm(!showManualForm)} className={`flex items-center gap-2 w-full px-2 py-[6px] rounded-md text-[10px] transition-colors ${showManualForm ? 'text-foreground bg-accent/10' : 'text-foreground/50 hover:text-foreground hover:bg-accent/10'}`}><Plus size={9} className="text-muted-foreground/35" /><span>{"手动添加"}</span></button>
+          <Button variant="ghost" size="xs" onClick={onExplore} className="w-full justify-start gap-2 text-foreground/50 hover:text-foreground hover:bg-accent/10"><ExternalLink size={9} className="text-muted-foreground/35" /><span>{"去探索浏览"}</span></Button>
+          <Button variant="ghost" size="xs" onClick={() => setShowManualForm(!showManualForm)} className={`w-full justify-start gap-2 ${showManualForm ? 'text-foreground bg-accent/10' : 'text-foreground/50 hover:text-foreground hover:bg-accent/10'}`}><Plus size={9} className="text-muted-foreground/35" /><span>{"手动添加"}</span></Button>
         </div>
       </div>
     </motion.div>
@@ -438,10 +438,10 @@ function MCPServerCard({ server, onToggleConnect, onRemove, onToggleTool, onTogg
     <div className="rounded-xl border border-border/12 bg-accent/3 overflow-hidden transition-all">
       {/* Header row */}
       <div className="flex items-center gap-2.5 px-3 py-2.5 cursor-pointer hover:bg-accent/8 transition-colors" onClick={() => isConnected && setExpanded(!expanded)}>
-        <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${isConnected ? 'bg-cherry-primary' : server.status === 'error' ? 'bg-red-500' : 'bg-muted-foreground/20'}`} />
+        <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${isConnected ? 'bg-cherry-primary' : server.status === 'error' ? 'bg-destructive' : 'bg-muted-foreground/20'}`} />
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
-            <span className="text-[11px] text-foreground truncate">{server.name}</span>
+            <span className="text-xs text-foreground truncate">{server.name}</span>
             <span className={`text-[9px] ${statusConfig[server.status].color}`}>{statusConfig[server.status].label}</span>
             {isConnected && <span className="text-[8px] text-muted-foreground/25">{enabledCount}/{server.tools.length} {"个工具"}</span>}
           </div>
@@ -451,10 +451,10 @@ function MCPServerCard({ server, onToggleConnect, onRemove, onToggleTool, onTogg
           </div>
         </div>
         <div className="flex items-center gap-1 flex-shrink-0">
-          <button onClick={e => { e.stopPropagation(); onToggleConnect(); }} className={`w-6 h-6 rounded-lg flex items-center justify-center transition-all ${isConnected ? 'text-cherry-primary hover:bg-cherry-active-bg' : 'text-muted-foreground/30 hover:text-foreground hover:bg-accent/20'}`} title={isConnected ? '断开连接' : '连接'}>
+          <Button variant="ghost" size="icon-xs" onClick={e => { e.stopPropagation(); onToggleConnect(); }} className={isConnected ? 'text-cherry-primary hover:bg-cherry-active-bg' : 'text-muted-foreground/30 hover:text-foreground hover:bg-accent/20'} title={isConnected ? '断开连接' : '连接'}>
             <Power size={11} />
-          </button>
-          <button onClick={e => { e.stopPropagation(); onRemove(); }} className="w-6 h-6 rounded-lg flex items-center justify-center text-muted-foreground/20 hover:text-red-500 hover:bg-red-500/8 transition-colors"><Trash2 size={10} /></button>
+          </Button>
+          <Button variant="ghost" size="icon-xs" onClick={e => { e.stopPropagation(); onRemove(); }} className="text-muted-foreground/20 hover:text-destructive hover:bg-destructive/8"><Trash2 size={10} /></Button>
           {isConnected && <ChevronDown size={10} className={`text-muted-foreground/25 transition-transform ${expanded ? 'rotate-180' : ''}`} />}
         </div>
       </div>
@@ -467,17 +467,17 @@ function MCPServerCard({ server, onToggleConnect, onRemove, onToggleTool, onTogg
               {/* Toggle all */}
               <div className="flex items-center justify-between mb-2 px-1">
                 <span className="text-[9px] text-muted-foreground/40">{"工具列表"}</span>
-                <button onClick={() => onToggleAll(!allEnabled)} className={`text-[9px] px-1.5 py-[2px] rounded transition-colors ${allEnabled ? 'text-muted-foreground/40 hover:text-foreground' : 'text-cherry-text-muted hover:text-cherry-primary-dark'}`}>
+                <Button variant="link" size="xs" onClick={() => onToggleAll(!allEnabled)} className={`h-auto py-0 px-1.5 text-[9px] ${allEnabled ? 'text-muted-foreground/40 hover:text-foreground' : 'text-cherry-text-muted hover:text-cherry-primary-dark'}`}>
                   {allEnabled ? '全部关闭' : '全部启用'}
-                </button>
+                </Button>
               </div>
               <div className="space-y-0.5 max-h-[180px] overflow-y-auto [&::-webkit-scrollbar]:w-[2px] [&::-webkit-scrollbar-thumb]:bg-border/20 [&::-webkit-scrollbar-thumb]:rounded-full">
                 {server.tools.map(tool => (
                   <div key={tool.id} className={`flex items-center gap-2.5 px-1.5 py-[5px] rounded-md cursor-pointer transition-colors ${tool.enabled ? 'hover:bg-accent/8' : 'hover:bg-accent/5'}`} onClick={() => onToggleTool(tool.id)}>
                     <div className={`w-[15px] h-[15px] rounded flex items-center justify-center flex-shrink-0 transition-all ${tool.enabled ? 'bg-cherry-primary' : 'border border-border/30'}`}>
-                      {tool.enabled && <Check size={9} className="text-white" strokeWidth={2.5} />}
+                      {tool.enabled && <Check size={9} className="text-primary-foreground" strokeWidth={2.5} />}
                     </div>
-                    <span className={`text-[10px] font-mono truncate flex-1 min-w-0 ${tool.enabled ? 'text-foreground/70' : 'text-muted-foreground/30'}`}>{tool.name}</span>
+                    <span className={`text-xs font-mono truncate flex-1 min-w-0 ${tool.enabled ? 'text-foreground/70' : 'text-muted-foreground/30'}`}>{tool.name}</span>
                     <span className="text-[8px] text-muted-foreground/25 truncate max-w-[100px] flex-shrink-0">{tool.desc}</span>
                   </div>
                 ))}
@@ -569,11 +569,11 @@ function ToolchainSection({ onExplore }: { onExplore: () => void }) {
   return (
     <div className="flex gap-4">
       <div className="flex-1 min-w-0 space-y-4">
-        <div><h3 className="text-[14px] text-foreground mb-1">{"能力扩展"}</h3><p className="text-[10px] text-muted-foreground/45">{"配置智能体可使用的工具和 MCP Server"}</p></div>
-        <div className="relative max-w-2xl"><Search size={11} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground/30" /><input value={search} onChange={e => setSearch(e.target.value)} placeholder="搜索工具或 Server..." className="w-full pl-8 pr-3 py-2 rounded-xl border border-border/15 bg-accent/5 text-[11px] text-foreground outline-none focus:border-border/30 focus:bg-accent/10 transition-all placeholder:text-muted-foreground/30" /></div>
+        <div><h3 className="text-sm text-foreground mb-1">{"能力扩展"}</h3><p className="text-xs text-muted-foreground/45">{"配置智能体可使用的工具和 MCP Server"}</p></div>
+        <div className="relative max-w-2xl"><Search size={11} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground/30" /><Input value={search} onChange={e => setSearch(e.target.value)} placeholder="搜索工具或 Server..." className="w-full pl-8 pr-3 py-2 h-auto rounded-xl border-border/15 bg-accent/5 text-xs text-foreground focus-visible:border-border/30 focus-visible:ring-0 shadow-none placeholder:text-muted-foreground/30" /></div>
         <div className="flex items-center border-b border-border/10 pb-px max-w-2xl">
-          {tabs.map(tab => (<button key={tab.id} onClick={() => setActiveTab(tab.id)} className={`relative px-3 py-1.5 text-[11px] transition-colors ${activeTab === tab.id ? 'text-foreground' : 'text-muted-foreground/45 hover:text-foreground/70'}`}>{tab.label}<span className={`ml-1.5 text-[9px] ${activeTab === tab.id ? 'text-muted-foreground/50' : 'text-muted-foreground/30'}`}>{tab.count}</span>{activeTab === tab.id && <motion.div layoutId="toolchain-tab" className="absolute bottom-0 left-0 right-0 h-[1.5px] bg-foreground/60 rounded-full" />}</button>))}
-          <button onClick={() => setShowAddPanel(!showAddPanel)} className={`ml-auto flex items-center gap-1 px-2 py-1 rounded-md text-[10px] transition-colors ${showAddPanel ? 'text-foreground bg-accent/20' : 'text-muted-foreground/40 hover:text-foreground hover:bg-accent/15'}`}><Plus size={10} /><span>{"添加"}</span></button>
+          {tabs.map(tab => (<Button variant="ghost" key={tab.id} onClick={() => setActiveTab(tab.id)} className={`relative px-3 py-1.5 h-auto font-normal rounded-none ${activeTab === tab.id ? 'text-foreground hover:bg-transparent' : 'text-muted-foreground/45 hover:text-foreground/70 hover:bg-transparent'}`}>{tab.label}<span className={`ml-1.5 text-[9px] ${activeTab === tab.id ? 'text-muted-foreground/50' : 'text-muted-foreground/30'}`}>{tab.count}</span>{activeTab === tab.id && <motion.div layoutId="toolchain-tab" className="absolute bottom-0 left-0 right-0 h-[1.5px] bg-foreground/60 rounded-full" />}</Button>))}
+          <Button variant="ghost" size="xs" onClick={() => setShowAddPanel(!showAddPanel)} className={`ml-auto gap-1 ${showAddPanel ? 'text-foreground bg-accent/20' : 'text-muted-foreground/40 hover:text-foreground hover:bg-accent/15'}`}><Plus size={10} /><span>{"添加"}</span></Button>
         </div>
         <div className="max-w-2xl">
           <AnimatePresence mode="wait">
@@ -582,8 +582,8 @@ function ToolchainSection({ onExplore }: { onExplore: () => void }) {
               {/* === Tools === */}
               {activeTab === 'tools' && (tools.length === 0 ? <TabEmptyState icon={Wrench} label="内置工具" onAdd={() => setShowAddPanel(true)} /> : (
                 <div className="space-y-5">
-                  {TOOL_CATEGORIES.map(cat => { const items = groupedTools[cat]; if (!items || items.length === 0) return null; return (<div key={cat}><div className="flex items-center gap-2 mb-2.5"><span className="text-[10px] text-muted-foreground/50">{cat}</span><div className="flex-1 h-px bg-border/8" /><span className="text-[9px] text-muted-foreground/30">{items.filter(t => t.enabled).length}/{items.length}</span></div><div className="grid grid-cols-2 gap-x-3 gap-y-1">{items.map(tool => { const Icon = tool.icon; return (<div key={tool.id} className={`flex items-center gap-2.5 px-3 py-2.5 rounded-lg transition-all cursor-pointer group ${tool.enabled ? 'hover:bg-accent/12' : 'opacity-40 hover:opacity-65'}`} onClick={() => toggleTool(tool.id)}><Icon size={14} strokeWidth={1.5} className={tool.enabled ? 'text-foreground/55' : 'text-muted-foreground/30'} /><div className="flex-1 min-w-0"><div className="text-[11px] text-foreground truncate">{tool.name}</div><div className="text-[9px] text-muted-foreground/35 truncate">{tool.desc}</div></div><CircleToggle enabled={tool.enabled} /></div>); })}</div></div>); })}
-                  {filteredTools.length === 0 && search && <p className="text-center text-[10px] text-muted-foreground/30 py-6">{"无匹配工具"}</p>}
+                  {TOOL_CATEGORIES.map(cat => { const items = groupedTools[cat]; if (!items || items.length === 0) return null; return (<div key={cat}><div className="flex items-center gap-2 mb-2.5"><span className="text-xs text-muted-foreground/50">{cat}</span><div className="flex-1 h-px bg-border/8" /><span className="text-[9px] text-muted-foreground/30">{items.filter(t => t.enabled).length}/{items.length}</span></div><div className="grid grid-cols-2 gap-x-3 gap-y-1">{items.map(tool => { const Icon = tool.icon; return (<div key={tool.id} className={`flex items-center gap-2.5 px-3 py-2.5 rounded-lg transition-all cursor-pointer group ${tool.enabled ? 'hover:bg-accent/12' : 'opacity-40 hover:opacity-65'}`} onClick={() => toggleTool(tool.id)}><Icon size={14} strokeWidth={1.5} className={tool.enabled ? 'text-foreground/55' : 'text-muted-foreground/30'} /><div className="flex-1 min-w-0"><div className="text-xs text-foreground truncate">{tool.name}</div><div className="text-[9px] text-muted-foreground/35 truncate">{tool.desc}</div></div><CircleToggle enabled={tool.enabled} /></div>); })}</div></div>); })}
+                  {filteredTools.length === 0 && search && <p className="text-center text-xs text-muted-foreground/30 py-6">{"无匹配工具"}</p>}
                 </div>
               ))}
 
@@ -602,9 +602,9 @@ function ToolchainSection({ onExplore }: { onExplore: () => void }) {
                         onToggleAll={(enabled) => toggleAllMcpTools(server.id, enabled)}
                       />
                     ))}
-                    {filteredMCP.length === 0 && <p className="text-center text-[10px] text-muted-foreground/30 py-6">{search ? '无匹配结果' : '该分类下无 Server'}</p>}
+                    {filteredMCP.length === 0 && <p className="text-center text-xs text-muted-foreground/30 py-6">{search ? '无匹配结果' : '该分类下无 Server'}</p>}
                   </div>
-                  <div className="pt-3 flex items-center gap-2"><button onClick={() => setShowAddPanel(true)} className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[10px] text-muted-foreground/50 hover:text-foreground hover:bg-accent/15 transition-colors"><Plus size={10} /> {"继续添加"}</button><button onClick={onExplore} className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[10px] text-cherry-text-muted hover:text-cherry-primary-dark hover:bg-cherry-active-bg transition-colors"><ExternalLink size={9} /> {"去探索浏览"}</button></div>
+                  <div className="pt-3 flex items-center gap-2"><Button variant="ghost" size="xs" onClick={() => setShowAddPanel(true)} className="text-muted-foreground/50 hover:text-foreground hover:bg-accent/15"><Plus size={10} /> {"继续添加"}</Button><Button variant="link" size="xs" onClick={onExplore} className="text-cherry-text-muted hover:text-cherry-primary-dark"><ExternalLink size={9} /> {"去探索浏览"}</Button></div>
                 </div>
               ))}
 
@@ -617,15 +617,15 @@ function ToolchainSection({ onExplore }: { onExplore: () => void }) {
                       <div key={skill.id} className={`flex items-center gap-2.5 px-3 py-2.5 rounded-lg transition-all cursor-pointer group ${skill.enabled ? 'hover:bg-accent/12' : 'opacity-40 hover:opacity-65'}`} onClick={() => toggleSkill(skill.id)}>
                         <Icon size={14} strokeWidth={1.5} className={skill.enabled ? 'text-foreground/55' : 'text-muted-foreground/30'} />
                         <div className="flex-1 min-w-0">
-                          <div className="text-[11px] text-foreground truncate">{skill.name}</div>
+                          <div className="text-xs text-foreground truncate">{skill.name}</div>
                           <div className="text-[9px] text-muted-foreground/35 truncate">{skill.desc}</div>
                         </div>
                         <CircleToggle enabled={skill.enabled} />
                       </div>
                     ); })}
                   </div>
-                  {filteredSkills.length === 0 && <p className="text-center text-[10px] text-muted-foreground/30 py-6">{search ? '无匹配结果' : '该分类下无 Skill'}</p>}
-                  <div className="pt-3 flex items-center gap-2"><button onClick={() => setShowAddPanel(true)} className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[10px] text-muted-foreground/50 hover:text-foreground hover:bg-accent/15 transition-colors"><Plus size={10} /> {"继续添加"}</button><button onClick={onExplore} className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[10px] text-cherry-text-muted hover:text-cherry-primary-dark hover:bg-cherry-active-bg transition-colors"><ExternalLink size={9} /> {"去探索浏览"}</button></div>
+                  {filteredSkills.length === 0 && <p className="text-center text-xs text-muted-foreground/30 py-6">{search ? '无匹配结果' : '该分类下无 Skill'}</p>}
+                  <div className="pt-3 flex items-center gap-2"><Button variant="ghost" size="xs" onClick={() => setShowAddPanel(true)} className="text-muted-foreground/50 hover:text-foreground hover:bg-accent/15"><Plus size={10} /> {"继续添加"}</Button><Button variant="link" size="xs" onClick={onExplore} className="text-cherry-text-muted hover:text-cherry-primary-dark"><ExternalLink size={9} /> {"去探索浏览"}</Button></div>
                 </div>
               ))}
 
@@ -653,8 +653,8 @@ const KB_GROUPS = ['全部', '产品文档', '技术文档', '运营资料', '�
 const ALL_KB_CATALOG: KBItem[] = [
   { id: 'kb-1', name: '产品文档库', group: '产品文档', docCount: 128, size: '45 MB', iconColor: 'bg-blue-500', desc: '产品需求、设计规范、迭代记录' },
   { id: 'kb-2', name: 'API 参考文档', group: '技术文档', docCount: 256, size: '120 MB', iconColor: 'bg-foreground/50', desc: 'REST API、SDK 接入文档' },
-  { id: 'kb-3', name: '用户反馈集', group: '运营资料', docCount: 1024, size: '230 MB', iconColor: 'bg-amber-500', desc: '用户工单、NPS 调研、反馈汇总' },
-  { id: 'kb-4', name: '内部 Wiki', group: '技术文档', docCount: 512, size: '180 MB', iconColor: 'bg-red-500', desc: '团队知识沉淀、最佳实践' },
+  { id: 'kb-3', name: '用户反馈集', group: '运营资料', docCount: 1024, size: '230 MB', iconColor: 'bg-warning', desc: '用户工单、NPS 调研、反馈汇总' },
+  { id: 'kb-4', name: '内部 Wiki', group: '技术文档', docCount: 512, size: '180 MB', iconColor: 'bg-destructive', desc: '团队知识沉淀、最佳实践' },
   { id: 'kb-5', name: '技术博客合集', group: '学习资源', docCount: 89, size: '35 MB', iconColor: 'bg-violet-500', desc: '技术博客、分享文章汇编' },
   { id: 'kb-6', name: '竞品分析库', group: '产品文档', docCount: 67, size: '28 MB', iconColor: 'bg-cyan-500', desc: '竞品调研报告、功能对比' },
   { id: 'kb-7', name: '运维手册', group: '技术文档', docCount: 145, size: '55 MB', iconColor: 'bg-orange-500', desc: '部署文档、故障排查指南' },
@@ -705,17 +705,17 @@ function KnowledgeBaseSection() {
   return (
     <div className="max-w-2xl space-y-6">
       <div>
-        <h3 className="text-[14px] text-foreground mb-1">{"知识库关联"}</h3>
-        <p className="text-[10px] text-muted-foreground/45">{"选择知识库并配置检索参数"}</p>
+        <h3 className="text-sm text-foreground mb-1">{"知识库关联"}</h3>
+        <p className="text-xs text-muted-foreground/45">{"选择知识库并配置检索参数"}</p>
       </div>
 
       {/* Linked knowledge bases */}
       <div>
-        <div className="text-[10px] text-muted-foreground/50 mb-2.5">{"已关联知识库"}</div>
+        <div className="text-xs text-muted-foreground/50 mb-2.5">{"已关联知识库"}</div>
         {linkedKBs.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-10 text-center rounded-xl border border-dashed border-border/15 bg-accent/3">
             <BookOpen size={20} strokeWidth={1.2} className="text-muted-foreground/15 mb-2" />
-            <p className="text-[10px] text-muted-foreground/30 mb-1">{"尚未关联任何知识库"}</p>
+            <p className="text-xs text-muted-foreground/30 mb-1">{"尚未关联任何知识库"}</p>
             <p className="text-[8px] text-muted-foreground/20">{"关联知识库后，智能体可检索其中的内容来回答问题"}</p>
           </div>
         ) : (
@@ -727,10 +727,10 @@ function KnowledgeBaseSection() {
                   <FolderOpen size={14} className="text-white/90" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="text-[11px] text-foreground">{kb.name}</div>
+                  <div className="text-xs text-foreground">{kb.name}</div>
                   <div className="text-[9px] text-muted-foreground/35">{kb.docCount} {"文档"} · {kb.size}</div>
                 </div>
-                <button onClick={() => removeKB(kb.id)} className="w-6 h-6 rounded-lg flex items-center justify-center text-muted-foreground/15 hover:text-red-500 hover:bg-red-500/8 opacity-0 group-hover:opacity-100 transition-all"><Trash2 size={11} /></button>
+                <Button variant="ghost" size="icon-xs" onClick={() => removeKB(kb.id)} className="text-muted-foreground/15 hover:text-destructive hover:bg-destructive/8 opacity-0 group-hover:opacity-100"><Trash2 size={11} /></Button>
               </motion.div>
             ))}
           </div>
@@ -738,10 +738,10 @@ function KnowledgeBaseSection() {
 
         {/* Add button + dropdown */}
         <div className="relative mt-3">
-          <button ref={addBtnRef} onClick={() => { setShowAddPanel(!showAddPanel); setAddSearch(''); setAddGroupFilter('全部'); }}
-            className="flex items-center gap-1.5 text-[10px] text-muted-foreground/50 hover:text-foreground transition-colors">
+          <Button variant="ghost" size="xs" ref={addBtnRef} onClick={() => { setShowAddPanel(!showAddPanel); setAddSearch(''); setAddGroupFilter('全部'); }}
+            className="text-muted-foreground/50 hover:text-foreground">
             <Plus size={11} /><span>{"添加知识库"}</span>
-          </button>
+          </Button>
 
           <AnimatePresence>
             {showAddPanel && (
@@ -752,16 +752,16 @@ function KnowledgeBaseSection() {
                 <div className="px-3 pt-3 pb-2">
                   <div className="flex items-center gap-1.5 px-2.5 py-[6px] rounded-lg bg-accent/10 border border-border/12">
                     <Search size={10} className="text-muted-foreground/30 flex-shrink-0" />
-                    <input value={addSearch} onChange={e => setAddSearch(e.target.value)} placeholder="搜索知识库..." className="flex-1 bg-transparent text-[10px] text-foreground placeholder:text-muted-foreground/25 outline-none min-w-0" autoFocus />
-                    {addSearch && <button onClick={() => setAddSearch('')} className="text-muted-foreground/25 hover:text-muted-foreground/50"><X size={8} /></button>}
+                    <Input value={addSearch} onChange={e => setAddSearch(e.target.value)} placeholder="搜索知识库..." className="flex-1 h-auto border-0 bg-transparent shadow-none focus-visible:ring-0 focus-visible:border-transparent text-xs text-foreground placeholder:text-muted-foreground/25 py-0 px-0 rounded-none min-w-0" autoFocus />
+                    {addSearch && <Button variant="ghost" size="icon-xs" onClick={() => setAddSearch('')} className="w-auto h-auto p-0 text-muted-foreground/25 hover:text-muted-foreground/50 hover:bg-transparent"><X size={8} /></Button>}
                   </div>
                 </div>
 
                 {/* Group filter pills */}
                 <div className="px-3 pb-2 flex flex-wrap gap-1">
                   {KB_GROUPS.map(g => (
-                    <button key={g} onClick={() => setAddGroupFilter(g)}
-                      className={`px-1.5 py-[2px] rounded-full text-[8px] border transition-all ${addGroupFilter === g ? 'bg-foreground/8 border-border/30 text-foreground' : 'border-transparent text-muted-foreground/35 hover:text-foreground/50'}`}>{g}</button>
+                    <Button variant="ghost" size="xs" key={g} onClick={() => setAddGroupFilter(g)}
+                      className={`h-auto px-1.5 py-[2px] rounded-full text-[8px] ${addGroupFilter === g ? 'bg-foreground/8 border border-border/30 text-foreground' : 'border border-transparent text-muted-foreground/35 hover:text-foreground/50'}`}>{g}</Button>
                   ))}
                 </div>
 
@@ -778,7 +778,7 @@ function KnowledgeBaseSection() {
                             <FolderOpen size={11} className="text-white/90" />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <div className="text-[10px] text-foreground/80 truncate">{kb.name}</div>
+                            <div className="text-xs text-foreground/80 truncate">{kb.name}</div>
                             <div className="text-[8px] text-muted-foreground/30">{kb.docCount} {"文档"}</div>
                           </div>
                           <Plus size={10} className="text-muted-foreground/15 group-hover:text-cherry-primary transition-colors flex-shrink-0" />
@@ -795,16 +795,15 @@ function KnowledgeBaseSection() {
 
       {/* Retrieval parameters */}
       <div className="border-t border-border/10 pt-5 space-y-5">
-        <div className="text-[10px] text-muted-foreground/50 mb-2">{"检索参数"}</div>
+        <div className="text-xs text-muted-foreground/50 mb-2">{"检索参数"}</div>
 
         {/* Similarity threshold */}
         <div>
           <div className="flex items-center justify-between mb-2">
-            <label className="text-[10px] text-muted-foreground/60">{"相似度阈值"}</label>
-            <span className="text-[10px] text-foreground/70 font-mono">{similarity.toFixed(2)}</span>
+            <label className="text-xs text-muted-foreground/60">{"相似度阈值"}</label>
+            <span className="text-xs text-foreground/70 font-mono">{similarity.toFixed(2)}</span>
           </div>
-          <input type="range" min={0} max={1} step={0.01} value={similarity} onChange={e => setSimilarity(parseFloat(e.target.value))}
-            className="w-full h-1 bg-accent/40 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-foreground [&::-webkit-slider-thumb]:cursor-pointer" />
+          <Slider min={0} max={1} step={0.01} value={[similarity]} onValueChange={([v]) => setSimilarity(v)} />
           <div className="flex justify-between mt-1"><span className="text-[8px] text-muted-foreground/30">0</span><span className="text-[8px] text-muted-foreground/30">1.0</span></div>
           <p className="text-[9px] text-muted-foreground/25 mt-1.5">{"仅返回相似度高于该阈值的文档片段。值越高匹配越精确，但可能遗漏相关内容。"}</p>
         </div>
@@ -812,11 +811,10 @@ function KnowledgeBaseSection() {
         {/* Top K */}
         <div>
           <div className="flex items-center justify-between mb-2">
-            <label className="text-[10px] text-muted-foreground/60">{"返回数量 (Top K)"}</label>
-            <span className="text-[10px] text-foreground/70 font-mono">{topK}</span>
+            <label className="text-xs text-muted-foreground/60">{"返回数量 (Top K)"}</label>
+            <span className="text-xs text-foreground/70 font-mono">{topK}</span>
           </div>
-          <input type="range" min={1} max={20} step={1} value={topK} onChange={e => setTopK(parseInt(e.target.value))}
-            className="w-full h-1 bg-accent/40 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-foreground [&::-webkit-slider-thumb]:cursor-pointer" />
+          <Slider min={1} max={20} step={1} value={[topK]} onValueChange={([v]) => setTopK(v)} />
           <div className="flex justify-between mt-1"><span className="text-[8px] text-muted-foreground/30">1</span><span className="text-[8px] text-muted-foreground/30">20</span></div>
           <p className="text-[9px] text-muted-foreground/25 mt-1.5">{"每次检索返回的最大文档片段数量。增加数量可提供更多上下文，但会消耗更多 Token。"}</p>
         </div>
@@ -829,10 +827,10 @@ function AgentAdvancedSection() {
   const [maxRounds, setMaxRounds] = useState(10);
   return (
     <div className="max-w-lg space-y-6">
-      <div><h3 className="text-[14px] text-foreground mb-1">{"高级设置"}</h3><p className="text-[10px] text-muted-foreground/45">{"配置智能体的执行限制"}</p></div>
+      <div><h3 className="text-sm text-foreground mb-1">{"高级设置"}</h3><p className="text-xs text-muted-foreground/45">{"配置智能体的执行限制"}</p></div>
       <div>
-        <label className="text-[10px] text-muted-foreground/60 mb-1.5 block">{"最大执行轮次"} <span className="text-muted-foreground/35 ml-1">{maxRounds}</span></label>
-        <input type="range" min={1} max={50} step={1} value={maxRounds} onChange={e => setMaxRounds(parseInt(e.target.value))} className="w-full h-1 bg-accent/40 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-foreground [&::-webkit-slider-thumb]:cursor-pointer" />
+        <label className="text-xs text-muted-foreground/60 mb-1.5 block">{"最大执行轮次"} <span className="text-muted-foreground/35 ml-1">{maxRounds}</span></label>
+        <Slider min={1} max={50} step={1} value={[maxRounds]} onValueChange={([v]) => setMaxRounds(v)} />
         <div className="flex justify-between mt-1"><span className="text-[8px] text-muted-foreground/30">1</span><span className="text-[8px] text-muted-foreground/30">50</span></div>
         <p className="text-[9px] text-muted-foreground/30 mt-2">{"每次会话中智能体与工具交互的最大轮次数。达到上限后将停止执行并返回当前结果。"}</p>
       </div>
@@ -841,5 +839,5 @@ function AgentAdvancedSection() {
 }
 
 function FieldGroup({ label, children }: { label: React.ReactNode; children: React.ReactNode }) {
-  return (<div><label className="text-[10px] text-muted-foreground/60 mb-1.5 block">{label}</label>{children}</div>);
+  return (<div><label className="text-xs text-muted-foreground/60 mb-1.5 block">{label}</label>{children}</div>);
 }

@@ -29,16 +29,16 @@ const files: FileItem[] = [
 ]
 
 const typeIcons: Record<FileItem["type"], React.ReactNode> = {
-  document: <FileText className="size-5 text-blue-500" />,
-  image: <Image className="size-5 text-green-500" />,
-  code: <FileCode className="size-5 text-amber-500" />,
+  document: <FileText className="size-5 text-accent-blue" />,
+  image: <Image className="size-5 text-accent-emerald" />,
+  code: <FileCode className="size-5 text-accent-amber" />,
   folder: <FolderOpen className="size-5 text-muted-foreground" />,
 }
 
 const smallTypeIcons: Record<FileItem["type"], React.ReactNode> = {
-  document: <FileText className="size-4 text-blue-500" />,
-  image: <Image className="size-4 text-green-500" />,
-  code: <FileCode className="size-4 text-amber-500" />,
+  document: <FileText className="size-4 text-accent-blue" />,
+  image: <Image className="size-4 text-accent-emerald" />,
+  code: <FileCode className="size-4 text-accent-amber" />,
   folder: <FolderOpen className="size-4 text-muted-foreground" />,
 }
 
@@ -51,7 +51,11 @@ export function FileGridListDemo() {
   )
 
   return (
-    <Section title="File Grid / List View Toggle" code={`import { ToggleGroup, ToggleGroupItem, Card, Table } from "@cherry-studio/ui"
+    <Section title="File Grid / List View Toggle" props={[
+        { name: "files", type: "FileItem[]", default: "[]", description: "List of files to display" },
+        { name: "view", type: '"grid" | "list"', default: '"grid"', description: "Display mode for the file list" },
+        { name: "onFileSelect", type: "(fileId: string) => void", default: "undefined", description: "Callback when a file is clicked" },
+      ]} code={`import { ToggleGroup, ToggleGroupItem, Card, Table } from "@cherry-studio/ui"
 
 <ToggleGroup type="single" value={view} onValueChange={setView}>
   <ToggleGroupItem value="grid"><LayoutGrid /></ToggleGroupItem>
@@ -95,7 +99,7 @@ export function FileGridListDemo() {
           </div>
         ) : (
           /* List View */
-          <div className="rounded-md border overflow-x-auto">
+          <div className="rounded-[12px] border overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -113,7 +117,7 @@ export function FileGridListDemo() {
                         {smallTypeIcons[file.type]}
                         <span className="text-xs font-medium">{file.name}</span>
                         {file.type === "folder" && (
-                          <Badge variant="secondary" className="text-[9px] px-1.5 py-0">folder</Badge>
+                          <Badge variant="secondary" className="text-xs px-1.5 py-0">folder</Badge>
                         )}
                       </div>
                     </TableCell>

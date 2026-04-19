@@ -1,5 +1,6 @@
 import React from 'react';
 import { Check, AlertTriangle } from 'lucide-react';
+import { Button } from '@cherry-studio/ui';
 import { motion } from 'motion/react';
 import type { GenerativeUIData } from '@/app/types/chat';
 
@@ -19,36 +20,38 @@ export function GenUIButtons({ data, msgId, onResolve }: {
       className="rounded-lg border border-border/30 overflow-hidden"
     >
       <div className="px-3 pt-2.5 pb-2">
-        <p className="text-[11px] text-foreground/90 leading-[1.6]">{data.prompt}</p>
+        <p className="text-xs text-foreground/90 leading-[1.6]">{data.prompt}</p>
       </div>
       <div className="flex flex-wrap gap-[5px] px-3 pb-3">
         {data.options?.map((opt, i) => {
           const isSelected = resolved && data.resolvedValue === opt.label;
           const isOther = resolved && !isSelected;
           return (
-            <button
+            <Button
+              variant="outline"
+              size="xs"
               key={i}
               onClick={() => !resolved && onResolve(msgId, opt.label)}
               disabled={!!resolved || opt.disabled}
-              className={`px-2.5 py-[5px] rounded-md text-[10.5px] border transition-all duration-100 active:scale-[0.97] ${
+              className={`active:scale-[0.97] ${
                 isSelected
                   ? 'border-cherry-ring bg-cherry-active-bg text-cherry-text'
                   : isOther
                     ? 'border-border/15 text-muted-foreground/40 cursor-default'
                     : opt.variant === 'danger'
-                      ? 'border-border/30 text-red-500 hover:bg-red-500/8'
+                      ? 'border-border/30 text-destructive hover:bg-destructive/8'
                       : 'border-border/30 text-foreground/80 hover:bg-accent/25 hover:text-foreground'
               }`}
             >
               {isSelected && <Check size={9} className="inline mr-1 -mt-px text-cherry-primary-dark" />}
               {opt.label}
-            </button>
+            </Button>
           );
         })}
       </div>
       {resolved && data.resolvedValue && (
         <div className="px-3 pb-2.5 border-t border-border/20 pt-2">
-          <p className="text-[10.5px] text-foreground/65 leading-[1.6]">
+          <p className="text-xs text-foreground/65 leading-[1.6]">
             {"已选择 "}<span className="text-cherry-primary-dark">{data.resolvedValue}</span>{"，正在执行..."}
           </p>
         </div>
@@ -73,18 +76,20 @@ export function GenUISelection({ data, msgId, onResolve }: {
       className="rounded-lg border border-border/30 overflow-hidden"
     >
       <div className="px-3 pt-2.5 pb-2">
-        <p className="text-[11px] text-foreground/90 leading-[1.6]">{data.prompt}</p>
+        <p className="text-xs text-foreground/90 leading-[1.6]">{data.prompt}</p>
       </div>
       <div className="flex flex-col gap-[2px] px-2 pb-2">
         {data.items?.map((item, i) => {
           const isSelected = resolved && data.resolvedValue === item.label;
           const isOther = resolved && !isSelected;
           return (
-            <button
+            <Button
+              variant="ghost"
+              size="xs"
               key={i}
               onClick={() => !resolved && onResolve(msgId, item.label)}
               disabled={!!resolved}
-              className={`flex items-center gap-2.5 w-full text-left px-2.5 py-[7px] rounded-md text-[10.5px] transition-all duration-100 ${
+              className={`w-full justify-start gap-2.5 ${
                 isSelected
                   ? 'bg-cherry-active-bg text-cherry-text'
                   : isOther
@@ -103,13 +108,13 @@ export function GenUISelection({ data, msgId, onResolve }: {
                   <span className="text-[9px] text-muted-foreground/60 ml-2">{item.description}</span>
                 )}
               </div>
-            </button>
+            </Button>
           );
         })}
       </div>
       {resolved && data.resolvedValue && (
         <div className="px-3 pb-2.5 border-t border-border/20 pt-2">
-          <p className="text-[10.5px] text-foreground/65 leading-[1.6]">
+          <p className="text-xs text-foreground/65 leading-[1.6]">
             {"已选择 "}<span className="text-cherry-primary-dark">{data.resolvedValue}</span>
           </p>
         </div>
@@ -134,32 +139,36 @@ export function GenUIConfirmation({ data, msgId, onResolve }: {
       className="rounded-lg border border-border/30 overflow-hidden"
     >
       <div className="flex items-start gap-2 px-3 pt-2.5 pb-2">
-        <AlertTriangle size={12} className="text-amber-500 flex-shrink-0 mt-[1px]" />
-        <p className="text-[11px] text-foreground/90 leading-[1.6] flex-1">{data.prompt}</p>
+        <AlertTriangle size={12} className="text-warning flex-shrink-0 mt-[1px]" />
+        <p className="text-xs text-foreground/90 leading-[1.6] flex-1">{data.prompt}</p>
       </div>
       <div className="flex items-center gap-2 px-3 pb-3">
-        <button
+        <Button
+          variant="outline"
+          size="xs"
           onClick={() => !resolved && onResolve(msgId, 'confirm')}
           disabled={!!resolved}
-          className={`px-2.5 py-[5px] rounded-md text-[10.5px] border transition-all duration-100 active:scale-[0.97] ${
+          className={`active:scale-[0.97] ${
             resolved && data.resolvedValue === 'confirm'
               ? (data.confirmVariant === 'danger'
-                  ? 'border-red-500/30 bg-red-500/10 text-red-600'
+                  ? 'border-destructive/30 bg-destructive/10 text-destructive'
                   : 'border-cherry-ring bg-cherry-active-bg text-cherry-text')
               : resolved
                 ? 'border-border/15 text-muted-foreground/30 cursor-default'
                 : data.confirmVariant === 'danger'
-                  ? 'border-border/30 text-red-500 hover:bg-red-500/8'
+                  ? 'border-border/30 text-destructive hover:bg-destructive/8'
                   : 'border-border/30 text-foreground/70 hover:bg-accent/20'
           }`}
         >
           {resolved && data.resolvedValue === 'confirm' && <Check size={9} className="inline mr-1 -mt-px text-cherry-primary-dark" />}
           {data.confirmLabel || '确认'}
-        </button>
-        <button
+        </Button>
+        <Button
+          variant="outline"
+          size="xs"
           onClick={() => !resolved && onResolve(msgId, 'cancel')}
           disabled={!!resolved}
-          className={`px-2.5 py-[5px] rounded-md text-[10.5px] border transition-all duration-100 active:scale-[0.97] ${
+          className={`active:scale-[0.97] ${
             resolved && data.resolvedValue === 'cancel'
               ? 'border-foreground/25 bg-foreground/8 text-foreground/70'
               : resolved
@@ -168,11 +177,11 @@ export function GenUIConfirmation({ data, msgId, onResolve }: {
           }`}
         >
           {data.cancelLabel || '取消'}
-        </button>
+        </Button>
       </div>
       {resolved && (
         <div className="px-3 pb-2.5 border-t border-border/20 pt-2">
-          <p className="text-[10.5px] text-foreground/65 leading-[1.6]">
+          <p className="text-xs text-foreground/65 leading-[1.6]">
             {data.resolvedValue === 'confirm'
               ? <span>{"已确认 "}<span className="text-cherry-primary-dark">{data.confirmLabel || '确认'}</span></span>
               : <span>{"已取消"}</span>

@@ -1,13 +1,13 @@
 "use client"
 
-import { Slot } from "@radix-ui/react-slot"
+import { Slot } from "radix-ui"
 import { cva, type VariantProps } from "class-variance-authority"
 
 import { cn } from "../../lib/utils"
 import { Separator } from "./separator"
 
 const buttonGroupVariants = cva(
-  "flex w-fit items-stretch has-[>[data-slot=button-group]]:gap-2 [&>*]:focus-visible:relative [&>*]:focus-visible:z-10 has-[select[aria-hidden=true]:last-child]:[&>[data-slot=select-trigger]:last-of-type]:rounded-r-md [&>[data-slot=select-trigger]:not([class*='w-'])]:w-fit [&>input]:flex-1",
+  "flex w-fit items-stretch tracking-[-0.14px] has-[>[data-slot=button-group]]:gap-2 [&>*]:focus-visible:relative [&>*]:focus-visible:z-10 has-[select[aria-hidden=true]:last-child]:[&>[data-slot=select-trigger]:last-of-type]:rounded-r-[12px] [&>[data-slot=select-trigger]:not([class*='w-'])]:w-fit [&>input]:flex-1",
   {
     variants: {
       orientation: {
@@ -46,12 +46,12 @@ function ButtonGroupText({
 }: React.ComponentProps<"div"> & {
   asChild?: boolean
 }) {
-  const Comp = asChild ? Slot : "div"
+  const Comp = asChild ? Slot.Root : "div"
 
   return (
     <Comp
       className={cn(
-        "bg-muted shadow-xs flex items-center gap-2 rounded-md border px-4 text-sm font-medium [&_svg:not([class*='size-'])]:size-4 [&_svg]:pointer-events-none",
+        "bg-muted shadow-xs flex items-center gap-2 rounded-[var(--radius-button)] border px-4 text-sm font-medium [&_svg:not([class*='size-'])]:size-4 [&_svg]:pointer-events-none",
         className
       )}
       {...props}

@@ -35,7 +35,7 @@ interface SettingsContextType {
 const defaultSettings: AppSettings = {
   language: 'zh-CN',
   theme: 'dark',
-  accentColor: 'green',
+  accentColor: 'neutral',
   transparency: true,
   zoom: 100,
   globalFont: 'system',
@@ -66,6 +66,7 @@ export function useSettings() {
 // Accent color mappings
 // ===========================
 const ACCENT_MAP: Record<string, { main: string; light: string; dark: string; ring: string }> = {
+  neutral: { main: '#323232', light: '#9ca3af', dark: '#4b5563', ring: 'rgba(107,114,128,0.2)' },
   green:   { main: '#00b96b', light: '#6ee7b7', dark: '#059669', ring: 'rgba(0,185,107,0.2)' },
   coral:   { main: '#FF5470', light: '#fca5b5', dark: '#e0394f', ring: 'rgba(255,84,112,0.2)' },
   teal:    { main: '#14B8A6', light: '#5eead4', dark: '#0d9488', ring: 'rgba(20,184,166,0.2)' },
@@ -152,14 +153,13 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
 
   // Apply accent color CSS custom properties
   useEffect(() => {
-    const accent = ACCENT_MAP[settings.accentColor] || ACCENT_MAP.green;
+    const accent = ACCENT_MAP[settings.accentColor] || ACCENT_MAP.neutral;
     const root = document.documentElement;
     root.style.setProperty('--cherry-accent', accent.main);
     root.style.setProperty('--cherry-accent-light', accent.light);
     root.style.setProperty('--cherry-accent-dark', accent.dark);
     root.style.setProperty('--cherry-accent-ring', accent.ring);
-    root.style.setProperty('--primary', accent.main);
-    root.style.setProperty('--primary-foreground', '#ffffff');
+    // --primary 和 --primary-foreground 由 theme.css 定义，不在 JS 中覆盖
   }, [settings.accentColor]);
 
   // Apply custom CSS

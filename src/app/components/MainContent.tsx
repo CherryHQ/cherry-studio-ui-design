@@ -2,7 +2,6 @@ import React, { useState, useEffect, useMemo } from 'react';
 import type { Tab } from '@/app/types';
 import { useGlobalActions } from '@/app/context/GlobalActionContext';
 import { ErrorBoundary } from './shared/ErrorBoundary';
-import { HomePage } from './pages/HomePage';
 import { ChatPage } from './pages/ChatPage';
 import { GenericPage } from './pages/GenericPage';
 import { TranslatePage } from './TranslatePage';
@@ -57,20 +56,8 @@ export function MainContent({ tabs, activeTabId }: MainContentProps) {
     });
   }, [tabIdSet]);
 
-  const alwaysMountHome = tabIdSet.has('home');
-
   return (
     <div className="flex-1 flex flex-col min-h-0 relative">
-      {/* Home page (always mounted if tab exists) */}
-      {alwaysMountHome && (
-        <div
-          className="absolute inset-0 flex flex-col"
-          style={{ display: (activeTabId === 'home' || !tabs.find(t => t.id === activeTabId)) ? 'flex' : 'none' }}
-        >
-          <HomePage />
-        </div>
-      )}
-
       {/* Regular tabs - keep-alive with display toggle */}
       {tabs.filter(t => t.id !== 'home' && mountedTabIds.has(t.id)).map(tab => {
         const isActive = tab.id === activeTabId;

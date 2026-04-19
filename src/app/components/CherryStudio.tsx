@@ -37,7 +37,7 @@ function CherryStudioInner() {
   const [newTabDialogOpen, setNewTabDialogOpen] = useState(false);
   const [newTabSearch, setNewTabSearch] = useState('');
   const [searchDialogOpen, setSearchDialogOpen] = useState(false);
-  const [hiddenApps, setHiddenApps] = useState<Set<string>>(new Set());
+  const [hiddenApps, setHiddenApps] = useState<Set<string>>(new Set(['explore', 'library', 'knowledge', 'file', 'code', 'note', 'extensions']));
   const [appOrder, setAppOrder] = useState<string[]>(() => dialogAppIcons.map(a => a.id));
 
   const [libraryEditResourceId, setLibraryEditResourceId] = useState<string | null>(null);
@@ -218,7 +218,6 @@ function CherryStudioInner() {
           <TabBar
             tabs={tabs}
             activeTabId={activeTabId}
-            isDark={isDark}
             onTabClick={setActiveTabId}
             onTabClose={handleCloseTab}
             onTabContext={(e, tabId) => {
@@ -226,8 +225,6 @@ function CherryStudioInner() {
               setContextMenu({ visible: true, x: e.clientX, y: e.clientY, tabId });
             }}
             onNewTab={() => { setNewTabSearch(''); setNewTabDialogOpen(true); }}
-            onToggleTheme={() => updateSetting('theme', isDark ? 'light' : 'dark')}
-            onSettingsClick={() => setSettingsOpen(true)}
             startTabDrag={onStartTabDrag}
           />
 
@@ -249,6 +246,8 @@ function CherryStudioInner() {
                 onUndockTab={handleUndockFromSidebar}
                 onStartSidebarDrag={onStartSidebarDrag}
                 onCloseDockedTab={handleCloseTab}
+                isDark={isDark}
+                onToggleTheme={() => updateSetting('theme', isDark ? 'light' : 'dark')}
               />
             </div>
 
@@ -297,6 +296,8 @@ function CherryStudioInner() {
               onUndockTab={handleUndockFromSidebar}
               onStartSidebarDrag={onStartSidebarDrag}
               onCloseDockedTab={handleCloseTab}
+              isDark={isDark}
+              onToggleTheme={() => updateSetting('theme', isDark ? 'light' : 'dark')}
             />
           )}
         </div>

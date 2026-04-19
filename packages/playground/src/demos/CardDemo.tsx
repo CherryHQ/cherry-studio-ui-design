@@ -1,9 +1,13 @@
-import React from "react"
+import React, { useState } from "react"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, Button, Badge, Input, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Label } from "@cherry-studio/ui"
 import { Section, type PropDef } from "../components/Section"
-import { Bot, Sparkles, Zap } from "lucide-react"
+import { Bot, Sparkles, Zap, Heart } from "lucide-react"
 
 export function CardDemo() {
+  const [liked, setLiked] = useState<Record<string, boolean>>({})
+
+  const toggleLike = (id: string) => setLiked(prev => ({ ...prev, [id]: !prev[id] }))
+
   return (
     <>
     <Section title="Card" install="npx shadcn@latest add card" props={[
@@ -23,7 +27,7 @@ export function CardDemo() {
         <Card>
           <CardHeader>
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+              <div className="w-10 h-10 rounded-[12px] bg-primary/10 flex items-center justify-center">
                 <Bot className="h-5 w-5 text-primary" />
               </div>
               <div>
@@ -37,15 +41,20 @@ export function CardDemo() {
           </CardContent>
           <CardFooter className="flex justify-between">
             <Badge variant="secondary">Free</Badge>
-            <Button size="sm">Start</Button>
+            <div className="flex items-center gap-1">
+              <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => toggleLike("assistant")}>
+                <Heart className={`h-4 w-4 ${liked["assistant"] ? "fill-error text-error" : ""}`} />
+              </Button>
+              <Button size="sm">Start</Button>
+            </div>
           </CardFooter>
         </Card>
 
         <Card>
           <CardHeader>
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-violet-500/10 flex items-center justify-center">
-                <Sparkles className="h-5 w-5 text-violet-500" />
+              <div className="w-10 h-10 rounded-[12px] bg-accent-violet-muted flex items-center justify-center">
+                <Sparkles className="h-5 w-5 text-accent-violet" />
               </div>
               <div>
                 <CardTitle className="text-base">Image Gen</CardTitle>
@@ -58,15 +67,20 @@ export function CardDemo() {
           </CardContent>
           <CardFooter className="flex justify-between">
             <Badge variant="secondary">Pro</Badge>
-            <Button size="sm" variant="outline">Upgrade</Button>
+            <div className="flex items-center gap-1">
+              <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => toggleLike("imagegen")}>
+                <Heart className={`h-4 w-4 ${liked["imagegen"] ? "fill-error text-error" : ""}`} />
+              </Button>
+              <Button size="sm" variant="outline">Upgrade</Button>
+            </div>
           </CardFooter>
         </Card>
 
         <Card>
           <CardHeader>
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center">
-                <Zap className="h-5 w-5 text-amber-500" />
+              <div className="w-10 h-10 rounded-[12px] bg-accent-amber-muted flex items-center justify-center">
+                <Zap className="h-5 w-5 text-accent-amber" />
               </div>
               <div>
                 <CardTitle className="text-base">Quick Actions</CardTitle>
@@ -79,7 +93,12 @@ export function CardDemo() {
           </CardContent>
           <CardFooter className="flex justify-between">
             <Badge>New</Badge>
-            <Button size="sm">Try</Button>
+            <div className="flex items-center gap-1">
+              <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => toggleLike("quick")}>
+                <Heart className={`h-4 w-4 ${liked["quick"] ? "fill-error text-error" : ""}`} />
+              </Button>
+              <Button size="sm">Try</Button>
+            </div>
           </CardFooter>
         </Card>
       </div>

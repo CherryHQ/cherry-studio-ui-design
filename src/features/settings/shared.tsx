@@ -1,5 +1,5 @@
 import React from 'react';
-import { Switch } from '@cherry-studio/ui';
+import { Switch, Input, Button } from '@cherry-studio/ui';
 
 // ===========================
 // Re-export from component library
@@ -45,18 +45,14 @@ export function TextInput({ value, onChange, placeholder, type = 'text', mono, r
   readOnly?: boolean;
 }) {
   return (
-    <div className="flex items-center px-2.5 py-[5px] bg-foreground/[0.03] rounded-lg border border-border/30">
-      <input
-        type={type}
-        value={value}
-        onChange={e => onChange?.(e.target.value)}
-        placeholder={placeholder}
-        readOnly={readOnly}
-        className={`flex-1 bg-transparent text-[10px] text-foreground/60 outline-none placeholder:text-foreground/20 min-w-0 ${
-          mono ? 'font-mono' : ''
-        }`}
-      />
-    </div>
+    <Input
+      type={type}
+      value={value}
+      onChange={e => onChange?.(e.target.value)}
+      placeholder={placeholder}
+      readOnly={readOnly}
+      className={`h-7 text-xs ${mono ? 'font-mono' : ''}`}
+    />
   );
 }
 
@@ -69,14 +65,14 @@ export function ActionButton({ children, variant = 'default', onClick }: {
   variant?: 'default' | 'primary' | 'danger';
   onClick?: () => void;
 }) {
-  const cls = {
-    default: 'border border-border/30 text-foreground/50 hover:text-foreground/70 hover:bg-accent',
-    primary: 'bg-primary text-primary-foreground hover:bg-primary/90',
-    danger: 'border border-red-500/20 text-red-500/60 hover:text-red-500/80 hover:bg-red-500/5',
-  };
+  const variantMap = {
+    default: 'outline',
+    primary: 'default',
+    danger: 'destructive',
+  } as const;
   return (
-    <button onClick={onClick} className={`px-3 py-[5px] rounded-lg text-[10px] transition-colors ${cls[variant]}`}>
+    <Button variant={variantMap[variant]} size="xs" onClick={onClick}>
       {children}
-    </button>
+    </Button>
   );
 }

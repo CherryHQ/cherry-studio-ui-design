@@ -86,8 +86,8 @@ function StatCard({ label, value, unit, sub, icon: Icon, iconColor, onClick }: {
         </div>
       </div>
       <div className="flex items-baseline gap-0.5">
-        <span className="text-[20px] text-foreground/70" style={{ fontWeight: 700 }}>{value}</span>
-        {unit && <span className="text-[10px] text-foreground/25">{unit}</span>}
+        <span className="text-xl text-foreground/70 font-bold">{value}</span>
+        {unit && <span className="text-xs text-foreground/25">{unit}</span>}
       </div>
       {sub && <div className="mt-1.5">{sub}</div>}
     </div>
@@ -114,7 +114,7 @@ export function DashboardPage() {
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           <BarChart3 size={14} className="text-foreground/50" />
-          <h2 className="text-[13px] text-foreground/90" style={{ fontWeight: 500 }}>数据统计</h2>
+          <h2 className="text-sm text-foreground/90 font-medium">数据统计</h2>
         </div>
         <InlineSelect
           value={timeRange}
@@ -149,7 +149,7 @@ export function DashboardPage() {
         />
         <StatCard
           label="总花费" value={`$${totalCost.toFixed(2)}`} icon={Coins}
-          iconColor="bg-amber-500/10 text-amber-400"
+          iconColor="bg-warning/10 text-warning"
           sub={
             <span className="text-[9px] text-foreground/25">日均 ${(totalCost / 28).toFixed(2)}</span>
           }
@@ -216,13 +216,13 @@ export function DashboardPage() {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between mb-[2px]">
                     <div className="flex items-center gap-1.5 min-w-0">
-                      <span className="text-[10px] text-foreground/60 truncate">{m.name}</span>
+                      <span className="text-xs text-foreground/60 truncate">{m.name}</span>
                       <span className="text-[8px] text-foreground/20 flex-shrink-0">{m.provider}</span>
                     </div>
                     <div className="flex items-center gap-3 flex-shrink-0 ml-2">
                       <span className="text-[9px] text-foreground/30">{(m.tokens / 1000).toFixed(0)}K</span>
                       <span className="text-[9px] text-foreground/30 w-9 text-right">{m.conversations} 次</span>
-                      <span className="text-[9px] text-foreground/40 w-10 text-right" style={{ fontWeight: 500 }}>
+                      <span className="text-[9px] text-foreground/40 w-10 text-right font-medium">
                         {m.cost > 0 ? `$${m.cost.toFixed(2)}` : '免费'}
                       </span>
                     </div>
@@ -263,13 +263,13 @@ export function DashboardPage() {
           <div className="mt-3 pt-2.5 border-t border-foreground/[0.04]">
             <div className="flex items-center justify-between">
               <span className="text-[9px] text-foreground/30">6 个月总计</span>
-              <span className="text-[11px] text-foreground/60" style={{ fontWeight: 600 }}>
+              <span className="text-xs text-foreground/60 font-semibold">
                 ${MONTHLY_TREND.reduce((s, m) => s + m.cost, 0).toFixed(2)}
               </span>
             </div>
             <div className="flex items-center justify-between mt-1">
               <span className="text-[9px] text-foreground/30">月均花费</span>
-              <span className="text-[10px] text-foreground/45">
+              <span className="text-xs text-foreground/45">
                 ${(MONTHLY_TREND.reduce((s, m) => s + m.cost, 0) / MONTHLY_TREND.length).toFixed(2)}
               </span>
             </div>
@@ -289,7 +289,7 @@ export function DashboardPage() {
               <div key={i} className="flex items-center gap-2 py-[4px] group">
                 <div className="w-[3px] h-[3px] rounded-full bg-foreground/15 flex-shrink-0 group-hover:bg-foreground/45 transition-colors" />
                 <div className="flex-1 min-w-0">
-                  <p className="text-[10px] text-foreground/55 truncate group-hover:text-foreground/75 transition-colors">{conv.title}</p>
+                  <p className="text-xs text-foreground/55 truncate group-hover:text-foreground/75 transition-colors">{conv.title}</p>
                   <div className="flex items-center gap-2 mt-[1px]">
                     <span className="text-[8px] text-foreground/25">{conv.model}</span>
                     <span className="text-[8px] text-foreground/15">{conv.time}</span>
@@ -340,7 +340,7 @@ export function DashboardPage() {
                 })()}
               </svg>
               <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <span className="text-[11px] text-foreground/70" style={{ fontWeight: 700 }}>${totalCost.toFixed(0)}</span>
+                <span className="text-xs text-foreground/70 font-bold">${totalCost.toFixed(0)}</span>
                 <span className="text-[7px] text-foreground/25">总计</span>
               </div>
             </div>
@@ -354,7 +354,7 @@ export function DashboardPage() {
               ].map(p => (
                 <div key={p.name} className="flex items-center gap-2">
                   <div className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ backgroundColor: p.color }} />
-                  <span className="text-[10px] text-foreground/50 flex-1">{p.name}</span>
+                  <span className="text-xs text-foreground/50 flex-1">{p.name}</span>
                   <span className="text-[9px] text-foreground/35">${p.cost.toFixed(2)}</span>
                   <span className="text-[8px] text-foreground/20 w-7 text-right">
                     {Math.round((p.cost / totalCost) * 100)}%
@@ -368,15 +368,15 @@ export function DashboardPage() {
           <div className="mt-3 pt-2.5 border-t border-foreground/[0.04] grid grid-cols-3 gap-2">
             <div className="text-center">
               <p className="text-[8px] text-foreground/25 mb-0.5">平均延迟</p>
-              <p className="text-[11px] text-foreground/55" style={{ fontWeight: 600 }}>118ms</p>
+              <p className="text-xs text-foreground/55 font-semibold">118ms</p>
             </div>
             <div className="text-center">
               <p className="text-[8px] text-foreground/25 mb-0.5">成功率</p>
-              <p className="text-[11px] text-primary" style={{ fontWeight: 600 }}>99.7%</p>
+              <p className="text-xs text-primary font-semibold">99.7%</p>
             </div>
             <div className="text-center">
               <p className="text-[8px] text-foreground/25 mb-0.5">连接数</p>
-              <p className="text-[11px] text-foreground/55" style={{ fontWeight: 600 }}>5/8</p>
+              <p className="text-xs text-foreground/55 font-semibold">5/8</p>
             </div>
           </div>
         </div>

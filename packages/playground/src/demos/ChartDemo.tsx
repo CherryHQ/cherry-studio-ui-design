@@ -17,6 +17,11 @@ const chartConfig = {
   cost: { label: "Cost ($)", color: "var(--chart-2)" },
 }
 
+// recharts components have JSX compatibility issues with newer React types
+const XAxisAny = XAxis as any
+const BarAny = Bar as any
+const AreaAny = Area as any
+
 export function ChartDemo() {
   return (
     <>
@@ -39,11 +44,11 @@ const config = { tokens: { label: "Tokens", color: "var(--chart-1)" } }
           <ChartContainer config={chartConfig} className="h-[250px] w-full">
             <BarChart data={data}>
               <CartesianGrid vertical={false} />
-              <XAxis dataKey="month" tickLine={false} tickMargin={10} axisLine={false} />
+              <XAxisAny dataKey="month" tickLine={false} tickMargin={10} axisLine={false} />
               <ChartTooltip content={<ChartTooltipContent />} />
               <ChartLegend content={<ChartLegendContent />} />
-              <Bar dataKey="tokens" fill="var(--color-tokens)" radius={4} />
-              <Bar dataKey="cost" fill="var(--color-cost)" radius={4} />
+              <BarAny dataKey="tokens" fill="var(--color-tokens)" radius={4} />
+              <BarAny dataKey="cost" fill="var(--color-cost)" radius={4} />
             </BarChart>
           </ChartContainer>
         </div>
@@ -54,9 +59,9 @@ const config = { tokens: { label: "Tokens", color: "var(--chart-1)" } }
           <ChartContainer config={chartConfig} className="h-[250px] w-full">
             <AreaChart data={data}>
               <CartesianGrid vertical={false} />
-              <XAxis dataKey="month" tickLine={false} tickMargin={10} axisLine={false} />
+              <XAxisAny dataKey="month" tickLine={false} tickMargin={10} axisLine={false} />
               <ChartTooltip content={<ChartTooltipContent />} />
-              <Area dataKey="tokens" type="natural" fill="var(--color-tokens)" fillOpacity={0.2} stroke="var(--color-tokens)" />
+              <AreaAny dataKey="tokens" type="natural" fill="var(--color-tokens)" fillOpacity={0.2} stroke="var(--color-tokens)" />
             </AreaChart>
           </ChartContainer>
         </div>

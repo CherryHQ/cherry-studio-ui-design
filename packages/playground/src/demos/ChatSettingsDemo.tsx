@@ -32,8 +32,13 @@ export function ChatSettingsDemo() {
   const [contextLength, setContextLength] = useState([50])
 
   return (
-    <Section title="Chat Settings Panel" install="npm install @cherry-studio/ui">
-      <div className="max-w-md rounded-xl border bg-background p-4 space-y-3">
+    <Section title="Chat Settings Panel" install="npm install @cherry-studio/ui" props={[
+        { name: "model", type: "string", default: '"claude-sonnet"', description: "Selected AI model" },
+        { name: "temperature", type: "number", default: "0.7", description: "Controls randomness of responses (0-1)" },
+        { name: "maxTokens", type: "number", default: "4096", description: "Maximum number of tokens in the response" },
+        { name: "streaming", type: "boolean", default: "true", description: "Enable streaming token output" },
+      ]}>
+      <div className="max-w-md rounded-[12px] border bg-background p-4 space-y-3">
         <PanelHeader icon="💬" title="Chat Settings" desc="Configure conversation preferences" />
 
         <ConfigSection title="Model" hint="AI model and parameters">

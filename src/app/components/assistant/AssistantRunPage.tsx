@@ -23,6 +23,7 @@ import { ThinkingBlock, InlineCodeBlock, MermaidBlock, ImageGallery } from '@/ap
 import { AttachmentList } from '@/app/components/shared/Chat/AttachmentList';
 import { EmptyState } from '@/app/components/ui/EmptyState';
 import { Tooltip } from '@/app/components/Tooltip';
+import { Button, Input } from '@cherry-studio/ui';
 import type { AssistantInfo, AssistantTopic } from '@/app/types/assistant';
 import type {
   Message, ArtifactData,
@@ -43,6 +44,8 @@ import { ChatSettingsPanel } from './ChatSettingsPanel';
 import { AtMentionPicker } from '@/app/components/shared/AtMentionPicker';
 import { ModelPickerPanel } from '@/app/components/shared/ModelPickerPanel';
 import { AssistantPickerPanel } from '@/app/components/shared/AssistantPickerPanel';
+import { HistorySidebar } from '@/app/components/shared/HistorySidebar';
+import { useHistorySidebar } from '@/app/hooks/useHistorySidebar';
 
 // Syntax highlighting, file icons, animations, and shared message components
 // are imported from shared utilities above.
@@ -72,7 +75,7 @@ function applyBoldAndCode(text: string): string {
   return applyCodeReplace(applyBoldReplace(text));
 }
 function applyCodeReplaceMd(text: string): string {
-  return text.replace(new RegExp(BT + '([^' + BT + ']+)' + BT, 'g'), '<code class="px-1 py-0.5 rounded bg-muted/50 text-[10px] font-mono text-foreground/80">$1</code>');
+  return text.replace(new RegExp(BT + '([^' + BT + ']+)' + BT, 'g'), '<code class="px-1 py-0.5 rounded bg-muted/50 text-xs font-mono text-foreground/80">$1</code>');
 }
 
 
@@ -130,10 +133,12 @@ function ParallelResponsesBlock({ responses }: { responses: ParallelResponse[] }
         </div>
         <div className="flex items-center gap-0.5 bg-accent/20 rounded-md p-0.5">
           {layoutOptions.map(opt => (
-            <button
+            <Button
               key={opt.key}
+              variant="ghost"
+              size="icon-xs"
               onClick={() => setLayout(opt.key)}
-              className={`p-1 rounded text-[10px] transition-all ${
+              className={`p-1 w-auto h-auto ${
                 layout === opt.key
                   ? 'bg-background text-foreground shadow-sm'
                   : 'text-muted-foreground/50 hover:text-foreground'
@@ -141,7 +146,7 @@ function ParallelResponsesBlock({ responses }: { responses: ParallelResponse[] }
               title={opt.label}
             >
               <opt.icon size={11} />
-            </button>
+            </Button>
           ))}
         </div>
       </div>
@@ -164,19 +169,19 @@ function ParallelResponsesBlock({ responses }: { responses: ParallelResponse[] }
               {/* Response header */}
               <div className="flex items-center justify-between px-3 py-2 border-b border-border/15">
                 <div className="flex items-center gap-2 min-w-0">
-                  <div className="w-5 h-5 rounded-md bg-accent/40 flex items-center justify-center text-[11px] leading-none flex-shrink-0">
+                  <div className="w-5 h-5 rounded-md bg-accent/40 flex items-center justify-center text-xs leading-none flex-shrink-0">
                     {getParallelAvatar(resp)}
                   </div>
                   <div className="flex items-center gap-1.5 min-w-0">
                     {resp.assistantName && (
-                      <span className="text-[10px] text-foreground/85 flex-shrink-0">{resp.assistantName}</span>
+                      <span className="text-xs text-foreground/85 flex-shrink-0">{resp.assistantName}</span>
                     )}
-                    <span className={`text-[10px] truncate ${resp.assistantName ? 'text-muted-foreground/50' : 'text-foreground/80'}`}>{resp.modelName}</span>
+                    <span className={`text-xs truncate ${resp.assistantName ? 'text-muted-foreground/50' : 'text-foreground/80'}`}>{resp.modelName}</span>
                     <span className="text-[8px] text-muted-foreground/40 flex-shrink-0">{resp.modelProvider}</span>
                   </div>
                 </div>
                 {isContext && (
-                  <Tooltip content="当前上下文" side="top"><span className="text-[10px] text-cherry-primary flex-shrink-0 ml-2">✦</span></Tooltip>
+                  <Tooltip content="当前上下文" side="top"><span className="text-xs text-cherry-primary flex-shrink-0 ml-2">✦</span></Tooltip>
                 )}
               </div>
               {/* Thinking */}
@@ -225,24 +230,24 @@ function ParallelResponsesBlock({ responses }: { responses: ParallelResponse[] }
                 </div>
                 <div className="flex items-center gap-0.5">
                   <Tooltip content="重新生成" side="bottom">
-                  <button
+                  <Button variant="ghost" size="icon-xs"
                     onClick={() => {}}
-                    className="p-1 rounded text-muted-foreground/40 hover:text-foreground hover:bg-accent/20 transition-colors text-[10px]"
+                    className="p-1 w-auto h-auto text-muted-foreground/40 hover:text-foreground hover:bg-accent/20"
                   >
                     <RotateCcw size={10} />
-                  </button>
+                  </Button>
                   </Tooltip>
                   <Tooltip content={isContext ? '已选为上下文' : '选为上下文'} side="bottom">
-                  <button
+                  <Button variant="ghost" size="icon-xs"
                     onClick={() => setContextId(resp.id)}
-                    className={`p-1 rounded transition-colors flex items-center text-[10px] ${
+                    className={`p-1 w-auto h-auto ${
                       isContext
                         ? 'text-cherry-primary bg-cherry-active-bg'
                         : 'text-muted-foreground/40 hover:text-cherry-primary hover:bg-cherry-active-bg'
                     }`}
                   >
-                    <span className="text-[10px] leading-none">✦</span>
-                  </button>
+                    <span className="text-xs leading-none">✦</span>
+                  </Button>
                   </Tooltip>
                 </div>
               </div>
@@ -282,7 +287,7 @@ function artifactTypeIcon(type: ArtifactData['type'], size = 11) {
     case 'html': return <Globe size={size} className="text-sky-500" />;
     case 'svg': return <Eye size={size} className="text-pink-500" />;
     case 'mermaid': return <Layers size={size} className="text-cyan-500" />;
-    default: return <FileText size={size} className="text-amber-500" />;
+    default: return <FileText size={size} className="text-warning" />;
   }
 }
 
@@ -328,9 +333,9 @@ function FileHistoryDropdown({ onSelect, onClose, anchorRight, selectedTitle, ha
   const [category, setCategory] = useState<FileCategory>('all');
   const inputRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => { if (hasTopic !== false) inputRef.current?.focus(); }, [hasTopic]);
+  useEffect(() => { inputRef.current?.focus(); }, []);
 
-  const files = hasTopic === false ? [] : HISTORY_FILES;
+  const files = HISTORY_FILES;
 
   const filtered = useMemo(() => {
     let list = files;
@@ -345,32 +350,6 @@ function FileHistoryDropdown({ onSelect, onClose, anchorRight, selectedTitle, ha
     }
     return list;
   }, [query, category, files]);
-
-  // Empty state for new topic (no topic selected)
-  if (hasTopic === false) {
-    return (
-      <div>
-        <div className="fixed inset-0 z-[55]" onClick={onClose} />
-        <motion.div
-          initial={{ opacity: 0, y: -4, scale: 0.97 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          exit={{ opacity: 0, y: -4, scale: 0.97 }}
-          transition={{ duration: 0.12 }}
-          className={`absolute top-full mt-1.5 z-[56] w-[270px] bg-popover border border-border/40 rounded-xl shadow-2xl shadow-black/12 overflow-hidden ${anchorRight ? 'right-0' : 'left-0'}`}
-        >
-          <div className="flex flex-col items-center py-8 px-6">
-            <div className="w-10 h-10 rounded-xl bg-accent/25 border border-border/15 flex items-center justify-center mb-3">
-              <File size={16} strokeWidth={1.3} className="text-muted-foreground/30" />
-            </div>
-            <p className="text-[11px] text-foreground/55 mb-1">暂无文件</p>
-            <p className="text-[10px] text-muted-foreground/40 text-center leading-[1.5]">
-              开始对话后，生成的代码、文档和网页将自动归档到当前话题
-            </p>
-          </div>
-        </motion.div>
-      </div>
-    );
-  }
 
   return (
     <div>
@@ -387,11 +366,11 @@ function FileHistoryDropdown({ onSelect, onClose, anchorRight, selectedTitle, ha
           {FILE_CATEGORIES.map(cat => {
             const Icon = cat.icon;
             return (
-              <button key={cat.key} onClick={() => setCategory(cat.key)}
-                className={`flex items-center gap-1 px-2 py-[4px] rounded-md text-[10px] transition-all duration-100 ${category === cat.key ? 'bg-foreground/8 text-foreground' : 'text-muted-foreground/60 hover:text-foreground hover:bg-accent/15'}`}>
+              <Button variant="ghost" size="xs" key={cat.key} onClick={() => setCategory(cat.key)}
+                className={`gap-1 px-2 py-[4px] h-auto text-xs ${category === cat.key ? 'bg-foreground/8 text-foreground' : 'text-muted-foreground/60 hover:text-foreground hover:bg-accent/15'}`}>
                 <Icon size={9} />
                 <span>{cat.label}</span>
-              </button>
+              </Button>
             );
           })}
         </div>
@@ -400,17 +379,17 @@ function FileHistoryDropdown({ onSelect, onClose, anchorRight, selectedTitle, ha
         <div className="px-2.5 pt-1 pb-1.5">
           <div className="flex items-center gap-2 px-2.5 py-[5px] rounded-lg bg-accent/15 border border-border/25">
             <Search size={10} className="text-muted-foreground/50 flex-shrink-0" />
-            <input
+            <Input
               ref={inputRef}
               value={query}
               onChange={e => setQuery(e.target.value)}
               placeholder="搜索历史文件..."
-              className="flex-1 bg-transparent text-[10.5px] text-foreground placeholder:text-muted-foreground/40 outline-none"
+              className="flex-1 h-auto border-0 bg-transparent shadow-none focus-visible:ring-0 text-xs text-foreground placeholder:text-muted-foreground/40 p-0 rounded-none"
             />
             {query && (
-              <button onClick={() => setQuery('')} className="text-muted-foreground hover:text-foreground transition-colors">
+              <Button variant="ghost" size="icon-xs" onClick={() => setQuery('')} className="w-auto h-auto p-0 text-muted-foreground hover:text-foreground hover:bg-transparent">
                 <X size={9} />
-              </button>
+              </Button>
             )}
           </div>
         </div>
@@ -420,26 +399,26 @@ function FileHistoryDropdown({ onSelect, onClose, anchorRight, selectedTitle, ha
           {filtered.length === 0 ? (
             <div className="flex flex-col items-center py-6">
               <Search size={14} className="text-muted-foreground/25 mb-2" />
-              <span className="text-[10px] text-muted-foreground/50">没有匹配的文件</span>
+              <span className="text-xs text-muted-foreground/50">没有匹配的文件</span>
             </div>
           ) : (
             filtered.map(file => {
               const isSelected = selectedTitle === file.title;
               return (
-                <button
+                <Button variant="ghost" size="xs"
                   key={file.id}
                   onClick={() => { onSelect({ type: file.type, title: file.title, content: file.content }); onClose(); }}
-                  className={`flex items-center gap-2.5 w-full px-2.5 py-[7px] text-left rounded-lg transition-colors group mb-0.5 ${isSelected ? 'bg-foreground/8' : 'hover:bg-accent/15'}`}
+                  className={`w-full justify-start gap-2.5 px-2.5 py-[7px] h-auto rounded-lg transition-colors group mb-0.5 ${isSelected ? 'bg-foreground/8' : 'hover:bg-accent/15'}`}
                 >
                   <div className="flex-shrink-0">
                     {artifactTypeIcon(file.type, 13)}
                   </div>
-                  <div className="flex-1 min-w-0">
+                  <div className="flex-1 min-w-0 text-left">
                     <div className={`text-[10.5px] truncate ${isSelected ? 'text-foreground' : 'text-foreground/80'}`}>{file.title}</div>
                     <div className="text-[9px] text-muted-foreground/45">{artifactTypeLabel(file.type)} · {file.timestamp}</div>
                   </div>
                   <Eye size={9} className={`flex-shrink-0 transition-opacity ${isSelected ? 'text-muted-foreground/40 opacity-100' : 'text-muted-foreground/25 opacity-0 group-hover:opacity-100'}`} />
-                </button>
+                </Button>
               );
             })
           )}
@@ -468,7 +447,7 @@ function ArtifactsPanel({ artifact, isFullscreen, onToggleFullscreen, onClose, o
 }) {
   const [tab, setTab] = useState<ArtifactTab>('document');
   const [copied, setCopied] = useState(false);
-  const [showFileHistory, setShowFileHistory] = useState(false);
+
 
   useEffect(() => {
     if (artifact) {
@@ -512,24 +491,11 @@ function ArtifactsPanel({ artifact, isFullscreen, onToggleFullscreen, onClose, o
     return (
       <div className="flex flex-col h-full">
         <div className="flex items-center justify-between px-3 h-[38px] border-b border-border/30 flex-shrink-0">
-          <span className="text-[10px] text-muted-foreground/50">内容预览</span>
+          <span className="text-xs text-muted-foreground/50">内容预览</span>
           <div className="flex items-center gap-0.5">
-            <div className="relative">
-              <Tooltip content="历史文件" side="bottom">
-              <button onClick={() => setShowFileHistory(!showFileHistory)}
-                className={`flex items-center gap-1 px-2 py-[3px] rounded-md text-[10px] transition-colors ${showFileHistory ? 'bg-foreground/8 text-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-accent/15'}`}>
-                <Clock size={10} /><span>历史</span>
-              </button>
-              </Tooltip>
-              <AnimatePresence>
-                {showFileHistory && (
-                  <FileHistoryDropdown onSelect={onSelectArtifact} onClose={() => setShowFileHistory(false)} anchorRight selectedTitle={artifact?.title} hasTopic={hasTopic} />
-                )}
-              </AnimatePresence>
-            </div>
-            <Tooltip content="关闭" side="bottom"><button onClick={onClose} className="p-1.5 rounded text-muted-foreground hover:text-foreground hover:bg-accent/15 transition-colors">
+            <Tooltip content="关闭" side="bottom"><Button variant="ghost" size="icon-xs" onClick={onClose} className="p-1.5 w-auto h-auto text-muted-foreground hover:text-foreground hover:bg-accent/15">
               <X size={11} />
-            </button></Tooltip>
+            </Button></Tooltip>
           </div>
         </div>
         <div className="flex flex-col items-center justify-center flex-1 px-10">
@@ -537,21 +503,21 @@ function ArtifactsPanel({ artifact, isFullscreen, onToggleFullscreen, onClose, o
             <Layers size={22} strokeWidth={1.3} className="text-muted-foreground/25" />
           </div>
           <p className="text-[11.5px] text-foreground/60 mb-2">暂无预览内容</p>
-          <p className="text-[10px] text-muted-foreground/40 text-center leading-[1.6] mb-5">
+          <p className="text-xs text-muted-foreground/40 text-center leading-[1.6] mb-5">
             点击消息中的代码块、文档或网页卡片即可在此查看
           </p>
           <div className="w-full space-y-[6px]">
             <div className="flex items-center gap-2.5 px-3 py-[6px] rounded-lg bg-accent/10 border border-border/15">
               <div className="w-5 h-5 rounded bg-violet-500/10 flex items-center justify-center"><Code2 size={10} className="text-violet-500/60" /></div>
-              <span className="text-[10px] text-muted-foreground/50">代码 — 语法高亮 + 复制</span>
+              <span className="text-xs text-muted-foreground/50">代码 — 语法高亮 + 复制</span>
             </div>
             <div className="flex items-center gap-2.5 px-3 py-[6px] rounded-lg bg-accent/10 border border-border/15">
-              <div className="w-5 h-5 rounded bg-amber-500/10 flex items-center justify-center"><FileText size={10} className="text-amber-500/60" /></div>
-              <span className="text-[10px] text-muted-foreground/50">文档 — Markdown 渲染</span>
+              <div className="w-5 h-5 rounded bg-warning/10 flex items-center justify-center"><FileText size={10} className="text-warning/60" /></div>
+              <span className="text-xs text-muted-foreground/50">文档 — Markdown 渲染</span>
             </div>
             <div className="flex items-center gap-2.5 px-3 py-[6px] rounded-lg bg-accent/10 border border-border/15">
               <div className="w-5 h-5 rounded bg-sky-500/10 flex items-center justify-center"><Globe size={10} className="text-sky-500/60" /></div>
-              <span className="text-[10px] text-muted-foreground/50">网页 — 实时预览效果</span>
+              <span className="text-xs text-muted-foreground/50">网页 — 实时预览效果</span>
             </div>
           </div>
         </div>
@@ -564,34 +530,23 @@ function ArtifactsPanel({ artifact, isFullscreen, onToggleFullscreen, onClose, o
       <div className="flex items-center justify-between px-3 h-[38px] border-b border-border/30 flex-shrink-0">
         <div className="flex items-center gap-1">
           {availableTabs.map(t => (
-            <button key={t.key} onClick={() => setTab(t.key)}
-              className={`flex items-center gap-1.5 px-2.5 py-[5px] rounded-md text-[10px] transition-all duration-100 ${tab === t.key ? 'bg-foreground/8 text-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-accent/15'}`}>
+            <Button variant="ghost" size="xs" key={t.key} onClick={() => setTab(t.key)}
+              className={`gap-1.5 px-2.5 py-[5px] h-auto text-xs transition-all duration-100 ${tab === t.key ? 'bg-foreground/8 text-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-accent/15'}`}>
               <t.icon size={10} />{t.label}
-            </button>
+            </Button>
           ))}
         </div>
         <div className="flex items-center gap-0.5">
           <span className="text-[9px] text-muted-foreground/50 mr-1.5 truncate max-w-[100px]">{artifact.title}</span>
-          <div className="relative">
-            <Tooltip content="历史文件" side="bottom"><button onClick={() => setShowFileHistory(!showFileHistory)}
-              className={`p-1.5 rounded transition-colors ${showFileHistory ? 'text-foreground/80 bg-accent/25' : 'text-muted-foreground hover:text-foreground hover:bg-accent/15'}`}>
-              <Clock size={11} />
-            </button></Tooltip>
-            <AnimatePresence>
-              {showFileHistory && (
-                <FileHistoryDropdown onSelect={onSelectArtifact} onClose={() => setShowFileHistory(false)} anchorRight selectedTitle={artifact?.title} hasTopic={hasTopic} />
-              )}
-            </AnimatePresence>
-          </div>
-          <Tooltip content="复制" side="bottom"><button onClick={handleCopy} className="p-1.5 rounded text-muted-foreground hover:text-foreground hover:bg-accent/15 transition-colors">
+          <Tooltip content="复制" side="bottom"><Button variant="ghost" size="icon-xs" onClick={handleCopy} className="p-1.5 w-auto h-auto text-muted-foreground hover:text-foreground hover:bg-accent/15">
             {copied ? <Check size={11} className="text-cherry-primary" /> : <Copy size={11} />}
-          </button></Tooltip>
-          <Tooltip content={isFullscreen ? '还原' : '全屏'} side="bottom"><button onClick={onToggleFullscreen} className="p-1.5 rounded text-muted-foreground hover:text-foreground hover:bg-accent/15 transition-colors">
+          </Button></Tooltip>
+          <Tooltip content={isFullscreen ? '还原' : '全屏'} side="bottom"><Button variant="ghost" size="icon-xs" onClick={onToggleFullscreen} className="p-1.5 w-auto h-auto text-muted-foreground hover:text-foreground hover:bg-accent/15">
             {isFullscreen ? <Minimize2 size={11} /> : <Maximize2 size={11} />}
-          </button></Tooltip>
-          <Tooltip content="关闭" side="bottom"><button onClick={onClose} className="p-1.5 rounded text-muted-foreground hover:text-foreground hover:bg-accent/15 transition-colors">
+          </Button></Tooltip>
+          <Tooltip content="关闭" side="bottom"><Button variant="ghost" size="icon-xs" onClick={onClose} className="p-1.5 w-auto h-auto text-muted-foreground hover:text-foreground hover:bg-accent/15">
             <X size={11} />
-          </button></Tooltip>
+          </Button></Tooltip>
         </div>
       </div>
       <div className="flex-1 overflow-auto [&::-webkit-scrollbar]:w-[3px] [&::-webkit-scrollbar-thumb]:bg-border/25 [&::-webkit-scrollbar-thumb]:rounded-full">
@@ -631,18 +586,18 @@ function MarkdownRenderer({ content }: { content: string }) {
     }
     if (inCodeBlock) { codeLines.push(line); return; }
 
-    if (line.startsWith('# ')) elements.push(<h1 key={i} className="text-[15px] text-foreground mb-3 mt-1">{line.slice(2)}</h1>);
-    else if (line.startsWith('## ')) elements.push(<h2 key={i} className="text-[13px] text-foreground mb-2 mt-4">{line.slice(3)}</h2>);
-    else if (line.startsWith('### ')) elements.push(<h3 key={i} className="text-[12px] text-foreground mb-1.5 mt-3">{line.slice(4)}</h3>);
+    if (line.startsWith('# ')) elements.push(<h1 key={i} className="text-base text-foreground mb-3 mt-1">{line.slice(2)}</h1>);
+    else if (line.startsWith('## ')) elements.push(<h2 key={i} className="text-sm text-foreground mb-2 mt-4">{line.slice(3)}</h2>);
+    else if (line.startsWith('### ')) elements.push(<h3 key={i} className="text-sm text-foreground mb-1.5 mt-3">{line.slice(4)}</h3>);
     else if (line.startsWith('- **')) {
       const bold = line.match(RE_DASH_BOLD);
-      if (bold) elements.push(<div key={i} className="flex items-start gap-1.5 py-0.5 text-[11px] text-foreground/80 leading-[1.7]"><span className="text-muted-foreground/40 mt-px">-</span><span><span className="text-foreground">{bold[1]}</span>{bold[2]}</span></div>);
+      if (bold) elements.push(<div key={i} className="flex items-start gap-1.5 py-0.5 text-xs text-foreground/80 leading-[1.7]"><span className="text-muted-foreground/40 mt-px">-</span><span><span className="text-foreground">{bold[1]}</span>{bold[2]}</span></div>);
     } else if (RE_NUM_SPACE_TEST.test(line)) {
-      elements.push(<div key={i} className="flex items-start gap-2 py-0.5 text-[11px] text-foreground/80 leading-[1.7]"><span className="text-muted-foreground/50 w-4 text-right flex-shrink-0">{line.match(RE_NUM_EXTRACT)?.[1]}.</span><span>{line.replace(RE_NUM_PREFIX, '')}</span></div>);
+      elements.push(<div key={i} className="flex items-start gap-2 py-0.5 text-xs text-foreground/80 leading-[1.7]"><span className="text-muted-foreground/50 w-4 text-right flex-shrink-0">{line.match(RE_NUM_EXTRACT)?.[1]}.</span><span>{line.replace(RE_NUM_PREFIX, '')}</span></div>);
     } else if (line.trim() === '') elements.push(<div key={i} className="h-2" />);
     else {
       const formatted = applyBoldReplace(applyCodeReplaceMd(line));
-      elements.push(<p key={i} className="text-[11px] text-foreground/75 leading-[1.8]" dangerouslySetInnerHTML={{ __html: formatted }} />);
+      elements.push(<p key={i} className="text-xs text-foreground/75 leading-[1.8]" dangerouslySetInnerHTML={{ __html: formatted }} />);
     }
   });
   return <div>{elements}</div>;
@@ -696,11 +651,11 @@ function FloatingPanel({ title, icon, onClose, children, width = 340 }: {
       <div className="flex items-center justify-between px-4 h-[38px] flex-shrink-0">
         <div className="flex items-center gap-2">
           {icon}
-          <span className="text-[11px] text-foreground">{title}</span>
+          <span className="text-xs text-foreground">{title}</span>
         </div>
-        <button onClick={onClose} className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-accent/15 transition-colors">
+        <Button variant="ghost" size="icon-xs" onClick={onClose} className="p-1.5 w-auto h-auto text-muted-foreground hover:text-foreground hover:bg-accent/15">
           <X size={12} />
-        </button>
+        </Button>
       </div>
       <div className="flex-1 overflow-y-auto [&::-webkit-scrollbar]:w-[3px] [&::-webkit-scrollbar-thumb]:bg-border/25 [&::-webkit-scrollbar-thumb]:rounded-full">
         {children}
@@ -729,17 +684,17 @@ function AssistantInfoPanel({ assistant, topics, onSelectTopic, onClose, onEdit,
       <div className="p-4 space-y-4">
         <div className="flex items-start justify-between">
           <div>
-            <h3 className="text-[13px] text-foreground mb-1">{assistant.name}</h3>
-            <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
+            <h3 className="text-sm text-foreground mb-1">{assistant.name}</h3>
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
               <Clock size={9} />
               <span>最新使用 {assistant.updatedAt}</span>
             </div>
           </div>
-          <button onClick={onEdit} className="px-2 py-[4px] rounded-md text-[10px] text-muted-foreground border border-border/30 hover:text-foreground hover:bg-accent/15 transition-colors flex items-center gap-1">
+          <Button variant="outline" size="xs" onClick={onEdit} className="px-2 py-[4px] h-auto border-border/30 text-muted-foreground hover:text-foreground hover:bg-accent/15 gap-1">
             <Edit3 size={9} />编辑
-          </button>
+          </Button>
         </div>
-        <div className="flex items-center gap-2 text-[10px]">
+        <div className="flex items-center gap-2 text-xs">
           <span className="text-muted-foreground">默认模型</span>
           <div className="flex items-center gap-1.5 px-2 py-[3px] rounded-md bg-accent/25">
             <Sparkles size={9} className="text-muted-foreground" />
@@ -748,7 +703,7 @@ function AssistantInfoPanel({ assistant, topics, onSelectTopic, onClose, onEdit,
         </div>
         {assistant.tags.length > 0 && (
           <div className="flex items-center gap-1.5">
-            <span className="text-[10px] text-muted-foreground">标签</span>
+            <span className="text-xs text-muted-foreground">标签</span>
             <div className="flex gap-1">
               {assistant.tags.map(t => (
                 <span key={t} className="px-1.5 py-[2px] rounded text-[9px] bg-accent/30 text-foreground/70">{t}</span>
@@ -757,19 +712,19 @@ function AssistantInfoPanel({ assistant, topics, onSelectTopic, onClose, onEdit,
           </div>
         )}
         <div className="rounded-lg bg-muted/15 overflow-hidden">
-          <button onClick={() => setPromptExpanded(!promptExpanded)}
-            className="flex items-center gap-2 w-full px-3 py-2 text-[10.5px] text-foreground/80 hover:bg-accent/10 transition-colors">
+          <Button variant="ghost" size="xs" onClick={() => setPromptExpanded(!promptExpanded)}
+            className="w-full justify-start gap-2 px-3 py-2 h-auto text-[10.5px] text-foreground/80 hover:bg-accent/10 transition-colors">
             <FileText size={10} className="text-muted-foreground flex-shrink-0" />
             <span className="flex-1 text-left">系统提示词</span>
             <motion.div animate={{ rotate: promptExpanded ? 90 : 0 }} transition={{ duration: 0.1 }}>
               <ChevronRight size={10} className="text-muted-foreground/50" />
             </motion.div>
-          </button>
+          </Button>
           <AnimatePresence initial={false}>
             {promptExpanded && (
               <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.15 }} className="overflow-hidden">
                 <div className="px-3 pb-3">
-                  <pre className="text-[10px] text-foreground/60 leading-[1.7] whitespace-pre-wrap mt-1 font-sans">{assistant.systemPrompt}</pre>
+                  <pre className="text-xs text-foreground/60 leading-[1.7] whitespace-pre-wrap mt-1 font-sans">{assistant.systemPrompt}</pre>
                 </div>
               </motion.div>
             )}
@@ -777,12 +732,12 @@ function AssistantInfoPanel({ assistant, topics, onSelectTopic, onClose, onEdit,
         </div>
         {assistant.knowledgeBases.length > 0 && (
           <div>
-            <div className="flex items-center gap-1.5 mb-2"><BookOpen size={10} className="text-muted-foreground" /><span className="text-[10px] text-muted-foreground">知识库</span></div>
+            <div className="flex items-center gap-1.5 mb-2"><BookOpen size={10} className="text-muted-foreground" /><span className="text-xs text-muted-foreground">知识库</span></div>
             <div className="space-y-1">
               {assistant.knowledgeBases.map(kb => (
                 <div key={kb.id} onClick={() => onNavigateToKnowledge?.(kb.name)} className="flex items-center gap-2 px-2.5 py-[6px] rounded-md hover:bg-accent/15 transition-colors cursor-pointer group">
-                  <Database size={10} className="text-blue-500/70 flex-shrink-0" />
-                  <span className="text-[10.5px] text-blue-500/80 group-hover:text-blue-600">{kb.name}</span>
+                  <Database size={10} className="text-info/70 flex-shrink-0" />
+                  <span className="text-[10.5px] text-info/80 group-hover:text-info">{kb.name}</span>
                   <ChevronRight size={8} className="ml-auto text-muted-foreground/30 group-hover:text-muted-foreground/50" />
                 </div>
               ))}
@@ -791,11 +746,11 @@ function AssistantInfoPanel({ assistant, topics, onSelectTopic, onClose, onEdit,
         )}
         {assistant.tools.length > 0 && (
           <div>
-            <div className="flex items-center gap-1.5 mb-2"><Settings size={10} className="text-muted-foreground" /><span className="text-[10px] text-muted-foreground">工具</span></div>
+            <div className="flex items-center gap-1.5 mb-2"><Settings size={10} className="text-muted-foreground" /><span className="text-xs text-muted-foreground">工具</span></div>
             <div className="space-y-1">
               {assistant.tools.map(tool => (
                 <div key={tool.id} className="flex items-center gap-2 px-2.5 py-[6px] rounded-md hover:bg-accent/15 transition-colors">
-                  <span className="text-[10px]">{tool.icon}</span>
+                  <span className="text-xs">{tool.icon}</span>
                   <span className="text-[10.5px] text-foreground/70">{tool.name}</span>
                 </div>
               ))}
@@ -805,19 +760,19 @@ function AssistantInfoPanel({ assistant, topics, onSelectTopic, onClose, onEdit,
         <div>
           <div className="flex items-center gap-1.5 mb-2">
             <Clock size={10} className="text-muted-foreground" />
-            <span className="text-[10px] text-muted-foreground flex-1">最近话题</span>
-            <Tooltip content="历史话题" side="bottom"><button onClick={onOpenHistory} className="p-1 rounded text-muted-foreground/40 hover:text-foreground hover:bg-accent/15 transition-colors">
+            <span className="text-xs text-muted-foreground flex-1">最近话题</span>
+            <Tooltip content="历史话题" side="bottom"><Button variant="ghost" size="icon-xs" onClick={onOpenHistory} className="p-1 w-auto h-auto text-muted-foreground/40 hover:text-foreground hover:bg-accent/15">
               <History size={11} />
-            </button></Tooltip>
+            </Button></Tooltip>
           </div>
           <div className="text-[9px] text-muted-foreground/50 px-1 mb-1.5 mt-3">昨天</div>
           <div className="space-y-0.5">
             {topics.slice(0, 4).map(topic => (
-              <button key={topic.id} onClick={() => { onSelectTopic(topic.id); onClose(); }}
-                className="flex items-center gap-2 w-full px-2.5 py-[6px] rounded-md text-left hover:bg-accent/15 transition-colors group">
+              <Button variant="ghost" size="xs" key={topic.id} onClick={() => { onSelectTopic(topic.id); onClose(); }}
+                className="w-full justify-start gap-2 px-2.5 py-[6px] h-auto text-left hover:bg-accent/15 transition-colors group">
                 <span className="text-[10.5px] text-foreground/70 flex-1 truncate group-hover:text-foreground">{topic.title}</span>
                 <span className="text-[9px] text-muted-foreground/40 flex-shrink-0">{topic.timestamp}</span>
-              </button>
+              </Button>
             ))}
           </div>
         </div>
@@ -848,26 +803,26 @@ function ChatDetailPanel({ metadata, onClose }: {
     <FloatingPanel title="聊天详情" icon={<Activity size={12} className="text-muted-foreground" />} onClose={onClose}>
       <div className="px-4 py-3 space-y-3">
         <div className="space-y-[6px]">
-          <div className="flex items-center justify-between text-[10px]">
+          <div className="flex items-center justify-between text-xs">
             <span className="text-muted-foreground/70">会话 ID</span>
-            <button onClick={copyId} className="flex items-center gap-1 text-foreground/60 hover:text-foreground transition-colors font-mono text-[9px]">
+            <Button variant="ghost" size="xs" onClick={copyId} className="gap-1 h-auto text-foreground/60 hover:text-foreground transition-colors font-mono text-[9px]">
               <span>{metadata.sessionId.slice(0, 16)}...</span>
               {copied ? <Check size={8} className="text-cherry-primary" /> : <Copy size={8} />}
-            </button>
+            </Button>
           </div>
-          <div className="flex items-center justify-between text-[10px]">
+          <div className="flex items-center justify-between text-xs">
             <span className="text-muted-foreground/70">模型</span>
             <div className="flex items-center gap-1.5"><Sparkles size={9} className="text-muted-foreground/40" /><span className="text-foreground/70">{metadata.model}</span></div>
           </div>
-          <div className="flex items-center justify-between text-[10px]">
+          <div className="flex items-center justify-between text-xs">
             <span className="text-muted-foreground/70">状态</span>
-            <span className={metadata.status === 'success' ? 'text-foreground/60' : 'text-red-500'}>{metadata.status === 'success' ? '成功' : '失败'}</span>
+            <span className={metadata.status === 'success' ? 'text-foreground/60' : 'text-destructive'}>{metadata.status === 'success' ? '成功' : '失败'}</span>
           </div>
-          <div className="flex items-center justify-between text-[10px]">
+          <div className="flex items-center justify-between text-xs">
             <span className="text-muted-foreground/70">时间</span>
             <span className="text-foreground/70">{metadata.startTime} · {metadata.duration}</span>
           </div>
-          <div className="relative flex items-center justify-between text-[10px]"
+          <div className="relative flex items-center justify-between text-xs"
             onMouseEnter={() => setTokenHover(true)} onMouseLeave={() => setTokenHover(false)}>
             <span className="text-muted-foreground/70">令牌数</span>
             <span className="text-foreground/70 tabular-nums cursor-default">{total.toLocaleString()}</span>
@@ -876,13 +831,13 @@ function ChatDetailPanel({ metadata, onClose }: {
                 <motion.div initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 4 }} transition={{ duration: 0.1 }}
                   className="absolute right-0 top-full mt-1 z-10 bg-popover rounded-lg shadow-lg shadow-black/10 border border-border/25 px-3 py-2 min-w-[160px]">
                   <div className="space-y-[4px]">
-                    <div className="flex items-center justify-between text-[9.5px]"><span className="text-muted-foreground">输入</span><span className="text-blue-500 tabular-nums">{metadata.tokens.input.toLocaleString()}</span></div>
+                    <div className="flex items-center justify-between text-[9.5px]"><span className="text-muted-foreground">输入</span><span className="text-info tabular-nums">{metadata.tokens.input.toLocaleString()}</span></div>
                     <div className="flex items-center justify-between text-[9.5px]"><span className="text-muted-foreground">输出</span><span className="text-foreground/60 tabular-nums">{metadata.tokens.output.toLocaleString()}</span></div>
                     {metadata.tokens.thinking !== undefined && metadata.tokens.thinking > 0 && (
                       <div className="flex items-center justify-between text-[9.5px]"><span className="text-muted-foreground">思考</span><span className="text-purple-500 tabular-nums">{metadata.tokens.thinking.toLocaleString()}</span></div>
                     )}
                     {metadata.tokens.cache !== undefined && metadata.tokens.cache > 0 && (
-                      <div className="flex items-center justify-between text-[9.5px]"><span className="text-muted-foreground">缓存</span><span className="text-amber-500 tabular-nums">{metadata.tokens.cache.toLocaleString()}</span></div>
+                      <div className="flex items-center justify-between text-[9.5px]"><span className="text-muted-foreground">缓存</span><span className="text-warning tabular-nums">{metadata.tokens.cache.toLocaleString()}</span></div>
                     )}
                   </div>
                 </motion.div>
@@ -894,20 +849,20 @@ function ChatDetailPanel({ metadata, onClose }: {
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-0.5">
               {(['request', 'response', 'process'] as const).map(t => (
-                <button key={t} onClick={() => setJsonTab(t)}
-                  className={`px-2.5 py-[4px] rounded-md text-[9.5px] transition-all duration-100 ${jsonTab === t ? 'bg-foreground/8 text-foreground' : 'text-muted-foreground/60 hover:text-foreground'}`}>
+                <Button variant="ghost" size="xs" key={t} onClick={() => setJsonTab(t)}
+                  className={`px-2.5 py-[4px] h-auto text-[9.5px] transition-all duration-100 ${jsonTab === t ? 'bg-foreground/8 text-foreground' : 'text-muted-foreground/60 hover:text-foreground'}`}>
                   {t === 'request' ? '请求' : t === 'response' ? '响应' : '过程'}
-                </button>
+                </Button>
               ))}
             </div>
             <div className="flex items-center gap-0.5">
-              <Tooltip content="复制" side="bottom"><button onClick={() => { copyToClipboard(jsonContent); setJsonCopied(true); setTimeout(() => setJsonCopied(false), 1500); }}
-                className="p-1 rounded text-muted-foreground/40 hover:text-foreground hover:bg-accent/15 transition-colors">
+              <Tooltip content="复制" side="bottom"><Button variant="ghost" size="icon-xs" onClick={() => { copyToClipboard(jsonContent); setJsonCopied(true); setTimeout(() => setJsonCopied(false), 1500); }}
+                className="p-1 w-auto h-auto text-muted-foreground/40 hover:text-foreground hover:bg-accent/15">
                 {jsonCopied ? <Check size={9} className="text-cherry-primary" /> : <Copy size={9} />}
-              </button></Tooltip>
-              <Tooltip content="放大" side="bottom"><button onClick={() => setJsonExpanded(true)} className="p-1 rounded text-muted-foreground/40 hover:text-foreground hover:bg-accent/15 transition-colors">
+              </Button></Tooltip>
+              <Tooltip content="放大" side="bottom"><Button variant="ghost" size="icon-xs" onClick={() => setJsonExpanded(true)} className="p-1 w-auto h-auto text-muted-foreground/40 hover:text-foreground hover:bg-accent/15">
                 <Maximize2 size={9} />
-              </button></Tooltip>
+              </Button></Tooltip>
             </div>
           </div>
           <div className="rounded-lg bg-muted/15 overflow-auto [&::-webkit-scrollbar]:w-[2px] [&::-webkit-scrollbar-thumb]:bg-border/20">
@@ -927,18 +882,18 @@ function ChatDetailPanel({ metadata, onClose }: {
               <div className="flex items-center justify-between px-4 py-2.5">
                 <div className="flex items-center gap-1">
                   {(['request', 'response', 'process'] as const).map(t => (
-                    <button key={t} onClick={() => setJsonTab(t)}
-                      className={`px-2.5 py-[4px] rounded-md text-[10px] transition-all duration-100 ${jsonTab === t ? 'bg-foreground/8 text-foreground' : 'text-muted-foreground/60 hover:text-foreground'}`}>
+                    <Button variant="ghost" size="xs" key={t} onClick={() => setJsonTab(t)}
+                      className={`px-2.5 py-[4px] h-auto text-xs transition-all duration-100 ${jsonTab === t ? 'bg-foreground/8 text-foreground' : 'text-muted-foreground/60 hover:text-foreground'}`}>
                       {t === 'request' ? '请求' : t === 'response' ? '响应' : '过程'}
-                    </button>
+                    </Button>
                   ))}
                 </div>
-                <button onClick={() => setJsonExpanded(false)} className="p-1.5 rounded text-muted-foreground/40 hover:text-foreground hover:bg-accent/15 transition-colors">
+                <Button variant="ghost" size="icon-xs" onClick={() => setJsonExpanded(false)} className="p-1.5 w-auto h-auto text-muted-foreground/40 hover:text-foreground hover:bg-accent/15">
                   <Minimize2 size={11} />
-                </button>
+                </Button>
               </div>
               <div className="flex-1 overflow-auto px-4 pb-4 [&::-webkit-scrollbar]:w-[3px] [&::-webkit-scrollbar-thumb]:bg-border/30">
-                <pre className="text-[10px] leading-[1.7] font-mono whitespace-pre">
+                <pre className="text-xs leading-[1.7] font-mono whitespace-pre">
                   {jsonContent.split('\n').map((line, i) => <div key={i}>{highlightLine(line)}</div>)}
                 </pre>
               </div>
@@ -959,23 +914,23 @@ function RAGPanel({ ragInfo, onClose }: { ragInfo: RAGInfo; onClose: () => void 
   const [expandedChunk, setExpandedChunk] = useState<number | null>(null);
 
   return (
-    <FloatingPanel title="知识库" icon={<Database size={12} className="text-blue-500/70" />} onClose={onClose}>
+    <FloatingPanel title="知识库" icon={<Database size={12} className="text-info/70" />} onClose={onClose}>
       <div className="px-4 py-3 space-y-3">
         <div className="space-y-[6px]">
-          <div className="flex items-center justify-between text-[10px]"><span className="text-muted-foreground/70">知识库</span><span className="text-blue-500 cursor-pointer hover:underline">{ragInfo.knowledgeBaseName}</span></div>
-          <div className="flex items-center justify-between text-[10px]"><span className="text-muted-foreground/70">Top-k</span><span className="text-foreground/70">{ragInfo.topK}</span></div>
-          <div className="flex items-center justify-between text-[10px]"><span className="text-muted-foreground/70">分数阈值</span><span className="text-foreground/70">{ragInfo.scoreThreshold}</span></div>
+          <div className="flex items-center justify-between text-xs"><span className="text-muted-foreground/70">知识库</span><span className="text-info cursor-pointer hover:underline">{ragInfo.knowledgeBaseName}</span></div>
+          <div className="flex items-center justify-between text-xs"><span className="text-muted-foreground/70">Top-k</span><span className="text-foreground/70">{ragInfo.topK}</span></div>
+          <div className="flex items-center justify-between text-xs"><span className="text-muted-foreground/70">分数阈值</span><span className="text-foreground/70">{ragInfo.scoreThreshold}</span></div>
           {ragInfo.rerankModel && (
-            <div className="flex items-center justify-between text-[10px]">
+            <div className="flex items-center justify-between text-xs">
               <span className="text-muted-foreground/70">重排</span>
               <div className="flex items-center gap-1.5"><Sparkles size={8} className="text-muted-foreground/40" /><span className="text-foreground/70">{ragInfo.rerankModel}</span></div>
             </div>
           )}
-          <div className="flex items-center justify-between text-[10px]"><span className="text-muted-foreground/70">检索方式</span><span className="text-foreground/70">{ragInfo.retrievalMethod}</span></div>
+          <div className="flex items-center justify-between text-xs"><span className="text-muted-foreground/70">检索方式</span><span className="text-foreground/70">{ragInfo.retrievalMethod}</span></div>
         </div>
         <div className="flex items-center gap-0.5">
-          <button onClick={() => setSubTab('chunks')} className={`px-2.5 py-[4px] rounded-md text-[10px] transition-all ${subTab === 'chunks' ? 'bg-foreground/8 text-foreground' : 'text-muted-foreground/60 hover:text-foreground'}`}>top-k</button>
-          <button onClick={() => setSubTab('process')} className={`px-2.5 py-[4px] rounded-md text-[10px] transition-all ${subTab === 'process' ? 'bg-foreground/8 text-foreground' : 'text-muted-foreground/60 hover:text-foreground'}`}>过程</button>
+          <Button variant="ghost" size="xs" onClick={() => setSubTab('chunks')} className={`px-2.5 py-[4px] h-auto text-xs transition-all ${subTab === 'chunks' ? 'bg-foreground/8 text-foreground' : 'text-muted-foreground/60 hover:text-foreground'}`}>top-k</Button>
+          <Button variant="ghost" size="xs" onClick={() => setSubTab('process')} className={`px-2.5 py-[4px] h-auto text-xs transition-all ${subTab === 'process' ? 'bg-foreground/8 text-foreground' : 'text-muted-foreground/60 hover:text-foreground'}`}>过程</Button>
         </div>
         {subTab === 'chunks' && (
           <div className="space-y-2">
@@ -999,14 +954,14 @@ function RAGPanel({ ragInfo, onClose }: { ragInfo: RAGInfo; onClose: () => void 
                 }`}
               >
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-1.5"><span className={`w-5 h-5 rounded text-[9px] flex items-center justify-center tabular-nums ${expandedChunk === i ? 'bg-blue-500/20 text-blue-600' : 'bg-blue-500/15 text-blue-600'}`}>{i + 1}</span><span className="text-[9px] text-muted-foreground">相关度</span></div>
+                  <div className="flex items-center gap-1.5"><span className={`w-5 h-5 rounded text-[9px] flex items-center justify-center tabular-nums ${expandedChunk === i ? 'bg-blue-500/20 text-info' : 'bg-blue-500/15 text-info'}`}>{i + 1}</span><span className="text-[9px] text-muted-foreground">相关度</span></div>
                   <div className="h-1.5 w-16 rounded-full bg-accent/30 overflow-hidden"><div className="h-full bg-blue-500 rounded-full" style={{ width: `${chunk.score * 100}%` }} /></div>
-                  <span className="text-[10px] text-blue-600 tabular-nums">{chunk.score.toFixed(2)}</span>
+                  <span className="text-xs text-info tabular-nums">{chunk.score.toFixed(2)}</span>
                 </div>
-                <p className="text-[10px] text-foreground/65 leading-[1.65] line-clamp-3">{chunk.content}</p>
+                <p className="text-xs text-foreground/65 leading-[1.65] line-clamp-3">{chunk.content}</p>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-1.5 text-[9px] text-muted-foreground/60"><File size={8} /><span>{chunk.source}</span></div>
-                  <Eye size={9} className={`transition-colors ${expandedChunk === i ? 'text-blue-500' : 'text-muted-foreground/30'}`} />
+                  <Eye size={9} className={`transition-colors ${expandedChunk === i ? 'text-info' : 'text-muted-foreground/30'}`} />
                 </div>
               </div>
             ))}
@@ -1031,7 +986,7 @@ function RAGPanel({ ragInfo, onClose }: { ragInfo: RAGInfo; onClose: () => void 
 function WebSearchPanel({ results, onClose, startIndex }: { results: SearchResultItem[]; onClose: () => void; startIndex?: number }) {
   const offset = startIndex ?? 0;
   return (
-    <FloatingPanel title="搜索结果" icon={<Globe size={12} className="text-blue-500/70" />} onClose={onClose}>
+    <FloatingPanel title="搜索结果" icon={<Globe size={12} className="text-info/70" />} onClose={onClose}>
       <div className="px-4 py-3 space-y-1.5">
         {results.map((r, i) => (
           <div key={i} className="rounded-lg p-2.5 hover:bg-accent/10 transition-colors">
@@ -1039,7 +994,7 @@ function WebSearchPanel({ results, onClose, startIndex }: { results: SearchResul
               <span className="w-5 h-5 rounded bg-foreground/[0.08] text-foreground/70 text-[9px] flex items-center justify-center flex-shrink-0 tabular-nums mt-px">{offset + i + 1}</span>
               <div className="flex-1 min-w-0">
                 <a href={r.url} target="_blank" rel="noopener noreferrer"
-                  className="text-[10.5px] text-foreground/85 hover:text-blue-500 transition-colors line-clamp-1 flex items-center gap-1">
+                  className="text-[10.5px] text-foreground/85 hover:text-info transition-colors line-clamp-1 flex items-center gap-1">
                   {r.title}<ExternalLink size={8} className="flex-shrink-0 text-muted-foreground/30" />
                 </a>
                 <p className="text-[9.5px] text-foreground/55 leading-[1.55] mt-1 line-clamp-3">{r.snippet}</p>
@@ -1103,8 +1058,8 @@ function InlineCitationBadge({ source }: { source: SourceItem }) {
       <span
         className={`inline-flex items-center justify-center min-w-[16px] h-[15px] px-[3px] rounded text-[8px] tabular-nums ml-[1px] mr-[1px] transition-all duration-100 cursor-default ${
           hovered
-            ? source.type === 'rag' ? 'bg-blue-500/25 text-blue-600 ring-1 ring-blue-400/30' : 'bg-sky-500/25 text-sky-600 ring-1 ring-sky-400/30'
-            : source.type === 'rag' ? 'bg-blue-500/10 text-blue-500/70' : 'bg-sky-500/10 text-sky-500/70'
+            ? source.type === 'rag' ? 'bg-blue-500/25 text-info ring-1 ring-blue-400/30' : 'bg-sky-500/25 text-sky-600 ring-1 ring-sky-400/30'
+            : source.type === 'rag' ? 'bg-blue-500/10 text-info/70' : 'bg-sky-500/10 text-sky-500/70'
         }`}
       >{source.index}</span>
       <AnimatePresence>
@@ -1121,19 +1076,19 @@ function InlineCitationBadge({ source }: { source: SourceItem }) {
             <div className="px-3 py-2.5 space-y-1">
               <div className="flex items-start gap-2">
                 <span className={`w-5 h-5 rounded flex items-center justify-center flex-shrink-0 text-[9px] tabular-nums mt-px ${
-                  source.type === 'rag' ? 'bg-blue-500/15 text-blue-600' : 'bg-sky-500/15 text-sky-600'
+                  source.type === 'rag' ? 'bg-blue-500/15 text-info' : 'bg-sky-500/15 text-sky-600'
                 }`}>{source.index}</span>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-1.5">
-                    {source.type === 'rag' ? <Database size={9} className="text-blue-500/60 flex-shrink-0" /> : <Globe size={9} className="text-sky-500/60 flex-shrink-0" />}
-                    <span className="text-[10px] text-foreground/80 truncate">{source.title}</span>
+                    {source.type === 'rag' ? <Database size={9} className="text-info/60 flex-shrink-0" /> : <Globe size={9} className="text-sky-500/60 flex-shrink-0" />}
+                    <span className="text-xs text-foreground/80 truncate">{source.title}</span>
                     {source.url && <ExternalLink size={8} className="text-muted-foreground/30 flex-shrink-0" />}
                   </div>
                   {source.score !== undefined && (
                     <div className="flex items-center gap-1.5 mt-1">
                       <span className="text-[9px] text-muted-foreground/50">相关度</span>
                       <div className="h-1 w-12 rounded-full bg-accent/30 overflow-hidden"><div className="h-full bg-blue-500 rounded-full" style={{ width: `${source.score * 100}%` }} /></div>
-                      <span className="text-[9px] text-blue-600 tabular-nums">{source.score.toFixed(2)}</span>
+                      <span className="text-[9px] text-info tabular-nums">{source.score.toFixed(2)}</span>
                     </div>
                   )}
                   <p className="text-[9.5px] text-foreground/55 leading-[1.6] mt-1 line-clamp-3">{source.snippet}</p>
@@ -1191,18 +1146,18 @@ function RAGChunkPreview({ chunk, index, onClose }: { chunk: RAGChunk; index: nu
     >
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-1.5">
-          <span className="w-5 h-5 rounded bg-blue-500/15 text-blue-600 text-[9px] flex items-center justify-center tabular-nums">{index}</span>
-          <span className="text-[10px] text-foreground/75">片段 #{index} 详情</span>
+          <span className="w-5 h-5 rounded bg-blue-500/15 text-info text-[9px] flex items-center justify-center tabular-nums">{index}</span>
+          <span className="text-xs text-foreground/75">片段 #{index} 详情</span>
         </div>
-        <button onClick={onClose} className="p-1 rounded text-muted-foreground/40 hover:text-foreground hover:bg-accent/15 transition-colors"><X size={10} /></button>
+        <Button variant="ghost" size="icon-xs" onClick={onClose} className="p-1 w-auto h-auto text-muted-foreground/40 hover:text-foreground hover:bg-accent/15"><X size={10} /></Button>
       </div>
       <div className="flex items-center gap-1.5">
         <span className="text-[9px] text-muted-foreground/50">相关度</span>
         <div className="h-1.5 w-20 rounded-full bg-accent/30 overflow-hidden"><div className="h-full bg-blue-500 rounded-full" style={{ width: `${chunk.score * 100}%` }} /></div>
-        <span className="text-[10px] text-blue-600 tabular-nums">{chunk.score.toFixed(4)}</span>
+        <span className="text-xs text-info tabular-nums">{chunk.score.toFixed(4)}</span>
       </div>
       <div className="rounded-lg bg-muted/15 p-2.5">
-        <p className="text-[10px] text-foreground/70 leading-[1.7] whitespace-pre-wrap">{chunk.content}</p>
+        <p className="text-xs text-foreground/70 leading-[1.7] whitespace-pre-wrap">{chunk.content}</p>
       </div>
       <div className="flex items-center gap-1.5 text-[9px] text-muted-foreground/50">
         <File size={8} />
@@ -1231,17 +1186,17 @@ function MessageActionBar({ onCopy, onQuote, onDelete, onBookmark, onShare, onIn
 }) {
   return (
     <div className="flex items-center gap-0.5 mt-1 -ml-1">
-      <Tooltip content="复制" side="bottom"><button onClick={onCopy} className="p-[4px] rounded text-muted-foreground/40 hover:text-foreground hover:bg-accent/20 transition-colors"><Copy size={12} /></button></Tooltip>
-      {onRetry && <Tooltip content="重试" side="bottom"><button onClick={onRetry} className="p-[4px] rounded text-muted-foreground/40 hover:text-foreground hover:bg-accent/20 transition-colors"><RotateCcw size={12} /></button></Tooltip>}
-      <Tooltip content="字体" side="bottom"><button className="p-[4px] rounded text-muted-foreground/40 hover:text-foreground hover:bg-accent/20 transition-colors"><Type size={12} /></button></Tooltip>
-      <Tooltip content="@提及" side="bottom"><button className="p-[4px] rounded text-muted-foreground/40 hover:text-foreground hover:bg-accent/20 transition-colors"><AtSign size={12} /></button></Tooltip>
-      <Tooltip content="引用" side="bottom"><button onClick={onQuote} className="p-[4px] rounded text-muted-foreground/40 hover:text-foreground hover:bg-accent/20 transition-colors"><Quote size={12} /></button></Tooltip>
-      <Tooltip content="删除" side="bottom"><button onClick={onDelete} className="p-[4px] rounded text-muted-foreground/40 hover:text-foreground hover:bg-accent/20 transition-colors"><Trash2 size={12} /></button></Tooltip>
-      <Tooltip content="收藏" side="bottom"><button onClick={onBookmark} className="p-[4px] rounded text-muted-foreground/40 hover:text-foreground hover:bg-accent/20 transition-colors"><Bookmark size={12} /></button></Tooltip>
-      <Tooltip content="分享" side="bottom"><button onClick={onShare} className="p-[4px] rounded text-muted-foreground/40 hover:text-foreground hover:bg-accent/20 transition-colors"><Share2 size={12} /></button></Tooltip>
-      {onInfo && <Tooltip content="聊天详情" side="bottom"><button onClick={onInfo} className="p-[4px] rounded text-muted-foreground/40 hover:text-foreground hover:bg-accent/20 transition-colors"><Info size={12} /></button></Tooltip>}
+      <Tooltip content="复制" side="bottom"><Button variant="ghost" size="icon-xs" onClick={onCopy} className="p-[4px] w-auto h-auto text-muted-foreground/40 hover:text-foreground hover:bg-accent/20"><Copy size={12} /></Button></Tooltip>
+      {onRetry && <Tooltip content="重试" side="bottom"><Button variant="ghost" size="icon-xs" onClick={onRetry} className="p-[4px] w-auto h-auto text-muted-foreground/40 hover:text-foreground hover:bg-accent/20"><RotateCcw size={12} /></Button></Tooltip>}
+      <Tooltip content="字体" side="bottom"><Button variant="ghost" size="icon-xs" className="p-[4px] w-auto h-auto text-muted-foreground/40 hover:text-foreground hover:bg-accent/20"><Type size={12} /></Button></Tooltip>
+      <Tooltip content="@提及" side="bottom"><Button variant="ghost" size="icon-xs" className="p-[4px] w-auto h-auto text-muted-foreground/40 hover:text-foreground hover:bg-accent/20"><AtSign size={12} /></Button></Tooltip>
+      <Tooltip content="引用" side="bottom"><Button variant="ghost" size="icon-xs" onClick={onQuote} className="p-[4px] w-auto h-auto text-muted-foreground/40 hover:text-foreground hover:bg-accent/20"><Quote size={12} /></Button></Tooltip>
+      <Tooltip content="删除" side="bottom"><Button variant="ghost" size="icon-xs" onClick={onDelete} className="p-[4px] w-auto h-auto text-muted-foreground/40 hover:text-foreground hover:bg-accent/20"><Trash2 size={12} /></Button></Tooltip>
+      <Tooltip content="收藏" side="bottom"><Button variant="ghost" size="icon-xs" onClick={onBookmark} className="p-[4px] w-auto h-auto text-muted-foreground/40 hover:text-foreground hover:bg-accent/20"><Bookmark size={12} /></Button></Tooltip>
+      <Tooltip content="分享" side="bottom"><Button variant="ghost" size="icon-xs" onClick={onShare} className="p-[4px] w-auto h-auto text-muted-foreground/40 hover:text-foreground hover:bg-accent/20"><Share2 size={12} /></Button></Tooltip>
+      {onInfo && <Tooltip content="聊天详情" side="bottom"><Button variant="ghost" size="icon-xs" onClick={onInfo} className="p-[4px] w-auto h-auto text-muted-foreground/40 hover:text-foreground hover:bg-accent/20"><Info size={12} /></Button></Tooltip>}
       <div className="relative">
-        <Tooltip content="更多" side="bottom"><button onClick={onMore} className="p-[4px] rounded text-muted-foreground/40 hover:text-foreground hover:bg-accent/20 transition-colors"><MoreHorizontal size={12} /></button></Tooltip>
+        <Tooltip content="更多" side="bottom"><Button variant="ghost" size="icon-xs" onClick={onMore} className="p-[4px] w-auto h-auto text-muted-foreground/40 hover:text-foreground hover:bg-accent/20"><MoreHorizontal size={12} /></Button></Tooltip>
         <AnimatePresence>{ctxMenuOpen && <MessageContextMenu onClose={onCloseCtxMenu} onAction={() => {}} alignRight={alignRight} />}</AnimatePresence>
       </div>
     </div>
@@ -1279,14 +1234,14 @@ function MessageContextMenu({ onClose, onAction, alignRight }: {
       <motion.div ref={menuRef} initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }}
         transition={{ duration: 0.08 }}
         className={`absolute z-[60] bg-popover border border-border/40 rounded-lg shadow-xl shadow-black/10 py-1 min-w-[160px] ${pos.openUp ? 'bottom-full mb-1' : 'top-full mt-1'} ${pos.openLeft ? 'right-0' : 'left-0'}`}>
-        <button onClick={() => { onAction('edit'); onClose(); }} className="flex items-center gap-2.5 w-full px-3 py-[6px] text-[10.5px] text-foreground/80 hover:bg-accent/20 transition-colors"><Edit3 size={11} className="text-muted-foreground" /><span>编辑</span></button>
-        <button onClick={() => { onAction('branch'); onClose(); }} className="flex items-center gap-2.5 w-full px-3 py-[6px] text-[10.5px] text-foreground/80 hover:bg-accent/20 transition-colors"><GitBranch size={11} className="text-muted-foreground" /><span>分支</span></button>
-        <button onClick={() => { onAction('multiSelect'); onClose(); }} className="flex items-center gap-2.5 w-full px-3 py-[6px] text-[10.5px] text-foreground/80 hover:bg-accent/20 transition-colors"><ListChecks size={11} className="text-muted-foreground" /><span>多选</span></button>
-        <button onClick={() => { onAction('save'); onClose(); }} className="flex items-center gap-2.5 w-full px-3 py-[6px] text-[10.5px] text-foreground/80 hover:bg-accent/20 transition-colors"><Bookmark size={11} className="text-muted-foreground" /><span>保存</span><ChevronRight size={9} className="ml-auto text-muted-foreground/40" /></button>
+        <Button variant="ghost" size="xs" onClick={() => { onAction('edit'); onClose(); }} className="w-full justify-start gap-2.5 px-3 py-[6px] h-auto text-[10.5px] text-foreground/80 hover:bg-accent/20"><Edit3 size={11} className="text-muted-foreground" /><span>编辑</span></Button>
+        <Button variant="ghost" size="xs" onClick={() => { onAction('branch'); onClose(); }} className="w-full justify-start gap-2.5 px-3 py-[6px] h-auto text-[10.5px] text-foreground/80 hover:bg-accent/20"><GitBranch size={11} className="text-muted-foreground" /><span>分支</span></Button>
+        <Button variant="ghost" size="xs" onClick={() => { onAction('multiSelect'); onClose(); }} className="w-full justify-start gap-2.5 px-3 py-[6px] h-auto text-[10.5px] text-foreground/80 hover:bg-accent/20"><ListChecks size={11} className="text-muted-foreground" /><span>多选</span></Button>
+        <Button variant="ghost" size="xs" onClick={() => { onAction('save'); onClose(); }} className="w-full justify-start gap-2.5 px-3 py-[6px] h-auto text-[10.5px] text-foreground/80 hover:bg-accent/20"><Bookmark size={11} className="text-muted-foreground" /><span>保存</span><ChevronRight size={9} className="ml-auto text-muted-foreground/40" /></Button>
         <div className="relative" onMouseEnter={() => setShowExportSub(true)} onMouseLeave={() => setShowExportSub(false)}>
-          <button className="flex items-center gap-2.5 w-full px-3 py-[6px] text-[10.5px] text-foreground/80 hover:bg-accent/20 transition-colors">
+          <Button variant="ghost" size="xs" className="w-full justify-start gap-2.5 px-3 py-[6px] h-auto text-[10.5px] text-foreground/80 hover:bg-accent/20">
             <Share2 size={11} className="text-muted-foreground" /><span className="flex-1 text-left">导出</span><ChevronRight size={9} className="text-muted-foreground/40" />
-          </button>
+          </Button>
           {showExportSub && (
             <ExportSubMenu onAction={onAction} onClose={onClose} exportItems={exportItems} parentOpenLeft={pos.openLeft} />
           )}
@@ -1317,8 +1272,8 @@ function ExportSubMenu({ onAction, onClose, exportItems, parentOpenLeft }: {
     <motion.div ref={subRef} initial={{ opacity: 0, x: openLeft ? 4 : -4 }} animate={{ opacity: 1, x: 0 }}
       className={`absolute top-0 bg-popover border border-border/40 rounded-lg shadow-xl shadow-black/10 py-1 min-w-[220px] z-[70] ${openLeft ? 'right-full mr-1' : 'left-full ml-1'}`}>
       {exportItems.map((item, i) => (
-        <button key={i} onClick={() => { onAction(`export-${i}`); onClose(); }}
-          className="flex items-center gap-2 w-full px-3 py-[5px] text-[10.5px] text-foreground/80 hover:bg-accent/20 transition-colors"><span>{item}</span></button>
+        <Button variant="ghost" size="xs" key={i} onClick={() => { onAction(`export-${i}`); onClose(); }}
+          className="w-full justify-start gap-2 px-3 py-[5px] h-auto text-[10.5px] text-foreground/80 hover:bg-accent/20"><span>{item}</span></Button>
       ))}
     </motion.div>
   );
@@ -1354,7 +1309,7 @@ function MessageBubble({ msg, onOpenPanel, onAvatarClick, onOpenArtifact, assist
               <AttachmentList attachments={msg.attachments} />
             </div>
           )}
-          <div className="px-3.5 py-2.5 rounded-[14px] rounded-br-[4px] bg-foreground text-background text-[11px] leading-[1.65]">
+          <div className="px-3.5 py-2.5 rounded-[14px] rounded-br-[4px] bg-foreground text-background text-xs leading-[1.65]">
             {msg.content}
           </div>
           <MessageActionBar
@@ -1371,9 +1326,9 @@ function MessageBubble({ msg, onOpenPanel, onAvatarClick, onOpenArtifact, assist
   if (msg.parallelResponses && msg.parallelResponses.length > 0) {
     return (
       <motion.div initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.15 }} className="flex gap-2.5 max-w-[95%]">
-        <Tooltip content="查看助手信息" side="left"><button onClick={onAvatarClick} className="w-6 h-6 rounded-[6px] bg-accent/40 flex items-center justify-center flex-shrink-0 mt-[1px] hover:bg-accent/60 transition-colors">
+        <Tooltip content="查看助手信息" side="left"><Button variant="ghost" size="icon-xs" onClick={onAvatarClick} className="w-6 h-6 rounded-[6px] bg-accent/40 hover:bg-accent/60 mt-[1px]">
           <Bot size={12} className="text-muted-foreground" />
-        </button></Tooltip>
+        </Button></Tooltip>
         <div className="flex-1 min-w-0">
           <ParallelResponsesBlock responses={msg.parallelResponses} />
           <MessageActionBar
@@ -1389,13 +1344,13 @@ function MessageBubble({ msg, onOpenPanel, onAvatarClick, onOpenArtifact, assist
   // === Regular Assistant Message ===
   return (
     <motion.div initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.15 }} className="flex gap-2.5 max-w-[95%]">
-      <Tooltip content="查看助手信息" side="left"><button onClick={onAvatarClick} className="w-6 h-6 rounded-[6px] bg-accent/40 flex items-center justify-center flex-shrink-0 mt-[1px] hover:bg-accent/60 transition-colors text-[13px] leading-none">
+      <Tooltip content="查看助手信息" side="left"><Button variant="ghost" size="icon-xs" onClick={onAvatarClick} className="w-6 h-6 rounded-[6px] bg-accent/40 hover:bg-accent/60 mt-[1px] text-sm leading-none">
         {(msg.assistantLabel && ASSISTANT_EMOJI_MAP[msg.assistantLabel]) || assistantEmoji || <Bot size={12} className="text-muted-foreground" />}
-      </button></Tooltip>
+      </Button></Tooltip>
       <div className="flex-1 min-w-0">
         {/* Assistant name + model */}
         <div className="flex items-center gap-1.5 mb-0.5">
-          <span className="text-[10px] text-foreground/70">{msg.assistantLabel || assistantName || '助手'}</span>
+          <span className="text-xs text-foreground/70">{msg.assistantLabel || assistantName || '助手'}</span>
           {modelDisplayName && <span className="text-[9px] text-muted-foreground/35">{modelDisplayName}</span>}
         </div>
 
@@ -1403,7 +1358,7 @@ function MessageBubble({ msg, onOpenPanel, onAvatarClick, onOpenArtifact, assist
         {msg.thinking && <ThinkingBlock content={msg.thinking} />}
 
         {/* Content */}
-        <div className="text-[11px] text-foreground/90 leading-[1.75] py-1">
+        <div className="text-xs text-foreground/90 leading-[1.75] py-1">
           {msg.content.split('\n').map((line, i) => {
             if (line.startsWith('- **')) {
               const match = line.match(RE_DASH_BOLD);
@@ -1442,30 +1397,30 @@ function MessageBubble({ msg, onOpenPanel, onAvatarClick, onOpenArtifact, assist
 
         {/* Artifact indicator — clickable to open preview */}
         {msg.artifact && (
-          <button
+          <Button variant="ghost" size="xs"
             onClick={() => onOpenArtifact?.(msg.artifact!)}
-            className="mt-2 mb-1 flex items-center gap-2 px-2.5 py-[6px] rounded-lg bg-accent/20 border border-border/25 text-[10px] text-foreground/70 hover:bg-accent/30 hover:border-border/40 transition-colors w-full text-left cursor-pointer group"
+            className="mt-2 mb-1 w-full justify-start gap-2 px-2.5 py-[6px] h-auto rounded-lg bg-accent/20 border border-border/25 text-xs text-foreground/70 hover:bg-accent/30 hover:border-border/40 group"
           >
             <Layers size={10} className="text-cherry-primary flex-shrink-0" />
             <span className="flex-1 truncate">{msg.artifact.title}</span>
             <span className="text-[9px] text-muted-foreground/50">{msg.artifact.type === 'document' ? '文档' : msg.artifact.type === 'code' ? '代码' : '预览'}</span>
             <ExternalLink size={9} className="text-muted-foreground/30 group-hover:text-muted-foreground/60 transition-colors flex-shrink-0" />
-          </button>
+          </Button>
         )}
 
         {/* Triggered indicators */}
         <div className="flex items-center gap-1.5 mt-1 flex-wrap">
           {msg.ragInfo && (
-            <button onClick={() => onOpenPanel('rag', msg)}
-              className="flex items-center gap-1 px-2 py-[3px] rounded-md text-[9px] text-blue-600/60 bg-blue-500/8 hover:bg-blue-500/15 hover:text-blue-600 transition-colors">
+            <Button variant="ghost" size="xs" onClick={() => onOpenPanel('rag', msg)}
+              className="gap-1 px-2 py-[3px] h-auto rounded-md text-[9px] text-info/60 bg-blue-500/8 hover:bg-blue-500/15 hover:text-info">
               <Database size={9} /><span>知识库 · {msg.ragInfo.chunks.length} 条</span>
-            </button>
+            </Button>
           )}
           {msg.searchResults && msg.searchResults.length > 0 && (
-            <button onClick={() => onOpenPanel('search', msg)}
-              className="flex items-center gap-1 px-2 py-[3px] rounded-md text-[9px] text-cherry-text-muted bg-cherry-active-bg hover:bg-cherry-active-border hover:text-cherry-primary-dark transition-colors">
+            <Button variant="ghost" size="xs" onClick={() => onOpenPanel('search', msg)}
+              className="gap-1 px-2 py-[3px] h-auto rounded-md text-[9px] text-cherry-text-muted bg-cherry-active-bg hover:bg-cherry-active-border hover:text-cherry-primary-dark">
               <Globe size={9} /><span>搜索 · {msg.searchResults.length} 条</span>
-            </button>
+            </Button>
           )}
         </div>
 
@@ -1488,88 +1443,18 @@ function MessageBubble({ msg, onOpenPanel, onAvatarClick, onOpenArtifact, assist
 // CAP_ICONS / CAP_TAG_ICONS moved to shared ModelPickerPanel
 
 // ===========================
-// Topic Breadcrumb Selector
+// Topic Breadcrumb (fixed label)
 // ===========================
 
-function TopicBreadcrumb({ topics, activeTopic, onSelectTopic }: {
-  topics: AssistantTopic[];
+function TopicBreadcrumb({ activeTopic }: {
   activeTopic: AssistantTopic;
-  onSelectTopic: (id: string) => void;
 }) {
-  const [open, setOpen] = useState(false);
-  const [search, setSearch] = useState('');
-  const menuRef = useRef<HTMLDivElement>(null);
-  const searchRef = useRef<HTMLInputElement>(null);
-
-  const filtered = useMemo(() => {
-    if (!search) return topics;
-    return topics.filter(t => t.title.toLowerCase().includes(search.toLowerCase()));
-  }, [topics, search]);
-
-  useEffect(() => {
-    if (!open) { setSearch(''); return; }
-    const handler = (e: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(e.target as Node)) setOpen(false);
-    };
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
-  }, [open]);
-
   return (
     <div className="flex items-center gap-1.5">
       <ChevronRight size={10} className="text-muted-foreground/30 flex-shrink-0" />
-      <div className="relative" ref={menuRef}>
-        <button onClick={() => setOpen(v => !v)}
-          className={`flex items-center gap-1 px-1.5 py-[3px] rounded text-[9.5px] transition-all duration-100 max-w-[220px] ${
-            open ? 'bg-accent/25 text-foreground' : 'text-foreground/55 hover:text-foreground/80 hover:bg-accent/15'
-          }`}>
-          <MessageCircle size={9} className="text-muted-foreground/50 flex-shrink-0" />
-          <span className="truncate">{activeTopic.title}</span>
-          <ChevronDown size={7} className={`text-muted-foreground/50 flex-shrink-0 transition-transform duration-100 ${open ? 'rotate-180' : ''}`} />
-        </button>
-        <AnimatePresence>
-          {open && (
-            <div>
-              <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
-              <motion.div initial={{ opacity: 0, y: -3 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -3 }} transition={{ duration: 0.1 }}
-                className="absolute top-full left-0 mt-1 z-50 bg-popover border border-border/40 rounded-lg shadow-xl shadow-black/10 min-w-[240px] max-w-[320px]"
-                onAnimationComplete={() => searchRef.current?.focus()}>
-                <div className="px-2 pt-2 pb-1">
-                  <div className="flex items-center gap-1.5 px-2 py-[5px] rounded-md bg-accent/15 border border-border/20">
-                    <Search size={10} className="text-muted-foreground/40 flex-shrink-0" />
-                    <input ref={searchRef} value={search} onChange={e => setSearch(e.target.value)}
-                      placeholder="搜索话题..."
-                      className="flex-1 bg-transparent text-[10px] text-foreground placeholder:text-muted-foreground/30 outline-none min-w-0" />
-                    {search && <button onClick={() => setSearch('')} className="text-muted-foreground/30 hover:text-muted-foreground/60"><X size={8} /></button>}
-                  </div>
-                </div>
-                <div className="p-1.5 pt-0.5 max-h-[240px] overflow-y-auto">
-                  {filtered.length === 0 ? (
-                    <div className="px-2.5 py-3 text-center text-[9px] text-muted-foreground/40">无匹配结果</div>
-                  ) : (
-                    filtered.map(t => {
-                      const selected = t.id === activeTopic.id;
-                      return (
-                        <button key={t.id} onClick={() => { onSelectTopic(t.id); setOpen(false); }}
-                          className={`flex items-center gap-2 w-full px-2 py-[5px] rounded-lg text-[10px] transition-all duration-75 mb-px ${
-                            selected ? 'bg-accent/30 ring-1 ring-border/30' : 'text-foreground/70 hover:text-foreground hover:bg-accent/15'
-                          }`}>
-                          <MessageCircle size={10} className={`flex-shrink-0 ${selected ? 'text-foreground/60' : 'text-muted-foreground/40'}`} />
-                          <div className="flex-1 min-w-0 text-left">
-                            <div className={`truncate ${selected ? 'text-foreground' : ''}`}>{t.title}</div>
-                            <div className="text-[8px] text-muted-foreground/40 truncate">{t.assistantName} · {t.timestamp}</div>
-                          </div>
-                          {selected && <Check size={9} className="text-cherry-primary flex-shrink-0" />}
-                          {t.pinned && <Bookmark size={8} className="text-muted-foreground/30 flex-shrink-0" />}
-                        </button>
-                      );
-                    })
-                  )}
-                </div>
-              </motion.div>
-            </div>
-          )}
-        </AnimatePresence>
+      <div className="flex items-center gap-1 px-1.5 py-[3px] text-[9.5px] text-foreground/55 max-w-[220px]">
+        <MessageCircle size={9} className="text-muted-foreground/50 flex-shrink-0" />
+        <span className="truncate">{activeTopic.title}</span>
       </div>
     </div>
   );
@@ -1613,17 +1498,17 @@ function MultiSelectPicker({
   return (
     <div className="flex items-center gap-1.5">
       <div className="relative">
-        <button onClick={handleOpenAssistant}
-          className={`flex items-center gap-1.5 px-2 py-[4px] rounded-md text-[10.5px] transition-all duration-100 ${
+        <Button variant="ghost" size="xs" onClick={handleOpenAssistant}
+          className={`gap-1.5 px-2 py-[4px] h-auto text-[10.5px] ${
             open && mode === 'assistant' ? 'bg-accent/25 text-foreground' : 'text-foreground/75 hover:text-foreground hover:bg-accent/15'
           }`}>
-          <span className="text-[12px] leading-none flex-shrink-0">{activeAssistant ? (ASSISTANT_EMOJI_MAP[activeAssistant.name] || '\uD83E\uDD16') : '\uD83E\uDD16'}</span>
+          <span className="text-sm leading-none flex-shrink-0">{activeAssistant ? (ASSISTANT_EMOJI_MAP[activeAssistant.name] || '\uD83E\uDD16') : '\uD83E\uDD16'}</span>
           <span className="truncate max-w-[100px]">
             {selectedAssistants.length > 1 ? `${selectedAssistants.length} 个助手` : activeAssistant?.name || '选择助手'}
           </span>
           {selectedAssistants.length > 1 && <span className="w-4 h-4 rounded-full bg-foreground/10 text-foreground/60 text-[8px] flex items-center justify-center flex-shrink-0">{selectedAssistants.length}</span>}
           <ChevronDown size={8} className={`text-muted-foreground/50 flex-shrink-0 transition-transform duration-100 ${open && mode === 'assistant' ? 'rotate-180' : ''}`} />
-        </button>
+        </Button>
         <AnimatePresence>
           {open && mode === 'assistant' && (
             <div>
@@ -1645,8 +1530,8 @@ function MultiSelectPicker({
       </div>
       <div className="w-px h-3.5 bg-border/25" />
       <div className="relative">
-        <button onClick={handleOpenModel}
-          className={`flex items-center gap-1 px-1.5 py-[3px] rounded text-[9.5px] transition-all duration-100 ${
+        <Button variant="ghost" size="xs" onClick={handleOpenModel}
+          className={`gap-1 px-1.5 py-[3px] h-auto text-[9.5px] ${
             open && mode === 'model' ? 'bg-accent/25 text-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-accent/15'
           }`}>
           <Sparkles size={9} className="text-muted-foreground/50" />
@@ -1655,7 +1540,7 @@ function MultiSelectPicker({
           </span>
           {selectedModels.length > 1 && <span className="w-4 h-4 rounded-full bg-foreground/10 text-foreground/60 text-[8px] flex items-center justify-center flex-shrink-0">{selectedModels.length}</span>}
           <ChevronDown size={7} className={`text-muted-foreground/50 transition-transform duration-100 ${open && mode === 'model' ? 'rotate-180' : ''}`} />
-        </button>
+        </Button>
         <AnimatePresence>
           {open && mode === 'model' && (
             <div>
@@ -1784,7 +1669,7 @@ export function AssistantRunPage() {
       if (!artifactResizing.current) return;
       const containerRect = artifactContainerRef.current?.getBoundingClientRect();
       const maxW = containerRect ? containerRect.width * 0.65 : 800;
-      const newW = Math.max(280, Math.min(maxW, startW + (ev.clientX - startX)));
+      const newW = Math.max(280, Math.min(maxW, startW - (ev.clientX - startX)));
       setArtifactPanelWidth(newW);
     };
     const onUp = () => {
@@ -1799,7 +1684,7 @@ export function AssistantRunPage() {
     document.addEventListener('mousemove', onMove);
     document.addEventListener('mouseup', onUp);
   }, [artifactPanelWidth]);
-  const [showHistory, setShowHistory] = useState(false);
+  const historySidebar = useHistorySidebar('compact');
   const [showBranchTree, setShowBranchTree] = useState(false);
   const [showChatSettings, setShowChatSettings] = useState(false);
 
@@ -2086,10 +1971,45 @@ export function AssistantRunPage() {
   }
 
   return (
-    <div className="flex flex-col h-full bg-background select-none relative">
-      {/* ===== Header ===== */}
-      <header className="flex items-center px-3 flex-shrink-0 h-[40px]">
-        <MultiSelectPicker
+    <div className="flex h-full bg-background select-none relative">
+      {/* ===== Left: History Sidebar (compact) ===== */}
+      <AnimatePresence initial={false}>
+        {historySidebar.isCompact && (
+          <motion.div
+            initial={{ width: 0, opacity: 0 }}
+            animate={{ width: 220, opacity: 1 }}
+            exit={{ width: 0, opacity: 0 }}
+            transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
+            className="flex-shrink-0 min-w-0 overflow-hidden h-full"
+            style={{ width: 220 }}
+          >
+            <HistorySidebar
+              items={topics}
+              activeItemId={activeTopicId}
+              onSelectItem={handleSelectTopic}
+              onDeleteItem={handleDeleteTopic}
+              onUpdateItem={handleUpdateTopic}
+              onNewItem={handleNewTopic}
+              onExpand={() => { setHistoryInitialAssistant(null); historySidebar.expand(); }}
+              onHide={historySidebar.hide}
+              entityLabel="话题"
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ===== Right: Header + Content ===== */}
+      <div className="flex flex-col flex-1 min-w-0 relative">
+        {/* ===== Header ===== */}
+        <header className="flex items-center px-3 flex-shrink-0 h-[40px]">
+          {/* History sidebar toggle */}
+          <Tooltip content={historySidebar.isCompact ? '收起话题列表' : '展开话题列表'} side="bottom">
+            <Button variant="ghost" size="icon-xs" onClick={() => historySidebar.toggle()}
+              className={`p-1.5 w-auto h-auto mr-1 ${historySidebar.isCompact ? 'text-foreground/60 hover:text-foreground hover:bg-accent/15' : 'text-foreground/35 hover:text-foreground/60 hover:bg-accent/15'}`}>
+              <History size={13} />
+            </Button>
+          </Tooltip>
+          <MultiSelectPicker
           mode={selectMode}
           selectedAssistants={selectedAssistants}
           selectedModels={selectedModels}
@@ -2104,9 +2024,7 @@ export function AssistantRunPage() {
         />
         {activeTopic && (
           <TopicBreadcrumb
-            topics={topics}
             activeTopic={activeTopic}
-            onSelectTopic={handleSelectTopic}
           />
         )}
         <div className="flex-1" />
@@ -2116,68 +2034,44 @@ export function AssistantRunPage() {
               并行 {selectedAssistants.length > 1 ? `${selectedAssistants.length} 助手` : `${selectedModels.length} 模型`}
             </span>
           )}
-          <Tooltip content="新建话题" side="bottom"><button onClick={handleNewTopic} className="p-1.5 rounded text-muted-foreground hover:text-foreground hover:bg-accent/15 transition-colors">
+          <Tooltip content="新建话题" side="bottom"><Button variant="ghost" size="icon-xs" onClick={handleNewTopic} className="p-1.5 w-auto h-auto text-muted-foreground hover:text-foreground hover:bg-accent/15">
             <MessageCirclePlus size={13} />
-          </button></Tooltip>
-          <Tooltip content="历史记录" side="bottom"><button onClick={() => { setHistoryInitialAssistant(null); setShowHistory(true); }} className="p-1.5 rounded text-muted-foreground hover:text-foreground hover:bg-accent/15 transition-colors">
-            <History size={13} />
-          </button></Tooltip>
-          <div className="relative">
-            <Tooltip content="历史文件" side="bottom"><button onClick={() => setShowHeaderFileHistory(v => !v)}
-              className={`p-1.5 rounded transition-colors ${showHeaderFileHistory ? 'text-foreground/80 bg-accent/25' : 'text-muted-foreground hover:text-foreground hover:bg-accent/15'}`}>
-              <File size={12} />
-            </button></Tooltip>
-            <AnimatePresence>
-              {showHeaderFileHistory && (
-                <FileHistoryDropdown
-                  onSelect={(a) => { handleOpenArtifact(a); }}
-                  onClose={() => setShowHeaderFileHistory(false)}
-                  anchorRight
-                  selectedTitle={activeArtifact?.title}
-                  hasTopic={activeTopicId !== null}
-                />
-              )}
-            </AnimatePresence>
-          </div>
-          <Tooltip content="分支管理" side="bottom"><button onClick={() => setShowBranchTree(!showBranchTree)}
-            className={`p-1.5 rounded transition-colors ${showBranchTree ? 'text-foreground/80 bg-accent/25' : 'text-muted-foreground hover:text-foreground hover:bg-accent/15'}`}>
-            <GitFork size={12} />
-          </button></Tooltip>
-          <div className="w-px h-3.5 bg-border/25 mx-0.5" />
-          <Tooltip content="参数设置" side="bottom"><button onClick={() => setShowChatSettings(v => !v)}
-            className={`p-1.5 rounded transition-colors ${showChatSettings ? 'text-foreground/80 bg-accent/25' : 'text-muted-foreground hover:text-foreground hover:bg-accent/15'}`}>
+          </Button></Tooltip>
+          {hasMessages && (
+            <>
+              <div className="relative">
+                <Tooltip content="历史文件" side="bottom"><Button variant="ghost" size="icon-xs" onClick={() => setShowHeaderFileHistory(v => !v)}
+                  className={`p-1.5 w-auto h-auto ${showHeaderFileHistory ? 'text-foreground/80 bg-accent/25' : 'text-muted-foreground hover:text-foreground hover:bg-accent/15'}`}>
+                  <File size={12} />
+                </Button></Tooltip>
+                <AnimatePresence>
+                  {showHeaderFileHistory && (
+                    <FileHistoryDropdown
+                      onSelect={(a) => { handleOpenArtifact(a); }}
+                      onClose={() => setShowHeaderFileHistory(false)}
+                      anchorRight
+                      selectedTitle={activeArtifact?.title}
+                      hasTopic={activeTopicId !== null}
+                    />
+                  )}
+                </AnimatePresence>
+              </div>
+              <Tooltip content="分支管理" side="bottom"><Button variant="ghost" size="icon-xs" onClick={() => setShowBranchTree(!showBranchTree)}
+                className={`p-1.5 w-auto h-auto ${showBranchTree ? 'text-foreground/80 bg-accent/25' : 'text-muted-foreground hover:text-foreground hover:bg-accent/15'}`}>
+                <GitFork size={12} />
+              </Button></Tooltip>
+              <div className="w-px h-3.5 bg-border/25 mx-0.5" />
+            </>
+          )}
+          <Tooltip content="参数设置" side="bottom"><Button variant="ghost" size="icon-xs" onClick={() => setShowChatSettings(v => !v)}
+            className={`p-1.5 w-auto h-auto ${showChatSettings ? 'text-foreground/80 bg-accent/25' : 'text-muted-foreground hover:text-foreground hover:bg-accent/15'}`}>
             <SlidersHorizontal size={12} />
-          </button></Tooltip>
+          </Button></Tooltip>
         </div>
       </header>
 
       {/* ===== Main Content ===== */}
       <div ref={artifactContainerRef} className="flex flex-1 min-h-0 relative">
-        {/* Left: Artifacts */}
-        <AnimatePresence initial={false}>
-          {showArtifacts && hasMessages && !artifactFullscreen && (
-            <motion.div
-              initial={{ width: 0, opacity: 0 }}
-              animate={{ width: artifactPanelWidth, opacity: 1 }}
-              exit={{ width: 0, opacity: 0 }}
-              transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
-              className="flex-shrink-0 min-w-0 relative flex"
-              style={{ width: artifactPanelWidth }}
-            >
-              <div className="flex-1 min-w-0 m-2 mr-0 rounded-2xl border border-border/30 bg-background shadow-lg overflow-hidden">
-                <ArtifactsPanel artifact={activeArtifact} isFullscreen={false} onToggleFullscreen={() => setArtifactFullscreen(true)} onClose={handleCloseArtifacts} onSelectArtifact={handleOpenArtifact} hasTopic={activeTopicId !== null} />
-              </div>
-              {/* Resize handle */}
-              <div
-                onMouseDown={handleArtifactResizeStart}
-                className="w-[6px] flex-shrink-0 cursor-col-resize group flex items-center justify-center relative z-10"
-              >
-                <div className="w-[2px] h-8 rounded-full bg-border/0 group-hover:bg-border/50 group-active:bg-foreground/20 transition-colors" />
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
         {/* Fullscreen Artifacts */}
         <AnimatePresence>
           {artifactFullscreen && (
@@ -2203,8 +2097,8 @@ export function AssistantRunPage() {
                   <div className="w-14 h-14 rounded-2xl bg-gradient-to-b from-accent/60 to-accent/30 border border-border/30 flex items-center justify-center mb-5">
                     <Bot size={22} strokeWidth={1.3} className="text-foreground/40" />
                   </div>
-                  <h2 className="text-[14px] text-foreground tracking-[-0.01em]">你好，有什么需要帮助的？</h2>
-                  <p className="text-[11px] text-muted-foreground/60 text-center leading-[1.6] mt-1.5">
+                  <h2 className="text-sm text-foreground tracking-[-0.01em]">你好，有什么需要帮助的？</h2>
+                  <p className="text-xs text-muted-foreground/60 text-center leading-[1.6] mt-1.5">
                     向 {currentAssistant.name} 提问，支持生成文章、代码和可视化内���
                   </p>
                 </motion.div>
@@ -2222,11 +2116,11 @@ export function AssistantRunPage() {
                           const Icon = item.icon;
                           return (
                             <div key={item.id}>
-                              <button onClick={() => setShowPlusMenu(false)}
-                                className="w-full flex items-center gap-2 px-2 py-[5px] text-[11px] text-popover-foreground hover:bg-accent/50 rounded-lg transition-colors">
+                              <Button variant="ghost" size="xs" onClick={() => setShowPlusMenu(false)}
+                                className="w-full justify-start gap-2 px-2 py-[5px] h-auto text-xs text-popover-foreground hover:bg-accent/50">
                                 <Icon size={13} strokeWidth={1.5} className="text-muted-foreground flex-shrink-0" />
                                 <span className="flex-1 text-left">{item.label}</span>
-                              </button>
+                              </Button>
                               {(item as { separator?: boolean }).separator && idx < plusMenuItems.length - 1 && (
                                 <div className="my-0.5 mx-1.5 border-t border-border/60" />
                               )}
@@ -2235,12 +2129,12 @@ export function AssistantRunPage() {
                         })}
                         <div className="my-0.5 mx-1.5 border-t border-border/60" />
                         <div className="relative">
-                          <button onMouseEnter={() => setShowPlusMore(true)} onMouseLeave={() => setShowPlusMore(false)}
-                            className="w-full flex items-center gap-2 px-2 py-[5px] text-[11px] text-muted-foreground hover:text-popover-foreground hover:bg-accent/50 rounded-lg transition-colors">
+                          <Button variant="ghost" size="xs" onMouseEnter={() => setShowPlusMore(true)} onMouseLeave={() => setShowPlusMore(false)}
+                            className="w-full justify-start gap-2 px-2 py-[5px] h-auto text-xs text-muted-foreground hover:text-popover-foreground hover:bg-accent/50">
                             <MoreHorizontal size={13} strokeWidth={1.5} className="flex-shrink-0" />
                             <span className="flex-1 text-left">更多</span>
                             <ChevronRight size={12} />
-                          </button>
+                          </Button>
                           {showPlusMore && (
                             <div onMouseEnter={() => setShowPlusMore(true)} onMouseLeave={() => setShowPlusMore(false)}
                               className="absolute left-full bottom-0 ml-1.5 w-40 bg-popover border border-border rounded-xl shadow-lg py-1 z-50 animate-in fade-in slide-in-from-left-1 duration-100">
@@ -2248,12 +2142,12 @@ export function AssistantRunPage() {
                                 {plusMenuSecondary.map(item => {
                                   const Icon = item.icon;
                                   return (
-                                    <button key={item.id} onClick={() => { setShowPlusMenu(false); setShowPlusMore(false); }}
-                                      className="w-full flex items-center gap-2 px-2 py-[5px] text-[11px] text-popover-foreground hover:bg-accent/50 rounded-lg transition-colors">
+                                    <Button variant="ghost" size="xs" key={item.id} onClick={() => { setShowPlusMenu(false); setShowPlusMore(false); }}
+                                      className="w-full justify-start gap-2 px-2 py-[5px] h-auto text-xs text-popover-foreground hover:bg-accent/50">
                                       <Icon size={13} strokeWidth={1.5} className="text-muted-foreground flex-shrink-0" />
                                       <span className="flex-1 text-left">{item.label}</span>
                                       {item.shortcut && <span className="text-[9px] text-muted-foreground/60 tracking-wider">{item.shortcut}</span>}
-                                    </button>
+                                    </Button>
                                   );
                                 })}
                               </div>
@@ -2268,7 +2162,7 @@ export function AssistantRunPage() {
                     ref={textareaRef} value={input} onChange={handleInput} onKeyDown={handleKeyDown}
                     placeholder="在这里输入消息，按 Enter 发送 - @ 选择助手/模型"
                     rows={1}
-                    className="w-full bg-transparent text-[12px] text-foreground placeholder:text-muted-foreground/50 outline-none resize-none min-h-[36px] max-h-[140px] leading-[1.6] px-3.5 pt-[10px] pb-[36px]"
+                    className="w-full bg-transparent text-sm text-foreground placeholder:text-muted-foreground/50 outline-none resize-none min-h-[36px] max-h-[140px] leading-[1.6] px-3.5 pt-[10px] pb-[36px]"
                   />
                   {/* @ Mention Picker */}
                   {showAtMenu && (
@@ -2287,23 +2181,21 @@ export function AssistantRunPage() {
                   )}
                   <div className="absolute bottom-[7px] left-2.5 right-2.5 flex items-center justify-between">
                     <div className="flex items-center gap-0.5">
-                      <button ref={plusBtnRef}
+                      <Button variant="ghost" size="icon-sm" ref={plusBtnRef}
                         onClick={() => { setShowPlusMenu(v => !v); setShowAtMenu(false); }}
-                        className={`p-[5px] rounded-md transition-colors ${
+                        className={`p-[5px] w-auto h-auto transition-colors ${
                           showPlusMenu ? 'bg-accent text-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-accent/20'
-                        }`}><Plus size={14} /></button>
+                        }`}><Plus size={14} /></Button>
                     </div>
                     <div className="flex items-center gap-2">
-                      <div className="flex items-center gap-2.5 text-[10px] text-muted-foreground">
+                      <div className="flex items-center gap-2.5 text-xs text-muted-foreground">
                         <span className="flex items-center gap-1"><Layers size={10} />6/20</span>
                         <span className="flex items-center gap-1"><Link2 size={10} />0/0</span>
                       </div>
-                      <button onClick={handleSend} disabled={!input.trim()}
-                        className={`w-7 h-7 rounded-full flex items-center justify-center transition-all duration-100 ${
-                          input.trim() ? 'bg-foreground text-background hover:bg-foreground/90 active:scale-[0.92]' : 'bg-accent text-muted-foreground/40 cursor-not-allowed'
-                        }`}>
+                      <Button variant="default" size="icon" onClick={handleSend} disabled={!input.trim()}
+                        className="w-7 h-7 rounded-full">
                         <ArrowUp size={14} strokeWidth={2} />
-                      </button>
+                      </Button>
                     </div>
                   </div>
                 </div>
@@ -2315,6 +2207,31 @@ export function AssistantRunPage() {
             ))}
           </ChatInterface>
         </div>
+
+        {/* Right: Artifacts */}
+        <AnimatePresence initial={false}>
+          {showArtifacts && !artifactFullscreen && (
+            <motion.div
+              initial={{ width: 0, opacity: 0 }}
+              animate={{ width: artifactPanelWidth, opacity: 1 }}
+              exit={{ width: 0, opacity: 0 }}
+              transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
+              className="flex-shrink-0 min-w-0 relative flex"
+              style={{ width: artifactPanelWidth }}
+            >
+              {/* Resize handle */}
+              <div
+                onMouseDown={handleArtifactResizeStart}
+                className="w-[6px] flex-shrink-0 cursor-col-resize group flex items-center justify-center relative z-10"
+              >
+                <div className="w-[2px] h-8 rounded-full bg-border/0 group-hover:bg-border/50 group-active:bg-foreground/20 transition-colors" />
+              </div>
+              <div className="flex-1 min-w-0 m-2 ml-0 rounded-2xl border border-border/30 bg-background shadow-lg overflow-hidden">
+                <ArtifactsPanel artifact={activeArtifact} isFullscreen={false} onToggleFullscreen={() => setArtifactFullscreen(true)} onClose={handleCloseArtifacts} onSelectArtifact={handleOpenArtifact} hasTopic={activeTopicId !== null} />
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Right: Chat Settings Panel */}
         <AnimatePresence>
@@ -2346,7 +2263,7 @@ export function AssistantRunPage() {
               onSelectTopic={handleSelectTopic}
               onClose={() => setRightPanel(null)}
               onEdit={() => onEditAssistantInLibrary?.(currentAssistant.name)}
-              onOpenHistory={() => { setRightPanel(null); setHistoryInitialAssistant(currentAssistant.name); setShowHistory(true); }}
+              onOpenHistory={() => { setRightPanel(null); setHistoryInitialAssistant(currentAssistant.name); historySidebar.expand(); }}
               onNavigateToKnowledge={onNavigateToKnowledge}
             />
           )}
@@ -2360,22 +2277,24 @@ export function AssistantRunPage() {
             <WebSearchPanel key="search" results={inspectedMsg.searchResults} onClose={() => setRightPanel(null)} startIndex={inspectedMsg.ragInfo?.chunks.length ?? 0} />
           )}
         </AnimatePresence>
+
       </div>
 
-      {/* ===== History Overlay ===== */}
+      {/* ===== History Overlay (fullscreen only) ===== */}
       <AnimatePresence>
-        {showHistory && (
+        {historySidebar.isExpanded && (
           <TopicHistoryPage
             topics={topics}
             activeTopicId={activeTopicId}
             onSelectTopic={handleSelectTopic}
             onDeleteTopic={handleDeleteTopic}
             onUpdateTopic={handleUpdateTopic}
-            onClose={() => { setShowHistory(false); setHistoryInitialAssistant(null); }}
+            onClose={() => { historySidebar.collapse(); setHistoryInitialAssistant(null); }}
             initialAssistant={historyInitialAssistant}
           />
         )}
       </AnimatePresence>
+      </div>
     </div>
   );
 }

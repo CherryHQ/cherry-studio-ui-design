@@ -3,6 +3,7 @@ import {
   FileText, Image as ImageIcon, Code2, Music, Video,
   File, Star, ChevronUp, ChevronDown,
 } from 'lucide-react';
+import { Button, Input } from '@cherry-studio/ui';
 import type { FileItem, FileTag } from './mockData';
 import { getFormatLabel } from './mockData';
 
@@ -53,9 +54,10 @@ export function FileList({
   onRenameCancel: () => void;
 }) {
   const SortHeader = ({ label, field, className: cn }: { label: string; field: SortKey; className?: string }) => (
-    <button
+    <Button
+      variant="ghost"
       onClick={() => onSort(field)}
-      className={`flex items-center gap-0.5 text-[9px] uppercase tracking-wider transition-colors ${
+      className={`h-auto p-0 flex items-center gap-0.5 text-[9px] uppercase tracking-wider transition-colors ${
         sortKey === field ? 'text-foreground/55' : 'text-foreground/30 hover:text-foreground/45'
       } ${cn || ''}`}
     >
@@ -63,7 +65,7 @@ export function FileList({
       {sortKey === field && (
         sortDir === 'asc' ? <ChevronUp size={8} /> : <ChevronDown size={8} />
       )}
-    </button>
+    </Button>
   );
 
   return (
@@ -94,14 +96,15 @@ export function FileList({
             }`}
           >
             {/* Star */}
-            <button
+            <Button
+              variant="ghost"
               onClick={(e) => { e.stopPropagation(); onToggleStar(file.id); }}
-              className={`w-5 flex-shrink-0 flex items-center justify-center transition-colors ${
+              className={`w-5 h-auto p-0 flex-shrink-0 flex items-center justify-center transition-colors ${
                 file.starred ? 'text-amber-400/60' : 'text-foreground/10 hover:text-amber-400/40'
               }`}
             >
               <Star size={10} fill={file.starred ? 'currentColor' : 'none'} />
-            </button>
+            </Button>
             {/* Icon + Name */}
             <div className="flex-1 flex items-center gap-2 min-w-0">
               <Icon size={13} strokeWidth={1.4} className={`flex-shrink-0 ${typeIconColors[file.type] || typeIconColors.other}`} />
@@ -112,15 +115,15 @@ export function FileList({
                   onCancel={onRenameCancel}
                 />
               ) : (
-                <span className="text-[11px] text-foreground/80 truncate">{file.name}</span>
+                <span className="text-xs text-foreground/80 truncate">{file.name}</span>
               )}
             </div>
             {/* Size */}
-            <span className="text-[10px] text-foreground/45 w-[70px] text-right flex-shrink-0">{file.size}</span>
+            <span className="text-xs text-foreground/45 w-[70px] text-right flex-shrink-0">{file.size}</span>
             {/* Type */}
-            <span className="text-[10px] text-foreground/45 w-[55px] flex-shrink-0">{getFormatLabel(file.format)}</span>
+            <span className="text-xs text-foreground/45 w-[55px] flex-shrink-0">{getFormatLabel(file.format)}</span>
             {/* Date */}
-            <span className="text-[10px] text-foreground/40 w-[110px] flex-shrink-0">{file.updatedAt}</span>
+            <span className="text-xs text-foreground/40 w-[110px] flex-shrink-0">{file.updatedAt}</span>
             {/* Tags */}
             <div className="w-[60px] flex items-center gap-1 flex-shrink-0">
               {fileTags.slice(0, 3).map(t => (
@@ -151,7 +154,7 @@ function InlineRename({ value, onConfirm, onCancel }: { value: string; onConfirm
     }
   }, [value]);
   return (
-    <input
+    <Input
       ref={ref}
       value={text}
       onChange={e => setText(e.target.value)}
@@ -160,7 +163,7 @@ function InlineRename({ value, onConfirm, onCancel }: { value: string; onConfirm
         if (e.key === 'Escape') onCancel();
       }}
       onBlur={() => { if (text.trim()) onConfirm(text.trim()); else onCancel(); }}
-      className="flex-1 bg-transparent outline-none text-[11px] text-foreground border-b border-foreground/20 py-0 min-w-0"
+      className="flex-1 bg-transparent outline-none text-xs text-foreground border-b border-foreground/20 py-0 min-w-0 h-auto border-x-0 border-t-0 rounded-none shadow-none focus-visible:ring-0"
       onClick={e => e.stopPropagation()}
     />
   );

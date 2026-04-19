@@ -40,7 +40,7 @@ const cssExample = `.cherry-card {
   --card-radius: 12px;
   border-radius: var(--card-radius);
   background: hsl(var(--card));
-  box-shadow: 0 1px 3px rgba(0,0,0,.08);
+  box-shadow: var(--shadow-sm);
 }`
 
 const longCode = `import { createContext, useContext, useState, useMemo, ReactNode } from "react"

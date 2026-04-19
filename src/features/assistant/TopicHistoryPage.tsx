@@ -2,15 +2,17 @@ import React, { useState, useMemo, useRef, useEffect } from 'react';
 import {
   X, Search, Tag, Pin, Trash2, Check, ChevronDown, History,
   List, LayoutGrid, ArrowUpDown, MoreHorizontal, Edit3, Plus,
-  MessageCircle, FolderOpen,
+  MessageCircle, FolderOpen, PanelRight, Layers,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Tooltip } from '@/app/components/Tooltip';
+import { Button, Input } from '@cherry-studio/ui';
 import type { AssistantTopic } from '@/app/types/assistant';
 
 type SortKey = 'time' | 'name' | 'messages';
 type GroupMode = 'none' | 'assistant' | 'tag';
 type ViewMode = 'card' | 'list';
+export type HistoryDisplayMode = 'floating' | 'docked';
 
 interface Props {
   topics: AssistantTopic[];
@@ -20,6 +22,8 @@ interface Props {
   onUpdateTopic: (id: string, updates: Partial<AssistantTopic>) => void;
   onClose: () => void;
   initialAssistant?: string | null;
+  displayMode?: HistoryDisplayMode;
+  onDisplayModeChange?: (mode: HistoryDisplayMode) => void;
 }
 
 // ===========================
@@ -54,7 +58,7 @@ function TagBadge({ tag, selected, onClick, onRemove, size = 'sm' }: {
   size?: 'sm' | 'xs';
 }) {
   const color = TAG_COLORS[tag] || 'bg-gray-500/12 text-gray-700 border-gray-500/20';
-  const sizeClass = size === 'sm' ? 'px-2 py-[2px] text-[10px]' : 'px-1.5 py-[1px] text-[9px]';
+  const sizeClass = size === 'sm' ? 'px-2 py-[2px] text-xs' : 'px-1.5 py-[1px] text-[9px]';
 
   return (
     <span
@@ -65,12 +69,14 @@ function TagBadge({ tag, selected, onClick, onRemove, size = 'sm' }: {
     >
       {tag}
       {onRemove && (
-        <button
+        <Button
+          variant="ghost"
+          size="icon-xs"
           onClick={(e) => { e.stopPropagation(); onRemove(); }}
-          className="ml-0.5 text-current opacity-50 hover:opacity-100 transition-opacity"
+          className="ml-0.5 text-current opacity-50 hover:opacity-100 transition-opacity h-auto w-auto p-0"
         >
           <X size={8} />
-        </button>
+        </Button>
       )}
     </span>
   );
@@ -108,17 +114,19 @@ function GroupSection({ title, count, children, defaultOpen = true, icon }: {
 
   return (
     <div className="mb-2">
-      <button
+      <Button
+        variant="ghost"
+        size="sm"
         onClick={() => setOpen(!open)}
-        className="flex items-center gap-2 w-full px-2 py-1.5 rounded-md hover:bg-accent/15 transition-colors"
+        className="flex items-center gap-2 w-full px-2 py-1.5 rounded-md hover:bg-accent/15 transition-colors h-auto"
       >
         <motion.div animate={{ rotate: open ? 0 : -90 }} transition={{ duration: 0.1 }}>
           <ChevronDown size={11} className="text-muted-foreground" />
         </motion.div>
         {icon || <FolderOpen size={11} className="text-muted-foreground" />}
-        <span className="text-[11px] text-foreground/90 flex-1 text-left">{title}</span>
-        <span className="text-[10px] text-muted-foreground bg-accent/30 px-1.5 py-[1px] rounded-md tabular-nums">{count}</span>
-      </button>
+        <span className="text-xs text-foreground/90 flex-1 text-left">{title}</span>
+        <span className="text-xs text-muted-foreground bg-accent/30 px-1.5 py-[1px] rounded-md tabular-nums">{count}</span>
+      </Button>
       <AnimatePresence initial={false}>
         {open && (
           <motion.div
@@ -162,35 +170,41 @@ function TopicContextMenu({ x, y, topic, onClose, onAction }: {
         style={{ left: cx, top: cy }}
       >
         {/* Edit tags */}
-        <button
+        <Button
+          variant="ghost"
+          size="xs"
           onClick={() => { onAction('editTags'); onClose(); }}
-          className="flex items-center gap-2.5 w-full px-3 py-[6px] text-[10.5px] text-foreground/80 hover:bg-accent/20 transition-colors"
+          className="flex items-center gap-2.5 w-full px-3 py-[6px] text-xs text-foreground/80 hover:bg-accent/20 transition-colors rounded-none justify-start h-auto"
         >
           <Tag size={11} className="text-muted-foreground" />
           <span>{'\u7f16\u8f91\u6807\u7b7e'}</span>
-        </button>
+        </Button>
 
         <div className="h-px bg-border/20 my-1" />
 
         {/* Pin/Unpin */}
-        <button
+        <Button
+          variant="ghost"
+          size="xs"
           onClick={() => { onAction('togglePin'); onClose(); }}
-          className="flex items-center gap-2.5 w-full px-3 py-[6px] text-[10.5px] text-foreground/80 hover:bg-accent/20 transition-colors"
+          className="flex items-center gap-2.5 w-full px-3 py-[6px] text-xs text-foreground/80 hover:bg-accent/20 transition-colors rounded-none justify-start h-auto"
         >
           <Pin size={11} className={`text-muted-foreground ${topic.pinned ? '' : '-rotate-45'}`} />
           <span>{topic.pinned ? '\u53d6\u6d88\u7f6e\u9876' : '\u7f6e\u9876'}</span>
-        </button>
+        </Button>
 
         <div className="h-px bg-border/20 my-1" />
 
         {/* Delete */}
-        <button
+        <Button
+          variant="destructive"
+          size="xs"
           onClick={() => { onAction('delete'); onClose(); }}
-          className="flex items-center gap-2.5 w-full px-3 py-[6px] text-[10.5px] text-red-500/80 hover:bg-red-500/8 transition-colors"
+          className="flex items-center gap-2.5 w-full px-3 py-[6px] text-xs text-destructive/80 hover:bg-destructive/8 transition-colors rounded-none justify-start h-auto bg-transparent"
         >
           <Trash2 size={11} />
           <span>{'\u5220\u9664'}</span>
-        </button>
+        </Button>
       </motion.div>
     </div>
   );
@@ -246,17 +260,17 @@ function TagEditorPopover({ topic, allTags, onUpdate, onClose }: {
             <Tag size={12} className="text-muted-foreground" />
             <span className="text-[11.5px] text-foreground">{'\u7f16\u8f91\u6807\u7b7e'}</span>
           </div>
-          <button onClick={onClose} className="p-1 rounded text-muted-foreground hover:text-foreground hover:bg-accent/20 transition-colors">
+          <Button variant="ghost" size="icon-xs" onClick={onClose} className="p-1 rounded text-muted-foreground hover:text-foreground hover:bg-accent/20 transition-colors">
             <X size={12} />
-          </button>
+          </Button>
         </div>
 
         <div className="px-4 py-3">
-          <p className="text-[10px] text-muted-foreground mb-2 truncate">{'\u8bdd\u9898\uff1a'}{topic.title}</p>
+          <p className="text-xs text-muted-foreground mb-2 truncate">{'\u8bdd\u9898\uff1a'}{topic.title}</p>
 
           {/* Current tags */}
           <div className="flex flex-wrap gap-1 mb-3 min-h-[24px]">
-            {tags.length === 0 && <span className="text-[10px] text-muted-foreground/50">{'\u6682\u65e0\u6807\u7b7e'}</span>}
+            {tags.length === 0 && <span className="text-xs text-muted-foreground/50">{'\u6682\u65e0\u6807\u7b7e'}</span>}
             {tags.map(t => (
               <TagBadge key={t} tag={t} size="sm" onRemove={() => removeTag(t)} />
             ))}
@@ -264,21 +278,23 @@ function TagEditorPopover({ topic, allTags, onUpdate, onClose }: {
 
           {/* Input */}
           <div className="flex items-center gap-2 mb-3">
-            <input
+            <Input
               ref={inputRef}
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => { if (e.key === 'Enter') addTag(input); }}
               placeholder={'\u8f93\u5165\u65b0\u6807\u7b7e\u540d...'}
-              className="flex-1 bg-accent/15 border border-border/30 rounded-md px-2.5 py-[5px] text-[10.5px] text-foreground placeholder:text-muted-foreground/40 outline-none focus:border-cherry-primary/40"
+              className="flex-1 bg-accent/15 border border-border/30 rounded-md px-2.5 py-[5px] text-xs text-foreground placeholder:text-muted-foreground/40 focus:border-cherry-primary/40 h-auto"
             />
-            <button
+            <Button
+              variant="default"
+              size="xs"
               onClick={() => addTag(input)}
               disabled={!input.trim()}
-              className="px-2.5 py-[5px] rounded-md bg-cherry-active-bg text-[10.5px] text-cherry-text hover:bg-cherry-active-border transition-colors disabled:opacity-30"
+              className="px-2.5 py-[5px] rounded-md bg-cherry-active-bg text-xs text-cherry-text hover:bg-cherry-active-border transition-colors disabled:opacity-30 h-auto"
             >
               {'\u6dfb\u52a0'}
-            </button>
+            </Button>
           </div>
 
           {/* Suggested tags */}
@@ -295,12 +311,12 @@ function TagEditorPopover({ topic, allTags, onUpdate, onClose }: {
         </div>
 
         <div className="flex items-center justify-end gap-2 px-4 py-2.5 border-t border-border/25">
-          <button onClick={onClose} className="px-3 py-[4px] rounded-md text-[10.5px] text-muted-foreground hover:text-foreground hover:bg-accent/20 transition-colors">
+          <Button variant="outline" size="xs" onClick={onClose} className="px-3 py-[4px] rounded-md text-xs text-muted-foreground hover:text-foreground hover:bg-accent/20 transition-colors h-auto">
             {'\u53d6\u6d88'}
-          </button>
-          <button onClick={save} className="px-3 py-[4px] rounded-md text-[10.5px] bg-foreground text-background hover:opacity-90 transition-opacity">
+          </Button>
+          <Button variant="default" size="xs" onClick={save} className="px-3 py-[4px] rounded-md text-xs bg-foreground text-background hover:opacity-90 transition-opacity h-auto">
             {'\u4fdd\u5b58'}
-          </button>
+          </Button>
         </div>
       </motion.div>
     </div>
@@ -332,7 +348,7 @@ function TopicCard({ topic, isActive, isHovered, onSelect, onContextMenu, onMous
           : 'border border-transparent hover:bg-accent/10 hover:border-border/30'
       }`}
     >
-      <span className="text-[13px] flex-shrink-0">{ASSISTANT_ICONS[topic.assistantName] || '\u{1F916}'}</span>
+      <span className="text-sm flex-shrink-0">{ASSISTANT_ICONS[topic.assistantName] || '\u{1F916}'}</span>
 
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-1.5">
@@ -340,7 +356,7 @@ function TopicCard({ topic, isActive, isHovered, onSelect, onContextMenu, onMous
             <span className="w-[5px] h-[5px] rounded-full bg-cherry-primary animate-pulse flex-shrink-0" />
           )}
           {topic.pinned && <Pin size={8} className="text-muted-foreground/50 -rotate-45 flex-shrink-0" />}
-          <span className="text-[11px] text-foreground truncate">{topic.title}</span>
+          <span className="text-xs text-foreground truncate">{topic.title}</span>
         </div>
         <div className="flex items-center gap-1.5 mt-[2px]">
           <span className="text-[9.5px] text-muted-foreground/60 flex-shrink-0">{topic.assistantName}</span>
@@ -359,14 +375,16 @@ function TopicCard({ topic, isActive, isHovered, onSelect, onContextMenu, onMous
 
       <div className="w-[20px] flex-shrink-0 flex justify-center">
         {isHovered && (
-          <motion.button
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            onClick={(e) => { e.stopPropagation(); onContextMenu(e); }}
-            className="p-1 rounded text-muted-foreground/40 hover:text-foreground hover:bg-accent/20 transition-colors"
-          >
-            <MoreHorizontal size={11} />
-          </motion.button>
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+            <Button
+              variant="ghost"
+              size="icon-xs"
+              onClick={(e) => { e.stopPropagation(); onContextMenu(e); }}
+              className="p-1 rounded text-muted-foreground/40 hover:text-foreground hover:bg-accent/20 transition-colors h-auto w-auto"
+            >
+              <MoreHorizontal size={11} />
+            </Button>
+          </motion.div>
         )}
       </div>
     </div>
@@ -396,31 +414,33 @@ function TopicListRow({ topic, isActive, isHovered, onSelect, onContextMenu, onM
         isActive ? 'bg-cherry-active-bg' : 'hover:bg-accent/10'
       }`}
     >
-      <span className="text-[12px] flex-shrink-0 w-5 text-center">{ASSISTANT_ICONS[topic.assistantName] || '\u{1F916}'}</span>
+      <span className="text-sm flex-shrink-0 w-5 text-center">{ASSISTANT_ICONS[topic.assistantName] || '\u{1F916}'}</span>
       {topic.status === 'active' && <span className="w-[5px] h-[5px] rounded-full bg-cherry-primary animate-pulse flex-shrink-0" />}
       {topic.pinned && <Pin size={8} className="text-muted-foreground/50 -rotate-45 flex-shrink-0" />}
-      <span className={`text-[11px] flex-1 truncate ${isActive ? 'text-foreground' : 'text-foreground/85'}`}>
+      <span className={`text-xs flex-1 truncate ${isActive ? 'text-foreground' : 'text-foreground/85'}`}>
         {topic.title}
       </span>
       <div className="flex items-center gap-1 flex-shrink-0">
         {topic.tags?.slice(0, 2).map(tag => <TagBadge key={tag} tag={tag} size="xs" />)}
       </div>
-      <span className="text-[10px] text-muted-foreground truncate flex-shrink-0 w-[70px] text-right">{topic.assistantName}</span>
+      <span className="text-xs text-muted-foreground truncate flex-shrink-0 w-[70px] text-right">{topic.assistantName}</span>
       <div className="flex items-center gap-0.5 flex-shrink-0 w-[36px] justify-end">
         <MessageCircle size={8} className="text-muted-foreground/40" />
         <span className="text-[9px] text-muted-foreground tabular-nums">{topic.messageCount}</span>
       </div>
-      <span className="text-[10px] text-muted-foreground flex-shrink-0 w-[40px] text-right tabular-nums">{topic.timestamp}</span>
+      <span className="text-xs text-muted-foreground flex-shrink-0 w-[40px] text-right tabular-nums">{topic.timestamp}</span>
       <div className="w-[24px] flex-shrink-0 flex justify-center">
         {isHovered ? (
-          <motion.button
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            onClick={(e) => { e.stopPropagation(); onContextMenu(e); }}
-            className="p-1 rounded text-muted-foreground/40 hover:text-foreground hover:bg-accent/20 transition-colors"
-          >
-            <MoreHorizontal size={11} />
-          </motion.button>
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+            <Button
+              variant="ghost"
+              size="icon-xs"
+              onClick={(e) => { e.stopPropagation(); onContextMenu(e); }}
+              className="p-1 rounded text-muted-foreground/40 hover:text-foreground hover:bg-accent/20 transition-colors h-auto w-auto"
+            >
+              <MoreHorizontal size={11} />
+            </Button>
+          </motion.div>
         ) : null}
       </div>
     </div>
@@ -431,7 +451,7 @@ function TopicListRow({ topic, isActive, isHovered, onSelect, onContextMenu, onM
 // Topic History Page
 // ===========================
 
-export function TopicHistoryPage({ topics, activeTopicId, onSelectTopic, onDeleteTopic, onUpdateTopic, onClose, initialAssistant }: Props) {
+export function TopicHistoryPage({ topics, activeTopicId, onSelectTopic, onDeleteTopic, onUpdateTopic, onClose, initialAssistant, displayMode = 'floating', onDisplayModeChange }: Props) {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [selectedAssistant, setSelectedAssistant] = useState<string | null>(initialAssistant ?? null);
@@ -552,7 +572,7 @@ export function TopicHistoryPage({ topics, activeTopicId, onSelectTopic, onDelet
       : <TopicListRow key={topic.id} {...topicProps(topic)} />;
 
   const listGap = viewMode === 'card' ? 'gap-1.5' : 'gap-0';
-
+  // ===== Fullscreen view =====
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -568,19 +588,21 @@ export function TopicHistoryPage({ topics, activeTopicId, onSelectTopic, onDelet
             <History size={14} className="text-foreground/70" />
           </div>
           <div>
-            <h2 className="text-[13px] text-foreground">
+            <h2 className="text-sm text-foreground">
               {selectedAssistant ? `${selectedAssistant} \u00b7 \u8bdd\u9898\u5386\u53f2` : '\u8bdd\u9898\u5386\u53f2\u8bb0\u5f55'}
             </h2>
-            <p className="text-[10px] text-muted-foreground">
+            <p className="text-xs text-muted-foreground">
               {selectedAssistant
                 ? `${filteredTopics.length} \u4e2a\u8bdd\u9898 \u00b7 \u7b5b\u9009\u81ea ${topics.length} \u4e2a`
                 : `${topics.length} \u4e2a\u8bdd\u9898`}
             </p>
           </div>
         </div>
-        <button onClick={onClose} className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent/20 transition-colors">
-          <X size={15} />
-        </button>
+        <div className="flex items-center gap-1">
+          <Button variant="ghost" size="icon-xs" onClick={onClose} className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent/20 transition-colors">
+            <X size={15} />
+          </Button>
+        </div>
       </div>
 
       {/* Main Layout */}
@@ -593,62 +615,68 @@ export function TopicHistoryPage({ topics, activeTopicId, onSelectTopic, onDelet
             {/* Assistant search */}
             <div className="flex items-center gap-2 px-2.5 py-[5px] rounded-md bg-accent/15 border border-border/25 mb-2">
               <Search size={10} className="text-muted-foreground/50 flex-shrink-0" />
-              <input
+              <Input
                 value={assistantQuery}
                 onChange={(e) => setAssistantQuery(e.target.value)}
                 placeholder={'\u641c\u7d22\u52a9\u624b...'}
-                className="flex-1 bg-transparent text-[10.5px] text-foreground placeholder:text-muted-foreground/40 outline-none"
+                className="flex-1 bg-transparent text-xs text-foreground placeholder:text-muted-foreground/40 border-none shadow-none h-auto p-0"
               />
               {assistantQuery && (
-                <button onClick={() => setAssistantQuery('')} className="text-muted-foreground hover:text-foreground transition-colors">
+                <Button variant="ghost" size="icon-xs" onClick={() => setAssistantQuery('')} className="text-muted-foreground hover:text-foreground transition-colors h-auto w-auto p-0">
                   <X size={9} />
-                </button>
+                </Button>
               )}
             </div>
             <div className="flex flex-col gap-[2px]">
               {!assistantQuery && (
-                <button
+                <Button
+                  variant="ghost"
+                  size="xs"
                   onClick={() => setSelectedAssistant(null)}
-                  className={`flex items-center gap-2 px-2.5 py-[5px] rounded-md text-[10.5px] transition-all duration-75 ${
+                  className={`flex items-center gap-2 px-2.5 py-[5px] rounded-md text-xs transition-all duration-75 w-full justify-start h-auto ${
                     !selectedAssistant ? 'bg-foreground/8 text-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-accent/15'
                   }`}
                 >
                   <span className="flex-1 text-left">{'\u5168\u90e8'}</span>
                   <span className="text-[9px] text-muted-foreground tabular-nums">{topics.length}</span>
-                </button>
+                </Button>
               )}
               {allAssistants
                 .filter(ast => !assistantQuery || ast.toLowerCase().includes(assistantQuery.toLowerCase()))
                 .map(ast => {
                 const count = topics.filter(t => t.assistantName === ast).length;
                 return (
-                  <button
+                  <Button
+                    variant="ghost"
+                    size="xs"
                     key={ast}
                     onClick={() => setSelectedAssistant(selectedAssistant === ast ? null : ast)}
-                    className={`flex items-center gap-2 px-2.5 py-[5px] rounded-md text-[10.5px] transition-all duration-75 ${
+                    className={`flex items-center gap-2 px-2.5 py-[5px] rounded-md text-xs transition-all duration-75 w-full justify-start h-auto ${
                       selectedAssistant === ast ? 'bg-foreground/8 text-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-accent/15'
                     }`}
                   >
-                    <span className="text-[10px] flex-shrink-0">{ASSISTANT_ICONS[ast] || '\u{1F916}'}</span>
+                    <span className="text-xs flex-shrink-0">{ASSISTANT_ICONS[ast] || '\u{1F916}'}</span>
                     <span className="flex-1 text-left truncate">{ast}</span>
                     <span className="text-[9px] text-muted-foreground tabular-nums">{count}</span>
-                  </button>
+                  </Button>
                 );
               })}
               {assistantQuery && allAssistants.filter(ast => ast.toLowerCase().includes(assistantQuery.toLowerCase())).length === 0 && (
-                <div className="px-2.5 py-3 text-[10px] text-muted-foreground/50 text-center">{'\u65e0\u5339\u914d\u52a9\u624b'}</div>
+                <div className="px-2.5 py-3 text-xs text-muted-foreground/50 text-center">{'\u65e0\u5339\u914d\u52a9\u624b'}</div>
               )}
             </div>
           </div>
 
           {hasFilters && (
-            <button
+            <Button
+              variant="outline"
+              size="xs"
               onClick={clearFilters}
-              className="flex items-center justify-center gap-1.5 px-2.5 py-[5px] rounded-md text-[10px] text-muted-foreground hover:text-foreground hover:bg-accent/15 transition-colors border border-dashed border-border/30 mt-auto"
+              className="flex items-center justify-center gap-1.5 px-2.5 py-[5px] rounded-md text-xs text-muted-foreground hover:text-foreground hover:bg-accent/15 transition-colors border border-dashed border-border/30 mt-auto h-auto w-full"
             >
               <X size={9} />
               {'\u6e05\u9664\u6240\u6709\u7b5b\u9009'}
-            </button>
+            </Button>
           )}
         </div>
 
@@ -657,12 +685,14 @@ export function TopicHistoryPage({ topics, activeTopicId, onSelectTopic, onDelet
           {/* Toolbar */}
           <div className="flex items-center justify-between px-4 py-2 border-b border-border/25 flex-shrink-0">
             <div className="flex items-center gap-2">
-              <span className="text-[10.5px] text-foreground/70">{filteredTopics.length} {'\u6761\u7ed3\u679c'}</span>
+              <span className="text-xs text-foreground/70">{filteredTopics.length} {'\u6761\u7ed3\u679c'}</span>
               {/* Tag filter */}
               <div className="relative">
-                <button
+                <Button
+                  variant="ghost"
+                  size="xs"
                   onClick={() => setTagDropdownOpen(!tagDropdownOpen)}
-                  className={`flex items-center gap-1 px-2 py-[3px] rounded-md text-[10px] transition-all duration-100 ${
+                  className={`flex items-center gap-1 px-2 py-[3px] rounded-md text-xs transition-all duration-100 h-auto ${
                     tagDropdownOpen || selectedTags.length > 0
                       ? 'bg-foreground/8 text-foreground'
                       : 'text-muted-foreground hover:text-foreground hover:bg-accent/15'
@@ -671,7 +701,7 @@ export function TopicHistoryPage({ topics, activeTopicId, onSelectTopic, onDelet
                   <Tag size={9} />
                   <span>{selectedTags.length > 0 ? `${selectedTags.length} \u4e2a\u6807\u7b7e` : '\u6807\u7b7e'}</span>
                   <ChevronDown size={8} className={`transition-transform duration-100 ${tagDropdownOpen ? 'rotate-180' : ''}`} />
-                </button>
+                </Button>
                 <AnimatePresence>
                   {tagDropdownOpen && (
                     <div>
@@ -689,10 +719,12 @@ export function TopicHistoryPage({ topics, activeTopicId, onSelectTopic, onDelet
                               const isSelected = selectedTags.includes(tag);
                               const count = topics.filter(t => t.tags?.includes(tag)).length;
                               return (
-                                <button
+                                <Button
+                                  variant="ghost"
+                                  size="xs"
                                   key={tag}
                                   onClick={() => toggleTag(tag)}
-                                  className={`flex items-center gap-2 w-full px-2.5 py-[5px] text-[10.5px] transition-colors ${
+                                  className={`flex items-center gap-2 w-full px-2.5 py-[5px] text-xs transition-colors rounded-none justify-start h-auto ${
                                     isSelected ? 'bg-foreground/6 text-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-accent/15'
                                   }`}
                                 >
@@ -704,44 +736,48 @@ export function TopicHistoryPage({ topics, activeTopicId, onSelectTopic, onDelet
                                   <TagBadge tag={tag} size="xs" />
                                   <span className="flex-1" />
                                   <span className="text-[9px] text-muted-foreground/50 tabular-nums">{count}</span>
-                                </button>
+                                </Button>
                               );
                             })}
                             {selectedTags.length > 0 && (
                               <div>
                                 <div className="h-px bg-border/20 my-0.5" />
-                                <button
+                                <Button
+                                  variant="ghost"
+                                  size="xs"
                                   onClick={() => setSelectedTags([])}
-                                  className="flex items-center gap-2 w-full px-2.5 py-[5px] text-[10.5px] text-muted-foreground hover:text-foreground hover:bg-accent/15 transition-colors"
+                                  className="flex items-center gap-2 w-full px-2.5 py-[5px] text-xs text-muted-foreground hover:text-foreground hover:bg-accent/15 transition-colors rounded-none justify-start h-auto"
                                 >
                                   <X size={9} className="flex-shrink-0" />
                                   <span>{'\u6e05\u9664\u9009\u62e9'}</span>
-                                </button>
+                                </Button>
                               </div>
                             )}
                             <div className="h-px bg-border/20 my-0.5" />
-                            <button
+                            <Button
+                              variant="ghost"
+                              size="xs"
                               onClick={() => setTagManageMode(true)}
-                              className="flex items-center gap-2 w-full px-2.5 py-[5px] text-[10.5px] text-muted-foreground hover:text-foreground hover:bg-accent/15 transition-colors"
+                              className="flex items-center gap-2 w-full px-2.5 py-[5px] text-xs text-muted-foreground hover:text-foreground hover:bg-accent/15 transition-colors rounded-none justify-start h-auto"
                             >
                               <Edit3 size={9} className="flex-shrink-0" />
                               <span>{'\u7ba1\u7406\u6807\u7b7e'}</span>
-                            </button>
+                            </Button>
                           </div>
                         ) : (
                           <div>
                             <div className="px-2.5 py-1.5 border-b border-border/20">
                               <div className="flex items-center justify-between mb-1.5">
-                                <span className="text-[10px] text-foreground/70">{'\u7ba1\u7406\u6807\u7b7e'}</span>
-                                <button
+                                <span className="text-xs text-foreground/70">{'\u7ba1\u7406\u6807\u7b7e'}</span>
+                                <Button variant="ghost" size="xs"
                                   onClick={() => setTagManageMode(false)}
-                                  className="text-[9px] text-muted-foreground hover:text-foreground transition-colors"
+                                  className="text-[9px] text-muted-foreground hover:text-foreground transition-colors h-auto p-0"
                                 >
                                   {'\u8fd4\u56de'}
-                                </button>
+                                </Button>
                               </div>
                               <div className="flex items-center gap-1.5">
-                                <input
+                                <Input
                                   ref={newTagRef}
                                   value={newTagInput}
                                   onChange={(e) => setNewTagInput(e.target.value)}
@@ -753,9 +789,9 @@ export function TopicHistoryPage({ topics, activeTopicId, onSelectTopic, onDelet
                                     }
                                   }}
                                   placeholder={'\u65b0\u5efa\u6807\u7b7e...'}
-                                  className="flex-1 bg-accent/15 border border-border/30 rounded px-2 py-[4px] text-[10px] text-foreground placeholder:text-muted-foreground/40 outline-none focus:border-cherry-primary/40"
+                                  className="flex-1 bg-accent/15 border border-border/30 rounded px-2 py-[4px] text-xs text-foreground placeholder:text-muted-foreground/40 focus:border-cherry-primary/40 h-auto"
                                 />
-                                <button
+                                <Button variant="ghost" size="icon-xs"
                                   onClick={() => {
                                     const t = newTagInput.trim();
                                     if (t && !managedTags.includes(t)) setManagedTags(prev => [...prev, t].sort());
@@ -765,7 +801,7 @@ export function TopicHistoryPage({ topics, activeTopicId, onSelectTopic, onDelet
                                   className="p-1 rounded text-cherry-primary-dark hover:bg-cherry-active-bg transition-colors disabled:opacity-30"
                                 >
                                   <Plus size={10} />
-                                </button>
+                                </Button>
                               </div>
                             </div>
                             {(managedTags.length > 0 ? managedTags : allTags).map(tag => {
@@ -778,15 +814,15 @@ export function TopicHistoryPage({ topics, activeTopicId, onSelectTopic, onDelet
                                   <TagBadge tag={tag} size="xs" />
                                   <span className="flex-1" />
                                   <span className="text-[9px] text-muted-foreground/50 tabular-nums">{count}</span>
-                                  <Tooltip content={'\u5220\u9664\u6807\u7b7e'} side="right"><button
+                                  <Tooltip content={'\u5220\u9664\u6807\u7b7e'} side="right"><Button variant="ghost" size="icon-xs"
                                     onClick={() => {
                                       setManagedTags(prev => prev.filter(t => t !== tag));
                                       setSelectedTags(prev => prev.filter(t => t !== tag));
                                     }}
-                                    className="p-0.5 rounded text-muted-foreground/30 hover:text-red-500 opacity-0 group-hover/tag:opacity-100 transition-all"
+                                    className="p-0.5 rounded text-muted-foreground/30 hover:text-destructive opacity-0 group-hover/tag:opacity-100 transition-all h-auto w-auto"
                                   >
                                     <Trash2 size={9} />
-                                  </button></Tooltip>
+                                  </Button></Tooltip>
                                 </div>
                               );
                             })}
@@ -809,33 +845,33 @@ export function TopicHistoryPage({ topics, activeTopicId, onSelectTopic, onDelet
               {/* Topic search */}
               <div className="flex items-center gap-1.5 px-2 py-[3px] rounded-md bg-accent/15 border border-border/25 w-[160px]">
                 <Search size={10} className="text-muted-foreground/50 flex-shrink-0" />
-                <input
+                <Input
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder={'\u641c\u7d22\u8bdd\u9898...'}
-                  className="flex-1 bg-transparent text-[10px] text-foreground placeholder:text-muted-foreground/40 outline-none min-w-0"
+                  className="flex-1 bg-transparent text-xs text-foreground placeholder:text-muted-foreground/40 min-w-0 border-none shadow-none h-auto p-0"
                 />
                 {searchQuery && (
-                  <button onClick={() => setSearchQuery('')} className="text-muted-foreground hover:text-foreground transition-colors flex-shrink-0">
+                  <Button variant="ghost" size="icon-xs" onClick={() => setSearchQuery('')} className="text-muted-foreground hover:text-foreground transition-colors flex-shrink-0 h-auto w-auto p-0">
                     <X size={9} />
-                  </button>
+                  </Button>
                 )}
               </div>
               <div className="w-px h-4 bg-border/25" />
               {/* View mode */}
               <div className="flex items-center gap-[1px] bg-accent/15 rounded-md p-[2px]">
-                <Tooltip content={'\u5217\u8868\u89c6\u56fe'} side="bottom"><button
+                <Tooltip content={'\u5217\u8868\u89c6\u56fe'} side="bottom"><Button variant="ghost" size="icon-xs"
                   onClick={() => setViewMode('list')}
-                  className={`p-[4px] rounded transition-all duration-100 ${viewMode === 'list' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
+                  className={`p-[4px] rounded transition-all duration-100 h-auto w-auto ${viewMode === 'list' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
                 >
                   <List size={12} />
-                </button></Tooltip>
-                <Tooltip content={'\u5361\u7247\u89c6\u56fe'} side="bottom"><button
+                </Button></Tooltip>
+                <Tooltip content={'\u5361\u7247\u89c6\u56fe'} side="bottom"><Button variant="ghost" size="icon-xs"
                   onClick={() => setViewMode('card')}
-                  className={`p-[4px] rounded transition-all duration-100 ${viewMode === 'card' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
+                  className={`p-[4px] rounded transition-all duration-100 h-auto w-auto ${viewMode === 'card' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
                 >
                   <LayoutGrid size={12} />
-                </button></Tooltip>
+                </Button></Tooltip>
               </div>
               <div className="w-px h-4 bg-border/25" />
               {/* Group */}
@@ -845,30 +881,30 @@ export function TopicHistoryPage({ topics, activeTopicId, onSelectTopic, onDelet
                   { key: 'assistant' as GroupMode, label: '\u6309\u52a9\u624b' },
                   { key: 'tag' as GroupMode, label: '\u6309\u6807\u7b7e' },
                 ] as const).map(g => (
-                  <button
+                  <Button variant="ghost" size="xs"
                     key={g.key}
                     onClick={() => setGroupMode(g.key)}
-                    className={`px-2 py-[3px] rounded text-[10px] transition-all duration-100 ${
+                    className={`px-2 py-[3px] rounded text-xs transition-all duration-100 h-auto ${
                       groupMode === g.key ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
                     }`}
                   >
                     {g.label}
-                  </button>
+                  </Button>
                 ))}
               </div>
               <div className="w-px h-4 bg-border/25" />
               {/* Sort */}
-              <button
+              <Button variant="ghost" size="xs"
                 onClick={() => {
                   if (sortKey === 'time') setSortKey('name');
                   else if (sortKey === 'name') setSortKey('messages');
                   else setSortKey('time');
                 }}
-                className="flex items-center gap-1 px-2 py-[3px] rounded-md text-[10px] text-muted-foreground hover:text-foreground hover:bg-accent/15 transition-colors"
+                className="flex items-center gap-1 px-2 py-[3px] rounded-md text-xs text-muted-foreground hover:text-foreground hover:bg-accent/15 transition-colors h-auto"
               >
                 <ArrowUpDown size={10} />
                 {sortKey === 'time' ? '\u6309\u65f6\u95f4' : sortKey === 'name' ? '\u6309\u540d\u79f0' : '\u6309\u6d88\u606f\u6570'}
-              </button>
+              </Button>
             </div>
           </div>
 
@@ -895,7 +931,7 @@ export function TopicHistoryPage({ topics, activeTopicId, onSelectTopic, onDelet
                   icon={groupMode === 'tag'
                     ? <TagBadge tag={groupName} size="xs" />
                     : groupMode === 'assistant'
-                      ? <span className="text-[11px]">{ASSISTANT_ICONS[groupName] || '\u{1F916}'}</span>
+                      ? <span className="text-xs">{ASSISTANT_ICONS[groupName] || '\u{1F916}'}</span>
                       : undefined
                   }
                 >
@@ -915,12 +951,12 @@ export function TopicHistoryPage({ topics, activeTopicId, onSelectTopic, onDelet
                 <div className="w-12 h-12 rounded-xl bg-accent/25 flex items-center justify-center mb-3">
                   <Search size={18} className="text-muted-foreground/40" />
                 </div>
-                <p className="text-[11px] text-foreground/70 mb-1">{'\u6ca1\u6709\u627e\u5230\u5339\u914d\u7684\u8bdd\u9898'}</p>
-                <p className="text-[10px] text-muted-foreground mb-3">{'\u5c1d\u8bd5\u4fee\u6539\u641c\u7d22\u6761\u4ef6\u6216\u7b5b\u9009\u6807\u7b7e'}</p>
+                <p className="text-xs text-foreground/70 mb-1">{'\u6ca1\u6709\u627e\u5230\u5339\u914d\u7684\u8bdd\u9898'}</p>
+                <p className="text-xs text-muted-foreground mb-3">{'\u5c1d\u8bd5\u4fee\u6539\u641c\u7d22\u6761\u4ef6\u6216\u7b5b\u9009\u6807\u7b7e'}</p>
                 {hasFilters && (
-                  <button onClick={clearFilters} className="px-3 py-1.5 rounded-md text-[10px] text-foreground/70 bg-accent/20 hover:bg-accent/30 transition-colors">
+                  <Button variant="ghost" size="xs" onClick={clearFilters} className="px-3 py-1.5 rounded-md text-xs text-foreground/70 bg-accent/20 hover:bg-accent/30 transition-colors h-auto">
                     {'\u6e05\u9664\u7b5b\u9009\u6761\u4ef6'}
-                  </button>
+                  </Button>
                 )}
               </div>
             )}

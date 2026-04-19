@@ -4,6 +4,7 @@ import {
   Code2, Music, Video, ChevronRight, ChevronDown,
   FolderClosed, FolderOpen, Plus, Circle,
 } from 'lucide-react';
+import { Button, Input } from '@cherry-studio/ui';
 import type { FileFolder, FileTag } from './mockData';
 
 export type SidebarFilter =
@@ -34,7 +35,7 @@ function InlineInput({ onConfirm, onCancel }: { onConfirm: (v: string) => void; 
   return (
     <div className="flex items-center gap-1.5 px-3 py-[5px]">
       <FolderClosed size={12} className="flex-shrink-0 text-foreground/35" />
-      <input
+      <Input
         ref={ref}
         value={text}
         onChange={e => setText(e.target.value)}
@@ -44,7 +45,7 @@ function InlineInput({ onConfirm, onCancel }: { onConfirm: (v: string) => void; 
         }}
         onBlur={() => { if (text.trim()) onConfirm(text.trim()); else onCancel(); }}
         placeholder="文件夹名称"
-        className="flex-1 bg-transparent outline-none text-[11px] text-foreground border-b border-foreground/20 py-0.5 min-w-0 placeholder:text-foreground/20"
+        className="flex-1 bg-transparent outline-none text-xs text-foreground border-b border-foreground/20 py-0.5 min-w-0 placeholder:text-foreground/20 h-auto border-x-0 border-t-0 rounded-none shadow-none focus-visible:ring-0"
       />
     </div>
   );
@@ -83,14 +84,14 @@ export function FileSidebar({
 
   const SectionHeader = ({ label, expanded, onToggle, onAdd }: { label: string; expanded: boolean; onToggle: () => void; onAdd?: () => void }) => (
     <div className="flex items-center justify-between px-3 pt-3 pb-1">
-      <button onClick={onToggle} className="flex items-center gap-1 text-[9px] text-foreground/40 uppercase tracking-wider hover:text-foreground/55 transition-colors">
+      <Button variant="ghost" onClick={onToggle} className="h-auto p-0 flex items-center gap-1 text-[9px] text-foreground/40 uppercase tracking-wider hover:text-foreground/55 transition-colors">
         {expanded ? <ChevronDown size={9} /> : <ChevronRight size={9} />}
         <span>{label}</span>
-      </button>
+      </Button>
       {onAdd && (
-        <button onClick={onAdd} className="w-4 h-4 flex items-center justify-center text-foreground/25 hover:text-foreground/50 transition-colors">
+        <Button variant="ghost" onClick={onAdd} className="w-4 h-4 p-0 flex items-center justify-center text-foreground/25 hover:text-foreground/50 transition-colors">
           <Plus size={10} />
-        </button>
+        </Button>
       )}
     </div>
   );
@@ -103,12 +104,13 @@ export function FileSidebar({
       const FIcon = active && expanded ? FolderOpen : FolderClosed;
       return (
         <div key={folder.id}>
-          <button
+          <Button
+            variant="ghost"
             onClick={() => {
               onFilterChange({ kind: 'folder', value: folder.id });
               if (hasChildren) toggleFolder(folder.id);
             }}
-            className={`w-full flex items-center gap-1.5 py-[5px] rounded-md transition-colors text-[11px] ${
+            className={`w-full flex items-center gap-1.5 py-[5px] rounded-md transition-colors text-xs h-auto ${
               active
                 ? 'bg-accent text-foreground/85'
                 : 'text-foreground/60 hover:bg-accent/40 hover:text-foreground/75'
@@ -125,7 +127,7 @@ export function FileSidebar({
             {fileCounts[folder.id] !== undefined && fileCounts[folder.id] > 0 && (
               <span className="ml-auto text-[9px] text-foreground/25">{fileCounts[folder.id]}</span>
             )}
-          </button>
+          </Button>
           {hasChildren && expanded && renderFolderTree(folder.children!, depth + 1)}
         </div>
       );
@@ -141,10 +143,11 @@ export function FileSidebar({
           const Icon = item.icon;
           const count = fileCounts[item.id];
           return (
-            <button
+            <Button
               key={item.id}
+              variant="ghost"
               onClick={() => onFilterChange({ kind: 'library', value: item.id })}
-              className={`w-full flex items-center gap-2 px-2.5 py-[5px] rounded-md transition-colors text-[11px] ${
+              className={`w-full flex items-center gap-2 px-2.5 py-[5px] rounded-md transition-colors text-xs h-auto ${
                 active
                   ? 'bg-accent text-foreground/85'
                   : 'text-foreground/60 hover:bg-accent/40 hover:text-foreground/75'
@@ -155,7 +158,7 @@ export function FileSidebar({
               {count !== undefined && count > 0 && (
                 <span className="text-[9px] text-foreground/25">{count}</span>
               )}
-            </button>
+            </Button>
           );
         })}
       </div>
@@ -169,10 +172,11 @@ export function FileSidebar({
             const Icon = item.icon;
             const count = fileCounts[`type_${item.id}`];
             return (
-              <button
+              <Button
                 key={item.id}
+                variant="ghost"
                 onClick={() => onFilterChange({ kind: 'type', value: item.id })}
-                className={`w-full flex items-center gap-2 px-2.5 py-[5px] rounded-md transition-colors text-[11px] ${
+                className={`w-full flex items-center gap-2 px-2.5 py-[5px] rounded-md transition-colors text-xs h-auto ${
                   active
                     ? 'bg-accent text-foreground/85'
                     : 'text-foreground/60 hover:bg-accent/40 hover:text-foreground/75'
@@ -183,7 +187,7 @@ export function FileSidebar({
                 {count !== undefined && count > 0 && (
                   <span className="text-[9px] text-foreground/25">{count}</span>
                 )}
-              </button>
+              </Button>
             );
           })}
         </div>
@@ -210,10 +214,11 @@ export function FileSidebar({
           {tags.map(tag => {
             const active = isActive({ kind: 'tag', value: tag.id });
             return (
-              <button
+              <Button
                 key={tag.id}
+                variant="ghost"
                 onClick={() => onFilterChange({ kind: 'tag', value: tag.id })}
-                className={`w-full flex items-center gap-2 px-2.5 py-[5px] rounded-md transition-colors text-[11px] ${
+                className={`w-full flex items-center gap-2 px-2.5 py-[5px] rounded-md transition-colors text-xs h-auto ${
                   active
                     ? 'bg-accent text-foreground/85'
                     : 'text-foreground/60 hover:bg-accent/40 hover:text-foreground/75'
@@ -221,7 +226,7 @@ export function FileSidebar({
               >
                 <Circle size={7} fill={tag.color} stroke="none" className="flex-shrink-0 opacity-70" />
                 <span className="flex-1 text-left truncate">{tag.name}</span>
-              </button>
+              </Button>
             );
           })}
         </div>

@@ -11,7 +11,7 @@ import {
   Code, Heading1, Heading2, Heading3, Undo2, Redo2,
   Braces, Table, Minus, Link, Image as ImageIcon, Eye
 } from 'lucide-react';
-import { Button } from '@cherry-studio/ui';
+import { Button, Input } from '@cherry-studio/ui';
 import { Tooltip } from '@/components/common/Tooltip';
 import type { AssistantInfo } from '@/types/assistant';
 import { MOCK_ASSISTANTS, ASSISTANT_EMOJI_MAP } from '@/mock';
@@ -160,29 +160,31 @@ function NoteTreeItem({ item, depth = 0, selectedId, onSelect, expandedFolders, 
     if (filterStarred && filteredChildren.length === 0) return null;
     return (
       <div>
-        <button
+        <Button
+          variant="ghost"
+          size="xs"
           onClick={() => onToggleFolder(item.id)}
           onContextMenu={handleCtx}
-          className="w-full flex items-center gap-1.5 py-[5px] px-2 rounded-md text-[12px] hover:bg-accent/60 transition-colors group/folder"
+          className="w-full flex items-center gap-1.5 py-[5px] px-2 h-auto rounded-md text-sm hover:bg-accent/60 group/folder justify-start"
           style={{ paddingLeft: `${depth * 16 + 8}px` }}
         >
           <ChevronRight size={12} className={`text-muted-foreground/50 transition-transform flex-shrink-0 ${isExpanded ? 'rotate-90' : ''}`} />
           {isExpanded ? <FolderOpen size={14} className="text-amber-500 flex-shrink-0" /> : <Folder size={14} className="text-amber-500/70 flex-shrink-0" />}
           {isRenaming ? (
-            <input
+            <Input
               autoFocus
               value={renameValue}
               onChange={e => onRenameChange?.(e.target.value)}
               onKeyDown={e => { if (e.key === 'Enter') onRenameSubmit?.(); if (e.key === 'Escape') onRenameCancel?.(); }}
               onBlur={() => onRenameSubmit?.()}
               onClick={e => e.stopPropagation()}
-              className="flex-1 min-w-0 bg-accent border border-primary/40 rounded px-1 py-0 text-[12px] text-foreground outline-none"
+              className="flex-1 min-w-0 bg-accent border border-primary/40 rounded px-1 py-0 text-sm text-foreground h-auto"
             />
           ) : (
             <span className="truncate text-foreground/80 flex-1 text-left">{item.title}</span>
           )}
-          <span className="text-[10px] text-muted-foreground/40 opacity-0 group-hover/folder:opacity-100">{children.length}</span>
-        </button>
+          <span className="text-xs text-muted-foreground/40 opacity-0 group-hover/folder:opacity-100">{children.length}</span>
+        </Button>
         {isExpanded && filteredChildren.map(child => (
           <NoteTreeItem key={child.id} item={child} depth={depth + 1} selectedId={selectedId} onSelect={onSelect} expandedFolders={expandedFolders} onToggleFolder={onToggleFolder} filterStarred={filterStarred} onContextMenu={onContextMenu} renamingId={renamingId} renameValue={renameValue} onRenameChange={onRenameChange} onRenameSubmit={onRenameSubmit} onRenameCancel={onRenameCancel} />
         ))}
@@ -194,29 +196,31 @@ function NoteTreeItem({ item, depth = 0, selectedId, onSelect, expandedFolders, 
 
   const isSelected = selectedId === item.id;
   return (
-    <button
+    <Button
+      variant="ghost"
+      size="xs"
       onClick={() => onSelect(item.id)}
       onContextMenu={handleCtx}
-      className={`w-full flex items-center gap-1.5 py-[5px] px-2 rounded-md text-[12px] transition-colors group/file
+      className={`w-full flex items-center gap-1.5 py-[5px] px-2 h-auto rounded-md text-sm group/file justify-start
         ${isSelected ? 'bg-accent text-foreground' : 'text-foreground/70 hover:bg-accent/50 hover:text-foreground'}`}
       style={{ paddingLeft: `${depth * 16 + 8}px` }}
     >
       <FileText size={13} className={`flex-shrink-0 ${isSelected ? 'text-primary' : 'text-muted-foreground/50'}`} />
       {isRenaming ? (
-        <input
+        <Input
           autoFocus
           value={renameValue}
           onChange={e => onRenameChange?.(e.target.value)}
           onKeyDown={e => { if (e.key === 'Enter') onRenameSubmit?.(); if (e.key === 'Escape') onRenameCancel?.(); }}
           onBlur={() => onRenameSubmit?.()}
           onClick={e => e.stopPropagation()}
-          className="flex-1 min-w-0 bg-accent border border-primary/40 rounded px-1 py-0 text-[12px] text-foreground outline-none"
+          className="flex-1 min-w-0 bg-accent border border-primary/40 rounded px-1 py-0 text-sm text-foreground h-auto"
         />
       ) : (
         <span className="truncate flex-1 text-left">{item.title}</span>
       )}
       {item.starred && <Star size={10} className="text-amber-400 fill-amber-400 flex-shrink-0" />}
-    </button>
+    </Button>
   );
 }
 
@@ -226,7 +230,7 @@ function renderInline(text: string): React.ReactNode {
   const parts = text.split(inlinePattern);
   const linkPattern = new RegExp('^\\[(.+?)\\]\\((.+?)\\)$');
   return parts.map((part, i) => {
-    if (part.startsWith('`') && part.endsWith('`')) return <code key={i} className="px-1 py-0.5 rounded bg-accent/60 text-[11px] font-mono text-primary/80">{part.slice(1, -1)}</code>;
+    if (part.startsWith('`') && part.endsWith('`')) return <code key={i} className="px-1 py-0.5 rounded bg-accent/60 text-xs font-mono text-primary/80">{part.slice(1, -1)}</code>;
     if (part.startsWith('**') && part.endsWith('**')) return <strong key={i} className="text-foreground">{part.slice(2, -2)}</strong>;
     if (part.startsWith('*') && part.endsWith('*')) return <em key={i} className="italic text-foreground/70">{part.slice(1, -1)}</em>;
     if (part.startsWith('~~') && part.endsWith('~~')) return <span key={i} className="line-through text-muted-foreground/50">{part.slice(2, -2)}</span>;
@@ -253,7 +257,7 @@ function NotePreviewRenderer({ content }: { content: string }) {
       if (inCodeBlock) {
         elements.push(
           <div key={`code-${i}`} className="bg-accent/40 rounded-lg border border-border/20 my-3 overflow-hidden">
-            {codeLang && <div className="px-3 py-1 border-b border-border/20 text-[10px] text-muted-foreground/50 bg-accent/30">{codeLang}</div>}
+            {codeLang && <div className="px-3 py-1 border-b border-border/20 text-xs text-muted-foreground/50 bg-accent/30">{codeLang}</div>}
             <pre className="px-4 py-3 text-xs font-mono text-foreground/80 overflow-x-auto [&::-webkit-scrollbar]:h-[3px] [&::-webkit-scrollbar-thumb]:bg-border/30">{codeLines.join('\n')}</pre>
           </div>
         );
@@ -297,7 +301,7 @@ function NotePreviewRenderer({ content }: { content: string }) {
       const match = line.match(numMatchPattern);
       if (match) { elements.push(<div key={i} className="flex items-start gap-2 py-0.5 ml-4 text-xs text-foreground/80"><span className="text-primary/70 w-4 text-right flex-shrink-0">{match[1]}.</span><span>{renderInline(match[2])}</span></div>); continue; }
     }
-    if (line.startsWith('*') && line.endsWith('*') && !line.startsWith('**')) { elements.push(<p key={i} className="text-[11px] text-muted-foreground/50 italic">{line.replace(new RegExp('\\*', 'g'), '')}</p>); continue; }
+    if (line.startsWith('*') && line.endsWith('*') && !line.startsWith('**')) { elements.push(<p key={i} className="text-xs text-muted-foreground/50 italic">{line.replace(new RegExp('\\*', 'g'), '')}</p>); continue; }
     if (line.trim() === '') { elements.push(<div key={i} className="h-3" />); continue; }
     elements.push(<p key={i} className="text-xs text-foreground/80 leading-relaxed">{renderInline(line)}</p>);
   }
@@ -365,7 +369,7 @@ function NoteEditableRenderer({ content, onChange }: { content: string; onChange
         const endIdx = i;
         elements.push(
           <div key={`code-${i}`} className="bg-accent/40 rounded-lg border border-border/20 my-3 overflow-hidden group/code">
-            {lang && <div className="px-3 py-1 border-b border-border/20 text-[10px] text-muted-foreground/50 bg-accent/30">{lang}</div>}
+            {lang && <div className="px-3 py-1 border-b border-border/20 text-xs text-muted-foreground/50 bg-accent/30">{lang}</div>}
             <textarea
               value={codeContent}
               onChange={e => {
@@ -423,7 +427,7 @@ function NoteEditableRenderer({ content, onChange }: { content: string; onChange
       elements.push(
         <div key={i} className="relative my-4 group/hr">
           <hr className="border-border/30" />
-          <button onClick={() => insertNewLineAfter(i)} className="absolute -top-2.5 left-1/2 -translate-x-1/2 w-5 h-5 rounded bg-accent border border-border/30 flex items-center justify-center text-muted-foreground/30 opacity-0 group-hover/hr:opacity-100 hover:text-foreground transition-all"><Plus size={10} /></button>
+          <Button variant="ghost" size="icon-xs" onClick={() => insertNewLineAfter(i)} className="absolute -top-2.5 left-1/2 -translate-x-1/2 w-5 h-5 bg-accent border border-border/30 text-muted-foreground/30 opacity-0 group-hover/hr:opacity-100 hover:text-foreground"><Plus size={10} /></Button>
         </div>
       );
       continue;
@@ -507,10 +511,12 @@ function NoteEditableRenderer({ content, onChange }: { content: string; onChange
       const lineIdx = i;
       elements.push(
         <div key={i} className="flex items-start gap-2 py-0.5 ml-4 text-xs text-foreground/80 group/task">
-          <button
+          <Button
+            variant="ghost"
+            size="icon-xs"
             onClick={() => updateLine(lineIdx, checked ? `- [ ] ${text}` : `- [x] ${text}`)}
-            className={`w-3.5 h-3.5 rounded border flex items-center justify-center flex-shrink-0 mt-[1px] transition-colors ${checked ? 'border-primary bg-primary' : 'border-muted-foreground/30 hover:border-primary'}`}
-          >{checked && <Check size={8} className="text-white" />}</button>
+            className={`w-3.5 h-3.5 rounded border flex items-center justify-center flex-shrink-0 mt-[1px] p-0 ${checked ? 'border-primary bg-primary' : 'border-muted-foreground/30 hover:border-primary'}`}
+          >{checked && <Check size={8} className="text-white" />}</Button>
           <div contentEditable suppressContentEditableWarning
             onBlur={e => updateLine(lineIdx, `- [${checked ? 'x' : ' '}] ` + (e.currentTarget.textContent || ''))}
             onKeyDown={e => handleKeyDown(e, lineIdx, `- [${checked ? 'x' : ' '}] `)}
@@ -564,7 +570,7 @@ function NoteEditableRenderer({ content, onChange }: { content: string; onChange
         <div key={i} contentEditable suppressContentEditableWarning
           onBlur={e => updateLine(lineIdx, '*' + (e.currentTarget.textContent || '') + '*')}
           onKeyDown={e => handleKeyDown(e, lineIdx, '*')}
-          className="text-[11px] text-muted-foreground/50 italic outline-none focus:bg-accent/10 rounded px-1 -mx-1 transition-colors"
+          className="text-xs text-muted-foreground/50 italic outline-none focus:bg-accent/10 rounded px-1 -mx-1 transition-colors"
         >{line.replace(new RegExp('\\*', 'g'), '')}</div>
       );
       continue;
@@ -891,25 +897,25 @@ export function NotePage() {
             <div className="h-11 flex items-center gap-1.5 px-3 flex-shrink-0">
               <NotebookPen size={14} className="text-orange-500 flex-shrink-0" />
               <span className="text-xs text-foreground flex-1 truncate">笔记</span>
-              <Tooltip content="新建笔记"><button onClick={addNewNoteAtRoot} className="w-6 h-6 rounded-md flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"><FilePlus size={13} /></button></Tooltip>
-              <Tooltip content="新建文件夹"><button onClick={addNewFolderAtRoot} className="w-6 h-6 rounded-md flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"><FolderPlus size={13} /></button></Tooltip>
-              <Tooltip content="收起目录"><button onClick={() => setLeftPanelOpen(false)} className="w-6 h-6 rounded-md flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"><PanelLeftClose size={13} /></button></Tooltip>
+              <Tooltip content="新建笔记"><Button variant="ghost" size="icon-xs" onClick={addNewNoteAtRoot} className="w-6 h-6 text-muted-foreground hover:text-foreground hover:bg-accent"><FilePlus size={13} /></Button></Tooltip>
+              <Tooltip content="新建文件夹"><Button variant="ghost" size="icon-xs" onClick={addNewFolderAtRoot} className="w-6 h-6 text-muted-foreground hover:text-foreground hover:bg-accent"><FolderPlus size={13} /></Button></Tooltip>
+              <Tooltip content="收起目录"><Button variant="ghost" size="icon-xs" onClick={() => setLeftPanelOpen(false)} className="w-6 h-6 text-muted-foreground hover:text-foreground hover:bg-accent"><PanelLeftClose size={13} /></Button></Tooltip>
             </div>
             <div className="px-2.5 pt-2 pb-1 space-y-1.5">
               <div className="relative">
                 <Search size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground/50" />
-                <input type="text" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} placeholder="搜索笔记..." className="w-full h-7 pl-7 pr-2 rounded-md bg-accent/40 border-none text-xs text-foreground placeholder:text-muted-foreground/40 outline-none focus:bg-accent/60 focus:ring-1 focus:ring-border/50 transition-all" />
+                <Input type="text" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} placeholder="搜索笔记..." className="w-full h-7 pl-7 pr-2 rounded-md bg-accent/40 border-none text-xs text-foreground placeholder:text-muted-foreground/40 focus:bg-accent/60 focus:ring-1 focus:ring-border/50" />
               </div>
               <div className="flex items-center gap-1">
-                <button onClick={() => setFilterStarred(!filterStarred)} className={`flex items-center gap-1 px-2 py-1 rounded-md text-[11px] transition-colors ${filterStarred ? 'bg-amber-500/15 text-amber-600' : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground'}`}>
+                <Button variant="ghost" size="xs" onClick={() => setFilterStarred(!filterStarred)} className={`flex items-center gap-1 px-2 py-1 h-auto rounded-md text-xs ${filterStarred ? 'bg-amber-500/15 text-amber-600' : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground'}`}>
                   <Star size={10} className={filterStarred ? 'fill-amber-500' : ''} /> 收藏
-                </button>
-                <button onClick={() => setSortBy(sortBy === 'name' ? 'date' : 'name')} className="flex items-center gap-1 px-2 py-1 rounded-md text-[11px] text-muted-foreground hover:bg-accent/50 hover:text-foreground transition-colors">
+                </Button>
+                <Button variant="ghost" size="xs" onClick={() => setSortBy(sortBy === 'name' ? 'date' : 'name')} className="flex items-center gap-1 px-2 py-1 h-auto rounded-md text-xs text-muted-foreground hover:bg-accent/50 hover:text-foreground">
                   <SortAsc size={10} /> {sortBy === 'name' ? '名称' : '日期'}
-                </button>
-                <button className="flex items-center gap-1 px-2 py-1 rounded-md text-[11px] text-muted-foreground hover:bg-accent/50 hover:text-foreground transition-colors">
+                </Button>
+                <Button variant="ghost" size="xs" className="flex items-center gap-1 px-2 py-1 h-auto rounded-md text-xs text-muted-foreground hover:bg-accent/50 hover:text-foreground">
                   <Filter size={10} /> 筛选
-                </button>
+                </Button>
               </div>
             </div>
             <div className="flex-1 overflow-y-auto px-1.5 py-1 [&::-webkit-scrollbar]:w-[3px] [&::-webkit-scrollbar-thumb]:bg-border/30 [&::-webkit-scrollbar-thumb]:rounded-full">
@@ -923,7 +929,7 @@ export function NotePage() {
                 <EmptyState preset="no-result" compact title="没有找到笔记" description="尝试调整搜索关键词" />
               )}
             </div>
-            <div className="h-8 flex items-center px-3 text-[10px] text-muted-foreground/40 flex-shrink-0">
+            <div className="h-8 flex items-center px-3 text-xs text-muted-foreground/40 flex-shrink-0">
               {allNotes.length} 篇笔记 · {collectFolders(notes).length} 个文件夹
             </div>
           </div>
@@ -935,33 +941,33 @@ export function NotePage() {
       <div className="flex-1 flex flex-col min-w-0">
         <div className="h-11 flex items-center px-4 flex-shrink-0 gap-2">
           {!leftPanelOpen && (
-            <Tooltip content="展开目录"><button onClick={() => setLeftPanelOpen(true)} className="w-7 h-7 rounded-md flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent transition-colors mr-1"><PanelLeftOpen size={15} /></button></Tooltip>
+            <Tooltip content="展开目录"><Button variant="ghost" size="icon-sm" onClick={() => setLeftPanelOpen(true)} className="w-7 h-7 text-muted-foreground hover:text-foreground hover:bg-accent mr-1"><PanelLeftOpen size={15} /></Button></Tooltip>
           )}
           <div className="flex items-center gap-1.5 flex-1 min-w-0">
             <FileText size={13} className="text-primary flex-shrink-0" />
             <span className="text-xs text-foreground truncate">{selectedNote?.title || '选择一篇笔记'}</span>
             {selectedNote?.starred && <Star size={10} className="text-amber-400 fill-amber-400 flex-shrink-0" />}
-            {selectedNote?.updatedAt && <span className="text-[10px] text-muted-foreground/40 flex-shrink-0 ml-1">{String.fromCharCode(183)} {selectedNote.updatedAt}</span>}
+            {selectedNote?.updatedAt && <span className="text-xs text-muted-foreground/40 flex-shrink-0 ml-1">{String.fromCharCode(183)} {selectedNote.updatedAt}</span>}
           </div>
           {selectedNote?.tags && selectedNote.tags.length > 0 && (
             <div className="flex items-center gap-1 flex-shrink-0">
-              {selectedNote.tags.map(tag => (<span key={tag} className="px-1.5 py-0.5 rounded bg-accent/60 text-[10px] text-muted-foreground">#{tag}</span>))}
+              {selectedNote.tags.map(tag => (<span key={tag} className="px-1.5 py-0.5 rounded bg-accent/60 text-xs text-muted-foreground">#{tag}</span>))}
             </div>
           )}
           <div className="flex items-center gap-0.5 flex-shrink-0 ml-1">
             <div className="flex items-center bg-accent/40 rounded-lg p-0.5 gap-0.5">
-              <Tooltip content="实时编辑"><button onClick={() => setEditorMode('edit')} className={`w-6 h-6 rounded-md flex items-center justify-center transition-colors ${editorMode === 'edit' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground/60 hover:text-foreground'}`}><PenLine size={11} /></button></Tooltip>
-              <Tooltip content="Markdown 源码"><button onClick={() => setEditorMode('markdown')} className={`w-6 h-6 rounded-md flex items-center justify-center transition-colors ${editorMode === 'markdown' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground/60 hover:text-foreground'}`}><Code size={11} /></button></Tooltip>
-              <Tooltip content="只读预览"><button onClick={() => setEditorMode('preview')} className={`w-6 h-6 rounded-md flex items-center justify-center transition-colors ${editorMode === 'preview' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground/60 hover:text-foreground'}`}><Eye size={11} /></button></Tooltip>
+              <Tooltip content="实时编辑"><Button variant="ghost" size="icon-xs" onClick={() => setEditorMode('edit')} className={`w-6 h-6 ${editorMode === 'edit' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground/60 hover:text-foreground'}`}><PenLine size={11} /></Button></Tooltip>
+              <Tooltip content="Markdown 源码"><Button variant="ghost" size="icon-xs" onClick={() => setEditorMode('markdown')} className={`w-6 h-6 ${editorMode === 'markdown' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground/60 hover:text-foreground'}`}><Code size={11} /></Button></Tooltip>
+              <Tooltip content="只读预览"><Button variant="ghost" size="icon-xs" onClick={() => setEditorMode('preview')} className={`w-6 h-6 ${editorMode === 'preview' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground/60 hover:text-foreground'}`}><Eye size={11} /></Button></Tooltip>
             </div>
           </div>
           <div className="w-px h-4 bg-border/30 mx-1" />
           <div className="flex items-center gap-0.5 flex-shrink-0">
-            <Tooltip content="导出"><button className="w-7 h-7 rounded-md flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"><Download size={13} /></button></Tooltip>
-            <Tooltip content="分享"><button className="w-7 h-7 rounded-md flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"><Share2 size={13} /></button></Tooltip>
-            <Tooltip content="更多"><button className="w-7 h-7 rounded-md flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"><MoreHorizontal size={13} /></button></Tooltip>
+            <Tooltip content="导出"><Button variant="ghost" size="icon-xs" className="w-7 h-7 text-muted-foreground hover:text-foreground hover:bg-accent"><Download size={13} /></Button></Tooltip>
+            <Tooltip content="分享"><Button variant="ghost" size="icon-xs" className="w-7 h-7 text-muted-foreground hover:text-foreground hover:bg-accent"><Share2 size={13} /></Button></Tooltip>
+            <Tooltip content="更多"><Button variant="ghost" size="icon-xs" className="w-7 h-7 text-muted-foreground hover:text-foreground hover:bg-accent"><MoreHorizontal size={13} /></Button></Tooltip>
             <div className="w-px h-4 bg-border/30 mx-1" />
-            <Tooltip content={rightPanelOpen ? '关闭 AI 面板' : '打开 AI 面板'}><button onClick={() => setRightPanelOpen(!rightPanelOpen)} className={`w-7 h-7 rounded-md flex items-center justify-center transition-colors ${rightPanelOpen ? 'bg-primary/15 text-primary' : 'text-muted-foreground hover:text-foreground hover:bg-accent'}`}><Sparkles size={13} /></button></Tooltip>
+            <Tooltip content={rightPanelOpen ? '关闭 AI 面板' : '打开 AI 面板'}><Button variant="ghost" size="icon-xs" onClick={() => setRightPanelOpen(!rightPanelOpen)} className={`w-7 h-7 ${rightPanelOpen ? 'bg-primary/15 text-primary' : 'text-muted-foreground hover:text-foreground hover:bg-accent'}`}><Sparkles size={13} /></Button></Tooltip>
           </div>
         </div>
 
@@ -969,42 +975,42 @@ export function NotePage() {
         {editorMode !== 'preview' && (
           <div className="h-9 flex items-center px-3 gap-0.5 flex-shrink-0 overflow-x-auto [&::-webkit-scrollbar]:hidden bg-muted/20 rounded-lg mx-3 mt-1">
             <div className="flex items-center gap-0.5">
-              <Tooltip content="撤销"><button onClick={handleUndo} className={`w-7 h-7 rounded-md flex items-center justify-center transition-colors ${undoStack.length > 0 ? 'text-muted-foreground/60 hover:text-foreground hover:bg-accent' : 'text-muted-foreground/20 cursor-not-allowed'}`}><Undo2 size={13} /></button></Tooltip>
-              <Tooltip content="重做"><button onClick={handleRedo} className={`w-7 h-7 rounded-md flex items-center justify-center transition-colors ${redoStack.length > 0 ? 'text-muted-foreground/60 hover:text-foreground hover:bg-accent' : 'text-muted-foreground/20 cursor-not-allowed'}`}><Redo2 size={13} /></button></Tooltip>
+              <Tooltip content="撤销"><Button variant="ghost" size="icon-xs" onClick={handleUndo} className={`w-7 h-7 ${undoStack.length > 0 ? 'text-muted-foreground/60 hover:text-foreground hover:bg-accent' : 'text-muted-foreground/20 cursor-not-allowed'}`}><Undo2 size={13} /></Button></Tooltip>
+              <Tooltip content="重做"><Button variant="ghost" size="icon-xs" onClick={handleRedo} className={`w-7 h-7 ${redoStack.length > 0 ? 'text-muted-foreground/60 hover:text-foreground hover:bg-accent' : 'text-muted-foreground/20 cursor-not-allowed'}`}><Redo2 size={13} /></Button></Tooltip>
             </div>
             <div className="w-px h-4 bg-border/20 mx-1" />
             <div className="flex items-center gap-0.5">
-              <Tooltip content="标题 1"><button onClick={() => insertLinePrefix('# ')} className="w-7 h-7 rounded-md flex items-center justify-center text-muted-foreground/60 hover:text-foreground hover:bg-accent transition-colors"><Heading1 size={13} /></button></Tooltip>
-              <Tooltip content="标题 2"><button onClick={() => insertLinePrefix('## ')} className="w-7 h-7 rounded-md flex items-center justify-center text-muted-foreground/60 hover:text-foreground hover:bg-accent transition-colors"><Heading2 size={13} /></button></Tooltip>
-              <Tooltip content="标题 3"><button onClick={() => insertLinePrefix('### ')} className="w-7 h-7 rounded-md flex items-center justify-center text-muted-foreground/60 hover:text-foreground hover:bg-accent transition-colors"><Heading3 size={13} /></button></Tooltip>
+              <Tooltip content="标题 1"><Button onClick={() => insertLinePrefix('# ')} variant="ghost" size="icon-xs" className="w-7 h-7 text-muted-foreground/60 hover:text-foreground hover:bg-accent"><Heading1 size={13} /></Button></Tooltip>
+              <Tooltip content="标题 2"><Button onClick={() => insertLinePrefix('## ')} variant="ghost" size="icon-xs" className="w-7 h-7 text-muted-foreground/60 hover:text-foreground hover:bg-accent"><Heading2 size={13} /></Button></Tooltip>
+              <Tooltip content="标题 3"><Button onClick={() => insertLinePrefix('### ')} variant="ghost" size="icon-xs" className="w-7 h-7 text-muted-foreground/60 hover:text-foreground hover:bg-accent"><Heading3 size={13} /></Button></Tooltip>
             </div>
             <div className="w-px h-4 bg-border/20 mx-1" />
             <div className="flex items-center gap-0.5">
-              <Tooltip content="加粗"><button onClick={() => insertMarkdown('**', '**', '粗体文字')} className="w-7 h-7 rounded-md flex items-center justify-center text-muted-foreground/60 hover:text-foreground hover:bg-accent transition-colors"><Bold size={13} /></button></Tooltip>
-              <Tooltip content="斜体"><button onClick={() => insertMarkdown('*', '*', '斜体文字')} className="w-7 h-7 rounded-md flex items-center justify-center text-muted-foreground/60 hover:text-foreground hover:bg-accent transition-colors"><Italic size={13} /></button></Tooltip>
-              <Tooltip content="下划线"><button onClick={() => insertMarkdown('<u>', '</u>', '下划线文字')} className="w-7 h-7 rounded-md flex items-center justify-center text-muted-foreground/60 hover:text-foreground hover:bg-accent transition-colors"><Underline size={13} /></button></Tooltip>
-              <Tooltip content="删除线"><button onClick={() => insertMarkdown('~~', '~~', '删除线文字')} className="w-7 h-7 rounded-md flex items-center justify-center text-muted-foreground/60 hover:text-foreground hover:bg-accent transition-colors"><Strikethrough size={13} /></button></Tooltip>
+              <Tooltip content="加粗"><Button onClick={() => insertMarkdown('**', '**', '粗体文字')} variant="ghost" size="icon-xs" className="w-7 h-7 text-muted-foreground/60 hover:text-foreground hover:bg-accent"><Bold size={13} /></Button></Tooltip>
+              <Tooltip content="斜体"><Button onClick={() => insertMarkdown('*', '*', '斜体文字')} variant="ghost" size="icon-xs" className="w-7 h-7 text-muted-foreground/60 hover:text-foreground hover:bg-accent"><Italic size={13} /></Button></Tooltip>
+              <Tooltip content="下划线"><Button onClick={() => insertMarkdown('<u>', '</u>', '下划线文字')} variant="ghost" size="icon-xs" className="w-7 h-7 text-muted-foreground/60 hover:text-foreground hover:bg-accent"><Underline size={13} /></Button></Tooltip>
+              <Tooltip content="删除线"><Button onClick={() => insertMarkdown('~~', '~~', '删除线文字')} variant="ghost" size="icon-xs" className="w-7 h-7 text-muted-foreground/60 hover:text-foreground hover:bg-accent"><Strikethrough size={13} /></Button></Tooltip>
             </div>
             <div className="w-px h-4 bg-border/20 mx-1" />
             <div className="flex items-center gap-0.5">
-              <Tooltip content="无序列表"><button onClick={() => insertLinePrefix('- ')} className="w-7 h-7 rounded-md flex items-center justify-center text-muted-foreground/60 hover:text-foreground hover:bg-accent transition-colors"><List size={13} /></button></Tooltip>
-              <Tooltip content="有序列表"><button onClick={() => insertLinePrefix('1. ')} className="w-7 h-7 rounded-md flex items-center justify-center text-muted-foreground/60 hover:text-foreground hover:bg-accent transition-colors"><ListOrdered size={13} /></button></Tooltip>
-              <Tooltip content="引用"><button onClick={() => insertLinePrefix('> ')} className="w-7 h-7 rounded-md flex items-center justify-center text-muted-foreground/60 hover:text-foreground hover:bg-accent transition-colors"><Quote size={13} /></button></Tooltip>
-              <Tooltip content="代码"><button onClick={() => insertMarkdown('`', '`', 'code')} className="w-7 h-7 rounded-md flex items-center justify-center text-muted-foreground/60 hover:text-foreground hover:bg-accent transition-colors"><Code size={13} /></button></Tooltip>
+              <Tooltip content="无序列表"><Button onClick={() => insertLinePrefix('- ')} variant="ghost" size="icon-xs" className="w-7 h-7 text-muted-foreground/60 hover:text-foreground hover:bg-accent"><List size={13} /></Button></Tooltip>
+              <Tooltip content="有序列表"><Button onClick={() => insertLinePrefix('1. ')} variant="ghost" size="icon-xs" className="w-7 h-7 text-muted-foreground/60 hover:text-foreground hover:bg-accent"><ListOrdered size={13} /></Button></Tooltip>
+              <Tooltip content="引用"><Button onClick={() => insertLinePrefix('> ')} variant="ghost" size="icon-xs" className="w-7 h-7 text-muted-foreground/60 hover:text-foreground hover:bg-accent"><Quote size={13} /></Button></Tooltip>
+              <Tooltip content="代码"><Button onClick={() => insertMarkdown('`', '`', 'code')} variant="ghost" size="icon-xs" className="w-7 h-7 text-muted-foreground/60 hover:text-foreground hover:bg-accent"><Code size={13} /></Button></Tooltip>
             </div>
             <div className="w-px h-4 bg-border/20 mx-1" />
             <div className="flex items-center gap-0.5">
-              <Tooltip content="分割线"><button onClick={() => insertMarkdown('\n---\n')} className="w-7 h-7 rounded-md flex items-center justify-center text-muted-foreground/60 hover:text-foreground hover:bg-accent transition-colors"><Minus size={13} /></button></Tooltip>
-              <Tooltip content="插入链接"><button onClick={() => insertMarkdown('[', '](url)', '链接文字')} className="w-7 h-7 rounded-md flex items-center justify-center text-muted-foreground/60 hover:text-foreground hover:bg-accent transition-colors"><Link size={13} /></button></Tooltip>
-              <Tooltip content="插入图片"><button onClick={() => insertMarkdown('![', '](image-url)', '图片描述')} className="w-7 h-7 rounded-md flex items-center justify-center text-muted-foreground/60 hover:text-foreground hover:bg-accent transition-colors"><ImageIcon size={13} /></button></Tooltip>
+              <Tooltip content="分割线"><Button onClick={() => insertMarkdown('\n---\n')} variant="ghost" size="icon-xs" className="w-7 h-7 text-muted-foreground/60 hover:text-foreground hover:bg-accent"><Minus size={13} /></Button></Tooltip>
+              <Tooltip content="插入链接"><Button onClick={() => insertMarkdown('[', '](url)', '链接文字')} variant="ghost" size="icon-xs" className="w-7 h-7 text-muted-foreground/60 hover:text-foreground hover:bg-accent"><Link size={13} /></Button></Tooltip>
+              <Tooltip content="插入图片"><Button onClick={() => insertMarkdown('![', '](image-url)', '图片描述')} variant="ghost" size="icon-xs" className="w-7 h-7 text-muted-foreground/60 hover:text-foreground hover:bg-accent"><ImageIcon size={13} /></Button></Tooltip>
             </div>
             {editorMode === 'markdown' && (
               <div className="contents">
                 <div className="w-px h-4 bg-border/20 mx-1" />
                 <div className="flex items-center gap-0.5">
-                  <Tooltip content="代码块"><button onClick={() => insertMarkdown('\n```\n', '\n```\n', '// 代码')} className="w-7 h-7 rounded-md flex items-center justify-center text-muted-foreground/60 hover:text-foreground hover:bg-accent transition-colors"><Braces size={13} /></button></Tooltip>
-                  <Tooltip content="表格"><button onClick={() => insertMarkdown('\n| 标题1 | 标题2 | 标题3 |\n| --- | --- | --- |\n| 内容 | 内容 | 内容 |\n')} className="w-7 h-7 rounded-md flex items-center justify-center text-muted-foreground/60 hover:text-foreground hover:bg-accent transition-colors"><Table size={13} /></button></Tooltip>
-                  <Tooltip content="任务列表"><button onClick={() => insertLinePrefix('- [ ] ')} className="w-7 h-7 rounded-md flex items-center justify-center text-muted-foreground/60 hover:text-foreground hover:bg-accent transition-colors"><Check size={13} /></button></Tooltip>
+                  <Tooltip content="代码块"><Button onClick={() => insertMarkdown('\n```\n', '\n```\n', '// 代码')} variant="ghost" size="icon-xs" className="w-7 h-7 text-muted-foreground/60 hover:text-foreground hover:bg-accent"><Braces size={13} /></Button></Tooltip>
+                  <Tooltip content="表格"><Button onClick={() => insertMarkdown('\n| 标题1 | 标题2 | 标题3 |\n| --- | --- | --- |\n| 内容 | 内容 | 内容 |\n')} variant="ghost" size="icon-xs" className="w-7 h-7 text-muted-foreground/60 hover:text-foreground hover:bg-accent"><Table size={13} /></Button></Tooltip>
+                  <Tooltip content="任务列表"><Button onClick={() => insertLinePrefix('- [ ] ')} variant="ghost" size="icon-xs" className="w-7 h-7 text-muted-foreground/60 hover:text-foreground hover:bg-accent"><Check size={13} /></Button></Tooltip>
                 </div>
               </div>
             )}
@@ -1019,7 +1025,7 @@ export function NotePage() {
                 <div className="flex h-full">
                   <div className="flex-shrink-0 pt-8 pb-8 pl-4 pr-0 select-none">
                     {getCurrentContent().split('\n').map((_, i) => (
-                      <div key={i} className="text-[11px] text-muted-foreground/25 text-right pr-3 leading-[22px] font-mono" style={{ minWidth: '32px' }}>{i + 1}</div>
+                      <div key={i} className="text-xs text-muted-foreground/25 text-right pr-3 leading-[22px] font-mono" style={{ minWidth: '32px' }}>{i + 1}</div>
                     ))}
                   </div>
                   <textarea
@@ -1038,7 +1044,7 @@ export function NotePage() {
                       }
                     }}
                     spellCheck={false}
-                    className="flex-1 bg-transparent border-none outline-none text-[13px] text-foreground font-mono leading-[22px] resize-none py-8 pr-10 placeholder:text-muted-foreground/30 [&::-webkit-scrollbar]:hidden"
+                    className="flex-1 bg-transparent border-none outline-none text-sm text-foreground font-mono leading-[22px] resize-none py-8 pr-10 placeholder:text-muted-foreground/30 [&::-webkit-scrollbar]:hidden"
                     style={{ tabSize: 2 }}
                   />
                 </div>
@@ -1058,7 +1064,7 @@ export function NotePage() {
         </div>
 
         {/* Bottom Status Bar */}
-        <div className="h-7 flex items-center px-4 text-[10px] text-muted-foreground/40 flex-shrink-0 gap-4">
+        <div className="h-7 flex items-center px-4 text-xs text-muted-foreground/40 flex-shrink-0 gap-4">
           <span className={`px-1.5 py-0.5 rounded ${editorMode === 'markdown' ? 'bg-cherry-active-bg text-cherry-primary-dark' : editorMode === 'edit' ? 'bg-primary/10 text-primary' : 'bg-accent text-muted-foreground/60'}`}>
             {editorMode === 'markdown' ? 'Markdown' : editorMode === 'edit' ? '实时编辑' : '只读预览'}
           </span>
@@ -1079,11 +1085,11 @@ export function NotePage() {
           <div className="flex flex-col h-full flex-shrink-0 border-l border-border/40" style={{ width: rightWidth }}>
             <div className="h-11 flex items-center gap-2 px-3 flex-shrink-0 relative">
               <div className="relative" ref={assistantPickerRef}>
-                <button onClick={() => { setShowAssistantPicker(!showAssistantPicker); setAstSearch(''); setAstTag(null); }} className={`flex items-center gap-1.5 px-2 py-[4px] rounded-md text-[10.5px] transition-all duration-100 ${showAssistantPicker ? 'bg-accent/25 text-foreground' : 'text-foreground/75 hover:text-foreground hover:bg-accent/15'}`}>
-                  <span className="text-[12px] leading-none flex-shrink-0">{selectedAssistantEmoji}</span>
+                <Button variant="ghost" size="xs" onClick={() => { setShowAssistantPicker(!showAssistantPicker); setAstSearch(''); setAstTag(null); }} className={`flex items-center gap-1.5 px-2 py-[4px] h-auto rounded-md text-xs ${showAssistantPicker ? 'bg-accent/25 text-foreground' : 'text-foreground/75 hover:text-foreground hover:bg-accent/15'}`}>
+                  <span className="text-sm leading-none flex-shrink-0">{selectedAssistantEmoji}</span>
                   <span className="truncate max-w-[100px]">{selectedAssistant.name}</span>
                   <ChevronDown size={8} className={`text-muted-foreground/50 flex-shrink-0 transition-transform duration-100 ${showAssistantPicker ? 'rotate-180' : ''}`} />
-                </button>
+                </Button>
                 {showAssistantPicker && (
                   <div>
                     <div className="fixed inset-0 z-40" onClick={() => setShowAssistantPicker(false)} />
@@ -1091,8 +1097,8 @@ export function NotePage() {
                       <div className="px-2 pt-2 pb-1">
                         <div className="flex items-center gap-1.5 px-2 py-[5px] rounded-md bg-accent/15 border border-border/20">
                           <Search size={10} className="text-muted-foreground/40 flex-shrink-0" />
-                          <input ref={astSearchRef} value={astSearch} onChange={e => setAstSearch(e.target.value)} placeholder="搜索助手..." className="flex-1 bg-transparent text-[10px] text-foreground placeholder:text-muted-foreground/30 outline-none min-w-0" autoFocus />
-                          {astSearch && <button onClick={() => setAstSearch('')} className="text-muted-foreground/30 hover:text-muted-foreground/60"><X size={8} /></button>}
+                          <Input ref={astSearchRef} value={astSearch} onChange={e => setAstSearch(e.target.value)} placeholder="搜索助手..." className="flex-1 bg-transparent text-xs text-foreground placeholder:text-muted-foreground/30 min-w-0 border-0 h-auto p-0 focus-visible:ring-0" autoFocus />
+                          {astSearch && <Button variant="ghost" size="icon-xs" onClick={() => setAstSearch('')} className="w-4 h-4 text-muted-foreground/30 hover:text-muted-foreground/60"><X size={8} /></Button>}
                         </div>
                       </div>
                       {allAstTags.length > 0 && (
@@ -1100,7 +1106,7 @@ export function NotePage() {
                           <div className="flex items-center gap-1 flex-wrap">
                             <Tag size={8} className="text-muted-foreground/30 flex-shrink-0" />
                             {allAstTags.map(tag => (
-                              <button key={tag} onClick={() => setAstTag(astTag === tag ? null : tag)} className={`px-1.5 py-px rounded-full text-[8px] transition-all ${astTag === tag ? 'bg-foreground/10 text-foreground/70 border border-border/40' : 'bg-accent/20 text-muted-foreground/50 border border-transparent hover:bg-accent/40 hover:text-muted-foreground/70'}`}>{tag}</button>
+                              <Button key={tag} variant="ghost" size="xs" onClick={() => setAstTag(astTag === tag ? null : tag)} className={`px-1.5 py-px h-auto rounded-full text-[8px] ${astTag === tag ? 'bg-foreground/10 text-foreground/70 border border-border/40' : 'bg-accent/20 text-muted-foreground/50 border border-transparent hover:bg-accent/40 hover:text-muted-foreground/70'}`}>{tag}</Button>
                             ))}
                           </div>
                         </div>
@@ -1113,16 +1119,16 @@ export function NotePage() {
                           filteredNoteAssistants.map(a => {
                             const isActive = selectedAssistant.id === a.id;
                             return (
-                              <button key={a.id} onClick={() => { setSelectedAssistantId(a.id); setShowAssistantPicker(false); }} className={`flex items-center gap-2 w-full px-2 py-[5px] rounded-lg text-[10.5px] transition-all duration-75 mb-px ${isActive ? 'bg-accent/30 text-foreground ring-1 ring-border/30' : 'text-foreground/75 hover:text-foreground hover:bg-accent/15'}`}>
+                              <Button key={a.id} variant="ghost" size="xs" onClick={() => { setSelectedAssistantId(a.id); setShowAssistantPicker(false); }} className={`flex items-center gap-2 w-full px-2 py-[5px] h-auto rounded-lg text-xs mb-px justify-start ${isActive ? 'bg-accent/30 text-foreground ring-1 ring-border/30' : 'text-foreground/75 hover:text-foreground hover:bg-accent/15'}`}>
                                 <div className={`w-5 h-5 rounded-[4px] flex items-center justify-center flex-shrink-0 ${isActive ? 'bg-foreground/10' : 'bg-accent/30'}`}>
-                                  <span className="text-[11px] leading-none">{ASSISTANT_EMOJI_MAP[a.name] || '\u{1F916}'}</span>
+                                  <span className="text-xs leading-none">{ASSISTANT_EMOJI_MAP[a.name] || '\u{1F916}'}</span>
                                 </div>
                                 <div className="flex-1 min-w-0 text-left">
-                                  <div className="text-[10.5px] text-foreground truncate">{a.name}</div>
+                                  <div className="text-xs text-foreground truncate">{a.name}</div>
                                   <div className="text-[9px] text-muted-foreground/50 truncate">{a.systemPrompt.slice(0, 20)}</div>
                                 </div>
                                 {isActive && <Check size={10} className="text-cherry-primary flex-shrink-0" />}
-                              </button>
+                              </Button>
                             );
                           })
                         )}
@@ -1135,8 +1141,8 @@ export function NotePage() {
                 )}
               </div>
               <div className="flex-1" />
-              <Tooltip content="清空对话"><button onClick={() => setAiMessages([])} className="w-6 h-6 rounded-md flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"><Trash2 size={12} /></button></Tooltip>
-              <Tooltip content="关闭面板"><button onClick={() => setRightPanelOpen(false)} className="w-6 h-6 rounded-md flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"><PanelRightClose size={12} /></button></Tooltip>
+              <Tooltip content="清空对话"><Button variant="ghost" size="icon-xs" onClick={() => setAiMessages([])} className="w-6 h-6 text-muted-foreground hover:text-foreground hover:bg-accent"><Trash2 size={12} /></Button></Tooltip>
+              <Tooltip content="关闭面板"><Button variant="ghost" size="icon-xs" onClick={() => setRightPanelOpen(false)} className="w-6 h-6 text-muted-foreground hover:text-foreground hover:bg-accent"><PanelRightClose size={12} /></Button></Tooltip>
             </div>
 
             {/* Quick Actions */}
@@ -1144,15 +1150,15 @@ export function NotePage() {
               <div className="flex items-center px-2 pt-1.5 gap-0.5">
                 {actionCategories.map(cat => {
                   const CatIcon = cat.icon;
-                  return (<button key={cat.id} onClick={() => setActiveActionCategory(cat.id)} className={`flex items-center gap-1 px-2 py-1 rounded-md text-[10px] transition-colors ${activeActionCategory === cat.id ? 'bg-accent text-foreground' : 'text-muted-foreground/60 hover:text-foreground hover:bg-accent/40'}`}><CatIcon size={10} />{cat.label}</button>);
+                  return (<Button key={cat.id} variant="ghost" size="xs" onClick={() => setActiveActionCategory(cat.id)} className={`flex items-center gap-1 px-2 py-1 h-auto rounded-md text-xs ${activeActionCategory === cat.id ? 'bg-accent text-foreground' : 'text-muted-foreground/60 hover:text-foreground hover:bg-accent/40'}`}><CatIcon size={10} />{cat.label}</Button>);
                 })}
                 <div className="flex-1" />
-                <button onClick={() => setShowAllActions(!showAllActions)} className="text-[10px] text-muted-foreground/40 hover:text-foreground px-1 transition-colors">{showAllActions ? '收起' : '全部'}</button>
+                <Button variant="ghost" size="xs" onClick={() => setShowAllActions(!showAllActions)} className="text-xs text-muted-foreground/40 hover:text-foreground px-1 h-auto">{showAllActions ? '收起' : '全部'}</Button>
               </div>
               <div className="px-2 py-1.5 flex flex-wrap gap-1">
                 {(showAllActions ? noteQuickActions : noteQuickActions.filter(a => a.category === activeActionCategory)).map(action => {
                   const AIcon = action.icon;
-                  return (<button key={action.id} onClick={() => handleQuickAction(action)} className="flex items-center gap-1 px-2 py-1 rounded-md bg-accent/30 text-[10px] text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"><AIcon size={10} />{action.label}</button>);
+                  return (<Button key={action.id} variant="ghost" size="xs" onClick={() => handleQuickAction(action)} className="flex items-center gap-1 px-2 py-1 h-auto rounded-md bg-accent/30 text-xs text-muted-foreground hover:bg-accent hover:text-foreground"><AIcon size={10} />{action.label}</Button>);
                 })}
               </div>
             </div>
@@ -1161,25 +1167,25 @@ export function NotePage() {
             <div className="flex-1 overflow-y-auto px-3 py-3 space-y-3 [&::-webkit-scrollbar]:w-[3px] [&::-webkit-scrollbar-thumb]:bg-border/30 [&::-webkit-scrollbar-thumb]:rounded-full">
               <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-primary/5 border border-primary/10">
                 <FileText size={11} className="text-primary flex-shrink-0" />
-                <span className="text-[10px] text-primary/70 truncate flex-1">当前笔记: {selectedNote?.title}</span>
-                <span className="text-[10px] leading-none flex-shrink-0">{selectedAssistantEmoji}</span>
+                <span className="text-xs text-primary/70 truncate flex-1">当前笔记: {selectedNote?.title}</span>
+                <span className="text-xs leading-none flex-shrink-0">{selectedAssistantEmoji}</span>
               </div>
               {aiMessages.length === 0 && (
                 <div className="flex flex-col items-center justify-center py-6 text-muted-foreground/30">
                   <div className="w-10 h-10 rounded-xl bg-accent/40 flex items-center justify-center mb-3 opacity-60"><span className="text-[22px] leading-none">{selectedAssistantEmoji}</span></div>
-                  <p className="text-[11px] text-muted-foreground/50 mb-1">{selectedAssistant.name}</p>
-                  <p className="text-[10px] text-muted-foreground/30">{selectedAssistant.modelProvider} {String.fromCharCode(183)} {selectedAssistant.model.split('/').pop()}</p>
-                  <p className="text-[10px] text-muted-foreground/20 mt-3">点击上方操作或输入问题开始</p>
+                  <p className="text-xs text-muted-foreground/50 mb-1">{selectedAssistant.name}</p>
+                  <p className="text-xs text-muted-foreground/30">{selectedAssistant.modelProvider} {String.fromCharCode(183)} {selectedAssistant.model.split('/').pop()}</p>
+                  <p className="text-xs text-muted-foreground/20 mt-3">点击上方操作或输入问题开始</p>
                 </div>
               )}
               {aiMessages.map((msg, i) => (
                 <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} gap-1.5`}>
                   {msg.role === 'assistant' && (
-                    <div className="w-5 h-5 rounded-md bg-accent/40 flex items-center justify-center flex-shrink-0 mt-0.5"><span className="text-[11px] leading-none">{selectedAssistantEmoji}</span></div>
+                    <div className="w-5 h-5 rounded-md bg-accent/40 flex items-center justify-center flex-shrink-0 mt-0.5"><span className="text-xs leading-none">{selectedAssistantEmoji}</span></div>
                   )}
                   <div className={`max-w-[85%] rounded-xl px-3 py-2 text-xs leading-relaxed ${msg.role === 'user' ? 'bg-primary text-primary-foreground rounded-br-sm' : 'bg-accent/60 text-foreground rounded-bl-sm'}`}>
                     {msg.content.split('\n').map((line, li) => {
-                      if (line.startsWith('```')) return <div key={li} className="font-mono text-[10px] bg-background/50 rounded px-1.5 py-0.5 my-1 text-muted-foreground">{line.replace(new RegExp('```', 'g'), '')}</div>;
+                      if (line.startsWith('```')) return <div key={li} className="font-mono text-xs bg-background/50 rounded px-1.5 py-0.5 my-1 text-muted-foreground">{line.replace(new RegExp('```', 'g'), '')}</div>;
                       if (line.startsWith('**') && line.endsWith('**')) return <p key={li} className="text-foreground mt-1.5 mb-0.5">{line.replace(new RegExp('\\*\\*', 'g'), '')}</p>;
                       if (line.startsWith('- [ ] ')) return <div key={li} className="flex items-start gap-1.5 py-0.5"><span className="w-3 h-3 rounded border border-muted-foreground/30 flex-shrink-0 mt-[1px]" /><span>{line.slice(6)}</span></div>;
                       if (line.startsWith('- ')) return <div key={li} className="flex items-start gap-1.5 py-0.5"><span className="text-primary mt-[2px]">{String.fromCharCode(8226)}</span><span>{renderBoldText(line.slice(2))}</span></div>;
@@ -1188,7 +1194,7 @@ export function NotePage() {
                         if (m) return <div key={li} className="flex items-start gap-1.5 py-0.5"><span className="text-muted-foreground w-3 text-right flex-shrink-0">{m[1]}.</span><span>{renderBoldText(m[2])}</span></div>;
                       }
                       if (line.match(new RegExp('^\\s+\\d+\\.\\d+ '))) return <div key={li} className="flex items-start gap-1.5 py-0.5 pl-4"><span className="text-muted-foreground/50">{String.fromCharCode(183)}</span><span className="text-foreground/70">{line.trim()}</span></div>;
-                      if (line.startsWith('\u2502') || line.startsWith('\u251c') || line.startsWith('\u2514')) return <div key={li} className="font-mono text-[10px] text-muted-foreground leading-tight">{line}</div>;
+                      if (line.startsWith('\u2502') || line.startsWith('\u251c') || line.startsWith('\u2514')) return <div key={li} className="font-mono text-xs text-muted-foreground leading-tight">{line}</div>;
                       if (line.trim() === '') return <div key={li} className="h-1.5" />;
                       return <p key={li} className="py-0.5">{renderBoldText(line)}</p>;
                     })}
@@ -1202,7 +1208,7 @@ export function NotePage() {
             <div className="px-3 pb-3 pt-1 flex-shrink-0">
               <div className="flex items-end gap-1.5 bg-accent/40 rounded-xl px-3 py-2 border border-border/30 focus-within:border-primary/30 focus-within:bg-accent/60 transition-all">
                 <textarea value={aiInput} onChange={e => setAiInput(e.target.value)} onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleAISend(); } }} placeholder={`向 ${selectedAssistant.name} 提问...`} rows={1} className="flex-1 bg-transparent border-none outline-none text-xs text-foreground placeholder:text-muted-foreground/40 resize-none min-h-[20px] max-h-[80px]" />
-                <button onClick={handleAISend} disabled={!aiInput.trim()} className={`w-6 h-6 rounded-md flex items-center justify-center flex-shrink-0 transition-colors ${aiInput.trim() ? 'bg-primary text-primary-foreground hover:bg-primary/90' : 'bg-muted text-muted-foreground/30'}`}><Send size={11} /></button>
+                <Button size="icon-xs" onClick={handleAISend} disabled={!aiInput.trim()} className={`w-6 h-6 flex-shrink-0 ${aiInput.trim() ? 'bg-primary text-primary-foreground hover:bg-primary/90' : 'bg-muted text-muted-foreground/30'}`}><Send size={11} /></Button>
               </div>
               <p className="text-[9px] text-muted-foreground/30 mt-1.5 text-center">{selectedAssistant.name} {String.fromCharCode(183)} 基于笔记上下文 {String.fromCharCode(183)} Enter 发送</p>
             </div>
@@ -1215,28 +1221,28 @@ export function NotePage() {
         <div ref={ctxRef} className="fixed z-[200] min-w-[180px] bg-popover border border-border/60 rounded-lg shadow-xl py-1 animate-in fade-in zoom-in-95 duration-100" style={{ left: ctxMenu.x, top: ctxMenu.y }}>
           {ctxMenu.item.type === 'file' ? (
             <div className="contents">
-              <button onClick={() => { setSelectedNoteId(ctxMenu.item.id); setCtxMenu(null); }} className="w-full flex items-center gap-2.5 px-3 py-1.5 text-xs text-foreground hover:bg-accent transition-colors"><FileText size={13} className="text-muted-foreground" />打开</button>
+              <Button onClick={() => { setSelectedNoteId(ctxMenu.item.id); setCtxMenu(null); }} variant="ghost" size="xs" className="w-full flex items-center gap-2.5 px-3 py-1.5 h-auto text-xs text-foreground hover:bg-accent justify-start"><FileText size={13} className="text-muted-foreground" />打开</Button>
               <div className="h-px bg-border/30 my-0.5 mx-2" />
-              <button onClick={() => startRename(ctxMenu.item)} className="w-full flex items-center gap-2.5 px-3 py-1.5 text-xs text-foreground hover:bg-accent transition-colors"><PenLine size={13} className="text-muted-foreground" />重命名</button>
-              <button onClick={() => duplicateItem(ctxMenu.item)} className="w-full flex items-center gap-2.5 px-3 py-1.5 text-xs text-foreground hover:bg-accent transition-colors"><Copy size={13} className="text-muted-foreground" />创建副本</button>
-              <button onClick={() => toggleStar(ctxMenu.item.id)} className="w-full flex items-center gap-2.5 px-3 py-1.5 text-xs text-foreground hover:bg-accent transition-colors"><Star size={13} className={ctxMenu.item.starred ? 'text-amber-400 fill-amber-400' : 'text-muted-foreground'} />{ctxMenu.item.starred ? '取消收藏' : '添加收藏'}</button>
+              <Button onClick={() => startRename(ctxMenu.item)} variant="ghost" size="xs" className="w-full flex items-center gap-2.5 px-3 py-1.5 h-auto text-xs text-foreground hover:bg-accent justify-start"><PenLine size={13} className="text-muted-foreground" />重命名</Button>
+              <Button onClick={() => duplicateItem(ctxMenu.item)} variant="ghost" size="xs" className="w-full flex items-center gap-2.5 px-3 py-1.5 h-auto text-xs text-foreground hover:bg-accent justify-start"><Copy size={13} className="text-muted-foreground" />创建副本</Button>
+              <Button onClick={() => toggleStar(ctxMenu.item.id)} variant="ghost" size="xs" className="w-full flex items-center gap-2.5 px-3 py-1.5 h-auto text-xs text-foreground hover:bg-accent justify-start"><Star size={13} className={ctxMenu.item.starred ? 'text-amber-400 fill-amber-400' : 'text-muted-foreground'} />{ctxMenu.item.starred ? '取消收藏' : '添加收藏'}</Button>
               <div className="h-px bg-border/30 my-0.5 mx-2" />
-              <button onClick={() => openMoveDialog(ctxMenu.item)} className="w-full flex items-center gap-2.5 px-3 py-1.5 text-xs text-foreground hover:bg-accent transition-colors"><FolderOpen size={13} className="text-muted-foreground" />移动到...</button>
+              <Button onClick={() => openMoveDialog(ctxMenu.item)} variant="ghost" size="xs" className="w-full flex items-center gap-2.5 px-3 py-1.5 h-auto text-xs text-foreground hover:bg-accent justify-start"><FolderOpen size={13} className="text-muted-foreground" />移动到...</Button>
               <div className="h-px bg-border/30 my-0.5 mx-2" />
-              <button onClick={() => confirmDelete(ctxMenu.item)} className="w-full flex items-center gap-2.5 px-3 py-1.5 text-xs text-red-500 hover:bg-red-500/10 transition-colors"><Trash2 size={13} />删除</button>
+              <Button onClick={() => confirmDelete(ctxMenu.item)} variant="ghost" size="xs" className="w-full flex items-center gap-2.5 px-3 py-1.5 h-auto text-xs text-destructive hover:bg-destructive/10 justify-start"><Trash2 size={13} />删除</Button>
             </div>
           ) : (
             <div className="contents">
-              <button onClick={() => { toggleFolder(ctxMenu.item.id); setCtxMenu(null); }} className="w-full flex items-center gap-2.5 px-3 py-1.5 text-xs text-foreground hover:bg-accent transition-colors"><ChevronRight size={13} className="text-muted-foreground" />{expandedFolders.has(ctxMenu.item.id) ? '收起文件夹' : '展开文件夹'}</button>
+              <Button onClick={() => { toggleFolder(ctxMenu.item.id); setCtxMenu(null); }} variant="ghost" size="xs" className="w-full flex items-center gap-2.5 px-3 py-1.5 h-auto text-xs text-foreground hover:bg-accent justify-start"><ChevronRight size={13} className="text-muted-foreground" />{expandedFolders.has(ctxMenu.item.id) ? '收起文件夹' : '展开文件夹'}</Button>
               <div className="h-px bg-border/30 my-0.5 mx-2" />
-              <button onClick={() => addNewNoteInFolder(ctxMenu.item.id)} className="w-full flex items-center gap-2.5 px-3 py-1.5 text-xs text-foreground hover:bg-accent transition-colors"><FilePlus size={13} className="text-muted-foreground" />新建笔记</button>
-              <button onClick={() => addNewSubfolder(ctxMenu.item.id)} className="w-full flex items-center gap-2.5 px-3 py-1.5 text-xs text-foreground hover:bg-accent transition-colors"><FolderPlus size={13} className="text-muted-foreground" />新建子文件夹</button>
+              <Button onClick={() => addNewNoteInFolder(ctxMenu.item.id)} variant="ghost" size="xs" className="w-full flex items-center gap-2.5 px-3 py-1.5 h-auto text-xs text-foreground hover:bg-accent justify-start"><FilePlus size={13} className="text-muted-foreground" />新建笔记</Button>
+              <Button onClick={() => addNewSubfolder(ctxMenu.item.id)} variant="ghost" size="xs" className="w-full flex items-center gap-2.5 px-3 py-1.5 h-auto text-xs text-foreground hover:bg-accent justify-start"><FolderPlus size={13} className="text-muted-foreground" />新建子文件夹</Button>
               <div className="h-px bg-border/30 my-0.5 mx-2" />
-              <button onClick={() => startRename(ctxMenu.item)} className="w-full flex items-center gap-2.5 px-3 py-1.5 text-xs text-foreground hover:bg-accent transition-colors"><PenLine size={13} className="text-muted-foreground" />重命名</button>
-              <button onClick={() => openMoveDialog(ctxMenu.item)} className="w-full flex items-center gap-2.5 px-3 py-1.5 text-xs text-foreground hover:bg-accent transition-colors"><FolderOpen size={13} className="text-muted-foreground" />移动到...</button>
-              <button onClick={() => duplicateItem(ctxMenu.item)} className="w-full flex items-center gap-2.5 px-3 py-1.5 text-xs text-foreground hover:bg-accent transition-colors"><Copy size={13} className="text-muted-foreground" />创建副本</button>
+              <Button onClick={() => startRename(ctxMenu.item)} variant="ghost" size="xs" className="w-full flex items-center gap-2.5 px-3 py-1.5 h-auto text-xs text-foreground hover:bg-accent justify-start"><PenLine size={13} className="text-muted-foreground" />重命名</Button>
+              <Button onClick={() => openMoveDialog(ctxMenu.item)} variant="ghost" size="xs" className="w-full flex items-center gap-2.5 px-3 py-1.5 h-auto text-xs text-foreground hover:bg-accent justify-start"><FolderOpen size={13} className="text-muted-foreground" />移动到...</Button>
+              <Button onClick={() => duplicateItem(ctxMenu.item)} variant="ghost" size="xs" className="w-full flex items-center gap-2.5 px-3 py-1.5 h-auto text-xs text-foreground hover:bg-accent justify-start"><Copy size={13} className="text-muted-foreground" />创建副本</Button>
               <div className="h-px bg-border/30 my-0.5 mx-2" />
-              <button onClick={() => confirmDelete(ctxMenu.item)} className="w-full flex items-center gap-2.5 px-3 py-1.5 text-xs text-red-500 hover:bg-red-500/10 transition-colors"><Trash2 size={13} />删除文件夹</button>
+              <Button onClick={() => confirmDelete(ctxMenu.item)} variant="ghost" size="xs" className="w-full flex items-center gap-2.5 px-3 py-1.5 h-auto text-xs text-destructive hover:bg-destructive/10 justify-start"><Trash2 size={13} />删除文件夹</Button>
             </div>
           )}
         </div>
@@ -1247,17 +1253,17 @@ export function NotePage() {
         <div className="fixed inset-0 z-[300] flex items-center justify-center bg-black/40" onClick={() => setDeleteConfirm(null)}>
           <div className="bg-popover border border-border/60 rounded-xl shadow-2xl w-[340px] p-5" onClick={e => e.stopPropagation()}>
             <div className="flex items-center gap-3 mb-3">
-              <div className="w-9 h-9 rounded-lg bg-red-500/15 flex items-center justify-center flex-shrink-0"><Trash2 size={18} className="text-red-500" /></div>
-              <div><h3 className="text-sm text-foreground">确认删除</h3><p className="text-[11px] text-muted-foreground mt-0.5">{deleteConfirm.type === 'folder' ? '将删除文件夹及其所有内容' : '此操作不可撤销'}</p></div>
+              <div className="w-9 h-9 rounded-lg bg-destructive/15 flex items-center justify-center flex-shrink-0"><Trash2 size={18} className="text-destructive" /></div>
+              <div><h3 className="text-sm text-foreground">确认删除</h3><p className="text-xs text-muted-foreground mt-0.5">{deleteConfirm.type === 'folder' ? '将删除文件夹及其所有内容' : '此操作不可撤销'}</p></div>
             </div>
             <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-accent/40 mb-4">
               {deleteConfirm.type === 'folder' ? <Folder size={14} className="text-amber-500" /> : <FileText size={14} className="text-muted-foreground" />}
               <span className="text-xs text-foreground truncate">{deleteConfirm.title}</span>
-              {deleteConfirm.type === 'folder' && deleteConfirm.children && (<span className="text-[10px] text-muted-foreground ml-auto flex-shrink-0">{deleteConfirm.children.length} 项</span>)}
+              {deleteConfirm.type === 'folder' && deleteConfirm.children && (<span className="text-xs text-muted-foreground ml-auto flex-shrink-0">{deleteConfirm.children.length} 项</span>)}
             </div>
             <div className="flex justify-end gap-2">
-              <button onClick={() => setDeleteConfirm(null)} className="px-3 py-1.5 rounded-lg text-xs text-muted-foreground hover:bg-accent transition-colors">取消</button>
-              <button onClick={executeDelete} className="px-3 py-1.5 rounded-lg text-xs bg-red-500 text-white hover:bg-red-600 transition-colors">删除</button>
+              <Button variant="ghost" size="sm" onClick={() => setDeleteConfirm(null)} className="px-3 py-1.5 h-auto rounded-lg text-xs text-muted-foreground hover:bg-accent">取消</Button>
+              <Button variant="destructive" size="sm" onClick={executeDelete} className="px-3 py-1.5 h-auto rounded-lg text-xs">删除</Button>
             </div>
           </div>
         </div>
@@ -1269,19 +1275,19 @@ export function NotePage() {
           <div className="bg-popover border border-border/60 rounded-xl shadow-2xl w-[360px] max-h-[480px] flex flex-col" onClick={e => e.stopPropagation()}>
             <div className="flex items-center gap-2 px-4 py-3 border-b border-border/30">
               <FolderOpen size={15} className="text-primary" /><span className="text-sm text-foreground flex-1">移动到</span>
-              <button onClick={() => setMoveDialog(null)} className="w-6 h-6 rounded-md flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"><X size={14} /></button>
+              <Button variant="ghost" size="icon-xs" onClick={() => setMoveDialog(null)} className="w-6 h-6 text-muted-foreground hover:text-foreground hover:bg-accent"><X size={14} /></Button>
             </div>
             <div className="flex items-center gap-2 px-4 py-2 border-b border-border/20 bg-accent/20">
               {moveDialog.item.type === 'folder' ? <Folder size={13} className="text-amber-500" /> : <FileText size={13} className="text-muted-foreground" />}
               <span className="text-xs text-foreground truncate">{moveDialog.item.title}</span>
             </div>
             <div className="flex-1 overflow-y-auto p-2 [&::-webkit-scrollbar]:w-[3px] [&::-webkit-scrollbar-thumb]:bg-border/30 [&::-webkit-scrollbar-thumb]:rounded-full">
-              <button onClick={() => executeMove('root')} className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs text-foreground hover:bg-accent transition-colors"><Home size={13} className="text-muted-foreground" /><span>根目录</span></button>
+              <Button variant="ghost" size="xs" onClick={() => executeMove('root')} className="w-full flex items-center gap-2 px-3 py-2 h-auto rounded-lg text-xs text-foreground hover:bg-accent justify-start"><Home size={13} className="text-muted-foreground" /><span>根目录</span></Button>
               {collectFolders(notes).filter(f => f.id !== moveDialog.item.id).map(folder => (
-                <button key={folder.id} onClick={() => executeMove(folder.id)} className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs text-foreground hover:bg-accent transition-colors"><Folder size={13} className="text-amber-500" /><span className="truncate">{folder.title}</span></button>
+                <Button key={folder.id} variant="ghost" size="xs" onClick={() => executeMove(folder.id)} className="w-full flex items-center gap-2 px-3 py-2 h-auto rounded-lg text-xs text-foreground hover:bg-accent justify-start"><Folder size={13} className="text-amber-500" /><span className="truncate">{folder.title}</span></Button>
               ))}
             </div>
-            <div className="flex justify-end px-4 py-2.5 border-t border-border/30"><button onClick={() => setMoveDialog(null)} className="px-3 py-1.5 rounded-lg text-xs text-muted-foreground hover:bg-accent transition-colors">取消</button></div>
+            <div className="flex justify-end px-4 py-2.5 border-t border-border/30"><Button variant="ghost" size="sm" onClick={() => setMoveDialog(null)} className="px-3 py-1.5 h-auto rounded-lg text-xs text-muted-foreground hover:bg-accent">取消</Button></div>
           </div>
         </div>
       )}

@@ -1,57 +1,93 @@
 import React, { useState } from "react"
-import { VarManager, type Variable } from "@cherry-studio/ui"
+import { VarManager, SYSTEM_VARIABLES, type VariableDef, type VarType, Button, } from "@cherry-studio/ui"
 import { Section, type PropDef } from "../components/Section"
 
-const systemVars: Variable[] = [
-  { key: "current_date", value: "2026-04-12", type: "string", system: true },
-  { key: "current_time", value: "15:30:00", type: "string", system: true },
-  { key: "model_name", value: "claude-sonnet-4", type: "string", system: true },
-  { key: "user_locale", value: "zh-CN", type: "string", system: true },
-]
-
-const initialVars: Variable[] = [
-  ...systemVars,
-  { key: "OPENAI_API_KEY", value: "sk-proj-abc123", type: "secret" },
-  { key: "BASE_URL", value: "https://api.openai.com/v1", type: "string" },
-  { key: "MAX_TOKENS", value: "4096", type: "number" },
-]
-
 const varManagerProps: PropDef[] = [
-  { name: "variables", type: "Variable[]", description: "Array of { key, value, type?, system? }" },
-  { name: "onVariablesChange", type: "(vars: Variable[]) => void", description: "Callback on variables change" },
-  { name: "className", type: "string", default: "undefined", description: "Additional CSS" },
+  { name: "systemVars", type: "VariableDef[]", description: "Read-only system variables" },
+  { name: "userVars", type: "VariableDef[]", description: "User-defined custom variables" },
+  { name: "onInsert", type: "(name: string) => void", description: "Insert variable name into editor" },
+  { name: "onAdd", type: "() => string", description: "Add new variable, returns its ID" },
+  { name: "onUpdate", type: "(id, field, value) => void", description: "Update a variable field" },
+  { name: "onRemove", type: "(id: string) => void", description: "Remove a variable" },
 ]
+
+let nextId = 1
 
 export function VarManagerDemo() {
-  const [vars, setVars] = useState<Variable[]>(initialVars)
-  const [simpleVars, setSimpleVars] = useState<Variable[]>([
-    { key: "API_KEY", value: "", type: "secret" },
-    { key: "ENDPOINT", value: "https://api.example.com", type: "string" },
+  const [userVars, setUserVars] = useState<VariableDef[]>([
+    { id: "u-1", name: "API_KEY", defaultValue: "sk-proj-abc123", description: "OpenAI API key", type: "string" },
+    { id: "u-2", name: "MAX_TOKENS", defaultValue: "4096", description: "Max output tokens", type: "number" },
+    { id: "u-3", name: "DEBUG_MODE", defaultValue: "false", description: "Enable debug logging", type: "boolean" },
   ])
+  const [open, setOpen] = useState(true)
+  const [lastInserted, setLastInserted] = useState<string | null>(null)
+
+  const handleAdd = () => {
+    const id = `u-new-${nextId++}`
+    setUserVars(prev => [...prev, { id, name: "", defaultValue: "", description: "", type: "string" }])
+    return id
+  }
+
+  const handleUpdate = (id: string, field: keyof VariableDef, value: string) => {
+    setUserVars(prev => prev.map(v => v.id === id ? { ...v, [field]: value } : v))
+  }
+
+  const handleUpdateType = (id: string, type: VarType) => {
+    setUserVars(prev => prev.map(v => v.id === id ? { ...v, type } : v))
+  }
+
+  const handleRemove = (id: string) => {
+    setUserVars(prev => prev.filter(v => v.id !== id))
+  }
 
   return (
-    <>
-      <Section title="Variable Manager — Full" install="npm install @cherry-studio/ui" props={varManagerProps} code={`import { VarManager, type Variable } from "@cherry-studio/ui"
+    <Section
+      title="Variable Manager"
+      install="npm install @cherry-studio/ui"
+      props={varManagerProps}
+      code={`import { VarManager, SYSTEM_VARIABLES Button, } from "@cherry-studio/ui"
 
-const [vars, setVars] = useState<Variable[]>([
-  { key: "current_date", value: "2026-04-12", type: "string", system: true },
-  { key: "API_KEY", value: "sk-xxx", type: "secret" },
-])
-
-<VarManager variables={vars} onVariablesChange={setVars} />`}>
-        <div className="max-w-lg">
-          <VarManager variables={vars} onVariablesChange={setVars} />
-        </div>
-      </Section>
-
-      <Section title="Simple — Custom Variables Only">
-        <div className="max-w-lg">
-          <VarManager variables={simpleVars} onVariablesChange={setSimpleVars} />
-          <p className="mt-2 text-xs text-muted-foreground">
-            {simpleVars.length} variable{simpleVars.length !== 1 ? "s" : ""}
-          </p>
-        </div>
-      </Section>
-    </>
+<VarManager
+  systemVars={SYSTEM_VARIABLES}
+  userVars={userVars}
+  onClose={() => setOpen(false)}
+  onInsert={(name) => console.log("Insert:", name)}
+  onAdd={() => { /* add and return id */ }}
+  onUpdate={(id, field, value) => { /* update */ }}
+  onUpdateType={(id, type) => { /* update type */ }}
+  onRemove={(id) => { /* remove */ }}
+/>`}
+    >
+      <div className="relative h-[500px] border rounded-[24px] bg-muted/30 overflow-hidden">
+        {!open && (
+          <div className="flex items-center justify-center h-full">
+            <Button variant="ghost"
+              onClick={() => setOpen(true)}
+              className="px-4 py-2 rounded-[12px] bg-primary text-primary-foreground text-sm"
+            >
+              Open Variable Manager
+            </Button>
+          </div>
+        )}
+        {open && (
+          <VarManager
+            systemVars={SYSTEM_VARIABLES}
+            userVars={userVars}
+            onClose={() => setOpen(false)}
+            onInsert={(name) => setLastInserted(name)}
+            onAdd={handleAdd}
+            onUpdate={handleUpdate}
+            onUpdateType={handleUpdateType}
+            onRemove={handleRemove}
+            noBackdrop
+          />
+        )}
+        {lastInserted && (
+          <div className="absolute bottom-3 left-3 text-xs text-muted-foreground bg-card border rounded-[12px] px-3 py-1.5">
+            Last inserted: <code className="font-mono text-foreground">{`{{${lastInserted}}}`}</code>
+          </div>
+        )}
+      </div>
+    </Section>
   )
 }

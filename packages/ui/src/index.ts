@@ -79,6 +79,89 @@ export * from "./components/ui/thinking-block"
 export * from "./components/ui/code-block"
 export * from "./components/ui/var-manager"
 export * from "./components/ui/attachment-list"
+export * from "./components/ui/tool-call-card"
+export * from "./components/ui/streaming-text"
+export * from "./components/ui/markdown-renderer"
+export * from "./components/ui/chat-message"
+export * from "./components/ui/chat-reaction"
+export * from "./components/ui/message-actions"
+export * from "./components/ui/multimodal-message"
+export * from "./components/ui/function-call-ui"
+
+// Card variants (Figma Cards page)
+export * from "./components/ui/plan-card"
+export * from "./components/ui/scene-card"
+export * from "./components/ui/asset-card"
+export * from "./components/ui/tags-card"
+export * from "./components/ui/explore-card"
+export * from "./components/ui/question-card"
+export * from "./components/ui/thumbnail"
+export * from "./components/ui/scene-property"
+export * from "./components/ui/image-canvas"
+export * from "./components/ui/agent-config-panel"
+
+// Layout & notification components
+export * from "./components/ui/toolbar"
+export * from "./components/ui/topbar"
+export * from "./components/ui/search-bar"
+export * from "./components/ui/notification-panel"
+export * from "./components/ui/notification-item"
+
+// Comment & modal components
+export * from "./components/ui/comment-item"
+export * from "./components/ui/comment-input"
+export * from "./components/ui/conversation-thread"
+export * from "./components/ui/share-modal"
+export * from "./components/ui/settings-modal"
+
+// Types
+export type { ChatMessage as ChatMessageData, ToolCallResult, ChatConfig, StreamStatus } from "./types/ai"
+
+// Tab / window management components
+export * from "./components/ui/drag-ghost"
+export * from "./components/ui/floating-window"
+export * from "./components/ui/new-tab-dialog"
+export * from "./components/ui/search-dialog"
+export * from "./components/ui/tab-context-menu"
+
+// Picker & error components
+export * from "./components/ui/model-picker-panel"
+export * from "./components/ui/assistant-picker-panel"
+export * from "./components/ui/at-mention-picker"
+export * from "./components/ui/error-boundary"
+
+// Prompt input components
+export * from "./components/ui/prompt-input"
+export * from "./components/ui/inspiration-popover"
+
+// Suggestion components
+export * from "./components/ui/suggestion-box"
+
+// App-level composite components
+export * from "./components/ui/app-sidebar"
+export * from "./components/ui/app-tab-bar"
+export * from "./components/ui/chat-interface"
+
+// Figma sync: new components
+export * from "./components/ui/deep-search"
+export * from "./components/ui/emoji-picker"
+export * from "./components/ui/contacts-card"
+export * from "./components/ui/social-login-button"
+export * from "./components/ui/floating-chat-button"
+export * from "./components/ui/thread-view"
+export * from "./components/ui/detail-overlay"
+export * from "./components/ui/user-dropdown"
+export * from "./components/ui/video-player"
+export * from "./components/ui/like-button"
+export * from "./components/ui/translation-panel"
+export * from "./components/ui/note-editor"
+export * from "./components/ui/kb-manager"
+export * from "./components/ui/settings-sections"
 
 // Hooks
 export * from "./hooks/use-mobile"
+export * from "./hooks/use-chat-stream"
+export * from "./hooks/use-tab-drag"
+export * from "./hooks/use-floating-windows"
+export * from "./hooks/use-tabs"
+export * from "./hooks/use-keyboard"

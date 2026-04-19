@@ -1,5 +1,6 @@
 import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
+import { Button, Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@cherry-studio/ui';
 import { useGlobalActions } from '@/app/context/GlobalActionContext';
 import type { ResourceItem, FolderNode, TagItem, LibrarySidebarFilter, LibraryConfigView, ResourceType } from '@/app/types';
 import type { ViewMode, SortKey } from '@/app/types';
@@ -354,20 +355,18 @@ export function LibraryPage() {
         onClose={() => setSpImportOpen(false)} onImportComplete={handleImportComplete}
       />
 
-      <AnimatePresence>
-        {deleteConfirm && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[500] flex items-center justify-center bg-black/40 backdrop-blur-sm">
-            <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="bg-popover rounded-2xl border border-border/30 p-5 w-[320px] shadow-2xl">
-              <h3 className="text-[13px] text-foreground mb-2">确认删除</h3>
-              <p className="text-[11px] text-muted-foreground/60 mb-4">确定要删除「{deleteConfirm.name}」吗？此操作无法撤销。</p>
-              <div className="flex justify-end gap-2">
-                <button onClick={() => setDeleteConfirm(null)} className="px-3 py-1.5 rounded-lg text-[11px] text-muted-foreground/60 hover:text-foreground hover:bg-accent/40 transition-colors">取消</button>
-                <button onClick={confirmDelete} className="px-3 py-1.5 rounded-lg text-[11px] bg-red-500/10 text-red-500 hover:bg-red-500/20 transition-colors">删除</button>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <Dialog open={!!deleteConfirm} onOpenChange={v => { if (!v) setDeleteConfirm(null); }}>
+        <DialogContent className="w-[320px]">
+          <DialogHeader>
+            <DialogTitle>确认删除</DialogTitle>
+          </DialogHeader>
+          <p className="text-xs text-muted-foreground/60 mb-4">确定要删除「{deleteConfirm?.name}」吗？此操作无法撤销。</p>
+          <DialogFooter>
+            <Button variant="ghost" size="sm" onClick={() => setDeleteConfirm(null)}>取消</Button>
+            <Button variant="destructive" size="sm" onClick={confirmDelete}>删除</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

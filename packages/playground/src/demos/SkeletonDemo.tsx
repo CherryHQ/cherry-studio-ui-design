@@ -18,8 +18,8 @@ function LoadingCard({ loaded }: { loaded: boolean }) {
           <Skeleton className="h-4 w-[90%]" />
           <Skeleton className="h-4 w-[70%]" />
           <div className="flex gap-2 pt-2">
-            <Skeleton className="h-8 w-20 rounded-md" />
-            <Skeleton className="h-8 w-20 rounded-md" />
+            <Skeleton className="h-8 w-20 rounded-[6px]" />
+            <Skeleton className="h-8 w-20 rounded-[6px]" />
           </div>
         </CardContent>
       </Card>
@@ -65,7 +65,7 @@ export function SkeletonDemo() {
 
 <Skeleton className="h-12 w-12 rounded-full" />
 <Skeleton className="h-4 w-64" />
-<Skeleton className="h-[125px] w-full rounded-xl" />`}>
+<Skeleton className="h-[125px] w-full rounded-[12px]" />`}>
         <div className="space-y-6">
           <div className="flex items-center space-x-4">
             <Skeleton className="h-12 w-12 rounded-full" />
@@ -79,7 +79,7 @@ export function SkeletonDemo() {
             <Skeleton className="h-4 w-[80%]" />
             <Skeleton className="h-4 w-[60%]" />
           </div>
-          <Skeleton className="h-[125px] w-full rounded-xl" />
+          <Skeleton className="h-[125px] w-full rounded-[12px]" />
         </div>
       </Section>
 
@@ -88,7 +88,7 @@ export function SkeletonDemo() {
           {[1, 2].map((i) => (
             <Card key={i}>
               <CardContent className="p-4 space-y-3">
-                <Skeleton className="h-32 w-full rounded-md" />
+                <Skeleton className="h-32 w-full rounded-[6px]" />
                 <Skeleton className="h-4 w-[70%]" />
                 <Skeleton className="h-3 w-full" />
                 <Skeleton className="h-3 w-[85%]" />
@@ -102,7 +102,7 @@ export function SkeletonDemo() {
         <div className="max-w-md space-y-3">
           {[1, 2, 3, 4].map((i) => (
             <div key={i} className="flex items-center gap-3">
-              <Skeleton className="h-10 w-10 rounded-md flex-shrink-0" />
+              <Skeleton className="h-10 w-10 rounded-[6px] flex-shrink-0" />
               <div className="flex-1 space-y-1.5">
                 <Skeleton className="h-3.5 w-[60%]" />
                 <Skeleton className="h-3 w-[80%]" />

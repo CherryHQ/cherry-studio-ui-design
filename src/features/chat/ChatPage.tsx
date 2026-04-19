@@ -3,6 +3,7 @@ import {
   Hash, ChevronRight, ChevronDown, Sparkles, Clock, Settings,
   Paperclip, MapPin, Send,
 } from 'lucide-react';
+import { Button, Input } from '@cherry-studio/ui';
 
 export function ChatPage({ title }: { title: string }) {
   return (
@@ -21,12 +22,12 @@ export function ChatPage({ title }: { title: string }) {
             <ChevronDown size={12} />
           </div>
           <div className="flex items-center gap-0.5 ml-2">
-            <button className="w-7 h-7 rounded-md flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent transition-colors">
+            <Button variant="ghost" size="icon-sm" className="w-7 h-7">
               <Clock size={14} strokeWidth={1.6} />
-            </button>
-            <button className="w-7 h-7 rounded-md flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent transition-colors">
+            </Button>
+            <Button variant="ghost" size="icon-sm" className="w-7 h-7">
               <Settings size={14} strokeWidth={1.6} />
-            </button>
+            </Button>
           </div>
         </div>
       </div>
@@ -34,17 +35,17 @@ export function ChatPage({ title }: { title: string }) {
         <div className="w-full max-w-2xl">
           <div className="bg-muted/30 border border-border/40 rounded-xl overflow-hidden">
             <div className="px-4 pt-4 pb-2">
-              <input type="text" placeholder="你想知道什么?" className="w-full bg-transparent text-sm text-foreground placeholder:text-muted-foreground/60 focus:outline-none" />
+              <Input type="text" placeholder="你想知道什么?" className="w-full bg-transparent text-sm text-foreground placeholder:text-muted-foreground/60 border-none shadow-none focus-visible:ring-0" />
             </div>
             <div className="flex items-center justify-between px-3 pb-3">
               <div className="flex items-center gap-1">
-                <button className="w-8 h-8 rounded-lg flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"><Paperclip size={15} strokeWidth={1.6} /></button>
-                <button className="flex items-center gap-1 px-2 py-1 rounded-lg text-xs text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"><Hash size={13} /><span>模型</span><ChevronDown size={11} /></button>
-                <button className="flex items-center gap-1 px-2 py-1 rounded-lg text-xs text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"><MapPin size={13} /><span>思考</span></button>
+                <Button variant="ghost" size="icon-sm" className="w-8 h-8"><Paperclip size={15} strokeWidth={1.6} /></Button>
+                <Button variant="ghost" size="xs" className="gap-1 text-muted-foreground"><Hash size={13} /><span>模型</span><ChevronDown size={11} /></Button>
+                <Button variant="ghost" size="xs" className="gap-1 text-muted-foreground"><MapPin size={13} /><span>思考</span></Button>
               </div>
               <div className="flex items-center gap-2">
-                <button className="flex items-center gap-1 px-2 py-1 text-xs text-muted-foreground hover:text-foreground transition-colors">默认助手<ChevronDown size={11} /></button>
-                <button className="w-8 h-8 rounded-full bg-foreground text-background flex items-center justify-center hover:opacity-80 transition-opacity"><Send size={14} className="ml-0.5" /></button>
+                <Button variant="ghost" size="xs" className="gap-1 text-muted-foreground">默认助手<ChevronDown size={11} /></Button>
+                <Button variant="default" size="icon-sm" className="w-8 h-8 rounded-full"><Send size={14} className="ml-0.5" /></Button>
               </div>
             </div>
           </div>
@@ -52,7 +53,7 @@ export function ChatPage({ title }: { title: string }) {
         <div className="w-full max-w-2xl mt-6 mb-8">
           <div className="flex items-center justify-between mb-2">
             <h3 className="text-sm text-foreground">最近话题</h3>
-            <button className="text-xs text-muted-foreground hover:text-foreground transition-colors">查看更多</button>
+            <Button variant="ghost" size="xs" className="text-muted-foreground">查看更多</Button>
           </div>
           <p className="text-xs text-muted-foreground">发送消息以开始你的第一个话题。</p>
         </div>

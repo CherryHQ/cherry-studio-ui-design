@@ -27,6 +27,7 @@ import { DashboardPage } from './DashboardPage';
 import { DefaultModelSettingsPage } from './DefaultModelSettingsPage';
 import { Toggle, InlineSelect } from './shared';
 import { Tooltip } from '@/app/components/Tooltip';
+import { Button } from '@cherry-studio/ui';
 
 // ===========================
 // Types
@@ -268,7 +269,7 @@ const CHANGELOG_DATA = [
 const CHANGE_TYPE_MAP = {
   feature: { label: '\u65b0\u589e', color: 'text-foreground/60', bg: 'bg-foreground/[0.06]' },
   improve: { label: '\u4f18\u5316', color: 'text-blue-400', bg: 'bg-blue-400/10' },
-  fix: { label: '\u4fee\u590d', color: 'text-amber-400', bg: 'bg-amber-400/10' },
+  fix: { label: '\u4fee\u590d', color: 'text-warning', bg: 'bg-warning/10' },
 };
 
 // ===========================
@@ -296,10 +297,11 @@ function SettingsSidebar({ active, onSelect, onClose }: { active: SettingsSectio
                 const isActive = active === item.id;
                 const Icon = item.icon;
                 return (
-                  <button
+                  <Button
                     key={item.id}
+                    variant="ghost"
                     onClick={() => onSelect(item.id)}
-                    className={`w-full flex items-center gap-2.5 px-3 py-[5px] rounded-lg transition-all duration-150 text-[11px] relative ${
+                    className={`w-full justify-start gap-2.5 px-3 py-[5px] h-auto rounded-lg text-xs relative ${
                       isActive
                         ? 'bg-cherry-active-bg text-foreground/90'
                         : 'text-foreground/70 hover:text-foreground/90 hover:bg-foreground/[0.04]'
@@ -310,7 +312,7 @@ function SettingsSidebar({ active, onSelect, onClose }: { active: SettingsSectio
                     )}
                     <Icon size={13} className="flex-shrink-0" />
                     <span>{item.label}</span>
-                  </button>
+                  </Button>
                 );
               })}
             </div>
@@ -325,7 +327,7 @@ function SettingsSidebar({ active, onSelect, onClose }: { active: SettingsSectio
 // Section Components
 // ===========================
 function SectionTitle({ children }: { children: React.ReactNode }) {
-  return <h2 className="text-[13px] text-foreground/90 mb-3" style={{ fontWeight: 500 }}>{children}</h2>;
+  return <h2 className="text-sm text-foreground/90 mb-3 font-medium">{children}</h2>;
 }
 
 function SectionCard({ children, className }: { children: React.ReactNode; className?: string }) {
@@ -371,8 +373,8 @@ function HomeSettings({ onNavigate }: { onNavigate: (s: SettingsSection) => void
       <div className={`${card} cursor-pointer`} onClick={() => onNavigate('models')}>
         <p className={`${cardLabel} mb-2`}>{'\u670d\u52a1\u8fde\u63a5'}</p>
         <div className="flex items-baseline gap-1">
-          <span className="text-[20px] text-primary" style={{ fontWeight: 700 }}>{connectedCount}</span>
-          <span className="text-[10px] text-foreground/20">/ {totalProviders}</span>
+          <span className="text-xl text-primary font-bold">{connectedCount}</span>
+          <span className="text-xs text-foreground/20">/ {totalProviders}</span>
         </div>
         <div className="flex items-center gap-1 mt-1.5">
           <div className="w-1 h-1 rounded-full bg-primary animate-pulse" />
@@ -382,13 +384,13 @@ function HomeSettings({ onNavigate }: { onNavigate: (s: SettingsSection) => void
 
       <div className={`${card} cursor-pointer`} onClick={() => onNavigate('models')}>
         <p className={`${cardLabel} mb-2`}>{'\u53ef\u7528\u6a21\u578b'}</p>
-        <span className="text-[20px] text-foreground/70" style={{ fontWeight: 700 }}>{totalModels}</span>
+        <span className="text-xl text-foreground/70 font-bold">{totalModels}</span>
         <p className="text-[9px] text-foreground/20 mt-1.5">{'\u5df2\u542f\u7528'}</p>
       </div>
 
       <div className={`${card}`}>
         <p className={`${cardLabel} mb-2`}>{'\u4eca\u65e5\u5bf9\u8bdd'}</p>
-        <span className="text-[20px] text-foreground/70" style={{ fontWeight: 700 }}>24</span>
+        <span className="text-xl text-foreground/70 font-bold">24</span>
         <div className="flex items-center gap-1 mt-1.5">
           <span className="text-[9px] text-foreground/40">{'\u2191 12%'}</span>
           <span className="text-[9px] text-foreground/20">{'\u8f83\u6628\u65e5'}</span>
@@ -398,8 +400,8 @@ function HomeSettings({ onNavigate }: { onNavigate: (s: SettingsSection) => void
       <div className={`${card}`}>
         <p className={`${cardLabel} mb-2`}>Token {'\u7528\u91cf'}</p>
         <div className="flex items-baseline gap-0.5">
-          <span className="text-[20px] text-foreground/70" style={{ fontWeight: 700 }}>1.2</span>
-          <span className="text-[10px] text-foreground/25">M</span>
+          <span className="text-xl text-foreground/70 font-bold">1.2</span>
+          <span className="text-xs text-foreground/25">M</span>
         </div>
         <div className="flex gap-[2px] items-end mt-1.5 h-[10px]">
           {[3, 5, 4, 7, 6, 8, 5, 9, 7, 6, 8, 10].map((h, i) => (
@@ -435,14 +437,14 @@ function HomeSettings({ onNavigate }: { onNavigate: (s: SettingsSection) => void
         </div>
         <div className="flex items-center gap-1.5">
           <div className="w-1 h-1 rounded-full bg-primary animate-pulse" />
-          <span className="text-[10px] text-primary">3 {'\u4e2a\u5de5\u5177\u8fd0\u884c\u4e2d'}</span>
+          <span className="text-xs text-primary">3 {'\u4e2a\u5de5\u5177\u8fd0\u884c\u4e2d'}</span>
         </div>
       </div>
 
       <div className={`${card}`}>
         <p className={`${cardLabel} mb-2`}>{'\u5b58\u50a8\u7a7a\u95f4'}</p>
         <div className="flex items-baseline gap-0.5">
-          <span className="text-[15px] text-foreground/70" style={{ fontWeight: 700 }}>256</span>
+          <span className="text-base text-foreground/70 font-bold">256</span>
           <span className="text-[9px] text-foreground/25">MB</span>
         </div>
         <div className="mt-1.5 h-[3px] rounded-full bg-foreground/[0.06] overflow-hidden">
@@ -456,10 +458,10 @@ function HomeSettings({ onNavigate }: { onNavigate: (s: SettingsSection) => void
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              {theme === 'dark' ? <span className="text-[11px]">{'\ud83c\udf19'}</span>
-                : theme === 'light' ? <span className="text-[11px]">{'\u2600\ufe0f'}</span>
-                : <span className="text-[11px]">{'\ud83d\udcbb'}</span>}
-              <span className="text-[10px] text-foreground/55">{'\u4e3b\u9898\u5916\u89c2'}</span>
+              {theme === 'dark' ? <span className="text-xs">{'\ud83c\udf19'}</span>
+                : theme === 'light' ? <span className="text-xs">{'\u2600\ufe0f'}</span>
+                : <span className="text-xs">{'\ud83d\udcbb'}</span>}
+              <span className="text-xs text-foreground/55">{'\u4e3b\u9898\u5916\u89c2'}</span>
             </div>
             <InlineSelect value={theme} onChange={setTheme}
               options={[
@@ -472,7 +474,7 @@ function HomeSettings({ onNavigate }: { onNavigate: (s: SettingsSection) => void
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Globe2 size={12} className="text-foreground/30" />
-              <span className="text-[10px] text-foreground/55">{'\u754c\u9762\u8bed\u8a00'}</span>
+              <span className="text-xs text-foreground/55">{'\u754c\u9762\u8bed\u8a00'}</span>
             </div>
             <InlineSelect value={language} onChange={setLanguage}
               options={[
@@ -492,14 +494,14 @@ function HomeSettings({ onNavigate }: { onNavigate: (s: SettingsSection) => void
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Sparkles size={11} className="text-foreground/30" />
-              <span className="text-[10px] text-foreground/55">{'\u81ea\u52a8\u751f\u6210\u6807\u9898'}</span>
+              <span className="text-xs text-foreground/55">{'\u81ea\u52a8\u751f\u6210\u6807\u9898'}</span>
             </div>
             <Toggle checked={autoTitle} onChange={setAutoTitle} />
           </div>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <RefreshCw size={11} className="text-foreground/30" />
-              <span className="text-[10px] text-foreground/55">{'\u5f00\u673a\u81ea\u542f\u52a8'}</span>
+              <span className="text-xs text-foreground/55">{'\u5f00\u673a\u81ea\u542f\u52a8'}</span>
             </div>
             <Toggle checked={launchAtLogin} onChange={setLaunchAtLogin} />
           </div>
@@ -513,7 +515,7 @@ function HomeSettings({ onNavigate }: { onNavigate: (s: SettingsSection) => void
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Command size={11} className="text-foreground/30" />
-              <span className="text-[10px] text-foreground/55">{'\u53d1\u9001\u5feb\u6377\u952e'}</span>
+              <span className="text-xs text-foreground/55">{'\u53d1\u9001\u5feb\u6377\u952e'}</span>
             </div>
             <InlineSelect value={sendKey} onChange={setSendKey}
               options={[
@@ -526,7 +528,7 @@ function HomeSettings({ onNavigate }: { onNavigate: (s: SettingsSection) => void
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Globe2 size={11} className="text-foreground/30" />
-              <span className="text-[10px] text-foreground/55">{'\u4ee3\u7406\u6a21\u5f0f'}</span>
+              <span className="text-xs text-foreground/55">{'\u4ee3\u7406\u6a21\u5f0f'}</span>
             </div>
             <InlineSelect value={proxyMode} onChange={setProxyMode}
               options={[
@@ -550,14 +552,15 @@ function HomeSettings({ onNavigate }: { onNavigate: (s: SettingsSection) => void
           ].map(item => {
             const Icon = item.icon;
             return (
-              <button
+              <Button
                 key={item.target}
+                variant="ghost"
                 onClick={() => onNavigate(item.target)}
-                className="flex flex-col items-center gap-1.5 py-2 rounded-xl bg-foreground/[0.03] hover:bg-foreground/[0.06] border border-transparent hover:border-foreground/[0.06] transition-all text-[10px]"
+                className="flex-col h-auto gap-1.5 py-2 rounded-xl bg-foreground/[0.03] hover:bg-foreground/[0.06] border border-transparent hover:border-foreground/[0.06] text-xs"
               >
                 <Icon size={13} className="text-foreground/30" />
                 <span className="text-[9px] text-foreground/40">{item.label}</span>
-              </button>
+              </Button>
             );
           })}
         </div>
@@ -572,7 +575,7 @@ function HomeSettings({ onNavigate }: { onNavigate: (s: SettingsSection) => void
               <span className="text-[9px] text-foreground/20 w-3 text-right">{i + 1}</span>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center justify-between mb-[2px]">
-                  <span className="text-[10px] text-foreground/60 truncate">{m.name}</span>
+                  <span className="text-xs text-foreground/60 truncate">{m.name}</span>
                   <span className="text-[9px] text-foreground/25 flex-shrink-0 ml-2">{m.count} {'\u6b21'}</span>
                 </div>
                 <div className="h-[2px] rounded-full bg-foreground/[0.04] overflow-hidden">
@@ -588,7 +591,7 @@ function HomeSettings({ onNavigate }: { onNavigate: (s: SettingsSection) => void
         <p className={`${cardLabel} mb-2.5`}>{'\u672c\u6708\u8d39\u7528\u6982\u89c8'}</p>
         <div className="flex items-baseline gap-1 mb-3">
           <span className="text-[9px] text-foreground/25">$</span>
-          <span className="text-[18px] text-foreground/70" style={{ fontWeight: 700 }}>4.28</span>
+          <span className="text-lg text-foreground/70 font-bold">4.28</span>
           <span className="text-[9px] text-foreground/20 ml-1">/ {'\u672c\u6708'}</span>
         </div>
         <div className="space-y-1.5">
@@ -599,7 +602,7 @@ function HomeSettings({ onNavigate }: { onNavigate: (s: SettingsSection) => void
           ].map(item => (
             <div key={item.label} className="flex items-center gap-2">
               <div className="w-1 h-1 rounded-full flex-shrink-0" style={{ backgroundColor: item.color }} />
-              <span className="text-[10px] text-foreground/50 flex-1">{item.label}</span>
+              <span className="text-xs text-foreground/50 flex-1">{item.label}</span>
               <span className="text-[9px] text-foreground/30">{item.amount}</span>
               <div className="w-12 h-[2px] rounded-full bg-foreground/[0.04] overflow-hidden">
                 <div className="h-full rounded-full" style={{ width: `${item.pct}%`, backgroundColor: item.color, opacity: 0.5 }} />
@@ -673,7 +676,7 @@ function AboutPage() {
     <div className="flex items-center justify-between gap-4 py-[5px]">
       <div className="flex items-center gap-2 min-w-0">
         <Icon size={13} className="text-foreground/35 flex-shrink-0" />
-        <span className="text-[11px] text-foreground/80">{label}</span>
+        <span className="text-xs text-foreground/80">{label}</span>
       </div>
       <div className="flex-shrink-0">{children}</div>
     </div>
@@ -689,7 +692,7 @@ function AboutPage() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             transition={{ type: 'spring', damping: 25, stiffness: 400 }}
-            className="fixed top-4 left-1/2 -translate-x-1/2 z-[9999] px-4 py-2 rounded-xl bg-foreground/90 text-background text-[11px] shadow-2xl flex items-center gap-2"
+            className="fixed top-4 left-1/2 -translate-x-1/2 z-[9999] px-4 py-2 rounded-xl bg-foreground/90 text-background text-xs shadow-2xl flex items-center gap-2"
           >
             <CheckCircle2 size={13} className="text-foreground/50 flex-shrink-0" />
             {toastMsg}
@@ -701,12 +704,14 @@ function AboutPage() {
       <div className="flex items-center justify-between">
         <SectionTitle>{'\u5173\u4e8e\u6211\u4eec'}</SectionTitle>
         <Tooltip content={'\u5728 GitHub \u4e0a\u67e5\u770b\u6e90\u7801'} side="left">
-          <button
+          <Button
+            variant="ghost"
+            size="icon-xs"
             onClick={() => showToast('\u5df2\u5728\u6d4f\u89c8\u5668\u4e2d\u6253\u5f00 GitHub \u4ed3\u5e93')}
-            className="w-7 h-7 rounded-lg flex items-center justify-center text-foreground/40 hover:text-foreground/70 hover:bg-foreground/[0.06] transition-colors"
+            className="w-7 h-7 rounded-lg text-foreground/40 hover:text-foreground/70 hover:bg-foreground/[0.06]"
           >
             <Github size={16} />
-          </button>
+          </Button>
         </Tooltip>
       </div>
 
@@ -714,18 +719,20 @@ function AboutPage() {
       <SectionCard>
         <div className="px-2 py-2.5">
           <div className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-foreground/45 via-foreground/40 to-foreground/60 flex items-center justify-center text-white text-[18px] shadow-lg shadow-foreground/[0.1] flex-shrink-0" style={{ fontWeight: 700 }}>
+            <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-foreground/45 via-foreground/40 to-foreground/60 flex items-center justify-center text-white text-lg shadow-lg shadow-foreground/[0.1] flex-shrink-0 font-bold">
               {'\ud83c\udf52'}
             </div>
             <div className="flex-1 min-w-0">
-              <h3 className="text-[13px] text-foreground/90" style={{ fontWeight: 500 }}>Cherry Studio</h3>
-              <p className="text-[10px] text-foreground/45 mt-0.5">{'\u4e00\u6b3e\u4e3a\u521b\u9020\u8005\u800c\u751f\u7684 AI \u52a9\u624b'}</p>
-              <span className="inline-block mt-1 px-2 py-[1px] rounded-md border border-foreground/[0.15] text-[9px] text-foreground/60" style={{ fontWeight: 500 }}>v2.6.0</span>
+              <h3 className="text-sm text-foreground/90 font-medium">Cherry Studio</h3>
+              <p className="text-xs text-foreground/45 mt-0.5">{'\u4e00\u6b3e\u4e3a\u521b\u9020\u8005\u800c\u751f\u7684 AI \u52a9\u624b'}</p>
+              <span className="inline-block mt-1 px-2 py-[1px] rounded-md border border-foreground/[0.15] text-[9px] text-foreground/60 font-medium">v2.6.0</span>
             </div>
-            <button
+            <Button
+              variant="outline"
+              size="xs"
               onClick={handleCheckUpdate}
               disabled={updateStatus === 'checking'}
-              className={`flex items-center gap-1.5 px-3 py-[5px] rounded-lg border text-[10px] transition-all flex-shrink-0 ${
+              className={`gap-1.5 px-3 py-[5px] rounded-lg text-xs flex-shrink-0 ${
                 updateStatus === 'latest'
                   ? 'border-foreground/[0.15] text-foreground/60 bg-foreground/[0.03]'
                   : updateStatus === 'checking'
@@ -743,7 +750,7 @@ function AboutPage() {
               <span>
                 {updateStatus === 'checking' ? '\u68c0\u67e5\u4e2d...' : updateStatus === 'latest' ? '\u5df2\u662f\u6700\u65b0' : '\u68c0\u67e5\u66f4\u65b0'}
               </span>
-            </button>
+            </Button>
           </div>
         </div>
       </SectionCard>
@@ -759,26 +766,30 @@ function AboutPage() {
           </AboutRow>
           <AboutRow icon={Server} label={'\u7248\u672c\u9009\u62e9'}>
             <div className="flex items-center bg-foreground/[0.06] rounded-lg p-[2px]">
-              <button
+              <Button
+                variant="ghost"
+                size="xs"
                 onClick={() => setVersionChannel('rc')}
-                className={`px-2.5 py-[3px] rounded-md text-[10px] transition-all ${
+                className={`px-2.5 py-[3px] h-auto rounded-md text-xs ${
                   versionChannel === 'rc'
-                    ? 'bg-primary text-primary-foreground shadow-sm'
+                    ? 'bg-primary text-primary-foreground shadow-sm hover:bg-primary/90'
                     : 'text-foreground/50 hover:text-foreground/70'
                 }`}
               >
                 {'\u9884\u89c8\u7248 (RC)'}
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="ghost"
+                size="xs"
                 onClick={() => setVersionChannel('beta')}
-                className={`px-2.5 py-[3px] rounded-md text-[10px] transition-all ${
+                className={`px-2.5 py-[3px] h-auto rounded-md text-xs ${
                   versionChannel === 'beta'
-                    ? 'bg-primary text-primary-foreground shadow-sm'
+                    ? 'bg-primary text-primary-foreground shadow-sm hover:bg-primary/90'
                     : 'text-foreground/50 hover:text-foreground/70'
                 }`}
               >
                 {'\u6d4b\u8bd5\u7248 (Beta)'}
-              </button>
+              </Button>
             </div>
           </AboutRow>
         </div>
@@ -796,14 +807,16 @@ function AboutPage() {
               >
                 <div className="flex items-center gap-2 min-w-0">
                   <Icon size={13} className="text-foreground/35 flex-shrink-0" />
-                  <span className="text-[11px] text-foreground/75">{link.label}</span>
+                  <span className="text-xs text-foreground/75">{link.label}</span>
                 </div>
-                <button
+                <Button
+                  variant="outline"
+                  size="xs"
                   onClick={() => handleLinkAction(link.label, link.action)}
-                  className="px-2 py-[2px] rounded-md border border-border/30 text-[10px] text-foreground/45 hover:text-foreground/70 hover:bg-accent transition-colors flex-shrink-0"
+                  className="px-2 py-[2px] h-auto rounded-md border-border/30 text-xs text-foreground/45 hover:text-foreground/70 hover:bg-accent flex-shrink-0"
                 >
                   {link.action}
-                </button>
+                </Button>
               </div>
             );
           })}
@@ -814,16 +827,16 @@ function AboutPage() {
       <SectionCard>
         <div className="px-2">
           <AboutRow icon={FileText} label={'\u5f00\u6e90\u534f\u8bae'}>
-            <span className="text-[11px] text-foreground/50">Apache-2.0</span>
+            <span className="text-xs text-foreground/50">Apache-2.0</span>
           </AboutRow>
           <AboutRow icon={Zap} label="Electron">
-            <span className="text-[11px] text-foreground/50">v33.2.0</span>
+            <span className="text-xs text-foreground/50">v33.2.0</span>
           </AboutRow>
           <AboutRow icon={Globe2} label="Chromium">
-            <span className="text-[11px] text-foreground/50">v130.0.6723.0</span>
+            <span className="text-xs text-foreground/50">v130.0.6723.0</span>
           </AboutRow>
           <AboutRow icon={Command} label="Node.js">
-            <span className="text-[11px] text-foreground/50">v20.18.1</span>
+            <span className="text-xs text-foreground/50">v20.18.1</span>
           </AboutRow>
         </div>
       </SectionCard>
@@ -855,14 +868,16 @@ function AboutPage() {
               <div className="flex items-center justify-between px-5 py-3.5 border-b border-foreground/[0.06] flex-shrink-0">
                 <div className="flex items-center gap-2">
                   <Rss size={14} className="text-foreground/50" />
-                  <h3 className="text-[13px] text-foreground/90" style={{ fontWeight: 500 }}>{'\u66f4\u65b0\u65e5\u5fd7'}</h3>
+                  <h3 className="text-sm text-foreground/90 font-medium">{'\u66f4\u65b0\u65e5\u5fd7'}</h3>
                 </div>
-                <button
+                <Button
+                  variant="ghost"
+                  size="icon-xs"
                   onClick={() => setShowChangelog(false)}
-                  className="w-6 h-6 rounded-lg flex items-center justify-center text-foreground/35 hover:text-foreground/70 hover:bg-foreground/[0.06] transition-colors"
+                  className="w-6 h-6 rounded-lg text-foreground/35 hover:text-foreground/70 hover:bg-foreground/[0.06]"
                 >
                   <X size={14} />
-                </button>
+                </Button>
               </div>
 
               {/* Changelog body */}
@@ -871,9 +886,9 @@ function AboutPage() {
                   <div key={release.version}>
                     {/* Version header */}
                     <div className="flex items-center gap-2 mb-2.5">
-                      <span className="text-[12px] text-foreground/85" style={{ fontWeight: 500 }}>{release.version}</span>
+                      <span className="text-sm text-foreground/85 font-medium">{release.version}</span>
                       {release.tag && (
-                        <span className="px-1.5 py-[1px] rounded-md bg-foreground/[0.06] text-[9px] text-foreground/60" style={{ fontWeight: 500 }}>{release.tag}</span>
+                        <span className="px-1.5 py-[1px] rounded-md bg-foreground/[0.06] text-[9px] text-foreground/60 font-medium">{release.tag}</span>
                       )}
                       <span className="text-[9px] text-foreground/30 ml-auto flex items-center gap-1">
                         <Calendar size={9} />
@@ -887,10 +902,10 @@ function AboutPage() {
                         const typeInfo = CHANGE_TYPE_MAP[change.type];
                         return (
                           <div key={ci} className="flex items-start gap-2">
-                            <span className={`flex-shrink-0 mt-[1px] px-1.5 py-[1px] rounded text-[8px] ${typeInfo.bg} ${typeInfo.color}`} style={{ fontWeight: 500 }}>
+                            <span className={`flex-shrink-0 mt-[1px] px-1.5 py-[1px] rounded text-[8px] font-medium ${typeInfo.bg} ${typeInfo.color}`}>
                               {typeInfo.label}
                             </span>
-                            <span className="text-[11px] text-foreground/65 leading-[16px]">{change.text}</span>
+                            <span className="text-xs text-foreground/65 leading-[16px]">{change.text}</span>
                           </div>
                         );
                       })}
@@ -907,13 +922,15 @@ function AboutPage() {
               {/* Changelog footer */}
               <div className="flex items-center justify-between px-5 py-3 border-t border-foreground/[0.06] flex-shrink-0">
                 <span className="text-[9px] text-foreground/30">{'\u5171'} {CHANGELOG_DATA.length} {'\u4e2a\u7248\u672c'}</span>
-                <button
+                <Button
+                  variant="outline"
+                  size="xs"
                   onClick={() => showToast('\u5df2\u5728\u6d4f\u89c8\u5668\u4e2d\u6253\u5f00\u5b8c\u6574\u66f4\u65b0\u65e5\u5fd7')}
-                  className="flex items-center gap-1 px-2.5 py-[3px] rounded-lg border border-border/30 text-[10px] text-foreground/50 hover:text-foreground/70 hover:bg-accent transition-colors"
+                  className="gap-1 px-2.5 py-[3px] rounded-lg border-border/30 text-xs text-foreground/50 hover:text-foreground/70 hover:bg-accent"
                 >
                   <span>{'\u67e5\u770b\u5168\u90e8'}</span>
                   <ArrowUpRight size={9} />
-                </button>
+                </Button>
               </div>
             </motion.div>
           </div>

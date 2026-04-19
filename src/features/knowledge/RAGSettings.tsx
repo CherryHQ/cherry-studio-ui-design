@@ -5,6 +5,7 @@ import {
   Cpu, MessageSquare,
 } from 'lucide-react';
 import { Tooltip } from '@/app/components/Tooltip';
+import { Button, Input } from '@cherry-studio/ui';
 
 // ===========================
 // Options data
@@ -86,26 +87,29 @@ function MiniSelect({ items, selectedId, onSelect }: {
 
   return (
     <div ref={ref} className="relative">
-      <button
+      <Button
+        variant="outline"
+        size="sm"
         onClick={() => setOpen(!open)}
-        className={`w-full flex items-center justify-between px-2.5 py-[6px] rounded-md border text-[11px] bg-transparent hover:bg-muted/20 transition-colors ${open ? 'border-cherry-primary/40 ring-1 ring-cherry-primary/15' : 'border-border/40'}`}
+        className={`w-full justify-between px-2.5 py-[6px] text-xs bg-transparent hover:bg-muted/20 transition-colors ${open ? 'border-cherry-primary/40 ring-1 ring-cherry-primary/15' : 'border-border/40'}`}
       >
         <span className="text-foreground truncate">{selected?.name || '选择...'}</span>
         <ChevronDown size={10} className={`text-muted-foreground/40 transition-transform flex-shrink-0 ml-2 ${open ? 'rotate-180' : ''}`} />
-      </button>
+      </Button>
       {open && (
         <div className="absolute top-full left-0 right-0 mt-1 bg-popover border border-border/40 rounded-lg shadow-lg z-50 p-1 overflow-y-auto max-h-[200px] animate-in fade-in slide-in-from-top-1 duration-150 [&::-webkit-scrollbar]:w-[3px] [&::-webkit-scrollbar-thumb]:bg-border/30 [&::-webkit-scrollbar-thumb]:rounded-full">
           {items.map(item => (
-            <button
+            <Button
               key={item.id}
+              variant="ghost"
               onClick={() => { onSelect(item.id); setOpen(false); }}
-              className={`w-full text-left px-2 py-[5px] text-[11px] rounded-md transition-colors flex items-center gap-1.5 ${selectedId === item.id ? 'bg-cherry-active-bg text-cherry-primary-dark' : 'text-foreground hover:bg-accent/60'}`}
+              className={`w-full justify-start h-auto py-[5px] px-2 text-xs rounded-md transition-colors flex items-center gap-1.5 ${selectedId === item.id ? 'bg-cherry-active-bg text-cherry-primary-dark' : 'text-foreground hover:bg-accent/60'}`}
             >
               <span className="truncate flex-1">{item.name}</span>
               {item.provider && <span className="text-[9px] text-muted-foreground/30 flex-shrink-0">{item.provider}</span>}
               {item.dim && <span className="text-[9px] text-muted-foreground/25 flex-shrink-0">{item.dim}d</span>}
               {selectedId === item.id && <Check size={10} className="text-cherry-primary flex-shrink-0" />}
-            </button>
+            </Button>
           ))}
         </div>
       )}
@@ -139,7 +143,7 @@ function GreenSlider({ value, onChange, min, max, step }: {
 function FieldLabel({ children, hint }: { children: React.ReactNode; hint?: string }) {
   return (
     <div className="flex items-center gap-1 mb-1">
-      <span className="text-[11px] text-foreground/75">{children}</span>
+      <span className="text-xs text-foreground/75">{children}</span>
       {hint && (
         <Tooltip content={hint} side="top">
           <Info size={9} className="text-muted-foreground/40 cursor-help" />
@@ -152,11 +156,11 @@ function FieldLabel({ children, hint }: { children: React.ReactNode; hint?: stri
 function FieldInput({ value, onChange, placeholder, suffix }: { value: string; onChange: (v: string) => void; placeholder?: string; suffix?: string }) {
   return (
     <div className="relative">
-      <input
+      <Input
         value={value}
         onChange={e => onChange(e.target.value)}
         placeholder={placeholder}
-        className="w-full px-2.5 py-[6px] rounded-md border border-border/40 bg-transparent text-[11px] text-foreground outline-none focus:border-cherry-primary/40 focus:ring-1 focus:ring-cherry-primary/15 transition-all placeholder:text-muted-foreground/30"
+        className="text-xs"
       />
       {suffix && <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[9px] text-muted-foreground/25 pointer-events-none">{suffix}</span>}
     </div>
@@ -165,7 +169,7 @@ function FieldInput({ value, onChange, placeholder, suffix }: { value: string; o
 
 function SectionHeader({ icon: Icon, title }: { icon: React.ElementType; title: string }) {
   return (
-    <div className="flex items-center gap-1.5 text-[12px] text-foreground font-medium pt-1 pb-1.5">
+    <div className="flex items-center gap-1.5 text-sm text-foreground font-medium pt-1 pb-1.5">
       <Icon size={13} strokeWidth={1.8} className="text-cherry-primary/70" />
       <span>{title}</span>
     </div>
@@ -237,13 +241,15 @@ export function RAGSettings() {
         <div className="space-y-2.5">
           <div className="flex items-center justify-between">
             <SectionHeader icon={Layers} title="分块规则 (Chunking)" />
-            <button
+            <Button
+              variant="ghost"
+              size="xs"
               onClick={handleResetChunking}
-              className="h-5 px-2 rounded text-[9px] text-muted-foreground/50 hover:text-foreground hover:bg-accent/60 transition-colors flex items-center gap-1"
+              className="h-5 px-2 text-[9px] text-muted-foreground/50 hover:text-foreground hover:bg-accent/60 transition-colors flex items-center gap-1"
             >
               <RotateCcw size={8} />
               <span>恢复默认</span>
-            </button>
+            </Button>
           </div>
 
           <div className="grid grid-cols-2 gap-2">
@@ -292,12 +298,14 @@ export function RAGSettings() {
               <FieldLabel hint="向量维度，由模型决定">向量维度</FieldLabel>
               <div className="flex items-center gap-2">
                 <FieldInput value={embeddingDim} onChange={setEmbeddingDim} />
-                <button
+                <Button
+                  variant="ghost"
+                  size="icon-xs"
                   onClick={() => { const m = embeddingModels.find(m => m.id === embeddingModel); if (m) setEmbeddingDim(String(m.dim)); }}
-                  className="w-7 h-7 rounded-md border border-border/40 flex items-center justify-center text-muted-foreground/40 hover:text-foreground hover:bg-accent transition-colors flex-shrink-0"
+                  className="w-7 h-7 rounded-md border border-border/40 text-muted-foreground/40 hover:text-foreground hover:bg-accent transition-colors flex-shrink-0"
                 >
                   <RefreshCw size={10} />
-                </button>
+                </Button>
               </div>
             </div>
           </div>
@@ -313,7 +321,7 @@ export function RAGSettings() {
           <div>
             <div className="flex items-center justify-between mb-1">
               <FieldLabel hint="检索返回的最大文档片段数">请求文档片段数 (Top K)</FieldLabel>
-              <span className="text-[11px] text-cherry-primary-dark tabular-nums">{topK}</span>
+              <span className="text-xs text-cherry-primary-dark tabular-nums">{topK}</span>
             </div>
             <GreenSlider value={topK} onChange={v => setTopK(Math.round(v))} min={1} max={50} step={1} />
             <div className="flex items-center justify-between mt-px text-[8px] text-muted-foreground/25">
@@ -325,7 +333,7 @@ export function RAGSettings() {
           <div>
             <div className="flex items-center justify-between mb-1">
               <FieldLabel hint="低于此分数的结果将被过滤，0 表示不过滤">匹配度阈值</FieldLabel>
-              <span className="text-[11px] text-cherry-primary-dark tabular-nums">{scoreThreshold}</span>
+              <span className="text-xs text-cherry-primary-dark tabular-nums">{scoreThreshold}</span>
             </div>
             <GreenSlider value={parseFloat(scoreThreshold)} onChange={v => setScoreThreshold(v.toFixed(2))} min={0} max={1} step={0.01} />
             <div className="flex items-center justify-between mt-px text-[8px] text-muted-foreground/25">
@@ -342,16 +350,18 @@ export function RAGSettings() {
 
         {/* ========== Footer ========== */}
         <div className="flex items-center justify-end gap-2 pt-3 border-t border-border/15">
-          <button
+          <Button
+            variant="ghost"
+            size="xs"
             onClick={handleReset}
-            className="h-6 px-2.5 rounded-md text-[11px] text-muted-foreground/50 hover:text-foreground hover:bg-accent transition-colors flex items-center gap-1"
+            className="h-6 px-2.5 text-xs text-muted-foreground/50 hover:text-foreground hover:bg-accent transition-colors flex items-center gap-1"
           >
             <RotateCcw size={9} />
             <span>恢复默认</span>
-          </button>
-          <button className="h-6 px-3 rounded-md text-[11px] bg-cherry-primary text-white hover:bg-cherry-primary-dark transition-colors">
+          </Button>
+          <Button size="sm" className="h-6 px-3 bg-cherry-primary text-white hover:bg-cherry-primary-dark transition-colors">
             保存
-          </button>
+          </Button>
         </div>
 
         <div className="h-2" />

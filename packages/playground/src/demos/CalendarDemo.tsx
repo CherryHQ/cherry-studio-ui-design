@@ -33,14 +33,14 @@ const [date, setDate] = useState<Date | undefined>(new Date())
   mode="single"
   selected={date}
   onSelect={setDate}
-  className="rounded-md border"
+  className="rounded-[6px] border"
 />`}>
         <div className="flex gap-8 items-start flex-wrap">
           <Calendar
             mode="single"
             selected={singleDate}
             onSelect={setSingleDate}
-            className="rounded-md border"
+            className="rounded-[6px] border"
           />
           <div className="text-sm text-muted-foreground">
             Selected: <span className="text-foreground font-medium">
@@ -57,7 +57,7 @@ const [date, setDate] = useState<Date | undefined>(new Date())
             selected={dateRange}
             onSelect={setDateRange}
             numberOfMonths={2}
-            className="rounded-md border"
+            className="rounded-[6px] border"
           />
           <div className="text-sm text-muted-foreground space-y-1">
             <div>From: <span className="text-foreground font-medium">{dateRange?.from?.toLocaleDateString("zh-CN") ?? "—"}</span></div>
@@ -72,7 +72,7 @@ const [date, setDate] = useState<Date | undefined>(new Date())
             mode="multiple"
             selected={multipleDates}
             onSelect={setMultipleDates}
-            className="rounded-md border"
+            className="rounded-[6px] border"
           />
           <div className="text-sm text-muted-foreground">
             Selected: <span className="text-foreground font-medium">{multipleDates?.length ?? 0} dates</span>
@@ -84,7 +84,7 @@ const [date, setDate] = useState<Date | undefined>(new Date())
         <Calendar
           mode="single"
           disabled={disabledDays}
-          className="rounded-md border"
+          className="rounded-[6px] border"
         />
       </Section>
 
@@ -94,7 +94,7 @@ const [date, setDate] = useState<Date | undefined>(new Date())
           captionLayout="dropdown"
           startMonth={new Date(2020, 0)}
           endMonth={new Date(2030, 11)}
-          className="rounded-md border"
+          className="rounded-[6px] border"
         />
       </Section>
     </>

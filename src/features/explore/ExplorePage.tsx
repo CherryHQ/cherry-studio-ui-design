@@ -5,6 +5,7 @@ import {
   TrendingUp,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { Button, Input } from '@cherry-studio/ui';
 import { AgentCard, AssistantCard, KnowledgeCard, ToolCard } from './ResourceCards';
 import { ExperienceModal } from './ExperienceModal';
 import { PreviewModal } from './PreviewModal';
@@ -64,16 +65,18 @@ function FeaturedBanner({ onTry }: { onTry: (agent: Agent) => void }) {
               <span>本周热门</span>
             </div>
           </div>
-          <h3 className="text-[15px] text-foreground mb-1">{featured.name}</h3>
-          <p className="text-[11px] text-muted-foreground/50 leading-relaxed max-w-md mb-3">{featured.description}</p>
+          <h3 className="text-base text-foreground mb-1">{featured.name}</h3>
+          <p className="text-xs text-muted-foreground/50 leading-relaxed max-w-md mb-3">{featured.description}</p>
           <div className="flex items-center gap-3">
-            <button
+            <Button
+              variant="ghost"
+              size="xs"
               onClick={() => onTry(featured)}
-              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-foreground text-background text-[11px] hover:bg-foreground/90 transition-colors active:scale-[0.97]"
+              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-foreground text-background text-xs hover:bg-foreground/90 transition-colors active:scale-[0.97]"
             >
               <Sparkles size={10} />
               <span>立即体验</span>
-            </button>
+            </Button>
             <div className="flex items-center gap-2 text-[9px] text-muted-foreground/30">
               <span>{formatNumber(featured.stars)} 收藏</span>
               <span>{'\u00B7'}</span>
@@ -105,10 +108,12 @@ function FilterTabs({ active, onChange }: { active: ResourceCategory; onChange: 
         const Icon = cat.icon;
         const total = categoryTotalCounts[cat.id];
         return (
-          <button
+          <Button
+            variant="ghost"
+            size="sm"
             key={cat.id}
             onClick={() => onChange(cat.id)}
-            className={`relative flex items-center gap-1.5 px-3 py-2 text-[11px] rounded-lg transition-all whitespace-nowrap ${
+            className={`relative flex items-center gap-1.5 px-3 py-2 text-xs rounded-lg transition-all whitespace-nowrap ${
               isActive
                 ? 'text-foreground bg-accent/60'
                 : 'text-muted-foreground/50 hover:text-foreground hover:bg-accent/30'
@@ -119,7 +124,7 @@ function FilterTabs({ active, onChange }: { active: ResourceCategory; onChange: 
             <span className={`text-[9px] tabular-nums ${isActive ? 'text-muted-foreground/50' : 'text-muted-foreground/25'}`}>
               {formatNumber(total)}
             </span>
-          </button>
+          </Button>
         );
       })}
     </div>
@@ -139,17 +144,19 @@ function SubcategoryTags({ category, active, onChange }: {
       {subs.map(sub => {
         const isActive = active === sub;
         return (
-          <button
+          <Button
+            variant="ghost"
+            size="sm"
             key={sub}
             onClick={() => onChange(sub)}
-            className={`px-2.5 py-[3px] rounded-full text-[10px] whitespace-nowrap transition-all border ${
+            className={`px-2.5 py-[3px] rounded-full text-xs whitespace-nowrap transition-all border ${
               isActive
                 ? 'bg-foreground text-background border-foreground'
                 : 'bg-transparent text-muted-foreground/45 border-border/25 hover:border-border/50 hover:text-foreground'
             }`}
           >
             {sub}
-          </button>
+          </Button>
         );
       })}
     </div>
@@ -164,16 +171,16 @@ function SearchBar({ value, onChange }: { value: string; onChange: (v: string) =
   return (
     <div className="relative max-w-xs">
       <Search size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground/30" />
-      <input
+      <Input
         value={value}
         onChange={e => onChange(e.target.value)}
         placeholder="搜索资源..."
-        className="w-full pl-7 pr-7 py-1.5 rounded-lg border border-border/25 bg-accent/15 text-[11px] text-foreground placeholder:text-muted-foreground/30 outline-none focus:border-border/50 focus:bg-accent/30 transition-all"
+        className="w-full pl-7 pr-7 py-1.5 rounded-lg border border-border/25 bg-accent/15 text-xs text-foreground placeholder:text-muted-foreground/30 outline-none focus:border-border/50 focus:bg-accent/30 transition-all border-none shadow-none"
       />
       {value && (
-        <button onClick={() => onChange('')} className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground/25 hover:text-foreground transition-colors">
+        <Button variant="ghost" size="icon-xs" onClick={() => onChange('')} className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground/25 hover:text-foreground transition-colors">
           <X size={10} />
-        </button>
+        </Button>
       )}
     </div>
   );
@@ -305,21 +312,23 @@ export function ExplorePage() {
       >
         <div className="flex items-end justify-between mb-5">
           <div>
-            <h1 className="text-[20px] text-foreground tracking-tight mb-0.5">探索</h1>
-            <p className="text-[11px] text-muted-foreground/40">发现智能体、助手和工具，提升你的工作效率</p>
+            <h1 className="text-xl text-foreground tracking-tight mb-0.5">探索</h1>
+            <p className="text-xs text-muted-foreground/40">发现智能体、助手和工具，提升你的工作效率</p>
           </div>
           <div className="flex items-center gap-2">
             {/* Favorites button */}
-            <button
+            <Button
+              variant="ghost"
+              size="xs"
               onClick={() => setFavDrawerOpen(true)}
-              className="relative flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-border/25 text-[11px] text-muted-foreground/50 hover:text-foreground hover:border-border/50 hover:bg-accent/30 transition-all"
+              className="relative flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-border/25 text-xs text-muted-foreground/50 hover:text-foreground hover:border-border/50 hover:bg-accent/30 transition-all"
             >
               <Heart size={11} className={favorites.size > 0 ? 'text-red-500/70' : ''} fill={favorites.size > 0 ? 'currentColor' : 'none'} />
               <span>收藏夹</span>
               {favorites.size > 0 && (
                 <span className="ml-0.5 px-1 py-px rounded-full bg-red-500/10 text-red-500 text-[9px] tabular-nums">{favorites.size}</span>
               )}
-            </button>
+            </Button>
             <SearchBar value={search} onChange={setSearch} />
           </div>
         </div>
@@ -423,12 +432,12 @@ export function ExplorePage() {
             {/* Load more hint */}
             {getFilteredCount() > 0 && (
               <div className="flex flex-col items-center py-8">
-                <p className="text-[10px] text-muted-foreground/20 mb-0.5">
+                <p className="text-xs text-muted-foreground/20 mb-0.5">
                   当前展示 {getFilteredCount()} 个资源，共 {formatNumber(categoryTotalCounts[category])} 个
                 </p>
-                <button className="text-[10px] text-muted-foreground/35 hover:text-foreground/60 transition-colors mt-1 px-3 py-1 rounded-lg hover:bg-accent/30">
+                <Button variant="ghost" size="xs" className="text-xs text-muted-foreground/35 hover:text-foreground/60 transition-colors mt-1 px-3 py-1 rounded-lg hover:bg-accent/30">
                   加载更多...
-                </button>
+                </Button>
               </div>
             )}
           </motion.div>
@@ -499,10 +508,10 @@ function EmptyState({ query, subcategory }: { query: string; subcategory: string
   return (
     <div className="col-span-full flex flex-col items-center justify-center py-16">
       <Search size={24} strokeWidth={1.2} className="text-muted-foreground/15 mb-2" />
-      <p className="text-[12px] text-muted-foreground/35 mb-0.5">
+      <p className="text-sm text-muted-foreground/35 mb-0.5">
         {query ? `未找到"${query}"相关结果` : subcategory !== '全部' ? `"${subcategory}" 分类暂无资源` : '暂无资源'}
       </p>
-      <p className="text-[10px] text-muted-foreground/20">请尝试其他搜索词或分类</p>
+      <p className="text-xs text-muted-foreground/20">请尝试其他搜索词或分类</p>
     </div>
   );
 }

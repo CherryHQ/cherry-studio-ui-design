@@ -22,8 +22,13 @@ export function AssistantConfigDemo() {
   )
 
   return (
-    <Section title="Assistant Configuration" install="npm install @cherry-studio/ui">
-      <div className="max-w-md rounded-xl border bg-background p-4 space-y-3">
+    <Section title="Assistant Configuration" install="npm install @cherry-studio/ui" props={[
+        { name: "name", type: "string", default: '""', description: "Assistant display name" },
+        { name: "model", type: "string", default: '"claude-sonnet"', description: "Default model for the assistant" },
+        { name: "systemPrompt", type: "string", default: '""', description: "System prompt that defines assistant behavior" },
+        { name: "tools", type: "ToolConfig[]", default: "[]", description: "Enabled tools and capabilities" },
+      ]}>
+      <div className="max-w-md rounded-[12px] border bg-background p-4 space-y-3">
         <PanelHeader icon="✨" title="Assistant Configuration" desc="Set up your AI assistant" />
 
         <ConfigSection title="Profile" hint="Basic assistant information">
@@ -38,17 +43,17 @@ export function AssistantConfigDemo() {
               {tags.map(tag => (
                 <Badge key={tag} variant="secondary" className="text-[10px] gap-1">
                   {tag}
-                  <button onClick={() => setTags(t => t.filter(x => x !== tag))} className="hover:text-destructive">
+                  <Button variant="ghost" onClick={() => setTags(t => t.filter(x => x !== tag))} className="hover:text-destructive">
                     <X size={10} />
-                  </button>
+                  </Button>
                 </Badge>
               ))}
-              <button
+              <Button variant="ghost"
                 onClick={() => setTags(t => [...t, "New"])}
                 className="text-[10px] text-muted-foreground hover:text-foreground px-1"
               >
                 <Plus size={10} />
-              </button>
+              </Button>
             </div>
           </FormRow>
         </ConfigSection>

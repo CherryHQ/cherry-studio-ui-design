@@ -5,6 +5,7 @@ import {
   Pencil, Trash2, FolderPlus, ArrowRightLeft, X, Check,
 } from 'lucide-react';
 import { Tooltip } from '@/app/components/Tooltip';
+import { Button, Input, Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@cherry-studio/ui';
 
 export interface KnowledgeBase {
   id: string;
@@ -26,9 +27,9 @@ const defaultGroupIcons: Record<string, React.ElementType> = {
 const kbIcons = ['📁', '📚', '🤖', '🎨', '📡', '📊', '🧠', '🍒', '✈️', '🍳', '🔬', '💼', '🎯', '📝', '🌐', '⚡', '🛠️', '🎵'];
 const kbColors = ['#8b5cf6', '#ec4899', '#3b82f6', '#f59e0b', '#10b981', '#06b6d4', '#f97316', '#ef4444', '#a855f7', '#14b8a6'];
 
-function InlineEditor({ value, onConfirm, onCancel, fontSize = 'text-[11px]' }: { 
-  value: string; 
-  onConfirm: (v: string) => void; 
+function InlineEditor({ value, onConfirm, onCancel, fontSize = 'text-xs' }: {
+  value: string;
+  onConfirm: (v: string) => void;
   onCancel: () => void;
   fontSize?: string;
 }) {
@@ -79,13 +80,14 @@ function ContextMenu({ x, y, children, onDismiss }: { x: number; y: number; chil
 
 function MenuItem({ icon: Icon, label, danger, onClick }: { icon: React.ElementType; label: string; danger?: boolean; onClick: () => void }) {
   return (
-    <button
+    <Button
+      variant="ghost"
       onClick={onClick}
-      className={`w-full flex items-center gap-2 px-2 py-1 rounded-md transition-colors text-left text-[11px] ${danger ? 'text-red-500 hover:bg-red-500/10' : 'text-popover-foreground hover:bg-accent'}`}
+      className={`w-full flex items-center gap-2 px-2 py-1 rounded-md transition-colors text-left text-xs h-auto justify-start ${danger ? 'text-destructive hover:bg-destructive/10' : 'text-popover-foreground hover:bg-accent'}`}
     >
       <Icon size={11} />
       <span>{label}</span>
-    </button>
+    </Button>
   );
 }
 
@@ -98,53 +100,53 @@ function CreateKBDialog({ groups, onConfirm, onCancel }: {
   const [group, setGroup] = useState(groups[0] || '工作');
   const [icon, setIcon] = useState('📁');
   const [color, setColor] = useState('#8b5cf6');
-  const overlayRef = useRef<HTMLDivElement>(null);
 
   return (
-    <div ref={overlayRef} className="fixed inset-0 z-[400] flex items-center justify-center bg-black/40" onClick={e => { if (e.target === overlayRef.current) onCancel(); }}>
-      <div className="bg-popover border border-border rounded-xl shadow-2xl w-[340px] p-4 animate-in fade-in zoom-in-95 duration-150" onClick={e => e.stopPropagation()}>
-        <div className="flex items-center justify-between mb-3">
-          <span className="text-xs text-foreground">新建知识库</span>
-          <button onClick={onCancel} className="w-5 h-5 rounded-md flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent transition-colors">
-            <X size={12} />
-          </button>
-        </div>
+    <Dialog open onOpenChange={open => { if (!open) onCancel(); }}>
+      <DialogContent className="w-[340px] p-4">
+        <DialogHeader>
+          <DialogTitle className="text-xs text-foreground">新建知识库</DialogTitle>
+        </DialogHeader>
 
-        <label className="block text-[11px] text-muted-foreground/60 mb-1">名称</label>
-        <input
+        <label className="block text-xs text-muted-foreground/60 mb-1">名称</label>
+        <Input
           autoFocus
           value={name}
           onChange={e => setName(e.target.value)}
           placeholder="输入知识库名称..."
-          className="w-full px-2 py-1.5 rounded-md border border-border/40 bg-transparent text-[11px] text-foreground outline-none focus:border-primary/40 focus:ring-1 focus:ring-primary/15 transition-all mb-2.5"
+          className="w-full px-2 py-1.5 rounded-md text-xs mb-2.5"
           onKeyDown={e => { if (e.key === 'Enter' && name.trim()) onConfirm(name.trim(), group, icon, color); }}
         />
 
-        <label className="block text-[11px] text-muted-foreground/60 mb-1">分组</label>
+        <label className="block text-xs text-muted-foreground/60 mb-1">分组</label>
         <select
           value={group}
           onChange={e => setGroup(e.target.value)}
-          className="w-full px-2 py-1.5 rounded-md border border-border/40 bg-transparent text-[11px] text-foreground outline-none focus:border-primary/40 mb-2.5 cursor-pointer"
+          className="w-full px-2 py-1.5 rounded-md border border-border/40 bg-transparent text-xs text-foreground outline-none focus:border-primary/40 mb-2.5 cursor-pointer"
         >
           {groups.map(g => <option key={g} value={g}>{g}</option>)}
         </select>
 
-        <label className="block text-[11px] text-muted-foreground/60 mb-1">图标</label>
+        <label className="block text-xs text-muted-foreground/60 mb-1">图标</label>
         <div className="flex flex-wrap gap-0.5 mb-2.5">
           {kbIcons.map(ic => (
-            <button
+            <Button
               key={ic}
+              variant="ghost"
+              size="icon-xs"
               onClick={() => setIcon(ic)}
               className={`w-6 h-6 rounded text-xs flex items-center justify-center transition-all ${icon === ic ? 'bg-primary/15 ring-1 ring-primary/40' : 'hover:bg-accent'}`}
-            >{ic}</button>
+            >{ic}</Button>
           ))}
         </div>
 
-        <label className="block text-[11px] text-muted-foreground/60 mb-1">颜色</label>
+        <label className="block text-xs text-muted-foreground/60 mb-1">颜色</label>
         <div className="flex flex-wrap gap-1 mb-3">
           {kbColors.map(c => (
-            <button
+            <Button
               key={c}
+              variant="ghost"
+              size="icon-xs"
               onClick={() => setColor(c)}
               className={`w-5 h-5 rounded-full transition-all ${color === c ? 'ring-2 ring-offset-1 ring-offset-popover ring-primary' : 'hover:scale-110'}`}
               style={{ background: c }}
@@ -152,16 +154,18 @@ function CreateKBDialog({ groups, onConfirm, onCancel }: {
           ))}
         </div>
 
-        <div className="flex justify-end gap-2">
-          <button onClick={onCancel} className="h-6 px-2.5 rounded-md text-[11px] text-muted-foreground hover:text-foreground hover:bg-accent transition-colors">取消</button>
-          <button
+        <DialogFooter className="flex justify-end gap-2">
+          <Button variant="ghost" size="xs" onClick={onCancel} className="h-6 px-2.5 text-xs text-muted-foreground hover:text-foreground">取消</Button>
+          <Button
+            variant="default"
+            size="xs"
             onClick={() => { if (name.trim()) onConfirm(name.trim(), group, icon, color); }}
             disabled={!name.trim()}
-            className="h-6 px-2.5 rounded-md text-[11px] bg-primary text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-40"
-          >创建</button>
-        </div>
-      </div>
-    </div>
+            className="h-6 px-2.5 text-xs"
+          >创建</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -230,21 +234,21 @@ export function KnowledgeSidebar({
     <div className="flex flex-col h-full select-none">
       {/* Header */}
       <div className="h-11 flex items-center justify-between px-3.5 flex-shrink-0">
-        <div className="flex items-center gap-1.5 text-[11px]">
+        <div className="flex items-center gap-1.5 text-xs">
           <BookOpen size={12} className="text-muted-foreground" strokeWidth={1.6} />
           <span className="text-foreground">知识库</span>
           <span className="text-muted-foreground/50 ml-0.5">{items.length}</span>
         </div>
         <div className="flex items-center gap-0.5">
           <Tooltip content="新建分组" side="bottom">
-            <button onClick={() => setCreatingGroup(true)} className="w-5 h-5 rounded flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent transition-colors">
+            <Button variant="ghost" size="icon-xs" onClick={() => setCreatingGroup(true)} className="w-5 h-5 rounded text-muted-foreground hover:text-foreground">
               <FolderPlus size={11} strokeWidth={1.8} />
-            </button>
+            </Button>
           </Tooltip>
           <Tooltip content="新建知识库" side="bottom">
-            <button onClick={() => setShowCreateDialog(true)} className="w-5 h-5 rounded flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent transition-colors">
+            <Button variant="ghost" size="icon-xs" onClick={() => setShowCreateDialog(true)} className="w-5 h-5 rounded text-muted-foreground hover:text-foreground">
               <Plus size={12} strokeWidth={1.8} />
-            </button>
+            </Button>
           </Tooltip>
         </div>
       </div>
@@ -253,16 +257,16 @@ export function KnowledgeSidebar({
       <div className="px-2 pb-1.5 flex-shrink-0">
         <div className="flex items-center gap-1.5 px-2 py-[4px] rounded-md bg-muted/50 border border-transparent focus-within:border-border/50 transition-colors">
           <Search size={10} className="text-muted-foreground/50 flex-shrink-0" />
-          <input
+          <Input
             value={search}
             onChange={e => setSearch(e.target.value)}
             placeholder="搜索知识库..."
-            className="flex-1 bg-transparent outline-none text-[11px] text-foreground placeholder:text-muted-foreground/40"
+            className="flex-1 bg-transparent outline-none text-xs text-foreground placeholder:text-muted-foreground/40 border-none shadow-none focus-visible:ring-0 h-auto p-0"
           />
           {search && (
-            <button onClick={() => setSearch('')} className="text-muted-foreground/30 hover:text-foreground">
+            <Button variant="ghost" size="icon-xs" onClick={() => setSearch('')} className="text-muted-foreground/30 hover:text-foreground w-4 h-4">
               <X size={9} />
-            </button>
+            </Button>
           )}
         </div>
       </div>
@@ -278,9 +282,9 @@ export function KnowledgeSidebar({
             <div key={group}>
               <div
                 onContextMenu={e => handleGroupContext(e, group)}
-                className="w-full flex items-center gap-1.5 px-1.5 py-[4px] text-[10px] text-foreground/45 hover:text-foreground/60 transition-colors group/grp"
+                className="w-full flex items-center gap-1.5 px-1.5 py-[4px] text-xs text-foreground/45 hover:text-foreground/60 transition-colors group/grp"
               >
-                <button onClick={() => toggleGroup(group)} className="flex items-center gap-1.5 min-w-0 flex-1 text-[10px]">
+                <Button variant="ghost" onClick={() => toggleGroup(group)} className="flex items-center gap-1.5 min-w-0 flex-1 text-xs h-auto p-0 justify-start">
                   <ChevronRight size={10} className={`transition-transform duration-150 flex-shrink-0 ${isCollapsed ? '' : 'rotate-90'}`} />
                   <GroupIcon size={11} strokeWidth={1.5} className="flex-shrink-0" />
                   {isEditingGroup ? (
@@ -288,19 +292,21 @@ export function KnowledgeSidebar({
                       value={group}
                       onConfirm={v => { onRenameGroup(group, v); setEditingGroupName(null); }}
                       onCancel={() => setEditingGroupName(null)}
-                      fontSize="text-[10px]"
+                      fontSize="text-xs"
                     />
                   ) : (
-                    <span className="uppercase tracking-widest truncate text-[10px]">{group}</span>
+                    <span className="uppercase tracking-widest truncate text-xs">{group}</span>
                   )}
-                </button>
-                <span className="text-[10px] text-muted-foreground/40 flex-shrink-0">{gItems.length}</span>
-                <button
+                </Button>
+                <span className="text-xs text-muted-foreground/40 flex-shrink-0">{gItems.length}</span>
+                <Button
+                  variant="ghost"
+                  size="icon-xs"
                   onClick={e => handleGroupContext(e, group)}
-                  className="w-4 h-4 rounded flex items-center justify-center text-muted-foreground/35 hover:text-foreground opacity-0 group-hover/grp:opacity-100 transition-all flex-shrink-0"
+                  className="w-4 h-4 rounded text-muted-foreground/35 hover:text-foreground opacity-0 group-hover/grp:opacity-100 transition-all flex-shrink-0"
                 >
                   <MoreHorizontal size={10} />
-                </button>
+                </Button>
               </div>
 
               {!isCollapsed && (
@@ -334,7 +340,7 @@ export function KnowledgeSidebar({
                             />
                           ) : (
                             <div className="contents">
-                              <div className="text-[11px] truncate">{kb.name}</div>
+                              <div className="text-xs truncate">{kb.name}</div>
                               <div className="flex items-center gap-1 mt-px">
                                 <span className="text-[9px] text-muted-foreground/45">{kb.docCount} 文档</span>
                                 <span className={`w-1 h-1 rounded-full flex-shrink-0 ${
@@ -347,12 +353,14 @@ export function KnowledgeSidebar({
                           )}
                         </div>
                         {!isEditing && (
-                          <button
+                          <Button
+                            variant="ghost"
+                            size="icon-xs"
                             onClick={e => handleKbDots(e, kb.id)}
-                            className="w-4 h-4 rounded flex items-center justify-center text-muted-foreground/25 hover:text-foreground hover:bg-foreground/5 opacity-0 group-hover/kb:opacity-100 transition-all flex-shrink-0"
+                            className="w-4 h-4 rounded text-muted-foreground/25 hover:text-foreground hover:bg-foreground/5 opacity-0 group-hover/kb:opacity-100 transition-all flex-shrink-0"
                           >
                             <MoreHorizontal size={9} />
-                          </button>
+                          </Button>
                         )}
                       </div>
                     );
@@ -366,7 +374,7 @@ export function KnowledgeSidebar({
         {creatingGroup && (
           <div className="flex items-center gap-1 px-1.5 py-[3px]">
             <FolderPlus size={9} className="text-muted-foreground/40 flex-shrink-0" />
-            <input
+            <Input
               autoFocus
               placeholder="输入分组名称..."
               onKeyDown={e => {
@@ -382,7 +390,7 @@ export function KnowledgeSidebar({
                 }
                 setCreatingGroup(false);
               }}
-              className="flex-1 bg-transparent outline-none text-[11px] text-foreground border border-border/40 rounded px-1.5 py-0.5 min-w-0 focus:border-primary/40 focus:ring-1 focus:ring-primary/15"
+              className="flex-1 text-xs text-foreground px-1.5 py-0.5 min-w-0"
             />
           </div>
         )}
@@ -390,13 +398,15 @@ export function KnowledgeSidebar({
 
       {/* Bottom new button */}
       <div className="px-2 py-1.5 flex-shrink-0 border-t border-border/30">
-        <button
+        <Button
+          variant="outline"
+          size="xs"
           onClick={() => setShowCreateDialog(true)}
-          className="w-full flex items-center justify-center gap-1 py-[5px] rounded-lg text-[11px] text-muted-foreground hover:text-foreground hover:bg-accent/60 transition-colors border border-dashed border-border/40 hover:border-border/70"
+          className="w-full flex items-center justify-center gap-1 py-[5px] text-xs text-muted-foreground hover:text-foreground border-dashed border-border/40 hover:border-border/70 h-auto"
         >
           <Plus size={11} strokeWidth={1.8} />
           <span>新建知识库</span>
-        </button>
+        </Button>
       </div>
 
       {/* Context menus */}

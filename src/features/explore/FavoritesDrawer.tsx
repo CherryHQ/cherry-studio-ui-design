@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
 import { X, Search, Heart, ArrowUpDown, Trash2, Clock, ChevronRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { Button, Input } from '@cherry-studio/ui';
 import { Tooltip } from '@/app/components/Tooltip';
 import type { ResourceCategory } from './ExploreData';
 
@@ -106,13 +107,13 @@ export function FavoritesDrawer({ open, favorites, onClose, onRemove, onPreview 
                 <div className="w-6 h-6 rounded-lg bg-red-500/10 flex items-center justify-center">
                   <Heart size={11} className="text-red-500/70" fill="currentColor" />
                 </div>
-                <span className="text-[13px] text-foreground">我的收藏</span>
-                <span className="text-[10px] text-muted-foreground/30 tabular-nums">{favorites.length}</span>
+                <span className="text-sm text-foreground">我的收藏</span>
+                <span className="text-xs text-muted-foreground/30 tabular-nums">{favorites.length}</span>
               </div>
-              <button onClick={onClose}
-                className="w-6 h-6 rounded-lg flex items-center justify-center text-muted-foreground/40 hover:text-foreground hover:bg-accent transition-colors">
+              <Button variant="ghost" size="icon-xs" onClick={onClose}
+                className="w-6 h-6 rounded-lg text-muted-foreground/40 hover:text-foreground">
                 <X size={13} />
-              </button>
+              </Button>
             </div>
 
             {/* Search + Sort + Category filter */}
@@ -122,23 +123,25 @@ export function FavoritesDrawer({ open, favorites, onClose, onRemove, onPreview 
                 <div className="flex items-center gap-1.5">
                   <div className="relative flex-1">
                     <Search size={11} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground/25" />
-                    <input
+                    <Input
                       value={search}
                       onChange={e => setSearch(e.target.value)}
                       placeholder="搜索收藏..."
-                      className="w-full pl-7 pr-7 py-1.5 rounded-lg border border-border/20 bg-accent/15 text-[11px] text-foreground placeholder:text-muted-foreground/25 outline-none focus:border-border/40 focus:bg-accent/25 transition-all"
+                      className="w-full pl-7 pr-7 py-1.5 rounded-lg border border-border/20 bg-accent/15 text-xs text-foreground placeholder:text-muted-foreground/25 outline-none focus:border-border/40 focus:bg-accent/25 transition-all"
                     />
                     {search && (
-                      <button onClick={() => setSearch('')} className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground/20 hover:text-foreground transition-colors">
+                      <Button variant="ghost" size="icon-xs" onClick={() => setSearch('')} className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground/20 hover:text-foreground">
                         <X size={9} />
-                      </button>
+                      </Button>
                     )}
                   </div>
                   {/* Sort dropdown */}
                   <div className="relative flex-shrink-0">
-                    <button
+                    <Button
+                      variant="ghost"
+                      size="icon-xs"
                       onClick={() => setShowSort(!showSort)}
-                      className={`flex items-center gap-1 px-2 py-1.5 rounded-lg text-[10px] border transition-all ${
+                      className={`flex items-center gap-1 px-2 py-1.5 rounded-lg text-xs border transition-all ${
                         showSort
                           ? 'border-primary/30 bg-accent/50 text-foreground'
                           : 'border-border/20 text-muted-foreground/35 hover:text-foreground hover:border-border/40'
@@ -146,7 +149,7 @@ export function FavoritesDrawer({ open, favorites, onClose, onRemove, onPreview 
                       title={sortLabels[sortMode]}
                     >
                       <ArrowUpDown size={10} />
-                    </button>
+                    </Button>
                     <AnimatePresence>
                       {showSort && (
                         <motion.div
@@ -157,15 +160,17 @@ export function FavoritesDrawer({ open, favorites, onClose, onRemove, onPreview 
                           className="absolute top-full right-0 mt-1 z-50 bg-popover border border-border/30 rounded-xl shadow-xl p-1 min-w-[110px]"
                         >
                           {(Object.keys(sortLabels) as SortMode[]).map(mode => (
-                            <button
+                            <Button
                               key={mode}
+                              variant="ghost"
+                              size="xs"
                               onClick={() => { setSortMode(mode); setShowSort(false); }}
-                              className={`w-full text-left px-2.5 py-[5px] rounded-md text-[10px] transition-colors ${
+                              className={`w-full text-left px-2.5 py-[5px] rounded-md text-xs transition-colors ${
                                 sortMode === mode ? 'bg-accent text-foreground' : 'text-muted-foreground/60 hover:bg-accent/50 hover:text-foreground'
                               }`}
                             >
                               {sortLabels[mode]}
-                            </button>
+                            </Button>
                           ))}
                         </motion.div>
                       )}
@@ -180,8 +185,10 @@ export function FavoritesDrawer({ open, favorites, onClose, onRemove, onPreview 
                     if (cat.id !== 'all' && count === 0) return null;
                     const isActive = catFilter === cat.id;
                     return (
-                      <button
+                      <Button
                         key={cat.id}
+                        variant="ghost"
+                        size="xs"
                         onClick={() => setCatFilter(cat.id)}
                         className={`flex items-center gap-1 px-2 py-[3px] rounded-full text-[9px] whitespace-nowrap transition-all border ${
                           isActive
@@ -191,7 +198,7 @@ export function FavoritesDrawer({ open, favorites, onClose, onRemove, onPreview 
                       >
                         <span>{cat.label}</span>
                         <span className={`tabular-nums ${isActive ? 'text-background/60' : 'text-muted-foreground/20'}`}>{count}</span>
-                      </button>
+                      </Button>
                     );
                   })}
                 </div>
@@ -205,14 +212,14 @@ export function FavoritesDrawer({ open, favorites, onClose, onRemove, onPreview 
                   <div className="w-12 h-12 rounded-2xl bg-accent/30 flex items-center justify-center mb-3">
                     <Heart size={20} strokeWidth={1.2} className="text-muted-foreground/12" />
                   </div>
-                  <p className="text-[12px] text-muted-foreground/30 mb-0.5">暂无收藏</p>
-                  <p className="text-[10px] text-muted-foreground/20">点击资源卡片可以收藏</p>
+                  <p className="text-sm text-muted-foreground/30 mb-0.5">暂无收藏</p>
+                  <p className="text-xs text-muted-foreground/20">点击资源卡片可以收藏</p>
                 </div>
               ) : filtered.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-16">
                   <Search size={20} strokeWidth={1.2} className="text-muted-foreground/12 mb-2" />
-                  <p className="text-[11px] text-muted-foreground/30 mb-0.5">未找到匹配的收藏</p>
-                  <p className="text-[10px] text-muted-foreground/18">尝试其他关键词或分类</p>
+                  <p className="text-xs text-muted-foreground/30 mb-0.5">未找到匹配的收藏</p>
+                  <p className="text-xs text-muted-foreground/18">尝试其他关键词或分类</p>
                 </div>
               ) : (
                 <div className="p-2 pt-1.5">
@@ -233,7 +240,7 @@ export function FavoritesDrawer({ open, favorites, onClose, onRemove, onPreview 
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-1.5">
-                            <span className="text-[11px] text-foreground truncate">{item.name}</span>
+                            <span className="text-xs text-foreground truncate">{item.name}</span>
                             <span className={`text-[8px] px-1.5 py-px rounded-full flex-shrink-0 ${categoryColors[item.category]}`}>
                               {item.categoryLabel}
                             </span>
@@ -248,12 +255,14 @@ export function FavoritesDrawer({ open, favorites, onClose, onRemove, onPreview 
                           </div>
                         </div>
                         <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
-                          <Tooltip content="取消收藏" side="left"><button
+                          <Tooltip content="取消收藏" side="left"><Button
+                            variant="ghost"
+                            size="icon-xs"
                             onClick={e => { e.stopPropagation(); onRemove(item.id); }}
-                            className="w-5 h-5 rounded-md flex items-center justify-center text-muted-foreground/25 hover:text-red-500 hover:bg-red-500/10 transition-colors"
+                            className="w-5 h-5 rounded-md text-muted-foreground/25 hover:text-red-500 hover:bg-red-500/10"
                           >
                             <Trash2 size={10} />
-                          </button></Tooltip>
+                          </Button></Tooltip>
                           <ChevronRight size={10} className="text-muted-foreground/20" />
                         </div>
                       </motion.div>

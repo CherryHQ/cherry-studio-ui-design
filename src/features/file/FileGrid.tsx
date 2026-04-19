@@ -3,6 +3,7 @@ import {
   FileText, Image as ImageIcon, Code2, Music, Video,
   File, Star, MoreHorizontal, Eye,
 } from 'lucide-react';
+import { Button, Input } from '@cherry-studio/ui';
 import type { FileItem, FileTag } from './mockData';
 import { getFormatLabel } from './mockData';
 
@@ -76,31 +77,34 @@ export function FileGrid({
             <div className={`h-[88px] rounded-t-lg flex items-center justify-center ${typeBgColors[file.type] || typeBgColors.other} relative overflow-hidden`}>
               <Icon size={26} strokeWidth={1.2} className={typeIconColors[file.type] || typeIconColors.other} />
               {/* Format badge */}
-              <span className="absolute top-1.5 left-1.5 px-1.5 py-[1px] rounded text-[8px] tracking-wide bg-foreground/[0.04] text-foreground/50" style={{ fontWeight: 500 }}>
+              <span className="absolute top-1.5 left-1.5 px-1.5 py-[1px] rounded text-[8px] tracking-wide bg-foreground/[0.04] text-foreground/50 font-medium">
                 {getFormatLabel(file.format)}
               </span>
               {/* Hover actions */}
               <div className="absolute top-1 right-1 flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                <button
+                <Button
+                  variant="ghost"
                   onClick={(e) => { e.stopPropagation(); onToggleStar(file.id); }}
-                  className={`w-5 h-5 rounded flex items-center justify-center transition-colors text-[11px] ${
+                  className={`w-5 h-5 p-0 rounded flex items-center justify-center transition-colors text-xs ${
                     file.starred ? 'text-amber-400/70' : 'text-foreground/20 hover:text-amber-400/50 bg-background/70'
                   }`}
                 >
                   <Star size={11} fill={file.starred ? 'currentColor' : 'none'} />
-                </button>
-                <button
+                </Button>
+                <Button
+                  variant="ghost"
                   onClick={(e) => { e.stopPropagation(); onPreview(file); }}
-                  className="w-5 h-5 rounded flex items-center justify-center text-foreground/20 hover:text-foreground/50 bg-background/70 transition-colors"
+                  className="w-5 h-5 p-0 rounded flex items-center justify-center text-foreground/20 hover:text-foreground/50 bg-background/70 transition-colors"
                 >
                   <Eye size={11} />
-                </button>
-                <button
+                </Button>
+                <Button
+                  variant="ghost"
                   onClick={(e) => { e.stopPropagation(); onContextMenu(e, file.id); }}
-                  className="w-5 h-5 rounded flex items-center justify-center text-foreground/20 hover:text-foreground/50 bg-background/70 transition-colors"
+                  className="w-5 h-5 p-0 rounded flex items-center justify-center text-foreground/20 hover:text-foreground/50 bg-background/70 transition-colors"
                 >
                   <MoreHorizontal size={11} />
-                </button>
+                </Button>
               </div>
               {/* Star indicator */}
               {file.starred && (
@@ -116,7 +120,7 @@ export function FileGrid({
                   onCancel={onRenameCancel}
                 />
               ) : (
-                <p className="text-[10px] text-foreground/80 truncate" title={file.name}>{file.name}</p>
+                <p className="text-xs text-foreground/80 truncate" title={file.name}>{file.name}</p>
               )}
               <div className="flex items-center gap-1 mt-0.5">
                 <span className="text-[9px] text-foreground/40">{file.size}</span>
@@ -147,7 +151,7 @@ function InlineRename({ value, onConfirm, onCancel }: { value: string; onConfirm
     }
   }, [value]);
   return (
-    <input
+    <Input
       ref={ref}
       value={text}
       onChange={e => setText(e.target.value)}
@@ -156,7 +160,7 @@ function InlineRename({ value, onConfirm, onCancel }: { value: string; onConfirm
         if (e.key === 'Escape') onCancel();
       }}
       onBlur={() => { if (text.trim()) onConfirm(text.trim()); else onCancel(); }}
-      className="w-full bg-transparent outline-none text-[10px] text-foreground border-b border-foreground/20 py-0"
+      className="w-full bg-transparent outline-none text-xs text-foreground border-b border-foreground/20 py-0 h-auto border-x-0 border-t-0 rounded-none shadow-none focus-visible:ring-0"
       onClick={e => e.stopPropagation()}
     />
   );

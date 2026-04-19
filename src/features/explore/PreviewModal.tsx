@@ -5,7 +5,7 @@ import {
   Calendar, Tag, Zap, User as UserIcon, Clock,
   ExternalLink, Share2,
 } from 'lucide-react';
-import { motion } from 'motion/react';
+import { Button, Dialog, DialogContent, DialogHeader, DialogTitle } from '@cherry-studio/ui';
 import { ImageWithFallback } from '@/app/components/figma/ImageWithFallback';
 import type { Agent, Assistant, KnowledgeBase, MCPTool, Skill, Plugin, ResourceCategory } from './ExploreData';
 import { integrationIcons, formatNumber, models } from './ExploreData';
@@ -48,8 +48,6 @@ export function PreviewModal({
   resource, category, isFavorited, isSaved,
   onClose, onToggleFavorite, onSaveToLibrary, onTry,
 }: PreviewModalProps) {
-  const overlayRef = React.useRef<HTMLDivElement>(null);
-
   const name = resource.name;
   const description = resource.description;
   const author = resource.author;
@@ -57,34 +55,28 @@ export function PreviewModal({
   const createdAt = resource.createdAt;
 
   return (
-    <div
-      ref={overlayRef}
-      className="fixed inset-0 z-[500] flex items-center justify-center bg-black/50 backdrop-blur-sm"
-      onClick={e => { if (e.target === overlayRef.current) onClose(); }}
-    >
-      <motion.div
-        initial={{ opacity: 0, scale: 0.96, y: 10 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.96, y: 10 }}
-        transition={{ duration: 0.2, ease: [0.25, 0.46, 0.45, 0.94] }}
-        className="bg-popover border border-border/30 rounded-2xl shadow-2xl w-[540px] max-h-[85vh] flex flex-col overflow-hidden"
-        onClick={e => e.stopPropagation()}
-      >
+    <Dialog open onOpenChange={(open) => { if (!open) onClose(); }}>
+      <DialogContent className="bg-popover border border-border/30 rounded-2xl shadow-2xl w-[540px] max-w-[540px] max-h-[85vh] flex flex-col overflow-hidden p-0 gap-0 [&>button:last-child]:hidden">
+        {/* Hidden DialogHeader for accessibility */}
+        <DialogHeader className="sr-only">
+          <DialogTitle>{name}</DialogTitle>
+        </DialogHeader>
+
         {/* Hero area — Knowledge uses cover image, others use gradient */}
         {isKB(resource, category) ? (
           <div className="h-40 relative overflow-hidden flex-shrink-0">
             <ImageWithFallback src={resource.cover} alt={name} className="w-full h-full object-cover" />
             <div className="absolute inset-0 bg-gradient-to-t from-popover via-popover/50 to-transparent" />
-            <button onClick={onClose}
-              className="absolute top-3 right-3 w-7 h-7 rounded-lg bg-black/30 backdrop-blur-sm flex items-center justify-center text-white/70 hover:text-white transition-colors">
+            <Button variant="ghost" size="icon" onClick={onClose}
+              className="absolute top-3 right-3 w-7 h-7 rounded-lg bg-black/30 backdrop-blur-sm text-white/70 hover:text-white hover:bg-black/40">
               <X size={13} />
-            </button>
+            </Button>
             {/* Title overlay on cover */}
             <div className="absolute bottom-3 left-5 right-5">
               <div className="flex items-center gap-1.5 mb-1">
                 <span className="text-[8px] px-1.5 py-px rounded-full bg-white/15 text-white/70 backdrop-blur-sm uppercase tracking-wider">{categoryLabels[category]}</span>
               </div>
-              <h2 className="text-[16px] text-white">{name}</h2>
+              <h2 className="text-base text-white">{name}</h2>
             </div>
           </div>
         ) : (
@@ -95,13 +87,14 @@ export function PreviewModal({
             <div className="relative px-5 pt-5 pb-4">
               {/* Close + share */}
               <div className="flex items-center justify-end gap-1 mb-4">
-                <button className="w-6 h-6 rounded-lg flex items-center justify-center text-muted-foreground/30 hover:text-foreground hover:bg-accent transition-colors">
+                <Button variant="ghost" size="icon"
+                  className="w-6 h-6 rounded-lg text-muted-foreground/30 hover:text-foreground hover:bg-accent">
                   <Share2 size={11} />
-                </button>
-                <button onClick={onClose}
-                  className="w-6 h-6 rounded-lg flex items-center justify-center text-muted-foreground/40 hover:text-foreground hover:bg-accent transition-colors">
+                </Button>
+                <Button variant="ghost" size="icon" onClick={onClose}
+                  className="w-6 h-6 rounded-lg text-muted-foreground/40 hover:text-foreground hover:bg-accent">
                   <X size={13} />
-                </button>
+                </Button>
               </div>
               {/* Avatar + Title */}
               <div className="flex items-start gap-3.5">
@@ -114,18 +107,18 @@ export function PreviewModal({
                 </div>
                 <div className="flex-1 min-w-0 pt-0.5">
                   <div className="flex items-center gap-2 mb-0.5">
-                    <h2 className="text-[15px] text-foreground truncate">{name}</h2>
+                    <h2 className="text-base text-foreground truncate">{name}</h2>
                     <span className="text-[8px] px-1.5 py-px rounded-full bg-accent text-muted-foreground/50 uppercase tracking-wider flex-shrink-0">{categoryLabels[category]}</span>
                   </div>
                   <div className="flex items-center gap-2.5 mt-1">
-                    <div className="flex items-center gap-1 text-[10px] text-muted-foreground/40">
+                    <div className="flex items-center gap-1 text-xs text-muted-foreground/40">
                       <UserIcon size={9} />
                       <span>{author}</span>
                     </div>
                     {(resource as any).version && (
                       <span className="text-[9px] text-muted-foreground/25 px-1.5 py-px rounded bg-accent/50">v{(resource as any).version}</span>
                     )}
-                    <div className="flex items-center gap-1 text-[10px] text-muted-foreground/30">
+                    <div className="flex items-center gap-1 text-xs text-muted-foreground/30">
                       <Clock size={8} />
                       <span>{createdAt}</span>
                     </div>
@@ -141,7 +134,7 @@ export function PreviewModal({
           {/* Description */}
           <div>
             <SectionLabel>简介</SectionLabel>
-            <p className="text-[12px] text-muted-foreground/60 leading-[1.7]">{description}</p>
+            <p className="text-sm text-muted-foreground/60 leading-[1.7]">{description}</p>
           </div>
 
           {/* Persona for Assistant */}
@@ -149,7 +142,7 @@ export function PreviewModal({
             <div>
               <SectionLabel>角色设定</SectionLabel>
               <div className="px-3.5 py-3 rounded-xl bg-gradient-to-r from-foreground/[0.03] to-foreground/[0.03] border border-border/10">
-                <p className="text-[11px] text-muted-foreground/50 leading-relaxed italic">"{resource.persona}"</p>
+                <p className="text-xs text-muted-foreground/50 leading-relaxed italic">"{resource.persona}"</p>
               </div>
             </div>
           )}
@@ -162,8 +155,8 @@ export function PreviewModal({
                 {resource.integrations.map(intg => (
                   <div key={intg}
                     className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-accent/40 border border-border/10 hover:border-border/25 transition-colors">
-                    <span className="text-[12px]">{integrationIcons[intg] || '\uD83D\uDD27'}</span>
-                    <span className="text-[10px] text-muted-foreground/50">{intg}</span>
+                    <span className="text-sm">{integrationIcons[intg] || '\uD83D\uDD27'}</span>
+                    <span className="text-xs text-muted-foreground/50">{intg}</span>
                   </div>
                 ))}
               </div>
@@ -178,7 +171,7 @@ export function PreviewModal({
                 <div className="w-5 h-5 rounded-md bg-amber-500/10 flex items-center justify-center">
                   <Zap size={10} className="text-amber-500/60" />
                 </div>
-                <span className="text-[11px] text-foreground/70">{models.find(m => m.id === resource.recommended_model)?.name}</span>
+                <span className="text-xs text-foreground/70">{models.find(m => m.id === resource.recommended_model)?.name}</span>
                 <span className="text-[9px] text-muted-foreground/30 px-1.5 py-px rounded bg-accent/50">{models.find(m => m.id === resource.recommended_model)?.provider}</span>
               </div>
             </div>
@@ -231,10 +224,10 @@ export function PreviewModal({
             <SectionLabel>标签</SectionLabel>
             <div className="flex flex-wrap gap-1.5">
               {tags.map(tag => (
-                <span key={tag} className="text-[10px] px-2.5 py-1 rounded-lg bg-accent/40 text-muted-foreground/45 border border-border/8 hover:border-border/20 transition-colors cursor-default">{tag}</span>
+                <span key={tag} className="text-xs px-2.5 py-1 rounded-lg bg-accent/40 text-muted-foreground/45 border border-border/8 hover:border-border/20 transition-colors cursor-default">{tag}</span>
               ))}
               {isKB(resource, category) && (
-                <span className="text-[10px] px-2.5 py-1 rounded-lg bg-accent/40 text-muted-foreground/45 border border-border/8">{resource.subcategory}</span>
+                <span className="text-xs px-2.5 py-1 rounded-lg bg-accent/40 text-muted-foreground/45 border border-border/8">{resource.subcategory}</span>
               )}
             </div>
           </div>
@@ -243,9 +236,10 @@ export function PreviewModal({
         {/* Footer actions */}
         <div className="px-5 py-3.5 border-t border-border/15 flex items-center gap-2 bg-accent/[0.03]">
           {/* Favorite */}
-          <button
+          <Button
+            variant="ghost"
             onClick={onToggleFavorite}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] transition-all active:scale-[0.97] ${
+            className={`flex items-center gap-1.5 px-3 py-1.5 h-auto rounded-lg text-xs ${
               isFavorited
                 ? 'bg-red-500/10 text-red-500 border border-red-500/15'
                 : 'bg-accent/40 text-muted-foreground/50 border border-border/15 hover:text-foreground hover:border-border/40'
@@ -253,13 +247,14 @@ export function PreviewModal({
           >
             <Heart size={11} fill={isFavorited ? 'currentColor' : 'none'} />
             <span>{isFavorited ? '已收藏' : '收藏'}</span>
-          </button>
+          </Button>
 
           {/* Save to library */}
-          <button
+          <Button
+            variant="ghost"
             onClick={onSaveToLibrary}
             disabled={isSaved}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] transition-all active:scale-[0.97] ${
+            className={`flex items-center gap-1.5 px-3 py-1.5 h-auto rounded-lg text-xs ${
               isSaved
                 ? 'bg-cherry-active-bg text-cherry-primary-dark border border-cherry-ring'
                 : 'bg-accent/40 text-muted-foreground/50 border border-border/15 hover:text-foreground hover:border-border/40'
@@ -267,23 +262,23 @@ export function PreviewModal({
           >
             {isSaved ? <Check size={11} /> : <BookmarkPlus size={11} />}
             <span>{isSaved ? '已添加资源库' : '添加到资源库'}</span>
-          </button>
+          </Button>
 
           <span className="flex-1" />
 
           {/* Try / Use */}
           {(isAgent(resource, category) || isAssistant(resource, category)) && onTry && (
-            <button
+            <Button
               onClick={onTry}
-              className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-foreground text-background text-[11px] hover:bg-foreground/90 transition-colors active:scale-[0.97]"
+              className="flex items-center gap-1.5 px-4 py-1.5 h-auto rounded-lg bg-foreground text-background text-xs hover:bg-foreground/90 active:scale-[0.97]"
             >
               {isAgent(resource, category) ? <Play size={10} /> : <MessageCircle size={10} />}
               <span>{isAgent(resource, category) ? '体验智能体' : '开始对话'}</span>
-            </button>
+            </Button>
           )}
         </div>
-      </motion.div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -310,7 +305,7 @@ function StatCard({ icon, label, value, color }: {
         {icon}
         <span className="text-[9px] text-muted-foreground/30">{label}</span>
       </div>
-      <span className="text-[13px] text-foreground/80">{value}</span>
+      <span className="text-sm text-foreground/80">{value}</span>
     </div>
   );
 }

@@ -56,13 +56,13 @@ import { Search } from "lucide-react"
           <InputGroup>
             <InputGroupText mode="icon"><Search className="h-4 w-4" /></InputGroupText>
             <InputGroupInput placeholder="Search models..." />
-            <Button size="sm" className="mr-1.5 rounded-md">Search</Button>
+            <Button size="xs" className="mr-1.5 shrink-0 h-7 px-3 text-xs">Search</Button>
           </InputGroup>
           <InputGroup>
             <InputGroupInput readOnly defaultValue="sk-xxxx...xxxx" className="font-mono text-xs" />
-            <button className="mr-2 text-muted-foreground hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 rounded-sm">
+            <Button variant="ghost" className="mr-2 text-muted-foreground hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 rounded-sm">
               <Copy className="h-4 w-4" />
-            </button>
+            </Button>
           </InputGroup>
         </div>
       </Section>
@@ -78,7 +78,7 @@ import { Search } from "lucide-react"
           </div>
           <div className="space-y-1.5">
             <p className="text-sm text-destructive">Error</p>
-            <InputGroup className="border-destructive focus-within:ring-destructive">
+            <InputGroup aria-invalid="true">
               <InputGroupText mode="icon"><Globe className="h-4 w-4" /></InputGroupText>
               <InputGroupInput placeholder="https://" defaultValue="not-a-url" />
             </InputGroup>

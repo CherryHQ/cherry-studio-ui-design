@@ -16,6 +16,8 @@ export interface AssistantPickerPanelProps {
   autoFocus?: boolean;
   /** Optional className for root container */
   className?: string;
+  /** Label for the create button at the bottom */
+  createLabel?: string;
 }
 
 export function AssistantPickerPanel({
@@ -27,6 +29,7 @@ export function AssistantPickerPanel({
   onCreateAssistant,
   autoFocus = true,
   className = '',
+  createLabel = '新建助手',
 }: AssistantPickerPanelProps) {
   const searchRef = useRef<HTMLInputElement>(null);
   const [search, setSearch] = useState('');
@@ -137,7 +140,7 @@ export function AssistantPickerPanel({
           className="w-full flex items-center gap-2 px-2 py-[5px] text-[11px] text-muted-foreground hover:text-popover-foreground hover:bg-accent/50 rounded-lg transition-colors"
         >
           <Plus size={13} strokeWidth={1.5} className="flex-shrink-0" />
-          <span className="flex-1 text-left">去资源库创建</span>
+          <span className="flex-1 text-left">{createLabel}</span>
           <ChevronRight size={12} />
         </button>
       </div>

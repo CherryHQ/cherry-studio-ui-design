@@ -11,6 +11,7 @@ export default defineConfig({
     alias: {
       "@cherry-studio/ui/theme.css": path.resolve(uiSrc, "styles/theme.css"),
       "@cherry-studio/ui": path.resolve(uiSrc, "index.ts"),
+      "@/": path.resolve(uiSrc) + "/",
       "@": path.resolve(__dirname, "./src"),
     },
   },

@@ -9,6 +9,7 @@ import {
   CircleHelp, AtSign, Layers, Bot, Link2,
 } from 'lucide-react';
 import { Tooltip } from '@/app/components/Tooltip';
+import { Button, Input, Popover, PopoverTrigger, PopoverContent } from '@cherry-studio/ui';
 import { Toggle } from './shared';
 
 // ===========================
@@ -83,18 +84,19 @@ function SegmentedControl({ value, options, onChange, disabled }: {
   return (
     <div className={`flex bg-foreground/[0.04] rounded-lg p-[2px] border border-foreground/[0.06] ${disabled ? 'opacity-40 pointer-events-none' : ''}`}>
       {options.map(opt => (
-        <button
+        <Button
           key={opt.value}
+          variant="ghost"
+          size="xs"
           onClick={() => onChange(opt.value)}
-          className={`px-3 py-[4px] rounded-md text-[10px] transition-all duration-150 ${
+          className={`px-3 py-[4px] rounded-md text-xs h-auto transition-all duration-150 ${
             value === opt.value
-              ? 'bg-cherry-primary text-white shadow-sm border border-cherry-primary'
-              : 'text-foreground/40 hover:text-foreground/55 border border-transparent'
+              ? 'bg-cherry-primary text-white shadow-sm border border-cherry-primary font-medium'
+              : 'text-foreground/40 hover:text-foreground/55 border border-transparent font-normal'
           }`}
-          style={{ fontWeight: value === opt.value ? 500 : 400 }}
         >
           {opt.label}
-        </button>
+        </Button>
       ))}
     </div>
   );
@@ -110,7 +112,7 @@ function FormRow({ label, desc, children, disabled }: {
     <div className={`flex items-center justify-between gap-4 py-[5px] ${disabled ? 'opacity-40' : ''}`}>
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-1.5">
-          <p className="text-[11px] text-foreground/75" style={{ fontWeight: 400 }}>{label}</p>
+          <p className="text-xs text-foreground/75 font-normal">{label}</p>
           {desc && (
             <Tooltip content={desc} side="top">
               <span className="text-muted-foreground/25 hover:text-muted-foreground/50 transition-colors cursor-help flex-shrink-0">
@@ -129,7 +131,7 @@ function FormRow({ label, desc, children, disabled }: {
 // SectionHeader / SectionCard
 // ===========================
 function SectionHeader({ title }: { title: string }) {
-  return <h4 className="text-[12px] text-foreground/70 mb-2" style={{ fontWeight: 500 }}>{title}</h4>;
+  return <h4 className="text-sm text-foreground/70 mb-2 font-medium">{title}</h4>;
 }
 
 function SectionCard({ children, className }: { children: React.ReactNode; className?: string }) {
@@ -184,18 +186,20 @@ function AssistantPill({ value, onChange }: { value: string; onChange: (v: strin
 
   return (
     <div className="min-w-0">
-      <button
+      <Button
         ref={triggerRef}
+        variant="ghost"
+        size="sm"
         onClick={() => setOpen(v => !v)}
-        className="flex items-center gap-2 px-3 py-[6px] rounded-full bg-foreground/[0.06] hover:bg-foreground/[0.09] text-[11px] transition-colors"
+        className="flex items-center gap-2 px-3 py-[6px] h-auto rounded-full bg-foreground/[0.06] hover:bg-foreground/[0.09] text-xs"
       >
-        <span style={{ color: selected?.color }} className="text-[11px] flex-shrink-0">{selected?.icon}</span>
+        <span style={{ color: selected?.color }} className="text-xs flex-shrink-0">{selected?.icon}</span>
         <span className="text-foreground/70 truncate">{selected?.label || '选择助手'}</span>
         {selected?.isDefault && (
           <span className="text-[9px] text-cherry-primary flex-shrink-0">默认</span>
         )}
         <ChevronDown size={10} className={`text-foreground/30 flex-shrink-0 transition-transform ${open ? 'rotate-180' : ''}`} />
-      </button>
+      </Button>
 
       {open && createPortal(
         <div
@@ -205,18 +209,20 @@ function AssistantPill({ value, onChange }: { value: string; onChange: (v: strin
         >
           <div className="max-h-[220px] overflow-y-auto [&::-webkit-scrollbar]:w-[2px] [&::-webkit-scrollbar-thumb]:bg-border/20">
             {MOCK_ASSISTANTS.map(a => (
-              <button
+              <Button
                 key={a.value}
+                variant="ghost"
+                size="sm"
                 onClick={() => { onChange(a.value); setOpen(false); }}
-                className={`w-full flex items-center gap-2 px-3 py-[6px] rounded-xl text-[11px] transition-colors ${
+                className={`w-full flex items-center gap-2 px-3 py-[6px] h-auto rounded-xl text-xs justify-start ${
                   value === a.value ? 'bg-foreground/[0.06]' : 'hover:bg-foreground/[0.04]'
                 }`}
               >
-                <span style={{ color: a.color }} className="text-[11px] flex-shrink-0">{a.icon}</span>
+                <span style={{ color: a.color }} className="text-xs flex-shrink-0">{a.icon}</span>
                 <span className="text-foreground/70 truncate flex-1 text-left">{a.label}</span>
                 {a.isDefault && <span className="text-[9px] text-cherry-primary flex-shrink-0">默认</span>}
                 {value === a.value && <Check size={11} className="text-cherry-primary flex-shrink-0" />}
-              </button>
+              </Button>
             ))}
           </div>
         </div>,
@@ -231,55 +237,39 @@ function AssistantPill({ value, onChange }: { value: string; onChange: (v: strin
 // ===========================
 function IconPicker({ value, onChange }: { value: string; onChange: (v: string) => void }) {
   const [show, setShow] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
   const CurrentIcon = getActionIcon(value);
 
-  useEffect(() => {
-    if (!show) return;
-    const h = (e: MouseEvent) => {
-      if (ref.current?.contains(e.target as Node)) return;
-      setShow(false);
-    };
-    setTimeout(() => document.addEventListener('mousedown', h), 0);
-    return () => document.removeEventListener('mousedown', h);
-  }, [show]);
-
   return (
-    <div className="relative" ref={ref}>
-      <button
-        onClick={() => setShow(!show)}
-        className="w-9 h-9 rounded-xl bg-foreground/[0.06] hover:bg-foreground/[0.1] flex items-center justify-center transition-colors flex-shrink-0"
-      >
-        <CurrentIcon size={16} className="text-foreground/50" />
-      </button>
-      <AnimatePresence>
-        {show && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.95 }}
-            transition={{ type: 'spring', damping: 25, stiffness: 400 }}
-            className="absolute top-full left-0 mt-1 bg-popover border border-border/60 rounded-xl shadow-2xl p-2 z-50 grid grid-cols-4 gap-1 w-[140px]"
-          >
-            {ICON_OPTIONS.map(opt => {
-              const Icon = getActionIcon(opt.value);
-              return (
-                <button
-                  key={opt.value}
-                  onClick={() => { onChange(opt.value); setShow(false); }}
-                  className={`w-7 h-7 rounded-lg flex items-center justify-center transition-colors ${
-                    value === opt.value ? 'bg-cherry-active-bg text-cherry-primary' : 'text-foreground/40 hover:bg-foreground/[0.06] hover:text-foreground/60'
-                  }`}
-                  title={opt.label}
-                >
-                  <Icon size={13} />
-                </button>
-              );
-            })}
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
+    <Popover open={show} onOpenChange={setShow}>
+      <PopoverTrigger asChild>
+        <Button
+          variant="outline"
+          size="icon-sm"
+          className="w-9 h-9 rounded-xl bg-foreground/[0.06] hover:bg-foreground/[0.1] border-0 flex-shrink-0"
+        >
+          <CurrentIcon size={16} className="text-foreground/50" />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent align="start" className="grid grid-cols-4 gap-1 w-[140px] p-2">
+        {ICON_OPTIONS.map(opt => {
+          const Icon = getActionIcon(opt.value);
+          return (
+            <Button
+              key={opt.value}
+              variant="ghost"
+              size="icon-xs"
+              onClick={() => { onChange(opt.value); setShow(false); }}
+              className={`w-7 h-7 rounded-lg ${
+                value === opt.value ? 'bg-cherry-active-bg text-cherry-primary' : 'text-foreground/40 hover:bg-foreground/[0.06] hover:text-foreground/60'
+              }`}
+              title={opt.label}
+            >
+              <Icon size={13} />
+            </Button>
+          );
+        })}
+      </PopoverContent>
+    </Popover>
   );
 }
 
@@ -333,23 +323,16 @@ function ActionsManagePanel({ open, onClose, actions, setActions, onAdd, onEdit 
             <div className="flex items-center justify-between px-5 py-3.5 border-b border-foreground/[0.06] flex-shrink-0">
               <div className="flex items-center gap-2">
                 <Layers size={14} className="text-foreground/50" />
-                <h3 className="text-[13px] text-foreground/90" style={{ fontWeight: 500 }}>功能管理</h3>
+                <h3 className="text-sm text-foreground/90 font-medium">功能管理</h3>
                 <span className="text-[9px] text-foreground/25 bg-foreground/[0.04] px-1.5 py-[1px] rounded-md">{actions.length}</span>
               </div>
               <div className="flex items-center gap-1">
-                <button
-                  onClick={onAdd}
-                  className="w-6 h-6 rounded-lg flex items-center justify-center text-cherry-primary hover:bg-cherry-active-bg transition-colors"
-                  title="添加功能"
-                >
+                <Button variant="ghost" size="icon-xs" onClick={onAdd} className="text-cherry-primary hover:bg-cherry-active-bg" title="添加功能">
                   <Plus size={14} />
-                </button>
-                <button
-                  onClick={onClose}
-                  className="w-6 h-6 rounded-lg flex items-center justify-center text-foreground/35 hover:text-foreground/70 hover:bg-foreground/[0.06] transition-colors"
-                >
+                </Button>
+                <Button variant="ghost" size="icon-xs" onClick={onClose} className="text-foreground/35 hover:text-foreground/70">
                   <X size={14} />
-                </button>
+                </Button>
               </div>
             </div>
 
@@ -366,42 +349,26 @@ function ActionsManagePanel({ open, onClose, actions, setActions, onAdd, onEdit 
                     }`}
                   >
                     <Icon size={14} className="text-foreground/40 flex-shrink-0" />
-                    <span className="text-[11px] text-foreground/70 flex-1 truncate">{action.label}</span>
+                    <span className="text-xs text-foreground/70 flex-1 truncate">{action.label}</span>
 
                     {/* Hover actions: edit + delete */}
                     <div className="flex items-center gap-0.5 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <button
-                        onClick={() => onEdit(action)}
-                        className="w-5 h-5 rounded-md flex items-center justify-center text-foreground/20 hover:text-foreground/50 hover:bg-foreground/[0.06] transition-colors"
-                        title="编辑"
-                      >
+                      <Button variant="ghost" size="icon-xs" onClick={() => onEdit(action)} className="w-5 h-5 text-foreground/20 hover:text-foreground/50" title="编辑">
                         <Pencil size={10} />
-                      </button>
+                      </Button>
                       {isConfirmDelete ? (
                         <div className="flex items-center gap-0.5">
-                          <button
-                            onClick={() => deleteAction(action.id)}
-                            className="w-5 h-5 rounded-md flex items-center justify-center text-red-400 hover:bg-red-500/10 transition-colors"
-                            title="确认删除"
-                          >
+                          <Button variant="ghost" size="icon-xs" onClick={() => deleteAction(action.id)} className="w-5 h-5 text-destructive hover:bg-destructive/10" title="确认删除">
                             <Check size={10} />
-                          </button>
-                          <button
-                            onClick={() => setConfirmDeleteId(null)}
-                            className="w-5 h-5 rounded-md flex items-center justify-center text-foreground/25 hover:text-foreground/50 hover:bg-foreground/[0.06] transition-colors"
-                            title="取消"
-                          >
+                          </Button>
+                          <Button variant="ghost" size="icon-xs" onClick={() => setConfirmDeleteId(null)} className="w-5 h-5 text-foreground/25 hover:text-foreground/50" title="取消">
                             <X size={9} />
-                          </button>
+                          </Button>
                         </div>
                       ) : (
-                        <button
-                          onClick={() => setConfirmDeleteId(action.id)}
-                          className="w-5 h-5 rounded-md flex items-center justify-center text-foreground/20 hover:text-red-400 hover:bg-red-500/[0.06] transition-colors"
-                          title="删除"
-                        >
+                        <Button variant="ghost" size="icon-xs" onClick={() => setConfirmDeleteId(action.id)} className="w-5 h-5 text-foreground/20 hover:text-destructive hover:bg-destructive/[0.06]" title="删除">
                           <Trash2 size={10} />
-                        </button>
+                        </Button>
                       )}
                     </div>
 
@@ -414,14 +381,11 @@ function ActionsManagePanel({ open, onClose, actions, setActions, onAdd, onEdit 
               {actions.length === 0 && (
                 <div className="py-8 text-center">
                   <Layers size={22} className="text-foreground/10 mx-auto mb-2" />
-                  <p className="text-[10px] text-foreground/25">暂无快捷功能</p>
-                  <button
-                    onClick={onAdd}
-                    className="mt-2 flex items-center gap-1 px-3 py-[4px] rounded-lg text-[10px] text-cherry-primary hover:bg-cherry-active-bg transition-colors mx-auto"
-                  >
+                  <p className="text-xs text-foreground/25">暂无快捷功能</p>
+                  <Button variant="ghost" size="xs" onClick={onAdd} className="mt-2 text-xs text-cherry-primary hover:bg-cherry-active-bg mx-auto">
                     <Plus size={11} />
                     <span>添加第一个功能</span>
-                  </button>
+                  </Button>
                 </div>
               )}
             </div>
@@ -498,29 +462,26 @@ function ActionFormPanel({ open, onClose, action, onSave }: {
             <div className="flex items-center justify-between px-5 py-3.5 border-b border-foreground/[0.06] flex-shrink-0">
               <div className="flex items-center gap-2">
                 {isAdd ? <Plus size={14} className="text-cherry-primary" /> : <Pencil size={14} className="text-foreground/50" />}
-                <h3 className="text-[13px] text-foreground/90" style={{ fontWeight: 500 }}>
+                <h3 className="text-sm text-foreground/90 font-medium">
                   {isAdd ? '添加功能' : '编辑功能'}
                 </h3>
               </div>
-              <button
-                onClick={onClose}
-                className="w-6 h-6 rounded-lg flex items-center justify-center text-foreground/35 hover:text-foreground/70 hover:bg-foreground/[0.06] transition-colors"
-              >
+              <Button variant="ghost" size="icon-xs" onClick={onClose} className="text-foreground/35 hover:text-foreground/70">
                 <X size={14} />
-              </button>
+              </Button>
             </div>
 
             {/* Form */}
             <div className="flex-1 overflow-y-auto px-5 py-4 space-y-4 [&::-webkit-scrollbar]:w-[3px] [&::-webkit-scrollbar-thumb]:bg-border/20">
               {/* Icon + Name */}
               <div>
-                <p className="text-[10px] text-foreground/40 mb-2" style={{ fontWeight: 500 }}>图标和名称</p>
+                <p className="text-xs text-foreground/40 mb-2 font-medium">图标和名称</p>
                 <div className="flex items-center gap-2.5">
                   <IconPicker value={icon} onChange={setIcon} />
-                  <input
+                  <Input
                     value={label}
                     onChange={e => setLabel(e.target.value)}
-                    className="flex-1 bg-foreground/[0.05] border border-foreground/[0.08] rounded-xl px-3 py-[8px] text-[11px] text-foreground/70 outline-none focus:border-cherry-primary/30 transition-colors"
+                    className="flex-1 bg-foreground/[0.05] border border-foreground/[0.08] rounded-xl px-3 py-[8px] text-xs text-foreground/70 focus:border-cherry-primary/30"
                     placeholder="功能名称，例如：代码审查"
                     autoFocus
                     onKeyDown={e => { if (e.key === 'Enter' && canSave) handleSave(); if (e.key === 'Escape') onClose(); }}
@@ -530,11 +491,11 @@ function ActionFormPanel({ open, onClose, action, onSave }: {
 
               {/* Prompt */}
               <div>
-                <p className="text-[10px] text-foreground/40 mb-2" style={{ fontWeight: 500 }}>提示词模板</p>
+                <p className="text-xs text-foreground/40 mb-2 font-medium">提示词模板</p>
                 <textarea
                   value={prompt}
                   onChange={e => setPrompt(e.target.value)}
-                  className="w-full bg-foreground/[0.05] border border-foreground/[0.08] rounded-xl px-3 py-[8px] text-[11px] text-foreground/50 outline-none focus:border-cherry-primary/30 resize-none transition-colors"
+                  className="w-full bg-foreground/[0.05] border border-foreground/[0.08] rounded-xl px-3 py-[8px] text-xs text-foreground/50 outline-none focus:border-cherry-primary/30 resize-none transition-colors"
                   placeholder="可选，例如：请审查以下代码并给出改进建议："
                   rows={3}
                 />
@@ -543,21 +504,19 @@ function ActionFormPanel({ open, onClose, action, onSave }: {
 
             {/* Footer */}
             <div className="flex items-center justify-end gap-2 px-5 py-3.5 border-t border-foreground/[0.06] flex-shrink-0">
-              <button
-                onClick={onClose}
-                className="px-4 py-[5px] rounded-lg text-[11px] text-foreground/40 hover:text-foreground/60 hover:bg-foreground/[0.05] transition-colors"
-              >
+              <Button variant="ghost" size="xs" onClick={onClose} className="text-foreground/40 hover:text-foreground/60">
                 取消
-              </button>
-              <button
+              </Button>
+              <Button
+                size="xs"
                 onClick={handleSave}
                 disabled={!canSave}
-                className={`px-4 py-[5px] rounded-lg text-[11px] text-white transition-colors ${
+                className={`text-white ${
                   canSave ? 'bg-cherry-primary hover:bg-cherry-primary-dark' : 'bg-foreground/15 cursor-not-allowed'
                 }`}
               >
                 {isAdd ? '添加' : '保存'}
-              </button>
+              </Button>
             </div>
           </motion.div>
         </div>
@@ -586,8 +545,8 @@ function GeneralPanel({ disabled }: { disabled: boolean }) {
   return (
     <div className={`space-y-3 ${disabled ? 'opacity-50 pointer-events-none' : ''}`}>
       <div className="mb-1">
-        <h3 className="text-[13px] text-foreground/90" style={{ fontWeight: 500 }}>常规设置</h3>
-        <p className="text-[10px] text-foreground/35 mt-1">管理快捷助手的唤起方式和基础行为。</p>
+        <h3 className="text-sm text-foreground/90 font-medium">常规设置</h3>
+        <p className="text-xs text-foreground/35 mt-1">管理快捷助手的唤起方式和基础行为。</p>
       </div>
 
       <SectionCard>
@@ -631,8 +590,8 @@ function ModelPanel({ disabled, actions, onOpenManagePanel }: {
   return (
     <div className={`space-y-3 ${disabled ? 'opacity-50 pointer-events-none' : ''}`}>
       <div className="mb-1">
-        <h3 className="text-[13px] text-foreground/90" style={{ fontWeight: 500 }}>功能配置</h3>
-        <p className="text-[10px] text-foreground/35 mt-1">配置快捷助手使用的助手角色，并管理弹窗中可用的快捷功能。</p>
+        <h3 className="text-sm text-foreground/90 font-medium">功能配置</h3>
+        <p className="text-xs text-foreground/35 mt-1">配置快捷助手使用的助手角色，并管理弹窗中可用的快捷功能。</p>
       </div>
 
       <SectionCard>
@@ -648,13 +607,10 @@ function ModelPanel({ disabled, actions, onOpenManagePanel }: {
       <SectionCard className="!px-4 !py-4">
         <div className="flex items-center justify-between mb-3">
           <SectionHeader title="界面预览 (Preview)" />
-          <button
-            onClick={onOpenManagePanel}
-            className="flex items-center gap-1 px-2 py-[3px] rounded-lg text-[10px] text-foreground/40 hover:text-foreground/60 hover:bg-foreground/[0.05] transition-colors"
-          >
+          <Button variant="ghost" size="xs" onClick={onOpenManagePanel} className="text-foreground/40 hover:text-foreground/60">
             <Layers size={10} />
             <span>功能管理</span>
-          </button>
+          </Button>
         </div>
 
         {/* Preview card */}
@@ -662,7 +618,7 @@ function ModelPanel({ disabled, actions, onOpenManagePanel }: {
           {/* Input bar */}
           <div className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl bg-foreground/[0.03]">
             <Sparkles size={14} className="text-cherry-primary/40 flex-shrink-0" />
-            <span className="text-[11px] text-foreground/25 flex-1 truncate">{inputPlaceholder}</span>
+            <span className="text-xs text-foreground/25 flex-1 truncate">{inputPlaceholder}</span>
           </div>
 
           {/* Action list — read-only */}
@@ -679,8 +635,7 @@ function ModelPanel({ disabled, actions, onOpenManagePanel }: {
                 >
                   <Icon size={13} className={`flex-shrink-0 ${isFirst ? 'text-foreground/50' : 'text-foreground/30'}`} />
                   <span
-                    className={`text-[11px] flex-1 truncate ${isFirst ? 'text-foreground/80' : 'text-foreground/50'}`}
-                    style={{ fontWeight: isFirst ? 500 : 400 }}
+                    className={`text-xs flex-1 truncate ${isFirst ? 'text-foreground/80 font-medium' : 'text-foreground/50 font-normal'}`}
                   >
                     {action.label}
                   </span>
@@ -692,7 +647,7 @@ function ModelPanel({ disabled, actions, onOpenManagePanel }: {
 
           {enabledActions.length === 0 && (
             <div className="px-3 py-4 text-center">
-              <p className="text-[10px] text-foreground/20">暂无启用的功能</p>
+              <p className="text-xs text-foreground/20">暂无启用的功能</p>
             </div>
           )}
 
@@ -721,8 +676,8 @@ function ContextPanel({ disabled }: { disabled: boolean }) {
   return (
     <div className={`space-y-3 ${disabled ? 'opacity-50 pointer-events-none' : ''}`}>
       <div className="mb-1">
-        <h3 className="text-[13px] text-foreground/90" style={{ fontWeight: 500 }}>上下文</h3>
-        <p className="text-[10px] text-foreground/35 mt-1">控制快捷助手如何获取和处理上下文信息。</p>
+        <h3 className="text-sm text-foreground/90 font-medium">上下文</h3>
+        <p className="text-xs text-foreground/35 mt-1">控制快捷助手如何获取和处理上下文信息。</p>
       </div>
 
       <SectionCard>
@@ -818,7 +773,7 @@ export function QuickAssistantPage() {
       {/* Left nav */}
       <div className="w-[160px] flex-shrink-0 flex flex-col border-r border-foreground/[0.05] min-h-0">
         <div className="px-3.5 pt-4 pb-2 flex items-center justify-between flex-shrink-0">
-          <p className="text-[11px] text-foreground/50" style={{ fontWeight: 500 }}>快捷助手</p>
+          <p className="text-xs text-foreground/50 font-medium">快捷助手</p>
           <Toggle checked={masterEnabled} onChange={setMasterEnabled} />
         </div>
 
@@ -827,14 +782,16 @@ export function QuickAssistantPage() {
             {NAV_ITEMS.map(item => {
               const isSelected = selectedId === item.id;
               return (
-                <button
+                <Button
                   key={item.id}
+                  variant="ghost"
+                  size="sm"
                   onClick={() => {
                     setSelectedId(item.id);
                     setShowManagePanel(false);
                     setShowFormPanel(false);
                   }}
-                  className={`w-full flex items-center justify-between px-3 py-[8px] rounded-xl transition-all text-left relative ${
+                  className={`w-full flex items-center justify-between px-3 py-[8px] h-auto rounded-xl transition-all text-left relative ${
                     isSelected
                       ? 'bg-cherry-active-bg'
                       : 'border border-transparent hover:bg-foreground/[0.03]'
@@ -845,12 +802,12 @@ export function QuickAssistantPage() {
                   )}
                   <div className="flex items-center gap-2 min-w-0 flex-1">
                     <span className={`flex-shrink-0 ${isSelected ? 'text-foreground/50' : 'text-foreground/35'}`}>{item.icon}</span>
-                    <span className={`text-[10px] truncate ${isSelected ? 'text-foreground/85' : 'text-foreground/55'}`} style={{ fontWeight: isSelected ? 500 : 400 }}>
+                    <span className={`text-xs truncate ${isSelected ? 'text-foreground/85 font-medium' : 'text-foreground/55 font-normal'}`}>
                       {item.label}
                     </span>
                   </div>
                   <ChevronRight size={9} className={`flex-shrink-0 ${isSelected ? 'text-foreground/25' : 'text-foreground/10'}`} />
-                </button>
+                </Button>
               );
             })}
           </div>

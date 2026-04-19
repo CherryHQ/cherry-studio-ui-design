@@ -7,6 +7,7 @@ import {
   Settings, Rocket,
   Brain, Pencil, Eye, Play, Trash2, FolderOpen,
 } from 'lucide-react';
+import { Button } from '@cherry-studio/ui';
 import { motion, AnimatePresence } from 'motion/react';
 import { shakeAnimation } from '@/app/config/animations';
 import type { AgentChatMessage } from '@/app/types/agent';
@@ -31,21 +32,23 @@ function CollapsibleRow({ icon, label, statusIndicator, children, defaultOpen = 
 
   return (
     <div>
-      <button
+      <Button
+        variant="ghost"
         onClick={() => hasChildren && setOpen(!open)}
-        className={`flex items-center gap-2 w-full text-left py-[5px] px-1 rounded-md text-[10.5px] transition-colors ${
-          hasChildren ? 'hover:bg-accent/20 cursor-pointer' : 'cursor-default'
+        className={`w-full justify-start gap-2 py-[5px] px-1 h-auto font-normal ${
+          hasChildren ? 'hover:bg-accent/20 cursor-pointer' : 'hover:bg-transparent cursor-default'
         }`}
       >
         {icon}
-        <span className="text-foreground/75 flex-1 truncate">{label}</span>
+        <span className="text-foreground/75 truncate">{label}</span>
+        <span className="flex-1" />
         {statusIndicator}
         {hasChildren && (
           <motion.div animate={{ rotate: open ? 90 : 0 }} transition={{ duration: 0.1 }}>
             <ChevronRight size={9} className="text-muted-foreground/50" />
           </motion.div>
         )}
-      </button>
+      </Button>
       {hasChildren && (
         <AnimatePresence initial={false}>
           {open && (
@@ -110,7 +113,7 @@ export function UserMessage({ msg }: { msg: ChatMessage }) {
       transition={{ duration: 0.15 }}
       className="flex justify-end"
     >
-      <div className="max-w-[85%] px-3.5 py-2.5 rounded-[14px] rounded-br-[4px] bg-foreground text-background text-[11px] leading-[1.65]">
+      <div className="max-w-[85%] px-3.5 py-2.5 rounded-[14px] rounded-br-[4px] bg-foreground text-background text-xs leading-[1.65]">
         {msg.content}
       </div>
     </motion.div>
@@ -128,12 +131,14 @@ export function AgentMessageGroup({ msgs, onResolve, onAvatarClick }: {
 }) {
   return (
     <div className="flex gap-2 max-w-[95%]">
-      <button
+      <Button
+        variant="ghost"
+        size="icon-xs"
         onClick={onAvatarClick}
-        className="w-5 h-5 rounded-[5px] bg-accent/40 flex items-center justify-center flex-shrink-0 mt-[1px] hover:bg-accent/70 transition-colors cursor-pointer active:scale-[0.92]"
+        className="w-5 h-5 rounded-[5px] bg-accent/40 flex-shrink-0 mt-[1px] hover:bg-accent/70 active:scale-[0.92]"
       >
         <Bot size={10} className="text-muted-foreground" />
-      </button>
+      </Button>
       <div className="flex-1 min-w-0 flex flex-col gap-0.5">
         {msgs.map((msg) => (
           <div key={msg.id}>
@@ -146,7 +151,7 @@ export function AgentMessageGroup({ msgs, onResolve, onAvatarClick }: {
                 }
                 label="思考中..."
               >
-                <p className="text-[10px] text-muted-foreground/70 leading-[1.7]">{msg.thinking}</p>
+                <p className="text-xs text-muted-foreground/70 leading-[1.7]">{msg.thinking}</p>
               </CollapsibleRow>
             )}
 
@@ -169,7 +174,7 @@ export function AgentMessageGroup({ msgs, onResolve, onAvatarClick }: {
                       <Check size={9} className="text-cherry-primary-dark" />
                     </div>
                   ) : msg.toolCall.status === 'error' ? (
-                    <X size={9} className="text-red-500 flex-shrink-0" />
+                    <X size={9} className="text-destructive flex-shrink-0" />
                   ) : undefined
                 }
               />
@@ -180,7 +185,7 @@ export function AgentMessageGroup({ msgs, onResolve, onAvatarClick }: {
                 initial={{ opacity: 0, y: 3 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.15 }}
-                className="text-[11px] text-foreground/90 leading-[1.7] py-1 px-1"
+                className="text-xs text-foreground/90 leading-[1.7] py-1 px-1"
               >
                 {msg.content}
               </motion.div>

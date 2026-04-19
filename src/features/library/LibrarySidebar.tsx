@@ -4,6 +4,7 @@ import { Layers, ChevronDown, ChevronRight, FolderPlus, Import, Rss, Pencil, Tra
 import { Tooltip } from '@/app/components/Tooltip';
 import type { FolderNode, LibrarySidebarFilter } from '@/app/types';
 import { RESOURCE_TYPES_LIST } from '@/app/config/constants';
+import { Button, Input } from '@cherry-studio/ui';
 
 interface Props {
   filter: LibrarySidebarFilter;
@@ -34,7 +35,7 @@ export function LibrarySidebar({
   };
 
   const itemCls = (f: LibrarySidebarFilter) =>
-    `flex items-center gap-2 w-full px-2.5 py-[6px] rounded-lg text-[11px] transition-all cursor-pointer ${
+    `flex items-center gap-2 w-full px-2.5 py-[6px] rounded-lg text-xs transition-all cursor-pointer ${
       isActive(f) ? 'bg-accent/70 text-foreground' : 'text-muted-foreground/70 hover:text-foreground hover:bg-accent/35'
     }`;
 
@@ -79,7 +80,7 @@ export function LibrarySidebar({
     <div className="w-[200px] flex-shrink-0 border-r border-border/15 flex flex-col min-h-0 bg-background/50">
       {/* Header */}
       <div className="px-4 pt-5 pb-3">
-        <h2 className="text-[13px] text-foreground tracking-tight">资源库</h2>
+        <h2 className="text-sm text-foreground tracking-tight">资源库</h2>
         <p className="text-[9px] text-muted-foreground/50 mt-0.5">管理你的 AI 资源</p>
       </div>
 
@@ -87,22 +88,22 @@ export function LibrarySidebar({
       <div className="flex-1 overflow-y-auto px-2.5 pb-2 [&::-webkit-scrollbar]:w-[3px] [&::-webkit-scrollbar-thumb]:bg-border/30 [&::-webkit-scrollbar-thumb]:rounded-full">
         {/* All */}
         <div className="mb-1">
-          <button onClick={() => onFilterChange({ type: 'all' })} className={itemCls({ type: 'all' })}>
+          <Button variant="ghost" onClick={() => onFilterChange({ type: 'all' })} className={itemCls({ type: 'all' })}>
             <Layers size={12} strokeWidth={1.6} />
             <span className="flex-1 text-left">所有资源</span>
-          </button>
+          </Button>
         </div>
 
         {/* Resource Types */}
         <div className="mb-3">
           {RESOURCE_TYPES_LIST.map(rt => (
-            <button key={rt.id} onClick={() => onFilterChange({ type: 'resource', resourceType: rt.id })} className={itemCls({ type: 'resource', resourceType: rt.id })}>
+            <Button variant="ghost" key={rt.id} onClick={() => onFilterChange({ type: 'resource', resourceType: rt.id })} className={itemCls({ type: 'resource', resourceType: rt.id })}>
               <rt.icon size={12} strokeWidth={1.6} />
               <span className="flex-1 text-left">{rt.label}</span>
               {typeCounts?.[rt.id] != null && (
                 <span className="text-[9px] text-muted-foreground/35 tabular-nums">{typeCounts[rt.id]}</span>
               )}
-            </button>
+            </Button>
           ))}
         </div>
 
@@ -111,13 +112,13 @@ export function LibrarySidebar({
         {/* Folders */}
         <div className="mb-3">
           <div className="flex items-center gap-1 w-full px-2 py-1 group">
-            <button onClick={() => setFoldersOpen(!foldersOpen)} className="flex items-center gap-1 text-[9px] text-muted-foreground/50 hover:text-muted-foreground/70 transition-colors flex-1">
+            <Button variant="ghost" onClick={() => setFoldersOpen(!foldersOpen)} className="flex items-center gap-1 text-[9px] text-muted-foreground/50 hover:text-muted-foreground/70 transition-colors flex-1 h-auto p-0">
               {foldersOpen ? <ChevronDown size={9} /> : <ChevronRight size={9} />}
               <span className="uppercase tracking-wider">文件夹</span>
-            </button>
-            <Tooltip content="创建文件夹" side="right"><button onClick={() => onCreateFolder()} className="text-muted-foreground/35 hover:text-foreground transition-colors opacity-0 group-hover:opacity-100">
+            </Button>
+            <Tooltip content="创建文件夹" side="right"><Button variant="ghost" size="icon" onClick={() => onCreateFolder()} className="text-muted-foreground/35 hover:text-foreground transition-colors opacity-0 group-hover:opacity-100 h-auto w-auto p-0">
               <FolderPlus size={10} />
-            </button></Tooltip>
+            </Button></Tooltip>
           </div>
           <AnimatePresence>
             {foldersOpen && (
@@ -143,12 +144,12 @@ export function LibrarySidebar({
 
       {/* Bottom */}
       <div className="flex-shrink-0 border-t border-border/10 p-2.5 space-y-0.5">
-        <button onClick={onImport} className="flex items-center gap-2 w-full px-2.5 py-[6px] rounded-lg text-[11px] text-muted-foreground/45 hover:text-foreground hover:bg-accent/35 transition-all">
+        <Button variant="ghost" onClick={onImport} className="flex items-center gap-2 w-full px-2.5 py-[6px] rounded-lg text-xs text-muted-foreground/45 hover:text-foreground hover:bg-accent/35 transition-all h-auto justify-start">
           <Import size={12} strokeWidth={1.6} /><span>导入配置</span>
-        </button>
-        <button className="flex items-center gap-2 w-full px-2.5 py-[6px] rounded-lg text-[11px] text-muted-foreground/45 hover:text-foreground hover:bg-accent/35 transition-all">
+        </Button>
+        <Button variant="ghost" className="flex items-center gap-2 w-full px-2.5 py-[6px] rounded-lg text-xs text-muted-foreground/45 hover:text-foreground hover:bg-accent/35 transition-all h-auto justify-start">
           <Rss size={12} strokeWidth={1.6} /><span>订阅资源库</span>
-        </button>
+        </Button>
       </div>
 
       {/* Folder ctx menu */}
@@ -162,19 +163,19 @@ export function LibrarySidebar({
               className="fixed z-[601] bg-popover border border-border/30 rounded-xl shadow-xl p-1 min-w-[130px]"
               style={{ left: folderCtx.x, top: folderCtx.y }}
             >
-              <button onClick={() => handleStartRename(folderCtx.id)}
-                className="flex items-center gap-2 w-full px-2.5 py-[5px] rounded-md text-[10px] text-muted-foreground/60 hover:text-foreground hover:bg-accent/50 transition-colors">
+              <Button variant="ghost" onClick={() => handleStartRename(folderCtx.id)}
+                className="flex items-center gap-2 w-full px-2.5 py-[5px] rounded-md text-xs text-muted-foreground/60 hover:text-foreground hover:bg-accent/50 transition-colors h-auto justify-start">
                 <Pencil size={10} /> 重命名
-              </button>
-              <button onClick={() => { onCreateFolder(folderCtx.id); setFolderCtx(null); }}
-                className="flex items-center gap-2 w-full px-2.5 py-[5px] rounded-md text-[10px] text-muted-foreground/60 hover:text-foreground hover:bg-accent/50 transition-colors">
+              </Button>
+              <Button variant="ghost" onClick={() => { onCreateFolder(folderCtx.id); setFolderCtx(null); }}
+                className="flex items-center gap-2 w-full px-2.5 py-[5px] rounded-md text-xs text-muted-foreground/60 hover:text-foreground hover:bg-accent/50 transition-colors h-auto justify-start">
                 <FolderPlus size={10} /> 新建子文件夹
-              </button>
+              </Button>
               <div className="h-px bg-border/15 my-0.5 mx-1" />
-              <button onClick={handleDeleteFolder}
-                className="flex items-center gap-2 w-full px-2.5 py-[5px] rounded-md text-[10px] text-red-500/70 hover:text-red-500 hover:bg-red-500/10 transition-colors">
+              <Button variant="ghost" onClick={handleDeleteFolder}
+                className="flex items-center gap-2 w-full px-2.5 py-[5px] rounded-md text-xs text-destructive/70 hover:text-destructive hover:bg-destructive/10 transition-colors h-auto justify-start">
                 <Trash2 size={10} /> 删除
-              </button>
+              </Button>
             </motion.div>
           </div>
         )}
@@ -203,22 +204,22 @@ function FolderItem({ node, depth, filter, onFilterChange, itemCls, onContextMen
     <div style={{ paddingLeft: depth * 10 }}>
       <div className="flex items-center group" onContextMenu={e => onContextMenu(e, node.id)}>
         {hasChildren ? (
-          <button onClick={() => setOpen(!open)} className="w-4 h-4 flex items-center justify-center text-muted-foreground/25 hover:text-muted-foreground/50 flex-shrink-0">
+          <Button variant="ghost" size="icon" onClick={() => setOpen(!open)} className="w-4 h-4 flex items-center justify-center text-muted-foreground/25 hover:text-muted-foreground/50 flex-shrink-0 p-0">
             {open ? <ChevronDown size={9} /> : <ChevronRight size={9} />}
-          </button>
+          </Button>
         ) : <div className="w-4" />}
-        <button onClick={() => onFilterChange(f)} className={`${itemCls(f)} flex-1 min-w-0`}>
+        <Button variant="ghost" onClick={() => onFilterChange(f)} className={`${itemCls(f)} flex-1 min-w-0 h-auto justify-start`}>
           <FolderOpen size={11} strokeWidth={1.6} />
           {renaming === node.id ? (
-            <input autoFocus value={renameValue} onChange={e => onRenameChange(e.target.value)}
+            <Input autoFocus value={renameValue} onChange={e => onRenameChange(e.target.value)}
               onBlur={onRenameSubmit} onKeyDown={e => { if (e.key === 'Enter') onRenameSubmit(); if (e.key === 'Escape') { onRenameChange(''); onRenameSubmit(); } }}
               onClick={e => e.stopPropagation()}
-              className="flex-1 bg-transparent outline-none text-[11px] min-w-0" />
+              className="flex-1 bg-transparent outline-none text-xs min-w-0 h-auto border-none p-0 focus-visible:ring-0" />
           ) : (
             <span className="flex-1 text-left truncate">{node.name}</span>
           )}
           <MoreHorizontal size={9} className="opacity-0 group-hover:opacity-50 flex-shrink-0 cursor-pointer" onClick={e => onContextMenu(e, node.id)} />
-        </button>
+        </Button>
       </div>
       <AnimatePresence>
         {open && hasChildren && (

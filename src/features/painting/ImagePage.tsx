@@ -273,23 +273,25 @@ function TopToolbar({ view, onViewChange }: {
     <div className="flex items-center justify-between px-3 h-[40px] bg-background shrink-0">
       <div className="flex items-center gap-0.5 bg-muted/40 rounded-lg p-0.5">
         {(['create', 'gallery'] as const).map(tab => (
-          <button
+          <Button
             key={tab}
+            variant="ghost"
+            size="xs"
             onClick={() => onViewChange(tab)}
-            className={`px-3 py-[4px] rounded-md text-[10.5px] transition-all duration-150 ${
+            className={`h-auto px-3 py-[4px] text-xs transition-all duration-150 ${
               view === tab
                 ? 'bg-background text-foreground shadow-sm'
                 : 'text-muted-foreground/60 hover:text-foreground/80'
             }`}
           >
             {tab === 'create' ? '\u521b\u4f5c' : '\u753b\u5eca'}
-          </button>
+          </Button>
         ))}
       </div>
       <div className="flex items-center gap-1">
-        <button className="flex items-center gap-1.5 px-3 py-[5px] rounded-lg border border-border/50 text-[10px] text-foreground/70 hover:bg-muted/40 transition-colors">
+        <Button variant="outline" size="xs" className="h-auto gap-1.5 px-3 py-[5px] border-border/50 text-xs text-foreground/70 hover:bg-muted/40">
           {'\u5bfc\u51fa'}
-        </button>
+        </Button>
       </div>
     </div>
   );
@@ -308,12 +310,14 @@ function HistoryStrip({ images, selectedId, onSelect }: {
 
   return (
     <div className="w-[54px] shrink-0 flex flex-col items-center py-2 gap-1 bg-background overflow-y-auto [&::-webkit-scrollbar]:w-0">
-      <button className="w-8 h-8 rounded-full bg-muted/30 flex items-center justify-center text-muted-foreground/40 hover:bg-muted/50 hover:text-foreground/60 transition-colors mb-1">
+      <Button variant="ghost" size="icon-sm" className="w-8 h-8 rounded-full bg-muted/30 text-muted-foreground/40 hover:bg-muted/50 hover:text-foreground/60 mb-1">
         <Clock size={12} />
-      </button>
+      </Button>
       {images.map(img => (
         <div key={img.id} className="relative">
-          <button
+          <Button
+            variant="ghost"
+            size="icon-sm"
             onClick={() => onSelect(img)}
             onMouseEnter={() => setHoveredId(img.id)}
             onMouseLeave={() => setHoveredId(null)}
@@ -334,7 +338,7 @@ function HistoryStrip({ images, selectedId, onSelect }: {
             ) : (
               <img src={img.url} alt="" className="w-full h-full object-cover" />
             )}
-          </button>
+          </Button>
 
           <AnimatePresence>
             {hoveredId === img.id && img.status === 'completed' && (
@@ -393,25 +397,27 @@ function ControlPanel({ params, onChange, onClose }: {
       className="absolute right-3 top-3 bottom-3 z-20 w-[230px] bg-background/95 backdrop-blur-xl rounded-2xl shadow-2xl shadow-black/12 border border-border/40 flex flex-col overflow-hidden"
     >
       <div className="flex items-center justify-between px-4 pt-3 pb-2">
-        <span className="text-[10px] text-foreground/85 tracking-wider">{'\u53c2\u6570\u8bbe\u7f6e'}</span>
-        <button onClick={onClose} className="p-0.5 rounded text-muted-foreground/70 hover:text-foreground/90 transition-colors">
+        <span className="text-xs text-foreground/85 tracking-wider">{'\u53c2\u6570\u8bbe\u7f6e'}</span>
+        <Button variant="ghost" size="icon-xs" onClick={onClose} className="p-0.5 text-muted-foreground/70 hover:text-foreground/90">
           <X size={11} />
-        </button>
+        </Button>
       </div>
 
       <div className="flex-1 overflow-y-auto px-4 pb-4 space-y-4 [&::-webkit-scrollbar]:w-[2px] [&::-webkit-scrollbar-thumb]:bg-border/30">
         <PanelSection label="Model">
           <div className="relative">
-            <button
+            <Button
+              variant="ghost"
+              size="xs"
               onClick={() => setModelOpen(!modelOpen)}
-              className="w-full flex items-center justify-between gap-2 px-2.5 py-[6px] rounded-lg bg-muted/35 hover:bg-muted/50 transition-colors text-[10px]"
+              className="h-auto w-full flex items-center justify-between gap-2 px-2.5 py-[6px] rounded-lg bg-muted/35 hover:bg-muted/50 text-xs"
             >
               <div className="flex items-center gap-1.5 truncate">
                 <Sparkles size={9} className="text-cherry-primary shrink-0" />
                 <span className="truncate text-foreground/80">{selectedModel?.name}</span>
               </div>
               <ChevronDown size={9} className={`text-muted-foreground/40 transition-transform ${modelOpen ? 'rotate-180' : ''}`} />
-            </button>
+            </Button>
             <AnimatePresence>
               {modelOpen && (
                 <motion.div
@@ -422,10 +428,12 @@ function ControlPanel({ params, onChange, onClose }: {
                   className="absolute top-full left-0 right-0 mt-1 z-30 rounded-xl bg-popover border border-border/40 shadow-xl overflow-hidden"
                 >
                   {IMAGE_MODELS.map(m => (
-                    <button
+                    <Button
                       key={m.id}
+                      variant="ghost"
+                      size="xs"
                       onClick={() => { onChange({ ...params, model: m.id }); setModelOpen(false); }}
-                      className={`w-full flex items-center gap-2 px-3 py-[6px] text-[10px] transition-colors ${
+                      className={`h-auto w-full flex items-center gap-2 px-3 py-[6px] text-xs transition-colors ${
                         params.model === m.id
                           ? 'bg-cherry-active-bg text-cherry-primary-dark'
                           : 'text-foreground/60 hover:bg-muted/40'
@@ -436,7 +444,7 @@ function ControlPanel({ params, onChange, onClose }: {
                         <div>{m.name}</div>
                         <div className="text-[8.5px] text-muted-foreground/40">{m.provider}</div>
                       </div>
-                    </button>
+                    </Button>
                   ))}
                 </motion.div>
               )}
@@ -447,17 +455,19 @@ function ControlPanel({ params, onChange, onClose }: {
         <PanelSection label="Mode">
           <div className="flex items-center gap-0.5 p-0.5 rounded-lg bg-muted/30">
             {(['standard', 'quality', 'speed'] as const).map(mode => (
-              <button
+              <Button
                 key={mode}
+                variant="ghost"
+                size="xs"
                 onClick={() => onChange({ ...params, mode })}
-                className={`flex-1 py-[4px] rounded-md text-[9.5px] transition-all duration-150 ${
+                className={`h-auto flex-1 py-[4px] rounded-md text-[9.5px] transition-all duration-150 ${
                   params.mode === mode
                     ? 'bg-background text-foreground shadow-sm'
                     : 'text-muted-foreground/50 hover:text-foreground/70'
                 }`}
               >
                 {mode === 'standard' ? 'Standard' : mode === 'quality' ? 'Quality' : 'Speed'}
-              </button>
+              </Button>
             ))}
           </div>
         </PanelSection>
@@ -465,10 +475,12 @@ function ControlPanel({ params, onChange, onClose }: {
         <PanelSection label="Dimensions">
           <div className="grid grid-cols-4 gap-1.5">
             {(Object.keys(ratioIcons) as AspectRatio[]).map(ratio => (
-              <button
+              <Button
                 key={ratio}
+                variant="ghost"
+                size="xs"
                 onClick={() => onChange({ ...params, ratio })}
-                className={`flex flex-col items-center gap-1 py-1.5 rounded-lg transition-all duration-150 ${
+                className={`h-auto flex flex-col items-center gap-1 py-1.5 rounded-lg transition-all duration-150 ${
                   params.ratio === ratio
                     ? 'bg-cherry-active-bg text-cherry-primary-dark ring-1 ring-cherry-ring'
                     : 'bg-muted/25 text-muted-foreground/60 hover:bg-muted/40 hover:text-foreground/75'
@@ -476,7 +488,7 @@ function ControlPanel({ params, onChange, onClose }: {
               >
                 {ratioIcons[ratio]}
                 <span className="text-[8px]">{ratio}</span>
-              </button>
+              </Button>
             ))}
           </div>
           <div className="text-[8.5px] text-muted-foreground/55 mt-1.5 text-center">
@@ -487,17 +499,19 @@ function ControlPanel({ params, onChange, onClose }: {
         <PanelSection label="Size">
           <div className="flex items-center gap-0.5 p-0.5 rounded-lg bg-muted/30">
             {(['small', 'medium', 'large'] as const).map(size => (
-              <button
+              <Button
                 key={size}
+                variant="ghost"
+                size="xs"
                 onClick={() => onChange({ ...params, size })}
-                className={`flex-1 py-[4px] rounded-md text-[9.5px] transition-all duration-150 ${
+                className={`h-auto flex-1 py-[4px] rounded-md text-[9.5px] transition-all duration-150 ${
                   params.size === size
                     ? 'bg-background text-foreground shadow-sm'
                     : 'text-muted-foreground/50 hover:text-foreground/70'
                 }`}
               >
                 {SIZE_LABELS[size]}
-              </button>
+              </Button>
             ))}
           </div>
         </PanelSection>
@@ -505,17 +519,19 @@ function ControlPanel({ params, onChange, onClose }: {
         <PanelSection label="Count">
           <div className="flex items-center gap-1.5">
             {[1, 2, 3, 4].map(n => (
-              <button
+              <Button
                 key={n}
+                variant="ghost"
+                size="xs"
                 onClick={() => onChange({ ...params, count: n })}
-                className={`flex-1 py-[5px] rounded-lg text-[10px] transition-all duration-150 ${
+                className={`h-auto flex-1 py-[5px] rounded-lg text-xs transition-all duration-150 ${
                   params.count === n
                     ? 'bg-cherry-active-bg text-cherry-primary-dark ring-1 ring-cherry-ring'
                     : 'bg-muted/25 text-muted-foreground/45 hover:bg-muted/40 hover:text-foreground/60'
                 }`}
               >
                 {n}
-              </button>
+              </Button>
             ))}
           </div>
         </PanelSection>
@@ -557,20 +573,24 @@ function CanvasArea({ image, images, currentIndex, onNavigate, onClickImage, onS
       {image ? (
         <div className="relative flex items-center justify-center flex-1 w-full px-16">
           {currentIndex > 0 && (
-            <button
+            <Button
+              variant="outline"
+              size="icon-sm"
               onClick={() => onNavigate(-1)}
-              className="absolute left-4 z-10 p-1.5 rounded-full bg-background/80 border border-border/40 shadow-lg text-muted-foreground/50 hover:text-foreground/80 hover:bg-background transition-colors"
+              className="absolute left-4 z-10 p-1.5 rounded-full bg-background/80 border-border/40 shadow-lg text-muted-foreground/50 hover:text-foreground/80 hover:bg-background"
             >
               <ChevronLeft size={16} />
-            </button>
+            </Button>
           )}
           {currentIndex < images.length - 1 && (
-            <button
+            <Button
+              variant="outline"
+              size="icon-sm"
               onClick={() => onNavigate(1)}
-              className="absolute right-14 z-10 p-1.5 rounded-full bg-background/80 border border-border/40 shadow-lg text-muted-foreground/50 hover:text-foreground/80 hover:bg-background transition-colors"
+              className="absolute right-14 z-10 p-1.5 rounded-full bg-background/80 border-border/40 shadow-lg text-muted-foreground/50 hover:text-foreground/80 hover:bg-background"
             >
               <ChevronRight size={16} />
-            </button>
+            </Button>
           )}
 
           <motion.div
@@ -586,14 +606,14 @@ function CanvasArea({ image, images, currentIndex, onNavigate, onClickImage, onS
                 <div className="w-12 h-12 rounded-2xl bg-rose-500/10 flex items-center justify-center">
                   <AlertTriangle size={20} className="text-rose-400" />
                 </div>
-                <div className="text-[11px] text-foreground/60">{'\u751f\u6210\u5931\u8d25'}</div>
+                <div className="text-xs text-foreground/60">{'\u751f\u6210\u5931\u8d25'}</div>
                 <div className="text-[9px] text-rose-400/70 text-center max-w-[260px] leading-relaxed">
                   {image.errorMessage || 'An unknown error occurred'}
                 </div>
-                <button className="mt-1 flex items-center gap-1.5 px-3 py-[5px] rounded-lg bg-rose-500/10 text-rose-500 text-[10px] hover:bg-rose-500/20 transition-colors">
+                <Button variant="ghost" size="xs" className="h-auto mt-1 gap-1.5 px-3 py-[5px] rounded-lg bg-rose-500/10 text-rose-500 text-xs hover:bg-rose-500/20">
                   <RefreshCw size={9} />
                   Retry
-                </button>
+                </Button>
               </div>
             ) : image.status === 'generating' ? (
               <div className="rounded-2xl bg-muted/15 border border-cherry-ring shadow-2xl shadow-black/10 flex flex-col items-center justify-center gap-3 px-16 py-16">
@@ -609,7 +629,7 @@ function CanvasArea({ image, images, currentIndex, onNavigate, onClickImage, onS
                     transition={{ duration: 1.5, repeat: Infinity, ease: 'linear' }}
                   />
                 </div>
-                <div className="text-[11px] text-muted-foreground/70">{'\u751f\u6210\u4e2d...'}</div>
+                <div className="text-xs text-muted-foreground/70">{'\u751f\u6210\u4e2d...'}</div>
                 <div className="w-32 h-[3px] rounded-full bg-muted/40 overflow-hidden">
                   <motion.div
                     className="h-full bg-cherry-primary rounded-full transition-all duration-300"
@@ -635,26 +655,30 @@ function CanvasArea({ image, images, currentIndex, onNavigate, onClickImage, onS
       ) : (
         <div className="flex flex-col items-center gap-3 text-muted-foreground/30">
           <ImageIcon size={36} strokeWidth={1} />
-          <span className="text-[11px]">{'\u8f93\u5165\u63d0\u793a\u8bcd\u5f00\u59cb\u521b\u4f5c'}</span>
+          <span className="text-xs">{'\u8f93\u5165\u63d0\u793a\u8bcd\u5f00\u59cb\u521b\u4f5c'}</span>
         </div>
       )}
 
       {image && (
         <div className="flex items-center gap-1.5 py-3">
-          <button
+          <Button
+            variant="ghost"
+            size="icon-xs"
             onClick={() => onNavigate(-1)}
             disabled={currentIndex === 0}
-            className="p-1 text-muted-foreground/35 hover:text-foreground/60 disabled:opacity-20 transition-colors"
+            className="p-1 text-muted-foreground/35 hover:text-foreground/60 disabled:opacity-20"
           >
             <ChevronLeft size={14} />
-          </button>
+          </Button>
           {images.slice(Math.max(0, currentIndex - 2), Math.min(images.length, currentIndex + 3)).map((img, i) => {
             const realIdx = Math.max(0, currentIndex - 2) + i;
             return (
-              <button
+              <Button
                 key={img.id}
+                variant="ghost"
+                size="icon-xs"
                 onClick={() => onSelectImage(images[realIdx])}
-                className={`w-[5px] h-[5px] rounded-full transition-all duration-200 ${
+                className={`w-[5px] h-[5px] p-0 rounded-full transition-all duration-200 ${
                   realIdx === currentIndex
                     ? 'bg-foreground/60 scale-125'
                     : 'bg-muted-foreground/25 hover:bg-muted-foreground/40'
@@ -662,13 +686,15 @@ function CanvasArea({ image, images, currentIndex, onNavigate, onClickImage, onS
               />
             );
           })}
-          <button
+          <Button
+            variant="ghost"
+            size="icon-xs"
             onClick={() => onNavigate(1)}
             disabled={currentIndex === images.length - 1}
-            className="p-1 text-muted-foreground/35 hover:text-foreground/60 disabled:opacity-20 transition-colors"
+            className="p-1 text-muted-foreground/35 hover:text-foreground/60 disabled:opacity-20"
           >
             <ChevronRight size={14} />
-          </button>
+          </Button>
         </div>
       )}
     </div>
@@ -697,28 +723,30 @@ function PromptBar({ params, onChange, onGenerate, isGenerating }: {
           placeholder={'\u63cf\u8ff0\u4f60\u60f3\u521b\u5efa\u7684 3D \u7269\u4f53\u6216\u573a\u666f...'}
           rows={1}
           onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); onGenerate(); } }}
-          className="w-full bg-transparent px-4 pt-3 pb-1.5 text-[11px] text-foreground/80 placeholder:text-muted-foreground/40 resize-none outline-none"
+          className="w-full bg-transparent px-4 pt-3 pb-1.5 text-xs text-foreground/80 placeholder:text-muted-foreground/40 resize-none outline-none"
         />
         <div className="flex items-center justify-between px-3 pb-2.5">
           <div className="flex items-center gap-1">
-            <button className="p-1.5 rounded-md text-muted-foreground/40 hover:text-foreground/70 hover:bg-muted/40 transition-colors">
+            <Button variant="ghost" size="icon-xs" className="p-1.5 text-muted-foreground/40 hover:text-foreground/70 hover:bg-muted/40">
               <Plus size={13} />
-            </button>
-            <button className="flex items-center gap-1 px-2 py-1 rounded-md text-[9.5px] text-cherry-text-muted hover:text-cherry-primary-dark hover:bg-cherry-active-bg transition-colors">
+            </Button>
+            <Button variant="ghost" size="xs" className="h-auto gap-1 px-2 py-1 text-[9.5px] text-cherry-text-muted hover:text-cherry-primary-dark hover:bg-cherry-active-bg">
               <Sparkles size={10} />
               <span>{'\u7075\u611f'}</span>
               <ChevronDown size={8} />
-            </button>
+            </Button>
           </div>
           <div className="flex items-center gap-2">
             <div className="relative">
-              <button
+              <Button
+                variant="ghost"
+                size="xs"
                 onClick={() => setModelDropdownOpen(!modelDropdownOpen)}
-                className="flex items-center gap-1 px-2 py-1 rounded-md text-[10px] text-foreground/60 hover:bg-muted/40 transition-colors"
+                className="h-auto gap-1 px-2 py-1 text-xs text-foreground/60 hover:bg-muted/40"
               >
                 <span>{selectedModel?.name || 'Select Model'}</span>
                 <ChevronDown size={8} className={`text-muted-foreground/40 transition-transform ${modelDropdownOpen ? 'rotate-180' : ''}`} />
-              </button>
+              </Button>
               <AnimatePresence>
                 {modelDropdownOpen && (
                   <motion.div
@@ -728,10 +756,12 @@ function PromptBar({ params, onChange, onGenerate, isGenerating }: {
                     className="absolute bottom-full right-0 mb-2 w-48 bg-popover rounded-xl border border-border/40 shadow-xl z-50 overflow-hidden"
                   >
                     {IMAGE_MODELS.map(m => (
-                      <button
+                      <Button
                         key={m.id}
+                        variant="ghost"
+                        size="xs"
                         onClick={() => { onChange({ ...params, model: m.id }); setModelDropdownOpen(false); }}
-                        className={`w-full flex items-center gap-2 px-3 py-[6px] text-[10px] transition-colors ${
+                        className={`h-auto w-full flex items-center gap-2 px-3 py-[6px] text-xs transition-colors ${
                           params.model === m.id
                             ? 'bg-cherry-active-bg text-cherry-primary-dark'
                             : 'text-foreground/60 hover:bg-muted/40'
@@ -739,16 +769,18 @@ function PromptBar({ params, onChange, onGenerate, isGenerating }: {
                       >
                         <Sparkles size={8} className={params.model === m.id ? 'text-cherry-primary' : 'text-muted-foreground/30'} />
                         <span>{m.name}</span>
-                      </button>
+                      </Button>
                     ))}
                   </motion.div>
                 )}
               </AnimatePresence>
             </div>
-            <button
+            <Button
+              variant="default"
+              size="icon-sm"
               onClick={onGenerate}
               disabled={!params.prompt.trim() || isGenerating}
-              className="relative p-1.5 rounded-lg bg-foreground text-background hover:bg-foreground/85 disabled:opacity-25 transition-colors"
+              className="relative p-1.5 rounded-lg bg-foreground text-background hover:bg-foreground/85 disabled:opacity-25"
             >
               {isGenerating ? <Loader2 size={13} className="animate-spin" /> : <ArrowUpRight size={13} />}
               {params.count > 1 && !isGenerating && (
@@ -756,7 +788,7 @@ function PromptBar({ params, onChange, onGenerate, isGenerating }: {
                   {params.count}
                 </span>
               )}
-            </button>
+            </Button>
           </div>
         </div>
       </div>
@@ -799,46 +831,54 @@ function GalleryGrid({ images, onSelect, onToggleFavorite }: {
     <div className="h-full flex flex-col flex-1">
       <div className="flex items-center justify-between px-5 py-2 border-b border-border/40">
         <div className="flex items-center gap-1">
-          <button
+          <Button
+            variant="ghost"
+            size="xs"
             onClick={() => setFilter('all')}
-            className={`flex items-center gap-1 px-2 py-[4px] rounded-md text-[10px] transition-colors ${
+            className={`h-auto gap-1 px-2 py-[4px] text-xs transition-colors ${
               filter === 'all' ? 'bg-muted/50 text-foreground' : 'text-muted-foreground/50 hover:text-foreground/70'
             }`}
           >
             <LayoutGrid size={9} /> All
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="ghost"
+            size="xs"
             onClick={() => setFilter('favorites')}
-            className={`flex items-center gap-1 px-2 py-[4px] rounded-md text-[10px] transition-colors ${
+            className={`h-auto gap-1 px-2 py-[4px] text-xs transition-colors ${
               filter === 'favorites' ? 'bg-muted/50 text-foreground' : 'text-muted-foreground/50 hover:text-foreground/70'
             }`}
           >
             <Star size={9} /> Favorites
-          </button>
+          </Button>
           <div className="w-px h-3.5 bg-border/30 mx-1" />
           {(['all', '1:1', '16:9', '9:16', '4:3'] as const).map(r => (
-            <button
+            <Button
               key={r}
+              variant="ghost"
+              size="xs"
               onClick={() => setRatioFilter(r)}
-              className={`px-1.5 py-[3px] rounded-md text-[9px] transition-colors ${
+              className={`h-auto px-1.5 py-[3px] text-[9px] transition-colors ${
                 ratioFilter === r
                   ? 'bg-cherry-active-bg text-cherry-primary-dark'
                   : 'text-muted-foreground/40 hover:text-foreground/60'
               }`}
             >
               {r === 'all' ? 'All' : r}
-            </button>
+            </Button>
           ))}
         </div>
         <div className="flex items-center gap-2">
           <span className="text-[9px] text-muted-foreground/40">{filtered.length} images</span>
-          <button
+          <Button
+            variant="ghost"
+            size="xs"
             onClick={() => setSort(s => s === 'newest' ? 'oldest' : 'newest')}
-            className="flex items-center gap-1 px-2 py-[3px] rounded-md text-[9px] text-muted-foreground/45 hover:text-foreground/60 hover:bg-muted/40 transition-colors"
+            className="h-auto gap-1 px-2 py-[3px] text-[9px] text-muted-foreground/45 hover:text-foreground/60 hover:bg-muted/40"
           >
             <SlidersHorizontal size={9} />
             {sort === 'newest' ? 'Newest' : 'Oldest'}
-          </button>
+          </Button>
         </div>
       </div>
       <div className="flex-1 overflow-y-auto p-4 [&::-webkit-scrollbar]:w-[3px] [&::-webkit-scrollbar-thumb]:bg-border/30">
@@ -874,12 +914,14 @@ function GalleryGrid({ images, onSelect, onToggleFavorite }: {
               </div>
               <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
                 <div className="absolute top-1.5 right-1.5">
-                  <button
+                  <Button
+                    variant="ghost"
+                    size="icon-xs"
                     onClick={e => { e.stopPropagation(); onToggleFavorite(img.id); }}
-                    className="p-1 rounded-md bg-black/40 backdrop-blur-sm"
+                    className="p-1 bg-black/40 backdrop-blur-sm"
                   >
                     <Heart size={9} className={img.favorite ? 'text-rose-400 fill-rose-400' : 'text-white/60'} />
-                  </button>
+                  </Button>
                 </div>
                 <div className="absolute bottom-0 left-0 right-0 px-2 py-1.5">
                   <div className="text-[8px] text-white/80 line-clamp-1">{img.prompt}</div>
@@ -924,63 +966,73 @@ function PreviewPage({ images, selected, onSelect, onBack, onNavigate, onToggleF
   return (
     <div className="flex flex-col h-full bg-background overflow-hidden">
       <div className="flex items-center justify-between px-3 h-[40px] border-b border-border/40 shrink-0">
-        <button
+        <Button
+          variant="ghost"
+          size="icon-sm"
           onClick={onBack}
-          className="p-1.5 rounded-md text-muted-foreground/50 hover:text-foreground/80 hover:bg-muted/40 transition-colors"
+          className="p-1.5 text-muted-foreground/50 hover:text-foreground/80 hover:bg-muted/40"
         >
           <X size={14} />
-        </button>
+        </Button>
 
         <div className="flex items-center gap-1 overflow-x-auto max-w-[60%] [&::-webkit-scrollbar]:h-0">
-          <button className="p-1 text-muted-foreground/35 hover:text-foreground/60 shrink-0">
+          <Button variant="ghost" size="icon-xs" className="p-1 text-muted-foreground/35 hover:text-foreground/60 shrink-0">
             <MousePointer2 size={12} />
-          </button>
+          </Button>
           {images.filter(img => img.status === 'completed').map(img => (
-            <button
+            <Button
               key={img.id}
+              variant="ghost"
+              size="icon-sm"
               onClick={() => onSelect(img)}
-              className={`w-8 h-8 rounded-lg overflow-hidden shrink-0 transition-all duration-150 ${
+              className={`w-8 h-8 rounded-lg overflow-hidden shrink-0 p-0 transition-all duration-150 ${
                 selected.id === img.id
                   ? 'ring-[1.5px] ring-cherry-primary/60 ring-offset-1 ring-offset-background'
                   : 'opacity-50 hover:opacity-90'
               }`}
             >
               <img src={img.url} alt="" className="w-full h-full object-cover" />
-            </button>
+            </Button>
           ))}
         </div>
 
         <div className="flex items-center gap-1">
-          <button className="p-1.5 rounded-md text-muted-foreground/40 hover:text-foreground/70 hover:bg-muted/40 transition-colors">
+          <Button variant="ghost" size="icon-xs" className="p-1.5 text-muted-foreground/40 hover:text-foreground/70 hover:bg-muted/40">
             <Download size={13} />
-          </button>
-          <button className="p-1.5 rounded-md text-muted-foreground/40 hover:text-foreground/70 hover:bg-muted/40 transition-colors">
+          </Button>
+          <Button variant="ghost" size="icon-xs" className="p-1.5 text-muted-foreground/40 hover:text-foreground/70 hover:bg-muted/40">
             <Share2 size={13} />
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="default"
+            size="xs"
             onClick={() => onShowDetail(selected)}
-            className="flex items-center gap-1.5 px-3 py-[5px] rounded-lg bg-foreground text-background text-[10px] hover:bg-foreground/85 transition-colors ml-1"
+            className="h-auto gap-1.5 px-3 py-[5px] rounded-lg bg-foreground text-background text-xs hover:bg-foreground/85 ml-1"
           >
             Details
-          </button>
+          </Button>
         </div>
       </div>
 
       <div className="flex-1 flex items-center justify-center relative overflow-hidden">
-        <button
+        <Button
+          variant="outline"
+          size="icon-sm"
           onClick={onBack}
-          className="absolute left-4 z-10 p-1.5 rounded-full bg-background/70 border border-border/30 text-muted-foreground/40 hover:text-foreground/70 hover:bg-background transition-colors"
+          className="absolute left-4 z-10 p-1.5 rounded-full bg-background/70 border-border/30 text-muted-foreground/40 hover:text-foreground/70 hover:bg-background"
         >
           <ChevronLeft size={18} />
-        </button>
+        </Button>
 
         {selectedIdx < images.length - 1 && (
-          <button
+          <Button
+            variant="outline"
+            size="icon-sm"
             onClick={() => onNavigate(1)}
-            className="absolute right-4 z-10 p-1.5 rounded-full bg-background/70 border border-border/30 text-muted-foreground/40 hover:text-foreground/70 hover:bg-background transition-colors"
+            className="absolute right-4 z-10 p-1.5 rounded-full bg-background/70 border-border/30 text-muted-foreground/40 hover:text-foreground/70 hover:bg-background"
           >
             <ChevronRight size={18} />
-          </button>
+          </Button>
         )}
 
         <motion.div
@@ -1047,11 +1099,11 @@ function DetailFloatingPanel({ image, onClose, onRemix, onToggleFavorite }: {
       <div className="flex items-center justify-between px-4 pt-3 pb-2 border-b border-border/30">
         <div className="flex items-center gap-1.5">
           <ImageIcon size={11} className="text-muted-foreground/50" />
-          <span className="text-[10px] text-foreground/70">{'\u56fe\u7247\u8be6\u60c5'}</span>
+          <span className="text-xs text-foreground/70">{'\u56fe\u7247\u8be6\u60c5'}</span>
         </div>
-        <button onClick={onClose} className="p-0.5 rounded text-muted-foreground/40 hover:text-foreground/70 transition-colors">
+        <Button variant="ghost" size="icon-xs" onClick={onClose} className="p-0.5 text-muted-foreground/40 hover:text-foreground/70">
           <X size={11} />
-        </button>
+        </Button>
       </div>
 
       <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3 [&::-webkit-scrollbar]:w-[2px] [&::-webkit-scrollbar-thumb]:bg-border/20">
@@ -1062,12 +1114,12 @@ function DetailFloatingPanel({ image, onClose, onRemix, onToggleFavorite }: {
         <div>
           <div className="flex items-center justify-between mb-1.5">
             <span className="text-[9px] text-muted-foreground/50 tracking-wider">{'\u63d0\u793a\u8bcd'}</span>
-            <button onClick={copyPrompt} className="flex items-center gap-0.5 text-[8.5px] text-muted-foreground/40 hover:text-foreground/60 transition-colors">
+            <Button variant="ghost" size="xs" onClick={copyPrompt} className="h-auto gap-0.5 p-0 text-[8.5px] text-muted-foreground/40 hover:text-foreground/60">
               {copied ? <Check size={7} className="text-cherry-primary" /> : <Copy size={7} />}
               <span>{copied ? 'Copied' : 'Copy'}</span>
-            </button>
+            </Button>
           </div>
-          <p className="text-[10px] text-foreground/70 leading-relaxed">{image.prompt}</p>
+          <p className="text-xs text-foreground/70 leading-relaxed">{image.prompt}</p>
         </div>
 
         <div className="space-y-[6px] rounded-xl bg-muted/25 p-3">
@@ -1081,26 +1133,30 @@ function DetailFloatingPanel({ image, onClose, onRemix, onToggleFavorite }: {
       </div>
 
       <div className="shrink-0 border-t border-border/30 p-3 flex items-center gap-1.5">
-        <button
+        <Button
+          variant="ghost"
+          size="xs"
           onClick={() => onRemix(image)}
-          className="flex-1 flex items-center justify-center gap-1 py-[6px] rounded-lg bg-cherry-active-bg text-cherry-primary-dark text-[10px] hover:bg-cherry-active-border transition-colors"
+          className="h-auto flex-1 gap-1 py-[6px] rounded-lg bg-cherry-active-bg text-cherry-primary-dark text-xs hover:bg-cherry-active-border"
         >
           <ArrowUpRight size={9} />
           Remix
-        </button>
-        <button
+        </Button>
+        <Button
+          variant="ghost"
+          size="icon-xs"
           onClick={() => onToggleFavorite(image.id)}
-          className={`p-[7px] rounded-lg transition-colors ${
+          className={`p-[7px] rounded-lg ${
             image.favorite
               ? 'bg-rose-500/12 text-rose-500'
               : 'bg-muted/30 text-muted-foreground/40 hover:text-foreground/60'
           }`}
         >
           <Heart size={11} className={image.favorite ? 'fill-rose-500' : ''} />
-        </button>
-        <button className="p-[7px] rounded-lg bg-muted/30 text-muted-foreground/40 hover:text-foreground/60 transition-colors">
+        </Button>
+        <Button variant="ghost" size="icon-xs" className="p-[7px] rounded-lg bg-muted/30 text-muted-foreground/40 hover:text-foreground/60">
           <Download size={11} />
-        </button>
+        </Button>
       </div>
     </motion.div>
   );
@@ -1145,8 +1201,10 @@ function VerticalToolHandle({ showRightPanel, onToggleRightPanel }: {
         }
         const isActive = tool.id !== 'panel' && tool.id !== 'undo' && tool.id !== 'redo' && activeTool === tool.id;
         return (
-          <button
+          <Button
             key={tool.id}
+            variant="ghost"
+            size="icon-xs"
             title={tool.label}
             onClick={() => {
               if (tool.action) {
@@ -1162,7 +1220,7 @@ function VerticalToolHandle({ showRightPanel, onToggleRightPanel }: {
             }`}
           >
             {tool.icon}
-          </button>
+          </Button>
         );
       })}
     </div>

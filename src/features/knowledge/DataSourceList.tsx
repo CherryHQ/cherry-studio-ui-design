@@ -12,6 +12,7 @@ import {
   Loader2,
 } from 'lucide-react';
 import { Tooltip } from '@/app/components/Tooltip';
+import { Button, Input, Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@cherry-studio/ui';
 
 export interface DataSource {
   id: string;
@@ -109,30 +110,26 @@ function generateMockChunks(source: DataSource): ChunkData[] {
 // ===========================
 
 function DocPreviewDialog({ source, onClose }: { source: DataSource; onClose: () => void }) {
-  const overlayRef = useRef<HTMLDivElement>(null);
   const cfg = typeConfig[source.type];
   const content = mockDocContents.default;
 
   return (
-    <div ref={overlayRef} className="fixed inset-0 z-[400] flex items-center justify-center bg-black/40" onClick={e => { if (e.target === overlayRef.current) onClose(); }}>
-      <div className="bg-popover border border-border rounded-xl shadow-2xl w-[560px] max-h-[80vh] flex flex-col animate-in fade-in zoom-in-95 duration-150" onClick={e => e.stopPropagation()}>
+    <Dialog open onOpenChange={open => { if (!open) onClose(); }}>
+      <DialogContent className="w-[560px] max-h-[80vh] flex flex-col p-0 gap-0">
         {/* Header */}
-        <div className="flex items-center gap-2 px-4 py-3 border-b border-border/15 flex-shrink-0">
+        <DialogHeader className="flex-row items-center gap-2 px-4 py-3 border-b border-border/15 flex-shrink-0 space-y-0">
           <div className={`w-5 h-5 rounded flex items-center justify-center flex-shrink-0 bg-accent/50 ${cfg.color}`}>
             {React.createElement(source.type === 'file' ? getFileIcon(source.format) : cfg.icon, { size: 10, strokeWidth: 1.6 })}
           </div>
           <div className="flex-1 min-w-0">
-            <span className="text-[11px] text-foreground truncate block">{source.name}</span>
+            <DialogTitle className="text-xs text-foreground truncate block">{source.name}</DialogTitle>
             <div className="flex items-center gap-2 text-[9px] text-muted-foreground/35">
               {source.format && <span className="uppercase">{source.format}</span>}
               {source.size && <span>{source.size}</span>}
               {source.url && <span className="truncate">{source.url}</span>}
             </div>
           </div>
-          <button onClick={onClose} className="w-5 h-5 rounded flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent transition-colors flex-shrink-0">
-            <X size={11} />
-          </button>
-        </div>
+        </DialogHeader>
 
         {/* Content */}
         <div className="flex-1 overflow-y-auto px-5 py-4 [&::-webkit-scrollbar]:w-[3px] [&::-webkit-scrollbar-thumb]:bg-border/30 [&::-webkit-scrollbar-thumb]:rounded-full">
@@ -140,22 +137,22 @@ function DocPreviewDialog({ source, onClose }: { source: DataSource; onClose: ()
             {content.split('\n').map((line, i) => {
               if (line.startsWith('# ')) return <h1 key={i} className="text-sm text-foreground mt-0 mb-2">{line.slice(2)}</h1>;
               if (line.startsWith('## ')) return <h2 key={i} className="text-xs text-foreground mt-3 mb-1.5">{line.slice(3)}</h2>;
-              if (line.startsWith('### ')) return <h3 key={i} className="text-[11px] text-foreground mt-2 mb-1">{line.slice(4)}</h3>;
+              if (line.startsWith('### ')) return <h3 key={i} className="text-xs text-foreground mt-2 mb-1">{line.slice(4)}</h3>;
               if (line.startsWith('---')) return <hr key={i} className="border-border/20 my-3" />;
               if (line.startsWith('- **')) {
                 const boldColonRe = new RegExp('- ' + String.fromCharCode(92, 42, 92, 42) + '(.+?)' + String.fromCharCode(92, 42, 92, 42) + String.fromCharCode(65306) + '(.+)');
                 const match = line.match(boldColonRe);
-                if (match) return <div key={i} className="text-[11px] text-foreground/70 pl-3 py-0.5"><strong className="text-foreground/90">{match[1]}</strong>{String.fromCharCode(65306)}{match[2]}</div>;
+                if (match) return <div key={i} className="text-xs text-foreground/70 pl-3 py-0.5"><strong className="text-foreground/90">{match[1]}</strong>{String.fromCharCode(65306)}{match[2]}</div>;
               }
-              if (line.match(new RegExp('^' + String.fromCharCode(92) + 'd+' + String.fromCharCode(92) + '.'))) return <div key={i} className="text-[11px] text-foreground/70 pl-3 py-0.5">{line}</div>;
-              if (line.startsWith('*')) return <p key={i} className="text-[10px] text-muted-foreground/40 italic mt-2">{line.replace(new RegExp(String.fromCharCode(42), 'g'), '')}</p>;
+              if (line.match(new RegExp('^' + String.fromCharCode(92) + 'd+' + String.fromCharCode(92) + '.'))) return <div key={i} className="text-xs text-foreground/70 pl-3 py-0.5">{line}</div>;
+              if (line.startsWith('*')) return <p key={i} className="text-xs text-muted-foreground/40 italic mt-2">{line.replace(new RegExp(String.fromCharCode(42), 'g'), '')}</p>;
               if (line.trim() === '') return <div key={i} className="h-1" />;
-              return <p key={i} className="text-[11px] text-foreground/70 leading-relaxed">{line}</p>;
+              return <p key={i} className="text-xs text-foreground/70 leading-relaxed">{line}</p>;
             })}
           </div>
         </div>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -177,14 +174,14 @@ function ChunkDetailView({ source, onBack }: { source: DataSource; onBack: () =>
   return (
     <div className="flex flex-col h-full">
       <div className="flex items-center gap-2 px-3 py-2 border-b border-border/15 flex-shrink-0">
-        <button onClick={onBack} className="w-5 h-5 rounded flex items-center justify-center text-muted-foreground/50 hover:text-foreground hover:bg-accent transition-colors">
+        <Button variant="ghost" size="icon-xs" onClick={onBack} className="text-muted-foreground/50">
           <ArrowLeft size={11} />
-        </button>
+        </Button>
         <div className={`w-5 h-5 rounded flex items-center justify-center flex-shrink-0 bg-accent/50 ${cfg.color}`}>
           {React.createElement(source.type === 'file' ? getFileIcon(source.format) : cfg.icon, { size: 10, strokeWidth: 1.6 })}
         </div>
         <div className="flex-1 min-w-0">
-          <span className="text-[11px] text-foreground truncate">{source.name}</span>
+          <span className="text-xs text-foreground truncate">{source.name}</span>
           <div className="flex items-center gap-2 text-[9px] text-muted-foreground/35">
             {source.format && <span className="uppercase">{source.format}</span>}
             {source.size && <span>{source.size}</span>}
@@ -204,22 +201,22 @@ function ChunkDetailView({ source, onBack }: { source: DataSource; onBack: () =>
                 <span className="text-[9px] text-muted-foreground/30 flex-1">{chunk.tokens} tokens</span>
                 <div className="flex items-center gap-0.5 opacity-0 group-hover/ck:opacity-100 transition-all">
                   {isEditing ? (
-                    <button onClick={() => saveEdit(chunk.id)} className="w-4 h-4 rounded flex items-center justify-center text-cherry-primary hover:bg-cherry-active-bg transition-colors"><Save size={9} /></button>
+                    <Button variant="ghost" size="icon-xs" onClick={() => saveEdit(chunk.id)} className="w-4 h-4 text-cherry-primary hover:bg-cherry-active-bg"><Save size={9} /></Button>
                   ) : (
-                    <button onClick={() => startEdit(chunk)} className="w-4 h-4 rounded flex items-center justify-center text-muted-foreground/25 hover:text-foreground hover:bg-accent transition-colors"><Pencil size={8} /></button>
+                    <Button variant="ghost" size="icon-xs" onClick={() => startEdit(chunk)} className="w-4 h-4 text-muted-foreground/25"><Pencil size={8} /></Button>
                   )}
-                  <button onClick={() => deleteChunk(chunk.id)} className="w-4 h-4 rounded flex items-center justify-center text-muted-foreground/25 hover:text-red-500 hover:bg-red-500/10 transition-colors"><Trash2 size={8} /></button>
-                  <button onClick={() => setExpandedId(isExpanded ? null : chunk.id)} className="w-4 h-4 rounded flex items-center justify-center text-muted-foreground/25 hover:text-foreground hover:bg-accent transition-colors">
+                  <Button variant="ghost" size="icon-xs" onClick={() => deleteChunk(chunk.id)} className="w-4 h-4 text-muted-foreground/25 hover:text-destructive hover:bg-destructive/10"><Trash2 size={8} /></Button>
+                  <Button variant="ghost" size="icon-xs" onClick={() => setExpandedId(isExpanded ? null : chunk.id)} className="w-4 h-4 text-muted-foreground/25">
                     {isExpanded ? <ChevronUp size={9} /> : <ChevronDown size={9} />}
-                  </button>
+                  </Button>
                 </div>
               </div>
               <div className="px-2.5 pb-2">
                 {isEditing ? (
                   <textarea value={editText} onChange={e => setEditText(e.target.value)} onKeyDown={e => { if (e.key === 'Escape') setEditingId(null); }}
-                    className="w-full min-h-[80px] text-[11px] text-foreground bg-muted/20 rounded-md border border-cherry-primary/30 p-2 outline-none focus:ring-1 focus:ring-cherry-primary/20 resize-y leading-relaxed" autoFocus />
+                    className="w-full min-h-[80px] text-xs text-foreground bg-muted/20 rounded-md border border-cherry-primary/30 p-2 outline-none focus:ring-1 focus:ring-cherry-primary/20 resize-y leading-relaxed" autoFocus />
                 ) : (
-                  <p className={`text-[11px] text-foreground/70 leading-relaxed ${isExpanded ? '' : 'line-clamp-2'}`}>{chunk.content}</p>
+                  <p className={`text-xs text-foreground/70 leading-relaxed ${isExpanded ? '' : 'line-clamp-2'}`}>{chunk.content}</p>
                 )}
               </div>
             </div>
@@ -259,7 +256,7 @@ const statusConfig = {
   chunking: { label: '\u5206\u5757\u4e2d', color: 'text-violet-500/70', step: 2 },
   embedding: { label: '\u5d4c\u5165\u4e2d', color: 'text-amber-500/70', step: 3 },
   success: { label: '\u5c31\u7eea', color: 'text-primary', step: 4 },
-  error: { label: '\u9519\u8bef', color: 'text-red-500/60', step: 0 },
+  error: { label: '\u9519\u8bef', color: 'text-destructive/60', step: 0 },
 } as const;
 
 function StatusBadge({ status, errorMsg }: { status: DataSource['status']; errorMsg?: string }) {
@@ -337,7 +334,6 @@ function AddSourceDialog({ onAdd, onCancel }: {
   const [selectedNotes, setSelectedNotes] = useState<Set<string>>(new Set());
   const [droppedFiles, setDroppedFiles] = useState<{ name: string; size: string; format: string }[]>([]);
   const [isDragOver, setIsDragOver] = useState(false);
-  const overlayRef = useRef<HTMLDivElement>(null);
 
   const tabs: { id: AddTab; label: string; icon: React.ElementType }[] = [
     { id: 'file', label: '\u6587\u4ef6', icon: FileText },
@@ -389,20 +385,19 @@ function AddSourceDialog({ onAdd, onCancel }: {
   const canConfirm = (tab === 'file' && droppedFiles.length > 0) || (tab === 'folder') || (tab === 'note' && selectedNotes.size > 0) || (tab === 'url' && urlInput.trim()) || (tab === 'website' && sitemapInput.trim());
 
   return (
-    <div ref={overlayRef} className="fixed inset-0 z-[400] flex items-center justify-center bg-black/40" onClick={e => { if (e.target === overlayRef.current) onCancel(); }}>
-      <div className="bg-popover border border-border rounded-xl shadow-2xl w-[400px] max-h-[70vh] flex flex-col animate-in fade-in zoom-in-95 duration-150" onClick={e => e.stopPropagation()}>
-        <div className="flex items-center justify-between px-4 pt-3 pb-2 flex-shrink-0">
-          <span className="text-[11px] text-foreground">{'\u6dfb\u52a0\u6570\u636e\u6e90'}</span>
-          <button onClick={onCancel} className="w-5 h-5 rounded flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"><X size={11} /></button>
-        </div>
+    <Dialog open onOpenChange={open => { if (!open) onCancel(); }}>
+      <DialogContent className="w-[400px] max-h-[70vh] flex flex-col p-0 gap-0">
+        <DialogHeader className="flex-row items-center justify-between px-4 pt-3 pb-2 flex-shrink-0 space-y-0">
+          <DialogTitle className="text-xs text-foreground">{'\u6dfb\u52a0\u6570\u636e\u6e90'}</DialogTitle>
+        </DialogHeader>
         <div className="flex items-center gap-0 px-3 border-b border-border/15 flex-shrink-0">
           {tabs.map(t => {
             const isActive = tab === t.id;
             const TIcon = t.icon;
             return (
-              <button key={t.id} onClick={() => setTab(t.id)} className={`flex items-center gap-1 px-2.5 py-1.5 text-[10px] border-b-[1.5px] transition-colors ${isActive ? 'border-primary text-foreground' : 'border-transparent text-muted-foreground/45 hover:text-foreground'}`}>
+              <Button key={t.id} variant="ghost" size="sm" onClick={() => setTab(t.id)} className={`flex items-center gap-1 px-2.5 py-1.5 text-xs rounded-none border-b-[1.5px] ${isActive ? 'border-primary text-foreground' : 'border-transparent text-muted-foreground/45 hover:text-foreground'}`}>
                 <TIcon size={10} strokeWidth={1.6} />{t.label}
-              </button>
+              </Button>
             );
           })}
         </div>
@@ -412,7 +407,7 @@ function AddSourceDialog({ onAdd, onCancel }: {
               <div className={`border-2 border-dashed rounded-lg p-5 text-center transition-colors cursor-pointer ${isDragOver ? 'border-primary/50 bg-primary/[0.04]' : 'border-border/30 hover:border-border/60'}`}
                 onDragOver={e => { e.preventDefault(); setIsDragOver(true); }} onDragLeave={() => setIsDragOver(false)} onDrop={handleFileDrop} onClick={handleFileSelect}>
                 <Upload size={18} className="text-muted-foreground/25 mx-auto mb-1.5" strokeWidth={1.4} />
-                <p className="text-[11px] text-muted-foreground/50 mb-0.5">{'\u70b9\u51fb\u9009\u62e9\u6587\u4ef6\u6216\u62d6\u62fd\u5230\u6b64\u5904'}</p>
+                <p className="text-xs text-muted-foreground/50 mb-0.5">{'\u70b9\u51fb\u9009\u62e9\u6587\u4ef6\u6216\u62d6\u62fd\u5230\u6b64\u5904'}</p>
                 <p className="text-[9px] text-muted-foreground/25">{'\u652f\u6301 PDF, DOCX, MD, XLSX, TXT, CSV'}</p>
               </div>
               {droppedFiles.length > 0 && (
@@ -420,9 +415,9 @@ function AddSourceDialog({ onAdd, onCancel }: {
                   {droppedFiles.map((f, i) => (
                     <div key={i} className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-accent/30">
                       <FileText size={10} className="text-blue-500 flex-shrink-0" />
-                      <span className="text-[11px] text-foreground truncate flex-1">{f.name}</span>
+                      <span className="text-xs text-foreground truncate flex-1">{f.name}</span>
                       <span className="text-[9px] text-muted-foreground/35 flex-shrink-0">{f.size}</span>
-                      <button onClick={() => removeFile(i)} className="text-muted-foreground/25 hover:text-red-500 flex-shrink-0"><X size={9} /></button>
+                      <Button variant="ghost" size="icon-xs" onClick={() => removeFile(i)} className="text-muted-foreground/25 hover:text-destructive"><X size={9} /></Button>
                     </div>
                   ))}
                 </div>
@@ -431,18 +426,18 @@ function AddSourceDialog({ onAdd, onCancel }: {
           )}
           {tab === 'note' && (
             <div className="space-y-0.5">
-              <p className="text-[10px] text-muted-foreground/40 mb-1.5">{'\u9009\u62e9\u8981\u5bfc\u5165\u7684\u7b14\u8bb0\uff1a'}</p>
+              <p className="text-xs text-muted-foreground/40 mb-1.5">{'\u9009\u62e9\u8981\u5bfc\u5165\u7684\u7b14\u8bb0\uff1a'}</p>
               {mockNotes.map(note => {
                 const isChecked = selectedNotes.has(note.id);
                 return (
-                  <button key={note.id} onClick={() => setSelectedNotes(prev => { const n = new Set(prev); if (n.has(note.id)) n.delete(note.id); else n.add(note.id); return n; })}
-                    className={`w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-left transition-colors ${isChecked ? 'bg-primary/10' : 'hover:bg-accent/40'}`}>
+                  <Button key={note.id} variant="ghost" onClick={() => setSelectedNotes(prev => { const n = new Set(prev); if (n.has(note.id)) n.delete(note.id); else n.add(note.id); return n; })}
+                    className={`w-full h-auto flex items-center gap-2 px-2 py-1.5 rounded-md text-left justify-start ${isChecked ? 'bg-primary/10' : 'hover:bg-accent/40'}`}>
                     <div className={`w-3.5 h-3.5 rounded border flex items-center justify-center flex-shrink-0 transition-colors ${isChecked ? 'bg-primary border-primary' : 'border-border/50'}`}>
                       {isChecked && <Check size={8} className="text-primary-foreground" />}
                     </div>
                     <StickyNote size={10} className="text-amber-500 flex-shrink-0" />
-                    <span className="text-[11px] text-foreground">{note.title}</span>
-                  </button>
+                    <span className="text-xs text-foreground">{note.title}</span>
+                  </Button>
                 );
               })}
             </div>
@@ -451,33 +446,33 @@ function AddSourceDialog({ onAdd, onCancel }: {
             <div className={`border-2 border-dashed rounded-lg p-5 text-center transition-colors cursor-pointer ${isDragOver ? 'border-primary/50 bg-primary/[0.04]' : 'border-border/30 hover:border-border/60'}`}
               onDragOver={e => { e.preventDefault(); setIsDragOver(true); }} onDragLeave={() => setIsDragOver(false)} onDrop={handleFileDrop} onClick={handleFileSelect}>
               <Folder size={18} className="text-violet-500/35 mx-auto mb-1.5" strokeWidth={1.4} />
-              <p className="text-[11px] text-muted-foreground/50 mb-0.5">{'\u9009\u62e9\u6216\u62d6\u5165\u672c\u5730\u6587\u4ef6\u5939'}</p>
+              <p className="text-xs text-muted-foreground/50 mb-0.5">{'\u9009\u62e9\u6216\u62d6\u5165\u672c\u5730\u6587\u4ef6\u5939'}</p>
               <p className="text-[9px] text-muted-foreground/25">{'\u5c06\u9012\u5f52\u5bfc\u5165\u76ee\u5f55\u4e0b\u6240\u6709\u652f\u6301\u7684\u6587\u4ef6'}</p>
             </div>
           )}
           {tab === 'url' && (
             <div>
-              <p className="text-[10px] text-muted-foreground/40 mb-1.5">{'\u8f93\u5165\u7f51\u9875\u94fe\u63a5\uff1a'}</p>
-              <input autoFocus value={urlInput} onChange={e => setUrlInput(e.target.value)} placeholder="https://example.com/article"
-                className="w-full px-2.5 py-[5px] rounded-md border border-border/40 bg-transparent text-[11px] text-foreground outline-none focus:border-primary/40 focus:ring-1 focus:ring-primary/15 transition-all" />
+              <p className="text-xs text-muted-foreground/40 mb-1.5">{'\u8f93\u5165\u7f51\u9875\u94fe\u63a5\uff1a'}</p>
+              <Input autoFocus value={urlInput} onChange={e => setUrlInput(e.target.value)} placeholder="https://example.com/article"
+                className="w-full text-xs" />
               <p className="text-[9px] text-muted-foreground/25 mt-1">{'\u5c06\u81ea\u52a8\u6293\u53d6\u9875\u9762\u6587\u672c\u5e76\u5206\u5757\u7d22\u5f15'}</p>
             </div>
           )}
           {tab === 'website' && (
             <div>
-              <p className="text-[10px] text-muted-foreground/40 mb-1.5">{'\u8f93\u5165\u7ad9\u70b9\u5730\u5740\u6216 Sitemap\uff1a'}</p>
-              <input autoFocus value={sitemapInput} onChange={e => setSitemapInput(e.target.value)} placeholder="https://docs.example.com/sitemap.xml"
-                className="w-full px-2.5 py-[5px] rounded-md border border-border/40 bg-transparent text-[11px] text-foreground outline-none focus:border-primary/40 focus:ring-1 focus:ring-primary/15 transition-all mb-2.5" />
+              <p className="text-xs text-muted-foreground/40 mb-1.5">{'\u8f93\u5165\u7ad9\u70b9\u5730\u5740\u6216 Sitemap\uff1a'}</p>
+              <Input autoFocus value={sitemapInput} onChange={e => setSitemapInput(e.target.value)} placeholder="https://docs.example.com/sitemap.xml"
+                className="w-full text-xs mb-2.5" />
               <div className="bg-muted/20 rounded-md p-2.5 border border-border/20 space-y-2">
                 <p className="text-[9px] text-muted-foreground/40">{'\u722c\u866b\u8bbe\u7f6e'}</p>
                 <div className="grid grid-cols-2 gap-2">
                   <div>
                     <label className="text-[9px] text-muted-foreground/35 mb-0.5 block">{'\u722c\u53d6\u6df1\u5ea6'}</label>
-                    <input value={crawlDepth} onChange={e => setCrawlDepth(e.target.value)} className="w-full px-2 py-[4px] rounded border border-border/30 bg-transparent text-[11px] text-foreground outline-none focus:border-primary/40 transition-all" />
+                    <Input value={crawlDepth} onChange={e => setCrawlDepth(e.target.value)} className="w-full text-xs" />
                   </div>
                   <div>
                     <label className="text-[9px] text-muted-foreground/35 mb-0.5 block">{'\u6700\u5927\u9875\u9762\u6570'}</label>
-                    <input value={crawlMaxPages} onChange={e => setCrawlMaxPages(e.target.value)} className="w-full px-2 py-[4px] rounded border border-border/30 bg-transparent text-[11px] text-foreground outline-none focus:border-primary/40 transition-all" />
+                    <Input value={crawlMaxPages} onChange={e => setCrawlMaxPages(e.target.value)} className="w-full text-xs" />
                   </div>
                 </div>
                 <p className="text-[8px] text-muted-foreground/25">{'\u6df1\u5ea6 1 = \u4ec5\u9996\u9875\uff0c2 = \u9996\u9875\u94fe\u63a5\u7684\u9875\u9762'}</p>
@@ -485,18 +480,18 @@ function AddSourceDialog({ onAdd, onCancel }: {
             </div>
           )}
         </div>
-        <div className="flex items-center justify-between px-4 py-2.5 border-t border-border/15 flex-shrink-0">
+        <DialogFooter className="flex-row items-center justify-between px-4 py-2.5 border-t border-border/15 flex-shrink-0">
           <span className="text-[9px] text-muted-foreground/30">
             {tab === 'note' && selectedNotes.size > 0 ? `\u5df2\u9009 ${selectedNotes.size} \u4e2a\u7b14\u8bb0` : ''}
             {(tab === 'file' || tab === 'folder') && droppedFiles.length > 0 ? `\u5df2\u9009 ${droppedFiles.length} \u4e2a\u6587\u4ef6` : ''}
           </span>
           <div className="flex gap-1.5">
-            <button onClick={onCancel} className="h-6 px-2.5 rounded-md text-[11px] text-muted-foreground hover:text-foreground hover:bg-accent transition-colors">{'\u53d6\u6d88'}</button>
-            <button onClick={handleConfirm} disabled={!canConfirm} className="h-6 px-2.5 rounded-md text-[11px] bg-primary text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-40">{'\u6dfb\u52a0'}</button>
+            <Button variant="ghost" size="xs" onClick={onCancel}>{'\u53d6\u6d88'}</Button>
+            <Button variant="default" size="xs" onClick={handleConfirm} disabled={!canConfirm}>{'\u6dfb\u52a0'}</Button>
           </div>
-        </div>
-      </div>
-    </div>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -545,14 +540,14 @@ export function DataSourceList({ sources, onAddSources, onDeleteSource, onReinde
       <div className="flex items-center justify-between px-3 py-2 flex-shrink-0">
         <div className="flex items-center gap-2">
           {typeFilters.map(tf => (
-            <button key={tf} onClick={() => setFilter(tf)} className={`text-[10px] px-1.5 py-px rounded transition-colors ${filter === tf ? 'bg-accent text-foreground' : 'text-muted-foreground/50 hover:text-foreground'}`}>{tf}</button>
+            <Button key={tf} variant="ghost" size="xs" onClick={() => setFilter(tf)} className={`text-xs px-1.5 py-px ${filter === tf ? 'bg-accent text-foreground' : 'text-muted-foreground/50'}`}>{tf}</Button>
           ))}
         </div>
         <div className="flex items-center gap-1.5">
           <span className="text-[9px] text-muted-foreground/35 mr-0.5">{stats.ready}/{stats.total} {'\u5c31\u7eea'}</span>
-          <button onClick={() => setShowAddDialog(true)} className="h-5 px-2 rounded text-[10px] bg-primary text-primary-foreground hover:bg-primary/90 transition-colors flex items-center gap-0.5">
+          <Button variant="default" size="xs" onClick={() => setShowAddDialog(true)} className="h-5 px-2 flex items-center gap-0.5">
             <Plus size={9} /><span>{'\u6dfb\u52a0'}</span>
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -565,9 +560,9 @@ export function DataSourceList({ sources, onAddSources, onDeleteSource, onReinde
         {filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full py-12 text-muted-foreground/35">
             <Upload size={22} strokeWidth={1.2} className="mb-1.5" />
-            <p className="text-[11px] mb-0.5">{'\u62d6\u62fd\u6587\u4ef6\u5230\u6b64\u5904\u4e0a\u4f20'}</p>
+            <p className="text-xs mb-0.5">{'\u62d6\u62fd\u6587\u4ef6\u5230\u6b64\u5904\u4e0a\u4f20'}</p>
             <p className="text-[9px] mb-2">{'\u652f\u6301 PDF, Word, Markdown, Excel, TXT'}</p>
-            <button onClick={() => setShowAddDialog(true)} className="text-[10px] text-primary hover:underline">{'\u6216\u70b9\u51fb\u6b64\u5904\u6dfb\u52a0\u6570\u636e\u6e90'}</button>
+            <Button variant="ghost" size="xs" onClick={() => setShowAddDialog(true)} className="text-xs text-primary hover:underline">{'\u6216\u70b9\u51fb\u6b64\u5904\u6dfb\u52a0\u6570\u636e\u6e90'}</Button>
           </div>
         ) : (
           <div className="divide-y divide-border/15">
@@ -587,7 +582,7 @@ export function DataSourceList({ sources, onAddSources, onDeleteSource, onReinde
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-1.5">
-                      <span className="text-[11px] text-foreground truncate">{source.name}</span>
+                      <span className="text-xs text-foreground truncate">{source.name}</span>
                       {source.format && <span className="text-[8px] text-muted-foreground/30 uppercase flex-shrink-0">{source.format}</span>}
                     </div>
                     <div className="flex items-center gap-1.5 mt-px">
@@ -598,30 +593,30 @@ export function DataSourceList({ sources, onAddSources, onDeleteSource, onReinde
                   </div>
                   <StatusBadge status={source.status} errorMsg={source.errorMsg} />
                   <div className="relative" ref={showContext ? contextRef : undefined}>
-                    <button onClick={e => { e.stopPropagation(); setContextId(showContext ? null : source.id); }}
-                      className="w-5 h-5 rounded flex items-center justify-center text-muted-foreground/25 hover:text-foreground hover:bg-accent opacity-0 group-hover/row:opacity-100 transition-all flex-shrink-0">
+                    <Button variant="ghost" size="icon-xs" onClick={e => { e.stopPropagation(); setContextId(showContext ? null : source.id); }}
+                      className="text-muted-foreground/25 opacity-0 group-hover/row:opacity-100 flex-shrink-0">
                       <MoreHorizontal size={10} />
-                    </button>
+                    </Button>
                     {showContext && (
                       <div className="absolute right-0 top-6 z-30 bg-popover border border-border rounded-lg shadow-xl p-1 min-w-[120px] animate-in fade-in zoom-in-95 duration-100">
-                        <button onClick={e => { e.stopPropagation(); setPreviewSource(source); setContextId(null); }}
-                          className="w-full flex items-center gap-1.5 px-2 py-1 text-[10px] text-popover-foreground hover:bg-accent rounded-md transition-colors text-left">
+                        <Button variant="ghost" size="xs" onClick={e => { e.stopPropagation(); setPreviewSource(source); setContextId(null); }}
+                          className="w-full justify-start gap-1.5 text-xs text-popover-foreground">
                           <BookOpen size={9} /> {'\u9884\u89c8\u539f\u6587'}
-                        </button>
+                        </Button>
                         {source.status === 'success' && (
-                          <button onClick={e => { e.stopPropagation(); setDetailSource(source); setContextId(null); }}
-                            className="w-full flex items-center gap-1.5 px-2 py-1 text-[10px] text-popover-foreground hover:bg-accent rounded-md transition-colors text-left">
+                          <Button variant="ghost" size="xs" onClick={e => { e.stopPropagation(); setDetailSource(source); setContextId(null); }}
+                            className="w-full justify-start gap-1.5 text-xs text-popover-foreground">
                             <Eye size={9} /> {'\u67e5\u770b Chunks'}
-                          </button>
+                          </Button>
                         )}
-                        <button onClick={e => { e.stopPropagation(); onReindexSource(source.id); setContextId(null); }}
-                          className="w-full flex items-center gap-1.5 px-2 py-1 text-[10px] text-popover-foreground hover:bg-accent rounded-md transition-colors text-left">
+                        <Button variant="ghost" size="xs" onClick={e => { e.stopPropagation(); onReindexSource(source.id); setContextId(null); }}
+                          className="w-full justify-start gap-1.5 text-xs text-popover-foreground">
                           <RefreshCw size={9} /> {'\u91cd\u65b0\u7d22\u5f15'}
-                        </button>
-                        <button onClick={e => { e.stopPropagation(); onDeleteSource(source.id); setContextId(null); }}
-                          className="w-full flex items-center gap-1.5 px-2 py-1 text-[10px] text-red-500 hover:bg-red-500/10 rounded-md transition-colors text-left">
+                        </Button>
+                        <Button variant="ghost" size="xs" onClick={e => { e.stopPropagation(); onDeleteSource(source.id); setContextId(null); }}
+                          className="w-full justify-start gap-1.5 text-xs text-destructive hover:bg-destructive/10">
                           <Trash2 size={9} /> {'\u5220\u9664'}
-                        </button>
+                        </Button>
                       </div>
                     )}
                   </div>

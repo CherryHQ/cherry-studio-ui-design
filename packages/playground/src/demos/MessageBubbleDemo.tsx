@@ -9,9 +9,9 @@ import { Copy, ThumbsUp, ThumbsDown, RotateCcw, Pencil, Inbox } from "lucide-rea
 
 function ActionButton({ icon: Icon }: { icon: React.ElementType }) {
   return (
-    <button className="p-1 rounded-sm text-muted-foreground/40 hover:text-muted-foreground hover:bg-accent/50 transition-colors focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50">
+    <Button variant="ghost" className="p-1 rounded-sm text-muted-foreground/40 hover:text-muted-foreground hover:bg-accent/50 transition-colors focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50">
       <Icon size={12} />
-    </button>
+    </Button>
   )
 }
 
@@ -92,9 +92,9 @@ export function MessageBubbleDemo() {
           >
             <div className="space-y-2">
               <p>To add a new component:</p>
-              <ol className="list-decimal pl-4 space-y-1 text-[12px]">
-                <li>Create the component file in <code className="bg-background/50 px-1 rounded text-[11px]">packages/ui/src/components/ui/</code></li>
-                <li>Export it from <code className="bg-background/50 px-1 rounded text-[11px]">index.ts</code></li>
+              <ol className="list-decimal pl-4 space-y-1 text-xs">
+                <li>Create the component file in <code className="bg-background/50 px-1 rounded text-xs">packages/ui/src/components/ui/</code></li>
+                <li>Export it from <code className="bg-background/50 px-1 rounded text-xs">index.ts</code></li>
                 <li>Add a playground demo</li>
               </ol>
             </div>
@@ -115,15 +115,15 @@ export function MessageBubbleDemo() {
             <p className="mt-1">Here's a simple counter component:</p>
             <CodeBlock
               language="tsx"
-              code={`import { useState } from "react"\n\nexport function Counter({ initial = 0 }: { initial?: number }) {\n  const [count, setCount] = useState(initial)\n  return (\n    <button onClick={() => setCount(c => c + 1)}>\n      Count: {count}\n    </button>\n  )\n}`}
+              code={`import { useState } from "react"\n\nexport function Counter({ initial = 0 }: { initial?: number }) {\n  const [count, setCount] = useState(initial)\n  return (\n    <Button variant="ghost" onClick={() => setCount(c => c + 1)}>\n      Count: {count}\n    </Button>\n  )\n}`}
             />
-            <p>You can use it by importing and rendering <code className="bg-muted px-1 rounded text-[11px]">&lt;Counter initial={5} /&gt;</code>.</p>
+            <p>You can use it by importing and rendering <code className="bg-muted px-1 rounded text-xs">&lt;Counter initial={5} /&gt;</code>.</p>
           </MessageBubble>
         </div>
       </Section>
 
       <Section title="Full Chat Interface">
-        <div className="max-w-lg h-[450px] border rounded-xl overflow-hidden bg-background">
+        <div className="max-w-lg h-[450px] border rounded-[12px] overflow-hidden bg-background">
           <ChatContainer hasMessages={messages.length > 0}>
             <MessageList scrollDeps={[messages.length]}>
               {messages.map((msg, i) => (
@@ -157,7 +157,7 @@ export function MessageBubbleDemo() {
       </Section>
 
       <Section title="Empty State">
-        <div className="max-w-lg h-[300px] border rounded-xl overflow-hidden bg-background">
+        <div className="max-w-lg h-[300px] border rounded-[12px] overflow-hidden bg-background">
           <ChatContainer
             hasMessages={false}
             emptyState={
