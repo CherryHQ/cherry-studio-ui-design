@@ -1595,6 +1595,11 @@ export function AssistantRunPage() {
     setNewTopicCounter(c => c + 1);
   }, [newTopicCounter]);
 
+  const currentAssistant = useMemo(() => MOCK_ASSISTANTS.find(a => a.id === selectedAssistants[0]) || MOCK_ASSISTANTS[0], [selectedAssistants]);
+  const currentModel = useMemo(() => ASSISTANT_MODELS.find(m => m.id === selectedModels[0]) || ASSISTANT_MODELS[0], [selectedModels]);
+  const currentAssistantEmoji = ASSISTANT_EMOJI_MAP[currentAssistant.name] || '🤖';
+  const currentModelDisplayName = currentModel.name.split('/').pop() || currentModel.name;
+
   // Copy branch node as new topic — inherits messages up to (and including) the node
   const handleCopyAsTopic = useCallback((truncatedMessages: AssistantMessage[], _sourceNodeId: string) => {
     const newId = `branch-topic-${Date.now()}`;
@@ -1664,11 +1669,6 @@ export function AssistantRunPage() {
   const [rightPanel, setRightPanel] = useState<RightPanel>(null);
   const [historyInitialAssistant, setHistoryInitialAssistant] = useState<string | null>(null);
   const [inspectedMsg, setInspectedMsg] = useState<AssistantMessage | null>(null);
-
-  const currentAssistant = useMemo(() => MOCK_ASSISTANTS.find(a => a.id === selectedAssistants[0]) || MOCK_ASSISTANTS[0], [selectedAssistants]);
-  const currentModel = useMemo(() => ASSISTANT_MODELS.find(m => m.id === selectedModels[0]) || ASSISTANT_MODELS[0], [selectedModels]);
-  const currentAssistantEmoji = ASSISTANT_EMOJI_MAP[currentAssistant.name] || '🤖';
-  const currentModelDisplayName = currentModel.name.split('/').pop() || currentModel.name;
 
   // Multi-select handlers
   const handleSelectAssistant = useCallback((id: string) => {
