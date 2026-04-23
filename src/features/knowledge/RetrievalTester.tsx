@@ -3,7 +3,7 @@ import {
   Search, Zap, Clock, FileText, ChevronDown, ChevronUp,
   Copy, Check, Sparkles, History, X, Trash2,
 } from 'lucide-react';
-import { Button, Input } from '@cherry-studio/ui';
+import { Button, SearchInput, EmptyState } from '@cherry-studio/ui';
 import { copyToClipboard } from '@/app/utils/clipboard';
 
 interface ChunkResult {
@@ -52,7 +52,7 @@ function highlightQuery(text: string, query: string): React.ReactNode {
   const parts = text.split(regex);
   return parts.map((part, i) => {
     if (keywords.some(k => part.toLowerCase() === k.toLowerCase())) {
-      return <mark key={i} className="bg-amber-500/20 text-amber-600 rounded-sm px-0.5">{part}</mark>;
+      return <mark key={i} className="bg-warning/20 text-warning rounded-sm px-0.5">{part}</mark>;
     }
     return part;
   });
@@ -60,13 +60,13 @@ function highlightQuery(text: string, query: string): React.ReactNode {
 
 function ScoreBar({ score }: { score: number }) {
   const pct = Math.round(score * 100);
-  const color = score >= 0.9 ? 'bg-blue-500' : score >= 0.75 ? 'bg-sky-500' : score >= 0.6 ? 'bg-amber-500' : 'bg-red-400';
+  const color = score >= 0.9 ? 'bg-info' : score >= 0.75 ? 'bg-accent-blue' : score >= 0.6 ? 'bg-warning' : 'bg-destructive';
   return (
     <div className="flex items-center gap-1.5">
-      <div className="w-12 h-[3px] rounded-full bg-border/25 overflow-hidden">
+      <div className="w-12 h-[3px] rounded-full bg-border/30 overflow-hidden">
         <div className={`h-full rounded-full ${color} transition-all duration-500`} style={{ width: `${pct}%` }} />
       </div>
-      <span className="text-[9px] text-muted-foreground/50 tabular-nums w-6">{pct}%</span>
+      <span className="text-xs text-muted-foreground/50 tabular-nums w-6">{pct}%</span>
     </div>
   );
 }
@@ -128,21 +128,21 @@ export function RetrievalTester() {
       <div className="px-3 pt-3 pb-2 flex-shrink-0">
         <div className="flex items-center gap-1.5">
           <div className="flex-1 flex items-center gap-1.5 px-2.5 py-[5px] rounded-lg border border-border/40 bg-muted/20 focus-within:border-cherry-primary/40 focus-within:ring-1 focus-within:ring-cherry-primary/15 transition-all relative">
-            <Search size={11} className="text-muted-foreground/35 flex-shrink-0" />
-            <Input
+            <SearchInput
               value={query}
-              onChange={e => setQuery(e.target.value)}
+              onChange={setQuery}
               onKeyDown={e => { if (e.key === 'Enter') handleSearch(); }}
               onFocus={() => { if (history.length > 0 && !results.length) setShowHistory(true); }}
               placeholder="输入测试 Query..."
-              className="border-none shadow-none focus-visible:ring-0 h-auto p-0 bg-transparent text-xs flex-1 text-foreground placeholder:text-muted-foreground/30"
+              clearable={false}
+              wrapperClassName="flex-1 p-0 border-0 bg-transparent rounded-none"
             />
             {history.length > 0 && (
               <Button
                 variant="ghost"
                 size="icon-xs"
                 onClick={() => setShowHistory(!showHistory)}
-                className={`text-muted-foreground/30 hover:text-foreground transition-colors ${showHistory ? 'text-cherry-primary' : ''}`}
+                className={`text-muted-foreground/50 hover:text-foreground transition-colors ${showHistory ? 'text-cherry-primary' : ''}`}
               >
                 <History size={11} />
               </Button>
@@ -154,7 +154,7 @@ export function RetrievalTester() {
             disabled={loading || !query.trim()}
             className={`bg-cherry-primary text-xs flex items-center gap-1 transition-all flex-shrink-0 ${
               loading ? 'bg-cherry-primary/60 text-white/60 cursor-wait' : 'text-white hover:bg-cherry-primary-dark active:scale-[0.97]'
-            } disabled:opacity-40`}
+            } disabled:opacity-30`}
           >
             {loading ? (
               <div className="w-2.5 h-2.5 border-[1.5px] border-white/30 border-t-white rounded-full animate-spin" />
@@ -167,14 +167,14 @@ export function RetrievalTester() {
 
         {/* History dropdown */}
         {showHistory && history.length > 0 && (
-          <div className="mt-1 bg-popover border border-border/40 rounded-lg shadow-lg p-1 max-h-[180px] overflow-y-auto animate-in fade-in slide-in-from-top-1 duration-150 [&::-webkit-scrollbar]:w-[3px] [&::-webkit-scrollbar-thumb]:bg-border/30 [&::-webkit-scrollbar-thumb]:rounded-full">
+          <div className="mt-1 bg-popover border border-border/40 rounded-lg shadow-lg p-1 max-h-[180px] overflow-y-auto animate-in fade-in slide-in-from-top-1 duration-150 scrollbar-thin">
             <div className="flex items-center justify-between px-2 py-0.5 mb-0.5">
-              <span className="text-[9px] text-muted-foreground/30">搜索历史</span>
+              <span className="text-xs text-muted-foreground/50">搜索历史</span>
               <Button
                 variant="ghost"
                 size="xs"
                 onClick={() => { setHistory([]); setShowHistory(false); }}
-                className="text-[9px] text-muted-foreground/25 hover:text-destructive transition-colors"
+                className="text-xs text-muted-foreground/50 hover:text-destructive transition-colors"
               >清空</Button>
             </div>
             {history.map(h => (
@@ -183,15 +183,15 @@ export function RetrievalTester() {
                 onClick={() => handleHistorySelect(h)}
                 className="w-full flex items-center gap-2 px-2 py-[4px] rounded-md text-left hover:bg-accent/50 transition-colors group/hist cursor-pointer"
               >
-                <History size={9} className="text-muted-foreground/25 flex-shrink-0" />
+                <History size={9} className="text-muted-foreground/40 flex-shrink-0" />
                 <span className="text-xs text-foreground truncate flex-1">{h.query}</span>
-                <span className="text-[9px] text-muted-foreground/25 flex-shrink-0">{h.resultCount}条 · {h.elapsed}ms</span>
-                <span className="text-[9px] text-muted-foreground/20 flex-shrink-0">{h.time}</span>
+                <span className="text-xs text-muted-foreground/50 flex-shrink-0">{h.resultCount}条 · {h.elapsed}ms</span>
+                <span className="text-xs text-muted-foreground/50 flex-shrink-0">{h.time}</span>
                 <Button
                   variant="ghost"
                   size="icon-xs"
                   onClick={e => handleDeleteHistory(h.id, e)}
-                  className="opacity-0 group-hover/hist:opacity-100 text-muted-foreground/20 hover:text-destructive transition-all flex-shrink-0"
+                  className="opacity-0 group-hover/hist:opacity-100 text-muted-foreground/40 hover:text-destructive transition-all flex-shrink-0"
                 >
                   <X size={8} />
                 </Button>
@@ -202,7 +202,7 @@ export function RetrievalTester() {
 
         {/* Stats */}
         {elapsed !== null && results.length > 0 && (
-          <div className="flex items-center gap-2.5 mt-1.5 text-[9px] text-muted-foreground/35">
+          <div className="flex items-center gap-2.5 mt-1.5 text-xs text-muted-foreground/50">
             <span className="flex items-center gap-0.5">
               <Sparkles size={8} />
               {results.length} 个结果
@@ -217,19 +217,20 @@ export function RetrievalTester() {
       </div>
 
       {/* Results */}
-      <div className="flex-1 overflow-y-auto px-3 pb-3 space-y-1.5 [&::-webkit-scrollbar]:w-[3px] [&::-webkit-scrollbar-thumb]:bg-border/30 [&::-webkit-scrollbar-thumb]:rounded-full">
+      <div className="flex-1 overflow-y-auto px-3 pb-3 space-y-1.5 scrollbar-thin">
         {results.length === 0 && !loading && !showHistory && (
-          <div className="flex flex-col items-center justify-center h-full text-muted-foreground/25 py-12">
-            <Search size={22} strokeWidth={1.2} className="mb-1.5" />
-            <p className="text-xs">输入查询语句开始检索测试</p>
-            <p className="text-[9px] mt-0.5">结果将展示匹配的文档片段和分数</p>
-          </div>
+          <EmptyState
+            icon={Search}
+            title="输入查询语句开始检索测试"
+            description="结果将展示匹配的文档片段和分数"
+            compact
+          />
         )}
 
         {loading && (
           <div className="flex flex-col items-center justify-center py-12">
             <div className="w-5 h-5 border-2 border-cherry-primary/20 border-t-cherry-primary rounded-full animate-spin mb-2" />
-            <p className="text-xs text-muted-foreground/35">正在检索...</p>
+            <p className="text-xs text-muted-foreground/50">正在检索...</p>
           </div>
         )}
 
@@ -242,20 +243,20 @@ export function RetrievalTester() {
               className="rounded-lg border border-border/20 hover:border-border/40 bg-muted/[0.03] transition-all group/chunk"
             >
               <div className="flex items-center gap-1.5 px-2.5 py-1.5">
-                <span className="w-4 h-4 rounded bg-accent/50 flex items-center justify-center text-[9px] text-muted-foreground/50 flex-shrink-0">
+                <span className="w-4 h-4 rounded bg-accent/50 flex items-center justify-center text-xs text-muted-foreground/50 flex-shrink-0">
                   {idx + 1}
                 </span>
                 <div className="flex items-center gap-1 min-w-0 flex-1">
-                  <FileText size={9} className="text-muted-foreground/35 flex-shrink-0" />
+                  <FileText size={9} className="text-muted-foreground/40 flex-shrink-0" />
                   <span className="text-xs text-muted-foreground/50 truncate">{chunk.source}</span>
-                  <span className="text-[8px] text-muted-foreground/20 flex-shrink-0">#{chunk.chunkIndex}</span>
+                  <span className="text-xs text-muted-foreground/50 flex-shrink-0">#{chunk.chunkIndex}</span>
                 </div>
                 <ScoreBar score={chunk.score} />
                 <Button
                   variant="ghost"
                   size="icon-xs"
                   onClick={() => handleCopy(chunk.id, chunk.content)}
-                  className="w-4 h-4 rounded flex items-center justify-center text-muted-foreground/20 hover:text-foreground hover:bg-accent opacity-0 group-hover/chunk:opacity-100 transition-all flex-shrink-0"
+                  className="w-4 h-4 rounded flex items-center justify-center text-muted-foreground/40 hover:text-foreground hover:bg-accent opacity-0 group-hover/chunk:opacity-100 transition-all flex-shrink-0"
                 >
                   {isCopied ? <Check size={8} className="text-cherry-primary" /> : <Copy size={8} />}
                 </Button>
@@ -263,13 +264,13 @@ export function RetrievalTester() {
                   variant="ghost"
                   size="icon-xs"
                   onClick={() => setExpandedId(isExpanded ? null : chunk.id)}
-                  className="w-4 h-4 rounded flex items-center justify-center text-muted-foreground/20 hover:text-foreground hover:bg-accent transition-all flex-shrink-0"
+                  className="w-4 h-4 rounded flex items-center justify-center text-muted-foreground/40 hover:text-foreground hover:bg-accent transition-all flex-shrink-0"
                 >
                   {isExpanded ? <ChevronUp size={9} /> : <ChevronDown size={9} />}
                 </Button>
               </div>
               <div className={`px-2.5 pb-2 ${isExpanded ? '' : 'line-clamp-2'}`}>
-                <p className="text-xs text-foreground/75 leading-relaxed">
+                <p className="text-xs text-foreground leading-relaxed">
                   {highlightQuery(chunk.content, query)}
                 </p>
               </div>

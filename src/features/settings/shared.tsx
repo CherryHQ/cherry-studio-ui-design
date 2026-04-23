@@ -1,5 +1,5 @@
 import React from 'react';
-import { Switch, Input, Button } from '@cherry-studio/ui';
+import { Input, Button, cn } from '@cherry-studio/ui';
 
 // ===========================
 // Re-export from component library
@@ -10,32 +10,30 @@ export {
   ConfigSection,
   PanelHeader,
   InlineSelect,
+  Tabs,
+  TabsList,
+  TabsTrigger,
+  TabsContent,
 } from '@cherry-studio/ui';
 
 // ===========================
-// Toggle — now wraps Shadcn Switch
+// SectionCard — simple container (no title)
 // ===========================
-// Preserves Cherry's onChange(boolean) API for backward compatibility.
-// All 14 consumer files work without changes.
-export function Toggle({ checked, onChange, disabled }: {
-  checked: boolean;
-  onChange: (v: boolean) => void;
-  disabled?: boolean;
-  size?: 'sm' | 'md';
-}) {
+// Package has ConfigSection (with title), this is the untitled variant.
+export function SectionCard({ children, className }: { children: React.ReactNode; className?: string }) {
   return (
-    <Switch
-      checked={checked}
-      onCheckedChange={onChange}
-      disabled={disabled}
-    />
+    <div className={cn(
+      'bg-muted/50 border border-border rounded-[var(--radius-button)] px-3.5 py-1 tracking-[-0.14px]',
+      className
+    )}>
+      {children}
+    </div>
   );
 }
 
 // ===========================
-// Text Input (local shim)
+// TextInput — wraps Input with mono font support
 // ===========================
-// TODO: Replace with <Input className="font-mono text-xs"> from @cherry-studio/ui
 export function TextInput({ value, onChange, placeholder, type = 'text', mono, readOnly }: {
   value: string;
   onChange?: (v: string) => void;
@@ -51,15 +49,14 @@ export function TextInput({ value, onChange, placeholder, type = 'text', mono, r
       onChange={e => onChange?.(e.target.value)}
       placeholder={placeholder}
       readOnly={readOnly}
-      className={`h-7 text-xs ${mono ? 'font-mono' : ''}`}
+      className={cn('h-7 text-xs', mono && 'font-mono')}
     />
   );
 }
 
 // ===========================
-// Action Button (local shim)
+// ActionButton — wraps Button with variant mapping
 // ===========================
-// TODO: Replace with <Button variant="..." size="sm"> from @cherry-studio/ui
 export function ActionButton({ children, variant = 'default', onClick }: {
   children: React.ReactNode;
   variant?: 'default' | 'primary' | 'danger';
@@ -76,3 +73,4 @@ export function ActionButton({ children, variant = 'default', onClick }: {
     </Button>
   );
 }
+

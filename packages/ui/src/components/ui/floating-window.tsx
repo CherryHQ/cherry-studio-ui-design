@@ -70,7 +70,7 @@ export function FloatingWindow({
       >
         {win.tab.miniAppId ? (
           win.tab.miniAppLogoUrl ? <img src={win.tab.miniAppLogoUrl} alt="" className="w-3.5 h-3.5 rounded-[var(--radius-dot)] object-cover" /> :
-          <div className="w-3.5 h-3.5 rounded-[var(--radius-dot)] flex items-center justify-center text-primary-foreground text-xs" style={{ background: win.tab.miniAppColor }}>{win.tab.miniAppInitial}</div>
+          <div className={`w-3.5 h-3.5 rounded-[var(--radius-dot)] flex items-center justify-center text-primary-foreground text-xs ${win.tab.miniAppColor}`}>{win.tab.miniAppInitial}</div>
         ) : <Icon size={13} className="text-muted-foreground" />}
         <span className="text-xs text-foreground flex-1 truncate">{win.tab.title}</span>
         <Button
@@ -95,7 +95,7 @@ export function FloatingWindow({
         <div className="text-center">
           {win.tab.miniAppId ? (
             win.tab.miniAppLogoUrl ? <img src={win.tab.miniAppLogoUrl} alt="" className="w-8 h-8 rounded-[var(--radius-button)] mx-auto mb-2 object-cover opacity-60" /> :
-            <div className="w-8 h-8 rounded-[var(--radius-button)] mx-auto mb-2 flex items-center justify-center text-primary-foreground text-sm opacity-60" style={{ background: win.tab.miniAppColor }}>{win.tab.miniAppInitial}</div>
+            <div className={`w-8 h-8 rounded-[var(--radius-button)] mx-auto mb-2 flex items-center justify-center text-primary-foreground text-sm opacity-60 ${win.tab.miniAppColor}`}>{win.tab.miniAppInitial}</div>
           ) : <Icon size={32} className="mx-auto mb-2 opacity-30" />}
           <p>{win.tab.title}</p>
           <p className="text-xs text-muted-foreground/60 mt-1">独立窗口</p>

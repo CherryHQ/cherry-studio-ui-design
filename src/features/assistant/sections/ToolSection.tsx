@@ -1,30 +1,8 @@
 import React, { useState } from 'react';
-import { Plus, Trash2, Search, Check, ChevronDown, ChevronRight, ExternalLink, ToggleLeft, ToggleRight, Plug, Server, Wrench, Settings, AlertCircle, Globe, FileText, Code2 } from 'lucide-react';
+import { Plus, Trash2, Check, ChevronDown, ChevronRight, ExternalLink, ToggleLeft, ToggleRight, Plug, Server, Wrench, Settings, AlertCircle, Globe, FileText, Code2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Button, Input } from '@cherry-studio/ui';
-
-// ===========================
-// Mock MCP Data
-// ===========================
-
-interface MCPServer {
-  id: string;
-  name: string;
-  description: string;
-  icon: string;
-  status: 'connected' | 'disconnected' | 'error';
-  tools: MCPTool[];
-  endpoint?: string;
-  version?: string;
-}
-
-interface MCPTool {
-  id: string;
-  name: string;
-  description: string;
-  enabled: boolean;
-  category: string;
-}
+import { Button, SearchInput, Popover, PopoverTrigger, PopoverContent, Typography, StatusBadge as UIStatusBadge, Card, Switch, Checkbox } from '@cherry-studio/ui';
+import type { MCPServer } from '@/app/types';
 
 const MOCK_MCP_SERVERS: MCPServer[] = [
   {
@@ -101,17 +79,16 @@ const AVAILABLE_SERVERS: { id: string; name: string; description: string; icon: 
 // ===========================
 
 function StatusBadge({ status }: { status: MCPServer['status'] }) {
-  const config = {
-    connected: { label: '已连接', dot: 'bg-cherry-primary', text: 'text-cherry-primary-dark', bg: 'bg-cherry-active-bg' },
-    disconnected: { label: '未连接', dot: 'bg-neutral-400', text: 'text-muted-foreground', bg: 'bg-accent/20' },
-    error: { label: '异常', dot: 'bg-destructive', text: 'text-destructive', bg: 'bg-destructive/8' },
-  }[status];
-
+  const variantMap = { connected: 'success', disconnected: 'default', error: 'error' } as const;
+  const labelMap = { connected: '已连接', disconnected: '未连接', error: '异常' };
   return (
-    <span className={`inline-flex items-center gap-1 px-1.5 py-[2px] rounded-md text-[9px] ${config.text} ${config.bg}`}>
-      <span className={`w-[5px] h-[5px] rounded-full ${config.dot} ${status === 'connected' ? 'animate-pulse' : ''}`} />
-      {config.label}
-    </span>
+    <UIStatusBadge
+      variant={variantMap[status]}
+      pulse={status === 'connected'}
+      className="px-1.5 py-[2px] rounded-md"
+    >
+      {labelMap[status]}
+    </UIStatusBadge>
   );
 }
 
@@ -129,16 +106,16 @@ function ServerCard({ server, onToggleTool, onRemove, onToggleConnection }: {
   const enabledCount = server.tools.filter(t => t.enabled).length;
 
   return (
-    <div className={`rounded-xl border transition-all ${
+    <Card className={`rounded-xl transition-all shadow-none gap-0 py-0 ${
       server.status === 'connected'
         ? 'border-border/20 bg-accent/5'
         : server.status === 'error'
         ? 'border-destructive/15 bg-destructive/3'
-        : 'border-border/15 bg-accent/3'
+        : 'border-border/15 bg-accent/5'
     }`}>
       {/* Header */}
       <div className="flex items-center gap-3 px-3.5 py-3">
-        <div className="w-9 h-9 rounded-lg bg-accent/40 flex items-center justify-center text-base flex-shrink-0">
+        <div className="w-9 h-9 rounded-lg bg-accent/50 flex items-center justify-center text-base flex-shrink-0">
           {server.icon}
         </div>
         <div className="flex-1 min-w-0">
@@ -146,27 +123,19 @@ function ServerCard({ server, onToggleTool, onRemove, onToggleConnection }: {
             <span className="text-xs text-foreground">{server.name}</span>
             <StatusBadge status={server.status} />
           </div>
-          <p className="text-[9.5px] text-muted-foreground/50 mt-0.5 truncate">{server.description}</p>
+          <p className="text-xs text-muted-foreground/50 mt-0.5 truncate">{server.description}</p>
         </div>
-        <div className="flex items-center gap-1 flex-shrink-0">
-          <Button
-            variant="ghost"
-            size="icon-xs"
-            onClick={() => onToggleConnection(server.id)}
-            className={`transition-colors ${
-              server.status === 'connected'
-                ? 'text-cherry-primary hover:bg-cherry-active-bg'
-                : 'text-muted-foreground/40 hover:text-foreground hover:bg-accent/20'
-            }`}
-            title={server.status === 'connected' ? '断开连接' : '连接'}
-          >
-            {server.status === 'connected' ? <ToggleRight size={14} /> : <ToggleLeft size={14} />}
-          </Button>
+        <div className="flex items-center gap-1.5 flex-shrink-0">
+          <Switch
+            size="sm"
+            checked={server.status === 'connected'}
+            onCheckedChange={() => onToggleConnection(server.id)}
+          />
           <Button
             variant="ghost"
             size="icon-xs"
             onClick={() => setExpanded(!expanded)}
-            className="text-muted-foreground/40 hover:text-foreground hover:bg-accent/20 transition-colors"
+            className="text-muted-foreground/40 hover:text-foreground hover:bg-accent/50 transition-colors"
           >
             <motion.div animate={{ rotate: expanded ? 90 : 0 }} transition={{ duration: 0.1 }}>
               <ChevronRight size={11} />
@@ -186,10 +155,10 @@ function ServerCard({ server, onToggleTool, onRemove, onToggleConnection }: {
             className="overflow-hidden"
           >
             <div className="px-3.5 pb-3 pt-0">
-              <div className="h-px bg-border/15 mb-2.5" />
+              <div className="h-px bg-border/30 mb-2.5" />
 
               {/* Server info */}
-              <div className="flex items-center gap-3 mb-2.5 text-[9px] text-muted-foreground/45">
+              <div className="flex items-center gap-3 mb-2.5 text-xs text-muted-foreground/40">
                 {server.endpoint && (
                   <span className="flex items-center gap-1">
                     <Globe size={8} />
@@ -206,7 +175,7 @@ function ServerCard({ server, onToggleTool, onRemove, onToggleConnection }: {
 
               {/* Tools */}
               <div className="flex items-center justify-between mb-2">
-                <span className="text-[9.5px] text-muted-foreground/50">
+                <span className="text-xs text-muted-foreground/50">
                   工具列表 ({enabledCount}/{server.tools.length} 已启用)
                 </span>
                 <Button
@@ -218,7 +187,7 @@ function ServerCard({ server, onToggleTool, onRemove, onToggleConnection }: {
                       if (allEnabled === t.enabled) onToggleTool(server.id, t.id);
                     });
                   }}
-                  className="text-[9px] text-muted-foreground/40 hover:text-foreground transition-colors"
+                  className="text-xs text-muted-foreground/40 hover:text-foreground transition-colors"
                 >
                   {server.tools.every(t => t.enabled) ? '全部禁用' : '全部启用'}
                 </Button>
@@ -229,39 +198,32 @@ function ServerCard({ server, onToggleTool, onRemove, onToggleConnection }: {
                   <div
                     key={tool.id}
                     className={`flex items-center gap-2.5 px-2.5 py-[6px] rounded-lg transition-colors ${
-                      tool.enabled ? 'bg-accent/15' : 'opacity-50'
+                      tool.enabled ? 'bg-accent/15' : 'opacity-30'
                     }`}
                   >
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => onToggleTool(server.id, tool.id)}
-                      className={`w-3.5 h-3.5 p-0 rounded border flex items-center justify-center flex-shrink-0 transition-all ${
-                        tool.enabled
-                          ? 'border-cherry-primary bg-cherry-primary hover:bg-cherry-primary'
-                          : 'border-border/40 hover:border-border/60 hover:bg-transparent'
-                      }`}
-                    >
-                      {tool.enabled && <Check size={8} className="text-background" />}
-                    </Button>
+                    <Checkbox
+                      checked={tool.enabled}
+                      onCheckedChange={() => onToggleTool(server.id, tool.id)}
+                      className="flex-shrink-0"
+                    />
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-1.5">
-                        <code className="text-xs text-foreground/80 font-mono">{tool.name}</code>
+                        <code className="text-xs text-foreground font-mono">{tool.name}</code>
                       </div>
-                      <p className="text-[9px] text-muted-foreground/45 mt-px truncate">{tool.description}</p>
+                      <p className="text-xs text-muted-foreground/40 mt-px truncate">{tool.description}</p>
                     </div>
                   </div>
                 ))}
               </div>
 
-              <div className="h-px bg-border/10 mt-2.5 mb-2" />
+              <div className="h-px bg-border/30 mt-2.5 mb-2" />
 
               {/* Remove */}
               <Button
                 variant="ghost"
                 size="xs"
                 onClick={() => onRemove(server.id)}
-                className="flex items-center gap-1.5 text-[9.5px] text-destructive/50 hover:text-destructive transition-colors"
+                className="flex items-center gap-1.5 text-xs text-destructive/50 hover:text-destructive transition-colors"
               >
                 <Trash2 size={9} />
                 移除服务
@@ -270,7 +232,7 @@ function ServerCard({ server, onToggleTool, onRemove, onToggleConnection }: {
           </motion.div>
         )}
       </AnimatePresence>
-    </div>
+    </Card>
   );
 }
 
@@ -333,8 +295,8 @@ export function ToolSection() {
   return (
     <div className="max-w-lg space-y-6">
       <div>
-        <h3 className="text-sm text-foreground mb-1">MCP 工具配置</h3>
-        <p className="text-xs text-muted-foreground/55">管理 MCP 服务连接和工具权限</p>
+        <Typography variant="subtitle" className="mb-1">MCP 工具配置</Typography>
+        <p className="text-xs text-muted-foreground/60">管理 MCP 服务连接和工具权限</p>
       </div>
 
       {/* Stats */}
@@ -351,12 +313,12 @@ export function ToolSection() {
 
       {/* Server List */}
       <div>
-        <label className="text-xs text-muted-foreground/60 mb-2 block">MCP 服务</label>
+        <label className="text-sm text-muted-foreground/60 mb-2 block">MCP 服务</label>
         {servers.length === 0 ? (
           <div className="border border-dashed border-border/20 rounded-xl p-8 flex flex-col items-center">
-            <Plug size={22} strokeWidth={1.2} className="text-muted-foreground/20 mb-2" />
+            <Plug size={22} strokeWidth={1.2} className="text-muted-foreground/40 mb-2" />
             <p className="text-xs text-muted-foreground/40 mb-1">暂未添加 MCP 服务</p>
-            <p className="text-[9px] text-muted-foreground/30">添加 MCP 服务后，助手可以调用外部工具</p>
+            <p className="text-xs text-muted-foreground/50">添加 MCP 服务后，助手可以调用外部工具</p>
           </div>
         ) : (
           <div className="space-y-2">
@@ -373,60 +335,41 @@ export function ToolSection() {
         )}
 
         {/* Add Server */}
-        <div className="relative mt-2.5">
-          <Button
-            variant="outline"
-            size="xs"
-            onClick={() => setShowAddPicker(!showAddPicker)}
-            className="flex items-center gap-1 text-xs text-muted-foreground/50 hover:text-foreground hover:bg-accent/30 transition-colors border-border/15 hover:border-border/30"
-          >
-            <Plus size={10} /> 添加 MCP 服务
-          </Button>
-          <AnimatePresence>
-            {showAddPicker && (
-              <div className="contents">
-                <div className="fixed inset-0 z-40" onClick={() => { setShowAddPicker(false); setAddSearch(''); }} />
-                <motion.div
-                  initial={{ opacity: 0, y: -4 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -4 }}
-                  className="absolute top-full left-0 mt-1 z-50 bg-popover border border-border/30 rounded-xl shadow-xl p-2 min-w-[260px]"
+        <Popover open={showAddPicker} onOpenChange={(open) => { setShowAddPicker(open); if (!open) setAddSearch(''); }}>
+          <PopoverTrigger asChild>
+            <Button
+              variant="outline"
+              size="xs"
+              className="flex items-center gap-1 text-xs text-muted-foreground/50 hover:text-foreground hover:bg-accent/50 transition-colors border-border/15 hover:border-border/30 mt-2.5"
+            >
+              <Plus size={10} /> 添加 MCP 服务
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent align="start" className="p-2 min-w-[260px]">
+            <div className="mb-2">
+              <SearchInput value={addSearch} onChange={setAddSearch} placeholder="搜索可用服务..." autoFocus />
+            </div>
+            {availableFiltered.length === 0 ? (
+              <p className="text-xs text-muted-foreground/40 px-2 py-3 text-center">没有更多可用的服务</p>
+            ) : (
+              availableFiltered.map(s => (
+                <Button size="inline"
+                  key={s.id}
+                  variant="ghost"
+                  onClick={() => handleAddServer(s.id)}
+                  className="flex items-center gap-2.5 w-full justify-start px-2.5 py-2 rounded-lg text-left hover:bg-accent/50 transition-colors"
                 >
-                  <div className="relative mb-2">
-                    <Search size={10} className="absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground/40" />
-                    <Input
-                      value={addSearch}
-                      onChange={e => setAddSearch(e.target.value)}
-                      placeholder="搜索可用服务..."
-                      className="w-full pl-6 pr-2 py-1.5 rounded-lg border-border/15 bg-accent/10 text-xs focus:border-border/40 transition-all"
-                      autoFocus
-                    />
+                  <span className="text-sm">{s.icon}</span>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-xs text-foreground truncate">{s.name}</div>
+                    <div className="text-xs text-muted-foreground/40">{s.description}</div>
                   </div>
-                  {availableFiltered.length === 0 ? (
-                    <p className="text-[9px] text-muted-foreground/40 px-2 py-3 text-center">没有更多可用的服务</p>
-                  ) : (
-                    availableFiltered.map(s => (
-                      <Button
-                        key={s.id}
-                        variant="ghost"
-                        size="xs"
-                        onClick={() => handleAddServer(s.id)}
-                        className="flex items-center gap-2.5 w-full h-auto justify-start px-2.5 py-2 rounded-lg text-left hover:bg-accent/40 transition-colors"
-                      >
-                        <span className="text-sm">{s.icon}</span>
-                        <div className="flex-1 min-w-0">
-                          <div className="text-xs text-foreground truncate">{s.name}</div>
-                          <div className="text-[8.5px] text-muted-foreground/40">{s.description}</div>
-                        </div>
-                        <Plus size={10} className="text-muted-foreground/30 flex-shrink-0" />
-                      </Button>
-                    ))
-                  )}
-                </motion.div>
-              </div>
+                  <Plus size={10} className="text-muted-foreground/40 flex-shrink-0" />
+                </Button>
+              ))
             )}
-          </AnimatePresence>
-        </div>
+          </PopoverContent>
+        </Popover>
       </div>
 
       {/* Info note */}
@@ -434,7 +377,7 @@ export function ToolSection() {
         <AlertCircle size={12} className="text-info/50 flex-shrink-0 mt-px" />
         <div>
           <p className="text-xs text-info/60">MCP (Model Context Protocol) 允许模型安全地调用外部工具。</p>
-          <p className="text-[9px] text-info/40 mt-0.5">仅启用必要的工具可以提高安全性和响应速度。</p>
+          <p className="text-xs text-info/40 mt-0.5">仅启用必要的工具可以提高安全性和响应速度。</p>
         </div>
       </div>
     </div>

@@ -8,38 +8,13 @@ import {
   BookOpen, Wrench, FileText, Database, Code, Image,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Button } from '@cherry-studio/ui';
 import {
-  VarManagerPanel, SYSTEM_VARIABLES, SYSTEM_VAR_ICONS, VAR_TYPE_CONFIG,
+  Button, Textarea, VarManagerPanel, SYSTEM_VARIABLES, SYSTEM_VAR_ICONS, VAR_TYPE_CONFIG, Typography,
   type VariableDef, type VarType,
-} from '@/app/components/ui/VarManagerPanel';
+} from '@cherry-studio/ui';
 
-// ===========================
-// Types
-// ===========================
-
-type BadgeKind = 'system' | 'custom' | 'kb' | 'mcp';
-type SlashTab = 'var' | 'kb' | 'mcp';
-
-interface KBItem {
-  id: string;
-  name: string;
-  description: string;
-  docCount: number;
-}
-
-interface MCPTool {
-  id: string;
-  name: string;
-  description: string;
-  icon: React.ElementType;
-}
-
-interface FewShotExample {
-  id: string;
-  user: string;
-  assistant: string;
-}
+import type { MCPTool } from '@/app/types';
+import type { BadgeKind, SlashTab, KBItem, FewShotExample } from '@/app/types/chat';
 
 // ===========================
 // Constants
@@ -72,10 +47,10 @@ const SLASH_TABS: { id: SlashTab; label: string; icon: React.ElementType }[] = [
 // ===========================
 
 const BADGE_STYLES: Record<BadgeKind, string> = {
-  system: 'display:inline-flex;align-items:center;gap:2px;padding:1px 7px;margin:0 2px;border-radius:5px;background:rgba(20,184,166,0.13);color:rgb(94,234,212);font-size:10px;line-height:1.6;cursor:default;user-select:all;vertical-align:baseline;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;white-space:nowrap;',
-  custom: 'display:inline-flex;align-items:center;gap:2px;padding:1px 7px;margin:0 2px;border-radius:5px;background:rgba(139,92,246,0.13);color:rgb(167,139,250);font-size:10px;line-height:1.6;cursor:default;user-select:all;vertical-align:baseline;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;white-space:nowrap;',
-  kb: 'display:inline-flex;align-items:center;gap:2px;padding:1px 7px;margin:0 2px;border-radius:5px;background:rgba(59,130,246,0.13);color:rgb(147,197,253);font-size:10px;line-height:1.6;cursor:default;user-select:all;vertical-align:baseline;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;white-space:nowrap;',
-  mcp: 'display:inline-flex;align-items:center;gap:2px;padding:1px 7px;margin:0 2px;border-radius:5px;background:rgba(245,158,11,0.13);color:rgb(252,211,77);font-size:10px;line-height:1.6;cursor:default;user-select:all;vertical-align:baseline;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;white-space:nowrap;',
+  system: 'display:inline-flex;align-items:center;gap:2px;padding:1px 7px;margin:0 2px;border-radius:5px;background:color-mix(in oklch,var(--color-teal-500) 13%,transparent);color:var(--color-teal-300);font-size:10px;line-height:1.6;cursor:default;user-select:all;vertical-align:baseline;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;white-space:nowrap;',
+  custom: 'display:inline-flex;align-items:center;gap:2px;padding:1px 7px;margin:0 2px;border-radius:5px;background:color-mix(in oklch,var(--color-accent-violet) 13%,transparent);color:var(--color-accent-violet);font-size:10px;line-height:1.6;cursor:default;user-select:all;vertical-align:baseline;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;white-space:nowrap;',
+  kb: 'display:inline-flex;align-items:center;gap:2px;padding:1px 7px;margin:0 2px;border-radius:5px;background:color-mix(in oklch,var(--color-blue-500) 13%,transparent);color:var(--color-blue-300);font-size:10px;line-height:1.6;cursor:default;user-select:all;vertical-align:baseline;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;white-space:nowrap;',
+  mcp: 'display:inline-flex;align-items:center;gap:2px;padding:1px 7px;margin:0 2px;border-radius:5px;background:color-mix(in oklch,var(--color-amber-500) 13%,transparent);color:var(--color-amber-300);font-size:10px;line-height:1.6;cursor:default;user-select:all;vertical-align:baseline;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;white-space:nowrap;',
 };
 
 // ===========================
@@ -565,20 +540,19 @@ export function PromptSection({ hideFewShot }: { hideFewShot?: boolean } = {}) {
   return (
     <div className="max-w-2xl space-y-6">
       <div>
-        <h3 className="text-sm text-foreground mb-1">提示词配置</h3>
-        <p className="text-xs text-muted-foreground/55">{hideFewShot ? '定义 System Prompt 和变量' : '定义 System Prompt、变量和对话样本'}</p>
+        <Typography variant="subtitle" className="mb-1">提示词配置</Typography>
+        <p className="text-xs text-muted-foreground/60">{hideFewShot ? '定义 System Prompt 和变量' : '定义 System Prompt、变量和对话样本'}</p>
       </div>
 
       {/* System Prompt */}
       <div>
         <div className="flex items-center mb-1.5">
-          <label className="text-xs text-foreground/80">系统提示词</label>
+          <label className="text-xs text-foreground">系统提示词</label>
           <div className="flex-1" />
-          <Button
+          <Button size="inline"
             variant="ghost"
-            size="xs"
             onClick={() => setShowVarPanel(true)}
-            className="gap-1 px-2 py-0.5 rounded-md text-[9px] text-violet-500/70 bg-violet-500/8 hover:bg-violet-500/15 hover:text-violet-500 border border-violet-500/15 transition-all h-auto"
+            className="gap-1 px-2 py-0.5 rounded-md text-xs text-accent-violet/70 bg-accent-violet/8 hover:bg-accent-violet/15 hover:text-accent-violet border border-accent-violet/15 transition-all"
           >
             <Variable size={9} />
             <span>变量管理</span>
@@ -586,7 +560,7 @@ export function PromptSection({ hideFewShot }: { hideFewShot?: boolean } = {}) {
         </div>
         <div className="relative">
           {/* ContentEditable Editor */}
-          <div className="rounded-xl border border-border/20 bg-accent/10 transition-all focus-within:border-border/40 focus-within:bg-accent/15 overflow-hidden">
+          <div className="rounded-xl border border-border/20 bg-accent/15 transition-all focus-within:border-border/40 focus-within:bg-accent/15 overflow-hidden">
             <div
               ref={editorRef}
               contentEditable
@@ -597,20 +571,20 @@ export function PromptSection({ hideFewShot }: { hideFewShot?: boolean } = {}) {
               onCompositionStart={() => { isComposing.current = true; }}
               onCompositionEnd={() => { isComposing.current = false; handleEditorInput(); }}
               spellCheck={false}
-              className="w-full px-4 py-3 text-xs text-foreground outline-none font-mono leading-relaxed overflow-y-auto [&::-webkit-scrollbar]:w-[3px] [&::-webkit-scrollbar-thumb]:bg-border/30 [&::-webkit-scrollbar-thumb]:rounded-full"
+              className="w-full px-4 py-3 text-xs text-foreground outline-none font-mono leading-relaxed overflow-y-auto scrollbar-thin"
               style={{ minHeight: 120, height: editorHeight }}
             />
             {editorEmpty && (
-              <div className="absolute top-3 left-4 text-xs text-muted-foreground/25 font-mono pointer-events-none select-none">
+              <div className="absolute top-3 left-4 text-xs text-muted-foreground/50 font-mono pointer-events-none select-none">
                 输入 / 快速插入变量、知识库、MCP 工具...
               </div>
             )}
             {/* Resize handle */}
             <div
-              className="flex items-center justify-center h-4 cursor-ns-resize group/resize hover:bg-accent/20 transition-colors"
+              className="flex items-center justify-center h-4 cursor-ns-resize group/resize hover:bg-accent/50 transition-colors"
               onMouseDown={startResize}
             >
-              <GripHorizontal size={10} className="text-muted-foreground/20 group-hover/resize:text-muted-foreground/40 transition-colors" />
+              <GripHorizontal size={10} className="text-muted-foreground/40 group-hover/resize:text-muted-foreground/50 transition-colors" />
             </div>
           </div>
 
@@ -623,7 +597,7 @@ export function PromptSection({ hideFewShot }: { hideFewShot?: boolean } = {}) {
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 exit={{ opacity: 0, y: -4, scale: 0.98 }}
                 transition={{ duration: 0.12 }}
-                className="absolute z-50 bg-popover border border-border/30 rounded-xl shadow-2xl shadow-black/10 w-[300px] max-h-[280px] overflow-hidden"
+                className="absolute z-[var(--z-popover)] bg-popover border border-border/30 rounded-xl shadow-2xl shadow-black/10 w-[300px] max-h-[280px] overflow-hidden"
                 style={{ top: slashPos.top, left: slashPos.left }}
               >
                 {/* Tab bar */}
@@ -633,15 +607,14 @@ export function PromptSection({ hideFewShot }: { hideFewShot?: boolean } = {}) {
                       const TabIcon = tab.icon;
                       const isActive = slashTab === tab.id;
                       return (
-                        <Button
+                        <Button size="inline"
                           variant="ghost"
-                          size="xs"
                           key={tab.id}
                           onClick={() => { setSlashTab(tab.id); setSlashIndex(0); }}
-                          className={`gap-1 px-2.5 py-1.5 rounded-t-lg text-[9px] transition-all border-b-2 h-auto ${
+                          className={`gap-1 px-2.5 py-1.5 rounded-t-lg text-xs transition-all border-b-2 ${
                             isActive
-                              ? 'text-foreground border-foreground/40 bg-accent/30'
-                              : 'text-muted-foreground/45 border-transparent hover:text-foreground/70 hover:bg-accent/15'
+                              ? 'text-foreground border-border bg-accent/25'
+                              : 'text-muted-foreground/40 border-transparent hover:text-foreground hover:bg-accent/15'
                           }`}
                         >
                           <TabIcon size={9} />
@@ -650,7 +623,7 @@ export function PromptSection({ hideFewShot }: { hideFewShot?: boolean } = {}) {
                       );
                     })}
                     {slashSearch && (
-                      <span className="text-[8px] text-muted-foreground/30 ml-auto pr-1 truncate max-w-[80px]">
+                      <span className="text-xs text-muted-foreground/50 ml-auto pr-1 truncate max-w-[80px]">
                         {slashSearch}
                       </span>
                     )}
@@ -658,43 +631,42 @@ export function PromptSection({ hideFewShot }: { hideFewShot?: boolean } = {}) {
                 </div>
 
                 {/* Tab content */}
-                <div className="overflow-y-auto max-h-[210px] py-1 [&::-webkit-scrollbar]:w-[2px] [&::-webkit-scrollbar-thumb]:bg-border/30">
+                <div className="overflow-y-auto max-h-[210px] py-1 scrollbar-thin-xs">
                   {/* Variables tab */}
                   {slashTab === 'var' && (
                     <div>
                       {filteredSlashVars.length === 0 && (
-                        <div className="px-3 py-4 text-center text-[9px] text-muted-foreground/35">无匹配变量</div>
+                        <div className="px-3 py-4 text-center text-xs text-muted-foreground/40">无匹配变量</div>
                       )}
                       {/* System variables */}
                       {filteredSlashVars.some(v => v.isSystem) && (
                         <div className="px-3 pt-1.5 pb-0.5">
-                          <span className="text-[8px] text-muted-foreground/35 uppercase tracking-wider">系统变量</span>
+                          <span className="text-xs text-muted-foreground/50 uppercase tracking-wider">系统变量</span>
                         </div>
                       )}
                       {filteredSlashVars.filter(v => v.isSystem).map((v) => {
                         const idx = filteredSlashVars.indexOf(v);
                         const SysIcon = SYSTEM_VAR_ICONS[v.name] || Variable;
                         return (
-                          <Button
+                          <Button size="inline"
                             variant="ghost"
-                            size="xs"
                             key={v.id}
                             data-active={idx === slashIndex}
                             onClick={() => insertVariable(v.name)}
-                            className={`gap-2 w-full px-3 py-[6px] justify-start h-auto ${
-                              idx === slashIndex ? 'bg-accent/60 text-foreground' : 'text-muted-foreground/70 hover:bg-accent/30 hover:text-foreground'
+                            className={`gap-2 w-full px-3 py-[6px] justify-start ${
+                              idx === slashIndex ? 'bg-accent/50 text-foreground' : 'text-muted-foreground/60 hover:bg-accent/50 hover:text-foreground'
                             }`}
                           >
-                            <SysIcon size={11} className="text-teal-400/60 flex-shrink-0" />
+                            <SysIcon size={11} className="text-accent-emerald/60 flex-shrink-0" />
                             <span className="text-xs font-mono flex-shrink-0">{v.name}</span>
-                            <span className="text-[9px] text-muted-foreground/40 truncate ml-auto">{v.description}</span>
+                            <span className="text-xs text-muted-foreground/40 truncate ml-auto">{v.description}</span>
                           </Button>
                         );
                       })}
                       {/* User variables */}
                       {filteredSlashVars.some(v => !v.isSystem) && (
                         <div className="px-3 pt-2 pb-0.5">
-                          <span className="text-[8px] text-muted-foreground/35 uppercase tracking-wider">自定义变量</span>
+                          <span className="text-xs text-muted-foreground/50 uppercase tracking-wider">自定义变量</span>
                         </div>
                       )}
                       {filteredSlashVars.filter(v => !v.isSystem).map((v) => {
@@ -702,19 +674,18 @@ export function PromptSection({ hideFewShot }: { hideFewShot?: boolean } = {}) {
                         const tc = VAR_TYPE_CONFIG[v.type];
                         const TypeIcon = tc.icon;
                         return (
-                          <Button
+                          <Button size="inline"
                             variant="ghost"
-                            size="xs"
                             key={v.id}
                             data-active={idx === slashIndex}
                             onClick={() => insertVariable(v.name)}
-                            className={`gap-2 w-full px-3 py-[6px] justify-start h-auto ${
-                              idx === slashIndex ? 'bg-accent/60 text-foreground' : 'text-muted-foreground/70 hover:bg-accent/30 hover:text-foreground'
+                            className={`gap-2 w-full px-3 py-[6px] justify-start ${
+                              idx === slashIndex ? 'bg-accent/50 text-foreground' : 'text-muted-foreground/60 hover:bg-accent/50 hover:text-foreground'
                             }`}
                           >
                             <TypeIcon size={11} className={`flex-shrink-0 ${tc.color.split(' ')[0]}`} />
                             <span className="text-xs font-mono flex-shrink-0">{v.name}</span>
-                            <span className="text-[9px] text-muted-foreground/40 truncate ml-auto">{v.description || v.defaultValue}</span>
+                            <span className="text-xs text-muted-foreground/40 truncate ml-auto">{v.description || v.defaultValue}</span>
                           </Button>
                         );
                       })}
@@ -725,22 +696,21 @@ export function PromptSection({ hideFewShot }: { hideFewShot?: boolean } = {}) {
                   {slashTab === 'kb' && (
                     <div>
                       {filteredSlashKB.length === 0 && (
-                        <div className="px-3 py-4 text-center text-[9px] text-muted-foreground/35">无匹配知识库</div>
+                        <div className="px-3 py-4 text-center text-xs text-muted-foreground/40">无匹配知识库</div>
                       )}
                       {filteredSlashKB.map((kb, i) => (
-                        <Button
+                        <Button size="inline"
                           variant="ghost"
-                          size="xs"
                           key={kb.id}
                           data-active={i === slashIndex}
                           onClick={() => insertBadge(kb.name, 'kb')}
-                          className={`gap-2 w-full px-3 py-[6px] justify-start h-auto ${
-                            i === slashIndex ? 'bg-accent/60 text-foreground' : 'text-muted-foreground/70 hover:bg-accent/30 hover:text-foreground'
+                          className={`gap-2 w-full px-3 py-[6px] justify-start ${
+                            i === slashIndex ? 'bg-accent/50 text-foreground' : 'text-muted-foreground/60 hover:bg-accent/50 hover:text-foreground'
                           }`}
                         >
                           <BookOpen size={11} className="text-info/60 flex-shrink-0" />
                           <span className="text-xs flex-shrink-0">{kb.name}</span>
-                          <span className="text-[9px] text-muted-foreground/40 truncate ml-auto">{kb.docCount} 篇</span>
+                          <span className="text-xs text-muted-foreground/40 truncate ml-auto">{kb.docCount} 篇</span>
                         </Button>
                       ))}
                     </div>
@@ -750,24 +720,23 @@ export function PromptSection({ hideFewShot }: { hideFewShot?: boolean } = {}) {
                   {slashTab === 'mcp' && (
                     <div>
                       {filteredSlashMCP.length === 0 && (
-                        <div className="px-3 py-4 text-center text-[9px] text-muted-foreground/35">无匹配工具</div>
+                        <div className="px-3 py-4 text-center text-xs text-muted-foreground/40">无匹配工具</div>
                       )}
                       {filteredSlashMCP.map((tool, i) => {
                         const ToolIcon = tool.icon;
                         return (
-                          <Button
+                          <Button size="inline"
                             variant="ghost"
-                            size="xs"
                             key={tool.id}
                             data-active={i === slashIndex}
                             onClick={() => insertBadge(tool.name, 'mcp')}
-                            className={`gap-2 w-full px-3 py-[6px] justify-start h-auto ${
-                              i === slashIndex ? 'bg-accent/60 text-foreground' : 'text-muted-foreground/70 hover:bg-accent/30 hover:text-foreground'
+                            className={`gap-2 w-full px-3 py-[6px] justify-start ${
+                              i === slashIndex ? 'bg-accent/50 text-foreground' : 'text-muted-foreground/60 hover:bg-accent/50 hover:text-foreground'
                             }`}
                           >
                             <ToolIcon size={11} className="text-warning/60 flex-shrink-0" />
                             <span className="text-xs font-mono flex-shrink-0">{tool.name}</span>
-                            <span className="text-[9px] text-muted-foreground/40 truncate ml-auto">{tool.description}</span>
+                            <span className="text-xs text-muted-foreground/40 truncate ml-auto">{tool.description}</span>
                           </Button>
                         );
                       })}
@@ -776,7 +745,7 @@ export function PromptSection({ hideFewShot }: { hideFewShot?: boolean } = {}) {
                 </div>
 
                 {/* Footer */}
-                <div className="px-3 py-1.5 border-t border-border/15 flex items-center gap-3 text-[8px] text-muted-foreground/30">
+                <div className="px-3 py-1.5 border-t border-border/15 flex items-center gap-3 text-xs text-muted-foreground/50">
                   <span>↑↓ 导航</span>
                   <span>↵ 选择</span>
                   <span>Tab 切换</span>
@@ -787,21 +756,21 @@ export function PromptSection({ hideFewShot }: { hideFewShot?: boolean } = {}) {
           </AnimatePresence>
         </div>
         <div className="flex items-center justify-end mt-1.5 px-1 gap-2">
-          <span className="text-[9px] text-muted-foreground/30">{charCount} 字符</span>
-          <span className="text-[9px] text-muted-foreground/30">·</span>
-          <span className="text-[9px] text-muted-foreground/30">{refTotal} 个引</span>
+          <span className="text-xs text-muted-foreground/50">{charCount} 字符</span>
+          <span className="text-xs text-muted-foreground/30">·</span>
+          <span className="text-xs text-muted-foreground/50">{refTotal} 个引</span>
         </div>
       </div>
 
       {/* Few-shot Examples */}
       {!hideFewShot && (
         <div className="border border-border/15 rounded-xl overflow-hidden">
-          <Button variant="ghost" size="sm" onClick={() => setFsOpen(!fsOpen)}
-            className="flex items-center gap-2 w-full px-4 py-3 justify-start h-auto hover:bg-accent/10 transition-colors">
-            {fsOpen ? <ChevronDown size={11} className="text-muted-foreground/45" /> : <ChevronRight size={11} className="text-muted-foreground/45" />}
-            <MessageCircle size={12} className="text-foreground/45" />
+          <Button variant="ghost" size="inline" onClick={() => setFsOpen(!fsOpen)}
+            className="flex items-center gap-2 w-full px-4 py-3 justify-start hover:bg-accent/15 transition-colors">
+            {fsOpen ? <ChevronDown size={11} className="text-muted-foreground/40" /> : <ChevronRight size={11} className="text-muted-foreground/40" />}
+            <MessageCircle size={12} className="text-muted-foreground/60" />
             <span className="text-xs text-foreground">对话样本 (Few-Shot)</span>
-            <span className="text-[9px] text-muted-foreground/40 ml-1">{fewShots.length}</span>
+            <span className="text-xs text-muted-foreground/40 ml-1">{fewShots.length}</span>
           </Button>
           <AnimatePresence>
             {fsOpen && (
@@ -810,26 +779,26 @@ export function PromptSection({ hideFewShot }: { hideFewShot?: boolean } = {}) {
                   {fewShots.map((fs, i) => (
                     <div key={fs.id} className="group border border-border/10 rounded-xl p-3 space-y-2 relative hover:border-border/25 transition-colors">
                       <div className="flex items-center justify-between mb-1">
-                        <span className="text-[9px] text-muted-foreground/40">样本 {i + 1}</span>
+                        <span className="text-xs text-muted-foreground/40">样本 {i + 1}</span>
                         <Button variant="ghost" size="icon-xs" onClick={() => removeFewShot(fs.id)}
-                          className="w-5 h-5 rounded-md text-muted-foreground/25 hover:text-destructive hover:bg-destructive/10 opacity-0 group-hover:opacity-100 transition-all">
+                          className="w-5 h-5 rounded-md text-muted-foreground/40 hover:text-destructive hover:bg-destructive/10 opacity-0 group-hover:opacity-100 transition-all">
                           <Trash2 size={9} />
                         </Button>
                       </div>
                       <div>
-                        <label className="text-[9px] text-info/50 mb-1 block">用户</label>
-                        <textarea value={fs.user} onChange={e => updateFewShot(fs.id, 'user', e.target.value)} rows={2}
-                          className="w-full px-2.5 py-1.5 rounded-lg border border-border/15 bg-accent/10 text-xs text-foreground outline-none focus:border-border/40 transition-all resize-none" />
+                        <label className="text-xs text-info/50 mb-1 block">用户</label>
+                        <Textarea value={fs.user} onChange={e => updateFewShot(fs.id, 'user', e.target.value)} rows={2}
+                          className="w-full px-2.5 py-1.5 rounded-lg border border-border/15 bg-accent/15 text-xs text-foreground outline-none focus:border-border/40 transition-all resize-none" />
                       </div>
                       <div>
-                        <label className="text-[9px] text-foreground/40 mb-1 block">助手</label>
-                        <textarea value={fs.assistant} onChange={e => updateFewShot(fs.id, 'assistant', e.target.value)} rows={2}
-                          className="w-full px-2.5 py-1.5 rounded-lg border border-border/15 bg-accent/10 text-xs text-foreground outline-none focus:border-border/40 transition-all resize-none" />
+                        <label className="text-xs text-muted-foreground/60 mb-1 block">助手</label>
+                        <Textarea value={fs.assistant} onChange={e => updateFewShot(fs.id, 'assistant', e.target.value)} rows={2}
+                          className="w-full px-2.5 py-1.5 rounded-lg border border-border/15 bg-accent/15 text-xs text-foreground outline-none focus:border-border/40 transition-all resize-none" />
                       </div>
                     </div>
                   ))}
-                  <Button variant="ghost" size="xs" onClick={addFewShot}
-                    className="gap-1 px-2 py-1.5 rounded-lg text-xs text-muted-foreground/45 hover:text-foreground hover:bg-accent/30 transition-colors h-auto">
+                  <Button variant="ghost" size="inline" onClick={addFewShot}
+                    className="gap-1 px-2 py-1.5 rounded-lg text-xs text-muted-foreground/40 hover:text-foreground hover:bg-accent/50 transition-colors">
                     <Plus size={10} /> 添加对话样本
                   </Button>
                 </div>

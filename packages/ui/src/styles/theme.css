@@ -57,7 +57,7 @@
 
   --font-weight-medium: 500;
   --font-weight-normal: 400;
-  --ring: var(--primary);
+  --ring: var(--muted-foreground);
   --chart-1: #3582FF;
   --chart-2: #6366F1;
   --chart-3: #8755E9;
@@ -244,7 +244,7 @@
   --shade-7: #c0c0c0;
   --shade-8: #a0a0a0;
   --switch-background: oklch(0.355 0 0);
-  --ring: var(--primary);
+  --ring: var(--muted-foreground);
 
   /* Button gradient tokens (dark) — Secondary (derives from --secondary) */
   --btn-default-from: color-mix(in srgb, var(--secondary), black 5%);

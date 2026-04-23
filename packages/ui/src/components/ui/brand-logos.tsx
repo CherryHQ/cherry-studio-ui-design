@@ -4,6 +4,9 @@ import * as React from "react"
 
 import { cn } from "../../lib/utils"
 
+// @lobehub/icons — ProviderIcon renders colored avatar/icon for any known AI provider
+import LobeProviderIcon from "@lobehub/icons/es/features/ProviderIcon"
+
 interface LogoProps {
   size?: number
   className?: string
@@ -21,18 +24,20 @@ function LetterBadge({
   size?: number
   className?: string
 }) {
+  const isCssClass = bg.startsWith("bg-")
   return (
     <div
       data-slot="brand-logos"
       className={cn(
         "flex items-center justify-center text-white shrink-0",
+        isCssClass && bg,
         className
       )}
       style={{
         width: size,
         height: size,
         borderRadius: size * 0.25,
-        background: bg,
+        ...(isCssClass ? {} : { background: bg }),
         fontSize: size * 0.45,
         fontWeight: 700,
         lineHeight: 1,
@@ -530,6 +535,29 @@ const BRAND_LOGO_MAP: Record<string, (props: LogoProps) => React.JSX.Element> = 
     <LetterBadge letter="2x" bg="#ef4444" size={props.size} className={props.className} />
   ),
 
+  // Image generation
+  midjourney: (props: LogoProps) => (
+    <LetterBadge letter="M" bg="#000000" size={props.size} className={props.className} />
+  ),
+  "stability ai": (props: LogoProps) => (
+    <LetterBadge letter="S" bg="#7c3aed" size={props.size} className={props.className} />
+  ),
+  "black forest labs": (props: LogoProps) => (
+    <LetterBadge letter="F" bg="#1a1a1a" size={props.size} className={props.className} />
+  ),
+  ideogram: (props: LogoProps) => (
+    <LetterBadge letter="I" bg="#3b82f6" size={props.size} className={props.className} />
+  ),
+  replicate: (props: LogoProps) => (
+    <LetterBadge letter="R" bg="#0f172a" size={props.size} className={props.className} />
+  ),
+  "together ai": (props: LogoProps) => (
+    <LetterBadge letter="T" bg="#0ea5e9" size={props.size} className={props.className} />
+  ),
+  leonardoai: (props: LogoProps) => (
+    <LetterBadge letter="L" bg="#8b5cf6" size={props.size} className={props.className} />
+  ),
+
   // Other
   grok: (props: LogoProps) => (
     <LetterBadge letter="X" bg="#000000" size={props.size} className={props.className} />
@@ -563,7 +591,28 @@ const BRAND_LOGO_MAP: Record<string, (props: LogoProps) => React.JSX.Element> = 
   ),
 }
 
-/** Get a brand logo component by id. Falls back to a letter badge. */
+// IDs known to @lobehub/icons ProviderIcon (subset we use)
+const LOBE_PROVIDER_IDS = new Set([
+  "openai", "chatgpt", "anthropic", "claude", "google", "vertex-ai", "aistudio",
+  "gemini", "ollama", "deepseek", "mistral", "lechat", "groq", "qwen", "qwenchat",
+  "meta", "perplexity", "github", "copilot", "huggingchat", "huggingface",
+  "moonshot", "kimi", "minimax", "zhipu", "baidu", "yi",
+])
+
+// Alias mapping for ProviderIcon provider prop
+const LOBE_ID_ALIAS: Record<string, string> = {
+  chatgpt: "openai",
+  "vertex-ai": "google",
+  aistudio: "google",
+  lechat: "mistral",
+  qwenchat: "qwen",
+  copilot: "github",
+  ghcopilot: "github",
+  huggingchat: "huggingface",
+  kimi: "moonshot",
+}
+
+/** Get a brand logo component by id. Tries @lobehub/icons ProviderIcon first, then built-in SVG, then letter badge. */
 function BrandLogo({
   id,
   fallbackLetter,
@@ -577,8 +626,19 @@ function BrandLogo({
   size?: number
   className?: string
 }) {
-  const Logo = BRAND_LOGO_MAP[id.toLowerCase()]
+  const key = id.toLowerCase()
+
+  // 1. Try @lobehub/icons ProviderIcon (colored avatar)
+  if (LOBE_PROVIDER_IDS.has(key)) {
+    const provider = LOBE_ID_ALIAS[key] || key
+    return <LobeProviderIcon provider={provider} size={size} type="avatar" className={className} />
+  }
+
+  // 2. Try built-in BRAND_LOGO_MAP
+  const Logo = BRAND_LOGO_MAP[key]
   if (Logo) return <Logo size={size} className={className} />
+
+  // 3. Fallback to letter badge
   if (fallbackLetter)
     return (
       <LetterBadge

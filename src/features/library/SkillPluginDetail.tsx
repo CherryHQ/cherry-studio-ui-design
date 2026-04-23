@@ -7,7 +7,7 @@ import {
 import { motion, AnimatePresence } from 'motion/react';
 import type { ResourceItem } from '@/app/types';
 import { RESOURCE_TYPE_CONFIG, TAG_COLORS, DEFAULT_TAG_COLOR } from '@/app/config/constants';
-import { Button, Input, Switch } from '@cherry-studio/ui';
+import { Button, Input, Switch, Textarea } from '@cherry-studio/ui';
 
 interface Props {
   resource: ResourceItem;
@@ -66,27 +66,27 @@ export function SkillPluginDetail({ resource, onBack, onToggle, onDelete }: Prop
     <div className="flex-1 flex flex-col min-h-0 bg-background">
       {/* Header */}
       <div className="flex items-center gap-3 px-5 py-3 border-b border-border/15 flex-shrink-0">
-        <Button variant="ghost" size="icon" onClick={onBack} className="w-7 h-7 rounded-lg flex items-center justify-center text-muted-foreground/40 hover:text-foreground hover:bg-accent/40 transition-colors">
+        <Button variant="ghost" size="icon" onClick={onBack} className="w-7 h-7 rounded-lg flex items-center justify-center text-muted-foreground/40 hover:text-foreground hover:bg-accent/50 transition-colors">
           <ArrowLeft size={14} />
         </Button>
         <div className="flex items-center gap-1 text-xs text-muted-foreground/50">
           <span className="hover:text-foreground cursor-pointer transition-colors" onClick={onBack}>资源库</span>
           <ChevronRight size={9} />
           <span className="text-foreground">{resource.name}</span>
-          <span className="text-muted-foreground/35 ml-1">({cfg.label})</span>
+          <span className="text-muted-foreground/50 ml-1">({cfg.label})</span>
         </div>
         <div className="flex-1" />
         <AnimatePresence>
           {saved && <motion.span initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0 }} className="text-xs text-cherry-primary">已保存</motion.span>}
         </AnimatePresence>
-        <Button variant="outline" size="sm" onClick={onBack} className="px-3 py-1.5 h-auto rounded-lg text-xs text-muted-foreground/50 hover:text-foreground hover:bg-accent/30 border border-border/20 transition-all">取消</Button>
-        <Button variant="default" size="sm" onClick={handleSave} className="flex items-center gap-1.5 px-3 py-1.5 h-auto rounded-lg bg-foreground text-background text-xs hover:bg-foreground/90 transition-colors active:scale-[0.97]">
+        <Button variant="outline" size="sm" onClick={onBack} className="px-3 rounded-lg text-xs text-muted-foreground/50 hover:text-foreground hover:bg-accent/50 border border-border/20 transition-all">取消</Button>
+        <Button variant="default" size="sm" onClick={handleSave} className="flex items-center gap-1.5 px-3 rounded-lg text-xs transition-colors active:scale-[0.97]">
           <Save size={10} /><span>保存</span>
         </Button>
       </div>
 
       {/* Main */}
-      <div className="flex-1 overflow-y-auto [&::-webkit-scrollbar]:w-[3px] [&::-webkit-scrollbar-thumb]:bg-border/30 [&::-webkit-scrollbar-thumb]:rounded-full">
+      <div className="flex-1 overflow-y-auto scrollbar-thin">
         <div className="max-w-2xl mx-auto px-8 py-8 space-y-8">
 
           {/* Identity */}
@@ -96,9 +96,9 @@ export function SkillPluginDetail({ resource, onBack, onToggle, onDelete }: Prop
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-1">
-                <h2 className="text-[16px] text-foreground">{resource.name}</h2>
+                <h2 className="text-base text-foreground">{resource.name}</h2>
                 {resource.hasUpdate && (
-                  <span className="flex items-center gap-1 text-[8px] px-1.5 py-0.5 rounded-full bg-orange-500/10 text-orange-500">
+                  <span className="flex items-center gap-1 text-xs px-1.5 py-0.5 rounded-full bg-accent-orange-muted text-accent-orange">
                     <RefreshCw size={8} /> 有新版本
                   </span>
                 )}
@@ -111,43 +111,43 @@ export function SkillPluginDetail({ resource, onBack, onToggle, onDelete }: Prop
             </div>
             {/* Enable toggle */}
             <div className="flex items-center gap-2 flex-shrink-0">
-              <span className="text-[9px] text-muted-foreground/40">{resource.enabled ? '已启用' : '已禁用'}</span>
-              <Switch checked={resource.enabled} onCheckedChange={() => onToggle(resource.id)} />
+              <span className="text-xs text-muted-foreground/40">{resource.enabled ? '已启用' : '已禁用'}</span>
+              <Switch size="sm" checked={resource.enabled} onCheckedChange={() => onToggle(resource.id)} />
             </div>
           </div>
 
           {/* Description */}
           <div>
-            <label className="text-xs text-muted-foreground/60 mb-1.5 block">描述</label>
+            <label className="text-sm text-muted-foreground/60 mb-1.5 block">描述</label>
             {editingDesc ? (
-              <textarea value={description} onChange={e => setDescription(e.target.value)} onBlur={() => setEditingDesc(false)} autoFocus rows={3}
-                className="w-full px-3 py-2 rounded-xl border border-border/20 bg-accent/10 text-xs text-foreground outline-none focus:border-border/40 focus:bg-accent/15 transition-all resize-none" />
+              <Textarea value={description} onChange={e => setDescription(e.target.value)} onBlur={() => setEditingDesc(false)} autoFocus rows={3}
+                className="input-accent resize-none" />
             ) : (
-              <p onClick={() => setEditingDesc(true)} className="text-xs text-muted-foreground/70 leading-relaxed px-3 py-2 rounded-xl border border-transparent hover:border-border/15 hover:bg-accent/5 cursor-text transition-all">
+              <p onClick={() => setEditingDesc(true)} className="text-xs text-muted-foreground/60 leading-relaxed px-3 py-2 rounded-xl border border-transparent hover:border-border/15 hover:bg-accent/15 cursor-text transition-all">
                 {description || '点击添加描述...'}
               </p>
             )}
           </div>
 
-          <div className="h-px bg-border/10" />
+          <div className="h-px bg-border/30" />
 
           {/* File Info */}
           <div>
-            <label className="text-xs text-muted-foreground/60 mb-2 block">源文件</label>
+            <label className="text-sm text-muted-foreground/60 mb-2 block">源文件</label>
             <div className="flex items-center gap-3 px-4 py-3.5 rounded-xl border border-border/15 bg-accent/5">
-              <div className="w-10 h-10 rounded-xl bg-accent/40 flex items-center justify-center flex-shrink-0">
+              <div className="w-10 h-10 rounded-xl bg-accent/50 flex items-center justify-center flex-shrink-0">
                 <FileIcon size={18} strokeWidth={1.3} className="text-muted-foreground/50" />
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-xs text-foreground truncate font-mono">{resource.fileName || '未知文件'}</p>
-                <div className="flex items-center gap-3 mt-0.5 text-[9px] text-muted-foreground/40">
+                <div className="flex items-center gap-3 mt-0.5 text-xs text-muted-foreground/40">
                   {resource.fileSize && <span>{resource.fileSize}</span>}
-                  {resource.fileType && <span className="px-1.5 py-px rounded-full bg-accent/40 text-muted-foreground/50 uppercase">{resource.fileType}</span>}
+                  {resource.fileType && <span className="px-1.5 py-px rounded-full bg-accent/50 text-muted-foreground/50 uppercase">{resource.fileType}</span>}
                 </div>
               </div>
               {resource.homepage && (
                 <a href={resource.homepage} target="_blank" rel="noopener noreferrer"
-                  className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-[9px] text-muted-foreground/50 hover:text-foreground hover:bg-accent/30 border border-border/15 transition-colors flex-shrink-0">
+                  className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs text-muted-foreground/50 hover:text-foreground hover:bg-accent/50 border border-border/15 transition-colors flex-shrink-0">
                   <ExternalLink size={9} /> 主页
                 </a>
               )}
@@ -156,73 +156,72 @@ export function SkillPluginDetail({ resource, onBack, onToggle, onDelete }: Prop
 
           {/* Content Preview */}
           <div>
-            <label className="text-xs text-muted-foreground/60 mb-2 block">
+            <label className="text-sm text-muted-foreground/60 mb-2 block">
               {resource.fileType === 'zip' ? '包内容' : '文件预览'}
             </label>
-            <div className="rounded-xl border border-border/15 bg-[#0d1117]/40 overflow-hidden">
-              <div className="flex items-center gap-2 px-3 py-2 border-b border-border/10 bg-accent/5">
+            <div className="rounded-xl border border-border/15 bg-foreground/[0.03] dark:bg-foreground/[0.06] overflow-hidden">
+              <div className="flex items-center gap-2 px-3 py-2 border-b border-border/15 bg-accent/5">
                 <FileIcon size={10} className="text-muted-foreground/40" />
-                <span className="text-[9px] text-muted-foreground/50 font-mono">{resource.fileName || 'preview'}</span>
+                <span className="text-xs text-muted-foreground/50 font-mono">{resource.fileName || 'preview'}</span>
               </div>
-              <pre className="p-4 text-xs text-muted-foreground/70 leading-relaxed overflow-x-auto font-mono [&::-webkit-scrollbar]:h-[3px] [&::-webkit-scrollbar-thumb]:bg-border/20 [&::-webkit-scrollbar-thumb]:rounded-full">
+              <pre className="p-4 text-xs text-muted-foreground/60 leading-relaxed overflow-x-auto font-mono scrollbar-thin">
                 {mockContentPreview}
               </pre>
             </div>
           </div>
 
-          <div className="h-px bg-border/10" />
+          <div className="h-px bg-border/30" />
 
           {/* Tags */}
           <div>
-            <label className="text-xs text-muted-foreground/60 mb-2 block flex items-center gap-1"><Tag size={9} /> 标签</label>
+            <label className="text-sm text-muted-foreground/60 mb-2 block flex items-center gap-1"><Tag size={9} /> 标签</label>
             <div className="flex flex-wrap items-center gap-1.5 mb-2">
               {tags.map(tag => (
-                <span key={tag} className="flex items-center gap-1 text-[9px] px-2 py-0.5 rounded-full border border-border/15 text-muted-foreground/65 hover:border-border/30 transition-colors group">
-                  <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ backgroundColor: TAG_COLORS[tag] || DEFAULT_TAG_COLOR }} />
+                <span key={tag} className="flex items-center gap-1 text-xs px-2 py-0.5 rounded-full border border-border/15 text-muted-foreground/60 hover:border-border/30 transition-colors group">
+                  <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${(TAG_COLORS[tag] || DEFAULT_TAG_COLOR).dot}`} />
                   {tag}
-                  <Button variant="ghost" onClick={() => removeTag(tag)} className="text-muted-foreground/30 hover:text-destructive transition-colors ml-0.5 h-auto w-auto p-0">&times;</Button>
+                  <Button variant="ghost" onClick={() => removeTag(tag)} size="inline" className="text-muted-foreground/50 hover:text-destructive transition-colors ml-0.5 w-auto p-0">&times;</Button>
                 </span>
               ))}
               <div className="flex items-center gap-1">
                 <Input value={newTag} onChange={e => setNewTag(e.target.value)} onKeyDown={e => e.key === 'Enter' && addTag()}
                   placeholder="添加标签..."
-                  className="w-[80px] text-[9px] px-2 py-0.5 h-auto rounded-full border border-border/15 bg-transparent outline-none text-foreground placeholder:text-muted-foreground/35 focus:border-border/30 focus:w-[120px] transition-all focus-visible:ring-0" />
+                  className="w-[80px] text-xs px-2 py-0.5 h-auto rounded-full border border-border/15 bg-transparent outline-none text-foreground placeholder:text-muted-foreground/60 focus:border-border/30 focus:w-[120px] transition-all focus-visible:ring-0" />
               </div>
             </div>
           </div>
 
-          <div className="h-px bg-border/10" />
+          <div className="h-px bg-border/30" />
 
           {/* Metadata */}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="text-[9px] text-muted-foreground/40 mb-1 block">创建时间</label>
-              <div className="flex items-center gap-1.5 text-xs text-muted-foreground/55">
+              <label className="text-sm text-muted-foreground/40 mb-1 block">创建时间</label>
+              <div className="flex items-center gap-1.5 text-xs text-muted-foreground/60">
                 <Clock size={9} />
                 <span>{new Date(resource.createdAt).toLocaleDateString('zh-CN')}</span>
-                <span className="text-muted-foreground/35">({timeAgo(resource.createdAt)})</span>
+                <span className="text-muted-foreground/50">({timeAgo(resource.createdAt)})</span>
               </div>
             </div>
             <div>
-              <label className="text-[9px] text-muted-foreground/40 mb-1 block">最近更新</label>
-              <div className="flex items-center gap-1.5 text-xs text-muted-foreground/55">
+              <label className="text-sm text-muted-foreground/40 mb-1 block">最近更新</label>
+              <div className="flex items-center gap-1.5 text-xs text-muted-foreground/60">
                 <Clock size={9} />
                 <span>{new Date(resource.updatedAt).toLocaleDateString('zh-CN')}</span>
-                <span className="text-muted-foreground/35">({timeAgo(resource.updatedAt)})</span>
+                <span className="text-muted-foreground/50">({timeAgo(resource.updatedAt)})</span>
               </div>
             </div>
           </div>
 
           {/* Danger zone */}
           <div className="pt-4">
-            <div className="rounded-xl border border-red-500/10 p-4">
+            <div className="rounded-xl border border-destructive/10 p-4">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-xs text-foreground mb-0.5">删除{cfg.label}</p>
-                  <p className="text-[9px] text-muted-foreground/40">移除此{cfg.label}及其所有配置，此操作不可恢复</p>
+                  <p className="text-xs text-muted-foreground/40">移除此{cfg.label}及其所有配置，此操作不可恢复</p>
                 </div>
-                <Button variant="ghost" onClick={() => onDelete(resource)}
-                  className="flex items-center gap-1.5 px-3 py-1.5 h-auto rounded-lg text-xs bg-destructive/10 text-destructive hover:bg-destructive/20 transition-colors">
+                <Button variant="destructive" size="xs" onClick={() => onDelete(resource)}>
                   <Trash2 size={10} /> 删除
                 </Button>
               </div>

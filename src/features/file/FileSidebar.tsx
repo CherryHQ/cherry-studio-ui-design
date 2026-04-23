@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import {
   Files, Clock, Star, Trash2, FileText, Image as ImageIcon,
   Code2, Music, Video, ChevronRight, ChevronDown,
-  FolderClosed, FolderOpen, Plus, Circle,
+  FolderClosed, FolderOpen, Plus,
 } from 'lucide-react';
 import { Button, Input } from '@cherry-studio/ui';
 import type { FileFolder, FileTag } from './mockData';
@@ -21,11 +21,11 @@ const libraryItems: { id: 'all' | 'recent' | 'starred' | 'trash'; label: string;
 ];
 
 const typeItems: { id: 'document' | 'image' | 'code' | 'audio' | 'video'; label: string; icon: React.ElementType; color: string }[] = [
-  { id: 'document', label: '文档', icon: FileText, color: 'text-sky-400/45' },
-  { id: 'image', label: '图片', icon: ImageIcon, color: 'text-rose-400/45' },
-  { id: 'code', label: '代码', icon: Code2, color: 'text-cyan-400/45' },
-  { id: 'audio', label: '音频', icon: Music, color: 'text-amber-400/45' },
-  { id: 'video', label: '视频', icon: Video, color: 'text-violet-400/45' },
+  { id: 'document', label: '文档', icon: FileText, color: 'text-accent-blue/45' },
+  { id: 'image', label: '图片', icon: ImageIcon, color: 'text-accent-pink/45' },
+  { id: 'code', label: '代码', icon: Code2, color: 'text-accent-cyan/45' },
+  { id: 'audio', label: '音频', icon: Music, color: 'text-accent-amber/45' },
+  { id: 'video', label: '视频', icon: Video, color: 'text-accent-violet/45' },
 ];
 
 function InlineInput({ onConfirm, onCancel }: { onConfirm: (v: string) => void; onCancel: () => void }) {
@@ -34,7 +34,7 @@ function InlineInput({ onConfirm, onCancel }: { onConfirm: (v: string) => void; 
   useEffect(() => { ref.current?.focus(); }, []);
   return (
     <div className="flex items-center gap-1.5 px-3 py-[5px]">
-      <FolderClosed size={12} className="flex-shrink-0 text-foreground/35" />
+      <FolderClosed size={12} className="flex-shrink-0 text-muted-foreground/40" />
       <Input
         ref={ref}
         value={text}
@@ -45,7 +45,7 @@ function InlineInput({ onConfirm, onCancel }: { onConfirm: (v: string) => void; 
         }}
         onBlur={() => { if (text.trim()) onConfirm(text.trim()); else onCancel(); }}
         placeholder="文件夹名称"
-        className="flex-1 bg-transparent outline-none text-xs text-foreground border-b border-foreground/20 py-0.5 min-w-0 placeholder:text-foreground/20 h-auto border-x-0 border-t-0 rounded-none shadow-none focus-visible:ring-0"
+        className="flex-1 bg-transparent outline-none text-xs text-foreground border-b border-border/50 py-0.5 min-w-0 placeholder:text-muted-foreground/60 h-auto border-x-0 border-t-0 rounded-none shadow-none focus-visible:ring-0"
       />
     </div>
   );
@@ -84,12 +84,12 @@ export function FileSidebar({
 
   const SectionHeader = ({ label, expanded, onToggle, onAdd }: { label: string; expanded: boolean; onToggle: () => void; onAdd?: () => void }) => (
     <div className="flex items-center justify-between px-3 pt-3 pb-1">
-      <Button variant="ghost" onClick={onToggle} className="h-auto p-0 flex items-center gap-1 text-[9px] text-foreground/40 uppercase tracking-wider hover:text-foreground/55 transition-colors">
+      <Button variant="ghost" onClick={onToggle} size="inline" className="p-0 flex items-center gap-1 text-xs text-muted-foreground/60 uppercase tracking-wider hover:text-foreground transition-colors">
         {expanded ? <ChevronDown size={9} /> : <ChevronRight size={9} />}
         <span>{label}</span>
       </Button>
       {onAdd && (
-        <Button variant="ghost" onClick={onAdd} className="w-4 h-4 p-0 flex items-center justify-center text-foreground/25 hover:text-foreground/50 transition-colors">
+        <Button variant="ghost" onClick={onAdd} className="w-4 h-4 p-0 flex items-center justify-center text-muted-foreground/40 hover:text-foreground transition-colors">
           <Plus size={10} />
         </Button>
       )}
@@ -104,28 +104,28 @@ export function FileSidebar({
       const FIcon = active && expanded ? FolderOpen : FolderClosed;
       return (
         <div key={folder.id}>
-          <Button
+          <Button size="inline"
             variant="ghost"
             onClick={() => {
               onFilterChange({ kind: 'folder', value: folder.id });
               if (hasChildren) toggleFolder(folder.id);
             }}
-            className={`w-full flex items-center gap-1.5 py-[5px] rounded-md transition-colors text-xs h-auto ${
+            className={`w-full flex items-center gap-1.5 py-[5px] rounded-md transition-colors text-sm ${
               active
-                ? 'bg-accent text-foreground/85'
-                : 'text-foreground/60 hover:bg-accent/40 hover:text-foreground/75'
+                ? 'bg-accent text-foreground'
+                : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground'
             }`}
             style={{ paddingLeft: `${12 + depth * 14}px`, paddingRight: '8px' }}
           >
             {hasChildren ? (
-              expanded ? <ChevronDown size={9} className="flex-shrink-0 text-foreground/30" /> : <ChevronRight size={9} className="flex-shrink-0 text-foreground/30" />
+              expanded ? <ChevronDown size={9} className="flex-shrink-0 text-muted-foreground/40" /> : <ChevronRight size={9} className="flex-shrink-0 text-muted-foreground/40" />
             ) : (
               <span className="w-[9px] flex-shrink-0" />
             )}
-            <FIcon size={12} className="flex-shrink-0 text-foreground/40" />
+            <FIcon size={12} className="flex-shrink-0 text-muted-foreground/60" />
             <span className="truncate">{folder.name}</span>
             {fileCounts[folder.id] !== undefined && fileCounts[folder.id] > 0 && (
-              <span className="ml-auto text-[9px] text-foreground/25">{fileCounts[folder.id]}</span>
+              <span className="ml-auto text-xs text-muted-foreground/40">{fileCounts[folder.id]}</span>
             )}
           </Button>
           {hasChildren && expanded && renderFolderTree(folder.children!, depth + 1)}
@@ -135,7 +135,7 @@ export function FileSidebar({
   };
 
   return (
-    <div className="w-[180px] flex-shrink-0 border-r border-border/40 flex flex-col overflow-y-auto select-none [&::-webkit-scrollbar]:w-[2px] [&::-webkit-scrollbar-thumb]:bg-border/20">
+    <div className="w-[180px] flex-shrink-0 border-r border-border/30 flex flex-col overflow-y-auto select-none scrollbar-thin-xs">
       {/* Library */}
       <div className="px-1.5 pt-2 pb-1 space-y-[1px]">
         {libraryItems.map(item => {
@@ -143,20 +143,20 @@ export function FileSidebar({
           const Icon = item.icon;
           const count = fileCounts[item.id];
           return (
-            <Button
+            <Button size="inline"
               key={item.id}
               variant="ghost"
               onClick={() => onFilterChange({ kind: 'library', value: item.id })}
-              className={`w-full flex items-center gap-2 px-2.5 py-[5px] rounded-md transition-colors text-xs h-auto ${
+              className={`w-full flex items-center gap-2 px-2.5 py-[5px] rounded-md transition-colors text-sm ${
                 active
-                  ? 'bg-accent text-foreground/85'
-                  : 'text-foreground/60 hover:bg-accent/40 hover:text-foreground/75'
+                  ? 'bg-accent text-foreground'
+                  : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground'
               }`}
             >
-              <Icon size={13} strokeWidth={1.5} className="flex-shrink-0 text-foreground/40" />
+              <Icon size={13} strokeWidth={1.5} className="flex-shrink-0 text-muted-foreground/60" />
               <span className="flex-1 text-left truncate">{item.label}</span>
               {count !== undefined && count > 0 && (
-                <span className="text-[9px] text-foreground/25">{count}</span>
+                <span className="text-xs text-muted-foreground/40">{count}</span>
               )}
             </Button>
           );
@@ -172,20 +172,20 @@ export function FileSidebar({
             const Icon = item.icon;
             const count = fileCounts[`type_${item.id}`];
             return (
-              <Button
+              <Button size="inline"
                 key={item.id}
                 variant="ghost"
                 onClick={() => onFilterChange({ kind: 'type', value: item.id })}
-                className={`w-full flex items-center gap-2 px-2.5 py-[5px] rounded-md transition-colors text-xs h-auto ${
+                className={`w-full flex items-center gap-2 px-2.5 py-[5px] rounded-md transition-colors text-sm ${
                   active
-                    ? 'bg-accent text-foreground/85'
-                    : 'text-foreground/60 hover:bg-accent/40 hover:text-foreground/75'
+                    ? 'bg-accent text-foreground'
+                    : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground'
                 }`}
               >
                 <Icon size={12} strokeWidth={1.5} className={`flex-shrink-0 ${item.color}`} />
                 <span className="flex-1 text-left truncate">{item.label}</span>
                 {count !== undefined && count > 0 && (
-                  <span className="text-[9px] text-foreground/25">{count}</span>
+                  <span className="text-xs text-muted-foreground/40">{count}</span>
                 )}
               </Button>
             );
@@ -214,17 +214,17 @@ export function FileSidebar({
           {tags.map(tag => {
             const active = isActive({ kind: 'tag', value: tag.id });
             return (
-              <Button
+              <Button size="inline"
                 key={tag.id}
                 variant="ghost"
                 onClick={() => onFilterChange({ kind: 'tag', value: tag.id })}
-                className={`w-full flex items-center gap-2 px-2.5 py-[5px] rounded-md transition-colors text-xs h-auto ${
+                className={`w-full flex items-center gap-2 px-2.5 py-[5px] rounded-md transition-colors text-sm ${
                   active
-                    ? 'bg-accent text-foreground/85'
-                    : 'text-foreground/60 hover:bg-accent/40 hover:text-foreground/75'
+                    ? 'bg-accent text-foreground'
+                    : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground'
                 }`}
               >
-                <Circle size={7} fill={tag.color} stroke="none" className="flex-shrink-0 opacity-70" />
+                <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 opacity-70 ${tag.color.dot}`} />
                 <span className="flex-1 text-left truncate">{tag.name}</span>
               </Button>
             );

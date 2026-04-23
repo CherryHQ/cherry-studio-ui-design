@@ -13,12 +13,12 @@ const typeIcons: Record<string, React.ElementType> = {
 };
 
 const typeIconColors: Record<string, string> = {
-  image: 'text-rose-400/50',
-  document: 'text-sky-400/50',
-  code: 'text-cyan-400/50',
-  audio: 'text-amber-400/50',
-  video: 'text-violet-400/50',
-  other: 'text-foreground/25',
+  image: 'text-accent-pink/50',
+  document: 'text-accent-blue/50',
+  code: 'text-accent-cyan/50',
+  audio: 'text-accent-amber/50',
+  video: 'text-accent-violet/50',
+  other: 'text-muted-foreground/40',
 };
 
 export type SortKey = 'name' | 'size' | 'updatedAt' | 'type';
@@ -54,11 +54,11 @@ export function FileList({
   onRenameCancel: () => void;
 }) {
   const SortHeader = ({ label, field, className: cn }: { label: string; field: SortKey; className?: string }) => (
-    <Button
+    <Button size="inline"
       variant="ghost"
       onClick={() => onSort(field)}
-      className={`h-auto p-0 flex items-center gap-0.5 text-[9px] uppercase tracking-wider transition-colors ${
-        sortKey === field ? 'text-foreground/55' : 'text-foreground/30 hover:text-foreground/45'
+      className={`p-0 flex items-center gap-0.5 text-xs uppercase tracking-wider transition-colors ${
+        sortKey === field ? 'text-muted-foreground' : 'text-muted-foreground/40 hover:text-foreground'
       } ${cn || ''}`}
     >
       <span>{label}</span>
@@ -77,7 +77,7 @@ export function FileList({
         <SortHeader label="大小" field="size" className="w-[70px] justify-end" />
         <SortHeader label="类型" field="type" className="w-[55px]" />
         <SortHeader label="修改时间" field="updatedAt" className="w-[110px]" />
-        <span className="w-[60px] text-[9px] text-foreground/30 uppercase tracking-wider">标签</span>
+        <span className="w-[60px] text-xs text-muted-foreground/40 uppercase tracking-wider">标签</span>
       </div>
       {/* Rows */}
       {files.map(file => {
@@ -91,16 +91,16 @@ export function FileList({
             onClick={(e) => { if (!isRenaming) onSelect(file.id, e.metaKey || e.ctrlKey); }}
             onContextMenu={(e) => onContextMenu(e, file.id)}
             onDoubleClick={() => { if (!isRenaming) onPreview(file); }}
-            className={`flex items-center gap-2 px-4 py-[6px] border-b border-border/10 cursor-pointer transition-colors ${
-              selected ? 'bg-accent/50' : 'hover:bg-accent/20'
+            className={`flex items-center gap-2 px-4 py-[6px] border-b border-border/15 cursor-pointer transition-colors ${
+              selected ? 'bg-accent/50' : 'hover:bg-accent/50'
             }`}
           >
             {/* Star */}
-            <Button
+            <Button size="inline"
               variant="ghost"
               onClick={(e) => { e.stopPropagation(); onToggleStar(file.id); }}
-              className={`w-5 h-auto p-0 flex-shrink-0 flex items-center justify-center transition-colors ${
-                file.starred ? 'text-amber-400/60' : 'text-foreground/10 hover:text-amber-400/40'
+              className={`w-5 p-0 flex-shrink-0 flex items-center justify-center transition-colors ${
+                file.starred ? 'text-accent-amber/60' : 'text-muted-foreground/50 hover:text-accent-amber/40'
               }`}
             >
               <Star size={10} fill={file.starred ? 'currentColor' : 'none'} />
@@ -115,22 +115,21 @@ export function FileList({
                   onCancel={onRenameCancel}
                 />
               ) : (
-                <span className="text-xs text-foreground/80 truncate">{file.name}</span>
+                <span className="text-sm text-foreground truncate">{file.name}</span>
               )}
             </div>
             {/* Size */}
-            <span className="text-xs text-foreground/45 w-[70px] text-right flex-shrink-0">{file.size}</span>
+            <span className="text-xs text-muted-foreground/50 w-[70px] text-right flex-shrink-0">{file.size}</span>
             {/* Type */}
-            <span className="text-xs text-foreground/45 w-[55px] flex-shrink-0">{getFormatLabel(file.format)}</span>
+            <span className="text-xs text-muted-foreground/50 w-[55px] flex-shrink-0">{getFormatLabel(file.format)}</span>
             {/* Date */}
-            <span className="text-xs text-foreground/40 w-[110px] flex-shrink-0">{file.updatedAt}</span>
+            <span className="text-xs text-muted-foreground/50 w-[110px] flex-shrink-0">{file.updatedAt}</span>
             {/* Tags */}
             <div className="w-[60px] flex items-center gap-1 flex-shrink-0">
               {fileTags.slice(0, 3).map(t => (
                 <span
                   key={t.id}
-                  className="px-1.5 py-[1px] rounded-full text-[8px] truncate"
-                  style={{ backgroundColor: `${t.color}15`, color: t.color }}
+                  className={`px-1.5 py-[1px] rounded-full text-xs truncate border ${t.color.badge}`}
                 >
                   {t.name}
                 </span>
@@ -163,7 +162,7 @@ function InlineRename({ value, onConfirm, onCancel }: { value: string; onConfirm
         if (e.key === 'Escape') onCancel();
       }}
       onBlur={() => { if (text.trim()) onConfirm(text.trim()); else onCancel(); }}
-      className="flex-1 bg-transparent outline-none text-xs text-foreground border-b border-foreground/20 py-0 min-w-0 h-auto border-x-0 border-t-0 rounded-none shadow-none focus-visible:ring-0"
+      className="flex-1 bg-transparent outline-none text-xs text-foreground border-b border-border/50 py-0 min-w-0 h-auto border-x-0 border-t-0 rounded-none shadow-none focus-visible:ring-0"
       onClick={e => e.stopPropagation()}
     />
   );

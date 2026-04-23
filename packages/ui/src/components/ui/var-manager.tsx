@@ -54,7 +54,7 @@ export const SYSTEM_VARIABLES: VariableDef[] = [
   { id: "sys-6", name: "message_count",   defaultValue: "", description: "Message count in conversation",  type: "number", isSystem: true },
 ]
 
-const SYSTEM_VAR_ICONS: Record<string, React.ElementType> = {
+export const SYSTEM_VAR_ICONS: Record<string, React.ElementType> = {
   current_date: Calendar,
   current_time: Clock,
   model_name: Bot,
@@ -477,4 +477,4 @@ function VarManager({
   )
 }
 
-export { VarManager, TypeSelect }
+export { VarManager, VarManager as VarManagerPanel, TypeSelect }

@@ -4,12 +4,12 @@ import {
   Plus, Trash2, RefreshCw, ExternalLink,
   Shield, Server, Wifi,
   AlertTriangle, CheckCircle2, XCircle,
-  ChevronRight, Info,
+  ChevronRight,
 } from 'lucide-react';
-import { Button, Input } from '@cherry-studio/ui';
+import { Button, Input, Typography, Switch } from '@cherry-studio/ui';
 import { copyToClipboard } from '@/app/utils/clipboard';
 import { Tooltip } from '@/app/components/Tooltip';
-import { Toggle, InlineSelect, ConfigSection } from './shared';
+import { InlineSelect, ConfigSection, FormRow } from './shared';
 
 // ===========================
 // Types
@@ -23,30 +23,6 @@ interface ApiKeyItem {
   createdAt: string;
 }
 
-// ===========================
-// Shared UI — local FormRow (custom font size for this page)
-// ===========================
-function FormRow({ label, desc, children, noBorder, disabled }: {
-  label: string; desc?: string; children: React.ReactNode; noBorder?: boolean; disabled?: boolean;
-}) {
-  return (
-    <div className={`flex items-center justify-between gap-4 py-3 ${noBorder ? '' : ''} ${disabled ? 'opacity-40' : ''}`}>
-      <div className="min-w-0 flex-1">
-        <div className="flex items-center gap-1.5">
-          <p className="text-sm text-foreground/65 font-medium">{label}</p>
-          {desc && (
-            <Tooltip content={desc} side="top">
-              <span className="text-muted-foreground/25 hover:text-muted-foreground/50 transition-colors cursor-help flex-shrink-0">
-                <Info size={13} />
-              </span>
-            </Tooltip>
-          )}
-        </div>
-      </div>
-      <div className="flex-shrink-0">{children}</div>
-    </div>
-  );
-}
 
 function CopyButton({ text }: { text: string }) {
   const [copied, setCopied] = useState(false);
@@ -58,9 +34,9 @@ function CopyButton({ text }: { text: string }) {
   return (
     <Tooltip content="复制" side="top"><Button
       variant="ghost"
-      size="icon"
+      size="icon-xs"
       onClick={handleCopy}
-      className="p-1 w-auto h-auto rounded-md text-foreground/25 hover:text-foreground/50 hover:bg-foreground/[0.04]"
+      className="text-muted-foreground/40 hover:text-foreground hover:bg-accent/50"
     >
       {copied ? <Check size={10} className="text-cherry-primary" /> : <Copy size={10} />}
     </Button></Tooltip>
@@ -95,13 +71,13 @@ function ConnectionPanel({ enabled }: { enabled: boolean }) {
   const disabled = !enabled;
 
   return (
-    <div className={`space-y-4 ${disabled ? 'opacity-50 pointer-events-none' : ''}`}>
+    <div className={`space-y-4 ${disabled ? 'opacity-30 pointer-events-none' : ''}`}>
       <div className="flex items-center justify-between mb-1">
         <div>
-          <h3 className="text-sm text-foreground/90 font-semibold">连接设置</h3>
-          <p className="text-[9px] text-foreground/35 mt-0.5">配置 API 服务监听的地址和端口。</p>
+          <Typography variant="subtitle">连接设置</Typography>
+          <p className="text-xs text-muted-foreground/60 mt-0.5">配置 API 服务监听的地址和端口。</p>
         </div>
-        <Button variant="outline" size="sm" className="flex items-center gap-1.5 px-2.5 py-[4px] h-auto rounded-lg border-border/30 text-xs text-foreground/40 hover:text-foreground/60">
+        <Button variant="outline" size="xs" className="border-border/30 text-muted-foreground/60 hover:text-foreground">
           <RefreshCw size={9} />
           <span>重置默认</span>
         </Button>
@@ -113,7 +89,7 @@ function ConnectionPanel({ enabled }: { enabled: boolean }) {
             <Input
               value={port}
               onChange={e => setPort(e.target.value)}
-              className="px-2.5 py-[5px] h-auto bg-foreground/[0.03] rounded-lg border-border/30 text-xs text-foreground/60 font-mono"
+              className="px-2.5 py-[5px] bg-muted/30 border-border/30 text-xs text-muted-foreground font-mono"
             />
           </div>
         </FormRow>
@@ -131,18 +107,18 @@ function ConnectionPanel({ enabled }: { enabled: boolean }) {
 
       <ConfigSection title="安全与策略">
         <FormRow label="开启 CORS 跨域支持" desc={'允许 Web 应用（如浏览器插件）直接调用 API。'}>
-          <Toggle checked={cors} onChange={setCors} />
+          <Switch size="sm" checked={cors} onCheckedChange={setCors} />
         </FormRow>
         <FormRow label="开机自启" desc="随 Cherry Studio 动时自动开启 API 服务。" noBorder>
-          <Toggle checked={autoStart} onChange={setAutoStart} />
+          <Switch size="sm" checked={autoStart} onCheckedChange={setAutoStart} />
         </FormRow>
       </ConfigSection>
 
       <ConfigSection title="当前活跃凭证">
         <div className="space-y-1">
-          <p className="text-[9px] text-foreground/35">主密钥 (Primary Key)</p>
-          <div className="flex items-center px-3 py-[7px] bg-foreground/[0.03] rounded-lg border border-border/30">
-            <span className="flex-1 text-xs text-foreground/50 font-mono truncate">sk-cherry-82js...92ks</span>
+          <p className="text-xs text-muted-foreground/40">主密钥 (Primary Key)</p>
+          <div className="flex items-center px-3 py-[7px] bg-muted/30 rounded-lg border border-border/30">
+            <span className="flex-1 text-xs text-muted-foreground/60 font-mono truncate">sk-cherry-82js...92ks</span>
             <CopyButton text="sk-cherry-82js-xxxx-xxxx-92ks" />
           </div>
         </div>
@@ -183,19 +159,20 @@ function SecurityPanel({ enabled }: { enabled: boolean }) {
   };
 
   return (
-    <div className={`space-y-4 ${disabled ? 'opacity-50 pointer-events-none' : ''}`}>
+    <div className={`space-y-4 ${disabled ? 'opacity-30 pointer-events-none' : ''}`}>
       <div className="mb-1">
-        <h3 className="text-sm text-foreground/90 font-semibold">安全凭证 (API Keys)</h3>
-        <p className="text-[9px] text-foreground/35 mt-0.5">管理访问此网关的密钥。</p>
+        <Typography variant="subtitle">安全凭证 (API Keys)</Typography>
+        <p className="text-xs text-muted-foreground/60 mt-0.5">管理访问此网关的密钥。</p>
       </div>
 
       <ConfigSection
         title="密钥列表"
         actions={
           <Button
+            variant="ghost"
             onClick={() => setShowCreate(v => !v)}
-            size="sm"
-            className="flex items-center gap-1.5 px-2.5 py-[4px] h-auto rounded-lg bg-cherry-primary text-white text-xs hover:bg-cherry-primary-dark"
+            size="xs"
+            className="text-cherry-primary-dark bg-cherry-active-bg hover:bg-cherry-active-border"
           >
             <Plus size={9} />
             <span>创建密钥</span>
@@ -209,23 +186,24 @@ function SecurityPanel({ enabled }: { enabled: boolean }) {
                 value={newName}
                 onChange={e => setNewName(e.target.value)}
                 placeholder="密钥名称，例如: My App"
-                className="px-2.5 py-[5px] h-auto bg-background rounded-lg border-border/30 text-xs text-foreground/60 placeholder:text-foreground/20"
+                className="px-2.5 py-[5px] h-auto bg-background rounded-lg border-border/30 text-xs text-muted-foreground placeholder:text-muted-foreground/60"
                 onKeyDown={e => e.key === 'Enter' && handleCreate()}
                 autoFocus
               />
             </div>
             <Button
+              variant="ghost"
               onClick={handleCreate}
-              size="sm"
-              className="px-2.5 py-[5px] h-auto rounded-lg bg-cherry-primary text-white text-xs hover:bg-cherry-primary-dark"
+              size="xs"
+              className="text-cherry-primary-dark bg-cherry-active-bg hover:bg-cherry-active-border"
             >
               确认
             </Button>
             <Button
               variant="outline"
-              size="sm"
+              size="xs"
               onClick={() => { setShowCreate(false); setNewName(''); }}
-              className="px-2 py-[5px] h-auto rounded-lg border-border/30 text-xs text-foreground/40 hover:text-foreground/60"
+              className="border-border/30 text-muted-foreground/60 hover:text-foreground"
             >
               取消
             </Button>
@@ -236,16 +214,16 @@ function SecurityPanel({ enabled }: { enabled: boolean }) {
           {keys.map((item, i) => (
             <div key={item.id} className={`flex items-center gap-3 py-2.5`}>
               <div className="flex-1 min-w-0">
-                <p className="text-xs text-foreground/65 truncate font-medium">{item.name}</p>
-                <p className="text-[9px] text-foreground/30 font-mono mt-0.5">{item.key}</p>
+                <p className="text-sm text-muted-foreground truncate font-medium">{item.name}</p>
+                <p className="text-xs text-muted-foreground/40 font-mono mt-0.5">{item.key}</p>
               </div>
               <div className="flex items-center gap-1">
                 <CopyButton text={item.key} />
                 <Button
                   variant="ghost"
-                  size="icon"
+                  size="icon-xs"
                   onClick={() => handleDelete(item.id)}
-                  className="p-1 w-auto h-auto rounded-md text-destructive/30 hover:text-destructive/60 hover:bg-destructive/[0.04]"
+                  className="text-destructive/30 hover:text-destructive/60 hover:bg-destructive/[0.04]"
                 >
                   <Trash2 size={10} />
                 </Button>
@@ -254,8 +232,8 @@ function SecurityPanel({ enabled }: { enabled: boolean }) {
           ))}
           {keys.length === 0 && (
             <div className="py-6 text-center">
-              <p className="text-xs text-foreground/25">暂无 API Key</p>
-              <p className="text-[9px] text-foreground/15 mt-0.5">点击上方按钮创建你的第一个密钥</p>
+              <p className="text-xs text-muted-foreground/40">暂无 API Key</p>
+              <p className="text-xs text-muted-foreground/50 mt-0.5">点击上方按钮创建你的第一个密钥</p>
             </div>
           )}
         </div>
@@ -267,12 +245,12 @@ function SecurityPanel({ enabled }: { enabled: boolean }) {
           desc={'警告：开启后任何人都可调用接口（仅建议本地调试）'}
           noBorder
         >
-          <Toggle checked={noAuth} onChange={setNoAuth} />
+          <Switch size="sm" checked={noAuth} onCheckedChange={setNoAuth} />
         </FormRow>
         {noAuth && (
           <div className="flex items-start gap-2 px-3 py-2 bg-warning/[0.06] border border-warning/15 rounded-lg mt-1">
             <AlertTriangle size={10} className="text-warning flex-shrink-0 mt-0.5" />
-            <p className="text-[9px] text-warning/70 leading-relaxed">
+            <p className="text-xs text-warning/70 leading-relaxed">
               无鉴权模式已启用。请确保仅在受信任的网络环境下使用。
             </p>
           </div>
@@ -303,11 +281,11 @@ function ModelMappingPanel({ enabled }: { enabled: boolean }) {
   const enabledCount = Object.values(modelStates).filter(Boolean).length;
 
   return (
-    <div className={`space-y-4 ${disabled ? 'opacity-50 pointer-events-none' : ''}`}>
+    <div className={`space-y-4 ${disabled ? 'opacity-30 pointer-events-none' : ''}`}>
       <div className="flex items-center justify-between mb-1">
         <div>
-          <h3 className="text-sm text-foreground/90 font-semibold">模型映射</h3>
-          <p className="text-[9px] text-foreground/35 mt-0.5">控制通 API 网关暴露哪些模型。已启用 {enabledCount}/{models.length} 个模型。</p>
+          <Typography variant="subtitle">模型映射</Typography>
+          <p className="text-xs text-muted-foreground/60 mt-0.5">控制通 API 网关暴露哪些模型。已启用 {enabledCount}/{models.length} 个模型。</p>
         </div>
       </div>
 
@@ -320,13 +298,13 @@ function ModelMappingPanel({ enabled }: { enabled: boolean }) {
                 <div className="flex items-center gap-2.5 min-w-0">
                   <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${isEnabled ? 'bg-primary' : 'bg-foreground/10'}`} />
                   <div className="min-w-0">
-                    <p className="text-xs text-foreground/65 truncate font-medium">{model.name}</p>
-                    <p className="text-[8px] text-foreground/25 mt-0.5">{model.provider}</p>
+                    <p className="text-sm text-muted-foreground truncate font-medium">{model.name}</p>
+                    <p className="text-xs text-muted-foreground/40 mt-0.5">{model.provider}</p>
                   </div>
                 </div>
-                <Toggle
+                <Switch size="sm"
                   checked={isEnabled}
-                  onChange={v => setModelStates(prev => ({ ...prev, [model.id]: v }))}
+                  onCheckedChange={v => setModelStates(prev => ({ ...prev, [model.id]: v }))}
                 />
               </div>
             );
@@ -334,10 +312,10 @@ function ModelMappingPanel({ enabled }: { enabled: boolean }) {
         </div>
       </ConfigSection>
 
-      <div className="bg-foreground/[0.03] border border-foreground/[0.06] rounded-xl p-4">
+      <div className="bg-muted/30 border border-border/50 rounded-xl p-4">
         <div className="flex items-start gap-2">
-          <AlertTriangle size={11} className="text-foreground/25 flex-shrink-0 mt-0.5" />
-          <p className="text-[9px] text-foreground/35 leading-relaxed">
+          <AlertTriangle size={11} className="text-muted-foreground/40 flex-shrink-0 mt-0.5" />
+          <p className="text-xs text-muted-foreground/40 leading-relaxed">
             禁用的模型将不会出现在 /v1/models 接口返回中，也无法通过 API 调用。修改后立即生效。
           </p>
         </div>
@@ -357,12 +335,12 @@ function IntegrationSection({ enabled, port }: { enabled: boolean; port: string 
   -d '{ "model": "gpt-4o", "messages": [{"role": "user", "content": "Hello!"}] }'`;
 
   return (
-    <div className={`mt-5 ${!enabled ? 'opacity-50 pointer-events-none' : ''}`}>
+    <div className={`mt-5 ${!enabled ? 'opacity-30 pointer-events-none' : ''}`}>
       <ConfigSection
         title="集成指南 (Integration)"
         hint={'如何在第三方应用中使用 Cherry Studio。'}
         actions={
-          <Button variant="outline" size="sm" className="flex items-center gap-1 px-2 py-[3px] h-auto rounded-lg border-border/30 text-[9px] text-foreground/40 hover:text-foreground/60">
+          <Button variant="outline" size="xs" className="border-border/30 text-muted-foreground/60 hover:text-foreground">
             <span>查看完整文档</span>
             <ExternalLink size={7} />
           </Button>
@@ -370,17 +348,17 @@ function IntegrationSection({ enabled, port }: { enabled: boolean; port: string 
       >
         <div className="space-y-3">
           <div>
-            <p className="text-[9px] text-foreground/40 mb-1">API Base URL</p>
-            <div className="flex items-center px-3 py-[7px] bg-foreground/[0.03] rounded-lg border border-border/30">
-              <span className="flex-1 text-xs text-foreground/50 font-mono truncate">{baseUrl}</span>
+            <p className="text-xs text-muted-foreground/60 mb-1">API Base URL</p>
+            <div className="flex items-center px-3 py-[7px] bg-muted/30 rounded-lg border border-border/30">
+              <span className="flex-1 text-xs text-muted-foreground/60 font-mono truncate">{baseUrl}</span>
               <CopyButton text={baseUrl} />
             </div>
           </div>
 
           <div>
-            <p className="text-[9px] text-foreground/40 mb-1">示例调用 (Curl)</p>
+            <p className="text-xs text-muted-foreground/60 mb-1">示例调用 (Curl)</p>
             <div className="relative">
-              <pre className="px-3 py-3 bg-foreground/[0.04] border border-foreground/[0.06] rounded-lg text-[9px] text-foreground/45 font-mono leading-relaxed overflow-x-auto whitespace-pre-wrap break-all">
+              <pre className="px-3 py-3 bg-muted/50 border border-border/50 rounded-lg text-xs text-muted-foreground/60 font-mono leading-relaxed overflow-x-auto whitespace-pre-wrap break-all">
                 {curlExample}
               </pre>
               <div className="absolute top-2 right-2">
@@ -389,7 +367,7 @@ function IntegrationSection({ enabled, port }: { enabled: boolean; port: string 
             </div>
           </div>
 
-          <p className="text-[8px] text-foreground/25 leading-relaxed">
+          <p className="text-xs text-muted-foreground/40 leading-relaxed">
             {'在第三方应用（如 Cursor, Obsidian, LangChain）中，将 Base URL 设置为上方地址，并填入任意已创建的 API Key 即可使用 Cherry Studio 的模型能力。'}
           </p>
         </div>
@@ -417,36 +395,36 @@ export function ApiGatewayPage() {
   return (
     <div className="flex h-full min-h-0">
       {/* Middle Column: Navigation */}
-      <div className="w-[160px] flex-shrink-0 flex flex-col border-r border-foreground/[0.05] min-h-0">
+      <div className="w-[160px] flex-shrink-0 flex flex-col border-r border-border/30 min-h-0">
         <div className="px-3.5 pt-4 pb-2 flex-shrink-0">
-          <p className="text-xs text-foreground/40 font-medium">API 网关</p>
+          <p className="text-xs text-muted-foreground/60 font-medium">API 网关</p>
         </div>
 
-        <div className="flex-1 overflow-y-auto px-2.5 pb-3 [&::-webkit-scrollbar]:w-[2px] [&::-webkit-scrollbar-thumb]:bg-border/20">
+        <div className="flex-1 overflow-y-auto px-2.5 pb-3 scrollbar-thin-xs">
           <div className="space-y-[2px]">
             {NAV_ITEMS.map(item => {
               const isSelected = selectedId === item.id;
               return (
-                <Button
+                <Button size="inline"
                   key={item.id}
                   variant="ghost"
                   onClick={() => setSelectedId(item.id)}
-                  className={`w-full flex items-center justify-between px-3 py-[8px] h-auto rounded-xl transition-all text-left relative ${
+                  className={`w-full flex items-center justify-between px-3 py-[8px] transition-all text-left relative ${
                     isSelected
                       ? 'bg-cherry-active-bg'
-                      : 'border border-transparent hover:bg-foreground/[0.03]'
+                      : 'border border-transparent hover:bg-accent/50'
                   }`}
                 >
                   {isSelected && (
                     <div className="absolute inset-0 rounded-xl border border-cherry-active-border pointer-events-none" />
                   )}
                   <div className="flex items-center gap-2 min-w-0 flex-1">
-                    <span className={`flex-shrink-0 ${isSelected ? 'text-foreground/50' : 'text-foreground/30'}`}>{item.icon}</span>
-                    <span className={`text-xs truncate ${isSelected ? 'text-foreground/85 font-medium' : 'text-foreground/55'}`}>
+                    <span className={`flex-shrink-0 ${isSelected ? 'text-muted-foreground/60' : 'text-muted-foreground/40'}`}>{item.icon}</span>
+                    <span className={`text-sm truncate ${isSelected ? 'text-foreground font-medium' : 'text-muted-foreground'}`}>
                       {item.label}
                     </span>
                   </div>
-                  <ChevronRight size={9} className={`flex-shrink-0 ${isSelected ? 'text-foreground/25' : 'text-foreground/10'}`} />
+                  <ChevronRight size={9} className={`flex-shrink-0 ${isSelected ? 'text-muted-foreground/40' : 'text-muted-foreground/50'}`} />
                 </Button>
               );
             })}
@@ -459,36 +437,36 @@ export function ApiGatewayPage() {
         {/* Top bar with master toggle */}
         <div className="flex items-center justify-between px-6 pt-4 pb-0 flex-shrink-0">
           <div>
-            <h2 className="text-sm text-foreground/85 font-semibold">
+            <h2 className="text-sm text-foreground font-semibold">
               {selectedId === 'connection' ? '配置 API 服务' : selectedId === 'security' ? '安全凭证管理' : '模型映射管理'}
             </h2>
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-xs text-foreground/40">{serviceEnabled ? '服务已开启' : '服务已关闭'}</span>
-            <Toggle checked={serviceEnabled} onChange={setServiceEnabled} />
+            <span className="text-xs text-muted-foreground/60">{serviceEnabled ? '服务已开启' : '服务已关闭'}</span>
+            <Switch size="sm" checked={serviceEnabled} onCheckedChange={setServiceEnabled} />
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto px-6 py-4 [&::-webkit-scrollbar]:w-[3px] [&::-webkit-scrollbar-thumb]:bg-border/20">
+        <div className="flex-1 overflow-y-auto px-6 py-4 scrollbar-thin">
           {/* Status banner */}
           {serviceEnabled && (
             <div className="flex items-center gap-2.5 px-3.5 py-2.5 bg-cherry-active-bg border border-cherry-ring rounded-xl mb-4">
               <CheckCircle2 size={13} className="text-cherry-primary flex-shrink-0" />
               <div className="flex-1 min-w-0">
                 <p className="text-xs text-cherry-primary-dark font-medium">API 网关正在运行</p>
-                <p className="text-[8px] text-cherry-text-muted mt-0.5">{'兼容 OpenAI 接口标准，可供第三方应用直接调用。'}</p>
+                <p className="text-xs text-cherry-text-muted mt-0.5">{'兼容 OpenAI 接口标准，可供第三方应用直接调用。'}</p>
               </div>
-              <Button variant="outline" size="sm" className="px-2 py-[3px] h-auto rounded-lg border-cherry-ring text-[9px] text-cherry-text-muted hover:bg-cherry-active-bg">
+              <Button variant="outline" size="xs" className="border-cherry-ring text-cherry-text-muted hover:bg-cherry-active-bg">
                 查看日志
               </Button>
             </div>
           )}
           {!serviceEnabled && (
-            <div className="flex items-center gap-2.5 px-3.5 py-2.5 bg-foreground/[0.03] border border-foreground/[0.06] rounded-xl mb-4">
-              <XCircle size={13} className="text-foreground/20 flex-shrink-0" />
+            <div className="flex items-center gap-2.5 px-3.5 py-2.5 bg-muted/30 border border-border/50 rounded-xl mb-4">
+              <XCircle size={13} className="text-muted-foreground/40 flex-shrink-0" />
               <div className="flex-1">
-                <p className="text-xs text-foreground/40 font-medium">API 服务未启用</p>
-                <p className="text-[8px] text-foreground/20 mt-0.5">开启右上角开关以启动 API 网关服务。</p>
+                <p className="text-xs text-muted-foreground/60 font-medium">API 服务未启用</p>
+                <p className="text-xs text-muted-foreground/50 mt-0.5">开启右上角开关以启动 API 网关服务。</p>
               </div>
             </div>
           )}

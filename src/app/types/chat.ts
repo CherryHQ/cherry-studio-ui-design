@@ -12,6 +12,23 @@ export type {
   ModelCapability, ModelInfo,
 } from './shared';
 
+// --- Prompt Section Types ---
+export type BadgeKind = 'system' | 'custom' | 'kb' | 'mcp';
+export type SlashTab = 'var' | 'kb' | 'mcp';
+
+export interface KBItem {
+  id: string;
+  name: string;
+  description: string;
+  docCount: number;
+}
+
+export interface FewShotExample {
+  id: string;
+  user: string;
+  assistant: string;
+}
+
 // --- Roles ---
 export type MessageRole = 'user' | 'assistant' | 'agent' | 'system';
 
@@ -104,10 +121,18 @@ export interface ParallelResponse {
 
 // --- Model Capability Labels ---
 export const MODEL_CAPABILITY_LABELS: Record<import('./shared').ModelCapability, string> = {
-  vision: '\u89c6\u89c9',
-  reasoning: '\u63a8\u7406',
-  tools: '\u5de5\u5177',
-  web: '\u8054\u7f51',
+  chat: '对话',
+  vision: '视觉',
+  reasoning: '推理',
+  code: '代码',
+  embedding: '嵌入',
+  'image-gen': '图像生成',
+  function: '函数',
+  audio: '音频',
+  'web-search': '联网搜索',
+  free: '免费',
+  tools: '工具',
+  web: '联网',
 };
 
 // --- Workflow Steps (Agent) ---

@@ -106,7 +106,7 @@ function InlineSelect({
             <Button
               key={opt.value}
               variant="ghost"
-              size="sm"
+              size="xs"
               onClick={() => {
                 onChange(opt.value)
                 setOpen(false)

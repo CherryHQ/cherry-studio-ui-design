@@ -30,7 +30,7 @@ type UpdateSettingFn = <K extends keyof AppSettings>(key: K, value: AppSettings[
 
 const defaultSettings: AppSettings = {
   language: 'zh-CN',
-  theme: 'dark',
+  theme: 'light',
   accentColor: 'neutral',
   transparency: true,
   zoom: 100,
@@ -57,7 +57,7 @@ const defaultSettings: AppSettings = {
 
 const SettingsStateContext = createContext<AppSettings>(defaultSettings);
 const SettingsDispatchContext = createContext<UpdateSettingFn>(() => {});
-const ResolvedThemeContext = createContext<'light' | 'dark'>('dark');
+const ResolvedThemeContext = createContext<'light' | 'dark'>('light');
 
 /**
  * Combined hook — backward compatible.
@@ -143,7 +143,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
 
   // Resolve theme (handle 'system')
   const [systemPrefersDark, setSystemPrefersDark] = useState(() =>
-    typeof window !== 'undefined' ? window.matchMedia('(prefers-color-scheme: dark)').matches : true
+    typeof window !== 'undefined' ? window.matchMedia('(prefers-color-scheme: dark)').matches : false
   );
 
   useEffect(() => {

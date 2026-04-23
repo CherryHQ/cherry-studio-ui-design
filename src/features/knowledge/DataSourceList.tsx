@@ -2,7 +2,7 @@
 // Physically inlined from @/app/components/pages/knowledge/DataSourceList
 // Compliance: 2 regex literals converted to new RegExp() + String.fromCharCode()
 
-import React, { useState, useCallback, useRef, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   FileText, StickyNote, Folder, Link2, Globe, Upload,
   Check, Clock, AlertCircle, MoreHorizontal, Trash2,
@@ -12,7 +12,7 @@ import {
   Loader2,
 } from 'lucide-react';
 import { Tooltip } from '@/app/components/Tooltip';
-import { Button, Input, Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@cherry-studio/ui';
+import { Button, Input, Textarea, Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, Popover, PopoverTrigger, PopoverContent , Checkbox} from '@cherry-studio/ui';
 
 export interface DataSource {
   id: string;
@@ -123,7 +123,7 @@ function DocPreviewDialog({ source, onClose }: { source: DataSource; onClose: ()
           </div>
           <div className="flex-1 min-w-0">
             <DialogTitle className="text-xs text-foreground truncate block">{source.name}</DialogTitle>
-            <div className="flex items-center gap-2 text-[9px] text-muted-foreground/35">
+            <div className="flex items-center gap-2 text-xs text-muted-foreground/50">
               {source.format && <span className="uppercase">{source.format}</span>}
               {source.size && <span>{source.size}</span>}
               {source.url && <span className="truncate">{source.url}</span>}
@@ -132,7 +132,7 @@ function DocPreviewDialog({ source, onClose }: { source: DataSource; onClose: ()
         </DialogHeader>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto px-5 py-4 [&::-webkit-scrollbar]:w-[3px] [&::-webkit-scrollbar-thumb]:bg-border/30 [&::-webkit-scrollbar-thumb]:rounded-full">
+        <div className="flex-1 overflow-y-auto px-5 py-4 scrollbar-thin">
           <div className="prose prose-sm max-w-none">
             {content.split('\n').map((line, i) => {
               if (line.startsWith('# ')) return <h1 key={i} className="text-sm text-foreground mt-0 mb-2">{line.slice(2)}</h1>;
@@ -142,12 +142,12 @@ function DocPreviewDialog({ source, onClose }: { source: DataSource; onClose: ()
               if (line.startsWith('- **')) {
                 const boldColonRe = new RegExp('- ' + String.fromCharCode(92, 42, 92, 42) + '(.+?)' + String.fromCharCode(92, 42, 92, 42) + String.fromCharCode(65306) + '(.+)');
                 const match = line.match(boldColonRe);
-                if (match) return <div key={i} className="text-xs text-foreground/70 pl-3 py-0.5"><strong className="text-foreground/90">{match[1]}</strong>{String.fromCharCode(65306)}{match[2]}</div>;
+                if (match) return <div key={i} className="text-xs text-foreground pl-3 py-0.5"><strong className="text-foreground">{match[1]}</strong>{String.fromCharCode(65306)}{match[2]}</div>;
               }
-              if (line.match(new RegExp('^' + String.fromCharCode(92) + 'd+' + String.fromCharCode(92) + '.'))) return <div key={i} className="text-xs text-foreground/70 pl-3 py-0.5">{line}</div>;
+              if (line.match(new RegExp('^' + String.fromCharCode(92) + 'd+' + String.fromCharCode(92) + '.'))) return <div key={i} className="text-xs text-foreground pl-3 py-0.5">{line}</div>;
               if (line.startsWith('*')) return <p key={i} className="text-xs text-muted-foreground/40 italic mt-2">{line.replace(new RegExp(String.fromCharCode(42), 'g'), '')}</p>;
               if (line.trim() === '') return <div key={i} className="h-1" />;
-              return <p key={i} className="text-xs text-foreground/70 leading-relaxed">{line}</p>;
+              return <p key={i} className="text-xs text-foreground leading-relaxed">{line}</p>;
             })}
           </div>
         </div>
@@ -181,8 +181,8 @@ function ChunkDetailView({ source, onBack }: { source: DataSource; onBack: () =>
           {React.createElement(source.type === 'file' ? getFileIcon(source.format) : cfg.icon, { size: 10, strokeWidth: 1.6 })}
         </div>
         <div className="flex-1 min-w-0">
-          <span className="text-xs text-foreground truncate">{source.name}</span>
-          <div className="flex items-center gap-2 text-[9px] text-muted-foreground/35">
+          <span className="text-sm text-foreground truncate">{source.name}</span>
+          <div className="flex items-center gap-2 text-xs text-muted-foreground/50">
             {source.format && <span className="uppercase">{source.format}</span>}
             {source.size && <span>{source.size}</span>}
             <span>{chunks.length} chunks</span>
@@ -190,33 +190,33 @@ function ChunkDetailView({ source, onBack }: { source: DataSource; onBack: () =>
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto px-3 py-2 space-y-1.5 [&::-webkit-scrollbar]:w-[3px] [&::-webkit-scrollbar-thumb]:bg-border/30 [&::-webkit-scrollbar-thumb]:rounded-full">
+      <div className="flex-1 overflow-y-auto px-3 py-2 space-y-1.5 scrollbar-thin">
         {chunks.map(chunk => {
           const isEditing = editingId === chunk.id;
           const isExpanded = expandedId === chunk.id;
           return (
             <div key={chunk.id} className="rounded-lg border border-border/20 hover:border-border/40 transition-all group/ck">
               <div className="flex items-center gap-1.5 px-2.5 py-1.5">
-                <span className="w-4 h-4 rounded bg-accent/50 flex items-center justify-center text-[8px] text-muted-foreground/40 flex-shrink-0">{chunk.index}</span>
-                <span className="text-[9px] text-muted-foreground/30 flex-1">{chunk.tokens} tokens</span>
+                <span className="w-4 h-4 rounded bg-accent/50 flex items-center justify-center text-xs text-muted-foreground/40 flex-shrink-0">{chunk.index}</span>
+                <span className="text-xs text-muted-foreground/50 flex-1">{chunk.tokens} tokens</span>
                 <div className="flex items-center gap-0.5 opacity-0 group-hover/ck:opacity-100 transition-all">
                   {isEditing ? (
-                    <Button variant="ghost" size="icon-xs" onClick={() => saveEdit(chunk.id)} className="w-4 h-4 text-cherry-primary hover:bg-cherry-active-bg"><Save size={9} /></Button>
+                    <Button variant="ghost" size="icon-xs" onClick={() => saveEdit(chunk.id)} className="text-cherry-primary hover:bg-cherry-active-bg"><Save size={9} /></Button>
                   ) : (
-                    <Button variant="ghost" size="icon-xs" onClick={() => startEdit(chunk)} className="w-4 h-4 text-muted-foreground/25"><Pencil size={8} /></Button>
+                    <Button variant="ghost" size="icon-xs" onClick={() => startEdit(chunk)} className="text-muted-foreground/40"><Pencil size={8} /></Button>
                   )}
-                  <Button variant="ghost" size="icon-xs" onClick={() => deleteChunk(chunk.id)} className="w-4 h-4 text-muted-foreground/25 hover:text-destructive hover:bg-destructive/10"><Trash2 size={8} /></Button>
-                  <Button variant="ghost" size="icon-xs" onClick={() => setExpandedId(isExpanded ? null : chunk.id)} className="w-4 h-4 text-muted-foreground/25">
+                  <Button variant="ghost" size="icon-xs" onClick={() => deleteChunk(chunk.id)} className="text-muted-foreground/40 hover:text-destructive hover:bg-destructive/10"><Trash2 size={8} /></Button>
+                  <Button variant="ghost" size="icon-xs" onClick={() => setExpandedId(isExpanded ? null : chunk.id)} className="text-muted-foreground/40">
                     {isExpanded ? <ChevronUp size={9} /> : <ChevronDown size={9} />}
                   </Button>
                 </div>
               </div>
               <div className="px-2.5 pb-2">
                 {isEditing ? (
-                  <textarea value={editText} onChange={e => setEditText(e.target.value)} onKeyDown={e => { if (e.key === 'Escape') setEditingId(null); }}
+                  <Textarea value={editText} onChange={e => setEditText(e.target.value)} onKeyDown={e => { if (e.key === 'Escape') setEditingId(null); }}
                     className="w-full min-h-[80px] text-xs text-foreground bg-muted/20 rounded-md border border-cherry-primary/30 p-2 outline-none focus:ring-1 focus:ring-cherry-primary/20 resize-y leading-relaxed" autoFocus />
                 ) : (
-                  <p className={`text-xs text-foreground/70 leading-relaxed ${isExpanded ? '' : 'line-clamp-2'}`}>{chunk.content}</p>
+                  <p className={`text-xs text-foreground leading-relaxed ${isExpanded ? '' : 'line-clamp-2'}`}>{chunk.content}</p>
                 )}
               </div>
             </div>
@@ -232,11 +232,11 @@ function ChunkDetailView({ source, onBack }: { source: DataSource; onBack: () =>
 // ===========================
 
 const typeConfig: Record<string, { icon: React.ElementType; label: string; color: string }> = {
-  file: { icon: FileText, label: '\u6587\u4ef6', color: 'text-blue-500' },
-  note: { icon: StickyNote, label: '\u7b14\u8bb0', color: 'text-amber-500' },
-  folder: { icon: Folder, label: '\u76ee\u5f55', color: 'text-violet-500' },
-  url: { icon: Link2, label: '\u7f51\u5740', color: 'text-cyan-500' },
-  website: { icon: Globe, label: '\u7f51\u7ad9', color: 'text-foreground/60' },
+  file: { icon: FileText, label: '\u6587\u4ef6', color: 'text-info' },
+  note: { icon: StickyNote, label: '\u7b14\u8bb0', color: 'text-warning' },
+  folder: { icon: Folder, label: '\u76ee\u5f55', color: 'text-accent-violet' },
+  url: { icon: Link2, label: '\u7f51\u5740', color: 'text-accent-cyan' },
+  website: { icon: Globe, label: '\u7f51\u7ad9', color: 'text-muted-foreground' },
 };
 
 function getFileIcon(format?: string) {
@@ -252,9 +252,9 @@ function getFileIcon(format?: string) {
 // ===========================
 
 const statusConfig = {
-  preprocessing: { label: '\u9884\u5904\u7406', color: 'text-blue-500/70', step: 1 },
-  chunking: { label: '\u5206\u5757\u4e2d', color: 'text-violet-500/70', step: 2 },
-  embedding: { label: '\u5d4c\u5165\u4e2d', color: 'text-amber-500/70', step: 3 },
+  preprocessing: { label: '\u9884\u5904\u7406', color: 'text-info/70', step: 1 },
+  chunking: { label: '\u5206\u5757\u4e2d', color: 'text-accent-violet/70', step: 2 },
+  embedding: { label: '\u5d4c\u5165\u4e2d', color: 'text-warning/70', step: 3 },
   success: { label: '\u5c31\u7eea', color: 'text-primary', step: 4 },
   error: { label: '\u9519\u8bef', color: 'text-destructive/60', step: 0 },
 } as const;
@@ -271,12 +271,12 @@ function StatusBadge({ status, errorMsg }: { status: DataSource['status']; error
           {[1, 2, 3].map(step => (
             <div key={step} className={`w-[5px] h-[5px] rounded-full transition-colors ${
               step < cfg.step ? 'bg-primary' :
-              step === cfg.step ? 'bg-current animate-pulse' :
+              step === cfg.step ? `${cfg.color.replace('text-', 'bg-').replace('/70', '')} animate-pulse` :
               'bg-border/40'
-            }`} style={step === cfg.step ? { color: cfg.color.includes('blue') ? '#3b82f6' : cfg.color.includes('violet') ? '#8b5cf6' : '#f59e0b' } : undefined} />
+            }`} />
           ))}
         </div>
-        <span className={`inline-flex items-center gap-0.5 text-[9px] ${cfg.color}`}>
+        <span className={`inline-flex items-center gap-0.5 text-xs ${cfg.color}`}>
           <Loader2 size={7} className="animate-spin" />
           <span>{cfg.label}</span>
         </span>
@@ -286,7 +286,7 @@ function StatusBadge({ status, errorMsg }: { status: DataSource['status']; error
 
   if (isError) {
     const badge = (
-      <span className={`inline-flex items-center gap-0.5 text-[9px] ${cfg.color} ${errorMsg ? 'cursor-help' : ''}`}>
+      <span className={`inline-flex items-center gap-0.5 text-xs ${cfg.color} ${errorMsg ? 'cursor-help' : ''}`}>
         <AlertCircle size={8} />
         <span>{cfg.label}</span>
       </span>
@@ -298,7 +298,7 @@ function StatusBadge({ status, errorMsg }: { status: DataSource['status']; error
   }
 
   return (
-    <span className="inline-flex items-center gap-0.5 text-[9px] text-primary">
+    <span className="inline-flex items-center gap-0.5 text-xs text-primary">
       <Check size={8} />
       <span>{'\u5c31\u7eea'}</span>
     </span>
@@ -395,29 +395,29 @@ function AddSourceDialog({ onAdd, onCancel }: {
             const isActive = tab === t.id;
             const TIcon = t.icon;
             return (
-              <Button key={t.id} variant="ghost" size="sm" onClick={() => setTab(t.id)} className={`flex items-center gap-1 px-2.5 py-1.5 text-xs rounded-none border-b-[1.5px] ${isActive ? 'border-primary text-foreground' : 'border-transparent text-muted-foreground/45 hover:text-foreground'}`}>
+              <Button key={t.id} variant="ghost" size="sm" onClick={() => setTab(t.id)} className={`flex items-center gap-1 px-2.5 py-1.5 text-xs rounded-none border-b-[1.5px] ${isActive ? 'border-primary text-foreground' : 'border-transparent text-muted-foreground/40 hover:text-foreground'}`}>
                 <TIcon size={10} strokeWidth={1.6} />{t.label}
               </Button>
             );
           })}
         </div>
-        <div className="flex-1 overflow-y-auto p-3 [&::-webkit-scrollbar]:w-[3px] [&::-webkit-scrollbar-thumb]:bg-border/30 [&::-webkit-scrollbar-thumb]:rounded-full">
+        <div className="flex-1 overflow-y-auto p-3 scrollbar-thin">
           {tab === 'file' && (
             <div>
               <div className={`border-2 border-dashed rounded-lg p-5 text-center transition-colors cursor-pointer ${isDragOver ? 'border-primary/50 bg-primary/[0.04]' : 'border-border/30 hover:border-border/60'}`}
                 onDragOver={e => { e.preventDefault(); setIsDragOver(true); }} onDragLeave={() => setIsDragOver(false)} onDrop={handleFileDrop} onClick={handleFileSelect}>
-                <Upload size={18} className="text-muted-foreground/25 mx-auto mb-1.5" strokeWidth={1.4} />
+                <Upload size={18} className="text-muted-foreground/40 mx-auto mb-1.5" strokeWidth={1.4} />
                 <p className="text-xs text-muted-foreground/50 mb-0.5">{'\u70b9\u51fb\u9009\u62e9\u6587\u4ef6\u6216\u62d6\u62fd\u5230\u6b64\u5904'}</p>
-                <p className="text-[9px] text-muted-foreground/25">{'\u652f\u6301 PDF, DOCX, MD, XLSX, TXT, CSV'}</p>
+                <p className="text-xs text-muted-foreground/50">{'\u652f\u6301 PDF, DOCX, MD, XLSX, TXT, CSV'}</p>
               </div>
               {droppedFiles.length > 0 && (
                 <div className="mt-2 space-y-0.5">
                   {droppedFiles.map((f, i) => (
-                    <div key={i} className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-accent/30">
-                      <FileText size={10} className="text-blue-500 flex-shrink-0" />
+                    <div key={i} className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-accent/25">
+                      <FileText size={10} className="text-info flex-shrink-0" />
                       <span className="text-xs text-foreground truncate flex-1">{f.name}</span>
-                      <span className="text-[9px] text-muted-foreground/35 flex-shrink-0">{f.size}</span>
-                      <Button variant="ghost" size="icon-xs" onClick={() => removeFile(i)} className="text-muted-foreground/25 hover:text-destructive"><X size={9} /></Button>
+                      <span className="text-xs text-muted-foreground/50 flex-shrink-0">{f.size}</span>
+                      <Button variant="ghost" size="icon-xs" onClick={() => removeFile(i)} className="text-muted-foreground/40 hover:text-destructive"><X size={9} /></Button>
                     </div>
                   ))}
                 </div>
@@ -430,12 +430,10 @@ function AddSourceDialog({ onAdd, onCancel }: {
               {mockNotes.map(note => {
                 const isChecked = selectedNotes.has(note.id);
                 return (
-                  <Button key={note.id} variant="ghost" onClick={() => setSelectedNotes(prev => { const n = new Set(prev); if (n.has(note.id)) n.delete(note.id); else n.add(note.id); return n; })}
-                    className={`w-full h-auto flex items-center gap-2 px-2 py-1.5 rounded-md text-left justify-start ${isChecked ? 'bg-primary/10' : 'hover:bg-accent/40'}`}>
-                    <div className={`w-3.5 h-3.5 rounded border flex items-center justify-center flex-shrink-0 transition-colors ${isChecked ? 'bg-primary border-primary' : 'border-border/50'}`}>
-                      {isChecked && <Check size={8} className="text-primary-foreground" />}
-                    </div>
-                    <StickyNote size={10} className="text-amber-500 flex-shrink-0" />
+                  <Button key={note.id} variant="ghost" size="inline" onClick={() => setSelectedNotes(prev => { const n = new Set(prev); if (n.has(note.id)) n.delete(note.id); else n.add(note.id); return n; })}
+                    className={`w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-left justify-start ${isChecked ? 'bg-primary/10' : 'hover:bg-accent/50'}`}>
+                    <Checkbox checked={isChecked} className="flex-shrink-0" />
+                    <StickyNote size={10} className="text-warning flex-shrink-0" />
                     <span className="text-xs text-foreground">{note.title}</span>
                   </Button>
                 );
@@ -445,9 +443,9 @@ function AddSourceDialog({ onAdd, onCancel }: {
           {tab === 'folder' && (
             <div className={`border-2 border-dashed rounded-lg p-5 text-center transition-colors cursor-pointer ${isDragOver ? 'border-primary/50 bg-primary/[0.04]' : 'border-border/30 hover:border-border/60'}`}
               onDragOver={e => { e.preventDefault(); setIsDragOver(true); }} onDragLeave={() => setIsDragOver(false)} onDrop={handleFileDrop} onClick={handleFileSelect}>
-              <Folder size={18} className="text-violet-500/35 mx-auto mb-1.5" strokeWidth={1.4} />
+              <Folder size={18} className="text-accent-violet/35 mx-auto mb-1.5" strokeWidth={1.4} />
               <p className="text-xs text-muted-foreground/50 mb-0.5">{'\u9009\u62e9\u6216\u62d6\u5165\u672c\u5730\u6587\u4ef6\u5939'}</p>
-              <p className="text-[9px] text-muted-foreground/25">{'\u5c06\u9012\u5f52\u5bfc\u5165\u76ee\u5f55\u4e0b\u6240\u6709\u652f\u6301\u7684\u6587\u4ef6'}</p>
+              <p className="text-xs text-muted-foreground/50">{'\u5c06\u9012\u5f52\u5bfc\u5165\u76ee\u5f55\u4e0b\u6240\u6709\u652f\u6301\u7684\u6587\u4ef6'}</p>
             </div>
           )}
           {tab === 'url' && (
@@ -455,7 +453,7 @@ function AddSourceDialog({ onAdd, onCancel }: {
               <p className="text-xs text-muted-foreground/40 mb-1.5">{'\u8f93\u5165\u7f51\u9875\u94fe\u63a5\uff1a'}</p>
               <Input autoFocus value={urlInput} onChange={e => setUrlInput(e.target.value)} placeholder="https://example.com/article"
                 className="w-full text-xs" />
-              <p className="text-[9px] text-muted-foreground/25 mt-1">{'\u5c06\u81ea\u52a8\u6293\u53d6\u9875\u9762\u6587\u672c\u5e76\u5206\u5757\u7d22\u5f15'}</p>
+              <p className="text-xs text-muted-foreground/50 mt-1">{'\u5c06\u81ea\u52a8\u6293\u53d6\u9875\u9762\u6587\u672c\u5e76\u5206\u5757\u7d22\u5f15'}</p>
             </div>
           )}
           {tab === 'website' && (
@@ -464,24 +462,24 @@ function AddSourceDialog({ onAdd, onCancel }: {
               <Input autoFocus value={sitemapInput} onChange={e => setSitemapInput(e.target.value)} placeholder="https://docs.example.com/sitemap.xml"
                 className="w-full text-xs mb-2.5" />
               <div className="bg-muted/20 rounded-md p-2.5 border border-border/20 space-y-2">
-                <p className="text-[9px] text-muted-foreground/40">{'\u722c\u866b\u8bbe\u7f6e'}</p>
+                <p className="text-xs text-muted-foreground/40">{'\u722c\u866b\u8bbe\u7f6e'}</p>
                 <div className="grid grid-cols-2 gap-2">
                   <div>
-                    <label className="text-[9px] text-muted-foreground/35 mb-0.5 block">{'\u722c\u53d6\u6df1\u5ea6'}</label>
+                    <label className="text-xs text-muted-foreground/60 mb-0.5 block">{'\u722c\u53d6\u6df1\u5ea6'}</label>
                     <Input value={crawlDepth} onChange={e => setCrawlDepth(e.target.value)} className="w-full text-xs" />
                   </div>
                   <div>
-                    <label className="text-[9px] text-muted-foreground/35 mb-0.5 block">{'\u6700\u5927\u9875\u9762\u6570'}</label>
+                    <label className="text-xs text-muted-foreground/60 mb-0.5 block">{'\u6700\u5927\u9875\u9762\u6570'}</label>
                     <Input value={crawlMaxPages} onChange={e => setCrawlMaxPages(e.target.value)} className="w-full text-xs" />
                   </div>
                 </div>
-                <p className="text-[8px] text-muted-foreground/25">{'\u6df1\u5ea6 1 = \u4ec5\u9996\u9875\uff0c2 = \u9996\u9875\u94fe\u63a5\u7684\u9875\u9762'}</p>
+                <p className="text-xs text-muted-foreground/50">{'\u6df1\u5ea6 1 = \u4ec5\u9996\u9875\uff0c2 = \u9996\u9875\u94fe\u63a5\u7684\u9875\u9762'}</p>
               </div>
             </div>
           )}
         </div>
         <DialogFooter className="flex-row items-center justify-between px-4 py-2.5 border-t border-border/15 flex-shrink-0">
-          <span className="text-[9px] text-muted-foreground/30">
+          <span className="text-xs text-muted-foreground/50">
             {tab === 'note' && selectedNotes.size > 0 ? `\u5df2\u9009 ${selectedNotes.size} \u4e2a\u7b14\u8bb0` : ''}
             {(tab === 'file' || tab === 'folder') && droppedFiles.length > 0 ? `\u5df2\u9009 ${droppedFiles.length} \u4e2a\u6587\u4ef6` : ''}
           </span>
@@ -513,14 +511,6 @@ export function DataSourceList({ sources, onAddSources, onDeleteSource, onReinde
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [detailSource, setDetailSource] = useState<DataSource | null>(null);
   const [previewSource, setPreviewSource] = useState<DataSource | null>(null);
-  const contextRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (!contextId) return;
-    const h = (e: MouseEvent) => { if (contextRef.current && !contextRef.current.contains(e.target as Node)) setContextId(null); };
-    document.addEventListener('mousedown', h);
-    return () => document.removeEventListener('mousedown', h);
-  }, [contextId]);
 
   if (detailSource) return <ChunkDetailView source={detailSource} onBack={() => setDetailSource(null)} />;
 
@@ -544,7 +534,7 @@ export function DataSourceList({ sources, onAddSources, onDeleteSource, onReinde
           ))}
         </div>
         <div className="flex items-center gap-1.5">
-          <span className="text-[9px] text-muted-foreground/35 mr-0.5">{stats.ready}/{stats.total} {'\u5c31\u7eea'}</span>
+          <span className="text-xs text-muted-foreground/50 mr-0.5">{stats.ready}/{stats.total} {'\u5c31\u7eea'}</span>
           <Button variant="default" size="xs" onClick={() => setShowAddDialog(true)} className="h-5 px-2 flex items-center gap-0.5">
             <Plus size={9} /><span>{'\u6dfb\u52a0'}</span>
           </Button>
@@ -552,16 +542,16 @@ export function DataSourceList({ sources, onAddSources, onDeleteSource, onReinde
       </div>
 
       <div
-        className={`flex-1 overflow-y-auto mx-2.5 mb-2.5 rounded-lg border transition-colors [&::-webkit-scrollbar]:w-[3px] [&::-webkit-scrollbar-thumb]:bg-border/30 [&::-webkit-scrollbar-thumb]:rounded-full ${isDragOver ? 'border-primary/50 bg-primary/[0.03]' : 'border-border/25'}`}
+        className={`flex-1 overflow-y-auto mx-2.5 mb-2.5 rounded-lg border transition-colors scrollbar-thin ${isDragOver ? 'border-primary/50 bg-primary/[0.03]' : 'border-border/25'}`}
         onDragOver={e => { e.preventDefault(); setIsDragOver(true); }}
         onDragLeave={() => setIsDragOver(false)}
         onDrop={handleDrop}
       >
         {filtered.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full py-12 text-muted-foreground/35">
+          <div className="flex flex-col items-center justify-center h-full py-12 text-muted-foreground/40">
             <Upload size={22} strokeWidth={1.2} className="mb-1.5" />
             <p className="text-xs mb-0.5">{'\u62d6\u62fd\u6587\u4ef6\u5230\u6b64\u5904\u4e0a\u4f20'}</p>
-            <p className="text-[9px] mb-2">{'\u652f\u6301 PDF, Word, Markdown, Excel, TXT'}</p>
+            <p className="text-xs mb-2">{'\u652f\u6301 PDF, Word, Markdown, Excel, TXT'}</p>
             <Button variant="ghost" size="xs" onClick={() => setShowAddDialog(true)} className="text-xs text-primary hover:underline">{'\u6216\u70b9\u51fb\u6b64\u5904\u6dfb\u52a0\u6570\u636e\u6e90'}</Button>
           </div>
         ) : (
@@ -574,52 +564,52 @@ export function DataSourceList({ sources, onAddSources, onDeleteSource, onReinde
               return (
                 <div
                   key={source.id}
-                  className={`flex items-center gap-2.5 px-2.5 py-[6px] hover:bg-accent/25 transition-colors group/row relative ${clickable ? 'cursor-pointer' : ''}`}
+                  className={`flex items-center gap-2.5 px-2.5 py-[6px] hover:bg-accent/50 transition-colors group/row relative ${clickable ? 'cursor-pointer' : ''}`}
                   onClick={() => { if (clickable) setDetailSource(source); }}
                 >
-                  <div className={`w-6 h-6 rounded flex items-center justify-center flex-shrink-0 bg-accent/40 ${cfg.color}`}>
+                  <div className={`w-6 h-6 rounded flex items-center justify-center flex-shrink-0 bg-accent/50 ${cfg.color}`}>
                     <Icon size={12} strokeWidth={1.6} />
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-1.5">
-                      <span className="text-xs text-foreground truncate">{source.name}</span>
-                      {source.format && <span className="text-[8px] text-muted-foreground/30 uppercase flex-shrink-0">{source.format}</span>}
+                      <span className="text-sm text-foreground truncate">{source.name}</span>
+                      {source.format && <span className="text-xs text-muted-foreground/50 uppercase flex-shrink-0">{source.format}</span>}
                     </div>
                     <div className="flex items-center gap-1.5 mt-px">
-                      {source.size && <span className="text-[9px] text-muted-foreground/35">{source.size}</span>}
-                      {source.chunks !== undefined && source.chunks > 0 && <span className="text-[9px] text-muted-foreground/25">{source.chunks} chunks</span>}
-                      <span className="text-[9px] text-muted-foreground/20">{source.updatedAt}</span>
+                      {source.size && <span className="text-xs text-muted-foreground/50">{source.size}</span>}
+                      {source.chunks !== undefined && source.chunks > 0 && <span className="text-xs text-muted-foreground/50">{source.chunks} chunks</span>}
+                      <span className="text-xs text-muted-foreground/50">{source.updatedAt}</span>
                     </div>
                   </div>
                   <StatusBadge status={source.status} errorMsg={source.errorMsg} />
-                  <div className="relative" ref={showContext ? contextRef : undefined}>
-                    <Button variant="ghost" size="icon-xs" onClick={e => { e.stopPropagation(); setContextId(showContext ? null : source.id); }}
-                      className="text-muted-foreground/25 opacity-0 group-hover/row:opacity-100 flex-shrink-0">
-                      <MoreHorizontal size={10} />
-                    </Button>
-                    {showContext && (
-                      <div className="absolute right-0 top-6 z-30 bg-popover border border-border rounded-lg shadow-xl p-1 min-w-[120px] animate-in fade-in zoom-in-95 duration-100">
-                        <Button variant="ghost" size="xs" onClick={e => { e.stopPropagation(); setPreviewSource(source); setContextId(null); }}
+                  <Popover open={showContext} onOpenChange={open => setContextId(open ? source.id : null)}>
+                    <PopoverTrigger asChild>
+                      <Button variant="ghost" size="icon-xs" onClick={e => { e.stopPropagation(); }}
+                        className="text-muted-foreground/40 opacity-0 group-hover/row:opacity-100 flex-shrink-0">
+                        <MoreHorizontal size={10} />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent align="end" className="p-1 min-w-[120px] w-auto">
+                      <Button variant="ghost" size="xs" onClick={e => { e.stopPropagation(); setPreviewSource(source); setContextId(null); }}
+                        className="w-full justify-start gap-1.5 text-xs text-popover-foreground">
+                        <BookOpen size={9} /> {'\u9884\u89c8\u539f\u6587'}
+                      </Button>
+                      {source.status === 'success' && (
+                        <Button variant="ghost" size="xs" onClick={e => { e.stopPropagation(); setDetailSource(source); setContextId(null); }}
                           className="w-full justify-start gap-1.5 text-xs text-popover-foreground">
-                          <BookOpen size={9} /> {'\u9884\u89c8\u539f\u6587'}
+                          <Eye size={9} /> {'\u67e5\u770b Chunks'}
                         </Button>
-                        {source.status === 'success' && (
-                          <Button variant="ghost" size="xs" onClick={e => { e.stopPropagation(); setDetailSource(source); setContextId(null); }}
-                            className="w-full justify-start gap-1.5 text-xs text-popover-foreground">
-                            <Eye size={9} /> {'\u67e5\u770b Chunks'}
-                          </Button>
-                        )}
-                        <Button variant="ghost" size="xs" onClick={e => { e.stopPropagation(); onReindexSource(source.id); setContextId(null); }}
-                          className="w-full justify-start gap-1.5 text-xs text-popover-foreground">
-                          <RefreshCw size={9} /> {'\u91cd\u65b0\u7d22\u5f15'}
-                        </Button>
-                        <Button variant="ghost" size="xs" onClick={e => { e.stopPropagation(); onDeleteSource(source.id); setContextId(null); }}
-                          className="w-full justify-start gap-1.5 text-xs text-destructive hover:bg-destructive/10">
-                          <Trash2 size={9} /> {'\u5220\u9664'}
-                        </Button>
-                      </div>
-                    )}
-                  </div>
+                      )}
+                      <Button variant="ghost" size="xs" onClick={e => { e.stopPropagation(); onReindexSource(source.id); setContextId(null); }}
+                        className="w-full justify-start gap-1.5 text-xs text-popover-foreground">
+                        <RefreshCw size={9} /> {'\u91cd\u65b0\u7d22\u5f15'}
+                      </Button>
+                      <Button variant="ghost" size="xs" onClick={e => { e.stopPropagation(); onDeleteSource(source.id); setContextId(null); }}
+                        className="w-full justify-start gap-1.5 text-xs text-destructive hover:bg-destructive/10">
+                        <Trash2 size={9} /> {'\u5220\u9664'}
+                      </Button>
+                    </PopoverContent>
+                  </Popover>
                 </div>
               );
             })}

@@ -4,11 +4,13 @@ import React from 'react';
 export type {
   AttachmentFileType, FileAttachment, ArtifactType, ArtifactData,
   TokenUsage, ModelCapability, ModelInfo,
+  SearchProvider, ProviderParam, BlacklistSubscription,
 } from './shared';
 export type {
   MessageRole, Message, ToolCallData, GenerativeUIData,
   SearchResultItem, RAGInfo, MessageMetadata, ParallelResponse,
   WorkflowStep, WorkflowStepIcon, StepDetailItem,
+  BadgeKind, SlashTab, KBItem, FewShotExample,
 } from './chat';
 export type {
   ApiResponse, PaginatedResponse, StreamChunk,
@@ -20,7 +22,7 @@ export type {
   FileNode, OutputFile, AgentSessionData,
 } from './agent';
 export type {
-  AssistantInfo, AssistantTopic,
+  AssistantInfo, AssistantTopic, BranchNode, LayoutNode,
 } from './assistant';
 export type {
   FileTag, FileFolder, FileItem,
@@ -29,6 +31,9 @@ export type {
   ImageModel, ImageMode, AspectRatio, ImageSize,
   GenerationParams, GeneratedImage,
 } from './image';
+export type {
+  NoteItem, AIChatMsg, NoteQuickAction,
+} from './note';
 
 export interface MenuItem {
   id: string;
@@ -54,7 +59,7 @@ export interface Tab {
 export type SidebarLayout = 'hidden' | 'icon' | 'vertical-card' | 'full';
 
 export interface ContextMenuState {
-  visible: boolean;
+  open: boolean;
   x: number;
   y: number;
   tabId: string;
@@ -175,12 +180,26 @@ export interface CustomScript {
 
 export type MCPServerStatus = 'connected' | 'disconnected' | 'error';
 
+export interface MCPTool {
+  id: string;
+  name: string;
+  description: string;
+  enabled?: boolean;
+  category?: string;
+  icon?: React.ElementType;
+}
+
 export interface MCPServer {
   id: string;
   name: string;
-  url: string;
+  description?: string;
+  icon?: string;
+  url?: string;
   status: MCPServerStatus;
-  toolCount: number;
+  toolCount?: number;
+  tools?: MCPTool[];
+  endpoint?: string;
+  version?: string;
 }
 
 export interface InstalledPlugin {

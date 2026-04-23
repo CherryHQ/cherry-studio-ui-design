@@ -2,9 +2,10 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import {
-  Search, X, Filter, SortAsc, CalendarDays,
+  Search, X, Filter, SortAsc, CalendarDays, ChevronDown,
   MessageCircle, Eye, EyeOff, RotateCcw, GripVertical, Settings,
 } from 'lucide-react';
+import { cn } from "../../lib/utils"
 import { Avatar, AvatarFallback } from "./avatar"
 import { Button } from "./button"
 import { Dialog, DialogContent } from "./dialog"
@@ -101,6 +102,11 @@ export function NewTabDialog({ open, search, onSearchChange, onSelect, onClose, 
   };
   const inputRef = useRef<HTMLInputElement>(null);
   const [activeFilter, setActiveFilter] = useState<string>(l.allFilter);
+  const [highlightedIndex, setHighlightedIndex] = useState(0);
+  const [sortOrder, setSortOrder] = useState('最近');
+  const [dateRange, setDateRange] = useState('全部时间');
+  const [openDropdown, setOpenDropdown] = useState<string | null>(null);
+  const [showFilters, setShowFilters] = useState(false);
   const [manageMode, setManageMode] = useState(false);
   const [dragIdx, setDragIdx] = useState<number | null>(null);
   const [dragOverIdx, setDragOverIdx] = useState<number | null>(null);
@@ -148,11 +154,20 @@ export function NewTabDialog({ open, search, onSearchChange, onSelect, onClose, 
   const filteredActions = activeFilter === l.allFilter ? dialogQuickActions.filter(i => matchSearch(i.label)) : [];
   const hasResults = filteredRecent.length > 0 || filteredFiles.length > 0 || filteredActions.length > 0;
 
+  // Flat list for highlight + preview
+  type ResultItem = { id: string; label: string; desc: string; icon: React.ElementType; section: string; category?: string; meta?: string; count?: number };
+  const allResults: ResultItem[] = [
+    ...filteredRecent.map(item => ({ id: item.id, label: item.label, desc: item.desc, icon: item.icon, section: 'recent', category: item.category, count: item.count })),
+    ...filteredFiles.map(item => ({ id: item.id, label: item.label, desc: item.desc, icon: item.icon, section: 'file', category: item.category, meta: item.meta })),
+  ];
+  const previewItem = allResults[highlightedIndex] || null;
+  let globalIdx = -1;
+
   return (
     <Dialog open={open} onOpenChange={(v) => { if (!v) onClose() }}>
-      <DialogContent data-slot="new-tab-dialog" className="max-w-[520px] p-0 top-[8%] translate-y-0 overflow-hidden flex flex-col tracking-[-0.14px]" showCloseButton={false}>
+      <DialogContent data-slot="new-tab-dialog" className="max-w-[820px] sm:max-w-[820px] p-0 overflow-hidden flex flex-col tracking-[-0.14px]" showCloseButton={false}>
         {/* Search input */}
-        <div className="flex items-center gap-2 px-4 h-12 border-b border-border">
+        <div className="flex items-center gap-2 mx-4 mt-4 mb-2 px-3 h-10 rounded-xl bg-muted/30 border border-border/50">
           <Search size={16} className="text-muted-foreground flex-shrink-0" />
           <Input
             ref={inputRef}
@@ -167,8 +182,7 @@ export function NewTabDialog({ open, search, onSearchChange, onSelect, onClose, 
               <X size={12} />
             </Button>
           )}
-          <span className="text-xs text-muted-foreground/50 flex-shrink-0 select-none">Aa</span>
-          <Button variant="ghost" size="icon-sm" className="w-7 h-7 text-muted-foreground hover:text-foreground flex-shrink-0"><Filter size={14} /></Button>
+          <Button variant="ghost" size="icon-sm" onClick={() => setShowFilters(v => !v)} className={cn("w-7 h-7 flex-shrink-0", showFilters ? "text-foreground bg-accent" : "text-muted-foreground hover:text-foreground")}><Filter size={14} /></Button>
         </div>
 
         {/* Create new - App icons grid */}
@@ -195,191 +209,222 @@ export function NewTabDialog({ open, search, onSearchChange, onSelect, onClose, 
         </div>
         )}
 
-        {/* Filter pills */}
-        <div className="flex items-center gap-1.5 px-4 py-2 border-b border-border/50 overflow-x-auto [&::-webkit-scrollbar]:hidden">
-          {[l.allFilter, ...dialogFilterTabs].map(f => (
-            <Button
-              key={f}
-              variant="ghost"
-              size="xs"
-              onClick={() => setActiveFilter(f)}
-              className={`rounded-full px-2.5 whitespace-nowrap border ${
-                activeFilter === f
-                  ? 'bg-primary text-primary-foreground border-primary'
-                  : 'bg-transparent text-muted-foreground border-border hover:bg-accent/50 hover:text-foreground'
-              }`}
-            >
-              {f}
+        {/* Filter dropdowns — toggle via funnel button, hidden in manage mode */}
+        {showFilters && !manageMode && <div className="flex items-center gap-2 px-4 py-2 border-b border-border/50">
+          <div className="relative">
+            <Button variant="ghost" size="xs" onClick={() => setOpenDropdown(openDropdown === 'type' ? null : 'type')} className="text-muted-foreground hover:text-foreground">
+              <Filter size={11} /><span>{activeFilter === l.allFilter ? '类型' : activeFilter}</span><ChevronDown size={10} />
             </Button>
-          ))}
-          <div className="flex-1" />
-          <Button variant="ghost" size="icon-xs" className="text-muted-foreground/60 hover:text-muted-foreground"><SortAsc size={12} /></Button>
-          <Button variant="ghost" size="icon-xs" className="text-muted-foreground/60 hover:text-muted-foreground"><CalendarDays size={12} /></Button>
-        </div>
+            {openDropdown === 'type' && (
+              <div className="absolute top-full left-0 mt-1 bg-popover border border-border/50 rounded-xl shadow-lg py-1 min-w-[120px] z-10">
+                {[l.allFilter, ...dialogFilterTabs].map(f => (
+                  <button key={f} onClick={() => { setActiveFilter(f); setOpenDropdown(null); }}
+                    className={cn("w-full text-left px-3 py-1.5 text-xs transition-colors", activeFilter === f ? 'text-foreground bg-accent/60' : 'text-muted-foreground hover:bg-accent/40 hover:text-foreground')}
+                  >{f}</button>
+                ))}
+              </div>
+            )}
+          </div>
+          <div className="relative">
+            <Button variant="ghost" size="xs" onClick={() => setOpenDropdown(openDropdown === 'sort' ? null : 'sort')} className="text-muted-foreground hover:text-foreground">
+              <SortAsc size={11} /><span>{sortOrder}</span><ChevronDown size={10} />
+            </Button>
+            {openDropdown === 'sort' && (
+              <div className="absolute top-full left-0 mt-1 bg-popover border border-border/50 rounded-xl shadow-lg py-1 min-w-[100px] z-10">
+                {['最近', '最早', '最多消息'].map(s => (
+                  <button key={s} onClick={() => { setSortOrder(s); setOpenDropdown(null); }}
+                    className={cn("w-full text-left px-3 py-1.5 text-xs transition-colors", sortOrder === s ? 'text-foreground bg-accent/60' : 'text-muted-foreground hover:bg-accent/40 hover:text-foreground')}
+                  >{s}</button>
+                ))}
+              </div>
+            )}
+          </div>
+          <div className="relative">
+            <Button variant="ghost" size="xs" onClick={() => setOpenDropdown(openDropdown === 'date' ? null : 'date')} className="text-muted-foreground hover:text-foreground">
+              <CalendarDays size={11} /><span>{dateRange}</span><ChevronDown size={10} />
+            </Button>
+            {openDropdown === 'date' && (
+              <div className="absolute top-full left-0 mt-1 bg-popover border border-border/50 rounded-xl shadow-lg py-1 min-w-[120px] z-10">
+                {['全部时间', '今天', '最近7天', '最近30天', '最近3个月'].map(d => (
+                  <button key={d} onClick={() => { setDateRange(d); setOpenDropdown(null); }}
+                    className={cn("w-full text-left px-3 py-1.5 text-xs transition-colors", dateRange === d ? 'text-foreground bg-accent/60' : 'text-muted-foreground hover:bg-accent/40 hover:text-foreground')}
+                  >{d}</button>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>}
 
-        {/* Content */}
-        <ScrollArea className="max-h-[380px]" role="list" aria-live="polite">
-          {manageMode ? (
-            /* Manage Mode */
-            <div className="px-3 pt-3 pb-2">
-              <div className="flex items-center justify-between mb-3 px-1">
-                <span className="text-xs text-muted-foreground">{l.manageHint}</span>
-                <Button
-                  variant="ghost"
-                  size="xs"
-                  onClick={resetApps}
-                  className="text-xs text-muted-foreground hover:text-foreground"
-                >
-                  <RotateCcw size={11} />
-                  {l.reset}
+        {/* Content: left list + right preview */}
+        <div className="flex flex-1 min-h-0">
+          <ScrollArea className={cn("flex-1 max-h-[380px]", !manageMode && "border-r border-border/50")} role="list" aria-live="polite">
+            {manageMode ? (
+              <div className="px-3 pt-3 pb-2">
+                <div className="flex items-center justify-between mb-3 px-1">
+                  <span className="text-xs text-muted-foreground">{l.manageHint}</span>
+                  <Button variant="ghost" size="xs" onClick={resetApps} className="text-xs text-muted-foreground hover:text-foreground">
+                    <RotateCcw size={11} />
+                    {l.reset}
+                  </Button>
+                </div>
+                <div className="space-y-0.5">
+                  {orderedApps.map((app, idx) => {
+                    const Icon = app.icon;
+                    const isHidden = hiddenApps.has(app.id);
+                    const isDragging = dragIdx === idx;
+                    const isDragOver = dragOverIdx === idx;
+                    return (
+                      <div
+                        key={app.id}
+                        draggable
+                        onDragStart={() => handleDragStart(idx)}
+                        onDragOver={(e) => handleDragOver(e, idx)}
+                        onDragEnd={handleDragEnd}
+                        className={`flex items-center gap-3 px-2 py-2 rounded-xl transition-all cursor-grab active:cursor-grabbing select-none
+                          ${isHidden ? 'opacity-40' : ''}
+                          ${isDragging ? 'opacity-50 scale-[0.98]' : ''}
+                          ${isDragOver && !isDragging ? 'border-t-2 border-primary/50' : 'border-t-2 border-transparent'}
+                          hover:bg-accent/50`}
+                      >
+                        <GripVertical size={14} className="text-muted-foreground/30 flex-shrink-0" />
+                        <div className={`w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 ${app.bg} ${app.color}`}>
+                          <Icon size={16} />
+                        </div>
+                        <span className="text-sm text-foreground flex-1">{app.label}</span>
+                        <Button
+                          variant="ghost"
+                          size="icon-sm"
+                          onClick={(e) => { e.stopPropagation(); toggleAppVisibility(app.id); }}
+                          className={`w-7 h-7 ${isHidden ? 'text-muted-foreground/60 hover:text-foreground' : 'text-foreground/70 hover:text-foreground'}`}
+                          title={isHidden ? l.show : l.hide}
+                        >
+                          {isHidden ? <EyeOff size={14} /> : <Eye size={14} />}
+                        </Button>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            ) : hasResults ? (
+              <div className="contents">
+                {filteredRecent.length > 0 && (
+                  <div className="px-2 pt-3 pb-1">
+                    <p className="text-xs text-muted-foreground/60 px-2 mb-1.5">{l.recentSection} · {filteredRecent.length}</p>
+                    {filteredRecent.map((item, i) => {
+                      globalIdx++;
+                      const thisIdx = globalIdx;
+                      const Icon = item.icon;
+                      return (
+                        <div
+                          key={`r-${i}`}
+                          onClick={() => onSelect(item.id)}
+                          onMouseEnter={() => setHighlightedIndex(thisIdx)}
+                          className={cn(
+                            "flex items-center gap-3 px-2 py-2 rounded-xl transition-colors cursor-pointer",
+                            highlightedIndex === thisIdx ? "bg-accent/60" : "hover:bg-accent/40"
+                          )}
+                        >
+                          <div className="w-8 h-8 rounded-xl bg-accent/80 flex items-center justify-center flex-shrink-0">
+                            <Icon size={14} className="text-muted-foreground" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <span className="text-sm text-foreground truncate block">{item.label}</span>
+                            <span className="text-xs text-muted-foreground/60 truncate block">{item.desc}</span>
+                          </div>
+                          <div className="flex items-center gap-1 text-xs text-muted-foreground/40 flex-shrink-0">
+                            <MessageCircle size={10} />
+                            <span>{item.count}</span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+
+                {filteredFiles.length > 0 && (
+                  <div className="px-2 pt-2 pb-1">
+                    <p className="text-xs text-muted-foreground/60 px-2 mb-1.5">{l.filesSection} · {filteredFiles.length}</p>
+                    {filteredFiles.map((item, i) => {
+                      globalIdx++;
+                      const thisIdx = globalIdx;
+                      const Icon = item.icon;
+                      return (
+                        <div
+                          key={`f-${i}`}
+                          onClick={() => onSelect(item.id)}
+                          onMouseEnter={() => setHighlightedIndex(thisIdx)}
+                          className={cn(
+                            "flex items-center gap-3 px-2 py-2 rounded-xl transition-colors cursor-pointer",
+                            highlightedIndex === thisIdx ? "bg-accent/60" : "hover:bg-accent/40"
+                          )}
+                        >
+                          <div className="w-8 h-8 rounded-xl bg-accent/80 flex items-center justify-center flex-shrink-0">
+                            <Icon size={14} className="text-muted-foreground" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <span className="text-sm text-foreground truncate block">
+                              {item.label} <span className="text-muted-foreground/60">· {item.desc}</span>
+                            </span>
+                            <span className="text-xs text-muted-foreground/40 truncate block">{item.meta}</span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+
+                {filteredActions.length > 0 && (
+                  <div className="px-2 pt-2 pb-2">
+                    <p className="text-xs text-muted-foreground/60 px-2 mb-1.5">{l.quickActionsSection}</p>
+                    {filteredActions.map((item, i) => {
+                      const Icon = item.icon;
+                      return (
+                        <div
+                          key={`a-${i}`}
+                          onClick={() => onSelect(item.id)}
+                          className="flex items-center gap-3 px-2 py-2 rounded-xl hover:bg-accent/40 transition-colors cursor-pointer"
+                        >
+                          <div className="w-8 h-8 rounded-xl bg-accent/80 flex items-center justify-center flex-shrink-0">
+                            <Icon size={14} className="text-muted-foreground" />
+                          </div>
+                          <span className="text-sm text-foreground flex-1">{item.label}</span>
+                          <Kbd>{item.shortcut}</Kbd>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center py-14 px-4">
+                <Search size={36} className="text-muted-foreground/20 mb-3" />
+                <p className="text-sm text-foreground mb-1">{l.noResults}</p>
+                <p className="text-xs text-muted-foreground text-center leading-relaxed">{l.noResultsHint}</p>
+                <Button variant="outline" size="xs" onClick={() => { onSearchChange(''); setActiveFilter(l.allFilter); }} className="mt-4">
+                  {l.clearFilter}
                 </Button>
               </div>
-              <div className="space-y-0.5">
-                {orderedApps.map((app, idx) => {
-                  const Icon = app.icon;
-                  const isHidden = hiddenApps.has(app.id);
-                  const isDragging = dragIdx === idx;
-                  const isDragOver = dragOverIdx === idx;
-                  return (
-                    <div
-                      key={app.id}
-                      draggable
-                      onDragStart={() => handleDragStart(idx)}
-                      onDragOver={(e) => handleDragOver(e, idx)}
-                      onDragEnd={handleDragEnd}
-                      className={`flex items-center gap-3 px-2 py-2 rounded-[var(--radius-button)] transition-all cursor-grab active:cursor-grabbing select-none
-                        ${isHidden ? 'opacity-40' : ''}
-                        ${isDragging ? 'opacity-50 scale-[0.98]' : ''}
-                        ${isDragOver && !isDragging ? 'border-t-2 border-primary/50' : 'border-t-2 border-transparent'}
-                        hover:bg-accent/50`}
-                    >
-                      <GripVertical size={14} className="text-muted-foreground/30 flex-shrink-0" />
-                      <div className={`w-8 h-8 rounded-[var(--radius-button)] flex items-center justify-center flex-shrink-0 ${app.bg} ${app.color}`}>
-                        <Icon size={16} />
-                      </div>
-                      <span className="text-sm text-foreground flex-1">{app.label}</span>
-                      <Button
-                        variant="ghost"
-                        size="icon-sm"
-                        onClick={(e) => { e.stopPropagation(); toggleAppVisibility(app.id); }}
-                        className={`w-7 h-7 ${
-                          isHidden
-                            ? 'text-muted-foreground/60 hover:text-foreground'
-                            : 'text-foreground/70 hover:text-foreground'
-                        }`}
-                        title={isHidden ? l.show : l.hide}
-                      >
-                        {isHidden ? <EyeOff size={14} /> : <Eye size={14} />}
-                      </Button>
-                    </div>
-                  );
-                })}
+            )}
+          </ScrollArea>
+
+          {/* Right: preview panel (hidden in manage mode) */}
+          {!manageMode && <div className="w-[280px] flex-shrink-0 flex flex-col items-center justify-center px-6 py-8 max-h-[380px]">
+            {previewItem ? (
+              <div className="flex flex-col items-center text-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-accent/80 flex items-center justify-center mb-2">
+                  <previewItem.icon size={20} className="text-muted-foreground" />
+                </div>
+                <div className="space-y-1">
+                  <p className="text-xs text-muted-foreground/50">{previewItem.category || (previewItem.section === 'recent' ? '对话' : '文件')}</p>
+                  <p className="text-sm text-foreground font-medium">{previewItem.label}</p>
+                  <p className="text-xs text-muted-foreground/60">{previewItem.desc}</p>
+                </div>
               </div>
-            </div>
-          ) : hasResults ? (
-            <div className="contents">
-              {/* Recent */}
-              {filteredRecent.length > 0 && (
-                <div className="px-2 pt-3 pb-1">
-                  <p className="text-xs text-muted-foreground/70 px-2 mb-1.5 tracking-wide uppercase">{l.recentSection} · {filteredRecent.length}</p>
-                  {filteredRecent.map((item, i) => {
-                    const Icon = item.icon;
-                    return (
-                      <Button
-                        key={`r-${i}`}
-                        variant="ghost"
-                        onClick={() => onSelect(item.id)}
-                        className="w-full h-auto px-2 py-2 hover:bg-accent/60"
-                      >
-                        <Avatar className="w-8 h-8 flex-shrink-0">
-                          <AvatarFallback className="bg-gradient-to-br from-accent to-accent/40">
-                            <Icon size={14} className="text-muted-foreground" />
-                          </AvatarFallback>
-                        </Avatar>
-                        <div className="flex-1 min-w-0 text-left">
-                          <span className="text-sm text-foreground truncate block">{item.label}</span>
-                          <span className="text-xs text-muted-foreground/60 truncate block">{item.desc}</span>
-                        </div>
-                        <div className="flex items-center gap-1 text-xs text-muted-foreground/50 flex-shrink-0">
-                          <MessageCircle size={10} />
-                          <span>{item.count}</span>
-                        </div>
-                      </Button>
-                    );
-                  })}
-                </div>
-              )}
-
-              {/* Files */}
-              {filteredFiles.length > 0 && (
-                <div className="px-2 pt-2 pb-1">
-                  <p className="text-xs text-muted-foreground/70 px-2 mb-1.5 tracking-wide uppercase">{l.filesSection} · {filteredFiles.length}</p>
-                  {filteredFiles.map((item, i) => {
-                    const Icon = item.icon;
-                    return (
-                      <Button
-                        key={`f-${i}`}
-                        variant="ghost"
-                        onClick={() => onSelect(item.id)}
-                        className="w-full h-auto px-2 py-2 hover:bg-accent/60"
-                      >
-                        <div className="w-8 h-8 rounded-[var(--radius-button)] bg-accent/80 flex items-center justify-center flex-shrink-0">
-                          <Icon size={14} className="text-muted-foreground" />
-                        </div>
-                        <div className="flex-1 min-w-0 text-left">
-                          <span className="text-sm text-foreground truncate block">
-                            {item.label} <span className="text-muted-foreground">· {item.desc}</span>
-                          </span>
-                          <span className="text-xs text-muted-foreground/60 truncate block">{item.meta}</span>
-                        </div>
-                      </Button>
-                    );
-                  })}
-                </div>
-              )}
-
-              {/* Quick Actions */}
-              {filteredActions.length > 0 && (
-                <div className="px-2 pt-2 pb-2">
-                  <p className="text-xs text-muted-foreground/70 px-2 mb-1.5 tracking-wide uppercase">{l.quickActionsSection}</p>
-                  {filteredActions.map((item, i) => {
-                    const Icon = item.icon;
-                    return (
-                      <Button
-                        key={`a-${i}`}
-                        variant="ghost"
-                        onClick={() => onSelect(item.id)}
-                        className="w-full h-auto px-2 py-2 hover:bg-accent/60"
-                      >
-                        <div className="w-8 h-8 rounded-[var(--radius-button)] bg-accent/80 flex items-center justify-center flex-shrink-0">
-                          <Icon size={14} className="text-muted-foreground" />
-                        </div>
-                        <span className="text-sm text-foreground flex-1 text-left">{item.label}</span>
-                        <Kbd>{item.shortcut}</Kbd>
-                      </Button>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-          ) : (
-            <div className="flex flex-col items-center justify-center py-14 px-4">
-              <Search size={36} className="text-muted-foreground/20 mb-3" />
-              <p className="text-sm text-foreground mb-1">{l.noResults}</p>
-              <p className="text-xs text-muted-foreground text-center leading-relaxed">
-                {l.noResultsHint}
-              </p>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => { onSearchChange(''); setActiveFilter(l.allFilter); }}
-                className="mt-4"
-              >
-                {l.clearFilter}
-              </Button>
-            </div>
-          )}
-        </ScrollArea>
+            ) : (
+              <div className="text-xs text-muted-foreground/30">无预览</div>
+            )}
+          </div>}
+        </div>
 
         {/* Bottom bar */}
         <div className="flex items-center gap-3 px-4 py-2 border-t border-border/50 text-xs text-muted-foreground/50">

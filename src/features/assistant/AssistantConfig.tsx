@@ -31,7 +31,7 @@ export function AssistantConfig({ resource, onBack }: Props) {
   return (
     <div className="flex-1 flex flex-col min-h-0">
       <div className="flex items-center gap-3 px-5 py-3 border-b border-border/15 flex-shrink-0">
-        <Button variant="ghost" size="icon-xs" onClick={onBack} className="w-7 h-7 text-muted-foreground/40"><ArrowLeft size={14} /></Button>
+        <Button variant="ghost" size="icon-sm" onClick={onBack} className=" text-muted-foreground/40"><ArrowLeft size={14} /></Button>
         <div className="flex items-center gap-1 text-xs text-muted-foreground/50">
           <span className="hover:text-foreground cursor-pointer transition-colors" onClick={onBack}>资源库</span>
           <ChevronRight size={9} />
@@ -45,23 +45,23 @@ export function AssistantConfig({ resource, onBack }: Props) {
         <Button variant="default" size="xs" onClick={handleSave} className="active:scale-[0.97]"><Save size={10} /><span>保存</span></Button>
       </div>
       <div className="flex flex-1 min-h-0">
-        <div className="w-[180px] flex-shrink-0 border-r border-border/10 p-3">
+        <div className="w-[180px] flex-shrink-0 border-r border-border/15 p-3">
           {sections.map(s => {
             const Icon = s.icon; const active = activeSection === s.id;
             return (
-              <Button key={s.id} variant="ghost" size="sm"
+              <Button key={s.id} variant="ghost" size="inline"
                 onClick={() => setActiveSection(s.id)}
-                className={`flex items-start gap-2.5 w-full h-auto px-3 py-2.5 rounded-xl text-left mb-1 ${active ? 'bg-accent/60 text-foreground' : 'text-muted-foreground/60'}`}>
+                className={`flex items-start gap-2.5 w-full px-3 py-2.5 rounded-xl text-left mb-1 ${active ? 'bg-accent/50 text-foreground' : 'text-muted-foreground/60'}`}>
                 <Icon size={13} strokeWidth={1.6} className="mt-0.5 flex-shrink-0" />
                 <div className="min-w-0">
-                  <div className="text-xs">{s.label}</div>
-                  <div className={`text-[9px] mt-px ${active ? 'text-muted-foreground/50' : 'text-muted-foreground/45'}`}>{s.desc}</div>
+                  <div className="text-sm">{s.label}</div>
+                  <div className={`text-xs mt-px ${active ? 'text-muted-foreground/50' : 'text-muted-foreground/60'}`}>{s.desc}</div>
                 </div>
               </Button>
             );
           })}
         </div>
-        <div className="flex-1 overflow-y-auto p-6 [&::-webkit-scrollbar]:w-[3px] [&::-webkit-scrollbar-thumb]:bg-border/30 [&::-webkit-scrollbar-thumb]:rounded-full">
+        <div className="flex-1 overflow-y-auto p-6 scrollbar-thin">
           <AnimatePresence mode="wait">
             <motion.div key={activeSection} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.2 }}>
               {activeSection === 'basic' && <BasicSection resource={resource} />}

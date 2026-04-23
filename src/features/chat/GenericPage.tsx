@@ -23,13 +23,13 @@ export function GenericPage({ tab }: { tab: Tab }) {
           <Icon size={13} className="text-muted-foreground" />
           <span className="text-foreground">{tab.title}</span>
         </div>
-        <Button variant="ghost" size="icon-sm" className="w-7 h-7">
+        <Button variant="ghost" size="icon-sm">
           <Settings size={14} strokeWidth={1.6} />
         </Button>
       </div>
       <div className="flex-1 flex flex-col items-center justify-center px-4 overflow-y-auto">
         <div className="text-center max-w-sm">
-          <div className="w-14 h-14 rounded-2xl bg-accent/80 flex items-center justify-center mx-auto mb-4">
+          <div className="w-14 h-14 rounded-2xl bg-accent/50 flex items-center justify-center mx-auto mb-4">
             <Icon size={28} className="text-muted-foreground" strokeWidth={1.4} />
           </div>
           <h2 className="text-lg text-foreground mb-2">{tab.title}</h2>

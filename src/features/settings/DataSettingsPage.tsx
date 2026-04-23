@@ -1,8 +1,5 @@
 import React, { useState } from 'react';
-import { Button, Input } from '@cherry-studio/ui';
-import {
-  BrandLogo
-} from '@/app/components/ui/BrandLogos';
+import { Button, Input, BrandLogo, Switch } from '@cherry-studio/ui';
 import {
   FolderOpen, HardDrive, Download, Upload as UploadIcon,
   X, Eye, EyeOff,
@@ -10,10 +7,9 @@ import {
   FileText, Image, BookOpen, Copy,
   AlertTriangle, CheckCircle2, Smartphone,
   RotateCcw,
-  ChevronRight, Info,
+  ChevronRight,
 } from 'lucide-react';
-import { Tooltip } from '@/app/components/Tooltip';
-import { Toggle, InlineSelect, ConfigSection, TextInput, ActionButton, PanelHeader } from './shared';
+import { InlineSelect, ConfigSection, TextInput, ActionButton, PanelHeader, FormRow } from './shared';
 
 // ===========================
 // Types
@@ -75,30 +71,6 @@ const NAV_GROUPS: NavGroup[] = [
   },
 ];
 
-// ===========================
-// Shared UI Components — local FormRow (custom font size)
-// ===========================
-function FormRow({ label, desc, children, noBorder }: {
-  label: string; desc?: string; children: React.ReactNode; noBorder?: boolean;
-}) {
-  return (
-    <div className={`flex items-center justify-between gap-4 py-[5px] ${noBorder ? '' : ''}`}>
-      <div className="min-w-0 flex-1">
-        <div className="flex items-center gap-1.5">
-          <p className="text-xs text-foreground/65 font-normal">{label}</p>
-          {desc && (
-            <Tooltip content={desc} side="top">
-              <span className="text-muted-foreground/25 hover:text-muted-foreground/50 transition-colors cursor-help flex-shrink-0">
-                <Info size={11} />
-              </span>
-            </Tooltip>
-          )}
-        </div>
-      </div>
-      <div className="flex-shrink-0">{children}</div>
-    </div>
-  );
-}
 
 // ===========================
 // Data Directory Panel
@@ -124,7 +96,7 @@ function DataDirPanel() {
         }
       >
         <FormRow label="精简备份" desc="备份时跳过图片、知识库等数据文件，仅备份记录和设置，减小占用。">
-          <Toggle checked={true} onChange={() => {}} />
+          <Switch size="sm" checked={true} onCheckedChange={() => {}} />
         </FormRow>
         <FormRow label="导出至手机" noBorder>
           <Button variant="outline" size="xs">
@@ -164,8 +136,8 @@ function DataDirPanel() {
       <div className="bg-destructive/[0.04] border border-destructive/10 rounded-xl px-3.5 py-3">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-xs text-destructive/70 font-medium">重置数据</p>
-            <p className="text-[9px] text-destructive/40 mt-0.5">清空所有配置和聊天记录，恢复出厂设置。此操作不可逆。</p>
+            <p className="text-sm text-destructive/70 font-medium">重置数据</p>
+            <p className="text-xs text-destructive/40 mt-0.5">清空所有配置和聊天记录，恢复出厂设置。此操作不可逆。</p>
           </div>
           <ActionButton variant="danger">重置数据</ActionButton>
         </div>
@@ -228,7 +200,7 @@ function LocalBackupPanel() {
           />
         </FormRow>
         <FormRow label="精简备份" desc="仅备份数据库文本，显著加快同步速度。" noBorder>
-          <Toggle checked={slimBackup} onChange={setSlimBackup} />
+          <Switch size="sm" checked={slimBackup} onCheckedChange={setSlimBackup} />
         </FormRow>
       </ConfigSection>
     </div>
@@ -259,7 +231,7 @@ function WebDAVPanel() {
               <RefreshCw size={9} />
               <span>检查更新</span>
             </Button>
-            <Button size="xs" className="bg-cherry-primary text-white hover:bg-cherry-primary-dark">
+            <Button size="xs">
               <UploadIcon size={9} />
               <span>立即备份</span>
             </Button>
@@ -272,7 +244,7 @@ function WebDAVPanel() {
         <CheckCircle2 size={13} className="text-cherry-primary flex-shrink-0" />
         <div className="flex-1 min-w-0">
           <p className="text-xs text-cherry-primary-dark font-medium">服务已连接</p>
-          <p className="text-[8px] text-cherry-text-muted mt-0.5">上次成功备份：今天 14:30 · 大小 4.2MB</p>
+          <p className="text-xs text-cherry-text-muted mt-0.5">上次成功备份：今天 14:30 · 大小 4.2MB</p>
         </div>
         <Button variant="outline" size="xs" className="border-cherry-ring text-cherry-text-muted hover:bg-cherry-active-bg">
           查看日志
@@ -282,29 +254,29 @@ function WebDAVPanel() {
       <ConfigSection title="服务器配置" hint="推荐使用坚果云或自建 NAS">
         <div className="space-y-2.5">
           <div>
-            <label className="text-xs text-foreground/55 mb-1 block">WebDAV 地址</label>
+            <label className="text-sm text-muted-foreground mb-1 block">WebDAV 地址</label>
             <TextInput value={url} onChange={setUrl} mono />
           </div>
           <div>
-            <label className="text-xs text-foreground/55 mb-1 block">用户名</label>
+            <label className="text-sm text-muted-foreground mb-1 block">用户名</label>
             <TextInput value={user} onChange={setUser} mono />
           </div>
           <div>
-            <label className="text-xs text-foreground/55 mb-1 block">密码 / 应用令牌</label>
-            <div className="flex items-center px-2.5 py-[5px] bg-foreground/[0.03] rounded-lg border border-border/30">
+            <label className="text-sm text-muted-foreground mb-1 block">密码 / 应用令牌</label>
+            <div className="flex items-center px-2.5 py-[5px] bg-muted/30 rounded-lg border border-border/30">
               <Input
                 type={showPwd ? 'text' : 'password'}
                 value={pwd}
                 onChange={e => setPwd(e.target.value)}
-                className="flex-1 bg-transparent text-xs text-foreground/60 min-w-0 font-mono border-0 h-auto p-0 focus-visible:ring-0"
+                className="flex-1 bg-transparent text-xs text-muted-foreground min-w-0 font-mono border-0 h-auto p-0 focus-visible:ring-0"
               />
-              <Button variant="ghost" size="icon-xs" onClick={() => setShowPwd(v => !v)} className="text-foreground/20 hover:text-foreground/40 ml-1.5">
+              <Button variant="ghost" size="icon-xs" onClick={() => setShowPwd(v => !v)} className="text-muted-foreground/50 hover:text-foreground ml-1.5">
                 {showPwd ? <EyeOff size={10} /> : <Eye size={10} />}
               </Button>
             </div>
           </div>
           <div>
-            <label className="text-xs text-foreground/55 mb-1 block">存储路径</label>
+            <label className="text-sm text-muted-foreground mb-1 block">存储路径</label>
             <div className="flex items-center gap-1.5">
               <div className="flex-1">
                 <TextInput value={path} onChange={setPath} mono />
@@ -320,10 +292,10 @@ function WebDAVPanel() {
 
       <ConfigSection title="备份策略">
         <FormRow label="自动备份" desc="应用关闭时或每隔 1 小时自动上传增量数据。">
-          <Toggle checked={autoBackup} onChange={setAutoBackup} />
+          <Switch size="sm" checked={autoBackup} onCheckedChange={setAutoBackup} />
         </FormRow>
         <FormRow label="精简备份 (不含图片/附件)" desc="仅备份数据库文本，显著加快同步速度。">
-          <Toggle checked={slimBackup} onChange={setSlimBackup} />
+          <Switch size="sm" checked={slimBackup} onCheckedChange={setSlimBackup} />
         </FormRow>
         <FormRow label="最大保留份数" noBorder>
           <InlineSelect
@@ -359,29 +331,29 @@ function JianguoyunPanel() {
       <ConfigSection title="账户信息" hint={'请在坚果云设置中生成「应用密码」'}>
         <div className="space-y-2.5">
           <div>
-            <label className="text-xs text-foreground/55 mb-1 block">坚果云账号</label>
+            <label className="text-sm text-muted-foreground mb-1 block">坚果云账号</label>
             <TextInput value={account} onChange={setAccount} placeholder="your@email.com" />
           </div>
           <div>
-            <label className="text-xs text-foreground/55 mb-1 block">应用密码</label>
-            <div className="flex items-center px-2.5 py-[5px] bg-foreground/[0.03] rounded-lg border border-border/30">
+            <label className="text-sm text-muted-foreground mb-1 block">应用密码</label>
+            <div className="flex items-center px-2.5 py-[5px] bg-muted/30 rounded-lg border border-border/30">
               <Input
                 type={showPwd ? 'text' : 'password'}
                 value={appPwd}
                 onChange={e => setAppPwd(e.target.value)}
                 placeholder="在坚果云安全设置中生成"
-                className="flex-1 bg-transparent text-xs text-foreground/60 placeholder:text-foreground/20 min-w-0 border-0 h-auto p-0 focus-visible:ring-0"
+                className="flex-1 bg-transparent text-xs text-muted-foreground placeholder:text-muted-foreground/60 min-w-0 border-0 h-auto p-0 focus-visible:ring-0"
               />
-              <Button variant="ghost" size="icon-xs" onClick={() => setShowPwd(v => !v)} className="text-foreground/20 hover:text-foreground/40 ml-1.5">
+              <Button variant="ghost" size="icon-xs" onClick={() => setShowPwd(v => !v)} className="text-muted-foreground/50 hover:text-foreground ml-1.5">
                 {showPwd ? <EyeOff size={10} /> : <Eye size={10} />}
               </Button>
             </div>
-            <a href="#" className="text-[9px] text-cherry-primary/60 hover:text-cherry-primary transition-colors mt-1 inline-flex items-center gap-1">
+            <a href="#" className="text-xs text-cherry-primary/60 hover:text-cherry-primary transition-colors mt-1 inline-flex items-center gap-1">
               如何获取应用密码？ <ExternalLink size={7} />
             </a>
           </div>
           <div>
-            <label className="text-xs text-foreground/55 mb-1 block">同步目录</label>
+            <label className="text-sm text-muted-foreground mb-1 block">同步目录</label>
             <TextInput value={path} onChange={setPath} mono />
           </div>
         </div>
@@ -389,7 +361,7 @@ function JianguoyunPanel() {
 
       <ConfigSection title="同步设置">
         <FormRow label="自动同步" desc="每次关闭应用时自动上传。" noBorder>
-          <Toggle checked={autoSync} onChange={setAutoSync} />
+          <Switch size="sm" checked={autoSync} onCheckedChange={setAutoSync} />
         </FormRow>
       </ConfigSection>
 
@@ -423,7 +395,7 @@ function S3Panel() {
         desc={'与 AWS S3 API 兼容的对象存储服务。例如 AWS S3, Cloudflare R2, 阿里云 OSS, 腾讯云 COS 等。'}
       />
 
-      <div className="bg-foreground/[0.03] border border-foreground/[0.06] rounded-xl px-3.5 py-3 space-y-0">
+      <div className="bg-muted/30 border border-border/50 rounded-xl px-3.5 py-3 space-y-0">
         <FormRow label="API 地址">
           <div className="w-[240px]">
             <TextInput value={apiUrl} onChange={setApiUrl} placeholder="https://s3.example.com" mono />
@@ -446,15 +418,15 @@ function S3Panel() {
         </FormRow>
         <FormRow label="Secret Access Key">
           <div className="w-[240px]">
-            <div className="flex items-center px-2.5 py-[5px] bg-foreground/[0.03] rounded-lg border border-border/30">
+            <div className="flex items-center px-2.5 py-[5px] bg-muted/30 rounded-lg border border-border/30">
               <Input
                 type={showSecret ? 'text' : 'password'}
                 value={secretKey}
                 onChange={e => setSecretKey(e.target.value)}
                 placeholder="Secret Access Key"
-                className="flex-1 bg-transparent text-xs text-foreground/60 placeholder:text-foreground/20 min-w-0 font-mono border-0 h-auto p-0 focus-visible:ring-0"
+                className="flex-1 bg-transparent text-xs text-muted-foreground placeholder:text-muted-foreground/60 min-w-0 font-mono border-0 h-auto p-0 focus-visible:ring-0"
               />
-              <Button variant="ghost" size="icon-xs" onClick={() => setShowSecret(v => !v)} className="text-foreground/20 hover:text-foreground/40 ml-1.5">
+              <Button variant="ghost" size="icon-xs" onClick={() => setShowSecret(v => !v)} className="text-muted-foreground/50 hover:text-foreground ml-1.5">
                 {showSecret ? <EyeOff size={10} /> : <Eye size={10} />}
               </Button>
             </div>
@@ -501,7 +473,7 @@ function S3Panel() {
           />
         </FormRow>
         <FormRow label="精简备份" desc="开启后备份时将跳过文件数据..." noBorder>
-          <Toggle checked={slimBackup} onChange={setSlimBackup} />
+          <Switch size="sm" checked={slimBackup} onCheckedChange={setSlimBackup} />
         </FormRow>
       </div>
     </div>
@@ -518,7 +490,7 @@ function ImportPanel() {
 
       <ConfigSection title="导入 ChatGPT 数据">
         <div className="flex items-center justify-between">
-          <p className="text-xs text-foreground/50">从 ChatGPT 导出的 JSON 文件导入对话记录。</p>
+          <p className="text-xs text-muted-foreground/60">从 ChatGPT 导出的 JSON 文件导入对话记录。</p>
           <Button variant="outline" size="xs" className="flex-shrink-0">
             <UploadIcon size={9} />
             <span>导入文件</span>
@@ -528,7 +500,7 @@ function ImportPanel() {
 
       <ConfigSection title="导入 Cherry Studio 备份">
         <div className="flex items-center justify-between">
-          <p className="text-xs text-foreground/50">恢复之前导出的 Cherry Studio 备份包。</p>
+          <p className="text-xs text-muted-foreground/60">恢复之前导出的 Cherry Studio 备份包。</p>
           <Button variant="outline" size="xs" className="flex-shrink-0">
             <UploadIcon size={9} />
             <span>选择备份</span>
@@ -536,10 +508,10 @@ function ImportPanel() {
         </div>
       </ConfigSection>
 
-      <div className="bg-foreground/[0.03] border border-foreground/[0.06] rounded-xl px-3.5 py-3">
+      <div className="bg-muted/30 border border-border/50 rounded-xl px-3.5 py-3">
         <div className="flex items-start gap-2">
-          <AlertTriangle size={11} className="text-foreground/25 flex-shrink-0 mt-0.5" />
-          <p className="text-[9px] text-foreground/35 leading-relaxed">
+          <AlertTriangle size={11} className="text-muted-foreground/40 flex-shrink-0 mt-0.5" />
+          <p className="text-xs text-muted-foreground/40 leading-relaxed">
             导入数据会与当前数据合并，不会覆盖已有内容。建议在导入前先备份当前数据。
           </p>
         </div>
@@ -570,7 +542,7 @@ function ExportPanel() {
         icon="📤"
         title="导出设置 (Export)"
         actions={
-          <Button variant="outline" size="xs" className="text-foreground/40 hover:text-foreground/60">
+          <Button variant="outline" size="xs" className="text-muted-foreground/60 hover:text-foreground">
             <RotateCcw size={9} />
             <span>恢复默认</span>
           </Button>
@@ -590,16 +562,16 @@ function ExportPanel() {
             </div>
           </FormRow>
           <FormRow label="强制使用 LaTeX 公式 ($$)" desc="将所有数学公式转换为标准 LaTeX 格式，便于 Notion 等软件识别。">
-            <Toggle checked={forceLatex} onChange={setForceLatex} />
+            <Switch size="sm" checked={forceLatex} onCheckedChange={setForceLatex} />
           </FormRow>
           <FormRow label="导出时包含模型名称" desc='在文档头部添加 "Model: GPT-4o" 等元数据信息。'>
-            <Toggle checked={includeModel} onChange={setIncludeModel} />
+            <Switch size="sm" checked={includeModel} onCheckedChange={setIncludeModel} />
           </FormRow>
           <FormRow label='使用"快速模型"为消息命名' desc="自动调用小模型生成文件名，而非使用默认的时间戳。">
-            <Toggle checked={smartFilename} onChange={setSmartFilename} />
+            <Switch size="sm" checked={smartFilename} onCheckedChange={setSmartFilename} />
           </FormRow>
           <FormRow label="标准化引用格式" desc='将脚注引用转换为标准 Markdown 脚注 [^1]。' noBorder>
-            <Toggle checked={normalizeRefs} onChange={setNormalizeRefs} />
+            <Switch size="sm" checked={normalizeRefs} onCheckedChange={setNormalizeRefs} />
           </FormRow>
         </div>
       </ConfigSection>
@@ -617,13 +589,13 @@ function ExportPanel() {
             <div key={item.label} className={`flex items-center justify-between py-[5px]`}>
               <div className="flex items-center gap-2">
                 {item.isText ? (
-                  <span className="w-4 h-4 rounded bg-foreground/[0.05] flex items-center justify-center text-[9px] text-foreground/50 font-semibold">{item.icon}</span>
+                  <span className="w-4 h-4 rounded bg-muted/50 flex items-center justify-center text-xs text-muted-foreground/60 font-semibold">{item.icon}</span>
                 ) : (
                   <span className="text-xs">{item.icon}</span>
                 )}
-                <span className="text-xs text-foreground/65 font-normal">{item.label}</span>
+                <span className="text-sm text-muted-foreground font-normal">{item.label}</span>
               </div>
-              <Toggle checked={item.checked} onChange={item.onChange} />
+              <Switch size="sm" checked={item.checked} onCheckedChange={item.onChange} />
             </div>
           ))}
         </div>
@@ -664,7 +636,7 @@ function NotionPanel() {
       <ConfigSection title="授权配置">
         <div className="space-y-2.5">
           <div>
-            <label className="text-xs text-foreground/55 mb-1 block">Notion Integration Token</label>
+            <label className="text-sm text-muted-foreground mb-1 block">Notion Integration Token</label>
             <div className="flex items-center gap-1.5">
               <div className="flex-1">
                 <TextInput value={token} onChange={setToken} mono />
@@ -675,7 +647,7 @@ function NotionPanel() {
             </div>
           </div>
           <div>
-            <label className="text-xs text-foreground/55 mb-1 block">Database ID</label>
+            <label className="text-sm text-muted-foreground mb-1 block">Database ID</label>
             <TextInput value={dbId} onChange={setDbId} placeholder="从 Notion 链接中获取..." mono />
           </div>
         </div>
@@ -688,7 +660,7 @@ function NotionPanel() {
           </div>
         </FormRow>
         <FormRow label="包含思维链" desc="导出时是否包含 AI 的思考过程。" noBorder>
-          <Toggle checked={includeThinking} onChange={setIncludeThinking} />
+          <Switch size="sm" checked={includeThinking} onCheckedChange={setIncludeThinking} />
         </FormRow>
       </ConfigSection>
     </div>
@@ -719,9 +691,9 @@ function ThirdPartyPanel({ icon, name, desc, fields }: {
           <p className="text-xs text-primary flex-1 font-medium">{name} 已连接</p>
         </div>
       ) : (
-        <div className="flex items-center gap-2.5 px-3.5 py-2.5 bg-foreground/[0.03] border border-foreground/[0.06] rounded-xl">
+        <div className="flex items-center gap-2.5 px-3.5 py-2.5 bg-muted/30 border border-border/50 rounded-xl">
           <div className="w-2 h-2 rounded-full bg-foreground/15 flex-shrink-0" />
-          <p className="text-xs text-foreground/40 flex-1">未连接</p>
+          <p className="text-xs text-muted-foreground/60 flex-1">未连接</p>
         </div>
       )}
 
@@ -729,7 +701,7 @@ function ThirdPartyPanel({ icon, name, desc, fields }: {
         <div className="space-y-2.5">
           {fields.map(field => (
             <div key={field.label}>
-              <label className="text-xs text-foreground/55 mb-1 block">{field.label}</label>
+              <label className="text-sm text-muted-foreground mb-1 block">{field.label}</label>
               <TextInput
                 value={values[field.label] || ''}
                 onChange={v => setValues(prev => ({ ...prev, [field.label]: v }))}
@@ -807,44 +779,43 @@ export function DataSettingsPage() {
   return (
     <div className="flex h-full min-h-0">
       {/* Middle Column: Navigation */}
-      <div className="w-[160px] flex-shrink-0 flex flex-col border-r border-foreground/[0.05] min-h-0">
+      <div className="w-[160px] flex-shrink-0 flex flex-col border-r border-border/30 min-h-0">
         <div className="px-3.5 pt-4 pb-2 flex-shrink-0">
-          <p className="text-xs text-foreground/40 font-medium">数据与存储</p>
+          <p className="text-xs text-muted-foreground/60 font-medium">数据与存储</p>
         </div>
 
-        <div className="flex-1 overflow-y-auto px-2.5 pb-3 [&::-webkit-scrollbar]:w-[2px] [&::-webkit-scrollbar-thumb]:bg-border/20">
+        <div className="flex-1 overflow-y-auto px-2.5 pb-3 scrollbar-thin-xs">
           {NAV_GROUPS.map((group, gi) => (
             <div key={gi}>
-              <p className="text-[8px] text-foreground/25 tracking-wider px-3 pt-2.5 pb-1 font-medium">{group.label}</p>
+              <p className="text-xs text-muted-foreground/40 tracking-wider px-3 pt-2.5 pb-1 font-medium">{group.label}</p>
               <div className="space-y-[2px]">
                 {group.items.map(item => {
                   const isSelected = selectedId === item.id;
                   return (
-                    <Button
+                    <Button size="inline"
                       key={item.id}
                       variant="ghost"
-                      size="sm"
                       onClick={() => setSelectedId(item.id)}
-                      className={`w-full flex items-center justify-between px-3 py-[8px] h-auto rounded-xl transition-all text-left relative ${
+                      className={`w-full flex items-center justify-between px-3 py-[8px] rounded-xl transition-all text-left relative ${
                         isSelected
                           ? 'bg-cherry-active-bg'
-                          : 'border border-transparent hover:bg-foreground/[0.03]'
+                          : 'border border-transparent hover:bg-accent/50'
                       }`}
                     >
                       {isSelected && (
                         <div className="absolute inset-0 rounded-xl border border-cherry-active-border pointer-events-none" />
                       )}
                       <div className="flex items-center gap-2 min-w-0 flex-1">
-                        <span className={`flex-shrink-0 ${isSelected ? 'text-foreground/50' : 'text-foreground/30'}`}>
+                        <span className={`flex-shrink-0 ${isSelected ? 'text-muted-foreground/60' : 'text-muted-foreground/40'}`}>
                           {item.iconType === 'brand' && item.icon ? (
                             <BrandLogo id={item.icon} fallbackLetter={item.icon[0].toUpperCase()} fallbackColor="#6b7280" size={15} />
                           ) : item.lucideIcon ? item.lucideIcon : null}
                         </span>
-                        <span className={`text-xs truncate ${isSelected ? 'text-foreground/85 font-medium' : 'text-foreground/55 font-normal'}`}>
+                        <span className={`text-sm truncate ${isSelected ? 'text-foreground font-medium' : 'text-muted-foreground font-normal'}`}>
                           {item.label}
                         </span>
                       </div>
-                      <ChevronRight size={9} className={`flex-shrink-0 ${isSelected ? 'text-foreground/25' : 'text-foreground/10'}`} />
+                      <ChevronRight size={9} className={`flex-shrink-0 ${isSelected ? 'text-muted-foreground/40' : 'text-muted-foreground/50'}`} />
                     </Button>
                   );
                 })}
@@ -856,7 +827,7 @@ export function DataSettingsPage() {
 
       {/* Right Column: Config */}
       <div className="flex-1 flex flex-col min-w-0 min-h-0">
-        <div className="flex-1 overflow-y-auto px-6 py-5 [&::-webkit-scrollbar]:w-[3px] [&::-webkit-scrollbar-thumb]:bg-border/20">
+        <div className="flex-1 overflow-y-auto px-6 py-5 scrollbar-thin">
           {renderConfig()}
         </div>
       </div>

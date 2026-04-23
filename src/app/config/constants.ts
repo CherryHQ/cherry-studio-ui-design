@@ -50,7 +50,7 @@ export function getLayout(width: number): SidebarLayout {
 // ===========================
 export const dialogAppIcons: { id: string; label: string; icon: typeof MessageCircle; color: string; bg: string }[] = [
   { id: 'chat', label: '聊天', icon: MessageCircle, color: 'text-foreground/50', bg: 'bg-foreground/[0.1]' },
-  { id: 'agent', label: 'Agent', icon: MousePointerClick, color: 'text-blue-400', bg: 'bg-blue-500/20' },
+  { id: 'agent', label: 'Agent', icon: MousePointerClick, color: 'text-info', bg: 'bg-info/20' },
   { id: 'painting', label: '绘画', icon: Palette, color: 'text-rose-400', bg: 'bg-rose-500/20' },
   { id: 'translate', label: '翻译', icon: Languages, color: 'text-violet-400', bg: 'bg-violet-500/20' },
   { id: 'knowledge', label: '知识库', icon: BookOpen, color: 'text-cyan-400', bg: 'bg-cyan-500/20' },
@@ -58,7 +58,7 @@ export const dialogAppIcons: { id: string; label: string; icon: typeof MessageCi
   { id: 'note', label: '笔记', icon: NotebookPen, color: 'text-teal-400', bg: 'bg-teal-500/20' },
   { id: 'code', label: 'Code', icon: Code2, color: 'text-slate-400', bg: 'bg-slate-500/20' },
   { id: 'explore', label: '探索', icon: Compass, color: 'text-orange-400', bg: 'bg-orange-500/20' },
-  { id: 'file', label: '文件', icon: FileText, color: 'text-amber-400', bg: 'bg-amber-500/20' },
+  { id: 'file', label: '文件', icon: FileText, color: 'text-warning', bg: 'bg-warning/20' },
   { id: 'miniapp', label: '小程序', icon: Puzzle, color: 'text-purple-400', bg: 'bg-purple-500/20' },
   { id: 'extensions', label: '扩展', icon: Blocks, color: 'text-fuchsia-400', bg: 'bg-fuchsia-500/20' },
 ];
@@ -90,7 +90,7 @@ export const dialogQuickActions = [
 // ===========================
 // Search Dialog data (static UI config)
 // ===========================
-export const searchFilterTabs = ['全部', '对话', '任务', '页面', '文件', '文档', '消息'];
+export const searchFilterTabs = ['对话', '助手', '页面', '文件', '文档', '消息'];
 
 export const searchRecentItems = [
   { label: '查询新加坡美食', desc: '与默认助手的对话', icon: MessageCircle, time: '2 小时前', count: 1 },
@@ -119,15 +119,14 @@ export const searchQuickActions = [
 export const RESOURCE_TYPE_CONFIG: Record<ResourceType, ResourceTypeUIConfig> = {
   agent:     { label: '智能体', icon: Bot,            color: 'text-violet-500 bg-violet-500/10' },
   assistant: { label: '助手',   icon: MessageCircle,   color: 'text-sky-500 bg-sky-500/10' },
-  skill:     { label: '技能',   icon: Zap,             color: 'text-amber-500 bg-amber-500/10' },
-  plugin:    { label: '插件',   icon: Puzzle,          color: 'text-blue-500 bg-blue-500/10' },
+  skill:     { label: '技能',   icon: Zap,             color: 'text-warning bg-warning-muted' },
+  plugin:    { label: '插件',   icon: Puzzle,          color: 'text-info bg-info-muted' },
 };
 
 export const RESOURCE_TYPES_LIST: { id: ResourceType; label: string; icon: typeof Bot }[] = [
   { id: 'agent',     label: '智能体', icon: Bot },
   { id: 'assistant', label: '助手',   icon: MessageCircle },
   { id: 'skill',     label: '技能',   icon: Zap },
-  { id: 'plugin',    label: '插件',   icon: Puzzle },
 ];
 
 export const SORT_LABELS: Record<string, string> = {
@@ -140,17 +139,17 @@ export const SORT_LABELS: Record<string, string> = {
 // Library — Tag Color Palette (static)
 // ===========================
 
-export const TAG_COLORS: Record<string, string> = {
-  '生产力': '#8b5cf6',
-  '写作':   '#10b981',
-  '编程':   '#3b82f6',
-  '翻译':   '#f59e0b',
-  '分析':   '#ef4444',
-  '创意':   '#ec4899',
-  '对话':   '#06b6d4',
-  '通用':   '#6b7280',
+export const TAG_COLORS: Record<string, { dot: string; badge: string }> = {
+  '生产力': { dot: 'bg-accent-violet',   badge: 'bg-accent-violet-muted text-accent-violet border-accent-violet/20' },
+  '写作':   { dot: 'bg-accent-emerald',  badge: 'bg-accent-emerald-muted text-accent-emerald border-accent-emerald/20' },
+  '编程':   { dot: 'bg-accent-blue',     badge: 'bg-accent-blue-muted text-accent-blue border-accent-blue/20' },
+  '翻译':   { dot: 'bg-accent-amber',    badge: 'bg-accent-amber-muted text-accent-amber border-accent-amber/20' },
+  '分析':   { dot: 'bg-destructive',     badge: 'bg-destructive/12 text-destructive border-destructive/20' },
+  '创意':   { dot: 'bg-accent-pink',     badge: 'bg-accent-pink-muted text-accent-pink border-accent-pink/20' },
+  '对话':   { dot: 'bg-accent-cyan',     badge: 'bg-accent-cyan-muted text-accent-cyan border-accent-cyan/20' },
+  '通用':   { dot: 'bg-muted-foreground/40', badge: 'bg-muted text-muted-foreground border-border/50' },
 };
-export const DEFAULT_TAG_COLOR = '#6b7280';
+export const DEFAULT_TAG_COLOR = { dot: 'bg-muted-foreground/40', badge: 'bg-muted text-muted-foreground border-border/50' };
 
 // ===========================
 // Config — Avatar Options (static)
@@ -164,8 +163,8 @@ export const AVATAR_OPTIONS = ['🤖', '💬', '✍️', '🎓', '💻', '🎨',
 
 export const TOOL_RISK_COLORS: Record<string, string> = {
   low:    'text-foreground/50 bg-foreground/[0.06]',
-  medium: 'text-amber-500 bg-amber-500/10',
-  high:   'text-red-500 bg-red-500/10',
+  medium: 'text-warning bg-warning-muted',
+  high:   'text-destructive bg-destructive/10',
 };
 
 export const TOOL_RISK_LABELS: Record<string, string> = {
@@ -191,21 +190,21 @@ export const PERMISSION_MODES: Record<PermissionMode, PermissionModeInfo> = {
     desc:  '自动生成执行计划并展示，用户确认后批量执行',
     icon:  ShieldCheck,
     level: '中低风险',
-    color: 'text-blue-500 bg-blue-500/10 border-blue-500/20',
+    color: 'text-info bg-info-muted border-info/20',
   },
   'auto-edit': {
     label: '自动编辑',
     desc:  '文件编辑类操作自动执行，其他操作仍需确认',
     icon:  ShieldAlert,
     level: '中风险',
-    color: 'text-amber-500 bg-amber-500/10 border-amber-500/20',
+    color: 'text-warning bg-warning-muted border-warning/20',
   },
   autonomous: {
     label: '完全自主',
     desc:  '所有工具调用自动执行，无需任何确认。仅建议在受控环境使用',
     icon:  Zap,
     level: '高风险',
-    color: 'text-red-500 bg-red-500/10 border-red-500/20',
+    color: 'text-destructive bg-destructive/10 border-destructive/20',
   },
 };
 

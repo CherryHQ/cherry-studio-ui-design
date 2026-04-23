@@ -1,10 +1,10 @@
 import React, { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import {
-  Search, X, ChevronDown, LayoutGrid, List, Upload, FolderPlus,
+  X, ChevronDown, LayoutGrid, List, Upload, FolderPlus,
   Pencil, Trash2, FolderInput, Tag, Share2, Eye, Download,
   Copy, ArrowUpDown, Star, Check, RotateCcw, FolderClosed,
 } from 'lucide-react';
-import { Button, Input } from '@cherry-studio/ui';
+import { Button, Input, SearchInput, Dialog, DialogContent, Popover as UIPopover, PopoverTrigger, PopoverContent, EmptyState, Checkbox } from '@cherry-studio/ui';
 import { FileSidebar } from './FileSidebar';
 import type { SidebarFilter } from './FileSidebar';
 import { FileGrid } from './FileGrid';
@@ -15,20 +15,19 @@ import {
   MOCK_FILES, FILE_TAGS, FILE_FOLDERS, flattenFolders,
 } from './mockData';
 import type { FileItem, FileFolder, FileTag } from './mockData';
-import { EmptyState } from '@/app/components/ui/EmptyState';
 
 // ===========================
 // Popover wrapper (click-outside dismiss)
 // ===========================
-function Popover({ x, y, children, onDismiss, width }: { x: number; y: number; children: React.ReactNode; onDismiss: () => void; width?: number }) {
+function Popover({ x, y, children, onClose, width }: { x: number; y: number; children: React.ReactNode; onClose: () => void; width?: number }) {
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    const h = (e: MouseEvent) => { if (ref.current && !ref.current.contains(e.target as Node)) onDismiss(); };
-    const k = (e: KeyboardEvent) => { if (e.key === 'Escape') onDismiss(); };
+    const h = (e: MouseEvent) => { if (ref.current && !ref.current.contains(e.target as Node)) onClose(); };
+    const k = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
     document.addEventListener('mousedown', h);
     document.addEventListener('keydown', k);
     return () => { document.removeEventListener('mousedown', h); document.removeEventListener('keydown', k); };
-  }, [onDismiss]);
+  }, [onClose]);
 
   const [pos, setPos] = useState({ left: x, top: y });
   useEffect(() => {
@@ -40,7 +39,7 @@ function Popover({ x, y, children, onDismiss, width }: { x: number; y: number; c
   }, [x, y]);
 
   return (
-    <div ref={ref} className="fixed z-[300] bg-popover border border-border rounded-lg shadow-xl animate-in fade-in zoom-in-95 duration-100"
+    <div ref={ref} className="fixed z-[var(--z-sticky)] bg-popover border border-border rounded-lg shadow-xl animate-in fade-in zoom-in-95 duration-100"
       style={{ ...pos, width: width || undefined }}>
       {children}
     </div>
@@ -52,13 +51,13 @@ function Popover({ x, y, children, onDismiss, width }: { x: number; y: number; c
 // ===========================
 function CMenuItem({ icon: Icon, label, danger, onClick, disabled }: { icon: React.ElementType; label: string; danger?: boolean; onClick: () => void; disabled?: boolean }) {
   return (
-    <Button
+    <Button size="inline"
       variant="ghost"
       onClick={onClick}
       disabled={disabled}
-      className={`w-full flex items-center gap-1.5 px-2 py-[5px] rounded-md transition-colors text-left text-xs h-auto justify-start ${
-        disabled ? 'text-foreground/20 cursor-not-allowed' :
-        danger ? 'text-red-500/70 hover:bg-red-500/8' : 'text-popover-foreground/70 hover:bg-accent'
+      className={`w-full flex items-center gap-1.5 px-2 py-[5px] rounded-md transition-colors text-left text-xs justify-start ${
+        disabled ? 'text-muted-foreground/30 cursor-not-allowed' :
+        danger ? 'text-destructive/70 hover:bg-destructive/8' : 'text-popover-foreground/70 hover:bg-accent'
       }`}
     >
       <Icon size={11} className={disabled ? 'opacity-30' : ''} />
@@ -78,46 +77,45 @@ function MoveToDialog({ folders, currentFolderId, onMove, onClose }: {
 }) {
   const flat = useMemo(() => flattenFolders(folders), [folders]);
   return (
-    <div className="fixed inset-0 z-[250] flex items-center justify-center bg-black/20 backdrop-blur-[2px]" onClick={onClose}>
-      <div className="bg-popover border border-border rounded-xl shadow-2xl w-[240px] overflow-hidden animate-in fade-in zoom-in-95 duration-100"
-        onClick={e => e.stopPropagation()}>
+    <Dialog open={true} onOpenChange={(open) => { if (!open) onClose(); }}>
+      <DialogContent className="bg-popover border border-border rounded-xl shadow-2xl w-[240px] overflow-hidden p-0">
         <div className="px-3 py-2 border-b border-border/30">
-          <p className="text-xs text-foreground/60 font-medium">移动到文件夹</p>
+          <p className="text-xs text-muted-foreground font-medium">移动到文件夹</p>
         </div>
-        <div className="max-h-[240px] overflow-y-auto p-1 [&::-webkit-scrollbar]:w-[2px] [&::-webkit-scrollbar-thumb]:bg-border/20">
-          <Button
+        <div className="max-h-[240px] overflow-y-auto p-1 scrollbar-thin-xs">
+          <Button size="inline"
             variant="ghost"
             onClick={() => onMove(null)}
-            className={`w-full flex items-center gap-2 px-2.5 py-[5px] rounded-md transition-colors text-xs h-auto justify-start ${
-              currentFolderId === null ? 'bg-accent text-foreground/70' : 'text-foreground/50 hover:bg-accent/50'
+            className={`w-full flex items-center gap-2 px-2.5 py-[5px] rounded-md transition-colors text-xs justify-start ${
+              currentFolderId === null ? 'bg-accent text-foreground' : 'text-muted-foreground/60 hover:bg-accent/50'
             }`}
           >
-            <FolderClosed size={11} className="text-foreground/30" />
+            <FolderClosed size={11} className="text-muted-foreground/40" />
             <span>根目录 (无文件夹)</span>
           </Button>
           {flat.map(f => (
-            <Button
+            <Button size="inline"
               key={f.id}
               variant="ghost"
               onClick={() => onMove(f.id)}
-              className={`w-full flex items-center gap-2 px-2.5 py-[5px] rounded-md transition-colors text-xs h-auto justify-start ${
-                currentFolderId === f.id ? 'bg-accent text-foreground/70' : 'text-foreground/50 hover:bg-accent/50'
+              className={`w-full flex items-center gap-2 px-2.5 py-[5px] rounded-md transition-colors text-xs justify-start ${
+                currentFolderId === f.id ? 'bg-accent text-foreground' : 'text-muted-foreground/60 hover:bg-accent/50'
               }`}
               style={{ paddingLeft: `${10 + (f.parentId ? 14 : 0)}px` }}
             >
-              <FolderClosed size={11} className="text-foreground/30" />
+              <FolderClosed size={11} className="text-muted-foreground/40" />
               <span className="truncate">{f.name}</span>
-              {currentFolderId === f.id && <Check size={10} className="ml-auto text-foreground/40" />}
+              {currentFolderId === f.id && <Check size={10} className="ml-auto text-muted-foreground/60" />}
             </Button>
           ))}
         </div>
-        <div className="px-3 py-1.5 border-t border-border/20 flex justify-end">
-          <Button variant="ghost" onClick={onClose} className="px-2 py-[3px] rounded-md text-xs text-foreground/40 hover:text-foreground/60 hover:bg-accent transition-colors h-auto">
+        <div className="px-3 py-1.5 border-t border-border/30 flex justify-end">
+          <Button variant="ghost" size="inline" onClick={onClose} className="px-2 py-[3px] rounded-md text-xs text-muted-foreground/60 hover:text-foreground hover:bg-accent transition-colors">
             取消
           </Button>
         </div>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -131,41 +129,36 @@ function TagPickerDialog({ allTags, currentTags, onToggleTag, onClose }: {
   onClose: () => void;
 }) {
   return (
-    <div className="fixed inset-0 z-[250] flex items-center justify-center bg-black/20 backdrop-blur-[2px]" onClick={onClose}>
-      <div className="bg-popover border border-border rounded-xl shadow-2xl w-[200px] overflow-hidden animate-in fade-in zoom-in-95 duration-100"
-        onClick={e => e.stopPropagation()}>
+    <Dialog open={true} onOpenChange={(open) => { if (!open) onClose(); }}>
+      <DialogContent className="bg-popover border border-border rounded-xl shadow-2xl w-[200px] overflow-hidden p-0">
         <div className="px-3 py-2 border-b border-border/30">
-          <p className="text-xs text-foreground/60 font-medium">管理标签</p>
+          <p className="text-xs text-muted-foreground font-medium">管理标签</p>
         </div>
         <div className="p-1">
           {allTags.map(tag => {
             const active = currentTags.includes(tag.id);
             return (
-              <Button
+              <Button size="inline"
                 key={tag.id}
                 variant="ghost"
                 onClick={() => onToggleTag(tag.id)}
-                className={`w-full flex items-center gap-2 px-2.5 py-[5px] rounded-md transition-colors text-xs h-auto justify-start ${
-                  active ? 'bg-accent text-foreground/70' : 'text-foreground/50 hover:bg-accent/50'
+                className={`w-full flex items-center gap-2 px-2.5 py-[5px] rounded-md transition-colors text-xs justify-start ${
+                  active ? 'bg-accent text-foreground' : 'text-muted-foreground/60 hover:bg-accent/50'
                 }`}
               >
-                <div className={`w-3 h-3 rounded border flex items-center justify-center flex-shrink-0 transition-colors ${
-                  active ? 'bg-foreground/60 border-foreground/60' : 'border-foreground/20'
-                }`}>
-                  {active && <Check size={8} className="text-background" />}
-                </div>
+                <Checkbox checked={active} className="flex-shrink-0" />
                 <span className="truncate">{tag.name}</span>
               </Button>
             );
           })}
         </div>
-        <div className="px-3 py-1.5 border-t border-border/20 flex justify-end">
-          <Button variant="ghost" onClick={onClose} className="px-2 py-[3px] rounded-md text-xs text-foreground/40 hover:text-foreground/60 hover:bg-accent transition-colors h-auto">
+        <div className="px-3 py-1.5 border-t border-border/30 flex justify-end">
+          <Button variant="ghost" size="inline" onClick={onClose} className="px-2 py-[3px] rounded-md text-xs text-muted-foreground/60 hover:text-foreground hover:bg-accent transition-colors">
             完成
           </Button>
         </div>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -179,46 +172,36 @@ function FilterDropdown({ label, options, value, onChange }: {
   onChange: (v: string) => void;
 }) {
   const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (!open) return;
-    const h = (e: MouseEvent) => { if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false); };
-    document.addEventListener('mousedown', h);
-    return () => document.removeEventListener('mousedown', h);
-  }, [open]);
-
   const selected = options.find(o => o.value === value);
 
   return (
-    <div ref={ref} className="relative">
-      <Button
-        variant="outline"
-        onClick={() => setOpen(v => !v)}
-        className={`flex items-center gap-1 px-2 py-[4px] rounded-md text-xs transition-colors h-auto ${
-          open ? 'border-border bg-accent text-foreground/70' : 'border-border/30 text-foreground/40 hover:border-border hover:text-foreground/60'
-        }`}
-      >
-        <span>{label}: {selected?.label || 'All'}</span>
-        <ChevronDown size={9} />
-      </Button>
-      {open && (
-        <div className="absolute top-full left-0 mt-1 w-32 bg-popover border border-border rounded-lg shadow-lg p-0.5 z-50 animate-in fade-in slide-in-from-top-1 duration-100">
-          {options.map(opt => (
-            <Button
-              key={opt.value}
-              variant="ghost"
-              onClick={() => { onChange(opt.value); setOpen(false); }}
-              className={`w-full text-left px-2 py-[4px] rounded-md text-xs transition-colors h-auto justify-start ${
-                value === opt.value ? 'bg-accent text-foreground/70' : 'text-foreground/50 hover:bg-accent/50'
-              }`}
-            >
-              {opt.label}
-            </Button>
-          ))}
-        </div>
-      )}
-    </div>
+    <UIPopover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button
+          variant="outline"
+          className={`flex items-center gap-1 px-2 py-[4px] rounded-md text-xs transition-colors ${
+            open ? 'border-border bg-accent text-foreground' : 'border-border/30 text-muted-foreground/60 hover:border-border hover:text-foreground'
+          }`}
+        >
+          <span>{label}: {selected?.label || 'All'}</span>
+          <ChevronDown size={9} />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent align="start" className="w-32 p-0.5">
+        {options.map(opt => (
+          <Button
+            key={opt.value}
+            variant="ghost"
+            onClick={() => { onChange(opt.value); setOpen(false); }}
+            className={`w-full text-left px-2 py-[4px] rounded-md text-xs transition-colors justify-start ${
+              value === opt.value ? 'bg-accent text-foreground' : 'text-muted-foreground/60 hover:bg-accent/50'
+            }`}
+          >
+            {opt.label}
+          </Button>
+        ))}
+      </PopoverContent>
+    </UIPopover>
   );
 }
 
@@ -233,22 +216,22 @@ function BatchBar({ count, onDelete, onMove, onDownload, onClear }: {
   onClear: () => void;
 }) {
   return (
-    <div className="flex items-center gap-2 px-4 py-1.5 bg-accent/40 border-b border-border/20">
-      <span className="text-xs text-foreground/60 font-medium">已选择 {count} 个文件</span>
+    <div className="flex items-center gap-2 px-4 py-1.5 bg-accent/50 border-b border-border/30">
+      <span className="text-xs text-muted-foreground font-medium">已选择 {count} 个文件</span>
       <div className="flex-1" />
-      <Button variant="ghost" onClick={onDownload} className="flex items-center gap-1 px-2 py-[3px] rounded-md text-xs text-foreground/50 hover:bg-accent transition-colors h-auto">
+      <Button variant="ghost" size="inline" onClick={onDownload} className="flex items-center gap-1 px-2 py-[3px] rounded-md text-xs text-muted-foreground/60 hover:bg-accent transition-colors">
         <Download size={10} />
         <span>下载</span>
       </Button>
-      <Button variant="ghost" onClick={onMove} className="flex items-center gap-1 px-2 py-[3px] rounded-md text-xs text-foreground/50 hover:bg-accent transition-colors h-auto">
+      <Button variant="ghost" size="inline" onClick={onMove} className="flex items-center gap-1 px-2 py-[3px] rounded-md text-xs text-muted-foreground/60 hover:bg-accent transition-colors">
         <FolderInput size={10} />
         <span>移动</span>
       </Button>
-      <Button variant="ghost" onClick={onDelete} className="flex items-center gap-1 px-2 py-[3px] rounded-md text-xs text-red-500/60 hover:bg-red-500/8 transition-colors h-auto">
+      <Button variant="ghost" size="inline" onClick={onDelete} className="flex items-center gap-1 px-2 py-[3px] rounded-md text-xs text-destructive/60 hover:bg-destructive/8 transition-colors">
         <Trash2 size={10} />
         <span>删除</span>
       </Button>
-      <Button variant="ghost" onClick={onClear} className="w-5 h-5 p-0 rounded-md flex items-center justify-center text-foreground/25 hover:text-foreground/50 hover:bg-accent transition-colors">
+      <Button variant="ghost" onClick={onClear} className="w-5 h-5 p-0 rounded-md flex items-center justify-center text-muted-foreground/40 hover:text-foreground hover:bg-accent transition-colors">
         <X size={10} />
       </Button>
     </div>
@@ -514,31 +497,23 @@ export function FilePage() {
 
       {/* Main Content */}
       <div
-        className={`flex-1 flex flex-col min-w-0 relative transition-colors ${dragOver ? 'bg-accent/30' : ''}`}
+        className={`flex-1 flex flex-col min-w-0 relative transition-colors ${dragOver ? 'bg-accent/25' : ''}`}
         onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
         onDragLeave={() => setDragOver(false)}
         onDrop={(e) => { e.preventDefault(); setDragOver(false); }}
       >
         {/* Header Toolbar */}
-        <div className="flex items-center gap-2 px-4 py-2 border-b border-border/25">
-          <h2 className="text-sm text-foreground/75 flex-shrink-0 mr-1 font-medium">{filterTitle}</h2>
+        <div className="flex items-center gap-2 px-4 py-2 border-b border-border/30">
+          <h2 className="text-sm text-foreground flex-shrink-0 mr-1 font-medium">{filterTitle}</h2>
 
           {/* Search */}
-          <div className="flex-1 max-w-[280px] flex items-center gap-1.5 px-2.5 h-[26px] bg-muted/20 rounded-md border border-border/20">
-            <Search size={11} className="text-foreground/20 flex-shrink-0" />
-            <Input
-              type="text"
-              value={searchText}
-              onChange={e => setSearchText(e.target.value)}
-              placeholder="搜索文件… (type:image, tag:工作)"
-              className="flex-1 bg-transparent text-xs text-foreground placeholder:text-foreground/20 outline-none border-0 h-auto p-0 shadow-none focus-visible:ring-0"
-            />
-            {searchText && (
-              <Button variant="ghost" onClick={() => setSearchText('')} className="text-foreground/20 hover:text-foreground/40 h-auto p-0">
-                <X size={9} />
-              </Button>
-            )}
-          </div>
+          <SearchInput
+            value={searchText}
+            onChange={setSearchText}
+            placeholder="搜索文件… (type:image, tag:工作)"
+            wrapperClassName="flex-1 max-w-[280px] px-2.5 h-[26px] bg-muted/20 rounded-md border border-border/20"
+            clearable
+          />
 
           <FilterDropdown label="时间" value={dateFilter} onChange={setDateFilter}
             options={[{ value: 'all', label: '全部' }, { value: 'today', label: '今天' }, { value: 'week', label: '本周' }, { value: 'month', label: '本月' }]} />
@@ -550,7 +525,7 @@ export function FilePage() {
           <Button
             variant="ghost"
             onClick={() => setSortDir(d => d === 'asc' ? 'desc' : 'asc')}
-            className="flex items-center gap-1 px-1.5 py-[3px] rounded-md text-[9px] text-foreground/30 hover:text-foreground/50 hover:bg-accent transition-colors h-auto"
+            className="flex items-center gap-1 px-1.5 py-[3px] rounded-md text-xs text-muted-foreground/40 hover:text-foreground hover:bg-accent transition-colors"
           >
             <ArrowUpDown size={9} />
             <span>{sortKey === 'name' ? '名称' : sortKey === 'size' ? '大小' : sortKey === 'type' ? '类型' : '时间'}</span>
@@ -558,23 +533,23 @@ export function FilePage() {
 
           <div className="flex items-center border border-border/25 rounded-md overflow-hidden">
             <Button variant="ghost" onClick={() => setViewMode('grid')}
-              className={`w-6 h-6 p-0 rounded-none flex items-center justify-center transition-colors ${viewMode === 'grid' ? 'bg-accent text-foreground/60' : 'text-foreground/25 hover:text-foreground/45'}`}>
+              className={`w-6 h-6 p-0 rounded-none flex items-center justify-center transition-colors ${viewMode === 'grid' ? 'bg-accent text-muted-foreground' : 'text-muted-foreground/40 hover:text-foreground'}`}>
               <LayoutGrid size={11} />
             </Button>
             <Button variant="ghost" onClick={() => setViewMode('list')}
-              className={`w-6 h-6 p-0 rounded-none flex items-center justify-center transition-colors ${viewMode === 'list' ? 'bg-accent text-foreground/60' : 'text-foreground/25 hover:text-foreground/45'}`}>
+              className={`w-6 h-6 p-0 rounded-none flex items-center justify-center transition-colors ${viewMode === 'list' ? 'bg-accent text-muted-foreground' : 'text-muted-foreground/40 hover:text-foreground'}`}>
               <List size={11} />
             </Button>
           </div>
 
-          <Button variant="outline" className="flex items-center gap-1 px-2.5 py-[4px] rounded-md text-xs text-foreground/45 hover:text-foreground/70 hover:bg-accent transition-colors h-auto border-border/30">
+          <Button variant="outline" size="inline" className="flex items-center gap-1 px-2.5 py-[4px] rounded-md text-xs text-muted-foreground/60 hover:text-foreground hover:bg-accent transition-colors border-border/30">
             <Upload size={10} />
             <span>上传</span>
           </Button>
           <Button
             variant="outline"
             onClick={() => handleCreateFolder('新建文件夹', null)}
-            className="flex items-center gap-1 px-2.5 py-[4px] rounded-md text-xs text-foreground/45 hover:text-foreground/70 hover:bg-accent transition-colors h-auto border-border/30"
+            className="flex items-center gap-1 px-2.5 py-[4px] rounded-md text-xs text-muted-foreground/60 hover:text-foreground hover:bg-accent transition-colors border-border/30"
           >
             <FolderPlus size={10} />
             <span>新建</span>
@@ -594,16 +569,16 @@ export function FilePage() {
 
         {/* Drag overlay */}
         {dragOver && (
-          <div className="absolute inset-0 z-50 flex items-center justify-center bg-accent/20 border-2 border-dashed border-foreground/10 rounded-lg m-2 pointer-events-none">
+          <div className="absolute inset-0 z-[var(--z-popover)] flex items-center justify-center bg-accent/25 border-2 border-dashed border-border/50 rounded-lg m-2 pointer-events-none">
             <div className="text-center">
-              <Upload size={28} className="text-foreground/15 mx-auto mb-2" />
-              <p className="text-xs text-foreground/30">拖拽文件到此处上传</p>
+              <Upload size={28} className="text-muted-foreground/40 mx-auto mb-2" />
+              <p className="text-xs text-muted-foreground/40">拖拽文件到此处上传</p>
             </div>
           </div>
         )}
 
         {/* File area */}
-        <div className="flex-1 overflow-y-auto [&::-webkit-scrollbar]:w-[3px] [&::-webkit-scrollbar-thumb]:bg-border/20 relative"
+        <div className="flex-1 overflow-y-auto scrollbar-thin relative"
           onClick={(e) => { if (e.target === e.currentTarget) { setSelectedIds(new Set()); setRenamingId(null); } }}>
           {filteredFiles.length === 0 ? (
             <div className="flex-1 flex flex-col items-center justify-center px-6 py-16">
@@ -651,16 +626,16 @@ export function FilePage() {
 
         {/* Status bar */}
         <div className="flex items-center gap-3 px-4 py-1 border-t border-border/15">
-          <span className="text-[9px] text-foreground/25">{filteredFiles.length} 个文件</span>
-          {selectedIds.size > 0 && <span className="text-[9px] text-foreground/35">{selectedIds.size} 个已选</span>}
+          <span className="text-xs text-muted-foreground/40">{filteredFiles.length} 个文件</span>
+          {selectedIds.size > 0 && <span className="text-xs text-muted-foreground/40">{selectedIds.size} 个已选</span>}
           <div className="flex-1" />
-          <span className="text-[9px] text-foreground/15">空格预览 · F2 重命名 · 右键菜单</span>
+          <span className="text-xs text-muted-foreground/50">空格预览 · F2 重命名 · 右键菜单</span>
         </div>
       </div>
 
       {/* Context Menu */}
       {contextMenu && contextFile && (
-        <Popover x={contextMenu.x} y={contextMenu.y} onDismiss={() => setContextMenu(null)}>
+        <Popover x={contextMenu.x} y={contextMenu.y} onClose={() => setContextMenu(null)}>
           <div className="p-0.5 min-w-[130px]">
             {isTrash ? (
               <div>

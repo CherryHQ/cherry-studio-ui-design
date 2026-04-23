@@ -14,7 +14,7 @@ const sampleWindow: DetachedWindow = {
 
 const sampleWindow2: DetachedWindow = {
   id: "win-2",
-  tab: { id: "tab-2", title: "Notes", icon: FileText, miniAppId: "notes", miniAppColor: "var(--accent-indigo)", miniAppInitial: "N" },
+  tab: { id: "tab-2", title: "Notes", icon: FileText, miniAppId: "notes", miniAppColor: "bg-accent-indigo", miniAppInitial: "N" },
   x: 200,
   y: 80,
   width: 300,

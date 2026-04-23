@@ -95,7 +95,7 @@ function ChatMessage({
       >
         {/* Thinking block (assistant only) */}
         {isAssistant && message.thinking && (
-          <ThinkingBlock content={message.thinking} />
+          <ThinkingBlock content={message.thinking} isStreaming={isStreaming} />
         )}
 
         {/* Tool call results (assistant only) */}

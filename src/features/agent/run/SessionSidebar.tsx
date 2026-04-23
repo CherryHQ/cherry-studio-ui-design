@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import {
-  Plus, Search, Bot, MoreHorizontal, Trash2, Pin,
+  Plus, Bot, MoreHorizontal, Trash2, Pin,
   Copy, Archive, ChevronDown, MessageCircle, Clock,
   Sparkles,
 } from 'lucide-react';
-import { Button, Input } from '@cherry-studio/ui';
+import { Button, SearchInput, EmptyState } from '@cherry-studio/ui';
 import { motion, AnimatePresence } from 'motion/react';
 import type { AgentSession } from '@/app/types/agent';
 
@@ -44,18 +44,18 @@ function SessionContextMenu({ x, y, onClose, onDelete, onPin, isPinned }: {
 
   return (
     <div className="contents">
-      <div className="fixed inset-0 z-50" onClick={onClose} />
+      <div className="fixed inset-0 z-[var(--z-overlay)]" onClick={onClose} />
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.95 }}
         transition={{ duration: 0.08 }}
-        className="fixed z-50 bg-popover border border-border/15 rounded-lg shadow-xl shadow-black/8 p-1 min-w-[140px]"
+        className="fixed z-[var(--z-overlay)] bg-popover border border-border/15 rounded-lg shadow-xl shadow-black/8 p-1 min-w-[140px]"
         style={{ left: clampedX, top: clampedY }}
       >
         {menuItems.map((item, i) => (
           'divider' in item ? (
-            <div key={i} className="h-px bg-border/10 my-1" />
+            <div key={i} className="h-px bg-border/30 my-1" />
           ) : (
             <Button
               variant="ghost"
@@ -65,7 +65,7 @@ function SessionContextMenu({ x, y, onClose, onDelete, onPin, isPinned }: {
               className={`w-full justify-start gap-2 ${
                 'danger' in item && item.danger
                   ? 'text-destructive/70 hover:bg-destructive/8'
-                  : 'text-foreground/65 hover:bg-accent/15'
+                  : 'text-muted-foreground hover:bg-accent/15'
               }`}
             >
               <item.icon size={11} />
@@ -89,59 +89,78 @@ function SessionItem({ session, isActive, onClick, onContextMenu }: {
   onContextMenu: (e: React.MouseEvent) => void;
 }) {
   return (
-    <Button
+    <Button size="inline"
       variant="ghost"
       onClick={onClick}
       onContextMenu={onContextMenu}
-      className={`flex-col items-start gap-[3px] w-full px-2.5 py-2 h-auto font-normal rounded-lg group ${
+      className={`flex-col items-start gap-[3px] w-full px-2.5 py-2 font-normal rounded-lg group ${
         isActive
           ? 'bg-cherry-active-bg border border-cherry-ring'
-          : 'border border-transparent hover:bg-accent/12'
+          : 'border border-transparent hover:bg-accent/15'
       }`}
     >
       {/* Top row: agent + time */}
       <div className="flex items-center gap-1.5 w-full">
-        <div className={`w-4 h-4 rounded-[4px] flex items-center justify-center flex-shrink-0 ${
+        <div className={`w-4 h-4 rounded-[var(--radius-dot)] flex items-center justify-center flex-shrink-0 ${
           isActive ? 'bg-cherry-active-bg' : 'bg-accent/15'
         }`}>
-          <Bot size={9} className={isActive ? 'text-cherry-primary/70' : 'text-muted-foreground/45'} />
+          <Bot size={9} className={isActive ? 'text-cherry-primary/70' : 'text-muted-foreground/40'} />
         </div>
         <span className={`text-xs flex-1 truncate ${
-          isActive ? 'text-cherry-primary-dark/80' : 'text-muted-foreground/45'
+          isActive ? 'text-cherry-primary-dark/80' : 'text-muted-foreground/40'
         }`}>
           {session.agentName}
         </span>
         {session.pinned && (
-          <Pin size={8} className="text-muted-foreground/30 flex-shrink-0 -rotate-45" />
+          <Pin size={8} className="text-muted-foreground/40 flex-shrink-0 -rotate-45" />
         )}
-        <span className="text-[9px] text-muted-foreground/30 flex-shrink-0 tabular-nums">
+        <span className="text-xs text-muted-foreground/50 flex-shrink-0 tabular-nums">
           {session.timestamp}
         </span>
       </div>
 
       {/* Title */}
-      <span className={`text-xs truncate w-full pl-[22px] ${
-        isActive ? 'text-foreground/85' : 'text-foreground/65'
-      }`}>
-        {session.title}
-      </span>
+      <div className="flex items-center gap-1.5 w-full pl-[22px]">
+        {session.unread && !isActive && (
+          <span className={`w-[5px] h-[5px] rounded-full flex-shrink-0 ${
+            session.status === 'active' ? 'bg-warning' :
+            session.status === 'error' ? 'bg-destructive' :
+            'bg-success'
+          }`} />
+        )}
+        <span className={`text-sm truncate ${
+          isActive ? 'text-foreground' : 'text-muted-foreground'
+        }`}>
+          {session.title}
+        </span>
+      </div>
 
       {/* Last message preview */}
       <div className="flex items-center gap-1.5 pl-[22px] w-full">
-        <span className="text-xs text-muted-foreground/35 truncate flex-1">
+        <span className="text-xs text-muted-foreground/50 truncate flex-1">
           {session.lastMessage}
         </span>
         <div className="flex items-center gap-0.5 flex-shrink-0">
-          <MessageCircle size={8} className="text-muted-foreground/20" />
-          <span className="text-[9px] text-muted-foreground/25 tabular-nums">{session.messageCount}</span>
+          <MessageCircle size={8} className="text-muted-foreground/40" />
+          <span className="text-xs text-muted-foreground/50 tabular-nums">{session.messageCount}</span>
         </div>
       </div>
 
       {/* Status indicator */}
-      {session.status === 'active' && (
+      {session.status !== 'completed' && (
         <div className="flex items-center gap-1 pl-[22px]">
-          <span className="w-[5px] h-[5px] rounded-full bg-cherry-primary/50 animate-pulse" />
-          <span className="text-[9px] text-cherry-primary/50">{"运行中"}</span>
+          <span className={`w-[5px] h-[5px] rounded-full flex-shrink-0 ${
+            session.status === 'active' ? 'bg-warning animate-pulse' :
+            session.status === 'error' ? 'bg-destructive' :
+            'bg-muted-foreground/40'
+          }`} />
+          <span className={`text-xs ${
+            session.status === 'active' ? 'text-warning' :
+            session.status === 'error' ? 'text-destructive' :
+            'text-muted-foreground/40'
+          }`}>
+            {session.status === 'active' ? '运行中' : session.status === 'error' ? '失败' : '已暂停'}
+          </span>
         </div>
       )}
     </Button>
@@ -176,20 +195,20 @@ export function SessionSidebar({ sessions, activeSessionId, onSelectSession, onN
   return (
     <div className="flex flex-col h-full select-none">
       {/* Header */}
-      <div className="px-3 py-2.5 border-b border-border/10 flex-shrink-0">
+      <div className="px-3 py-2.5 border-b border-border/15 flex-shrink-0">
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-1.5">
             <Clock size={11} className="text-muted-foreground/40" />
-            <span className="text-xs text-muted-foreground/45 uppercase tracking-[0.06em]">{"会话"}</span>
+            <span className="text-xs text-muted-foreground/40 uppercase tracking-[0.06em]">{"会话"}</span>
           </div>
-          <span className="text-[9px] text-muted-foreground/30 tabular-nums">{sessions.length}</span>
+          <span className="text-xs text-muted-foreground/50 tabular-nums">{sessions.length}</span>
         </div>
 
         {/* New Session Button */}
-        <Button
+        <Button size="inline"
           variant="outline"
           onClick={onNewSession}
-          className="w-full py-[6px] h-auto border-dashed border-border/20 text-muted-foreground/50 hover:text-foreground/70 hover:border-cherry-ring hover:bg-cherry-active-bg group"
+          className="w-full py-[6px] border-dashed border-border/20 text-muted-foreground/50 hover:text-foreground hover:border-cherry-ring hover:bg-cherry-active-bg group"
         >
           <Plus size={11} className="group-hover:text-cherry-primary/70 transition-colors" />
           {"新建会话"}
@@ -198,25 +217,17 @@ export function SessionSidebar({ sessions, activeSessionId, onSelectSession, onN
 
       {/* Search */}
       <div className="px-2.5 py-1.5 flex-shrink-0">
-        <div className="flex items-center gap-1.5 px-2 py-[4px] rounded-md bg-accent/8 border border-border/8">
-          <Search size={10} className="text-muted-foreground/30 flex-shrink-0" />
-          <Input
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="搜索会话..."
-            className="flex-1 h-auto border-0 bg-transparent shadow-none focus-visible:ring-0 focus-visible:border-transparent text-xs text-foreground/70 placeholder:text-muted-foreground/25 py-0 px-0 rounded-none"
-          />
-        </div>
+        <SearchInput value={searchQuery} onChange={setSearchQuery} placeholder="搜索会话..." wrapperClassName="flex items-center gap-1.5 px-2 py-[4px] rounded-md bg-accent/5 border border-border/8" />
       </div>
 
       {/* Session List */}
-      <div className="flex-1 overflow-y-auto px-1.5 py-1 space-y-0.5 [&::-webkit-scrollbar]:w-[2px] [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-border/12 [&::-webkit-scrollbar-thumb]:rounded-full">
+      <div className="flex-1 overflow-y-auto px-1.5 py-1 space-y-0.5 scrollbar-thin-xs">
         {/* Pinned */}
         {filteredPinned.length > 0 && (
           <div className="mb-1.5">
             <div className="flex items-center gap-1 px-2 py-1">
-              <Pin size={8} className="text-muted-foreground/25 -rotate-45" />
-              <span className="text-[9px] text-muted-foreground/30 uppercase tracking-[0.06em]">{"已置顶"}</span>
+              <Pin size={8} className="text-muted-foreground/40 -rotate-45" />
+              <span className="text-xs text-muted-foreground/50 uppercase tracking-[0.06em]">{"已置顶"}</span>
             </div>
             {filteredPinned.map(session => (
               <SessionItem
@@ -233,8 +244,8 @@ export function SessionSidebar({ sessions, activeSessionId, onSelectSession, onN
         {/* Recent */}
         {filteredPinned.length > 0 && filteredRecent.length > 0 && (
           <div className="flex items-center gap-1 px-2 py-1">
-            <Clock size={8} className="text-muted-foreground/25" />
-            <span className="text-[9px] text-muted-foreground/30 uppercase tracking-[0.06em]">{"最近"}</span>
+            <Clock size={8} className="text-muted-foreground/40" />
+            <span className="text-xs text-muted-foreground/50 uppercase tracking-[0.06em]">{"最近"}</span>
           </div>
         )}
         {filteredRecent.map(session => (
@@ -248,10 +259,7 @@ export function SessionSidebar({ sessions, activeSessionId, onSelectSession, onN
         ))}
 
         {filteredPinned.length === 0 && filteredRecent.length === 0 && searchQuery && (
-          <div className="flex flex-col items-center justify-center py-8">
-            <Search size={16} className="text-muted-foreground/15 mb-2" />
-            <p className="text-xs text-muted-foreground/30">{"未找到会话"}</p>
-          </div>
+          <EmptyState preset="no-result" compact />
         )}
       </div>
 

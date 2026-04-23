@@ -1,7 +1,7 @@
 import { useState, useMemo, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, Pin, Trash2, Tag, MoreHorizontal, Check, ChevronDown, FolderOpen, MessageCircle, History, Search, List, LayoutGrid, ArrowUpDown, Edit3, Plus, PanelRight, Layers } from 'lucide-react';
-import { Button, Input } from '@cherry-studio/ui';
+import { X, Pin, Trash2, Tag, MoreHorizontal, Check, ChevronDown, FolderOpen, MessageCircle, History, List, LayoutGrid, ArrowUpDown, Edit3, Plus } from 'lucide-react';
+import { Button, Input, EmptyState, SearchInput, Popover, PopoverTrigger, PopoverContent, ContextMenu, ContextMenuTrigger, ContextMenuContent, ContextMenuItem, ContextMenuSeparator , Checkbox} from '@cherry-studio/ui';
 import { Tooltip } from '@/app/components/Tooltip';
 import type { AgentSession } from './SessionSidebar';
 
@@ -26,19 +26,19 @@ interface Props {
 // ===========================
 
 const TAG_COLORS: Record<string, string> = {
-  '前端': 'bg-blue-500/12 text-blue-700 border-blue-500/20',
-  'React': 'bg-cyan-500/12 text-cyan-700 border-cyan-500/20',
-  '后端': 'bg-violet-500/12 text-violet-700 border-violet-500/20',
+  '前端': 'bg-accent-blue-muted text-accent-blue border-accent-blue/20',
+  'React': 'bg-accent-cyan-muted text-accent-cyan border-accent-cyan/20',
+  '后端': 'bg-accent-violet-muted text-accent-violet border-accent-violet/20',
   '调研': 'bg-warning-muted text-warning border-warning/20',
-  'AI': 'bg-pink-500/12 text-pink-700 border-pink-500/20',
-  '可视化': 'bg-foreground/[0.07] text-foreground/80 border-foreground/[0.1]',
+  'AI': 'bg-accent-pink-muted text-accent-pink border-accent-pink/20',
+  '可视化': 'bg-muted text-foreground border-border/50',
   '安全': 'bg-destructive/12 text-destructive border-destructive/20',
-  '性能': 'bg-orange-500/12 text-orange-700 border-orange-500/20',
-  'DevOps': 'bg-indigo-500/12 text-indigo-700 border-indigo-500/20',
-  '部署': 'bg-teal-500/12 text-teal-700 border-teal-500/20',
-  '移动端': 'bg-sky-500/12 text-sky-700 border-sky-500/20',
-  '实时': 'bg-purple-500/12 text-purple-700 border-purple-500/20',
-  '竞品': 'bg-yellow-500/12 text-yellow-700 border-yellow-500/20',
+  '性能': 'bg-accent-orange-muted text-accent-orange border-accent-orange/20',
+  'DevOps': 'bg-accent-indigo-muted text-accent-indigo border-accent-indigo/20',
+  '部署': 'bg-accent-emerald-muted text-accent-emerald border-accent-emerald/20',
+  '移动端': 'bg-accent-blue-muted text-accent-blue border-accent-blue/20',
+  '实时': 'bg-accent-purple-muted text-accent-purple border-accent-purple/20',
+  '竞品': 'bg-accent-amber-muted text-accent-amber border-accent-amber/20',
 };
 
 function TagBadge({ tag, selected, onClick, onRemove, size = 'sm' }: {
@@ -48,15 +48,15 @@ function TagBadge({ tag, selected, onClick, onRemove, size = 'sm' }: {
   onRemove?: () => void;
   size?: 'sm' | 'xs';
 }) {
-  const color = TAG_COLORS[tag] || 'bg-gray-500/12 text-gray-700 border-gray-500/20';
-  const sizeClass = size === 'sm' ? 'px-2 py-[2px] text-xs' : 'px-1.5 py-[1px] text-[9px]';
+  const color = TAG_COLORS[tag] || 'bg-muted text-foreground border-border/50';
+  const sizeClass = size === 'sm' ? 'px-2 py-[2px] text-xs' : 'px-1.5 py-[1px] text-xs';
 
   return (
     <span
       onClick={onClick}
       className={`inline-flex items-center gap-0.5 rounded-md border transition-all duration-100 ${sizeClass} ${color} ${
-        selected ? 'ring-1 ring-foreground/20 shadow-sm' : ''
-      } ${onClick ? 'cursor-pointer hover:shadow-sm active:scale-[0.96]' : 'cursor-default'}`}
+        selected ? 'ring-1 ring-ring/20 shadow-sm' : ''
+      } ${onClick ? 'cursor-pointer hover:shadow-sm active:scale-[0.97]' : 'cursor-default'}`}
     >
       {tag}
       {onRemove && (
@@ -83,6 +83,28 @@ const AGENT_ICONS: Record<string, string> = {
 };
 
 // ===========================
+// Session Status Config
+// ===========================
+
+const SESSION_STATUS_CONFIG: Record<string, { dot: string; label: string; animate?: boolean }> = {
+  active:    { dot: 'bg-warning',        label: '运行中', animate: true },
+  completed: { dot: 'bg-success',         label: '已完成' },
+  error:     { dot: 'bg-destructive',    label: '失败' },
+  paused:    { dot: 'bg-muted-foreground/40', label: '已暂停' },
+};
+
+function StatusDot({ status, size = 5 }: { status: string; size?: number }) {
+  const cfg = SESSION_STATUS_CONFIG[status];
+  if (!cfg) return null;
+  return (
+    <span
+      className={`rounded-full flex-shrink-0 ${cfg.dot} ${cfg.animate ? 'animate-pulse' : ''}`}
+      style={{ width: size, height: size }}
+    />
+  );
+}
+
+// ===========================
 // Grouped Section
 // ===========================
 
@@ -97,16 +119,16 @@ function GroupSection({ title, count, children, defaultOpen = true, icon }: {
 
   return (
     <div className="mb-2">
-      <Button variant="ghost"
+      <Button variant="ghost" size="inline"
         onClick={() => setOpen(!open)}
-        className="w-full justify-start gap-2 px-2 py-1.5 h-auto font-normal hover:bg-accent/15"
+        className="w-full justify-start gap-2 px-2 py-1.5 font-normal hover:bg-accent/15"
       >
         <motion.div animate={{ rotate: open ? 0 : -90 }} transition={{ duration: 0.1 }}>
           <ChevronDown size={11} className="text-muted-foreground" />
         </motion.div>
         {icon || <FolderOpen size={11} className="text-muted-foreground" />}
-        <span className="text-xs text-foreground/90 flex-1 text-left">{title}</span>
-        <span className="text-xs text-muted-foreground bg-accent/30 px-1.5 py-[1px] rounded-md tabular-nums">{count}</span>
+        <span className="text-xs text-foreground flex-1 text-left">{title}</span>
+        <span className="text-xs text-muted-foreground bg-accent/25 px-1.5 py-[1px] rounded-md tabular-nums">{count}</span>
       </Button>
       <AnimatePresence initial={false}>
         {open && (
@@ -121,66 +143,6 @@ function GroupSection({ title, count, children, defaultOpen = true, icon }: {
           </motion.div>
         )}
       </AnimatePresence>
-    </div>
-  );
-}
-
-// ===========================
-// Context Menu
-// ===========================
-
-function SessionContextMenu({ x, y, session, onClose, onAction }: {
-  x: number;
-  y: number;
-  session: AgentSession;
-  onClose: () => void;
-  onAction: (action: string, payload?: string) => void;
-}) {
-  const cx = Math.min(x, window.innerWidth - 180);
-  const cy = Math.min(y, window.innerHeight - 200);
-
-  return (
-    <div>
-      <div className="fixed inset-0 z-[60]" onClick={onClose} />
-      <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        exit={{ opacity: 0, scale: 0.95 }}
-        transition={{ duration: 0.08 }}
-        className="fixed z-[60] bg-popover border border-border/40 rounded-lg shadow-xl shadow-black/10 py-1 min-w-[160px]"
-        style={{ left: cx, top: cy }}
-      >
-        {/* Edit tags */}
-        <Button variant="ghost" size="xs"
-          onClick={() => { onAction('editTags'); onClose(); }}
-          className="w-full justify-start gap-2.5 text-foreground/80 hover:bg-accent/20"
-        >
-          <Tag size={11} className="text-muted-foreground" />
-          <span>{"编辑标签"}</span>
-        </Button>
-
-        <div className="h-px bg-border/20 my-1" />
-
-        {/* Pin/Unpin */}
-        <Button variant="ghost" size="xs"
-          onClick={() => { onAction('togglePin'); onClose(); }}
-          className="w-full justify-start gap-2.5 text-foreground/80 hover:bg-accent/20"
-        >
-          <Pin size={11} className={`text-muted-foreground ${session.pinned ? '' : '-rotate-45'}`} />
-          <span>{session.pinned ? '取消置顶' : '置顶'}</span>
-        </Button>
-
-        <div className="h-px bg-border/20 my-1" />
-
-        {/* Delete */}
-        <Button variant="ghost" size="xs"
-          onClick={() => { onAction('delete'); onClose(); }}
-          className="w-full justify-start gap-2.5 text-destructive/80 hover:bg-destructive/8"
-        >
-          <Trash2 size={11} />
-          <span>{"删除"}</span>
-        </Button>
-      </motion.div>
     </div>
   );
 }
@@ -222,15 +184,15 @@ function TagEditorPopover({ session, allTags, onUpdate, onClose }: {
 
   return (
     <div>
-      <div className="fixed inset-0 z-[60] bg-black/10" onClick={onClose} />
+      <div className="fixed inset-0 z-[var(--z-floating)] bg-foreground/10" onClick={onClose} />
       <motion.div
         initial={{ opacity: 0, scale: 0.95, y: 8 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95, y: 8 }}
         transition={{ duration: 0.12 }}
-        className="fixed z-[60] top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-popover border border-border/40 rounded-xl shadow-2xl shadow-black/15 w-[340px] overflow-hidden"
+        className="fixed z-[var(--z-floating)] top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-popover border border-border/40 rounded-xl shadow-2xl shadow-black/15 w-[340px] overflow-hidden"
       >
-        <div className="flex items-center justify-between px-4 py-3 border-b border-border/25">
+        <div className="flex items-center justify-between px-4 py-3 border-b border-border/30">
           <div className="flex items-center gap-2">
             <Tag size={12} className="text-muted-foreground" />
             <span className="text-xs text-foreground">{"编辑标签"}</span>
@@ -245,7 +207,7 @@ function TagEditorPopover({ session, allTags, onUpdate, onClose }: {
 
           {/* Current tags */}
           <div className="flex flex-wrap gap-1 mb-3 min-h-[24px]">
-            {tags.length === 0 && <span className="text-xs text-muted-foreground/50">{"暂无标签"}</span>}
+            {tags.length === 0 && <span className="text-xs text-muted-foreground/40">{"暂无标签"}</span>}
             {tags.map(t => (
               <TagBadge key={t} tag={t} size="sm" onRemove={() => removeTag(t)} />
             ))}
@@ -272,7 +234,7 @@ function TagEditorPopover({ session, allTags, onUpdate, onClose }: {
           {/* Suggested tags */}
           {unusedTags.length > 0 && (
             <div>
-              <span className="text-[9px] text-muted-foreground uppercase tracking-[0.06em]">{"可用标签"}</span>
+              <span className="text-xs text-muted-foreground uppercase tracking-[0.06em]">{"可用标签"}</span>
               <div className="flex flex-wrap gap-1 mt-1.5">
                 {unusedTags.map(t => (
                   <TagBadge key={t} tag={t} size="sm" onClick={() => toggleTag(t)} />
@@ -282,7 +244,7 @@ function TagEditorPopover({ session, allTags, onUpdate, onClose }: {
           )}
         </div>
 
-        <div className="flex items-center justify-end gap-2 px-4 py-2.5 border-t border-border/25">
+        <div className="flex items-center justify-end gap-2 px-4 py-2.5 border-t border-border/30">
           <Button variant="ghost" size="sm" onClick={onClose} className="text-muted-foreground hover:text-foreground">
             {"取消"}
           </Button>
@@ -299,69 +261,81 @@ function TagEditorPopover({ session, allTags, onUpdate, onClose }: {
 // Session Card (card view)
 // ===========================
 
-function SessionCard({ session, isActive, isHovered, onSelect, onContextMenu, onMouseEnter, onMouseLeave }: {
+function SessionCard({ session, isActive, isHovered, onSelect, onEditTags, onTogglePin, onDelete, onMouseEnter, onMouseLeave }: {
   session: AgentSession;
   isActive: boolean;
   isHovered: boolean;
   onSelect: () => void;
-  onContextMenu: (e: React.MouseEvent) => void;
+  onEditTags: () => void;
+  onTogglePin: () => void;
+  onDelete: () => void;
   onMouseEnter: () => void;
   onMouseLeave: () => void;
 }) {
   return (
-    <div
-      onClick={onSelect}
-      onContextMenu={onContextMenu}
-      onMouseEnter={onMouseEnter}
-      onMouseLeave={onMouseLeave}
-      className={`flex items-center gap-2.5 px-3 py-2 rounded-lg cursor-pointer transition-all duration-100 ${
-        isActive
-          ? 'bg-cherry-active-bg border border-cherry-ring'
-          : 'border border-transparent hover:bg-accent/10 hover:border-border/30'
-      }`}
-    >
-      {/* Agent icon — small */}
-      <span className="text-sm flex-shrink-0">{AGENT_ICONS[session.agentName] || '🤖'}</span>
+    <ContextMenu>
+      <ContextMenuTrigger asChild>
+        <div
+          onClick={onSelect}
+          onMouseEnter={onMouseEnter}
+          onMouseLeave={onMouseLeave}
+          className={`flex items-center gap-2.5 px-3 py-2 rounded-lg cursor-pointer transition-all duration-100 ${
+            isActive
+              ? 'bg-cherry-active-bg border border-cherry-ring'
+              : 'border border-transparent hover:bg-accent/15 hover:border-border/30'
+          }`}
+        >
+          {/* Agent icon -- small */}
+          <span className="text-sm flex-shrink-0">{session.agentIcon || AGENT_ICONS[session.agentName] || '🤖'}</span>
 
-      {/* Content — compact two-line */}
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-1.5">
-          {session.status === 'active' && (
-            <span className="w-[5px] h-[5px] rounded-full bg-cherry-primary animate-pulse flex-shrink-0" />
-          )}
-          {session.pinned && <Pin size={8} className="text-muted-foreground/50 -rotate-45 flex-shrink-0" />}
-          <span className="text-xs text-foreground truncate">{session.title}</span>
-        </div>
-        <div className="flex items-center gap-1.5 mt-[2px]">
-          <span className="text-[9.5px] text-muted-foreground/60 flex-shrink-0">{session.agentName}</span>
-          <span className="text-muted-foreground/20">{"·"}</span>
-          <span className="text-[9.5px] text-muted-foreground/50 tabular-nums flex-shrink-0">{session.messageCount}{" 条"}</span>
-          <span className="text-muted-foreground/20">{"·"}</span>
-          <span className="text-[9.5px] text-muted-foreground/50 flex-shrink-0">{session.timestamp}</span>
-          {session.tags && session.tags.length > 0 && (
-            <div className="flex items-center gap-0.5 overflow-hidden ml-0.5">
-              {session.tags.slice(0, 2).map(tag => <TagBadge key={tag} tag={tag} size="xs" />)}
-              {session.tags.length > 2 && <span className="text-[8px] text-muted-foreground/40">+{session.tags.length - 2}</span>}
+          {/* Content -- compact two-line */}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-1.5">
+              {session.unread && !isActive && <StatusDot status={session.status} />}
+              {session.pinned && <Pin size={8} className="text-muted-foreground/50 -rotate-45 flex-shrink-0" />}
+              <span className="text-sm text-foreground truncate">{session.title}</span>
             </div>
-          )}
-          {session.group && <span className="text-[9px] text-muted-foreground/40 ml-auto flex-shrink-0">{session.group}</span>}
-        </div>
-      </div>
+            <div className="flex items-center gap-1.5 mt-[2px]">
+              <span className="text-xs text-muted-foreground/60 flex-shrink-0">{session.agentName}</span>
+              <span className="text-muted-foreground/30">{"\u00b7"}</span>
+              <span className="text-xs text-muted-foreground/50 tabular-nums flex-shrink-0">{session.messageCount}{" \u6761"}</span>
+              <span className="text-muted-foreground/30">{"\u00b7"}</span>
+              <span className="text-xs text-muted-foreground/50 flex-shrink-0">{session.timestamp}</span>
+              {session.tags && session.tags.length > 0 && (
+                <div className="flex items-center gap-0.5 overflow-hidden ml-0.5">
+                  {session.tags.slice(0, 2).map(tag => <TagBadge key={tag} tag={tag} size="xs" />)}
+                  {session.tags.length > 2 && <span className="text-xs text-muted-foreground/40">+{session.tags.length - 2}</span>}
+                </div>
+              )}
+              {session.group && <span className="text-xs text-muted-foreground/40 ml-auto flex-shrink-0">{session.group}</span>}
+            </div>
+          </div>
 
-      {/* Actions */}
-      <div className="w-[20px] flex-shrink-0 flex justify-center">
-        {isHovered && (
-          <motion.button
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            onClick={(e) => { e.stopPropagation(); onContextMenu(e); }}
-            className="p-1 rounded text-muted-foreground/40 hover:text-foreground hover:bg-accent/20 transition-colors"
-          >
-            <MoreHorizontal size={11} />
-          </motion.button>
-        )}
-      </div>
-    </div>
+          {/* Actions */}
+          <div className="w-[20px] flex-shrink-0 flex justify-center">
+            {isHovered && (
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+                <MoreHorizontal size={11} className="text-muted-foreground/40" />
+              </motion.div>
+            )}
+          </div>
+        </div>
+      </ContextMenuTrigger>
+      <ContextMenuContent>
+        <ContextMenuItem onClick={onEditTags}>
+          <Tag size={14} /> {"\u7f16\u8f91\u6807\u7b7e"}
+        </ContextMenuItem>
+        <ContextMenuSeparator />
+        <ContextMenuItem onClick={onTogglePin}>
+          <Pin size={14} className={session.pinned ? '' : '-rotate-45'} />
+          {session.pinned ? '\u53d6\u6d88\u7f6e\u9876' : '\u7f6e\u9876'}
+        </ContextMenuItem>
+        <ContextMenuSeparator />
+        <ContextMenuItem variant="destructive" onClick={onDelete}>
+          <Trash2 size={14} /> {"\u5220\u9664"}
+        </ContextMenuItem>
+      </ContextMenuContent>
+    </ContextMenu>
   );
 }
 
@@ -369,53 +343,67 @@ function SessionCard({ session, isActive, isHovered, onSelect, onContextMenu, on
 // Session List Row (list view)
 // ===========================
 
-function SessionListRow({ session, isActive, isHovered, onSelect, onContextMenu, onMouseEnter, onMouseLeave }: {
+function SessionListRow({ session, isActive, isHovered, onSelect, onEditTags, onTogglePin, onDelete, onMouseEnter, onMouseLeave }: {
   session: AgentSession;
   isActive: boolean;
   isHovered: boolean;
   onSelect: () => void;
-  onContextMenu: (e: React.MouseEvent) => void;
+  onEditTags: () => void;
+  onTogglePin: () => void;
+  onDelete: () => void;
   onMouseEnter: () => void;
   onMouseLeave: () => void;
 }) {
   return (
-    <div
-      onClick={onSelect}
-      onContextMenu={onContextMenu}
-      onMouseEnter={onMouseEnter}
-      onMouseLeave={onMouseLeave}
-      className={`flex items-center gap-2.5 px-3 py-[7px] rounded-lg cursor-pointer transition-all duration-75 group ${
-        isActive ? 'bg-cherry-active-bg' : 'hover:bg-accent/10'
-      }`}
-    >
-      <span className="text-sm flex-shrink-0 w-5 text-center">{AGENT_ICONS[session.agentName] || '🤖'}</span>
-      {session.status === 'active' && <span className="w-[5px] h-[5px] rounded-full bg-cherry-primary animate-pulse flex-shrink-0" />}
-      {session.pinned && <Pin size={8} className="text-muted-foreground/50 -rotate-45 flex-shrink-0" />}
-      <span className={`text-xs flex-1 truncate ${isActive ? 'text-foreground' : 'text-foreground/85'}`}>
-        {session.title}
-      </span>
-      <div className="flex items-center gap-1 flex-shrink-0">
-        {session.tags?.slice(0, 2).map(tag => <TagBadge key={tag} tag={tag} size="xs" />)}
-      </div>
-      <span className="text-xs text-muted-foreground truncate flex-shrink-0 w-[90px] text-right">{session.agentName}</span>
-      <div className="flex items-center gap-0.5 flex-shrink-0 w-[36px] justify-end">
-        <MessageCircle size={8} className="text-muted-foreground/40" />
-        <span className="text-[9px] text-muted-foreground tabular-nums">{session.messageCount}</span>
-      </div>
-      <span className="text-xs text-muted-foreground flex-shrink-0 w-[40px] text-right tabular-nums">{session.timestamp}</span>
-      <div className="w-[24px] flex-shrink-0 flex justify-center">
-        {isHovered ? (
-          <motion.button
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            onClick={(e) => { e.stopPropagation(); onContextMenu(e); }}
-            className="p-1 rounded text-muted-foreground/40 hover:text-foreground hover:bg-accent/20 transition-colors"
-          >
-            <MoreHorizontal size={11} />
-          </motion.button>
-        ) : null}
-      </div>
-    </div>
+    <ContextMenu>
+      <ContextMenuTrigger asChild>
+        <div
+          onClick={onSelect}
+          onMouseEnter={onMouseEnter}
+          onMouseLeave={onMouseLeave}
+          className={`flex items-center gap-2.5 px-3 py-[7px] rounded-lg cursor-pointer transition-all duration-75 group ${
+            isActive ? 'bg-cherry-active-bg' : 'hover:bg-accent/15'
+          }`}
+        >
+          <span className="text-sm flex-shrink-0 w-5 text-center">{session.agentIcon || AGENT_ICONS[session.agentName] || '🤖'}</span>
+          {session.unread && !isActive && <StatusDot status={session.status} />}
+          {session.pinned && <Pin size={8} className="text-muted-foreground/50 -rotate-45 flex-shrink-0" />}
+          <span className={`text-sm flex-1 truncate ${isActive ? 'text-foreground' : 'text-foreground'}`}>
+            {session.title}
+          </span>
+          <div className="flex items-center gap-1 flex-shrink-0">
+            {session.tags?.slice(0, 2).map(tag => <TagBadge key={tag} tag={tag} size="xs" />)}
+          </div>
+          <span className="text-xs text-muted-foreground truncate flex-shrink-0 w-[90px] text-right">{session.agentName}</span>
+          <div className="flex items-center gap-0.5 flex-shrink-0 w-[36px] justify-end">
+            <MessageCircle size={8} className="text-muted-foreground/40" />
+            <span className="text-xs text-muted-foreground tabular-nums">{session.messageCount}</span>
+          </div>
+          <span className="text-xs text-muted-foreground flex-shrink-0 w-[40px] text-right tabular-nums">{session.timestamp}</span>
+          <div className="w-[24px] flex-shrink-0 flex justify-center">
+            {isHovered ? (
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+                <MoreHorizontal size={11} className="text-muted-foreground/40" />
+              </motion.div>
+            ) : null}
+          </div>
+        </div>
+      </ContextMenuTrigger>
+      <ContextMenuContent>
+        <ContextMenuItem onClick={onEditTags}>
+          <Tag size={14} /> {"\u7f16\u8f91\u6807\u7b7e"}
+        </ContextMenuItem>
+        <ContextMenuSeparator />
+        <ContextMenuItem onClick={onTogglePin}>
+          <Pin size={14} className={session.pinned ? '' : '-rotate-45'} />
+          {session.pinned ? '\u53d6\u6d88\u7f6e\u9876' : '\u7f6e\u9876'}
+        </ContextMenuItem>
+        <ContextMenuSeparator />
+        <ContextMenuItem variant="destructive" onClick={onDelete}>
+          <Trash2 size={14} /> {"\u5220\u9664"}
+        </ContextMenuItem>
+      </ContextMenuContent>
+    </ContextMenu>
   );
 }
 
@@ -427,15 +415,13 @@ export function SessionHistoryPage({ sessions, activeSessionId, onSelectSession,
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [selectedAgent, setSelectedAgent] = useState<string | null>(null);
-  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'completed'>('all');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'completed' | 'error'>('all');
   const [sortKey, setSortKey] = useState<SortKey>('time');
   const [groupMode, setGroupMode] = useState<GroupMode>('none');
   const [viewMode, setViewMode] = useState<ViewMode>('list');
   const [hoveredId, setHoveredId] = useState<string | null>(null);
   const [agentQuery, setAgentQuery] = useState('');
 
-  // Context menu
-  const [ctxMenu, setCtxMenu] = useState<{ x: number; y: number; session: AgentSession } | null>(null);
   // Tag editing
   const [tagEditSession, setTagEditSession] = useState<AgentSession | null>(null);
 
@@ -508,29 +494,19 @@ export function SessionHistoryPage({ sessions, activeSessionId, onSelectSession,
   }, [filteredSessions, groupMode]);
 
   const activeCount = sessions.filter(s => s.status === 'active').length;
+  const completedCount = sessions.filter(s => s.status === 'completed').length;
+  const errorCount = sessions.filter(s => s.status === 'error').length;
   const hasFilters = selectedTags.length > 0 || selectedAgent !== null || statusFilter !== 'all';
   const clearFilters = () => { setSelectedTags([]); setSelectedAgent(null); setStatusFilter('all'); setSearchQuery(''); };
-
-  const handleCtxMenu = (e: React.MouseEvent, session: AgentSession) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setCtxMenu({ x: e.clientX, y: e.clientY, session });
-  };
-
-  const handleCtxAction = (action: string, payload?: string) => {
-    if (!ctxMenu) return;
-    const s = ctxMenu.session;
-    if (action === 'editTags') setTagEditSession(s);
-    else if (action === 'togglePin') onUpdateSession(s.id, { pinned: !s.pinned });
-    else if (action === 'delete') onDeleteSession(s.id);
-  };
 
   const sessionProps = (session: AgentSession) => ({
     session,
     isActive: activeSessionId === session.id,
     isHovered: hoveredId === session.id,
     onSelect: () => { onSelectSession(session.id); onClose(); },
-    onContextMenu: (e: React.MouseEvent) => handleCtxMenu(e, session),
+    onEditTags: () => setTagEditSession(session),
+    onTogglePin: () => onUpdateSession(session.id, { pinned: !session.pinned }),
+    onDelete: () => onDeleteSession(session.id),
     onMouseEnter: () => setHoveredId(session.id),
     onMouseLeave: () => setHoveredId(null),
   });
@@ -543,23 +519,6 @@ export function SessionHistoryPage({ sessions, activeSessionId, onSelectSession,
   const listGap = viewMode === 'card' ? 'gap-1.5' : 'gap-0';
   const isDocked = displayMode !== 'floating';
 
-  const displayModeSwitch = (
-    <div className="flex items-center gap-[1px] bg-accent/15 rounded-md p-[2px]">
-      <Tooltip content="浮窗" side="bottom"><Button variant="ghost" size="icon-xs"
-        onClick={() => onDisplayModeChange?.('floating')}
-        className={`p-[4px] rounded transition-all duration-100 h-auto w-auto ${displayMode === 'floating' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
-      >
-        <Layers size={12} />
-      </Button></Tooltip>
-      <Tooltip content="固定" side="bottom"><Button variant="ghost" size="icon-xs"
-        onClick={() => onDisplayModeChange?.('docked')}
-        className={`p-[4px] rounded transition-all duration-100 h-auto w-auto ${displayMode === 'docked' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
-      >
-        <PanelRight size={12} />
-      </Button></Tooltip>
-    </div>
-  );
-
   // ===== Docked compact view =====
   if (isDocked) {
     return (
@@ -571,11 +530,10 @@ export function SessionHistoryPage({ sessions, activeSessionId, onSelectSession,
         className="flex flex-col h-full bg-background"
       >
         {/* Compact header */}
-        <div className="flex items-center justify-between px-3 h-[40px] border-b border-border/20 flex-shrink-0">
-          <span className="text-xs text-foreground/70">{"话题"}</span>
+        <div className="flex items-center justify-between px-3 h-[40px] border-b border-border/30 flex-shrink-0">
+          <span className="text-xs text-foreground">{"话题"}</span>
           <div className="flex items-center gap-1">
-            {displayModeSwitch}
-            <Button variant="ghost" size="icon-xs" onClick={onClose} className="p-1.5 rounded text-muted-foreground/40 hover:text-foreground hover:bg-accent/15 h-auto w-auto ml-1">
+            <Button variant="ghost" size="icon-xs" onClick={onClose} className="p-1.5 rounded text-muted-foreground/40 hover:text-foreground hover:bg-accent/15">
               <X size={13} />
             </Button>
           </div>
@@ -583,37 +541,30 @@ export function SessionHistoryPage({ sessions, activeSessionId, onSelectSession,
 
         {/* Search */}
         <div className="px-2.5 py-2 flex-shrink-0">
-          <div className="flex items-center gap-1.5 px-2 py-[5px] rounded-md bg-accent/10 border border-border/15">
-            <Search size={10} className="text-muted-foreground/40 flex-shrink-0" />
-            <Input
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="搜索话题..."
-              className="flex-1 h-auto border-0 bg-transparent shadow-none focus-visible:ring-0 text-xs text-foreground placeholder:text-muted-foreground/30 p-0 rounded-none min-w-0"
-            />
-            {searchQuery && <Button variant="ghost" size="icon-xs" onClick={() => setSearchQuery('')} className="w-auto h-auto p-0 text-muted-foreground/30 hover:text-muted-foreground/60 hover:bg-transparent"><X size={8} /></Button>}
-          </div>
+          <SearchInput value={searchQuery} onChange={setSearchQuery} placeholder="搜索话题..." clearable wrapperClassName="flex items-center gap-1.5 px-2 py-[5px] rounded-md bg-accent/15 border border-border/15" />
         </div>
 
         {/* Simple session list */}
-        <div className="flex-1 overflow-y-auto px-1.5 [&::-webkit-scrollbar]:w-[2px] [&::-webkit-scrollbar-thumb]:bg-border/25 [&::-webkit-scrollbar-thumb]:rounded-full">
+        <div className="flex-1 overflow-y-auto px-1.5 scrollbar-thin-xs">
           {filteredSessions.length === 0 ? (
-            <div className="px-3 py-6 text-center text-[10px] text-muted-foreground/40">{"无匹配话题"}</div>
+            <EmptyState preset="no-result" compact />
           ) : (
             filteredSessions.map(s => {
               const isActive = s.id === activeSessionId;
               return (
-                <button
+                <Button
                   key={s.id}
+                  variant="ghost"
+                  size="xs"
                   onClick={() => { onSelectSession(s.id); onClose(); }}
-                  className={`w-full text-left px-2.5 py-[7px] rounded-md text-xs truncate transition-colors ${
+                  className={`w-full justify-start px-2.5 py-[7px] font-normal truncate ${
                     isActive
-                      ? 'bg-accent/30 text-foreground'
-                      : 'text-foreground/65 hover:text-foreground hover:bg-accent/12'
+                      ? 'bg-accent/25 text-foreground'
+                      : 'text-muted-foreground hover:text-foreground hover:bg-accent/15'
                   }`}
                 >
                   {s.title}
-                </button>
+                </Button>
               );
             })
           )}
@@ -629,13 +580,13 @@ export function SessionHistoryPage({ sessions, activeSessionId, onSelectSession,
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.15 }}
-      className="absolute inset-0 z-50 bg-background flex flex-col"
+      className="absolute inset-0 z-[var(--z-dropdown)] bg-background flex flex-col"
     >
       {/* Header */}
-      <div className="flex items-center justify-between px-5 h-[48px] border-b border-border/40 flex-shrink-0">
+      <div className="flex items-center justify-between px-5 h-[48px] border-b border-border/30 flex-shrink-0">
         <div className="flex items-center gap-3">
-          <div className="w-7 h-7 rounded-lg bg-accent/40 flex items-center justify-center">
-            <History size={14} className="text-foreground/70" />
+          <div className="w-7 h-7 rounded-lg bg-accent/50 flex items-center justify-center">
+            <History size={14} className="text-foreground" />
           </div>
           <div>
             <h2 className="text-sm text-foreground">
@@ -649,7 +600,6 @@ export function SessionHistoryPage({ sessions, activeSessionId, onSelectSession,
           </div>
         </div>
         <div className="flex items-center gap-1">
-          {displayModeSwitch}
           <Button variant="ghost" size="icon-sm" onClick={onClose} className="text-muted-foreground ml-2">
             <X size={15} />
           </Button>
@@ -659,27 +609,27 @@ export function SessionHistoryPage({ sessions, activeSessionId, onSelectSession,
       {/* Main Layout */}
       <div className="flex flex-1 min-h-0">
         {/* Left Filter Sidebar */}
-        <div className="w-[200px] border-r border-border/30 flex flex-col flex-shrink-0 overflow-y-auto py-3 px-3 [&::-webkit-scrollbar]:w-[2px] [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-border/25 [&::-webkit-scrollbar-thumb]:rounded-full">
+        <div className="w-[200px] border-r border-border/30 flex flex-col flex-shrink-0 overflow-y-auto py-3 px-3 scrollbar-thin-xs">
           {/* Status */}
           <div className="mb-4">
-            <div className="text-[9.5px] text-muted-foreground uppercase tracking-[0.08em] px-1 mb-2">{"状态"}</div>
+            <div className="text-xs text-muted-foreground uppercase tracking-[0.08em] px-1 mb-2">{"状态"}</div>
             <div className="flex flex-col gap-[2px]">
               {([
                 { key: 'all' as const, label: '全部', count: sessions.length },
                 { key: 'active' as const, label: '运行中', count: activeCount },
-                { key: 'completed' as const, label: '已完成', count: sessions.length - activeCount },
+                { key: 'completed' as const, label: '已完成', count: completedCount },
+                { key: 'error' as const, label: '失败', count: errorCount },
               ]).map(item => (
                 <Button variant="ghost" size="xs"
                   key={item.key}
                   onClick={() => setStatusFilter(item.key)}
                   className={`w-full justify-start gap-2 ${
-                    statusFilter === item.key ? 'bg-foreground/8 text-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-accent/15'
+                    statusFilter === item.key ? 'bg-accent/50 text-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-accent/15'
                   }`}
                 >
-                  {item.key === 'active' && <span className="w-[5px] h-[5px] rounded-full bg-cherry-primary flex-shrink-0" />}
-                  {item.key === 'completed' && <Check size={9} className="text-muted-foreground flex-shrink-0" />}
+                  {item.key !== 'all' && <StatusDot status={item.key} />}
                   <span className="flex-1 text-left">{item.label}</span>
-                  <span className="text-[9px] text-muted-foreground tabular-nums">{item.count}</span>
+                  <span className="text-xs text-muted-foreground tabular-nums">{item.count}</span>
                 </Button>
               ))}
             </div>
@@ -687,32 +637,19 @@ export function SessionHistoryPage({ sessions, activeSessionId, onSelectSession,
 
           {/* Agent list — direct click with search (like assistant page) */}
           <div className="mb-4">
-            <div className="text-[9.5px] text-muted-foreground uppercase tracking-[0.08em] px-1 mb-2">{"智能体"}</div>
+            <div className="text-xs text-muted-foreground uppercase tracking-[0.08em] px-1 mb-2">{"智能体"}</div>
             {/* Agent search */}
-            <div className="flex items-center gap-2 px-2.5 py-[5px] rounded-md bg-accent/15 border border-border/25 mb-2">
-              <Search size={10} className="text-muted-foreground/50 flex-shrink-0" />
-              <Input
-                value={agentQuery}
-                onChange={(e) => setAgentQuery(e.target.value)}
-                placeholder="搜索智能体..."
-                className="flex-1 h-auto border-0 bg-transparent shadow-none focus-visible:ring-0 focus-visible:border-transparent text-xs text-foreground placeholder:text-muted-foreground/40 py-0 px-0 rounded-none"
-              />
-              {agentQuery && (
-                <Button variant="ghost" size="icon-xs" onClick={() => setAgentQuery('')} className="w-auto h-auto p-0 text-muted-foreground hover:text-foreground hover:bg-transparent">
-                  <X size={9} />
-                </Button>
-              )}
-            </div>
+            <SearchInput value={agentQuery} onChange={setAgentQuery} placeholder="搜索智能体..." clearable wrapperClassName="flex items-center gap-2 px-2.5 py-[5px] rounded-md bg-accent/15 border border-border/25 mb-2" />
             <div className="flex flex-col gap-[2px]">
               {!agentQuery && (
                 <Button variant="ghost" size="xs"
                   onClick={() => setSelectedAgent(null)}
                   className={`w-full justify-start gap-2 ${
-                    !selectedAgent ? 'bg-foreground/8 text-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-accent/15'
+                    !selectedAgent ? 'bg-accent/50 text-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-accent/15'
                   }`}
                 >
                   <span className="flex-1 text-left">{"全部"}</span>
-                  <span className="text-[9px] text-muted-foreground tabular-nums">{sessions.length}</span>
+                  <span className="text-xs text-muted-foreground tabular-nums">{sessions.length}</span>
                 </Button>
               )}
               {allAgents
@@ -724,17 +661,17 @@ export function SessionHistoryPage({ sessions, activeSessionId, onSelectSession,
                     key={agent}
                     onClick={() => setSelectedAgent(selectedAgent === agent ? null : agent)}
                     className={`w-full justify-start gap-2 ${
-                      selectedAgent === agent ? 'bg-foreground/8 text-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-accent/15'
+                      selectedAgent === agent ? 'bg-accent/50 text-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-accent/15'
                     }`}
                   >
                     <span className="text-xs flex-shrink-0">{AGENT_ICONS[agent] || '🤖'}</span>
                     <span className="flex-1 text-left truncate">{agent}</span>
-                    <span className="text-[9px] text-muted-foreground tabular-nums">{count}</span>
+                    <span className="text-xs text-muted-foreground tabular-nums">{count}</span>
                   </Button>
                 );
               })}
               {agentQuery && allAgents.filter(agent => agent.toLowerCase().includes(agentQuery.toLowerCase())).length === 0 && (
-                <div className="px-2.5 py-3 text-xs text-muted-foreground/50 text-center">{"无匹配智能体"}</div>
+                <div className="px-2.5 py-3 text-xs text-muted-foreground/40 text-center">{"无匹配智能体"}</div>
               )}
             </div>
           </div>
@@ -753,34 +690,28 @@ export function SessionHistoryPage({ sessions, activeSessionId, onSelectSession,
         {/* Right Content */}
         <div className="flex-1 flex flex-col min-w-0">
           {/* Toolbar */}
-          <div className="flex items-center justify-between px-4 py-2 border-b border-border/25 flex-shrink-0">
+          <div className="flex items-center justify-between px-4 py-2 border-b border-border/30 flex-shrink-0">
             <div className="flex items-center gap-2">
-              <span className="text-xs text-foreground/70">{filteredSessions.length}{" 条结果"}</span>
+              <span className="text-xs text-foreground">{filteredSessions.length}{" 条结果"}</span>
               {/* Tag filter */}
-              <div className="relative">
-                <Button variant="ghost" size="xs"
-                  onClick={() => setTagDropdownOpen(!tagDropdownOpen)}
-                  className={`gap-1 ${
-                    tagDropdownOpen || selectedTags.length > 0
-                      ? 'bg-foreground/8 text-foreground'
-                      : 'text-muted-foreground hover:text-foreground hover:bg-accent/15'
-                  }`}
+              <Popover open={tagDropdownOpen} onOpenChange={(open) => { setTagDropdownOpen(open); if (!open) setTagManageMode(false); }}>
+                <PopoverTrigger asChild>
+                  <Button variant="ghost" size="xs"
+                    className={`gap-1 ${
+                      tagDropdownOpen || selectedTags.length > 0
+                        ? 'bg-accent/50 text-foreground'
+                        : 'text-muted-foreground hover:text-foreground hover:bg-accent/15'
+                    }`}
+                  >
+                    <Tag size={9} />
+                    <span>{selectedTags.length > 0 ? `${selectedTags.length} 个标签` : '标签'}</span>
+                    <ChevronDown size={8} className={`transition-transform duration-100 ${tagDropdownOpen ? 'rotate-180' : ''}`} />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent
+                  align="start"
+                  className="w-[220px] p-0 py-1 max-h-[280px] overflow-y-auto scrollbar-thin-xs"
                 >
-                  <Tag size={9} />
-                  <span>{selectedTags.length > 0 ? `${selectedTags.length} 个标签` : '标签'}</span>
-                  <ChevronDown size={8} className={`transition-transform duration-100 ${tagDropdownOpen ? 'rotate-180' : ''}`} />
-                </Button>
-                <AnimatePresence>
-                  {tagDropdownOpen && (
-                    <div>
-                      <div className="fixed inset-0 z-[55]" onClick={() => { setTagDropdownOpen(false); setTagManageMode(false); }} />
-                      <motion.div
-                        initial={{ opacity: 0, y: -3 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -3 }}
-                        transition={{ duration: 0.1 }}
-                        className="absolute left-0 top-full mt-1 z-[56] w-[220px] bg-popover border border-border/40 rounded-lg shadow-xl shadow-black/10 py-1 max-h-[280px] overflow-y-auto [&::-webkit-scrollbar]:w-[2px] [&::-webkit-scrollbar-thumb]:bg-border/30"
-                      >
                         {!tagManageMode ? (
                           <div>
                             {(managedTags.length > 0 ? managedTags : allTags).map(tag => {
@@ -794,20 +725,16 @@ export function SessionHistoryPage({ sessions, activeSessionId, onSelectSession,
                                     isSelected ? 'bg-foreground/6 text-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-accent/15'
                                   }`}
                                 >
-                                  <div className={`w-3.5 h-3.5 rounded border flex items-center justify-center flex-shrink-0 transition-all ${
-                                    isSelected ? 'border-cherry-primary bg-cherry-primary' : 'border-border/50'
-                                  }`}>
-                                    {isSelected && <Check size={8} className="text-background" />}
-                                  </div>
+                                  <Checkbox checked={isSelected} className="flex-shrink-0" />
                                   <TagBadge tag={tag} size="xs" />
                                   <span className="flex-1" />
-                                  <span className="text-[9px] text-muted-foreground/50 tabular-nums">{count}</span>
+                                  <span className="text-xs text-muted-foreground/50 tabular-nums">{count}</span>
                                 </Button>
                               );
                             })}
                             {selectedTags.length > 0 && (
                               <div>
-                                <div className="h-px bg-border/20 my-0.5" />
+                                <div className="h-px bg-border/30 my-0.5" />
                                 <Button variant="ghost" size="xs"
                                   onClick={() => setSelectedTags([])}
                                   className="w-full justify-start gap-2 text-muted-foreground hover:text-foreground hover:bg-accent/15"
@@ -817,7 +744,7 @@ export function SessionHistoryPage({ sessions, activeSessionId, onSelectSession,
                                 </Button>
                               </div>
                             )}
-                            <div className="h-px bg-border/20 my-0.5" />
+                            <div className="h-px bg-border/30 my-0.5" />
                             <Button variant="ghost" size="xs"
                               onClick={() => setTagManageMode(true)}
                               className="w-full justify-start gap-2 text-muted-foreground hover:text-foreground hover:bg-accent/15"
@@ -828,12 +755,12 @@ export function SessionHistoryPage({ sessions, activeSessionId, onSelectSession,
                           </div>
                         ) : (
                           <div>
-                            <div className="px-2.5 py-1.5 border-b border-border/20">
+                            <div className="px-2.5 py-1.5 border-b border-border/30">
                               <div className="flex items-center justify-between mb-1.5">
-                                <span className="text-xs text-foreground/70">{"管理标签"}</span>
-                                <Button variant="link" size="xs"
+                                <span className="text-xs text-foreground">{"管理标签"}</span>
+                                <Button variant="link" size="inline"
                                   onClick={() => setTagManageMode(false)}
-                                  className="h-auto p-0 text-muted-foreground hover:text-foreground"
+                                  className="p-0 text-muted-foreground hover:text-foreground"
                                 >
                                   {"返回"}
                                 </Button>
@@ -871,17 +798,17 @@ export function SessionHistoryPage({ sessions, activeSessionId, onSelectSession,
                               return (
                                 <div
                                   key={tag}
-                                  className="flex items-center gap-2 px-2.5 py-[5px] text-xs text-foreground/75 group/tag hover:bg-accent/10 transition-colors"
+                                  className="flex items-center gap-2 px-2.5 py-[5px] text-xs text-foreground group/tag hover:bg-accent/15 transition-colors"
                                 >
                                   <TagBadge tag={tag} size="xs" />
                                   <span className="flex-1" />
-                                  <span className="text-[9px] text-muted-foreground/50 tabular-nums">{count}</span>
+                                  <span className="text-xs text-muted-foreground/50 tabular-nums">{count}</span>
                                   <Tooltip content="删除标签" side="right"><Button variant="ghost" size="icon-xs"
                                     onClick={() => {
                                       setManagedTags(prev => prev.filter(t => t !== tag));
                                       setSelectedTags(prev => prev.filter(t => t !== tag));
                                     }}
-                                    className="p-0.5 w-auto h-auto text-muted-foreground/30 hover:text-destructive opacity-0 group-hover/tag:opacity-100"
+                                    className="p-0.5 w-auto h-auto text-muted-foreground/40 hover:text-destructive opacity-0 group-hover/tag:opacity-100"
                                   >
                                     <Trash2 size={9} />
                                   </Button></Tooltip>
@@ -890,11 +817,8 @@ export function SessionHistoryPage({ sessions, activeSessionId, onSelectSession,
                             })}
                           </div>
                         )}
-                      </motion.div>
-                    </div>
-                  )}
-                </AnimatePresence>
-              </div>
+                </PopoverContent>
+              </Popover>
               {/* Selected tag badges inline */}
               {selectedTags.length > 0 && (
                 <div className="flex items-center gap-1">
@@ -905,21 +829,8 @@ export function SessionHistoryPage({ sessions, activeSessionId, onSelectSession,
 
             <div className="flex items-center gap-1.5">
               {/* Topic search */}
-              <div className="flex items-center gap-1.5 px-2 py-[3px] rounded-md bg-accent/15 border border-border/25 w-[160px]">
-                <Search size={10} className="text-muted-foreground/50 flex-shrink-0" />
-                <Input
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="搜索话题..."
-                  className="flex-1 h-auto border-0 bg-transparent shadow-none focus-visible:ring-0 focus-visible:border-transparent text-xs text-foreground placeholder:text-muted-foreground/40 py-0 px-0 rounded-none min-w-0"
-                />
-                {searchQuery && (
-                  <Button variant="ghost" size="icon-xs" onClick={() => setSearchQuery('')} className="w-auto h-auto p-0 text-muted-foreground hover:text-foreground hover:bg-transparent flex-shrink-0">
-                    <X size={9} />
-                  </Button>
-                )}
-              </div>
-              <div className="w-px h-4 bg-border/25" />
+              <SearchInput value={searchQuery} onChange={setSearchQuery} placeholder="搜索话题..." clearable wrapperClassName="flex items-center gap-1.5 px-2 py-[3px] rounded-md bg-accent/15 border border-border/25 w-[160px]" />
+              <div className="w-px h-4 bg-border/30" />
               {/* View mode */}
               <div className="flex items-center gap-[1px] bg-accent/15 rounded-md p-[2px]">
                 <Tooltip content="列表视图" side="bottom"><Button variant="ghost" size="icon-xs"
@@ -935,7 +846,7 @@ export function SessionHistoryPage({ sessions, activeSessionId, onSelectSession,
                   <LayoutGrid size={12} />
                 </Button></Tooltip>
               </div>
-              <div className="w-px h-4 bg-border/25" />
+              <div className="w-px h-4 bg-border/30" />
               {/* Group */}
               <div className="flex items-center gap-[2px] bg-accent/15 rounded-md p-[2px]">
                 {([
@@ -954,7 +865,7 @@ export function SessionHistoryPage({ sessions, activeSessionId, onSelectSession,
                   </Button>
                 ))}
               </div>
-              <div className="w-px h-4 bg-border/25" />
+              <div className="w-px h-4 bg-border/30" />
               {/* Sort */}
               <Button variant="ghost" size="xs"
                 onClick={() => {
@@ -972,7 +883,7 @@ export function SessionHistoryPage({ sessions, activeSessionId, onSelectSession,
 
           {/* List header */}
           {viewMode === 'list' && filteredSessions.length > 0 && (
-            <div className="flex items-center gap-2.5 px-3 py-[5px] border-b border-border/15 text-[9px] text-muted-foreground uppercase tracking-[0.06em] flex-shrink-0">
+            <div className="flex items-center gap-2.5 px-3 py-[5px] border-b border-border/15 text-xs text-muted-foreground uppercase tracking-[0.06em] flex-shrink-0">
               <span className="w-5 flex-shrink-0 text-center">{"智能体"}</span>
               <span className="flex-1">{"标题"}</span>
               <span className="w-[90px] text-right flex-shrink-0">{"类型"}</span>
@@ -983,7 +894,7 @@ export function SessionHistoryPage({ sessions, activeSessionId, onSelectSession,
           )}
 
           {/* Session List */}
-          <div className="flex-1 overflow-y-auto px-2 py-1.5 [&::-webkit-scrollbar]:w-[3px] [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-border/25 [&::-webkit-scrollbar-thumb]:rounded-full">
+          <div className="flex-1 overflow-y-auto px-2 py-1.5 scrollbar-thin">
             {groupedSessions ? (
               Object.entries(groupedSessions).map(([groupName, groupSessions]) => (
                 <GroupSection
@@ -1009,35 +920,15 @@ export function SessionHistoryPage({ sessions, activeSessionId, onSelectSession,
             )}
 
             {filteredSessions.length === 0 && (
-              <div className="flex flex-col items-center justify-center py-20">
-                <div className="w-12 h-12 rounded-xl bg-accent/25 flex items-center justify-center mb-3">
-                  <Search size={18} className="text-muted-foreground/40" />
-                </div>
-                <p className="text-xs text-foreground/70 mb-1">{"没有找到匹配的话题"}</p>
-                <p className="text-xs text-muted-foreground mb-3">{"尝试修改搜索条件或筛选标签"}</p>
-                {hasFilters && (
-                  <Button variant="outline" size="sm" onClick={clearFilters} className="text-foreground/70 bg-accent/20 hover:bg-accent/30 border-transparent">
-                    {"清除筛选条件"}
-                  </Button>
-                )}
-              </div>
+              <EmptyState
+                preset="no-result"
+                actionLabel={hasFilters ? '清除筛选条件' : undefined}
+                onAction={hasFilters ? clearFilters : undefined}
+              />
             )}
           </div>
         </div>
       </div>
-
-      {/* Context Menu */}
-      <AnimatePresence>
-        {ctxMenu && (
-          <SessionContextMenu
-            x={ctxMenu.x}
-            y={ctxMenu.y}
-            session={ctxMenu.session}
-            onClose={() => setCtxMenu(null)}
-            onAction={handleCtxAction}
-          />
-        )}
-      </AnimatePresence>
 
       {/* Tag Editor */}
       <AnimatePresence>

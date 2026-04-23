@@ -1,12 +1,12 @@
 import React, { useState, useMemo, useCallback } from 'react';
 import {
-  Search, X, Download, Trash2, RefreshCw,
+  X, Download, Trash2, RefreshCw,
   Star, ArrowUpRight, Shield, Wrench, Package,
   CheckCircle2, AlertCircle, ChevronRight, HardDrive,
   Blocks, ChevronDown,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Button, Input, Switch, Tabs, TabsList, TabsTrigger, TabsContent } from '@cherry-studio/ui';
+import { Button, SearchInput, Switch, Tabs, TabsList, TabsTrigger, TabsContent, EmptyState } from '@cherry-studio/ui';
 import {
   installedExtensions as INSTALLED,
   marketplaceExtensions as MARKETPLACE,
@@ -48,7 +48,7 @@ function depStatusLabel(s: DepStatus) {
 
 function depStatusColor(s: DepStatus) {
   if (s === 'ready') return 'text-primary bg-primary/10';
-  if (s === 'missing') return 'text-foreground/40 bg-foreground/[0.04]';
+  if (s === 'missing') return 'text-muted-foreground/60 bg-muted/50';
   if (s === 'outdated') return 'text-warning bg-warning/10';
   return 'text-info bg-info/10';
 }
@@ -60,20 +60,6 @@ function depTypeLabel(t: string) {
 }
 
 // ===========================
-// Toggle
-// ===========================
-
-function Toggle({ enabled, onChange }: { enabled: boolean; onChange: () => void }) {
-  return (
-    <Switch
-      checked={enabled}
-      onCheckedChange={() => onChange()}
-      onClick={(e) => e.stopPropagation()}
-    />
-  );
-}
-
-// ===========================
 // Extension Card — Installed
 // ===========================
 
@@ -81,12 +67,12 @@ function InstalledCard({
   ext,
   isSelected,
   onClick,
-  onToggle,
+  onCheckedChange,
 }: {
   ext: Extension;
   isSelected: boolean;
   onClick: () => void;
-  onToggle: () => void;
+  onCheckedChange: () => void;
 }) {
   return (
     <motion.button
@@ -96,32 +82,32 @@ function InstalledCard({
       onClick={onClick}
       className={`w-full text-left px-3.5 py-3 rounded-xl border transition-all duration-150 group/card ${
         isSelected
-          ? 'bg-foreground/[0.05] border-foreground/[0.08]'
-          : 'bg-transparent border-transparent hover:bg-foreground/[0.03] hover:border-foreground/[0.04]'
+          ? 'bg-muted/50 border-border/50'
+          : 'bg-transparent border-transparent hover:bg-accent/50 hover:border-border/50'
       }`}
     >
       <div className="flex items-start gap-3">
-        <div className="w-9 h-9 rounded-xl bg-foreground/[0.05] flex items-center justify-center text-[18px] flex-shrink-0">
+        <div className="w-9 h-9 rounded-xl bg-muted/50 flex items-center justify-center text-lg flex-shrink-0">
           {ext.icon}
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
             <span className="text-sm font-medium text-foreground truncate">{ext.name}</span>
             {ext.category === 'official' && (
-              <span className="text-[9px] font-medium px-1.5 py-0.5 rounded-full bg-info/10 text-info">官方</span>
+              <span className="text-xs font-medium px-1.5 py-0.5 rounded-full bg-info/10 text-info">官方</span>
             )}
             {ext.status === 'update-available' && (
-              <span className="text-[9px] font-medium px-1.5 py-0.5 rounded-full bg-warning/10 text-warning">可更新</span>
+              <span className="text-xs font-medium px-1.5 py-0.5 rounded-full bg-warning/10 text-warning">可更新</span>
             )}
           </div>
           <p className="text-xs text-muted-foreground/60 mt-0.5 line-clamp-1">{ext.description}</p>
           <div className="flex items-center gap-2 mt-1.5">
             <span className="text-xs text-muted-foreground/40">v{ext.version}</span>
-            <span className="text-xs text-muted-foreground/20">·</span>
+            <span className="text-xs text-muted-foreground/30">·</span>
             <span className="text-xs text-muted-foreground/40">{ext.size}</span>
             {ext.mcpTools && ext.mcpTools.length > 0 && (
               <>
-                <span className="text-xs text-muted-foreground/20">·</span>
+                <span className="text-xs text-muted-foreground/30">·</span>
                 <span className="text-xs text-muted-foreground/40 flex items-center gap-0.5">
                   <Wrench size={9} />
                   {ext.mcpTools.length} MCP
@@ -130,7 +116,7 @@ function InstalledCard({
             )}
           </div>
         </div>
-        <Toggle enabled={ext.enabled} onChange={onToggle} />
+        <Switch size="sm" checked={ext.enabled} onCheckedChange={() => onCheckedChange()} onClick={(e) => e.stopPropagation()} />
       </div>
     </motion.button>
   );
@@ -148,17 +134,17 @@ function MarketplaceCard({ ext }: { ext: Extension }) {
       initial={{ opacity: 0, y: 6 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.15 }}
-      className="px-3.5 py-3 rounded-xl border border-foreground/[0.04] bg-foreground/[0.02] hover:bg-foreground/[0.04] hover:border-foreground/[0.06] transition-all duration-150 group/card"
+      className="px-3.5 py-3 rounded-xl border border-border/50 bg-muted/30 hover:bg-accent/50 hover:border-border/50 transition-all duration-150 group/card"
     >
       <div className="flex items-start gap-3">
-        <div className="w-10 h-10 rounded-xl bg-foreground/[0.05] flex items-center justify-center text-xl flex-shrink-0">
+        <div className="w-10 h-10 rounded-xl bg-muted/50 flex items-center justify-center text-xl flex-shrink-0">
           {ext.icon}
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
             <span className="text-sm font-medium text-foreground truncate">{ext.name}</span>
             {ext.category === 'official' && (
-              <span className="text-[9px] font-medium px-1.5 py-0.5 rounded-full bg-info/10 text-info">官方</span>
+              <span className="text-xs font-medium px-1.5 py-0.5 rounded-full bg-info/10 text-info">官方</span>
             )}
           </div>
           <p className="text-xs text-muted-foreground/60 mt-0.5 line-clamp-2">{ext.description}</p>
@@ -220,14 +206,14 @@ function DetailPanel({ ext, onClose }: { ext: Extension; onClose: () => void }) 
     >
       {/* Header */}
       <div className="flex items-start gap-3 px-5 pt-5 pb-4 flex-shrink-0">
-        <div className="w-12 h-12 rounded-2xl bg-foreground/[0.05] flex items-center justify-center text-[24px] flex-shrink-0">
+        <div className="w-12 h-12 rounded-2xl bg-muted/50 flex items-center justify-center text-2xl flex-shrink-0">
           {ext.icon}
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
             <h3 className="text-base font-semibold text-foreground">{ext.name}</h3>
             {ext.category === 'official' && (
-              <span className="text-[9px] font-medium px-1.5 py-0.5 rounded-full bg-info/10 text-info">官方</span>
+              <span className="text-xs font-medium px-1.5 py-0.5 rounded-full bg-info/10 text-info">官方</span>
             )}
           </div>
           <p className="text-xs text-muted-foreground/50 mt-0.5">{ext.author} · v{ext.version} · {ext.size}</p>
@@ -238,10 +224,10 @@ function DetailPanel({ ext, onClose }: { ext: Extension; onClose: () => void }) 
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto px-5 pb-5 space-y-4 [&::-webkit-scrollbar]:w-[3px] [&::-webkit-scrollbar-thumb]:bg-border/30 [&::-webkit-scrollbar-thumb]:rounded-full">
+      <div className="flex-1 overflow-y-auto px-5 pb-5 space-y-4 scrollbar-thin">
         {/* Description */}
         <div>
-          <p className="text-sm text-foreground/70 leading-relaxed">{ext.description}</p>
+          <p className="text-sm text-foreground leading-relaxed">{ext.description}</p>
         </div>
 
         {/* Status */}
@@ -252,7 +238,7 @@ function DetailPanel({ ext, onClose }: { ext: Extension; onClose: () => void }) 
             </span>
           )}
           {ext.status === 'installed' && !ext.enabled && (
-            <span className="text-xs px-2 py-1 rounded-md bg-foreground/[0.05] text-muted-foreground/50 flex items-center gap-1">
+            <span className="text-xs px-2 py-1 rounded-md bg-muted/50 text-muted-foreground/50 flex items-center gap-1">
               已停用
             </span>
           )}
@@ -265,17 +251,17 @@ function DetailPanel({ ext, onClose }: { ext: Extension; onClose: () => void }) 
 
         {/* MCP Tools */}
         {ext.mcpTools && ext.mcpTools.length > 0 && (
-          <div className="rounded-xl border border-border/25 bg-foreground/[0.02] p-3.5">
+          <div className="rounded-xl border border-border/25 bg-muted/30 p-3.5">
             <div className="flex items-center gap-1.5 mb-2.5">
               <Wrench size={12} className="text-muted-foreground/50" />
-              <span className="text-xs font-medium text-foreground/60">MCP 工具</span>
-              <span className="text-xs text-muted-foreground/30 ml-auto">Agent 可调用</span>
+              <span className="text-xs font-medium text-muted-foreground">MCP 工具</span>
+              <span className="text-xs text-muted-foreground/50 ml-auto">Agent 可调用</span>
             </div>
             <div className="space-y-1.5">
               {ext.mcpTools.map(tool => (
-                <div key={tool} className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-foreground/[0.03]">
-                  <div className="w-1 h-1 rounded-full bg-foreground/50 flex-shrink-0" />
-                  <code className="text-xs text-foreground/60 font-mono">{tool}</code>
+                <div key={tool} className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-muted/30">
+                  <div className="w-1 h-1 rounded-full bg-muted0 flex-shrink-0" />
+                  <code className="text-xs text-muted-foreground font-mono">{tool}</code>
                 </div>
               ))}
             </div>
@@ -284,14 +270,14 @@ function DetailPanel({ ext, onClose }: { ext: Extension; onClose: () => void }) 
 
         {/* Permissions */}
         {ext.permissions && ext.permissions.length > 0 && (
-          <div className="rounded-xl border border-border/25 bg-foreground/[0.02] p-3.5">
+          <div className="rounded-xl border border-border/25 bg-muted/30 p-3.5">
             <div className="flex items-center gap-1.5 mb-2.5">
               <Shield size={12} className="text-muted-foreground/50" />
-              <span className="text-xs font-medium text-foreground/60">权限</span>
+              <span className="text-xs font-medium text-muted-foreground">权限</span>
             </div>
             <div className="flex flex-wrap gap-1.5">
               {ext.permissions.map(p => (
-                <span key={p} className="text-xs px-2 py-1 rounded-md bg-foreground/[0.04] text-foreground/50 font-mono">{p}</span>
+                <span key={p} className="text-xs px-2 py-1 rounded-md bg-muted/50 text-muted-foreground/60 font-mono">{p}</span>
               ))}
             </div>
           </div>
@@ -339,12 +325,12 @@ function DependencyRow({ dep }: { dep: RuntimeDependency }) {
       initial={{ opacity: 0, y: 4 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.12 }}
-      className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl hover:bg-foreground/[0.02] transition-colors group/dep"
+      className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl hover:bg-accent/50 transition-colors group/dep"
     >
       {/* Icon */}
       <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${
-        dep.type === 'binary' ? 'bg-violet-500/10 text-violet-500' :
-        dep.type === 'npm' ? 'bg-sky-500/10 text-sky-500' :
+        dep.type === 'binary' ? 'bg-accent-violet/10 text-accent-violet' :
+        dep.type === 'npm' ? 'bg-accent-blue-muted text-accent-blue' :
         'bg-info/10 text-info'
       }`}>
         {dep.type === 'binary' ? <HardDrive size={14} /> : <Package size={14} />}
@@ -354,17 +340,17 @@ function DependencyRow({ dep }: { dep: RuntimeDependency }) {
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
           <span className="text-sm font-medium text-foreground">{dep.name}</span>
-          <span className="text-xs text-muted-foreground/30 font-mono">v{dep.version}</span>
+          <span className="text-xs text-muted-foreground/50 font-mono">v{dep.version}</span>
         </div>
         <div className="flex items-center gap-2 mt-0.5">
           <span className="text-xs text-muted-foreground/40">{depTypeLabel(dep.type)}</span>
           {dep.size && (
             <>
-              <span className="text-xs text-muted-foreground/20">·</span>
+              <span className="text-xs text-muted-foreground/30">·</span>
               <span className="text-xs text-muted-foreground/40">{dep.size}</span>
             </>
           )}
-          <span className="text-xs text-muted-foreground/20">·</span>
+          <span className="text-xs text-muted-foreground/30">·</span>
           <span className="text-xs text-muted-foreground/40">
             {dep.requiredBy.map(r => r.split('.').pop()).join(', ')}
           </span>
@@ -456,11 +442,11 @@ export function ExtensionsPage() {
         {/* Title row */}
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-violet-500/10 flex items-center justify-center">
-              <Blocks size={16} className="text-violet-500" />
+            <div className="w-8 h-8 rounded-xl bg-accent-violet/10 flex items-center justify-center">
+              <Blocks size={16} className="text-accent-violet" />
             </div>
             <div>
-              <h1 className="text-[16px] font-semibold text-foreground">扩展</h1>
+              <h1 className="text-base font-semibold text-foreground">扩展</h1>
               <p className="text-xs text-muted-foreground/40 mt-0">
                 {enabledCount} 个启用 · {mcpToolCount} 个 MCP 工具可供 Agent 调用
               </p>
@@ -479,7 +465,7 @@ export function ExtensionsPage() {
               <TabsTrigger key={tab.id} value={tab.id}>
                 {tab.label}
                 {tab.count !== undefined && (
-                  <span className="ml-1 text-[9px] text-muted-foreground/30">{tab.count}</span>
+                  <span className="ml-1 text-xs text-muted-foreground/50">{tab.count}</span>
                 )}
               </TabsTrigger>
             ))}
@@ -489,15 +475,15 @@ export function ExtensionsPage() {
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-1.5">
               <div className="w-1.5 h-1.5 rounded-full bg-primary" />
-              <span className="text-xs text-foreground/40">{enabledCount} 已启用</span>
+              <span className="text-xs text-muted-foreground/60">{enabledCount} 已启用</span>
             </div>
             <div className="flex items-center gap-1">
-              <Wrench size={9} className="text-muted-foreground/30" />
-              <span className="text-xs text-foreground/40">{mcpToolCount} MCP 工具</span>
+              <Wrench size={9} className="text-muted-foreground/40" />
+              <span className="text-xs text-muted-foreground/60">{mcpToolCount} MCP 工具</span>
             </div>
             <div className="flex items-center gap-1">
-              <HardDrive size={9} className="text-muted-foreground/30" />
-              <span className="text-xs text-foreground/40">
+              <HardDrive size={9} className="text-muted-foreground/40" />
+              <span className="text-xs text-muted-foreground/60">
                 {depsReady}/{DEPS.length} 依赖
                 {depsMissing > 0 && <span className="text-warning ml-0.5">({depsMissing} 缺失)</span>}
               </span>
@@ -507,20 +493,14 @@ export function ExtensionsPage() {
 
         {/* Search + Filter row */}
         <div className="flex items-center gap-2">
-          <div className="flex-1 flex items-center gap-2 px-2.5 py-[6px] rounded-lg bg-foreground/[0.03] border border-transparent focus-within:border-foreground/[0.08] transition-colors">
-            <Search size={13} className="text-muted-foreground/30 flex-shrink-0" />
-            <Input
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-              placeholder={activeTab === 'dependencies' ? '搜索依赖...' : '搜索扩展...'}
-              className="flex-1 bg-transparent text-xs text-foreground placeholder:text-muted-foreground/30 outline-none border-0 h-auto p-0 shadow-none focus-visible:ring-0"
-            />
-            {search && (
-              <Button variant="ghost" size="icon-xs" onClick={() => setSearch('')} className="text-muted-foreground/30 hover:text-foreground/50">
-                <X size={12} />
-              </Button>
-            )}
-          </div>
+          <SearchInput
+            value={search}
+            onChange={setSearch}
+            placeholder={activeTab === 'dependencies' ? '搜索依赖...' : '搜索扩展...'}
+            iconSize={13}
+            wrapperClassName="flex-1 px-2.5 py-[6px] rounded-lg bg-muted/30 border border-transparent focus-within:border-border/50 transition-colors"
+            clearable
+          />
 
           {/* Category filter (not for dependencies) */}
           {activeTab !== 'dependencies' && (
@@ -533,8 +513,8 @@ export function ExtensionsPage() {
                   onClick={() => setCategory(cf.id)}
                   className={`px-2.5 transition-all duration-150 ${
                     category === cf.id
-                      ? 'bg-foreground/[0.06] text-foreground font-medium'
-                      : 'text-muted-foreground/40 hover:text-foreground/60'
+                      ? 'bg-muted/50 text-foreground font-medium'
+                      : 'text-muted-foreground/40 hover:text-foreground'
                   }`}
                 >
                   {cf.label}
@@ -548,7 +528,7 @@ export function ExtensionsPage() {
       {/* Content */}
       <div className="flex-1 relative min-h-0 mt-3">
         {/* List — always full width */}
-        <div className="absolute inset-0 overflow-y-auto px-4 pb-4 [&::-webkit-scrollbar]:w-[3px] [&::-webkit-scrollbar-thumb]:bg-border/30 [&::-webkit-scrollbar-thumb]:rounded-full">
+        <div className="absolute inset-0 overflow-y-auto px-4 pb-4 scrollbar-thin">
           <TabsContent value="installed" className="mt-0">
             <motion.div
               key="installed"
@@ -558,10 +538,7 @@ export function ExtensionsPage() {
               className="space-y-1"
             >
               {filteredInstalled.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-16 text-muted-foreground/30">
-                  <Blocks size={32} className="mb-3" />
-                  <p className="text-sm">没有找到扩展</p>
-                </div>
+                <EmptyState preset="no-result" title="没有找到扩展" />
               ) : (
                 filteredInstalled.map(ext => (
                   <InstalledCard
@@ -569,7 +546,7 @@ export function ExtensionsPage() {
                     ext={ext}
                     isSelected={selectedId === ext.id}
                     onClick={() => setSelectedId(selectedId === ext.id ? null : ext.id)}
-                    onToggle={() => handleToggle(ext.id)}
+                    onCheckedChange={() => handleToggle(ext.id)}
                   />
                 ))
               )}
@@ -585,9 +562,8 @@ export function ExtensionsPage() {
               className="grid grid-cols-1 lg:grid-cols-2 gap-2"
             >
               {filteredMarketplace.length === 0 ? (
-                <div className="col-span-full flex flex-col items-center justify-center py-16 text-muted-foreground/30">
-                  <Package size={32} className="mb-3" />
-                  <p className="text-sm">没有找到扩展</p>
+                <div className="col-span-full">
+                  <EmptyState preset="no-result" title="没有找到扩展" />
                 </div>
               ) : (
                 filteredMarketplace.map(ext => (
@@ -606,10 +582,7 @@ export function ExtensionsPage() {
               className="space-y-0.5"
             >
               {filteredDeps.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-16 text-muted-foreground/30">
-                  <HardDrive size={32} className="mb-3" />
-                  <p className="text-sm">没有依赖</p>
-                </div>
+                <EmptyState preset="no-result" title="没有依赖" />
               ) : (
                 filteredDeps.map(dep => (
                   <DependencyRow key={dep.id} dep={dep} />
@@ -631,7 +604,7 @@ export function ExtensionsPage() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.15 }}
-              className="absolute inset-0 bg-background/60 backdrop-blur-[2px] z-10"
+              className="absolute inset-0 bg-foreground/10 backdrop-blur-[1px] z-[var(--z-overlay)]"
               onClick={() => setSelectedId(null)}
             />
             {/* Panel */}
@@ -640,7 +613,7 @@ export function ExtensionsPage() {
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
               transition={{ type: 'spring', damping: 30, stiffness: 350 }}
-              className="absolute top-2 right-2 bottom-2 w-[340px] z-20 bg-popover border border-border/30 rounded-2xl shadow-2xl overflow-hidden"
+              className="absolute top-2 right-2 bottom-2 w-[340px] z-[var(--z-dropdown)] slide-panel"
             >
               <DetailPanel ext={selectedExt} onClose={() => setSelectedId(null)} />
             </motion.div>

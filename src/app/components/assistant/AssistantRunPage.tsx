@@ -4,7 +4,7 @@ import {
   ChevronDown, ChevronRight, ChevronUp, X, Copy, Check, Maximize2, Minimize2,
   Bot, Plus, ArrowUp, FileText, Code2, Eye, BookOpen,
   Clock, Settings, History, MessageCirclePlus, AtSign,
-  ExternalLink, File, Globe, Sparkles,
+  ExternalLink, File, Globe,
   Layers, Activity, Database, Link2, Info,
   Trash2, Bookmark, Share2, MoreHorizontal,
   GitBranch, GitFork, ListChecks, Edit3,
@@ -19,11 +19,16 @@ import { copyToClipboard } from '@/app/utils/clipboard';
 import { highlightLine } from '@/app/utils/syntaxHighlight';
 import { getFileIcon } from '@/app/utils/fileIcons';
 import { ChatInterface } from '@/app/components/shared/Chat/ChatInterface';
-import { ThinkingBlock, InlineCodeBlock, MermaidBlock, ImageGallery } from '@/app/components/shared/Chat/MessageComponents';
+import { ThinkingBlock, InlineCodeBlock, MermaidBlock, ImageGallery } from '@/app/components/shared/Chat/components/MessageComponents';
 import { AttachmentList } from '@/app/components/shared/Chat/AttachmentList';
-import { EmptyState } from '@/app/components/ui/EmptyState';
 import { Tooltip } from '@/app/components/Tooltip';
-import { Button, Input } from '@cherry-studio/ui';
+import {
+  Button, Textarea, EmptyState, SearchInput, Typography,
+  DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator,
+  DropdownMenuSub, DropdownMenuSubTrigger, DropdownMenuSubContent,
+  Popover, PopoverTrigger, PopoverContent,
+  HoverCard, HoverCardTrigger, HoverCardContent, BrandLogo,
+} from '@cherry-studio/ui';
 import type { AssistantInfo, AssistantTopic } from '@/app/types/assistant';
 import type {
   Message, ArtifactData,
@@ -38,9 +43,9 @@ import {
 // Backward-compatible alias
 type AssistantMessage = Message;
 import { ASSISTANT_MODELS } from '@/app/config/models';
-import { TopicHistoryPage } from './TopicHistoryPage';
-import { BranchTreePanel } from './BranchTreePanel';
-import { ChatSettingsPanel } from './ChatSettingsPanel';
+import { TopicHistoryPage } from '@/features/assistant/TopicHistoryPage';
+import { BranchTreePanel } from '@/features/assistant/BranchTreePanel';
+import { ChatSettingsPanel } from '@/features/assistant/ChatSettingsPanel';
 import { AtMentionPicker } from '@/app/components/shared/AtMentionPicker';
 import { ModelPickerPanel } from '@/app/components/shared/ModelPickerPanel';
 import { AssistantPickerPanel } from '@/app/components/shared/AssistantPickerPanel';
@@ -69,13 +74,13 @@ function applyBoldReplace(text: string): string {
   return text.replace(new RegExp('\\*\\*(.+?)\\*\\*', 'g'), '<strong class="text-foreground">$1</strong>');
 }
 function applyCodeReplace(text: string): string {
-  return text.replace(new RegExp(BT + '([^' + BT + ']+)' + BT, 'g'), '<code class="px-1 py-0.5 rounded bg-muted/50 text-[9px] font-mono">$1</code>');
+  return text.replace(new RegExp(BT + '([^' + BT + ']+)' + BT, 'g'), '<code class="px-1 py-0.5 rounded bg-muted/50 text-xs font-mono">$1</code>');
 }
 function applyBoldAndCode(text: string): string {
   return applyCodeReplace(applyBoldReplace(text));
 }
 function applyCodeReplaceMd(text: string): string {
-  return text.replace(new RegExp(BT + '([^' + BT + ']+)' + BT, 'g'), '<code class="px-1 py-0.5 rounded bg-muted/50 text-xs font-mono text-foreground/80">$1</code>');
+  return text.replace(new RegExp(BT + '([^' + BT + ']+)' + BT, 'g'), '<code class="px-1 py-0.5 rounded bg-muted/50 text-xs font-mono text-foreground">$1</code>');
 }
 
 
@@ -127,11 +132,11 @@ function ParallelResponsesBlock({ responses }: { responses: ParallelResponse[] }
       {/* Layout switcher */}
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-1.5">
-          <span className="text-[9px] text-cherry-primary-dark bg-cherry-active-bg px-2 py-[2px] rounded-md">
+          <span className="text-xs text-cherry-primary-dark bg-cherry-active-bg px-2 py-[2px] rounded-md">
             并行 {responses.length} {isMultiAssistant ? '助手' : '模型'}
           </span>
         </div>
-        <div className="flex items-center gap-0.5 bg-accent/20 rounded-md p-0.5">
+        <div className="flex items-center gap-0.5 bg-accent/25 rounded-md p-0.5">
           {layoutOptions.map(opt => (
             <Button
               key={opt.key}
@@ -154,7 +159,7 @@ function ParallelResponsesBlock({ responses }: { responses: ParallelResponse[] }
       {/* Responses */}
       <div className={
         layout === 'vertical' ? 'space-y-2' :
-        layout === 'horizontal' ? 'flex gap-2 overflow-x-auto [&::-webkit-scrollbar]:h-[2px] [&::-webkit-scrollbar-thumb]:bg-border/20 pb-1' :
+        layout === 'horizontal' ? 'flex gap-2 overflow-x-auto scrollbar-thin-xs pb-1' :
         'grid grid-cols-2 gap-2'
       }>
         {responses.map(resp => {
@@ -164,20 +169,20 @@ function ParallelResponsesBlock({ responses }: { responses: ParallelResponse[] }
               key={resp.id}
               className={`rounded-xl border overflow-hidden flex flex-col ${
                 layout === 'horizontal' ? 'min-w-[280px] max-w-[340px] flex-shrink-0' : ''
-              } ${isContext ? 'border-cherry-ring bg-cherry-active-bg/30' : 'border-border/25 bg-accent/8'}`}
+              } ${isContext ? 'border-cherry-ring bg-cherry-active-bg/30' : 'border-border/25 bg-accent/5'}`}
             >
               {/* Response header */}
               <div className="flex items-center justify-between px-3 py-2 border-b border-border/15">
                 <div className="flex items-center gap-2 min-w-0">
-                  <div className="w-5 h-5 rounded-md bg-accent/40 flex items-center justify-center text-xs leading-none flex-shrink-0">
+                  <div className="w-5 h-5 rounded-md bg-accent/50 flex items-center justify-center text-xs leading-none flex-shrink-0">
                     {getParallelAvatar(resp)}
                   </div>
                   <div className="flex items-center gap-1.5 min-w-0">
                     {resp.assistantName && (
-                      <span className="text-xs text-foreground/85 flex-shrink-0">{resp.assistantName}</span>
+                      <span className="text-xs text-foreground flex-shrink-0">{resp.assistantName}</span>
                     )}
-                    <span className={`text-xs truncate ${resp.assistantName ? 'text-muted-foreground/50' : 'text-foreground/80'}`}>{resp.modelName}</span>
-                    <span className="text-[8px] text-muted-foreground/40 flex-shrink-0">{resp.modelProvider}</span>
+                    <span className={`text-xs truncate ${resp.assistantName ? 'text-muted-foreground/50' : 'text-foreground'}`}>{resp.modelName}</span>
+                    <span className="text-xs text-muted-foreground/40 flex-shrink-0">{resp.modelProvider}</span>
                   </div>
                 </div>
                 {isContext && (
@@ -187,7 +192,7 @@ function ParallelResponsesBlock({ responses }: { responses: ParallelResponse[] }
               {/* Thinking */}
               {resp.thinking && <ThinkingBlock content={resp.thinking} />}
               {/* Content */}
-              <div className="px-3 py-2.5 text-[10.5px] text-foreground/85 leading-[1.75] flex-1">
+              <div className="px-3 py-2.5 text-xs text-foreground leading-[1.75] flex-1">
                 {resp.content.split('\n').map((line, i) => {
                   if (line.startsWith('|') && line.includes('|')) {
                     const cells = line.split('|').filter(c => c.trim()).map(c => c.trim());
@@ -196,8 +201,8 @@ function ParallelResponsesBlock({ responses }: { responses: ParallelResponse[] }
                     return (
                       <div key={i} className="flex gap-0">
                         {cells.map((cell, j) => (
-                          <span key={j} className={`flex-1 px-1.5 py-0.5 text-[9px] border-b border-border/15 ${
-                            i === 0 ? 'text-foreground/70' : 'text-foreground/55'
+                          <span key={j} className={`flex-1 px-1.5 py-0.5 text-xs border-b border-border/15 ${
+                            i === 0 ? 'text-foreground' : 'text-muted-foreground'
                           }`}>
                             {cell}
                           </span>
@@ -222,8 +227,8 @@ function ParallelResponsesBlock({ responses }: { responses: ParallelResponse[] }
                 <div className="px-3 pb-2"><ImageGallery images={resp.images} /></div>
               )}
               {/* Card footer actions */}
-              <div className="flex items-center justify-between px-3 py-1.5 border-t border-border/10">
-                <div className="flex items-center gap-1 text-[8px] text-muted-foreground/40">
+              <div className="flex items-center justify-between px-3 py-1.5 border-t border-border/15">
+                <div className="flex items-center gap-1 text-xs text-muted-foreground/40">
                   <span>{resp.duration}</span>
                   <span className="mx-0.5">·</span>
                   <span>{(resp.tokens.input + resp.tokens.output + (resp.tokens.thinking || 0)).toLocaleString()} tokens</span>
@@ -232,7 +237,7 @@ function ParallelResponsesBlock({ responses }: { responses: ParallelResponse[] }
                   <Tooltip content="重新生成" side="bottom">
                   <Button variant="ghost" size="icon-xs"
                     onClick={() => {}}
-                    className="p-1 w-auto h-auto text-muted-foreground/40 hover:text-foreground hover:bg-accent/20"
+                    className="p-1 w-auto h-auto text-muted-foreground/40 hover:text-foreground hover:bg-accent/15"
                   >
                     <RotateCcw size={10} />
                   </Button>
@@ -270,7 +275,7 @@ type ArtifactTab = 'document' | 'code' | 'preview';
 // ===========================
 
 const HISTORY_FILES: { id: string; title: string; type: ArtifactData['type']; timestamp: string; content: string }[] = [
-  { id: 'hf-1', title: 'StatsRow.tsx', type: 'code', timestamp: '14:35', content: 'import React from "react";\n\ninterface Props {\n  label: string;\n  value: number;\n}\n\nexport function StatsRow({ label, value }: Props) {\n  return (\n    <div className="flex items-center justify-between py-2">\n      <span className="text-sm text-gray-600">{label}</span>\n      <span className="text-lg font-semibold">{value.toLocaleString()}</span>\n    </div>\n  );\n}' },
+  { id: 'hf-1', title: 'StatsRow.tsx', type: 'code', timestamp: '14:35', content: 'import React from "react";\n\ninterface Props {\n  label: string;\n  value: number;\n}\n\nexport function StatsRow({ label, value }: Props) {\n  return (\n    <div className="flex items-center justify-between py-2">\n      <span className="text-sm text-muted-foreground">{label}</span>\n      <span className="text-lg font-semibold">{value.toLocaleString()}</span>\n    </div>\n  );\n}' },
   { id: 'hf-2', title: '产品落地页', type: 'html', timestamp: '14:38', content: '<!DOCTYPE html>\n<html>\n<head><title>Product</title></head>\n<body>\n  <header><h1>Amazing Product</h1></header>\n  <main><p>Build better experiences.</p></main>\n</body>\n</html>' },
   { id: 'hf-3', title: 'API 接口文档', type: 'document', timestamp: '昨天', content: '# API 接口文档\n\n## 用户模块\n\n### GET /api/users\n\n获取用户列表，支持分页和筛选。\n\n**参数：**\n- `page` - 页码\n- `limit` - 每���数量' },
   { id: 'hf-4', title: 'UserCard.vue', type: 'code', timestamp: '昨天', content: '<template>\n  <div class="user-card">\n    <img :src="user.avatar" :alt="user.name" />\n    <h3>{{ user.name }}</h3>\n    <p>{{ user.email }}</p>\n  </div>\n</template>\n\n<script setup>\ndefineProps({ user: Object });\n</script>' },
@@ -283,10 +288,10 @@ const HISTORY_FILES: { id: string; title: string; type: ArtifactData['type']; ti
 
 function artifactTypeIcon(type: ArtifactData['type'], size = 11) {
   switch (type) {
-    case 'code': return <Code2 size={size} className="text-violet-500" />;
-    case 'html': return <Globe size={size} className="text-sky-500" />;
-    case 'svg': return <Eye size={size} className="text-pink-500" />;
-    case 'mermaid': return <Layers size={size} className="text-cyan-500" />;
+    case 'code': return <Code2 size={size} className="text-accent-violet" />;
+    case 'html': return <Globe size={size} className="text-accent-blue" />;
+    case 'svg': return <Eye size={size} className="text-accent-pink" />;
+    case 'mermaid': return <Layers size={size} className="text-accent-cyan" />;
     default: return <FileText size={size} className="text-warning" />;
   }
 }
@@ -353,21 +358,21 @@ function FileHistoryDropdown({ onSelect, onClose, anchorRight, selectedTitle, ha
 
   return (
     <div>
-      <div className="fixed inset-0 z-[55]" onClick={onClose} />
+      <div className="fixed inset-0 z-[var(--z-overlay)]" onClick={onClose} />
       <motion.div
         initial={{ opacity: 0, y: -4, scale: 0.97 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         exit={{ opacity: 0, y: -4, scale: 0.97 }}
         transition={{ duration: 0.12 }}
-        className={`absolute top-full mt-1.5 z-[56] w-[270px] bg-popover border border-border/40 rounded-xl shadow-2xl shadow-black/12 overflow-hidden ${anchorRight ? 'right-0' : 'left-0'}`}
+        className={`absolute top-full mt-1.5 z-[var(--z-popover)] w-[270px] bg-popover border border-border/40 rounded-xl shadow-2xl shadow-black/12 overflow-hidden ${anchorRight ? 'right-0' : 'left-0'}`}
       >
         {/* Category tabs */}
         <div className="flex items-center gap-0.5 px-2.5 pt-2 pb-1">
           {FILE_CATEGORIES.map(cat => {
             const Icon = cat.icon;
             return (
-              <Button variant="ghost" size="xs" key={cat.key} onClick={() => setCategory(cat.key)}
-                className={`gap-1 px-2 py-[4px] h-auto text-xs ${category === cat.key ? 'bg-foreground/8 text-foreground' : 'text-muted-foreground/60 hover:text-foreground hover:bg-accent/15'}`}>
+              <Button variant="ghost" size="inline" key={cat.key} onClick={() => setCategory(cat.key)}
+                className={`gap-1 px-2 py-[4px] text-xs ${category === cat.key ? 'bg-accent/50 text-foreground' : 'text-muted-foreground/60 hover:text-foreground hover:bg-accent/15'}`}>
                 <Icon size={9} />
                 <span>{cat.label}</span>
               </Button>
@@ -377,47 +382,40 @@ function FileHistoryDropdown({ onSelect, onClose, anchorRight, selectedTitle, ha
 
         {/* Search */}
         <div className="px-2.5 pt-1 pb-1.5">
-          <div className="flex items-center gap-2 px-2.5 py-[5px] rounded-lg bg-accent/15 border border-border/25">
-            <Search size={10} className="text-muted-foreground/50 flex-shrink-0" />
-            <Input
-              ref={inputRef}
-              value={query}
-              onChange={e => setQuery(e.target.value)}
-              placeholder="搜索历史文件..."
-              className="flex-1 h-auto border-0 bg-transparent shadow-none focus-visible:ring-0 text-xs text-foreground placeholder:text-muted-foreground/40 p-0 rounded-none"
-            />
-            {query && (
-              <Button variant="ghost" size="icon-xs" onClick={() => setQuery('')} className="w-auto h-auto p-0 text-muted-foreground hover:text-foreground hover:bg-transparent">
-                <X size={9} />
-              </Button>
-            )}
-          </div>
+          <SearchInput
+            ref={inputRef}
+            value={query}
+            onChange={setQuery}
+            placeholder="搜索历史文件..."
+            iconSize={10}
+            wrapperClassName="flex items-center gap-2 px-2.5 py-[5px] rounded-lg bg-accent/15 border border-border/25"
+          />
         </div>
 
         {/* File list */}
-        <div className="max-h-[260px] overflow-y-auto px-1.5 py-0.5 [&::-webkit-scrollbar]:w-[2px] [&::-webkit-scrollbar-thumb]:bg-border/25 [&::-webkit-scrollbar-thumb]:rounded-full">
+        <div className="max-h-[260px] overflow-y-auto px-1.5 py-0.5 scrollbar-thin-xs">
           {filtered.length === 0 ? (
             <div className="flex flex-col items-center py-6">
-              <Search size={14} className="text-muted-foreground/25 mb-2" />
-              <span className="text-xs text-muted-foreground/50">没有匹配的文件</span>
+              <Search size={14} className="text-muted-foreground/40 mb-2" />
+              <span className="text-xs text-muted-foreground/40">没有匹配的文件</span>
             </div>
           ) : (
             filtered.map(file => {
               const isSelected = selectedTitle === file.title;
               return (
-                <Button variant="ghost" size="xs"
+                <Button variant="ghost" size="inline"
                   key={file.id}
                   onClick={() => { onSelect({ type: file.type, title: file.title, content: file.content }); onClose(); }}
-                  className={`w-full justify-start gap-2.5 px-2.5 py-[7px] h-auto rounded-lg transition-colors group mb-0.5 ${isSelected ? 'bg-foreground/8' : 'hover:bg-accent/15'}`}
+                  className={`w-full justify-start gap-2.5 px-2.5 py-[7px] rounded-lg transition-colors group mb-0.5 ${isSelected ? 'bg-accent/50' : 'hover:bg-accent/50'}`}
                 >
                   <div className="flex-shrink-0">
                     {artifactTypeIcon(file.type, 13)}
                   </div>
                   <div className="flex-1 min-w-0 text-left">
-                    <div className={`text-[10.5px] truncate ${isSelected ? 'text-foreground' : 'text-foreground/80'}`}>{file.title}</div>
-                    <div className="text-[9px] text-muted-foreground/45">{artifactTypeLabel(file.type)} · {file.timestamp}</div>
+                    <div className={`text-xs truncate ${isSelected ? 'text-foreground' : 'text-foreground'}`}>{file.title}</div>
+                    <div className="text-xs text-muted-foreground/40">{artifactTypeLabel(file.type)} · {file.timestamp}</div>
                   </div>
-                  <Eye size={9} className={`flex-shrink-0 transition-opacity ${isSelected ? 'text-muted-foreground/40 opacity-100' : 'text-muted-foreground/25 opacity-0 group-hover:opacity-100'}`} />
+                  <Eye size={9} className={`flex-shrink-0 transition-opacity ${isSelected ? 'text-muted-foreground/40 opacity-100' : 'text-muted-foreground/40 opacity-0 group-hover:opacity-100'}`} />
                 </Button>
               );
             })
@@ -425,8 +423,8 @@ function FileHistoryDropdown({ onSelect, onClose, anchorRight, selectedTitle, ha
         </div>
 
         {/* Footer */}
-        <div className="px-3 py-1.5 border-t border-border/20">
-          <span className="text-[9px] text-muted-foreground/40">{files.length} 个历史文件</span>
+        <div className="px-3 py-1.5 border-t border-border/30">
+          <span className="text-xs text-muted-foreground/40">{files.length} 个历史文件</span>
         </div>
       </motion.div>
     </div>
@@ -493,30 +491,30 @@ function ArtifactsPanel({ artifact, isFullscreen, onToggleFullscreen, onClose, o
         <div className="flex items-center justify-between px-3 h-[38px] border-b border-border/30 flex-shrink-0">
           <span className="text-xs text-muted-foreground/50">内容预览</span>
           <div className="flex items-center gap-0.5">
-            <Tooltip content="关闭" side="bottom"><Button variant="ghost" size="icon-xs" onClick={onClose} className="p-1.5 w-auto h-auto text-muted-foreground hover:text-foreground hover:bg-accent/15">
+            <Tooltip content="关闭" side="bottom"><Button variant="ghost" size="icon-xs" onClick={onClose} className="p-1.5 w-auto h-auto text-muted-foreground/40 hover:text-foreground hover:bg-accent/15">
               <X size={11} />
             </Button></Tooltip>
           </div>
         </div>
         <div className="flex flex-col items-center justify-center flex-1 px-10">
           <div className="w-14 h-14 rounded-2xl bg-gradient-to-b from-accent/40 to-accent/20 border border-border/20 flex items-center justify-center mb-5">
-            <Layers size={22} strokeWidth={1.3} className="text-muted-foreground/25" />
+            <Layers size={22} strokeWidth={1.3} className="text-muted-foreground/40" />
           </div>
-          <p className="text-[11.5px] text-foreground/60 mb-2">暂无预览内容</p>
+          <p className="text-xs text-muted-foreground mb-2">暂无预览内容</p>
           <p className="text-xs text-muted-foreground/40 text-center leading-[1.6] mb-5">
             点击消息中的代码块、文档或网页卡片即可在此查看
           </p>
           <div className="w-full space-y-[6px]">
-            <div className="flex items-center gap-2.5 px-3 py-[6px] rounded-lg bg-accent/10 border border-border/15">
-              <div className="w-5 h-5 rounded bg-violet-500/10 flex items-center justify-center"><Code2 size={10} className="text-violet-500/60" /></div>
+            <div className="flex items-center gap-2.5 px-3 py-[6px] rounded-lg bg-accent/15 border border-border/15">
+              <div className="w-5 h-5 rounded bg-accent-violet/10 flex items-center justify-center"><Code2 size={10} className="text-accent-violet/60" /></div>
               <span className="text-xs text-muted-foreground/50">代码 — 语法高亮 + 复制</span>
             </div>
-            <div className="flex items-center gap-2.5 px-3 py-[6px] rounded-lg bg-accent/10 border border-border/15">
+            <div className="flex items-center gap-2.5 px-3 py-[6px] rounded-lg bg-accent/15 border border-border/15">
               <div className="w-5 h-5 rounded bg-warning/10 flex items-center justify-center"><FileText size={10} className="text-warning/60" /></div>
               <span className="text-xs text-muted-foreground/50">文档 — Markdown 渲染</span>
             </div>
-            <div className="flex items-center gap-2.5 px-3 py-[6px] rounded-lg bg-accent/10 border border-border/15">
-              <div className="w-5 h-5 rounded bg-sky-500/10 flex items-center justify-center"><Globe size={10} className="text-sky-500/60" /></div>
+            <div className="flex items-center gap-2.5 px-3 py-[6px] rounded-lg bg-accent/15 border border-border/15">
+              <div className="w-5 h-5 rounded bg-accent-blue/10 flex items-center justify-center"><Globe size={10} className="text-accent-blue/60" /></div>
               <span className="text-xs text-muted-foreground/50">网页 — 实时预览效果</span>
             </div>
           </div>
@@ -530,26 +528,26 @@ function ArtifactsPanel({ artifact, isFullscreen, onToggleFullscreen, onClose, o
       <div className="flex items-center justify-between px-3 h-[38px] border-b border-border/30 flex-shrink-0">
         <div className="flex items-center gap-1">
           {availableTabs.map(t => (
-            <Button variant="ghost" size="xs" key={t.key} onClick={() => setTab(t.key)}
-              className={`gap-1.5 px-2.5 py-[5px] h-auto text-xs transition-all duration-100 ${tab === t.key ? 'bg-foreground/8 text-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-accent/15'}`}>
+            <Button variant="ghost" size="inline" key={t.key} onClick={() => setTab(t.key)}
+              className={`gap-1.5 px-2.5 py-[5px] text-xs transition-all duration-100 ${tab === t.key ? 'bg-accent/50 text-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-accent/15'}`}>
               <t.icon size={10} />{t.label}
             </Button>
           ))}
         </div>
         <div className="flex items-center gap-0.5">
-          <span className="text-[9px] text-muted-foreground/50 mr-1.5 truncate max-w-[100px]">{artifact.title}</span>
+          <span className="text-xs text-muted-foreground/50 mr-1.5 truncate max-w-[100px]">{artifact.title}</span>
           <Tooltip content="复制" side="bottom"><Button variant="ghost" size="icon-xs" onClick={handleCopy} className="p-1.5 w-auto h-auto text-muted-foreground hover:text-foreground hover:bg-accent/15">
             {copied ? <Check size={11} className="text-cherry-primary" /> : <Copy size={11} />}
           </Button></Tooltip>
           <Tooltip content={isFullscreen ? '还原' : '全屏'} side="bottom"><Button variant="ghost" size="icon-xs" onClick={onToggleFullscreen} className="p-1.5 w-auto h-auto text-muted-foreground hover:text-foreground hover:bg-accent/15">
             {isFullscreen ? <Minimize2 size={11} /> : <Maximize2 size={11} />}
           </Button></Tooltip>
-          <Tooltip content="关闭" side="bottom"><Button variant="ghost" size="icon-xs" onClick={onClose} className="p-1.5 w-auto h-auto text-muted-foreground hover:text-foreground hover:bg-accent/15">
+          <Tooltip content="关闭" side="bottom"><Button variant="ghost" size="icon-xs" onClick={onClose} className="p-1.5 w-auto h-auto text-muted-foreground/40 hover:text-foreground hover:bg-accent/15">
             <X size={11} />
           </Button></Tooltip>
         </div>
       </div>
-      <div className="flex-1 overflow-auto [&::-webkit-scrollbar]:w-[3px] [&::-webkit-scrollbar-thumb]:bg-border/25 [&::-webkit-scrollbar-thumb]:rounded-full">
+      <div className="flex-1 overflow-auto scrollbar-thin">
         {tab === 'document' && <div className="p-5"><MarkdownRenderer content={artifact.content} /></div>}
         {tab === 'code' && <CodeRenderer content={artifact.content} />}
         {tab === 'preview' && <PreviewRenderer content={artifact.content} type={artifact.type} />}
@@ -574,8 +572,8 @@ function MarkdownRenderer({ content }: { content: string }) {
       if (inCodeBlock) {
         elements.push(
           <div key={`code-${i}`} className="my-3 rounded-lg overflow-hidden border border-border/30">
-            {codeLang && <div className="px-3 py-1.5 bg-muted/40 border-b border-border/20"><span className="text-[9px] text-muted-foreground">{codeLang}</span></div>}
-            <pre className="px-3 py-2.5 overflow-x-auto text-[10.5px] leading-[1.7] font-mono bg-muted/20">
+            {codeLang && <div className="px-3 py-1.5 bg-muted/40 border-b border-border/30"><span className="text-xs text-muted-foreground">{codeLang}</span></div>}
+            <pre className="px-3 py-2.5 overflow-x-auto text-xs leading-[1.7] font-mono bg-muted/20">
               {codeLines.map((cl, j) => <div key={j}>{highlightLine(cl)}</div>)}
             </pre>
           </div>
@@ -591,13 +589,13 @@ function MarkdownRenderer({ content }: { content: string }) {
     else if (line.startsWith('### ')) elements.push(<h3 key={i} className="text-sm text-foreground mb-1.5 mt-3">{line.slice(4)}</h3>);
     else if (line.startsWith('- **')) {
       const bold = line.match(RE_DASH_BOLD);
-      if (bold) elements.push(<div key={i} className="flex items-start gap-1.5 py-0.5 text-xs text-foreground/80 leading-[1.7]"><span className="text-muted-foreground/40 mt-px">-</span><span><span className="text-foreground">{bold[1]}</span>{bold[2]}</span></div>);
+      if (bold) elements.push(<div key={i} className="flex items-start gap-1.5 py-0.5 text-xs text-foreground leading-[1.7]"><span className="text-muted-foreground/40 mt-px">-</span><span><span className="text-foreground">{bold[1]}</span>{bold[2]}</span></div>);
     } else if (RE_NUM_SPACE_TEST.test(line)) {
-      elements.push(<div key={i} className="flex items-start gap-2 py-0.5 text-xs text-foreground/80 leading-[1.7]"><span className="text-muted-foreground/50 w-4 text-right flex-shrink-0">{line.match(RE_NUM_EXTRACT)?.[1]}.</span><span>{line.replace(RE_NUM_PREFIX, '')}</span></div>);
+      elements.push(<div key={i} className="flex items-start gap-2 py-0.5 text-xs text-foreground leading-[1.7]"><span className="text-muted-foreground/50 w-4 text-right flex-shrink-0">{line.match(RE_NUM_EXTRACT)?.[1]}.</span><span>{line.replace(RE_NUM_PREFIX, '')}</span></div>);
     } else if (line.trim() === '') elements.push(<div key={i} className="h-2" />);
     else {
       const formatted = applyBoldReplace(applyCodeReplaceMd(line));
-      elements.push(<p key={i} className="text-xs text-foreground/75 leading-[1.8]" dangerouslySetInnerHTML={{ __html: formatted }} />);
+      elements.push(<p key={i} className="text-xs text-foreground leading-[1.8]" dangerouslySetInnerHTML={{ __html: formatted }} />);
     }
   });
   return <div>{elements}</div>;
@@ -606,10 +604,10 @@ function MarkdownRenderer({ content }: { content: string }) {
 function CodeRenderer({ content }: { content: string }) {
   const lines = content.split('\n');
   return (
-    <pre className="px-0 py-2 text-[10.5px] leading-[1.75] font-mono">
+    <pre className="px-0 py-2 text-xs leading-[1.75] font-mono">
       {lines.map((line, i) => (
-        <div key={i} className="flex hover:bg-accent/10 transition-colors">
-          <span className="w-10 text-right pr-3 text-[9px] text-muted-foreground/30 select-none flex-shrink-0 tabular-nums">{i + 1}</span>
+        <div key={i} className="flex hover:bg-accent/15 transition-colors">
+          <span className="w-10 text-right pr-3 text-xs text-muted-foreground/50 select-none flex-shrink-0 tabular-nums">{i + 1}</span>
           <span className="flex-1 pr-4">{highlightLine(line)}</span>
         </div>
       ))}
@@ -620,7 +618,7 @@ function CodeRenderer({ content }: { content: string }) {
 function PreviewRenderer({ content, type }: { content: string; type: string }) {
   if (type === 'html' || type === 'svg') {
     return (
-      <div className="h-full flex items-start justify-center p-4 bg-white dark:bg-neutral-100">
+      <div className="h-full flex items-start justify-center p-4 bg-background">
         <iframe srcDoc={content} className="w-full h-full min-h-[300px] border-0 rounded-lg" sandbox="allow-scripts" title="Preview" />
       </div>
     );
@@ -645,7 +643,7 @@ function FloatingPanel({ title, icon, onClose, children, width = 340 }: {
       animate={{ x: 0, opacity: 1 }}
       exit={{ x: 40, opacity: 0 }}
       transition={{ duration: 0.18, ease: [0.4, 0, 0.2, 1] }}
-      className="absolute top-2 right-2 bottom-2 z-40 bg-background rounded-xl border border-border/25 shadow-2xl shadow-black/12 flex flex-col overflow-hidden"
+      className="absolute top-2 right-2 bottom-2 z-[var(--z-sticky)] bg-background rounded-xl border border-border/25 shadow-2xl shadow-black/12 flex flex-col overflow-hidden"
       style={{ width }}
     >
       <div className="flex items-center justify-between px-4 h-[38px] flex-shrink-0">
@@ -653,11 +651,11 @@ function FloatingPanel({ title, icon, onClose, children, width = 340 }: {
           {icon}
           <span className="text-xs text-foreground">{title}</span>
         </div>
-        <Button variant="ghost" size="icon-xs" onClick={onClose} className="p-1.5 w-auto h-auto text-muted-foreground hover:text-foreground hover:bg-accent/15">
-          <X size={12} />
+        <Button variant="ghost" size="icon-xs" onClick={onClose} className="p-1.5 w-auto h-auto text-muted-foreground/40 hover:text-foreground hover:bg-accent/15">
+          <X size={11} />
         </Button>
       </div>
-      <div className="flex-1 overflow-y-auto [&::-webkit-scrollbar]:w-[3px] [&::-webkit-scrollbar-thumb]:bg-border/25 [&::-webkit-scrollbar-thumb]:rounded-full">
+      <div className="flex-1 overflow-y-auto scrollbar-thin">
         {children}
       </div>
     </motion.div>
@@ -684,21 +682,21 @@ function AssistantInfoPanel({ assistant, topics, onSelectTopic, onClose, onEdit,
       <div className="p-4 space-y-4">
         <div className="flex items-start justify-between">
           <div>
-            <h3 className="text-sm text-foreground mb-1">{assistant.name}</h3>
+            <Typography variant="subtitle" className="mb-1">{assistant.name}</Typography>
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
               <Clock size={9} />
               <span>最新使用 {assistant.updatedAt}</span>
             </div>
           </div>
-          <Button variant="outline" size="xs" onClick={onEdit} className="px-2 py-[4px] h-auto border-border/30 text-muted-foreground hover:text-foreground hover:bg-accent/15 gap-1">
+          <Button variant="outline" size="xs" onClick={onEdit} className="px-2 border-border/30 text-muted-foreground hover:text-foreground hover:bg-accent/15 gap-1">
             <Edit3 size={9} />编辑
           </Button>
         </div>
         <div className="flex items-center gap-2 text-xs">
           <span className="text-muted-foreground">默认模型</span>
           <div className="flex items-center gap-1.5 px-2 py-[3px] rounded-md bg-accent/25">
-            <Sparkles size={9} className="text-muted-foreground" />
-            <span className="text-foreground/80">{assistant.model}</span>
+            <BrandLogo id={assistant.provider?.toLowerCase() || ''} fallbackLetter="?" size={14} className="shrink-0" />
+            <span className="text-foreground">{assistant.model}</span>
           </div>
         </div>
         {assistant.tags.length > 0 && (
@@ -706,14 +704,14 @@ function AssistantInfoPanel({ assistant, topics, onSelectTopic, onClose, onEdit,
             <span className="text-xs text-muted-foreground">标签</span>
             <div className="flex gap-1">
               {assistant.tags.map(t => (
-                <span key={t} className="px-1.5 py-[2px] rounded text-[9px] bg-accent/30 text-foreground/70">{t}</span>
+                <span key={t} className="px-1.5 py-[2px] rounded text-xs bg-accent/25 text-foreground">{t}</span>
               ))}
             </div>
           </div>
         )}
         <div className="rounded-lg bg-muted/15 overflow-hidden">
           <Button variant="ghost" size="xs" onClick={() => setPromptExpanded(!promptExpanded)}
-            className="w-full justify-start gap-2 px-3 py-2 h-auto text-[10.5px] text-foreground/80 hover:bg-accent/10 transition-colors">
+            className="w-full justify-start gap-2 px-3 text-xs text-foreground hover:bg-accent/15 transition-colors">
             <FileText size={10} className="text-muted-foreground flex-shrink-0" />
             <span className="flex-1 text-left">系统提示词</span>
             <motion.div animate={{ rotate: promptExpanded ? 90 : 0 }} transition={{ duration: 0.1 }}>
@@ -724,7 +722,7 @@ function AssistantInfoPanel({ assistant, topics, onSelectTopic, onClose, onEdit,
             {promptExpanded && (
               <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.15 }} className="overflow-hidden">
                 <div className="px-3 pb-3">
-                  <pre className="text-xs text-foreground/60 leading-[1.7] whitespace-pre-wrap mt-1 font-sans">{assistant.systemPrompt}</pre>
+                  <pre className="text-xs text-muted-foreground leading-[1.7] whitespace-pre-wrap mt-1 font-sans">{assistant.systemPrompt}</pre>
                 </div>
               </motion.div>
             )}
@@ -737,8 +735,8 @@ function AssistantInfoPanel({ assistant, topics, onSelectTopic, onClose, onEdit,
               {assistant.knowledgeBases.map(kb => (
                 <div key={kb.id} onClick={() => onNavigateToKnowledge?.(kb.name)} className="flex items-center gap-2 px-2.5 py-[6px] rounded-md hover:bg-accent/15 transition-colors cursor-pointer group">
                   <Database size={10} className="text-info/70 flex-shrink-0" />
-                  <span className="text-[10.5px] text-info/80 group-hover:text-info">{kb.name}</span>
-                  <ChevronRight size={8} className="ml-auto text-muted-foreground/30 group-hover:text-muted-foreground/50" />
+                  <span className="text-xs text-info/80 group-hover:text-info">{kb.name}</span>
+                  <ChevronRight size={8} className="ml-auto text-muted-foreground/40 group-hover:text-muted-foreground/50" />
                 </div>
               ))}
             </div>
@@ -751,7 +749,7 @@ function AssistantInfoPanel({ assistant, topics, onSelectTopic, onClose, onEdit,
               {assistant.tools.map(tool => (
                 <div key={tool.id} className="flex items-center gap-2 px-2.5 py-[6px] rounded-md hover:bg-accent/15 transition-colors">
                   <span className="text-xs">{tool.icon}</span>
-                  <span className="text-[10.5px] text-foreground/70">{tool.name}</span>
+                  <span className="text-xs text-foreground">{tool.name}</span>
                 </div>
               ))}
             </div>
@@ -765,13 +763,13 @@ function AssistantInfoPanel({ assistant, topics, onSelectTopic, onClose, onEdit,
               <History size={11} />
             </Button></Tooltip>
           </div>
-          <div className="text-[9px] text-muted-foreground/50 px-1 mb-1.5 mt-3">昨天</div>
+          <div className="text-xs text-muted-foreground/50 px-1 mb-1.5 mt-3">昨天</div>
           <div className="space-y-0.5">
             {topics.slice(0, 4).map(topic => (
               <Button variant="ghost" size="xs" key={topic.id} onClick={() => { onSelectTopic(topic.id); onClose(); }}
-                className="w-full justify-start gap-2 px-2.5 py-[6px] h-auto text-left hover:bg-accent/15 transition-colors group">
-                <span className="text-[10.5px] text-foreground/70 flex-1 truncate group-hover:text-foreground">{topic.title}</span>
-                <span className="text-[9px] text-muted-foreground/40 flex-shrink-0">{topic.timestamp}</span>
+                className="w-full justify-start gap-2 px-2.5 text-left hover:bg-accent/50 transition-colors group">
+                <span className="text-sm text-foreground flex-1 truncate group-hover:text-foreground">{topic.title}</span>
+                <span className="text-xs text-muted-foreground/40 flex-shrink-0">{topic.timestamp}</span>
               </Button>
             ))}
           </div>
@@ -804,53 +802,51 @@ function ChatDetailPanel({ metadata, onClose }: {
       <div className="px-4 py-3 space-y-3">
         <div className="space-y-[6px]">
           <div className="flex items-center justify-between text-xs">
-            <span className="text-muted-foreground/70">会话 ID</span>
-            <Button variant="ghost" size="xs" onClick={copyId} className="gap-1 h-auto text-foreground/60 hover:text-foreground transition-colors font-mono text-[9px]">
+            <span className="text-muted-foreground/60">会话 ID</span>
+            <Button variant="ghost" size="inline" onClick={copyId} className="gap-1 text-muted-foreground hover:text-foreground transition-colors font-mono text-xs">
               <span>{metadata.sessionId.slice(0, 16)}...</span>
               {copied ? <Check size={8} className="text-cherry-primary" /> : <Copy size={8} />}
             </Button>
           </div>
           <div className="flex items-center justify-between text-xs">
-            <span className="text-muted-foreground/70">模型</span>
-            <div className="flex items-center gap-1.5"><Sparkles size={9} className="text-muted-foreground/40" /><span className="text-foreground/70">{metadata.model}</span></div>
+            <span className="text-muted-foreground/60">模型</span>
+            <div className="flex items-center gap-1.5"><BrandLogo id={metadata.provider?.toLowerCase() || ''} fallbackLetter="?" size={14} className="shrink-0" /><span className="text-foreground">{metadata.model}</span></div>
           </div>
           <div className="flex items-center justify-between text-xs">
-            <span className="text-muted-foreground/70">状态</span>
-            <span className={metadata.status === 'success' ? 'text-foreground/60' : 'text-destructive'}>{metadata.status === 'success' ? '成功' : '失败'}</span>
+            <span className="text-muted-foreground/60">状态</span>
+            <span className={metadata.status === 'success' ? 'text-muted-foreground' : 'text-destructive'}>{metadata.status === 'success' ? '成功' : '失败'}</span>
           </div>
           <div className="flex items-center justify-between text-xs">
-            <span className="text-muted-foreground/70">时间</span>
-            <span className="text-foreground/70">{metadata.startTime} · {metadata.duration}</span>
+            <span className="text-muted-foreground/60">时间</span>
+            <span className="text-foreground">{metadata.startTime} · {metadata.duration}</span>
           </div>
-          <div className="relative flex items-center justify-between text-xs"
-            onMouseEnter={() => setTokenHover(true)} onMouseLeave={() => setTokenHover(false)}>
-            <span className="text-muted-foreground/70">令牌数</span>
-            <span className="text-foreground/70 tabular-nums cursor-default">{total.toLocaleString()}</span>
-            <AnimatePresence>
-              {tokenHover && (
-                <motion.div initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 4 }} transition={{ duration: 0.1 }}
-                  className="absolute right-0 top-full mt-1 z-10 bg-popover rounded-lg shadow-lg shadow-black/10 border border-border/25 px-3 py-2 min-w-[160px]">
-                  <div className="space-y-[4px]">
-                    <div className="flex items-center justify-between text-[9.5px]"><span className="text-muted-foreground">输入</span><span className="text-info tabular-nums">{metadata.tokens.input.toLocaleString()}</span></div>
-                    <div className="flex items-center justify-between text-[9.5px]"><span className="text-muted-foreground">输出</span><span className="text-foreground/60 tabular-nums">{metadata.tokens.output.toLocaleString()}</span></div>
-                    {metadata.tokens.thinking !== undefined && metadata.tokens.thinking > 0 && (
-                      <div className="flex items-center justify-between text-[9.5px]"><span className="text-muted-foreground">思考</span><span className="text-purple-500 tabular-nums">{metadata.tokens.thinking.toLocaleString()}</span></div>
-                    )}
-                    {metadata.tokens.cache !== undefined && metadata.tokens.cache > 0 && (
-                      <div className="flex items-center justify-between text-[9.5px]"><span className="text-muted-foreground">缓存</span><span className="text-warning tabular-nums">{metadata.tokens.cache.toLocaleString()}</span></div>
-                    )}
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
+          <HoverCard openDelay={200} closeDelay={100}>
+            <HoverCardTrigger asChild>
+              <div className="flex items-center justify-between text-xs cursor-default">
+                <span className="text-muted-foreground/60">令牌数</span>
+                <span className="text-foreground tabular-nums">{total.toLocaleString()}</span>
+              </div>
+            </HoverCardTrigger>
+            <HoverCardContent align="end" className="px-3 py-2 min-w-[160px]">
+              <div className="space-y-[4px]">
+                <div className="flex items-center justify-between text-xs"><span className="text-muted-foreground">输入</span><span className="text-info tabular-nums">{metadata.tokens.input.toLocaleString()}</span></div>
+                <div className="flex items-center justify-between text-xs"><span className="text-muted-foreground">输出</span><span className="text-muted-foreground tabular-nums">{metadata.tokens.output.toLocaleString()}</span></div>
+                {metadata.tokens.thinking !== undefined && metadata.tokens.thinking > 0 && (
+                  <div className="flex items-center justify-between text-xs"><span className="text-muted-foreground">思考</span><span className="text-accent-purple tabular-nums">{metadata.tokens.thinking.toLocaleString()}</span></div>
+                )}
+                {metadata.tokens.cache !== undefined && metadata.tokens.cache > 0 && (
+                  <div className="flex items-center justify-between text-xs"><span className="text-muted-foreground">缓存</span><span className="text-warning tabular-nums">{metadata.tokens.cache.toLocaleString()}</span></div>
+                )}
+              </div>
+            </HoverCardContent>
+          </HoverCard>
         </div>
         <div>
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-0.5">
               {(['request', 'response', 'process'] as const).map(t => (
-                <Button variant="ghost" size="xs" key={t} onClick={() => setJsonTab(t)}
-                  className={`px-2.5 py-[4px] h-auto text-[9.5px] transition-all duration-100 ${jsonTab === t ? 'bg-foreground/8 text-foreground' : 'text-muted-foreground/60 hover:text-foreground'}`}>
+                <Button variant="ghost" size="inline" key={t} onClick={() => setJsonTab(t)}
+                  className={`px-2.5 py-[4px] text-xs transition-all duration-100 ${jsonTab === t ? 'bg-accent/50 text-foreground' : 'text-muted-foreground/60 hover:text-foreground'}`}>
                   {t === 'request' ? '请求' : t === 'response' ? '响应' : '过程'}
                 </Button>
               ))}
@@ -865,8 +861,8 @@ function ChatDetailPanel({ metadata, onClose }: {
               </Button></Tooltip>
             </div>
           </div>
-          <div className="rounded-lg bg-muted/15 overflow-auto [&::-webkit-scrollbar]:w-[2px] [&::-webkit-scrollbar-thumb]:bg-border/20">
-            <pre className="px-3 py-2.5 text-[9.5px] leading-[1.7] font-mono whitespace-pre">
+          <div className="rounded-lg bg-muted/15 overflow-auto scrollbar-thin-xs">
+            <pre className="px-3 py-2.5 text-xs leading-[1.7] font-mono whitespace-pre">
               {jsonContent.split('\n').map((line, i) => <div key={i}>{highlightLine(line)}</div>)}
             </pre>
           </div>
@@ -875,15 +871,15 @@ function ChatDetailPanel({ metadata, onClose }: {
       <AnimatePresence>
         {jsonExpanded && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-8" onClick={() => setJsonExpanded(false)}>
+            className="fixed inset-0 z-[var(--z-overlay)] bg-muted0 flex items-center justify-center p-8" onClick={() => setJsonExpanded(false)}>
             <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }}
               transition={{ duration: 0.15 }} className="bg-popover rounded-xl shadow-2xl w-full max-w-[700px] max-h-[80vh] flex flex-col overflow-hidden"
               onClick={e => e.stopPropagation()}>
               <div className="flex items-center justify-between px-4 py-2.5">
                 <div className="flex items-center gap-1">
                   {(['request', 'response', 'process'] as const).map(t => (
-                    <Button variant="ghost" size="xs" key={t} onClick={() => setJsonTab(t)}
-                      className={`px-2.5 py-[4px] h-auto text-xs transition-all duration-100 ${jsonTab === t ? 'bg-foreground/8 text-foreground' : 'text-muted-foreground/60 hover:text-foreground'}`}>
+                    <Button variant="ghost" size="inline" key={t} onClick={() => setJsonTab(t)}
+                      className={`px-2.5 py-[4px] text-xs transition-all duration-100 ${jsonTab === t ? 'bg-accent/50 text-foreground' : 'text-muted-foreground/60 hover:text-foreground'}`}>
                       {t === 'request' ? '请求' : t === 'response' ? '响应' : '过程'}
                     </Button>
                   ))}
@@ -892,7 +888,7 @@ function ChatDetailPanel({ metadata, onClose }: {
                   <Minimize2 size={11} />
                 </Button>
               </div>
-              <div className="flex-1 overflow-auto px-4 pb-4 [&::-webkit-scrollbar]:w-[3px] [&::-webkit-scrollbar-thumb]:bg-border/30">
+              <div className="flex-1 overflow-auto px-4 pb-4 scrollbar-thin">
                 <pre className="text-xs leading-[1.7] font-mono whitespace-pre">
                   {jsonContent.split('\n').map((line, i) => <div key={i}>{highlightLine(line)}</div>)}
                 </pre>
@@ -917,20 +913,20 @@ function RAGPanel({ ragInfo, onClose }: { ragInfo: RAGInfo; onClose: () => void 
     <FloatingPanel title="知识库" icon={<Database size={12} className="text-info/70" />} onClose={onClose}>
       <div className="px-4 py-3 space-y-3">
         <div className="space-y-[6px]">
-          <div className="flex items-center justify-between text-xs"><span className="text-muted-foreground/70">知识库</span><span className="text-info cursor-pointer hover:underline">{ragInfo.knowledgeBaseName}</span></div>
-          <div className="flex items-center justify-between text-xs"><span className="text-muted-foreground/70">Top-k</span><span className="text-foreground/70">{ragInfo.topK}</span></div>
-          <div className="flex items-center justify-between text-xs"><span className="text-muted-foreground/70">分数阈值</span><span className="text-foreground/70">{ragInfo.scoreThreshold}</span></div>
+          <div className="flex items-center justify-between text-xs"><span className="text-muted-foreground/60">知识库</span><span className="text-info cursor-pointer hover:underline">{ragInfo.knowledgeBaseName}</span></div>
+          <div className="flex items-center justify-between text-xs"><span className="text-muted-foreground/60">Top-k</span><span className="text-foreground">{ragInfo.topK}</span></div>
+          <div className="flex items-center justify-between text-xs"><span className="text-muted-foreground/60">分数阈值</span><span className="text-foreground">{ragInfo.scoreThreshold}</span></div>
           {ragInfo.rerankModel && (
             <div className="flex items-center justify-between text-xs">
-              <span className="text-muted-foreground/70">重排</span>
-              <div className="flex items-center gap-1.5"><Sparkles size={8} className="text-muted-foreground/40" /><span className="text-foreground/70">{ragInfo.rerankModel}</span></div>
+              <span className="text-muted-foreground/60">重排</span>
+              <div className="flex items-center gap-1.5"><BrandLogo id="" fallbackLetter="R" size={14} className="shrink-0" /><span className="text-foreground">{ragInfo.rerankModel}</span></div>
             </div>
           )}
-          <div className="flex items-center justify-between text-xs"><span className="text-muted-foreground/70">检索方式</span><span className="text-foreground/70">{ragInfo.retrievalMethod}</span></div>
+          <div className="flex items-center justify-between text-xs"><span className="text-muted-foreground/60">检索方式</span><span className="text-foreground">{ragInfo.retrievalMethod}</span></div>
         </div>
         <div className="flex items-center gap-0.5">
-          <Button variant="ghost" size="xs" onClick={() => setSubTab('chunks')} className={`px-2.5 py-[4px] h-auto text-xs transition-all ${subTab === 'chunks' ? 'bg-foreground/8 text-foreground' : 'text-muted-foreground/60 hover:text-foreground'}`}>top-k</Button>
-          <Button variant="ghost" size="xs" onClick={() => setSubTab('process')} className={`px-2.5 py-[4px] h-auto text-xs transition-all ${subTab === 'process' ? 'bg-foreground/8 text-foreground' : 'text-muted-foreground/60 hover:text-foreground'}`}>过程</Button>
+          <Button variant="ghost" size="inline" onClick={() => setSubTab('chunks')} className={`px-2.5 py-[4px] text-xs transition-all ${subTab === 'chunks' ? 'bg-accent/50 text-foreground' : 'text-muted-foreground/60 hover:text-foreground'}`}>top-k</Button>
+          <Button variant="ghost" size="inline" onClick={() => setSubTab('process')} className={`px-2.5 py-[4px] text-xs transition-all ${subTab === 'process' ? 'bg-accent/50 text-foreground' : 'text-muted-foreground/60 hover:text-foreground'}`}>过程</Button>
         </div>
         {subTab === 'chunks' && (
           <div className="space-y-2">
@@ -949,27 +945,27 @@ function RAGPanel({ ragInfo, onClose }: { ragInfo: RAGInfo; onClose: () => void 
                 onClick={() => setExpandedChunk(expandedChunk === i ? null : i)}
                 className={`rounded-lg p-3 space-y-2 cursor-pointer transition-all duration-100 ${
                   expandedChunk === i
-                    ? 'bg-blue-500/10 ring-1 ring-blue-400/25'
+                    ? 'bg-info/10 ring-1 ring-blue-400/25'
                     : 'bg-muted/15 hover:bg-muted/25'
                 }`}
               >
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-1.5"><span className={`w-5 h-5 rounded text-[9px] flex items-center justify-center tabular-nums ${expandedChunk === i ? 'bg-blue-500/20 text-info' : 'bg-blue-500/15 text-info'}`}>{i + 1}</span><span className="text-[9px] text-muted-foreground">相关度</span></div>
-                  <div className="h-1.5 w-16 rounded-full bg-accent/30 overflow-hidden"><div className="h-full bg-blue-500 rounded-full" style={{ width: `${chunk.score * 100}%` }} /></div>
+                  <div className="flex items-center gap-1.5"><span className={`w-5 h-5 rounded text-xs flex items-center justify-center tabular-nums ${expandedChunk === i ? 'bg-info/20 text-info' : 'bg-info/15 text-info'}`}>{i + 1}</span><span className="text-xs text-muted-foreground">相关度</span></div>
+                  <div className="h-1.5 w-16 rounded-full bg-accent/25 overflow-hidden"><div className="h-full bg-info rounded-full" style={{ width: `${chunk.score * 100}%` }} /></div>
                   <span className="text-xs text-info tabular-nums">{chunk.score.toFixed(2)}</span>
                 </div>
-                <p className="text-xs text-foreground/65 leading-[1.65] line-clamp-3">{chunk.content}</p>
+                <p className="text-xs text-muted-foreground leading-[1.65] line-clamp-3">{chunk.content}</p>
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-1.5 text-[9px] text-muted-foreground/60"><File size={8} /><span>{chunk.source}</span></div>
-                  <Eye size={9} className={`transition-colors ${expandedChunk === i ? 'text-info' : 'text-muted-foreground/30'}`} />
+                  <div className="flex items-center gap-1.5 text-xs text-muted-foreground/60"><File size={8} /><span>{chunk.source}</span></div>
+                  <Eye size={9} className={`transition-colors ${expandedChunk === i ? 'text-info' : 'text-muted-foreground/50'}`} />
                 </div>
               </div>
             ))}
           </div>
         )}
         {subTab === 'process' && (
-          <div className="rounded-lg bg-muted/15 overflow-auto [&::-webkit-scrollbar]:w-[2px] [&::-webkit-scrollbar-thumb]:bg-border/20">
-            <pre className="px-3 py-2.5 text-[9.5px] leading-[1.7] font-mono">
+          <div className="rounded-lg bg-muted/15 overflow-auto scrollbar-thin-xs">
+            <pre className="px-3 py-2.5 text-xs leading-[1.7] font-mono">
               {ragInfo.processLog.map((log, i) => <div key={i}>{highlightLine(log)}</div>)}
             </pre>
           </div>
@@ -989,16 +985,16 @@ function WebSearchPanel({ results, onClose, startIndex }: { results: SearchResul
     <FloatingPanel title="搜索结果" icon={<Globe size={12} className="text-info/70" />} onClose={onClose}>
       <div className="px-4 py-3 space-y-1.5">
         {results.map((r, i) => (
-          <div key={i} className="rounded-lg p-2.5 hover:bg-accent/10 transition-colors">
+          <div key={i} className="rounded-lg p-2.5 hover:bg-accent/50 transition-colors">
             <div className="flex items-start gap-2">
-              <span className="w-5 h-5 rounded bg-foreground/[0.08] text-foreground/70 text-[9px] flex items-center justify-center flex-shrink-0 tabular-nums mt-px">{offset + i + 1}</span>
+              <span className="w-5 h-5 rounded bg-muted text-foreground text-xs flex items-center justify-center flex-shrink-0 tabular-nums mt-px">{offset + i + 1}</span>
               <div className="flex-1 min-w-0">
                 <a href={r.url} target="_blank" rel="noopener noreferrer"
-                  className="text-[10.5px] text-foreground/85 hover:text-info transition-colors line-clamp-1 flex items-center gap-1">
-                  {r.title}<ExternalLink size={8} className="flex-shrink-0 text-muted-foreground/30" />
+                  className="text-xs text-foreground hover:text-info transition-colors line-clamp-1 flex items-center gap-1">
+                  {r.title}<ExternalLink size={8} className="flex-shrink-0 text-muted-foreground/40" />
                 </a>
-                <p className="text-[9.5px] text-foreground/55 leading-[1.55] mt-1 line-clamp-3">{r.snippet}</p>
-                <div className="flex items-center gap-1.5 mt-1 text-[9px] text-muted-foreground/50"><Globe size={8} /><span>{r.source}</span></div>
+                <p className="text-xs text-muted-foreground leading-[1.55] mt-1 line-clamp-3">{r.snippet}</p>
+                <div className="flex items-center gap-1.5 mt-1 text-xs text-muted-foreground/50"><Globe size={8} /><span>{r.source}</span></div>
               </div>
             </div>
           </div>
@@ -1047,62 +1043,44 @@ function buildSourceMap(msg: AssistantMessage): SourceItem[] {
 
 /** Inline citation badge with hover popover */
 function InlineCitationBadge({ source }: { source: SourceItem }) {
-  const [hovered, setHovered] = useState(false);
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  const show = () => { if (timerRef.current) clearTimeout(timerRef.current); setHovered(true); };
-  const hide = () => { timerRef.current = setTimeout(() => setHovered(false), 120); };
-
   return (
-    <span className="relative inline-block align-top" onMouseEnter={show} onMouseLeave={hide}>
-      <span
-        className={`inline-flex items-center justify-center min-w-[16px] h-[15px] px-[3px] rounded text-[8px] tabular-nums ml-[1px] mr-[1px] transition-all duration-100 cursor-default ${
-          hovered
-            ? source.type === 'rag' ? 'bg-blue-500/25 text-info ring-1 ring-blue-400/30' : 'bg-sky-500/25 text-sky-600 ring-1 ring-sky-400/30'
-            : source.type === 'rag' ? 'bg-blue-500/10 text-info/70' : 'bg-sky-500/10 text-sky-500/70'
-        }`}
-      >{source.index}</span>
-      <AnimatePresence>
-        {hovered && (
-          <motion.div
-            initial={{ opacity: 0, y: 4, scale: 0.96 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 4, scale: 0.96 }}
-            transition={{ type: 'spring', stiffness: 480, damping: 30 }}
-            onMouseEnter={show}
-            onMouseLeave={hide}
-            className="absolute left-1/2 -translate-x-1/2 top-full mt-1.5 z-50 w-[300px] rounded-xl border border-border/30 bg-popover shadow-2xl shadow-black/10 overflow-hidden"
-          >
-            <div className="px-3 py-2.5 space-y-1">
-              <div className="flex items-start gap-2">
-                <span className={`w-5 h-5 rounded flex items-center justify-center flex-shrink-0 text-[9px] tabular-nums mt-px ${
-                  source.type === 'rag' ? 'bg-blue-500/15 text-info' : 'bg-sky-500/15 text-sky-600'
-                }`}>{source.index}</span>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-1.5">
-                    {source.type === 'rag' ? <Database size={9} className="text-info/60 flex-shrink-0" /> : <Globe size={9} className="text-sky-500/60 flex-shrink-0" />}
-                    <span className="text-xs text-foreground/80 truncate">{source.title}</span>
-                    {source.url && <ExternalLink size={8} className="text-muted-foreground/30 flex-shrink-0" />}
-                  </div>
-                  {source.score !== undefined && (
-                    <div className="flex items-center gap-1.5 mt-1">
-                      <span className="text-[9px] text-muted-foreground/50">相关度</span>
-                      <div className="h-1 w-12 rounded-full bg-accent/30 overflow-hidden"><div className="h-full bg-blue-500 rounded-full" style={{ width: `${source.score * 100}%` }} /></div>
-                      <span className="text-[9px] text-info tabular-nums">{source.score.toFixed(2)}</span>
-                    </div>
-                  )}
-                  <p className="text-[9.5px] text-foreground/55 leading-[1.6] mt-1 line-clamp-3">{source.snippet}</p>
-                  <div className="flex items-center gap-1 mt-1.5 text-[9px] text-muted-foreground/45">
-                    {source.type === 'rag' ? <BookOpen size={8} /> : <Globe size={8} />}
-                    <span className="truncate">{source.source}</span>
-                  </div>
+    <HoverCard openDelay={150} closeDelay={120}>
+      <HoverCardTrigger asChild>
+        <span
+          className={`inline-flex items-center justify-center min-w-[16px] h-[15px] px-[3px] rounded text-xs tabular-nums ml-[1px] mr-[1px] transition-all duration-100 cursor-default align-top ${
+            source.type === 'rag' ? 'bg-info/10 text-info/70 hover:bg-info/25 hover:text-info hover:ring-1 hover:ring-info/30' : 'bg-accent-blue/10 text-accent-blue/70 hover:bg-accent-blue/25 hover:text-accent-blue hover:ring-1 hover:ring-accent-blue/30'
+          }`}
+        >{source.index}</span>
+      </HoverCardTrigger>
+      <HoverCardContent className="w-[300px] p-0 overflow-hidden">
+        <div className="px-3 py-2.5 space-y-1">
+          <div className="flex items-start gap-2">
+            <span className={`w-5 h-5 rounded flex items-center justify-center flex-shrink-0 text-xs tabular-nums mt-px ${
+              source.type === 'rag' ? 'bg-info/15 text-info' : 'bg-accent-blue/15 text-accent-blue'
+            }`}>{source.index}</span>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-1.5">
+                {source.type === 'rag' ? <Database size={9} className="text-info/60 flex-shrink-0" /> : <Globe size={9} className="text-accent-blue/60 flex-shrink-0" />}
+                <span className="text-xs text-foreground truncate">{source.title}</span>
+                {source.url && <ExternalLink size={8} className="text-muted-foreground/40 flex-shrink-0" />}
+              </div>
+              {source.score !== undefined && (
+                <div className="flex items-center gap-1.5 mt-1">
+                  <span className="text-xs text-muted-foreground/50">相关度</span>
+                  <div className="h-1 w-12 rounded-full bg-accent/25 overflow-hidden"><div className="h-full bg-info rounded-full" style={{ width: `${source.score * 100}%` }} /></div>
+                  <span className="text-xs text-info tabular-nums">{source.score.toFixed(2)}</span>
                 </div>
+              )}
+              <p className="text-xs text-muted-foreground leading-[1.6] mt-1 line-clamp-3">{source.snippet}</p>
+              <div className="flex items-center gap-1 mt-1.5 text-xs text-muted-foreground/40">
+                {source.type === 'rag' ? <BookOpen size={8} /> : <Globe size={8} />}
+                <span className="truncate">{source.source}</span>
               </div>
             </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </span>
+          </div>
+        </div>
+      </HoverCardContent>
+    </HoverCard>
   );
 }
 
@@ -1142,24 +1120,24 @@ function RAGChunkPreview({ chunk, index, onClose }: { chunk: RAGChunk; index: nu
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -4 }}
       transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-      className="rounded-xl border border-blue-500/20 bg-blue-500/5 p-3 space-y-2"
+      className="rounded-xl border border-info/20 bg-info/5 p-3 space-y-2"
     >
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-1.5">
-          <span className="w-5 h-5 rounded bg-blue-500/15 text-info text-[9px] flex items-center justify-center tabular-nums">{index}</span>
-          <span className="text-xs text-foreground/75">片段 #{index} 详情</span>
+          <span className="w-5 h-5 rounded bg-info/15 text-info text-xs flex items-center justify-center tabular-nums">{index}</span>
+          <span className="text-xs text-foreground">片段 #{index} 详情</span>
         </div>
-        <Button variant="ghost" size="icon-xs" onClick={onClose} className="p-1 w-auto h-auto text-muted-foreground/40 hover:text-foreground hover:bg-accent/15"><X size={10} /></Button>
+        <Button variant="ghost" size="icon-xs" onClick={onClose} className="p-1.5 w-auto h-auto text-muted-foreground/40 hover:text-foreground hover:bg-accent/15"><X size={11} /></Button>
       </div>
       <div className="flex items-center gap-1.5">
-        <span className="text-[9px] text-muted-foreground/50">相关度</span>
-        <div className="h-1.5 w-20 rounded-full bg-accent/30 overflow-hidden"><div className="h-full bg-blue-500 rounded-full" style={{ width: `${chunk.score * 100}%` }} /></div>
+        <span className="text-xs text-muted-foreground/50">相关度</span>
+        <div className="h-1.5 w-20 rounded-full bg-accent/25 overflow-hidden"><div className="h-full bg-info rounded-full" style={{ width: `${chunk.score * 100}%` }} /></div>
         <span className="text-xs text-info tabular-nums">{chunk.score.toFixed(4)}</span>
       </div>
       <div className="rounded-lg bg-muted/15 p-2.5">
-        <p className="text-xs text-foreground/70 leading-[1.7] whitespace-pre-wrap">{chunk.content}</p>
+        <p className="text-xs text-foreground leading-[1.7] whitespace-pre-wrap">{chunk.content}</p>
       </div>
-      <div className="flex items-center gap-1.5 text-[9px] text-muted-foreground/50">
+      <div className="flex items-center gap-1.5 text-xs text-muted-foreground/50">
         <File size={8} />
         <span>{chunk.source}</span>
       </div>
@@ -1171,7 +1149,13 @@ function RAGChunkPreview({ chunk, index, onClose }: { chunk: RAGChunk; index: nu
 // Message Action Bar & Context Menu
 // ===========================
 
-function MessageActionBar({ onCopy, onQuote, onDelete, onBookmark, onShare, onInfo, onRetry, ctxMenuOpen, onMore, onCloseCtxMenu, alignRight }: {
+const EXPORT_ITEMS = [
+  '复制为纯文本（去除 Markdown）', '复制为图片', '导出为图片',
+  '导出为 Markdown', '导出为 Markdown（包含思考）', '导出为 Word',
+  '导出到 Notion', '导出到 Obsidian', '导出到语雀', '导出到 Joplin', '导出到思源笔记',
+];
+
+function MessageActionBar({ onCopy, onQuote, onDelete, onBookmark, onShare, onInfo, onRetry, ctxMenuOpen, onOpenChange, alignRight }: {
   onCopy: () => void;
   onQuote: () => void;
   onDelete: () => void;
@@ -1180,102 +1164,40 @@ function MessageActionBar({ onCopy, onQuote, onDelete, onBookmark, onShare, onIn
   onInfo?: () => void;
   onRetry?: () => void;
   ctxMenuOpen: boolean;
-  onMore: () => void;
-  onCloseCtxMenu: () => void;
+  onOpenChange: (open: boolean) => void;
   alignRight?: boolean;
 }) {
   return (
     <div className="flex items-center gap-0.5 mt-1 -ml-1">
-      <Tooltip content="复制" side="bottom"><Button variant="ghost" size="icon-xs" onClick={onCopy} className="p-[4px] w-auto h-auto text-muted-foreground/40 hover:text-foreground hover:bg-accent/20"><Copy size={12} /></Button></Tooltip>
-      {onRetry && <Tooltip content="重试" side="bottom"><Button variant="ghost" size="icon-xs" onClick={onRetry} className="p-[4px] w-auto h-auto text-muted-foreground/40 hover:text-foreground hover:bg-accent/20"><RotateCcw size={12} /></Button></Tooltip>}
-      <Tooltip content="字体" side="bottom"><Button variant="ghost" size="icon-xs" className="p-[4px] w-auto h-auto text-muted-foreground/40 hover:text-foreground hover:bg-accent/20"><Type size={12} /></Button></Tooltip>
-      <Tooltip content="@提及" side="bottom"><Button variant="ghost" size="icon-xs" className="p-[4px] w-auto h-auto text-muted-foreground/40 hover:text-foreground hover:bg-accent/20"><AtSign size={12} /></Button></Tooltip>
-      <Tooltip content="引用" side="bottom"><Button variant="ghost" size="icon-xs" onClick={onQuote} className="p-[4px] w-auto h-auto text-muted-foreground/40 hover:text-foreground hover:bg-accent/20"><Quote size={12} /></Button></Tooltip>
-      <Tooltip content="删除" side="bottom"><Button variant="ghost" size="icon-xs" onClick={onDelete} className="p-[4px] w-auto h-auto text-muted-foreground/40 hover:text-foreground hover:bg-accent/20"><Trash2 size={12} /></Button></Tooltip>
-      <Tooltip content="收藏" side="bottom"><Button variant="ghost" size="icon-xs" onClick={onBookmark} className="p-[4px] w-auto h-auto text-muted-foreground/40 hover:text-foreground hover:bg-accent/20"><Bookmark size={12} /></Button></Tooltip>
-      <Tooltip content="分享" side="bottom"><Button variant="ghost" size="icon-xs" onClick={onShare} className="p-[4px] w-auto h-auto text-muted-foreground/40 hover:text-foreground hover:bg-accent/20"><Share2 size={12} /></Button></Tooltip>
-      {onInfo && <Tooltip content="聊天详情" side="bottom"><Button variant="ghost" size="icon-xs" onClick={onInfo} className="p-[4px] w-auto h-auto text-muted-foreground/40 hover:text-foreground hover:bg-accent/20"><Info size={12} /></Button></Tooltip>}
-      <div className="relative">
-        <Tooltip content="更多" side="bottom"><Button variant="ghost" size="icon-xs" onClick={onMore} className="p-[4px] w-auto h-auto text-muted-foreground/40 hover:text-foreground hover:bg-accent/20"><MoreHorizontal size={12} /></Button></Tooltip>
-        <AnimatePresence>{ctxMenuOpen && <MessageContextMenu onClose={onCloseCtxMenu} onAction={() => {}} alignRight={alignRight} />}</AnimatePresence>
-      </div>
+      <Tooltip content="复制" side="bottom"><Button variant="ghost" size="icon-xs" onClick={onCopy} className="p-[4px] w-auto h-auto text-muted-foreground/40 hover:text-foreground hover:bg-accent/15"><Copy size={12} /></Button></Tooltip>
+      {onRetry && <Tooltip content="重试" side="bottom"><Button variant="ghost" size="icon-xs" onClick={onRetry} className="p-[4px] w-auto h-auto text-muted-foreground/40 hover:text-foreground hover:bg-accent/15"><RotateCcw size={12} /></Button></Tooltip>}
+      <Tooltip content="字体" side="bottom"><Button variant="ghost" size="icon-xs" className="p-[4px] w-auto h-auto text-muted-foreground/40 hover:text-foreground hover:bg-accent/15"><Type size={12} /></Button></Tooltip>
+      <Tooltip content="@提及" side="bottom"><Button variant="ghost" size="icon-xs" className="p-[4px] w-auto h-auto text-muted-foreground/40 hover:text-foreground hover:bg-accent/15"><AtSign size={12} /></Button></Tooltip>
+      <Tooltip content="引用" side="bottom"><Button variant="ghost" size="icon-xs" onClick={onQuote} className="p-[4px] w-auto h-auto text-muted-foreground/40 hover:text-foreground hover:bg-accent/15"><Quote size={12} /></Button></Tooltip>
+      <Tooltip content="删除" side="bottom"><Button variant="ghost" size="icon-xs" onClick={onDelete} className="p-[4px] w-auto h-auto text-muted-foreground/40 hover:text-foreground hover:bg-accent/15"><Trash2 size={12} /></Button></Tooltip>
+      <Tooltip content="收藏" side="bottom"><Button variant="ghost" size="icon-xs" onClick={onBookmark} className="p-[4px] w-auto h-auto text-muted-foreground/40 hover:text-foreground hover:bg-accent/15"><Bookmark size={12} /></Button></Tooltip>
+      <Tooltip content="分享" side="bottom"><Button variant="ghost" size="icon-xs" onClick={onShare} className="p-[4px] w-auto h-auto text-muted-foreground/40 hover:text-foreground hover:bg-accent/15"><Share2 size={12} /></Button></Tooltip>
+      {onInfo && <Tooltip content="聊天详情" side="bottom"><Button variant="ghost" size="icon-xs" onClick={onInfo} className="p-[4px] w-auto h-auto text-muted-foreground/40 hover:text-foreground hover:bg-accent/15"><Info size={12} /></Button></Tooltip>}
+      <DropdownMenu open={ctxMenuOpen} onOpenChange={onOpenChange}>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" size="icon-xs" className="p-[4px] w-auto h-auto text-muted-foreground/40 hover:text-foreground hover:bg-accent/15"><MoreHorizontal size={12} /></Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align={alignRight ? 'end' : 'start'} side="top" className="min-w-[160px]">
+          <DropdownMenuItem onClick={() => {}} className="gap-2.5 text-xs"><Edit3 size={11} className="text-muted-foreground" />编辑</DropdownMenuItem>
+          <DropdownMenuItem onClick={() => {}} className="gap-2.5 text-xs"><GitBranch size={11} className="text-muted-foreground" />分支</DropdownMenuItem>
+          <DropdownMenuItem onClick={() => {}} className="gap-2.5 text-xs"><ListChecks size={11} className="text-muted-foreground" />多选</DropdownMenuItem>
+          <DropdownMenuItem onClick={() => {}} className="gap-2.5 text-xs"><Bookmark size={11} className="text-muted-foreground" />保存</DropdownMenuItem>
+          <DropdownMenuSub>
+            <DropdownMenuSubTrigger className="gap-2.5 text-xs"><Share2 size={11} className="text-muted-foreground" />导出</DropdownMenuSubTrigger>
+            <DropdownMenuSubContent className="min-w-[220px]">
+              {EXPORT_ITEMS.map((item, i) => (
+                <DropdownMenuItem key={i} onClick={() => {}} className="text-xs">{item}</DropdownMenuItem>
+              ))}
+            </DropdownMenuSubContent>
+          </DropdownMenuSub>
+        </DropdownMenuContent>
+      </DropdownMenu>
     </div>
-  );
-}
-
-function MessageContextMenu({ onClose, onAction, alignRight }: {
-  onClose: () => void;
-  onAction: (action: string) => void;
-  alignRight?: boolean;
-}) {
-  const [showExportSub, setShowExportSub] = useState(false);
-  const menuRef = useRef<HTMLDivElement>(null);
-  const [pos, setPos] = useState<{ openUp: boolean; openLeft: boolean }>({ openUp: true, openLeft: !!alignRight });
-  const exportItems = [
-    '复制为纯文本（去除 Markdown）', '复制为图片', '导出为图片',
-    '导出为 Markdown', '导出��� Markdown（包含思考）', '导出为 Word',
-    '导出到 Notion', '导出到 Obsidian', '导出到语雀', '导出到 Joplin', '导出到思源笔记',
-  ];
-
-  useEffect(() => {
-    if (!menuRef.current) return;
-    const rect = menuRef.current.getBoundingClientRect();
-    const scrollParent = menuRef.current.closest('[class*="overflow-y"]') || document.documentElement;
-    const containerRect = scrollParent.getBoundingClientRect();
-    const newPos = { openUp: true, openLeft: false };
-    if (rect.top < containerRect.top + 8) newPos.openUp = false;
-    if (rect.right > containerRect.right - 8) newPos.openLeft = true;
-    if (newPos.openUp !== pos.openUp || newPos.openLeft !== pos.openLeft) setPos(newPos);
-  }, []);
-
-  return (
-    <div>
-      <div className="fixed inset-0 z-[60]" onClick={onClose} />
-      <motion.div ref={menuRef} initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }}
-        transition={{ duration: 0.08 }}
-        className={`absolute z-[60] bg-popover border border-border/40 rounded-lg shadow-xl shadow-black/10 py-1 min-w-[160px] ${pos.openUp ? 'bottom-full mb-1' : 'top-full mt-1'} ${pos.openLeft ? 'right-0' : 'left-0'}`}>
-        <Button variant="ghost" size="xs" onClick={() => { onAction('edit'); onClose(); }} className="w-full justify-start gap-2.5 px-3 py-[6px] h-auto text-[10.5px] text-foreground/80 hover:bg-accent/20"><Edit3 size={11} className="text-muted-foreground" /><span>编辑</span></Button>
-        <Button variant="ghost" size="xs" onClick={() => { onAction('branch'); onClose(); }} className="w-full justify-start gap-2.5 px-3 py-[6px] h-auto text-[10.5px] text-foreground/80 hover:bg-accent/20"><GitBranch size={11} className="text-muted-foreground" /><span>分支</span></Button>
-        <Button variant="ghost" size="xs" onClick={() => { onAction('multiSelect'); onClose(); }} className="w-full justify-start gap-2.5 px-3 py-[6px] h-auto text-[10.5px] text-foreground/80 hover:bg-accent/20"><ListChecks size={11} className="text-muted-foreground" /><span>多选</span></Button>
-        <Button variant="ghost" size="xs" onClick={() => { onAction('save'); onClose(); }} className="w-full justify-start gap-2.5 px-3 py-[6px] h-auto text-[10.5px] text-foreground/80 hover:bg-accent/20"><Bookmark size={11} className="text-muted-foreground" /><span>保存</span><ChevronRight size={9} className="ml-auto text-muted-foreground/40" /></Button>
-        <div className="relative" onMouseEnter={() => setShowExportSub(true)} onMouseLeave={() => setShowExportSub(false)}>
-          <Button variant="ghost" size="xs" className="w-full justify-start gap-2.5 px-3 py-[6px] h-auto text-[10.5px] text-foreground/80 hover:bg-accent/20">
-            <Share2 size={11} className="text-muted-foreground" /><span className="flex-1 text-left">导出</span><ChevronRight size={9} className="text-muted-foreground/40" />
-          </Button>
-          {showExportSub && (
-            <ExportSubMenu onAction={onAction} onClose={onClose} exportItems={exportItems} parentOpenLeft={pos.openLeft} />
-          )}
-        </div>
-      </motion.div>
-    </div>
-  );
-}
-
-function ExportSubMenu({ onAction, onClose, exportItems, parentOpenLeft }: {
-  onAction: (action: string) => void;
-  onClose: () => void;
-  exportItems: string[];
-  parentOpenLeft: boolean;
-}) {
-  const subRef = useRef<HTMLDivElement>(null);
-  const [openLeft, setOpenLeft] = useState(parentOpenLeft);
-
-  useEffect(() => {
-    if (!subRef.current) return;
-    const rect = subRef.current.getBoundingClientRect();
-    const scrollParent = subRef.current.closest('[class*="overflow-y"]') || document.documentElement;
-    const containerRect = scrollParent.getBoundingClientRect();
-    if (rect.right > containerRect.right - 8) setOpenLeft(true);
-  }, []);
-
-  return (
-    <motion.div ref={subRef} initial={{ opacity: 0, x: openLeft ? 4 : -4 }} animate={{ opacity: 1, x: 0 }}
-      className={`absolute top-0 bg-popover border border-border/40 rounded-lg shadow-xl shadow-black/10 py-1 min-w-[220px] z-[70] ${openLeft ? 'right-full mr-1' : 'left-full ml-1'}`}>
-      {exportItems.map((item, i) => (
-        <Button variant="ghost" size="xs" key={i} onClick={() => { onAction(`export-${i}`); onClose(); }}
-          className="w-full justify-start gap-2 px-3 py-[5px] h-auto text-[10.5px] text-foreground/80 hover:bg-accent/20"><span>{item}</span></Button>
-      ))}
-    </motion.div>
   );
 }
 
@@ -1309,12 +1231,12 @@ function MessageBubble({ msg, onOpenPanel, onAvatarClick, onOpenArtifact, assist
               <AttachmentList attachments={msg.attachments} />
             </div>
           )}
-          <div className="px-3.5 py-2.5 rounded-[14px] rounded-br-[4px] bg-foreground text-background text-xs leading-[1.65]">
+          <div className="px-3.5 py-2.5 rounded-[var(--radius-button)] rounded-br-[var(--radius-dot)] bg-foreground text-background text-xs leading-[1.65]">
             {msg.content}
           </div>
           <MessageActionBar
             onCopy={handleCopy} onQuote={() => {}} onDelete={() => {}} onBookmark={() => {}} onShare={() => {}}
-            ctxMenuOpen={ctxMenu} onMore={() => setCtxMenu(true)} onCloseCtxMenu={() => setCtxMenu(false)}
+            ctxMenuOpen={ctxMenu} onOpenChange={setCtxMenu}
             alignRight
           />
         </div>
@@ -1326,7 +1248,7 @@ function MessageBubble({ msg, onOpenPanel, onAvatarClick, onOpenArtifact, assist
   if (msg.parallelResponses && msg.parallelResponses.length > 0) {
     return (
       <motion.div initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.15 }} className="flex gap-2.5 max-w-[95%]">
-        <Tooltip content="查看助手信息" side="left"><Button variant="ghost" size="icon-xs" onClick={onAvatarClick} className="w-6 h-6 rounded-[6px] bg-accent/40 hover:bg-accent/60 mt-[1px]">
+        <Tooltip content="查看助手信息" side="left"><Button variant="ghost" size="icon-xs" onClick={onAvatarClick} className="rounded-[var(--radius-kbd)] bg-accent/50 mt-[1px]">
           <Bot size={12} className="text-muted-foreground" />
         </Button></Tooltip>
         <div className="flex-1 min-w-0">
@@ -1334,7 +1256,7 @@ function MessageBubble({ msg, onOpenPanel, onAvatarClick, onOpenArtifact, assist
           <MessageActionBar
             onCopy={handleCopy} onQuote={() => {}} onDelete={() => {}} onBookmark={() => {}} onShare={() => {}}
             onRetry={() => {}}
-            ctxMenuOpen={ctxMenu} onMore={() => setCtxMenu(true)} onCloseCtxMenu={() => setCtxMenu(false)}
+            ctxMenuOpen={ctxMenu} onOpenChange={setCtxMenu}
           />
         </div>
       </motion.div>
@@ -1344,21 +1266,21 @@ function MessageBubble({ msg, onOpenPanel, onAvatarClick, onOpenArtifact, assist
   // === Regular Assistant Message ===
   return (
     <motion.div initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.15 }} className="flex gap-2.5 max-w-[95%]">
-      <Tooltip content="查看助手信息" side="left"><Button variant="ghost" size="icon-xs" onClick={onAvatarClick} className="w-6 h-6 rounded-[6px] bg-accent/40 hover:bg-accent/60 mt-[1px] text-sm leading-none">
+      <Tooltip content="查看助手信息" side="left"><Button variant="ghost" size="icon-xs" onClick={onAvatarClick} className="rounded-[var(--radius-kbd)] bg-accent/50 mt-[1px] text-sm leading-none">
         {(msg.assistantLabel && ASSISTANT_EMOJI_MAP[msg.assistantLabel]) || assistantEmoji || <Bot size={12} className="text-muted-foreground" />}
       </Button></Tooltip>
       <div className="flex-1 min-w-0">
         {/* Assistant name + model */}
         <div className="flex items-center gap-1.5 mb-0.5">
-          <span className="text-xs text-foreground/70">{msg.assistantLabel || assistantName || '助手'}</span>
-          {modelDisplayName && <span className="text-[9px] text-muted-foreground/35">{modelDisplayName}</span>}
+          <span className="text-xs text-foreground">{msg.assistantLabel || assistantName || '助手'}</span>
+          {modelDisplayName && <span className="text-xs text-muted-foreground/50">{modelDisplayName}</span>}
         </div>
 
         {/* Thinking block */}
         {msg.thinking && <ThinkingBlock content={msg.thinking} />}
 
         {/* Content */}
-        <div className="text-xs text-foreground/90 leading-[1.75] py-1">
+        <div className="text-xs text-foreground leading-[1.75] py-1">
           {msg.content.split('\n').map((line, i) => {
             if (line.startsWith('- **')) {
               const match = line.match(RE_DASH_BOLD);
@@ -1382,7 +1304,7 @@ function MessageBubble({ msg, onOpenPanel, onAvatarClick, onOpenArtifact, assist
             if (hasCitations) {
               return <p key={i}>{renderInlineWithCitations(line, sources)}</p>;
             }
-            return <p key={i} dangerouslySetInnerHTML={{ __html: line.replace(/\*\*(.+?)\*\*/g, '<strong class="text-foreground">$1</strong>').replace(/`([^`]+)`/g, '<code class="px-1 py-0.5 rounded bg-muted/50 text-[9px] font-mono">$1</code>') }} />;
+            return <p key={i} dangerouslySetInnerHTML={{ __html: line.replace(/\*\*(.+?)\*\*/g, '<strong class="text-foreground">$1</strong>').replace(/`([^`]+)`/g, '<code class="px-1 py-0.5 rounded bg-muted/50 text-xs font-mono">$1</code>') }} />;
           })}
         </div>
 
@@ -1397,28 +1319,28 @@ function MessageBubble({ msg, onOpenPanel, onAvatarClick, onOpenArtifact, assist
 
         {/* Artifact indicator — clickable to open preview */}
         {msg.artifact && (
-          <Button variant="ghost" size="xs"
+          <Button variant="ghost" size="inline"
             onClick={() => onOpenArtifact?.(msg.artifact!)}
-            className="mt-2 mb-1 w-full justify-start gap-2 px-2.5 py-[6px] h-auto rounded-lg bg-accent/20 border border-border/25 text-xs text-foreground/70 hover:bg-accent/30 hover:border-border/40 group"
+            className="mt-2 mb-1 w-full justify-start gap-2 px-2.5 py-[6px] rounded-lg bg-accent/25 border border-border/25 text-xs text-foreground hover:bg-accent/50 hover:border-border/40 group"
           >
             <Layers size={10} className="text-cherry-primary flex-shrink-0" />
             <span className="flex-1 truncate">{msg.artifact.title}</span>
-            <span className="text-[9px] text-muted-foreground/50">{msg.artifact.type === 'document' ? '文档' : msg.artifact.type === 'code' ? '代码' : '预览'}</span>
-            <ExternalLink size={9} className="text-muted-foreground/30 group-hover:text-muted-foreground/60 transition-colors flex-shrink-0" />
+            <span className="text-xs text-muted-foreground/50">{msg.artifact.type === 'document' ? '文档' : msg.artifact.type === 'code' ? '代码' : '预览'}</span>
+            <ExternalLink size={9} className="text-muted-foreground/40 group-hover:text-muted-foreground/60 transition-colors flex-shrink-0" />
           </Button>
         )}
 
         {/* Triggered indicators */}
         <div className="flex items-center gap-1.5 mt-1 flex-wrap">
           {msg.ragInfo && (
-            <Button variant="ghost" size="xs" onClick={() => onOpenPanel('rag', msg)}
-              className="gap-1 px-2 py-[3px] h-auto rounded-md text-[9px] text-info/60 bg-blue-500/8 hover:bg-blue-500/15 hover:text-info">
+            <Button variant="ghost" size="inline" onClick={() => onOpenPanel('rag', msg)}
+              className="gap-1 px-2 py-[3px] rounded-md text-xs text-info/60 bg-info/8 hover:bg-info/15 hover:text-info">
               <Database size={9} /><span>知识库 · {msg.ragInfo.chunks.length} 条</span>
             </Button>
           )}
           {msg.searchResults && msg.searchResults.length > 0 && (
-            <Button variant="ghost" size="xs" onClick={() => onOpenPanel('search', msg)}
-              className="gap-1 px-2 py-[3px] h-auto rounded-md text-[9px] text-cherry-text-muted bg-cherry-active-bg hover:bg-cherry-active-border hover:text-cherry-primary-dark">
+            <Button variant="ghost" size="inline" onClick={() => onOpenPanel('search', msg)}
+              className="gap-1 px-2 py-[3px] rounded-md text-xs text-cherry-text-muted bg-cherry-active-bg hover:bg-cherry-active-border hover:text-cherry-primary-dark">
               <Globe size={9} /><span>搜索 · {msg.searchResults.length} 条</span>
             </Button>
           )}
@@ -1429,7 +1351,7 @@ function MessageBubble({ msg, onOpenPanel, onAvatarClick, onOpenArtifact, assist
           onCopy={handleCopy} onQuote={() => {}} onDelete={() => {}} onBookmark={() => {}} onShare={() => {}}
           onRetry={() => {}}
           onInfo={msg.metadata ? () => onOpenPanel('chatDetail', msg) : undefined}
-          ctxMenuOpen={ctxMenu} onMore={() => setCtxMenu(true)} onCloseCtxMenu={() => setCtxMenu(false)}
+          ctxMenuOpen={ctxMenu} onOpenChange={setCtxMenu}
         />
       </div>
     </motion.div>
@@ -1451,8 +1373,8 @@ function TopicBreadcrumb({ activeTopic }: {
 }) {
   return (
     <div className="flex items-center gap-1.5">
-      <ChevronRight size={10} className="text-muted-foreground/30 flex-shrink-0" />
-      <div className="flex items-center gap-1 px-1.5 py-[3px] text-[9.5px] text-foreground/55 max-w-[220px]">
+      <ChevronRight size={10} className="text-muted-foreground/40 flex-shrink-0" />
+      <div className="flex items-center gap-1 px-1.5 py-[3px] text-xs text-muted-foreground max-w-[220px]">
         <MessageCircle size={9} className="text-muted-foreground/50 flex-shrink-0" />
         <span className="truncate">{activeTopic.title}</span>
       </div>
@@ -1497,70 +1419,56 @@ function MultiSelectPicker({
 
   return (
     <div className="flex items-center gap-1.5">
-      <div className="relative">
-        <Button variant="ghost" size="xs" onClick={handleOpenAssistant}
-          className={`gap-1.5 px-2 py-[4px] h-auto text-[10.5px] ${
-            open && mode === 'assistant' ? 'bg-accent/25 text-foreground' : 'text-foreground/75 hover:text-foreground hover:bg-accent/15'
-          }`}>
-          <span className="text-sm leading-none flex-shrink-0">{activeAssistant ? (ASSISTANT_EMOJI_MAP[activeAssistant.name] || '\uD83E\uDD16') : '\uD83E\uDD16'}</span>
-          <span className="truncate max-w-[100px]">
-            {selectedAssistants.length > 1 ? `${selectedAssistants.length} 个助手` : activeAssistant?.name || '选择助手'}
-          </span>
-          {selectedAssistants.length > 1 && <span className="w-4 h-4 rounded-full bg-foreground/10 text-foreground/60 text-[8px] flex items-center justify-center flex-shrink-0">{selectedAssistants.length}</span>}
-          <ChevronDown size={8} className={`text-muted-foreground/50 flex-shrink-0 transition-transform duration-100 ${open && mode === 'assistant' ? 'rotate-180' : ''}`} />
-        </Button>
-        <AnimatePresence>
-          {open && mode === 'assistant' && (
-            <div>
-              <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
-              <motion.div initial={{ opacity: 0, y: -3 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -3 }} transition={{ duration: 0.1 }}
-                className="absolute top-full left-0 mt-1 z-50 bg-popover border border-border/40 rounded-lg shadow-xl shadow-black/10 overflow-hidden max-h-[380px]">
-                <AssistantPickerPanel
-                  selectedAssistants={selectedAssistants}
-                  onSelectAssistant={onSelectAssistant}
-                  multiAssistant={multiAssistant}
-                  onToggleMultiAssistant={onToggleMultiAssistant}
-                  onClose={() => setOpen(false)}
-                  onCreateAssistant={onCreateAssistant}
-                />
-              </motion.div>
-            </div>
-          )}
-        </AnimatePresence>
-      </div>
-      <div className="w-px h-3.5 bg-border/25" />
-      <div className="relative">
-        <Button variant="ghost" size="xs" onClick={handleOpenModel}
-          className={`gap-1 px-1.5 py-[3px] h-auto text-[9.5px] ${
-            open && mode === 'model' ? 'bg-accent/25 text-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-accent/15'
-          }`}>
-          <Sparkles size={9} className="text-muted-foreground/50" />
-          <span className="truncate max-w-[160px]">
-            {selectedModels.length > 1 ? `${selectedModels.length} 个模型` : activeModel?.name || '选择模型'}
-          </span>
-          {selectedModels.length > 1 && <span className="w-4 h-4 rounded-full bg-foreground/10 text-foreground/60 text-[8px] flex items-center justify-center flex-shrink-0">{selectedModels.length}</span>}
-          <ChevronDown size={7} className={`text-muted-foreground/50 transition-transform duration-100 ${open && mode === 'model' ? 'rotate-180' : ''}`} />
-        </Button>
-        <AnimatePresence>
-          {open && mode === 'model' && (
-            <div>
-              <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
-              <motion.div initial={{ opacity: 0, y: -3 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -3 }} transition={{ duration: 0.1 }}
-                className="absolute top-full left-0 mt-1 z-50 bg-popover border border-border/40 rounded-lg shadow-xl shadow-black/8 w-[380px]"
-                >
-                <ModelPickerPanel
-                  selectedModels={selectedModels}
-                  onSelectModel={onSelectModel}
-                  multiModel={multiModel}
-                  onToggleMultiModel={onToggleMultiModel}
-                  onClose={() => setOpen(false)}
-                  initialProvider={activeModel?.provider}
-                />
-              </motion.div>
-            </div>
-          )}
-        </AnimatePresence>
-      </div>
+      <Popover open={open && mode === 'assistant'} onOpenChange={(v) => { if (v) handleOpenAssistant(); else setOpen(false); }}>
+        <PopoverTrigger asChild>
+          <Button variant="ghost" size="inline"
+            className={`gap-1.5 px-2 py-[4px] text-xs ${
+              open && mode === 'assistant' ? 'bg-accent/25 text-foreground' : 'text-foreground hover:text-foreground hover:bg-accent/15'
+            }`}>
+            <span className="text-sm leading-none flex-shrink-0">{activeAssistant ? (ASSISTANT_EMOJI_MAP[activeAssistant.name] || '\uD83E\uDD16') : '\uD83E\uDD16'}</span>
+            <span className="truncate max-w-[100px]">
+              {selectedAssistants.length > 1 ? `${selectedAssistants.length} 个助手` : activeAssistant?.name || '选择助手'}
+            </span>
+            {selectedAssistants.length > 1 && <span className="w-4 h-4 rounded-full bg-muted text-muted-foreground text-xs flex items-center justify-center flex-shrink-0">{selectedAssistants.length}</span>}
+            <ChevronDown size={8} className={`text-muted-foreground/50 flex-shrink-0 transition-transform duration-100 ${open && mode === 'assistant' ? 'rotate-180' : ''}`} />
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent align="start" className="p-0 w-[380px] overflow-hidden">
+          <AssistantPickerPanel
+            selectedAssistants={selectedAssistants}
+            onSelectAssistant={onSelectAssistant}
+            multiAssistant={multiAssistant}
+            onToggleMultiAssistant={onToggleMultiAssistant}
+            onClose={() => setOpen(false)}
+            onCreateAssistant={onCreateAssistant}
+          />
+        </PopoverContent>
+      </Popover>
+      <div className="w-px h-3.5 bg-border/30" />
+      <Popover open={open && mode === 'model'} onOpenChange={(v) => { if (v) handleOpenModel(); else setOpen(false); }}>
+        <PopoverTrigger asChild>
+          <Button variant="ghost" size="inline"
+            className={`gap-1.5 px-1.5 py-[3px] text-xs ${
+              open && mode === 'model' ? 'bg-accent/25 text-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-accent/15'
+            }`}>
+            {activeModel && <BrandLogo id={activeModel.provider.toLowerCase()} fallbackLetter={activeModel.provider[0]} size={14} className="shrink-0" />}
+            <span className="truncate max-w-[240px]">
+              {selectedModels.length > 1 ? `${selectedModels.length} 个模型` : activeModel?.name || '选择模型'}
+            </span>
+            {selectedModels.length > 1 && <span className="w-4 h-4 rounded-full bg-muted text-muted-foreground text-xs flex items-center justify-center flex-shrink-0">{selectedModels.length}</span>}
+            <ChevronDown size={7} className={`text-muted-foreground/50 transition-transform duration-100 ${open && mode === 'model' ? 'rotate-180' : ''}`} />
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent align="start" className="p-0 w-[480px]">
+          <ModelPickerPanel
+            selectedModels={selectedModels}
+            onSelectModel={onSelectModel}
+            multiModel={multiModel}
+            onToggleMultiModel={onToggleMultiModel}
+            onClose={() => setOpen(false)}
+          />
+        </PopoverContent>
+      </Popover>
     </div>
   );
 }
@@ -1991,7 +1899,7 @@ export function AssistantRunPage() {
               onUpdateItem={handleUpdateTopic}
               onNewItem={handleNewTopic}
               onExpand={() => { setHistoryInitialAssistant(null); historySidebar.expand(); }}
-              onHide={historySidebar.hide}
+              onClose={historySidebar.hide}
               entityLabel="话题"
             />
           </motion.div>
@@ -1999,13 +1907,13 @@ export function AssistantRunPage() {
       </AnimatePresence>
 
       {/* ===== Right: Header + Content ===== */}
-      <div className="flex flex-col flex-1 min-w-0 relative">
+      <div className="flex flex-col flex-1 min-w-0 min-h-0 relative">
         {/* ===== Header ===== */}
         <header className="flex items-center px-3 flex-shrink-0 h-[40px]">
           {/* History sidebar toggle */}
           <Tooltip content={historySidebar.isCompact ? '收起话题列表' : '展开话题列表'} side="bottom">
             <Button variant="ghost" size="icon-xs" onClick={() => historySidebar.toggle()}
-              className={`p-1.5 w-auto h-auto mr-1 ${historySidebar.isCompact ? 'text-foreground/60 hover:text-foreground hover:bg-accent/15' : 'text-foreground/35 hover:text-foreground/60 hover:bg-accent/15'}`}>
+              className={`p-1.5 w-auto h-auto mr-1 ${historySidebar.isCompact ? 'text-muted-foreground hover:text-foreground hover:bg-accent/15' : 'text-muted-foreground/40 hover:text-foreground hover:bg-accent/15'}`}>
               <History size={13} />
             </Button>
           </Tooltip>
@@ -2022,26 +1930,18 @@ export function AssistantRunPage() {
           onToggleMultiModel={handleToggleMultiModel}
           onCreateAssistant={onNavigateToLibrary}
         />
-        {activeTopic && (
-          <TopicBreadcrumb
-            activeTopic={activeTopic}
-          />
-        )}
         <div className="flex-1" />
         <div className="flex items-center gap-0.5">
-          {(selectedAssistants.length > 1 || selectedModels.length > 1) && (
-            <span className="text-[9px] text-foreground/60 bg-accent/30 px-2 py-[2px] rounded-md mr-1">
-              并行 {selectedAssistants.length > 1 ? `${selectedAssistants.length} 助手` : `${selectedModels.length} 模型`}
-            </span>
+          {!(activeTopic && activeTopic.title === '\u65b0\u8bdd\u9898' && activeTopic.messageCount === 0) && (
+            <Tooltip content="新建话题" side="bottom"><Button variant="ghost" size="icon-xs" onClick={handleNewTopic} className="p-1.5 w-auto h-auto text-muted-foreground hover:text-foreground hover:bg-accent/15">
+              <MessageCirclePlus size={13} />
+            </Button></Tooltip>
           )}
-          <Tooltip content="新建话题" side="bottom"><Button variant="ghost" size="icon-xs" onClick={handleNewTopic} className="p-1.5 w-auto h-auto text-muted-foreground hover:text-foreground hover:bg-accent/15">
-            <MessageCirclePlus size={13} />
-          </Button></Tooltip>
           {hasMessages && (
             <>
               <div className="relative">
                 <Tooltip content="历史文件" side="bottom"><Button variant="ghost" size="icon-xs" onClick={() => setShowHeaderFileHistory(v => !v)}
-                  className={`p-1.5 w-auto h-auto ${showHeaderFileHistory ? 'text-foreground/80 bg-accent/25' : 'text-muted-foreground hover:text-foreground hover:bg-accent/15'}`}>
+                  className={`p-1.5 w-auto h-auto ${showHeaderFileHistory ? 'text-foreground bg-accent/25' : 'text-muted-foreground hover:text-foreground hover:bg-accent/15'}`}>
                   <File size={12} />
                 </Button></Tooltip>
                 <AnimatePresence>
@@ -2057,14 +1957,14 @@ export function AssistantRunPage() {
                 </AnimatePresence>
               </div>
               <Tooltip content="分支管理" side="bottom"><Button variant="ghost" size="icon-xs" onClick={() => setShowBranchTree(!showBranchTree)}
-                className={`p-1.5 w-auto h-auto ${showBranchTree ? 'text-foreground/80 bg-accent/25' : 'text-muted-foreground hover:text-foreground hover:bg-accent/15'}`}>
+                className={`p-1.5 w-auto h-auto ${showBranchTree ? 'text-foreground bg-accent/25' : 'text-muted-foreground hover:text-foreground hover:bg-accent/15'}`}>
                 <GitFork size={12} />
               </Button></Tooltip>
-              <div className="w-px h-3.5 bg-border/25 mx-0.5" />
+              <div className="w-px h-3.5 bg-border/30 mx-0.5" />
             </>
           )}
           <Tooltip content="参数设置" side="bottom"><Button variant="ghost" size="icon-xs" onClick={() => setShowChatSettings(v => !v)}
-            className={`p-1.5 w-auto h-auto ${showChatSettings ? 'text-foreground/80 bg-accent/25' : 'text-muted-foreground hover:text-foreground hover:bg-accent/15'}`}>
+            className={`p-1.5 w-auto h-auto ${showChatSettings ? 'text-foreground bg-accent/25' : 'text-muted-foreground hover:text-foreground hover:bg-accent/15'}`}>
             <SlidersHorizontal size={12} />
           </Button></Tooltip>
         </div>
@@ -2075,7 +1975,7 @@ export function AssistantRunPage() {
         {/* Fullscreen Artifacts */}
         <AnimatePresence>
           {artifactFullscreen && (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.15 }} className="absolute inset-0 z-30 bg-background p-2">
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.15 }} className="absolute inset-0 z-[var(--z-sticky)] bg-background p-2">
               <div className="h-full rounded-2xl border border-border/30 bg-background shadow-lg overflow-hidden">
                 <ArtifactsPanel artifact={activeArtifact} isFullscreen={true} onToggleFullscreen={() => setArtifactFullscreen(false)} onClose={handleCloseArtifacts} onSelectArtifact={handleOpenArtifact} hasTopic={activeTopicId !== null} />
               </div>
@@ -2084,7 +1984,7 @@ export function AssistantRunPage() {
         </AnimatePresence>
 
         {/* Center: Chat */}
-        <div className="flex-1 flex flex-col min-w-0">
+        <div className="flex-1 flex flex-col min-w-0 min-h-0">
           <ChatInterface
             scrollDeps={[messages]}
             onSendMessage={() => handleSend()}
@@ -2095,7 +1995,7 @@ export function AssistantRunPage() {
                 <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}
                   className="flex flex-col items-center max-w-[360px] w-full">
                   <div className="w-14 h-14 rounded-2xl bg-gradient-to-b from-accent/60 to-accent/30 border border-border/30 flex items-center justify-center mb-5">
-                    <Bot size={22} strokeWidth={1.3} className="text-foreground/40" />
+                    <Bot size={22} strokeWidth={1.3} className="text-muted-foreground/60" />
                   </div>
                   <h2 className="text-sm text-foreground tracking-[-0.01em]">你好，有什么需要帮助的？</h2>
                   <p className="text-xs text-muted-foreground/60 text-center leading-[1.6] mt-1.5">
@@ -2107,62 +2007,11 @@ export function AssistantRunPage() {
             customComposer={
               <div className="flex-shrink-0 px-4 pb-3">
                 <div className="relative rounded-xl border border-border/50 bg-background shadow-sm focus-within:border-border/80 transition-all duration-150">
-                  {/* Plus Menu Popover */}
-                  {showPlusMenu && (
-                    <div ref={plusMenuRef}
-                      className="absolute bottom-full left-0 mb-2 w-44 bg-popover border border-border rounded-xl shadow-lg py-1 z-50 animate-in fade-in slide-in-from-bottom-2 duration-150">
-                      <div className="px-1 flex flex-col">
-                        {plusMenuItems.map((item, idx) => {
-                          const Icon = item.icon;
-                          return (
-                            <div key={item.id}>
-                              <Button variant="ghost" size="xs" onClick={() => setShowPlusMenu(false)}
-                                className="w-full justify-start gap-2 px-2 py-[5px] h-auto text-xs text-popover-foreground hover:bg-accent/50">
-                                <Icon size={13} strokeWidth={1.5} className="text-muted-foreground flex-shrink-0" />
-                                <span className="flex-1 text-left">{item.label}</span>
-                              </Button>
-                              {(item as { separator?: boolean }).separator && idx < plusMenuItems.length - 1 && (
-                                <div className="my-0.5 mx-1.5 border-t border-border/60" />
-                              )}
-                            </div>
-                          );
-                        })}
-                        <div className="my-0.5 mx-1.5 border-t border-border/60" />
-                        <div className="relative">
-                          <Button variant="ghost" size="xs" onMouseEnter={() => setShowPlusMore(true)} onMouseLeave={() => setShowPlusMore(false)}
-                            className="w-full justify-start gap-2 px-2 py-[5px] h-auto text-xs text-muted-foreground hover:text-popover-foreground hover:bg-accent/50">
-                            <MoreHorizontal size={13} strokeWidth={1.5} className="flex-shrink-0" />
-                            <span className="flex-1 text-left">更多</span>
-                            <ChevronRight size={12} />
-                          </Button>
-                          {showPlusMore && (
-                            <div onMouseEnter={() => setShowPlusMore(true)} onMouseLeave={() => setShowPlusMore(false)}
-                              className="absolute left-full bottom-0 ml-1.5 w-40 bg-popover border border-border rounded-xl shadow-lg py-1 z-50 animate-in fade-in slide-in-from-left-1 duration-100">
-                              <div className="px-1 flex flex-col">
-                                {plusMenuSecondary.map(item => {
-                                  const Icon = item.icon;
-                                  return (
-                                    <Button variant="ghost" size="xs" key={item.id} onClick={() => { setShowPlusMenu(false); setShowPlusMore(false); }}
-                                      className="w-full justify-start gap-2 px-2 py-[5px] h-auto text-xs text-popover-foreground hover:bg-accent/50">
-                                      <Icon size={13} strokeWidth={1.5} className="text-muted-foreground flex-shrink-0" />
-                                      <span className="flex-1 text-left">{item.label}</span>
-                                      {item.shortcut && <span className="text-[9px] text-muted-foreground/60 tracking-wider">{item.shortcut}</span>}
-                                    </Button>
-                                  );
-                                })}
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  <textarea
+                  <Textarea
                     ref={textareaRef} value={input} onChange={handleInput} onKeyDown={handleKeyDown}
                     placeholder="在这里输入消息，按 Enter 发送 - @ 选择助手/模型"
                     rows={1}
-                    className="w-full bg-transparent text-sm text-foreground placeholder:text-muted-foreground/50 outline-none resize-none min-h-[36px] max-h-[140px] leading-[1.6] px-3.5 pt-[10px] pb-[36px]"
+                    className="w-full bg-transparent text-sm text-foreground placeholder:text-muted-foreground/60 outline-none resize-none min-h-[36px] max-h-[140px] leading-[1.6] px-3.5 pt-[10px] pb-[36px]"
                   />
                   {/* @ Mention Picker */}
                   {showAtMenu && (
@@ -2181,11 +2030,49 @@ export function AssistantRunPage() {
                   )}
                   <div className="absolute bottom-[7px] left-2.5 right-2.5 flex items-center justify-between">
                     <div className="flex items-center gap-0.5">
-                      <Button variant="ghost" size="icon-sm" ref={plusBtnRef}
-                        onClick={() => { setShowPlusMenu(v => !v); setShowAtMenu(false); }}
-                        className={`p-[5px] w-auto h-auto transition-colors ${
-                          showPlusMenu ? 'bg-accent text-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-accent/20'
-                        }`}><Plus size={14} /></Button>
+                      <DropdownMenu open={showPlusMenu} onOpenChange={(v) => { setShowPlusMenu(v); if (v) setShowAtMenu(false); }}>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon-sm" ref={plusBtnRef}
+                            className={`p-[5px] w-auto h-auto transition-colors ${
+                              showPlusMenu ? 'bg-accent text-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
+                            }`}><Plus size={14} /></Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent side="top" align="start" className="w-44">
+                          {plusMenuItems.map((item, idx) => {
+                            const Icon = item.icon;
+                            return (
+                              <div key={item.id}>
+                                <DropdownMenuItem className="gap-2 px-2 py-[5px] text-xs">
+                                  <Icon size={13} strokeWidth={1.5} className="text-muted-foreground flex-shrink-0" />
+                                  <span className="flex-1 text-left">{item.label}</span>
+                                </DropdownMenuItem>
+                                {(item as { separator?: boolean }).separator && idx < plusMenuItems.length - 1 && (
+                                  <DropdownMenuSeparator />
+                                )}
+                              </div>
+                            );
+                          })}
+                          <DropdownMenuSeparator />
+                          <DropdownMenuSub>
+                            <DropdownMenuSubTrigger className="gap-2 px-2 py-[5px] text-xs text-muted-foreground">
+                              <MoreHorizontal size={13} strokeWidth={1.5} className="flex-shrink-0" />
+                              <span className="flex-1 text-left">更多</span>
+                            </DropdownMenuSubTrigger>
+                            <DropdownMenuSubContent>
+                              {plusMenuSecondary.map(item => {
+                                const Icon = item.icon;
+                                return (
+                                  <DropdownMenuItem key={item.id} className="gap-2 px-2 py-[5px] text-xs">
+                                    <Icon size={13} strokeWidth={1.5} className="text-muted-foreground flex-shrink-0" />
+                                    <span className="flex-1 text-left">{item.label}</span>
+                                    {item.shortcut && <span className="text-xs text-muted-foreground/60 tracking-wider">{item.shortcut}</span>}
+                                  </DropdownMenuItem>
+                                );
+                              })}
+                            </DropdownMenuSubContent>
+                          </DropdownMenuSub>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </div>
                     <div className="flex items-center gap-2">
                       <div className="flex items-center gap-2.5 text-xs text-muted-foreground">

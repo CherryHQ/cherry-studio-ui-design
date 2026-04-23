@@ -10,8 +10,8 @@ import { ResourceGrid } from './ResourceGrid';
 import { ImportModal } from './ImportModal';
 import { SkillPluginImportModal } from './SkillPluginImportModal';
 import { SkillPluginDetail } from './SkillPluginDetail';
-import { AssistantConfig } from '@/app/components/assistant/AssistantConfig';
-import { AgentConfig } from '@/app/components/agent/AgentConfig';
+import { AssistantConfig } from '@/features/assistant/AssistantConfig';
+import { AgentConfig } from '@/features/agent/AgentConfig';
 
 // ===========================
 // Helpers
@@ -35,7 +35,7 @@ function buildTags(resources: ResourceItem[], filterType?: ResourceType): TagIte
     .map(([name, count], i) => ({
       id: `tag-${i}`,
       name,
-      color: TAG_COLORS[name] || DEFAULT_TAG_COLOR,
+      color: (TAG_COLORS[name] || DEFAULT_TAG_COLOR).dot,
       count,
     }));
 }

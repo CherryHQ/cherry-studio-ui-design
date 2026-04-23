@@ -3,6 +3,7 @@ import {
   BarChart3, TrendingUp, Clock, MessageSquare, Coins,
   Cpu, Activity,
 } from 'lucide-react';
+import { Typography, Card } from '@cherry-studio/ui';
 import { InlineSelect } from './shared';
 
 // ===========================
@@ -51,8 +52,8 @@ const RECENT_CONVERSATIONS = [
 // ===========================
 // Sub-components
 // ===========================
-const card = "bg-foreground/[0.03] border border-foreground/[0.06] rounded-2xl p-3.5 hover:border-foreground/[0.12] transition-all duration-200";
-const cardLabel = "text-[9px] text-foreground/30 tracking-wide";
+const cardCls = "bg-muted/30 border-border/50 rounded-2xl p-3.5 py-3.5 px-3.5 gap-0 hover:border-border transition-all duration-200 shadow-none";
+const cardLabel = "text-xs text-muted-foreground/40 tracking-wide";
 
 function MiniBarChart({ data, maxVal, color, height = 40 }: { data: number[]; maxVal: number; color: string; height?: number }) {
   return (
@@ -60,7 +61,7 @@ function MiniBarChart({ data, maxVal, color, height = 40 }: { data: number[]; ma
       {data.map((v, i) => (
         <div
           key={i}
-          className="flex-1 rounded-[2px] transition-all hover:opacity-80"
+          className="flex-1 rounded-[var(--radius-dot)] transition-all hover:opacity-80"
           style={{
             height: `${Math.max((v / maxVal) * 100, 4)}%`,
             backgroundColor: color,
@@ -78,16 +79,16 @@ function StatCard({ label, value, unit, sub, icon: Icon, iconColor, onClick }: {
   iconColor?: string; onClick?: () => void;
 }) {
   return (
-    <div className={`${card} ${onClick ? 'cursor-pointer' : ''}`} onClick={onClick}>
+    <div className={`${cardCls} ${onClick ? 'cursor-pointer' : ''}`} onClick={onClick}>
       <div className="flex items-center justify-between mb-2">
         <p className={cardLabel}>{label}</p>
-        <div className={`w-5 h-5 rounded-lg flex items-center justify-center ${iconColor || 'bg-foreground/[0.06]'}`}>
+        <div className={`w-5 h-5 rounded-lg flex items-center justify-center ${iconColor || 'bg-muted/50'}`}>
           <Icon size={10} className="text-current" />
         </div>
       </div>
       <div className="flex items-baseline gap-0.5">
-        <span className="text-xl text-foreground/70 font-bold">{value}</span>
-        {unit && <span className="text-xs text-foreground/25">{unit}</span>}
+        <span className="text-xl text-foreground font-bold">{value}</span>
+        {unit && <span className="text-xs text-muted-foreground/40">{unit}</span>}
       </div>
       {sub && <div className="mt-1.5">{sub}</div>}
     </div>
@@ -109,12 +110,12 @@ export function DashboardPage() {
   const avgTokensPerConv = Math.round(totalTokens / totalConversations);
 
   return (
-    <div className="flex-1 overflow-y-auto px-5 py-4 [&::-webkit-scrollbar]:w-[3px] [&::-webkit-scrollbar-thumb]:bg-border/20">
+    <div className="flex-1 overflow-y-auto px-5 py-4 scrollbar-thin">
       {/* Header */}
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
-          <BarChart3 size={14} className="text-foreground/50" />
-          <h2 className="text-sm text-foreground/90 font-medium">数据统计</h2>
+          <BarChart3 size={14} className="text-muted-foreground/60" />
+          <Typography variant="subtitle" as="h2">数据统计</Typography>
         </div>
         <InlineSelect
           value={timeRange}
@@ -132,33 +133,33 @@ export function DashboardPage() {
       <div className="grid grid-cols-4 gap-2 mb-2">
         <StatCard
           label="总对话数" value={totalConversations} icon={MessageSquare}
-          iconColor="bg-blue-500/10 text-blue-400"
+          iconColor="bg-accent-blue-muted text-accent-blue"
           sub={
             <div className="flex items-center gap-1">
               <TrendingUp size={9} className="text-primary" />
-              <span className="text-[9px] text-primary">↑ 18% 较上月</span>
+              <span className="text-xs text-primary">↑ 18% 较上月</span>
             </div>
           }
         />
         <StatCard
           label="Token 总量" value={(totalTokens / 1000000).toFixed(1)} unit="M" icon={Cpu}
-          iconColor="bg-violet-500/10 text-violet-400"
+          iconColor="bg-accent-violet/10 text-accent-violet"
           sub={
-            <span className="text-[9px] text-foreground/25">平均 {(avgTokensPerConv / 1000).toFixed(1)}K / 对话</span>
+            <span className="text-xs text-muted-foreground/40">平均 {(avgTokensPerConv / 1000).toFixed(1)}K / 对话</span>
           }
         />
         <StatCard
           label="总花费" value={`$${totalCost.toFixed(2)}`} icon={Coins}
           iconColor="bg-warning/10 text-warning"
           sub={
-            <span className="text-[9px] text-foreground/25">日均 ${(totalCost / 28).toFixed(2)}</span>
+            <span className="text-xs text-muted-foreground/40">日均 ${(totalCost / 28).toFixed(2)}</span>
           }
         />
         <StatCard
           label="活跃天数" value={24} unit="天" icon={Activity}
-          iconColor="bg-foreground/[0.06] text-foreground/50"
+          iconColor="bg-muted/50 text-muted-foreground/60"
           sub={
-            <div className="h-[3px] rounded-full bg-foreground/[0.06] overflow-hidden">
+            <div className="h-[3px] rounded-full bg-muted/50 overflow-hidden">
               <div className="h-full rounded-full bg-primary/40" style={{ width: '86%' }} />
             </div>
           }
@@ -170,17 +171,17 @@ export function DashboardPage() {
         <div className={card}>
           <div className="flex items-center justify-between mb-3">
             <p className={cardLabel}>每日对话趋势</p>
-            <span className="text-[9px] text-foreground/20">最近 7 天</span>
+            <span className="text-xs text-muted-foreground/50">最近 7 天</span>
           </div>
           <MiniBarChart
             data={DAILY_USAGE.map(d => d.conversations)}
             maxVal={maxDailyConv}
-            color="rgb(52,211,153)"
+            color="var(--accent-emerald)"
             height={60}
           />
           <div className="flex justify-between mt-1.5 px-[1px]">
             {DAILY_USAGE.map(d => (
-              <span key={d.day} className="text-[8px] text-foreground/20 flex-1 text-center">{d.day}</span>
+              <span key={d.day} className="text-xs text-muted-foreground/50 flex-1 text-center">{d.day}</span>
             ))}
           </div>
         </div>
@@ -188,17 +189,17 @@ export function DashboardPage() {
         <div className={card}>
           <div className="flex items-center justify-between mb-3">
             <p className={cardLabel}>活跃时段分布</p>
-            <span className="text-[9px] text-foreground/20">24 小时</span>
+            <span className="text-xs text-muted-foreground/50">24 小时</span>
           </div>
           <MiniBarChart
             data={HOURLY_DISTRIBUTION}
             maxVal={maxHourly}
-            color="rgb(139,92,246)"
+            color="var(--accent-violet)"
             height={60}
           />
           <div className="flex justify-between mt-1.5 px-[1px]">
             {[0, 6, 12, 18, 23].map(h => (
-              <span key={h} className="text-[8px] text-foreground/20">{h}:00</span>
+              <span key={h} className="text-xs text-muted-foreground/50">{h}:00</span>
             ))}
           </div>
         </div>
@@ -206,28 +207,28 @@ export function DashboardPage() {
 
       {/* Row 3: 模型使用明细 + 月度趋势 */}
       <div className="grid grid-cols-5 gap-2 mb-2">
-        <div className={`${card} col-span-3`}>
+        <Card className={`${cardCls} col-span-3`}>
           <p className={`${cardLabel} mb-2.5`}>模型使用明细</p>
           <div className="space-y-[5px]">
             {MODEL_USAGE.map((m, i) => (
               <div key={m.name} className="flex items-center gap-2">
-                <span className="text-[9px] text-foreground/20 w-3 text-right flex-shrink-0">{i + 1}</span>
+                <span className="text-xs text-muted-foreground/50 w-3 text-right flex-shrink-0">{i + 1}</span>
                 <div className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ backgroundColor: m.color }} />
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between mb-[2px]">
                     <div className="flex items-center gap-1.5 min-w-0">
-                      <span className="text-xs text-foreground/60 truncate">{m.name}</span>
-                      <span className="text-[8px] text-foreground/20 flex-shrink-0">{m.provider}</span>
+                      <span className="text-xs text-muted-foreground truncate">{m.name}</span>
+                      <span className="text-xs text-muted-foreground/50 flex-shrink-0">{m.provider}</span>
                     </div>
                     <div className="flex items-center gap-3 flex-shrink-0 ml-2">
-                      <span className="text-[9px] text-foreground/30">{(m.tokens / 1000).toFixed(0)}K</span>
-                      <span className="text-[9px] text-foreground/30 w-9 text-right">{m.conversations} 次</span>
-                      <span className="text-[9px] text-foreground/40 w-10 text-right font-medium">
+                      <span className="text-xs text-muted-foreground/40">{(m.tokens / 1000).toFixed(0)}K</span>
+                      <span className="text-xs text-muted-foreground/40 w-9 text-right">{m.conversations} 次</span>
+                      <span className="text-xs text-muted-foreground/60 w-10 text-right font-medium">
                         {m.cost > 0 ? `$${m.cost.toFixed(2)}` : '免费'}
                       </span>
                     </div>
                   </div>
-                  <div className="h-[2px] rounded-full bg-foreground/[0.04] overflow-hidden">
+                  <div className="h-[2px] rounded-full bg-muted/50 overflow-hidden">
                     <div
                       className="h-full rounded-full"
                       style={{ width: `${(m.tokens / maxModelTokens) * 100}%`, backgroundColor: m.color, opacity: 0.5 }}
@@ -237,9 +238,9 @@ export function DashboardPage() {
               </div>
             ))}
           </div>
-        </div>
+        </Card>
 
-        <div className={`${card} col-span-2`}>
+        <Card className={`${cardCls} col-span-2`}>
           <p className={`${cardLabel} mb-2.5`}>月度花费趋势</p>
           <div className="flex items-end gap-[6px]" style={{ height: 80 }}>
             {MONTHLY_TREND.map((m, i) => {
@@ -247,34 +248,34 @@ export function DashboardPage() {
               const isLast = i === MONTHLY_TREND.length - 1;
               return (
                 <div key={m.month} className="flex-1 flex flex-col items-center gap-1">
-                  <span className={`text-[8px] ${isLast ? 'text-foreground/45' : 'text-foreground/20'}`}>
+                  <span className={`text-xs ${isLast ? 'text-muted-foreground/60' : 'text-muted-foreground/50'}`}>
                     ${m.cost.toFixed(1)}
                   </span>
                   <div
-                    className={`w-full rounded-[3px] ${isLast ? 'bg-foreground/40' : 'bg-foreground/[0.08]'}`}
+                    className={`w-full rounded-[var(--radius-dot)] ${isLast ? 'bg-foreground/40' : 'bg-muted'}`}
                     style={{ height: `${(m.cost / maxCost) * 50}px` }}
                   />
-                  <span className="text-[8px] text-foreground/20">{m.month}</span>
+                  <span className="text-xs text-muted-foreground/50">{m.month}</span>
                 </div>
               );
             })}
           </div>
           {/* Summary */}
-          <div className="mt-3 pt-2.5 border-t border-foreground/[0.04]">
+          <div className="mt-3 pt-2.5 border-t border-border/30">
             <div className="flex items-center justify-between">
-              <span className="text-[9px] text-foreground/30">6 个月总计</span>
-              <span className="text-xs text-foreground/60 font-semibold">
+              <span className="text-xs text-muted-foreground/40">6 个月总计</span>
+              <span className="text-xs text-muted-foreground font-semibold">
                 ${MONTHLY_TREND.reduce((s, m) => s + m.cost, 0).toFixed(2)}
               </span>
             </div>
             <div className="flex items-center justify-between mt-1">
-              <span className="text-[9px] text-foreground/30">月均花费</span>
-              <span className="text-xs text-foreground/45">
+              <span className="text-xs text-muted-foreground/40">月均花费</span>
+              <span className="text-xs text-muted-foreground/60">
                 ${(MONTHLY_TREND.reduce((s, m) => s + m.cost, 0) / MONTHLY_TREND.length).toFixed(2)}
               </span>
             </div>
           </div>
-        </div>
+        </Card>
       </div>
 
       {/* Row 4: 最近对话 + 服务商分布 */}
@@ -282,20 +283,20 @@ export function DashboardPage() {
         <div className={card}>
           <div className="flex items-center justify-between mb-2.5">
             <p className={cardLabel}>最近对话</p>
-            <Clock size={10} className="text-foreground/20" />
+            <Clock size={10} className="text-muted-foreground/40" />
           </div>
           <div className="space-y-[1px]">
             {RECENT_CONVERSATIONS.map((conv, i) => (
               <div key={i} className="flex items-center gap-2 py-[4px] group">
                 <div className="w-[3px] h-[3px] rounded-full bg-foreground/15 flex-shrink-0 group-hover:bg-foreground/45 transition-colors" />
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs text-foreground/55 truncate group-hover:text-foreground/75 transition-colors">{conv.title}</p>
+                  <p className="text-xs text-muted-foreground truncate group-hover:text-foreground transition-colors">{conv.title}</p>
                   <div className="flex items-center gap-2 mt-[1px]">
-                    <span className="text-[8px] text-foreground/25">{conv.model}</span>
-                    <span className="text-[8px] text-foreground/15">{conv.time}</span>
+                    <span className="text-xs text-muted-foreground/40">{conv.model}</span>
+                    <span className="text-xs text-muted-foreground/50">{conv.time}</span>
                   </div>
                 </div>
-                <span className="text-[8px] text-foreground/20 flex-shrink-0">{(conv.tokens / 1000).toFixed(1)}K</span>
+                <span className="text-xs text-muted-foreground/50 flex-shrink-0">{(conv.tokens / 1000).toFixed(1)}K</span>
               </div>
             ))}
           </div>
@@ -340,8 +341,8 @@ export function DashboardPage() {
                 })()}
               </svg>
               <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <span className="text-xs text-foreground/70 font-bold">${totalCost.toFixed(0)}</span>
-                <span className="text-[7px] text-foreground/25">总计</span>
+                <span className="text-xs text-foreground font-bold">${totalCost.toFixed(0)}</span>
+                <span className="text-xs text-muted-foreground/40">总计</span>
               </div>
             </div>
             <div className="flex-1 space-y-1.5">
@@ -354,9 +355,9 @@ export function DashboardPage() {
               ].map(p => (
                 <div key={p.name} className="flex items-center gap-2">
                   <div className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ backgroundColor: p.color }} />
-                  <span className="text-xs text-foreground/50 flex-1">{p.name}</span>
-                  <span className="text-[9px] text-foreground/35">${p.cost.toFixed(2)}</span>
-                  <span className="text-[8px] text-foreground/20 w-7 text-right">
+                  <span className="text-xs text-muted-foreground/60 flex-1">{p.name}</span>
+                  <span className="text-xs text-muted-foreground/40">${p.cost.toFixed(2)}</span>
+                  <span className="text-xs text-muted-foreground/50 w-7 text-right">
                     {Math.round((p.cost / totalCost) * 100)}%
                   </span>
                 </div>
@@ -365,18 +366,18 @@ export function DashboardPage() {
           </div>
 
           {/* Performance metrics */}
-          <div className="mt-3 pt-2.5 border-t border-foreground/[0.04] grid grid-cols-3 gap-2">
+          <div className="mt-3 pt-2.5 border-t border-border/30 grid grid-cols-3 gap-2">
             <div className="text-center">
-              <p className="text-[8px] text-foreground/25 mb-0.5">平均延迟</p>
-              <p className="text-xs text-foreground/55 font-semibold">118ms</p>
+              <p className="text-xs text-muted-foreground/40 mb-0.5">平均延迟</p>
+              <p className="text-xs text-muted-foreground font-semibold">118ms</p>
             </div>
             <div className="text-center">
-              <p className="text-[8px] text-foreground/25 mb-0.5">成功率</p>
+              <p className="text-xs text-muted-foreground/40 mb-0.5">成功率</p>
               <p className="text-xs text-primary font-semibold">99.7%</p>
             </div>
             <div className="text-center">
-              <p className="text-[8px] text-foreground/25 mb-0.5">连接数</p>
-              <p className="text-xs text-foreground/55 font-semibold">5/8</p>
+              <p className="text-xs text-muted-foreground/40 mb-0.5">连接数</p>
+              <p className="text-xs text-muted-foreground font-semibold">5/8</p>
             </div>
           </div>
         </div>

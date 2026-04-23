@@ -37,6 +37,9 @@ import { SeparatorDemo } from "./SeparatorDemo"
 import { KbdDemo } from "./KbdDemo"
 import { SpinnerDemo } from "./SpinnerDemo"
 import { ThemePreviewDemo } from "./ThemePreviewDemo"
+import { TypographyDemo } from "./TypographyDemo"
+import { ImageWithFallbackDemo } from "./ImageWithFallbackDemo"
+import { ConfirmDialogDemo } from "./ConfirmDialogDemo"
 import { FormRowDemo } from "./FormRowDemo"
 import { ConfigSectionDemo } from "./ConfigSectionDemo"
 import { InlineSelectDemo } from "./InlineSelectDemo"
@@ -169,6 +172,7 @@ export const demos = [
   // Overlay
   { id: "dialog", title: "Dialog / Sheet / Drawer", category: "Overlay", description: "对话框、侧边面板、底部抽屉", component: DialogSheetDrawerDemo },
   { id: "alert-dialog", title: "Alert Dialog", category: "Overlay", description: "确认对话框", component: AlertDialogDemo },
+  { id: "confirm-dialog", title: "ConfirmDialog", category: "Overlay", description: "通用确认弹窗（删除/操作确认）", component: ConfirmDialogDemo },
   { id: "popover", title: "Popover & Tooltip", category: "Overlay", description: "弹出气泡和提示", component: PopoverTooltipDemo },
   { id: "hover-card", title: "Hover Card", category: "Overlay", description: "悬浮预览卡片", component: HoverCardDemo },
   { id: "dropdown", title: "Dropdown & Context Menu", category: "Overlay", description: "下拉菜单和右键菜单", component: DropdownContextMenuDemo },
@@ -184,10 +188,12 @@ export const demos = [
   { id: "menubar", title: "Menubar", category: "Navigation", description: "菜单栏", component: MenubarDemo },
 
   // Layout
+  { id: "typography", title: "Typography", category: "Layout", description: "文字排版（标题/正文/标签/说明）", component: TypographyDemo },
   { id: "resizable", title: "Resizable Panels", category: "Layout", description: "可调整尺寸的面板", component: ResizableDemo },
   { id: "separator", title: "Separator", category: "Layout", description: "分隔线（水平/垂直/带标签）", component: SeparatorDemo },
   { id: "kbd", title: "Kbd", category: "Layout", description: "键盘按键快捷键展示", component: KbdDemo },
   { id: "spinner", title: "Spinner", category: "Layout", description: "加载动画（尺寸/文字/按钮内）", component: SpinnerDemo },
+  { id: "image-fallback", title: "ImageWithFallback", category: "Layout", description: "图片加载失败自动降级占位", component: ImageWithFallbackDemo },
 
   // Cherry Composite
   { id: "form-row", title: "FormRow & SectionHeader", category: "Cherry Composite", description: "表单行布局、区块标题", component: FormRowDemo },

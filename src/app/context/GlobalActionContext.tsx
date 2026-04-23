@@ -30,8 +30,8 @@ export interface GlobalActionFunctions {
   libraryReturn: () => void;
   /** Change the title of the currently-active tab */
   changeTabTitle: (title: string) => void;
-  /** Open the global Settings overlay */
-  openSettings: () => void;
+  /** Open the global Settings overlay, optionally jumping to a specific section */
+  openSettings: (section?: string) => void;
 }
 
 /** Mutable state values consumed by pages */

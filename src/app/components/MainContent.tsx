@@ -1,22 +1,22 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import type { Tab } from '@/app/types';
 import { useGlobalActions } from '@/app/context/GlobalActionContext';
-import { ErrorBoundary } from './shared/ErrorBoundary';
-import { ChatPage } from './pages/ChatPage';
-import { GenericPage } from './pages/GenericPage';
-import { TranslatePage } from './TranslatePage';
-import { NotePage } from './NotePage';
-import { CodeToolPage } from './CodeToolPage';
-import { KnowledgePage } from './KnowledgePage';
-import { MiniAppsPage } from './MiniAppsPage';
-import { MiniAppEmbedPage } from './MiniAppEmbedPage';
-import { ExplorePage } from './ExplorePage';
-import { LibraryPage } from './library/LibraryPage';
-import { AgentRunPage } from './agent/run/AgentRunPage';
-import { AssistantRunPage } from './assistant/AssistantRunPage';
-import { ImagePage } from './image/ImagePage';
-import { FilePage } from './file/FilePage';
-import { ModelServicePage } from './settings/ModelServicePage';
+import { ErrorBoundary } from '@cherry-studio/ui';
+import { ChatPage } from '@/features/chat/ChatPage';
+import { GenericPage } from '@/features/chat/GenericPage';
+import { TranslatePage } from '@/features/translate/TranslatePage';
+import { NotePage } from '@/features/note/NotePage';
+import { CodeToolPage } from '@/features/codetool/CodeToolPage';
+import { KnowledgePage } from '@/features/knowledge/KnowledgePage';
+import { MiniAppsPage } from '@/features/miniapp/MiniAppsPage';
+import { MiniAppEmbedPage } from '@/features/miniapp/MiniAppEmbedPage';
+import { ExplorePage } from '@/features/explore/ExplorePage';
+import { LibraryPage } from '@/features/library/LibraryPage';
+import { AgentRunPage } from '@/features/agent/run/AgentRunPage';
+import { AssistantRunPage } from '@/app/components/assistant/AssistantRunPage';
+import { ImagePage } from '@/features/painting/ImagePage';
+import { FilePage } from '@/features/file/FilePage';
+import { ModelServicePage } from '@/app/components/settings/ModelServicePage';
 import { ExtensionsPage } from '@/features/extensions/ExtensionsPage';
 
 interface MainContentProps {

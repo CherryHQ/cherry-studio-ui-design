@@ -50,9 +50,9 @@ export const AGENT_PROVIDER_COLORS: Record<string, string> = {
 
 export const AGENT_CAP_ICONS: Record<AgentModelCapability, { icon: typeof Eye; color: string }> = {
   vision: { icon: Eye, color: 'text-sky-500' },
-  tools: { icon: Hammer, color: 'text-amber-500' },
+  tools: { icon: Hammer, color: 'text-warning' },
   reasoning: { icon: Brain, color: 'text-violet-500' },
-  web: { icon: Globe, color: 'text-blue-500' },
+  web: { icon: Globe, color: 'text-info' },
 };
 
 export const AGENT_CAP_TAG_ICONS: Record<AgentModelCapability, typeof Eye> = {
@@ -71,7 +71,7 @@ export const ALL_AGENT_CAPABILITIES: AgentModelCapability[] = ['vision', 'reason
 export const RUN_MODE_LABELS: Record<string, { label: string; color: string }> = {
   plan: { label: '规划模式', color: 'text-violet-500' },
   auto: { label: '自动模式', color: 'text-sky-500' },
-  manual: { label: '手动模式', color: 'text-amber-500' },
+  manual: { label: '手动模式', color: 'text-warning' },
 };
 
 // ===========================

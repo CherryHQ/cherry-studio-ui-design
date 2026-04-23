@@ -5,9 +5,10 @@ import {
   CheckCircle2, AlertCircle,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Button, Dialog, DialogContent, DialogHeader, DialogTitle, Popover, PopoverTrigger, PopoverContent } from '@cherry-studio/ui';
+import { Button, Textarea, Dialog, DialogContent, DialogHeader, DialogTitle, Popover, PopoverTrigger, PopoverContent } from '@cherry-studio/ui';
+import { ModelPickerPanel } from '@/app/components/shared/ModelPickerPanel';
 import type { Agent, Assistant } from './ExploreData';
-import { models } from './ExploreData';
+import { ASSISTANT_MODELS, PROVIDER_COLORS } from '@/app/config/models';
 
 // ===========================
 // Model Selector
@@ -16,45 +17,32 @@ import { models } from './ExploreData';
 function ModelSelector({ selectedId, onSelect }: { selectedId: string; onSelect: (id: string) => void }) {
   const [open, setOpen] = useState(false);
 
-  const selected = models.find(m => m.id === selectedId);
+  const selected = ASSISTANT_MODELS.find(m => m.id === selectedId);
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <Button
+        <Button size="inline"
           variant="outline"
-          className={`flex items-center gap-1.5 px-2.5 py-1 h-auto rounded-lg border text-xs ${
-            open ? 'border-primary/30 bg-accent/50' : 'border-border/30 hover:border-border/60 hover:bg-accent/30'
+          className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-xs ${
+            open ? 'border-primary/30 bg-accent/50' : 'border-border/30 hover:border-border/60 hover:bg-accent/50'
           }`}
         >
           <Sparkles size={10} className="text-muted-foreground/50" />
           <span className="text-foreground">{selected?.name || '选择模型'}</span>
-          <span className="text-[9px] text-muted-foreground/40">{selected?.provider}</span>
           <ChevronDown size={9} className={`text-muted-foreground/40 transition-transform ${open ? 'rotate-180' : ''}`} />
         </Button>
       </PopoverTrigger>
-      <PopoverContent align="start" className="p-1 min-w-[220px] overflow-y-auto max-h-[280px] [&::-webkit-scrollbar]:w-[3px] [&::-webkit-scrollbar-thumb]:bg-border/30 [&::-webkit-scrollbar-thumb]:rounded-full">
-        {models.map(m => (
-          <Button
-            key={m.id}
-            variant="ghost"
-            onClick={() => { onSelect(m.id); setOpen(false); }}
-            className={`w-full justify-start px-2.5 py-[6px] h-auto rounded-lg text-xs flex items-center gap-2 ${
-              selectedId === m.id ? 'bg-accent text-foreground' : 'text-foreground hover:bg-accent/50'
-            }`}
-          >
-            <span className="flex-1 truncate text-left">{m.name}</span>
-            <span className="text-[9px] text-muted-foreground/35">{m.provider}</span>
-            {m.badge && (
-              <span className={`text-[8px] px-1.5 py-px rounded-full ${
-                m.badge === '推荐' ? 'bg-foreground/[0.06] text-foreground/70' :
-                m.badge === '热门' ? 'bg-blue-500/10 text-blue-500' :
-                'bg-amber-500/10 text-amber-600'
-              }`}>{m.badge}</span>
-            )}
-            {selectedId === m.id && <Check size={10} className="text-primary flex-shrink-0" />}
-          </Button>
-        ))}
+      <PopoverContent align="start" className="p-0 w-[480px]">
+        <ModelPickerPanel
+          models={ASSISTANT_MODELS}
+          selectedModels={[selectedId]}
+          onSelectModel={onSelect}
+          multiModel={false}
+          onToggleMultiModel={() => {}}
+          providerColors={PROVIDER_COLORS}
+          onClose={() => setOpen(false)}
+        />
       </PopoverContent>
     </Popover>
   );
@@ -87,7 +75,7 @@ function ChatBubble({ msg }: { msg: Message }) {
       <div className={`max-w-[80%] px-3 py-2 rounded-xl text-sm leading-relaxed ${
         isUser
           ? 'bg-primary text-primary-foreground rounded-br-sm'
-          : 'bg-accent/60 text-foreground rounded-bl-sm'
+          : 'bg-accent/50 text-foreground rounded-bl-sm'
       }`}>
         {msg.content}
       </div>
@@ -116,15 +104,15 @@ function ToolLogItem({ log }: { log: ToolLog }) {
       className="flex items-start gap-2 px-3 py-1.5 text-xs"
     >
       <div className="mt-0.5 flex-shrink-0">
-        {log.status === 'running' && <Loader2 size={10} className="text-blue-500 animate-spin" />}
-        {log.status === 'done' && <CheckCircle2 size={10} className="text-foreground/60" />}
-        {log.status === 'error' && <AlertCircle size={10} className="text-red-500" />}
+        {log.status === 'running' && <Loader2 size={10} className="text-info animate-spin" />}
+        {log.status === 'done' && <CheckCircle2 size={10} className="text-muted-foreground" />}
+        {log.status === 'error' && <AlertCircle size={10} className="text-destructive" />}
       </div>
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-1.5">
           <Wrench size={9} className="text-muted-foreground/40" />
-          <span className="text-foreground/70">{log.tool}</span>
-          {log.elapsed !== undefined && <span className="text-[9px] text-muted-foreground/30">{log.elapsed}ms</span>}
+          <span className="text-foreground">{log.tool}</span>
+          {log.elapsed !== undefined && <span className="text-xs text-muted-foreground/50">{log.elapsed}ms</span>}
         </div>
         <p className="text-muted-foreground/50 mt-0.5 truncate">{log.detail}</p>
       </div>
@@ -222,7 +210,7 @@ export function ExperienceModal({ resource, type, onClose }: ExperienceModalProp
 
   return (
     <Dialog open onOpenChange={(open) => { if (!open) onClose(); }}>
-      <DialogContent className="bg-popover border border-border/30 rounded-2xl shadow-2xl w-[580px] max-w-[580px] max-h-[85vh] flex flex-col overflow-hidden p-0 gap-0 [&>button:last-child]:hidden">
+      <DialogContent className="bg-popover border border-border/30 shadow-2xl w-[580px] max-w-[580px] max-h-[85vh] flex flex-col overflow-hidden p-0 gap-0 [&>button:last-child]:hidden">
         {/* Hidden DialogHeader for accessibility */}
         <DialogHeader className="sr-only">
           <DialogTitle>{resource.name}</DialogTitle>
@@ -237,7 +225,7 @@ export function ExperienceModal({ resource, type, onClose }: ExperienceModalProp
             <div className="min-w-0">
               <div className="flex items-center gap-2">
                 <span className="text-sm text-foreground truncate">{resource.name}</span>
-                <span className="text-[9px] px-1.5 py-px rounded-full bg-accent text-muted-foreground/60 uppercase tracking-wide">
+                <span className="text-xs px-1.5 py-px rounded-full bg-accent text-muted-foreground/60 uppercase tracking-wide">
                   {type}
                 </span>
               </div>
@@ -246,22 +234,22 @@ export function ExperienceModal({ resource, type, onClose }: ExperienceModalProp
           </div>
           <div className="flex items-center gap-2 flex-shrink-0">
             <ModelSelector selectedId={modelId} onSelect={setModelId} />
-            <Button variant="ghost" size="icon" onClick={onClose}
-              className="w-6 h-6 rounded-lg text-muted-foreground/40 hover:text-foreground hover:bg-accent">
-              <X size={13} />
+            <Button variant="ghost" size="icon-xs" onClick={onClose}
+              className="text-muted-foreground/40 hover:text-foreground hover:bg-accent/15">
+              <X size={11} />
             </Button>
           </div>
         </div>
 
         {/* Chat / Task area */}
-        <div className="flex-1 overflow-y-auto px-5 py-4 space-y-3 min-h-[300px] [&::-webkit-scrollbar]:w-[3px] [&::-webkit-scrollbar-thumb]:bg-border/30 [&::-webkit-scrollbar-thumb]:rounded-full">
+        <div className="flex-1 overflow-y-auto px-5 py-4 space-y-3 min-h-[300px] scrollbar-thin">
           {messages.length === 0 && !thinking && (
             <div className="flex flex-col items-center justify-center h-full py-8">
-              <div className="w-12 h-12 rounded-2xl bg-accent/60 flex items-center justify-center text-xl mb-3">{resource.avatar}</div>
-              <p className="text-sm text-foreground/80 mb-1">{resource.name}</p>
+              <div className="w-12 h-12 rounded-2xl bg-accent/50 flex items-center justify-center text-xl mb-3">{resource.avatar}</div>
+              <p className="text-sm text-foreground mb-1">{resource.name}</p>
               <p className="text-xs text-muted-foreground/40 text-center max-w-[300px] leading-relaxed">{resource.description}</p>
               {type === 'agent' && (
-                <div className="flex items-center gap-1 mt-3 text-xs text-muted-foreground/30">
+                <div className="flex items-center gap-1 mt-3 text-xs text-muted-foreground/50">
                   <Wrench size={9} />
                   <span>该智能体可以使用工具来完成任务</span>
                 </div>
@@ -278,10 +266,10 @@ export function ExperienceModal({ resource, type, onClose }: ExperienceModalProp
                 initial={{ opacity: 0, y: 4 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0 }}
-                className="flex items-center gap-2 px-3 py-2 rounded-lg bg-blue-500/[0.06] border border-blue-500/10"
+                className="flex items-center gap-2 px-3 py-2 rounded-lg bg-info/[0.06] border border-info/10"
               >
-                <Loader2 size={10} className="text-blue-500 animate-spin" />
-                <span className="text-xs text-blue-600/70">{thinking}</span>
+                <Loader2 size={10} className="text-info animate-spin" />
+                <span className="text-xs text-info/70">{thinking}</span>
               </motion.div>
             )}
           </AnimatePresence>
@@ -289,8 +277,8 @@ export function ExperienceModal({ resource, type, onClose }: ExperienceModalProp
           {/* Tool logs */}
           {toolLogs.length > 0 && (
             <div className="rounded-lg border border-border/15 bg-muted/[0.03] overflow-hidden">
-              <div className="flex items-center gap-1.5 px-3 py-1.5 border-b border-border/10">
-                <Wrench size={9} className="text-muted-foreground/35" />
+              <div className="flex items-center gap-1.5 px-3 py-1.5 border-b border-border/15">
+                <Wrench size={9} className="text-muted-foreground/40" />
                 <span className="text-xs text-muted-foreground/40">工具执行</span>
               </div>
               {toolLogs.map(log => <ToolLogItem key={log.id} log={log} />)}
@@ -308,7 +296,7 @@ export function ExperienceModal({ resource, type, onClose }: ExperienceModalProp
                 {[0, 1, 2].map(i => (
                   <motion.div
                     key={i}
-                    className="w-1.5 h-1.5 rounded-full bg-muted-foreground/25"
+                    className="w-1.5 h-1.5 rounded-full bg-muted-foreground/30"
                     animate={{ opacity: [0.3, 1, 0.3] }}
                     transition={{ duration: 1.2, repeat: Infinity, delay: i * 0.2 }}
                   />
@@ -324,13 +312,13 @@ export function ExperienceModal({ resource, type, onClose }: ExperienceModalProp
         <div className="px-5 pb-3 pt-1 border-t border-border/15">
           <div className="flex items-end gap-2">
             <div className="flex-1 relative">
-              <textarea
+              <Textarea
                 value={input}
                 onChange={e => setInput(e.target.value)}
                 onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); } }}
                 placeholder={type === 'agent' ? '描述你的任务……' : '输入消息……'}
                 rows={1}
-                className="w-full px-3.5 py-2.5 rounded-xl border border-border/30 bg-accent/20 text-sm text-foreground placeholder:text-muted-foreground/30 outline-none focus:border-primary/25 focus:ring-1 focus:ring-primary/10 resize-none transition-all leading-relaxed"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-border/30 bg-accent/25 text-sm text-foreground placeholder:text-muted-foreground/60 outline-none focus:border-primary/25 focus:ring-1 focus:ring-primary/10 resize-none transition-all leading-relaxed"
                 style={{ minHeight: 40, maxHeight: 120 }}
               />
             </div>
@@ -338,7 +326,7 @@ export function ExperienceModal({ resource, type, onClose }: ExperienceModalProp
               onClick={handleSend}
               disabled={!input.trim() || isProcessing}
               size="icon"
-              className="w-8 h-8 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-30 flex-shrink-0 active:scale-95"
+              className="w-8 h-8 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-30 flex-shrink-0 active:scale-[0.97]"
             >
               <Send size={12} />
             </Button>
@@ -346,14 +334,14 @@ export function ExperienceModal({ resource, type, onClose }: ExperienceModalProp
 
           {/* Footer: Add to library */}
           <div className="flex items-center justify-between mt-2.5">
-            <span className="text-[9px] text-muted-foreground/25">
-              模型: {models.find(m => m.id === modelId)?.name}
+            <span className="text-xs text-muted-foreground/50">
+              模型: {ASSISTANT_MODELS.find(m => m.id === modelId)?.name}
             </span>
-            <Button
+            <Button size="inline"
               variant="ghost"
               onClick={() => setAdded(true)}
               disabled={added}
-              className={`flex items-center gap-1 text-xs px-2.5 py-1 h-auto rounded-lg ${
+              className={`flex items-center gap-1 text-xs px-2.5 py-1 rounded-lg ${
                 added
                   ? 'bg-cherry-active-bg text-cherry-primary-dark'
                   : 'text-muted-foreground/50 hover:text-foreground hover:bg-accent'

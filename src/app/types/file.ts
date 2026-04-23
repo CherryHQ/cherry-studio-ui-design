@@ -6,7 +6,7 @@
 export interface FileTag {
   id: string;
   name: string;
-  color: string;
+  color: { dot: string; badge: string };
 }
 
 export interface FileFolder {

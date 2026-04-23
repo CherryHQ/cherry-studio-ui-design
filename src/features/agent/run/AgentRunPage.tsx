@@ -1,8 +1,8 @@
 import React, { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import { useGlobalActions } from '@/app/context/GlobalActionContext';
 import {
-  ArrowLeft, ChevronDown, ChevronRight, FolderOpen, Share2, Download,
-  Bot, Circle, Columns2,
+  ArrowLeft, ChevronDown, ChevronRight, FolderOpen, Download,
+  Bot, Columns2,
   Sparkles, Plus, ArrowUp,
   FileText, Zap, Search as SearchIcon, BookOpen, History,
   MessageCirclePlus,
@@ -11,32 +11,31 @@ import {
   Check,
   Edit3, Clock,
   Workflow, Cable, Layers,
-  Compass, Wrench, PenTool,
+  Compass, Wrench, PenTool, Bolt, Filter, Pin, ArrowDown,
+  Paperclip, Globe, Brain,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Tooltip } from '@/app/components/Tooltip';
-import { Button, Input, Switch } from '@cherry-studio/ui';
+import { Button, Switch, Textarea, EmptyState, Popover, PopoverTrigger, PopoverContent, SearchInput, Typography, BrandLogo, Separator, ScrollArea, DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from '@cherry-studio/ui';
+import { ModelPickerPanel } from '@/app/components/shared/ModelPickerPanel';
+import { usePinnedAgents } from '@/app/hooks/usePinnedAgents';
 import { FileExplorer } from './FileExplorer';
 import { ArtifactViewer } from './ArtifactViewer';
-import { EmptyState } from '@/app/components/ui/EmptyState';
 import { ChatPanel } from './ChatPanel';
 import type { AgentChatMessage, AgentSession, AgentSessionData } from '@/app/types/agent';
-import type { ModelCapability } from '@/app/types/chat';
 import { SessionHistoryPage, type SessionDisplayMode } from './SessionHistoryPage';
 import { HistorySidebar } from '@/app/components/shared/HistorySidebar';
 import { useHistorySidebar } from '@/app/hooks/useHistorySidebar';
 import {
   MOCK_SESSIONS, MODELS, SESSION_DATA_MAP, EMPTY_SESSION_DATA,
-  DEFAULT_INITIAL_FILES, AGENT_MODEL_CAPABILITY_LABELS,
+  DEFAULT_INITIAL_FILES,
 } from '@/app/mock';
 
 // Backward-compatible aliases
 type ChatMessage = AgentChatMessage;
 type SessionData = AgentSessionData;
-type AgentModelCapability = ModelCapability;
 import {
   AGENT_PROVIDER_COLORS,
-  AGENT_CAP_ICONS, AGENT_CAP_TAG_ICONS, ALL_AGENT_CAPABILITIES,
   RUN_MODE_LABELS, CAP_TAB_CONFIG,
   BUILTIN_TOOLS_CATALOG, MCP_CATALOG, SKILLS_CATALOG,
   BUILTIN_TOOL_CATEGORIES, AGENT_TAGS,
@@ -56,159 +55,235 @@ function AgentPicker({
   onSelectAgent,
   onCreateNew,
   onAvatarClick,
+  onConfigureAgent,
+  pinnedIds = [],
+  onTogglePin,
 }: {
   selectedAgent: typeof AVAILABLE_AGENTS[0];
   onSelectAgent: (agent: typeof AVAILABLE_AGENTS[0]) => void;
   onCreateNew: () => void;
   onAvatarClick?: () => void;
+  onConfigureAgent?: (agent: typeof AVAILABLE_AGENTS[0]) => void;
+  pinnedIds?: string[];
+  onTogglePin?: (id: string) => void;
 }) {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState('');
   const [activeTag, setActiveTag] = useState<string | null>(null);
-  const searchRef = useRef<HTMLInputElement>(null);
+  const [showFilter, setShowFilter] = useState(false);
+  const [sortOrder, setSortOrder] = useState<'recent' | 'oldest' | null>(null);
+  const [contextMenu, setContextMenu] = useState<{ x: number; y: number; id: string } | null>(null);
 
-  const filtered = useMemo(() => {
-    return AVAILABLE_AGENTS.filter(a => {
+  const pinnedSet = useMemo(() => new Set(pinnedIds), [pinnedIds]);
+
+  // Close context menu on outside click
+  useEffect(() => {
+    if (!contextMenu) return;
+    const handler = () => setContextMenu(null);
+    document.addEventListener('click', handler);
+    return () => document.removeEventListener('click', handler);
+  }, [contextMenu]);
+
+  const { pinned, unpinned } = useMemo(() => {
+    let filtered = AVAILABLE_AGENTS.filter(a => {
       const matchSearch = !search || a.name.toLowerCase().includes(search.toLowerCase()) || a.desc.toLowerCase().includes(search.toLowerCase());
       const matchTag = !activeTag || a.tags.includes(activeTag);
       return matchSearch && matchTag;
     });
-  }, [search, activeTag]);
+    if (sortOrder) {
+      filtered = [...filtered].sort((a, b) => {
+        const ta = a.createdAt || '';
+        const tb = b.createdAt || '';
+        return sortOrder === 'recent' ? tb.localeCompare(ta) : ta.localeCompare(tb);
+      });
+    }
+    return {
+      pinned: filtered.filter(a => pinnedSet.has(a.id)),
+      unpinned: filtered.filter(a => !pinnedSet.has(a.id)),
+    };
+  }, [search, activeTag, sortOrder, pinnedSet]);
 
   const handleOpen = () => {
     setOpen(!open);
     if (!open) { setSearch(''); setActiveTag(null); }
   };
 
+  const handleContextMenu = useCallback((e: React.MouseEvent, id: string) => {
+    if (!onTogglePin) return;
+    e.preventDefault();
+    setContextMenu({ x: e.clientX, y: e.clientY, id });
+  }, [onTogglePin]);
+
+  const renderAgentRow = (a: typeof AVAILABLE_AGENTS[0]) => {
+    const isSelected = selectedAgent.id === a.id;
+    const isPinned = pinnedSet.has(a.id);
+    return (
+      <button
+        key={a.id}
+        onClick={() => { onSelectAgent(a); setOpen(false); }}
+        onContextMenu={(e) => handleContextMenu(e, a.id)}
+        className={`group w-full flex items-center gap-2.5 px-3 py-[5px] mb-0.5 text-left transition-all duration-[var(--duration-fast)] rounded-lg cursor-pointer ${
+          isSelected ? 'bg-accent/40 text-foreground' : 'text-foreground/80 hover:bg-accent/20'
+        }`}
+      >
+        <span className="text-base leading-none flex-shrink-0">{a.avatar}</span>
+        <div className="flex flex-col items-start min-w-0 flex-1">
+          <span className={`text-sm truncate w-full ${isSelected ? 'font-medium' : ''}`}>{a.name}</span>
+          <span className="text-xs text-muted-foreground/40 truncate w-full">{a.desc}</span>
+        </div>
+        <span className="w-5 h-5 flex items-center justify-center flex-shrink-0">
+          {isSelected ? (
+            <Check size={14} className="text-foreground/50" />
+          ) : isPinned ? (
+            <button
+              onClick={(e) => { e.stopPropagation(); onTogglePin?.(a.id); }}
+              className="text-muted-foreground/40 hover:text-muted-foreground/60 transition-colors"
+            >
+              <Pin size={13} className="rotate-45" />
+            </button>
+          ) : onConfigureAgent ? (
+            <button
+              onClick={(e) => { e.stopPropagation(); onConfigureAgent(a); setOpen(false); }}
+              className="text-muted-foreground/15 opacity-0 group-hover:opacity-100 hover:text-muted-foreground/40 transition-all"
+            >
+              <Bolt size={13} />
+            </button>
+          ) : null}
+        </span>
+      </button>
+    );
+  };
+
   return (
     <div className="relative flex items-center">
-      {/* Avatar — opens agent info panel */}
-      <Tooltip content={"\u667a\u80fd\u4f53\u4fe1\u606f"} side="bottom">
-        <Button
-          variant="ghost"
-          size="icon-xs"
+      <Tooltip content="智能体信息" side="bottom">
+        <Button variant="ghost" size="icon-xs"
           onClick={(e) => { e.stopPropagation(); onAvatarClick?.(); }}
-          className="w-6 h-6 rounded-lg bg-gradient-to-br from-accent/30 to-accent/10 border border-border/20 text-sm flex-shrink-0 hover:from-accent/50 hover:to-accent/25 hover:border-border/40 active:scale-95 mr-1 p-0"
+          className="w-6 h-6 rounded-lg bg-gradient-to-br from-accent/30 to-accent/10 border border-border/20 text-sm flex-shrink-0 hover:from-accent/50 hover:to-accent/25 hover:border-border/40 active:scale-[0.97] mr-1 p-0"
         >
           {selectedAgent.avatar}
         </Button>
       </Tooltip>
 
-      {/* Name + Chevron — opens picker dropdown */}
-      <Button
-        variant="ghost"
-        size="xs"
-        onClick={handleOpen}
-        className={`gap-1 px-1.5 py-[3px] h-auto text-xs ${
-          open ? 'bg-accent/25 text-foreground' : 'text-foreground/75 hover:text-foreground hover:bg-accent/15'
-        }`}
-      >
-        <span className="truncate max-w-[160px]">{selectedAgent.name}</span>
-        <ChevronDown size={8} className={`text-muted-foreground/50 flex-shrink-0 transition-transform duration-100 ${open ? 'rotate-180' : ''}`} />
-      </Button>
-
-      <AnimatePresence>
-        {open && (
-          <div>
-            <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
-            <motion.div
-              initial={{ opacity: 0, y: -3 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -3 }}
-              transition={{ duration: 0.1 }}
-              className="absolute top-full left-0 mt-1 z-50 bg-popover border border-border/40 rounded-lg shadow-xl shadow-black/10 min-w-[260px]"
-              onAnimationComplete={() => searchRef.current?.focus()}
-            >
-              {/* Search */}
-              <div className="px-2 pt-2 pb-1">
-                <div className="flex items-center gap-1.5 px-2 py-[5px] rounded-md bg-accent/15 border border-border/20">
-                  <SearchIcon size={10} className="text-muted-foreground/40 flex-shrink-0" />
-                  <Input
-                    ref={searchRef}
-                    value={search}
-                    onChange={e => setSearch(e.target.value)}
-                    placeholder={"\u641c\u7d22\u667a\u80fd\u4f53..."}
-                    className="flex-1 h-auto border-0 bg-transparent shadow-none focus-visible:ring-0 text-xs text-foreground placeholder:text-muted-foreground/30 p-0 rounded-none min-w-0"
-                  />
-                  {search && (
-                    <Button variant="ghost" size="icon-xs" onClick={() => setSearch('')} className="w-auto h-auto p-0 text-muted-foreground/30 hover:text-muted-foreground/60 hover:bg-transparent">
-                      <X size={8} />
-                    </Button>
-                  )}
-                </div>
-              </div>
-
-              {/* Tags */}
-              <div className="px-2 pb-1.5">
-                <div className="flex items-center gap-1 flex-wrap">
-                  <Tag size={8} className="text-muted-foreground/30 flex-shrink-0" />
-                  {AGENT_TAGS.map(tag => (
-                    <Button
-                      key={tag}
-                      variant="ghost"
-                      size="xs"
-                      onClick={() => setActiveTag(activeTag === tag ? null : tag)}
-                      className={`px-1.5 py-px h-auto rounded-full text-[8px] ${
-                        activeTag === tag
-                          ? 'bg-foreground/10 text-foreground/70 border border-border/40'
-                          : 'bg-accent/20 text-muted-foreground/50 border border-transparent hover:bg-accent/40 hover:text-muted-foreground/70'
-                      }`}
-                    >
-                      {tag}
-                    </Button>
-                  ))}
-                </div>
-              </div>
-
-              <div className="h-px bg-border/20 mx-1" />
-
-              {/* Agent list */}
-              <div className="p-1.5 max-h-[240px] overflow-y-auto">
-                {filtered.length === 0 ? (
-                  <div className="px-2.5 py-3 text-center text-[9px] text-muted-foreground/40">{"\u65e0\u5339\u914d\u7ed3\u679c"}</div>
-                ) : (
-                  filtered.map(a => (
-                    <Button
-                      key={a.id}
-                      variant="ghost"
-                      size="xs"
-                      onClick={() => { onSelectAgent(a); setOpen(false); }}
-                      className={`w-full justify-start gap-2 px-2 py-[5px] h-auto text-xs mb-px ${
-                        selectedAgent.id === a.id
-                          ? 'bg-accent/30 text-foreground ring-1 ring-border/30'
-                          : 'text-foreground/75 hover:text-foreground hover:bg-accent/15'
-                      }`}
-                    >
-                      <span className="text-xs flex-shrink-0">{a.avatar}</span>
-                      <div className="flex flex-col items-start min-w-0 flex-1">
-                        <span className="truncate text-xs">{a.name}</span>
-                        <span className="text-[9px] text-muted-foreground/45">{a.desc}</span>
-                      </div>
-                      {selectedAgent.id === a.id && (
-                        <Check size={9} className="text-cherry-primary flex-shrink-0" />
-                      )}
-                    </Button>
-                  ))
-                )}
-              </div>
-
-              <div className="h-px bg-border/25 mx-1" />
-              <div className="p-1">
-                <Button
-                  variant="ghost"
-                  size="xs"
-                  onClick={() => { setOpen(false); onCreateNew(); }}
-                  className="w-full justify-start gap-2 px-2.5 py-[6px] h-auto text-xs text-muted-foreground hover:text-foreground hover:bg-accent/20"
-                >
-                  <Plus size={10} className="flex-shrink-0" />
-                  <span>{"\u53bb\u8d44\u6e90\u5e93\u521b\u5efa"}</span>
-                  <ChevronRight size={9} className="ml-auto text-muted-foreground/40" />
-                </Button>
-              </div>
-            </motion.div>
+      <Popover open={open} onOpenChange={(v) => { if (v) handleOpen(); else setOpen(false); }}>
+        <PopoverTrigger asChild>
+          <Button size="inline" variant="ghost"
+            className={`gap-1 px-1.5 py-[3px] text-xs ${open ? 'bg-accent/25 text-foreground' : 'text-foreground hover:text-foreground hover:bg-accent/15'}`}
+          >
+            <span className="truncate max-w-[160px]">{selectedAgent.name}</span>
+            <ChevronDown size={8} className={`text-muted-foreground/50 flex-shrink-0 transition-transform duration-100 ${open ? 'rotate-180' : ''}`} />
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent align="start" className="p-0 w-[380px]">
+          {/* Search + Filter toggle */}
+          <div className="px-3 pt-3 pb-2">
+            <div className="flex items-center gap-2 px-2.5 py-[7px] rounded-xl bg-muted/40">
+              <SearchIcon size={14} className="text-muted-foreground/40 flex-shrink-0" />
+              <input value={search} onChange={e => setSearch(e.target.value)} placeholder="搜索智能体..." autoFocus
+                className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground/30 min-w-0" />
+              {search && (
+                <button onClick={() => setSearch('')} className="w-4 h-4 text-muted-foreground/40 hover:text-muted-foreground/60 transition-colors">
+                  <X size={12} />
+                </button>
+              )}
+              <button
+                onClick={() => setShowFilter(v => !v)}
+                className={`w-5 h-5 flex items-center justify-center rounded transition-colors flex-shrink-0 ${
+                  showFilter ? 'text-foreground/60 bg-accent/40' : 'text-muted-foreground/30 hover:text-muted-foreground/50'
+                }`}
+              >
+                <Filter size={12} />
+              </button>
+            </div>
           </div>
-        )}
-      </AnimatePresence>
+
+          {/* Filter panel */}
+          {showFilter && (
+            <div className="px-3 pb-2 space-y-1.5">
+              <div className="flex items-center gap-1.5 flex-wrap">
+                {AGENT_TAGS.map(tag => (
+                  <button key={tag} onClick={() => setActiveTag(activeTag === tag ? null : tag)}
+                    className={`px-2 py-[3px] rounded-full text-xs border transition-colors cursor-pointer ${
+                      activeTag === tag
+                        ? 'bg-foreground/8 text-foreground/80 border-border/60'
+                        : 'bg-transparent text-muted-foreground/50 border-border/40 hover:bg-accent/20 hover:text-muted-foreground/70'
+                    }`}>{tag}</button>
+                ))}
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className="text-xs text-muted-foreground/35">排序</span>
+                <button onClick={() => setSortOrder(sortOrder === 'recent' ? null : 'recent')}
+                  className={`inline-flex items-center gap-1 px-2 py-[3px] rounded-full text-xs border transition-colors cursor-pointer ${
+                    sortOrder === 'recent' ? 'bg-foreground/8 text-foreground/80 border-border/60' : 'bg-transparent text-muted-foreground/50 border-border/40 hover:bg-accent/20'
+                  }`}><ArrowDown size={10} /><span>最近</span></button>
+                <button onClick={() => setSortOrder(sortOrder === 'oldest' ? null : 'oldest')}
+                  className={`inline-flex items-center gap-1 px-2 py-[3px] rounded-full text-xs border transition-colors cursor-pointer ${
+                    sortOrder === 'oldest' ? 'bg-foreground/8 text-foreground/80 border-border/60' : 'bg-transparent text-muted-foreground/50 border-border/40 hover:bg-accent/20'
+                  }`}><ArrowUp size={10} /><span>最早</span></button>
+              </div>
+            </div>
+          )}
+
+          {!showFilter && (
+            <div className="px-3 pb-2 flex items-center gap-1.5 flex-wrap">
+              <Tag size={10} className="text-muted-foreground/30 flex-shrink-0" />
+              {AGENT_TAGS.map(tag => (
+                <button key={tag} onClick={() => setActiveTag(activeTag === tag ? null : tag)}
+                  className={`px-2 py-[3px] rounded-full text-xs border transition-colors cursor-pointer ${
+                    activeTag === tag
+                      ? 'bg-foreground/8 text-foreground/80 border-border/60'
+                      : 'bg-transparent text-muted-foreground/50 border-border/40 hover:bg-accent/20 hover:text-muted-foreground/70'
+                  }`}>{tag}</button>
+              ))}
+            </div>
+          )}
+
+          <Separator className="bg-border/20" />
+
+          <ScrollArea className="h-[300px]">
+            <div className="py-1 px-1.5">
+              {pinned.length === 0 && unpinned.length === 0 ? (
+                <div className="px-3 py-4 text-center text-sm text-muted-foreground/40">无匹配结果</div>
+              ) : (
+                <>
+                  {pinned.length > 0 && (
+                    <>
+                      <div className="text-xs text-muted-foreground/35 px-3 pt-2 pb-1">已固定</div>
+                      {pinned.map(renderAgentRow)}
+                    </>
+                  )}
+                  {unpinned.map(renderAgentRow)}
+                </>
+              )}
+            </div>
+          </ScrollArea>
+
+          <Separator className="bg-border/20" />
+          <div className="px-1.5 py-1">
+            <button onClick={() => { setOpen(false); onCreateNew(); }}
+              className="w-full flex items-center gap-2.5 px-3 py-[5px] text-left text-sm text-muted-foreground hover:text-foreground hover:bg-accent/20 rounded-lg transition-colors cursor-pointer">
+              <Plus size={14} className="flex-shrink-0" />
+              <span className="flex-1">新建 Agent</span>
+              <ChevronRight size={12} className="text-muted-foreground/40" />
+            </button>
+          </div>
+        </PopoverContent>
+      </Popover>
+
+      {/* Context menu for Pin */}
+      {contextMenu && (
+        <div
+          className="fixed z-[9999] bg-popover border border-border rounded-lg shadow-popover py-1 px-1 animate-in fade-in zoom-in-95 duration-100"
+          style={{ left: contextMenu.x, top: contextMenu.y }}
+          onClick={() => setContextMenu(null)}
+        >
+          <button onClick={() => { onTogglePin?.(contextMenu.id); setContextMenu(null); }}
+            className="flex items-center gap-2 px-2.5 py-[5px] text-sm text-foreground/80 hover:bg-accent/30 rounded-md transition-colors cursor-pointer w-full text-left">
+            <Pin size={12} className={pinnedSet.has(contextMenu.id) ? 'rotate-45' : ''} />
+            <span>{pinnedSet.has(contextMenu.id) ? '取消固定' : '固定'}</span>
+          </button>
+        </div>
+      )}
     </div>
   );
 }
@@ -217,16 +292,9 @@ function AgentPicker({
 // New Session Empty State
 // ===========================
 
-function NewSessionEmpty({ onSendMessage }: { onSendMessage: (text: string) => void }) {
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
+function NewSessionEmpty({ onSendMessage, agentName }: { onSendMessage: (text: string) => void; agentName?: string }) {
   const [input, setInput] = useState('');
-
-  const suggestions = [
-    { icon: Zap, label: '\u521b\u5efa React \u5168\u6808\u9879\u76ee', desc: 'Vite + TypeScript + Tailwind CSS' },
-    { icon: SearchIcon, label: 'AI \u6846\u67b6\u6280\u672f\u9009\u578b\u8c03\u7814', desc: '\u591a\u7ef4\u5bf9\u6bd4 + \u57fa\u51c6\u6d4b\u8bd5 + \u62a5\u544a\u8f93\u51fa' },
-    { icon: BookOpen, label: '\u6784\u5efa Dashboard \u770b\u677f', desc: 'Recharts \u56fe\u8868 + \u5b9e\u65f6\u6570\u636e\u6d41' },
-    { icon: FileText, label: '\u5b9e\u73b0\u7528\u6237\u8ba4\u8bc1\u7cfb\u7edf', desc: 'JWT + OAuth + Prisma + PostgreSQL' },
-  ];
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const handleSend = () => {
     if (input.trim()) {
@@ -246,97 +314,67 @@ function NewSessionEmpty({ onSendMessage }: { onSendMessage: (text: string) => v
     setInput(e.target.value);
     const el = e.target;
     el.style.height = 'auto';
-    el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+    el.style.height = Math.min(el.scrollHeight, 140) + 'px';
   };
 
   return (
-    <div className="flex flex-col h-full w-full items-center justify-center">
-      <div className="w-full max-w-[620px] px-8">
-        <motion.div
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.35 }}
-          className="flex flex-col items-center w-full"
-        >
-          {/* Logo */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.5, delay: 0.05 }}
-            className="w-11 h-11 rounded-2xl bg-gradient-to-br from-cherry-primary/18 via-cherry-primary-hover/10 to-teal-500/8 border border-cherry-active-border flex items-center justify-center mb-4 shadow-lg shadow-cherry-shadow-sm"
-          >
-            <Sparkles size={18} strokeWidth={1.2} className="text-cherry-text-muted" />
-          </motion.div>
-          <h2 className="text-sm text-foreground/90 tracking-[-0.02em]">{"\u9700\u8981\u6211\u5e2e\u4f60\u6784\u5efa\u4ec0\u4e48\uff1f"}</h2>
-          <p className="text-xs text-muted-foreground/45 text-center leading-[1.6] mt-1.5 mb-5">
-            {"\u63cf\u8ff0\u4f60\u60f3\u8981\u6784\u5efa\u7684\u5185\u5bb9\uff0cAI \u5c06\u4e3a\u4f60\u5b8c\u6210\u5168\u8fc7\u7a0b"}
-          </p>
-
-          {/* Input area — centered */}
-          <motion.div
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3, delay: 0.1 }}
-            className="w-full mb-5"
-          >
-            <div className="relative rounded-2xl border border-border/40 bg-card/80 shadow-sm shadow-black/5 focus-within:border-border/70 focus-within:shadow-md focus-within:shadow-black/8 transition-all duration-200">
-              <textarea
-                ref={textareaRef}
-                value={input}
-                onChange={handleInput}
-                onKeyDown={handleKeyDown}
-                placeholder={"\u8bf7\u8f93\u5165\u4f60\u60f3\u8981\u4e86\u89e3\u7684\u95ee\u9898"}
-                rows={1}
-                autoFocus
-                className="w-full bg-transparent text-sm text-foreground placeholder:text-muted-foreground/35 outline-none resize-none min-h-[44px] max-h-[120px] leading-[1.6] px-4 pt-3.5 pb-[38px]"
-              />
-              <div className="absolute bottom-[8px] left-3 right-3 flex items-center justify-between">
-                <div className="flex items-center gap-0.5">
-                  <Tooltip content={"\u6dfb\u52a0"} side="top"><Button variant="ghost" size="icon-xs" className="p-[4px] w-auto h-auto rounded-lg text-muted-foreground/40 hover:text-muted-foreground/70 hover:bg-accent/15">
-                    <Plus size={13} />
-                  </Button></Tooltip>
-                  <Tooltip content={"\u4ee3\u7801"} side="top"><Button variant="ghost" size="icon-xs" className="p-[4px] w-auto h-auto rounded-lg text-muted-foreground/40 hover:text-muted-foreground/70 hover:bg-accent/15">
-                    <Code2 size={12} />
-                  </Button></Tooltip>
-                  <Tooltip content={"\u6dfb\u52a0\u6587\u4ef6\u5939"} side="top"><Button variant="ghost" size="icon-xs" className="p-[4px] w-auto h-auto rounded-lg text-muted-foreground/40 hover:text-muted-foreground/70 hover:bg-accent/15">
-                    <Folder size={12} />
-                  </Button></Tooltip>
-                </div>
-                <Button
-                  variant="default"
-                  size="icon"
-                  onClick={handleSend}
-                  disabled={!input.trim()}
-                  className="w-6 h-6 rounded-full"
-                >
-                  <ArrowUp size={13} strokeWidth={2} />
-                </Button>
-              </div>
-            </div>
-          </motion.div>
-
-          {/* Suggestions — below input, horizontal grid */}
-          <div className="grid grid-cols-2 gap-2 w-full">
-            {suggestions.map((s, i) => (
-              <motion.button
-                key={i}
-                initial={{ opacity: 0, y: 6 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.25, delay: 0.15 + i * 0.03 }}
-                onClick={() => onSendMessage(s.label)}
-                className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl border border-border/20 hover:border-border/40 bg-card/30 hover:bg-card/60 transition-all duration-150 text-left group"
-              >
-                <div className="w-6 h-6 rounded-md bg-accent/20 flex items-center justify-center flex-shrink-0 group-hover:bg-cherry-active-bg transition-colors">
-                  <s.icon size={11} strokeWidth={1.5} className="text-muted-foreground/50 group-hover:text-cherry-primary transition-colors" />
-                </div>
-                <div className="flex flex-col gap-0 min-w-0">
-                  <span className="text-xs text-foreground/65 group-hover:text-foreground/85 transition-colors truncate">{s.label}</span>
-                  <span className="text-[9px] text-muted-foreground/35 leading-[1.3] truncate">{s.desc}</span>
-                </div>
-              </motion.button>
-            ))}
+    <div className="flex flex-col h-full w-full">
+      {/* Centered empty state */}
+      <div className="flex-1 flex flex-col items-center justify-center">
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}
+          className="flex flex-col items-center max-w-[360px] w-full">
+          <div className="w-14 h-14 rounded-2xl bg-gradient-to-b from-accent/60 to-accent/30 border border-border/30 flex items-center justify-center mb-5">
+            <Sparkles size={22} strokeWidth={1.3} className="text-muted-foreground/60" />
           </div>
+          <h2 className="text-sm text-foreground tracking-[-0.01em]">你好，有什么需要帮助的？</h2>
+          <p className="text-xs text-muted-foreground/60 text-center leading-[1.6] mt-1.5">
+            向 {agentName || '智能体'} 提问，支持生成文章、代码和可视化内容
+          </p>
         </motion.div>
+      </div>
+
+      {/* Input bar at bottom */}
+      <div className="flex-shrink-0 px-4 pb-3 pt-2">
+        <div className="relative rounded-xl border border-border/50 bg-background shadow-sm focus-within:border-border/80 transition-all duration-150">
+          <Textarea
+            ref={textareaRef}
+            value={input}
+            onChange={handleInput}
+            onKeyDown={handleKeyDown}
+            placeholder="在这里输入消息，按 Enter 发送"
+            rows={1}
+            autoFocus
+            className="w-full bg-transparent text-sm text-foreground placeholder:text-muted-foreground/60 outline-none resize-none min-h-[36px] max-h-[140px] leading-[1.6] px-3.5 pt-[10px] pb-[36px]"
+          />
+          <div className="absolute bottom-[7px] left-2.5 right-2.5 flex items-center justify-between">
+            <div className="flex items-center gap-0.5">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon-sm" className="p-[5px] w-auto h-auto text-muted-foreground hover:text-foreground hover:bg-accent/50">
+                    <Plus size={14} />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent side="top" align="start" className="w-44">
+                  <DropdownMenuItem className="gap-2 px-2 py-[5px] text-xs"><Paperclip size={13} strokeWidth={1.5} className="text-muted-foreground flex-shrink-0" /><span className="flex-1 text-left">添加图片或附件</span></DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem className="gap-2 px-2 py-[5px] text-xs"><Code2 size={13} strokeWidth={1.5} className="text-muted-foreground flex-shrink-0" /><span className="flex-1 text-left">代码</span></DropdownMenuItem>
+                  <DropdownMenuItem className="gap-2 px-2 py-[5px] text-xs"><Folder size={13} strokeWidth={1.5} className="text-muted-foreground flex-shrink-0" /><span className="flex-1 text-left">添加文件夹</span></DropdownMenuItem>
+                  <DropdownMenuItem className="gap-2 px-2 py-[5px] text-xs"><Globe size={13} strokeWidth={1.5} className="text-muted-foreground flex-shrink-0" /><span className="flex-1 text-left">网络搜索</span></DropdownMenuItem>
+                  <DropdownMenuItem className="gap-2 px-2 py-[5px] text-xs"><Brain size={13} strokeWidth={1.5} className="text-muted-foreground flex-shrink-0" /><span className="flex-1 text-left">推理</span></DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+            <Button
+              variant="default"
+              size="icon-sm"
+              onClick={handleSend}
+              disabled={!input.trim()}
+              className="rounded-lg p-1.5 w-auto h-auto disabled:opacity-30"
+            >
+              <ArrowUp size={13} strokeWidth={2} />
+            </Button>
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -355,13 +393,18 @@ function CompactSessionSelector({
   onOpenHistory: () => void;
 }) {
   return (
-    <div className="flex items-center gap-1.5 px-2 py-[4px] text-xs text-foreground/75 max-w-[200px]">
+    <div className="flex items-center gap-1.5 px-2 py-[4px] text-xs text-foreground max-w-[200px]">
       <Bot size={11} className="text-muted-foreground flex-shrink-0" />
       <span className="truncate">
         {activeSession ? activeSession.title : '新会话'}
       </span>
-      {activeSession?.status === 'active' && (
-        <span className="w-[5px] h-[5px] rounded-full bg-cherry-primary flex-shrink-0" />
+      {activeSession && (
+        <span className={`w-[5px] h-[5px] rounded-full flex-shrink-0 ${
+          activeSession.status === 'active' ? 'bg-warning animate-pulse' :
+          activeSession.status === 'completed' ? 'bg-success' :
+          activeSession.status === 'error' ? 'bg-destructive' :
+          'bg-muted-foreground/40'
+        }`} />
       )}
     </div>
   );
@@ -371,9 +414,6 @@ function CompactSessionSelector({
 // Capability Toggle Switch (mini)
 // ===========================
 
-function CapToggle({ checked, onChange }: { checked: boolean; onChange: (v: boolean) => void }) {
-  return <Switch checked={checked} onCheckedChange={onChange} />;
-}
 
 // ===========================
 // Add Capability Panel (slide-over inside info panel)
@@ -388,9 +428,6 @@ function AddCapabilityPanel({ tab, existingIds, onAdd, onClose, onBrowse }: {
 }) {
   const [search, setSearch] = useState('');
   const [activeCat, setActiveCat] = useState<string | null>(null);
-  const searchRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => { searchRef.current?.focus(); }, []);
 
   const catalog = useMemo(() => {
     if (tab === 'tools') return BUILTIN_TOOLS_CATALOG.filter(t => !existingIds.has(t.id));
@@ -428,46 +465,38 @@ function AddCapabilityPanel({ tab, existingIds, onAdd, onClose, onBrowse }: {
       className="absolute inset-0 z-10 bg-background flex flex-col"
     >
       {/* Header */}
-      <div className="flex items-center gap-2 px-4 h-[38px] flex-shrink-0 border-b border-border/10">
-        <Button variant="ghost" size="icon-xs" onClick={onClose} className="p-1 w-auto h-auto text-muted-foreground hover:text-foreground hover:bg-accent/15">
+      <div className="flex items-center gap-2 px-4 h-[38px] flex-shrink-0 border-b border-border/15">
+        <Button variant="ghost" size="icon-xs" onClick={onClose} className="text-muted-foreground hover:text-foreground hover:bg-accent/15">
           <ArrowLeft size={12} />
         </Button>
         <span className="text-xs text-foreground">{"\u6dfb\u52a0"}{tabLabel}</span>
-        <span className="text-[9px] text-muted-foreground/40 ml-auto">{catalog.length} {"\u9879\u53ef\u7528"}</span>
+        <span className="text-xs text-muted-foreground/40 ml-auto">{catalog.length} {"\u9879\u53ef\u7528"}</span>
       </div>
 
       {/* Search */}
       <div className="px-3 pt-2.5 pb-1.5">
-        <div className="flex items-center gap-1.5 px-2.5 py-[5px] rounded-lg bg-accent/15 border border-border/15">
-          <SearchIcon size={10} className="text-muted-foreground/40 flex-shrink-0" />
-          <Input
-            ref={searchRef}
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            placeholder={`\u641c\u7d22${tabLabel}...`}
-            className="flex-1 h-auto border-0 bg-transparent shadow-none focus-visible:ring-0 text-xs text-foreground placeholder:text-muted-foreground/30 p-0 rounded-none min-w-0"
-          />
-          {search && (
-            <Button variant="ghost" size="icon-xs" onClick={() => setSearch('')} className="w-auto h-auto p-0 text-muted-foreground/30 hover:text-muted-foreground/60 hover:bg-transparent">
-              <X size={8} />
-            </Button>
-          )}
-        </div>
+        <SearchInput
+          value={search}
+          onChange={setSearch}
+          placeholder={`\u641c\u7d22${tabLabel}...`}
+          iconSize={10}
+          autoFocus
+          wrapperClassName="px-2.5"
+        />
       </div>
 
       {/* Category pills for tools */}
       {tab === 'tools' && (
         <div className="px-3 pb-1.5 flex items-center gap-1 flex-wrap">
           {BUILTIN_TOOL_CATEGORIES.map(cat => (
-            <Button
+            <Button size="inline"
               key={cat}
               variant="ghost"
-              size="xs"
               onClick={() => setActiveCat(activeCat === cat ? null : cat)}
-              className={`px-1.5 py-px h-auto rounded-full text-[8.5px] border ${
+              className={`px-1.5 py-px rounded-full text-xs border ${
                 activeCat === cat
-                  ? 'bg-foreground/8 text-foreground/70 border-border/40'
-                  : 'bg-accent/15 text-muted-foreground/50 border-transparent hover:bg-accent/30'
+                  ? 'bg-accent/50 text-foreground border-border/40'
+                  : 'bg-accent/15 text-muted-foreground/50 border-transparent hover:bg-accent/50'
               }`}
             >
               {cat}
@@ -477,26 +506,23 @@ function AddCapabilityPanel({ tab, existingIds, onAdd, onClose, onBrowse }: {
       )}
 
       {/* Item list */}
-      <div className="flex-1 overflow-y-auto px-3 pb-3 [&::-webkit-scrollbar]:w-[3px] [&::-webkit-scrollbar-thumb]:bg-border/25 [&::-webkit-scrollbar-thumb]:rounded-full">
+      <div className="flex-1 overflow-y-auto px-3 pb-3 scrollbar-thin">
         {filtered.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-8 text-center">
-            <SearchIcon size={16} className="text-muted-foreground/20 mb-2" />
-            <span className="text-xs text-muted-foreground/40">{"\u65e0\u5339\u914d\u7ed3\u679c"}</span>
-          </div>
+          <EmptyState preset="no-result" compact className="py-8" />
         ) : tab === 'tools' && grouped ? (
           Array.from(grouped.entries()).map(([cat, items]) => (
             <div key={cat} className="mb-3">
-              <div className="text-[9px] text-muted-foreground/45 mb-1.5 px-0.5">{cat}</div>
+              <div className="text-xs text-muted-foreground/40 mb-1.5 px-0.5">{cat}</div>
               <div className="space-y-0.5">
                 {items.map((item: any) => (
                   <div key={item.id} className="flex items-center gap-2 px-2.5 py-[7px] rounded-lg hover:bg-accent/15 transition-colors group">
                     <Wrench size={10} className="text-muted-foreground/40 flex-shrink-0" />
                     <div className="flex-1 min-w-0">
-                      <div className="text-xs text-foreground/75 truncate">{item.name}</div>
-                      <div className="text-[9px] text-muted-foreground/40 truncate">{item.desc}</div>
+                      <div className="text-sm text-foreground truncate">{item.name}</div>
+                      <div className="text-xs text-muted-foreground/40 truncate">{item.desc}</div>
                     </div>
                     <Button variant="ghost" size="icon-xs" onClick={() => onAdd(item.id)}
-                      className="p-[3px] w-auto h-auto text-muted-foreground/30 hover:text-cherry-primary hover:bg-cherry-active-bg opacity-0 group-hover:opacity-100">
+                      className="p-[3px] w-auto h-auto text-muted-foreground/40 hover:text-cherry-primary hover:bg-cherry-active-bg opacity-0 group-hover:opacity-100">
                       <Plus size={11} />
                     </Button>
                   </div>
@@ -514,13 +540,13 @@ function AddCapabilityPanel({ tab, existingIds, onAdd, onClose, onBrowse }: {
                   <Zap size={10} className="text-warning/40 flex-shrink-0" />
                 )}
                 <div className="flex-1 min-w-0">
-                  <div className="text-xs text-foreground/75 truncate">{item.name}</div>
-                  <div className="text-[9px] text-muted-foreground/40 truncate">
+                  <div className="text-sm text-foreground truncate">{item.name}</div>
+                  <div className="text-xs text-muted-foreground/40 truncate">
                     {tab === 'mcp' ? item.author : item.desc}
                   </div>
                 </div>
                 <Button variant="ghost" size="icon-xs" onClick={() => onAdd(item.id)}
-                  className="p-[3px] w-auto h-auto text-muted-foreground/30 hover:text-cherry-primary hover:bg-cherry-active-bg opacity-0 group-hover:opacity-100">
+                  className="p-[3px] w-auto h-auto text-muted-foreground/40 hover:text-cherry-primary hover:bg-cherry-active-bg opacity-0 group-hover:opacity-100">
                   <Plus size={11} />
                 </Button>
               </div>
@@ -530,25 +556,23 @@ function AddCapabilityPanel({ tab, existingIds, onAdd, onClose, onBrowse }: {
       </div>
 
       {/* Bottom actions */}
-      <div className="px-3 pb-3 pt-1.5 border-t border-border/10 space-y-1.5">
-        <Button
+      <div className="px-3 pb-3 pt-1.5 border-t border-border/15 space-y-1.5">
+        <Button size="inline"
           variant="ghost"
-          size="xs"
           onClick={onBrowse}
-          className="w-full justify-start gap-2 px-2.5 py-[7px] h-auto text-xs text-foreground/60 hover:text-foreground hover:bg-accent/15"
+          className="w-full justify-start gap-2 px-2.5 py-[7px] text-xs text-muted-foreground hover:text-foreground hover:bg-accent/15"
         >
           <Compass size={11} className="text-muted-foreground/50" />
           <span>{"\u53bb\u63a2\u7d22\u6d4f\u89c8"}</span>
-          <ChevronRight size={9} className="ml-auto text-muted-foreground/30" />
+          <ChevronRight size={9} className="ml-auto text-muted-foreground/40" />
         </Button>
-        <Button
+        <Button size="inline"
           variant="ghost"
-          size="xs"
-          className="w-full justify-start gap-2 px-2.5 py-[7px] h-auto text-xs text-foreground/60 hover:text-foreground hover:bg-accent/15"
+          className="w-full justify-start gap-2 px-2.5 py-[7px] text-xs text-muted-foreground hover:text-foreground hover:bg-accent/15"
         >
           <PenTool size={10} className="text-muted-foreground/50" />
           <span>{"\u624b\u52a8\u6dfb\u52a0"}</span>
-          <ChevronRight size={9} className="ml-auto text-muted-foreground/30" />
+          <ChevronRight size={9} className="ml-auto text-muted-foreground/40" />
         </Button>
       </div>
     </motion.div>
@@ -603,7 +627,7 @@ function AgentInfoPanel({ agent, onClose, onEdit }: {
       animate={{ x: 0, opacity: 1 }}
       exit={{ x: 40, opacity: 0 }}
       transition={{ duration: 0.18, ease: [0.4, 0, 0.2, 1] }}
-      className="absolute top-2 right-2 bottom-2 z-40 bg-background rounded-xl border border-border/25 shadow-2xl shadow-black/12 flex flex-col overflow-hidden"
+      className="absolute top-2 right-2 bottom-2 z-[var(--z-sticky)] bg-background rounded-xl border border-border/25 shadow-2xl shadow-black/12 flex flex-col overflow-hidden"
       style={{ width: 340 }}
     >
       {/* Add panel overlay */}
@@ -627,17 +651,17 @@ function AgentInfoPanel({ agent, onClose, onEdit }: {
         </div>
         <div className="flex items-center gap-0.5">
           <Tooltip content={"\u5728\u8d44\u6e90\u5e93\u4e2d\u7f16\u8f91"} side="bottom">
-            <Button variant="ghost" size="icon-xs" onClick={onEdit} className="p-1.5 w-auto h-auto text-muted-foreground hover:text-foreground hover:bg-accent/15">
+            <Button variant="ghost" size="icon-xs" onClick={onEdit} className="text-muted-foreground hover:text-foreground hover:bg-accent/15">
               <Edit3 size={11} />
             </Button>
           </Tooltip>
-          <Button variant="ghost" size="icon-xs" onClick={onClose} className="p-1.5 w-auto h-auto text-muted-foreground hover:text-foreground hover:bg-accent/15">
+          <Button variant="ghost" size="icon-xs" onClick={onClose} className="text-muted-foreground hover:text-foreground hover:bg-accent/15">
             <X size={12} />
           </Button>
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto [&::-webkit-scrollbar]:w-[3px] [&::-webkit-scrollbar-thumb]:bg-border/25 [&::-webkit-scrollbar-thumb]:rounded-full">
+      <div className="flex-1 overflow-y-auto scrollbar-thin">
         <div className="p-4 space-y-3.5">
           {/* Avatar + Name + Desc */}
           <div className="flex items-start gap-3">
@@ -645,9 +669,9 @@ function AgentInfoPanel({ agent, onClose, onEdit }: {
               {agent.avatar}
             </div>
             <div className="flex-1 min-w-0">
-              <h3 className="text-sm text-foreground mb-0.5">{agent.name}</h3>
+              <Typography variant="subtitle" className="mb-0.5">{agent.name}</Typography>
               <p className="text-xs text-muted-foreground/60 leading-[1.5]">{agent.desc}</p>
-              <div className="flex items-center gap-2 text-[9px] text-muted-foreground/45 mt-1.5">
+              <div className="flex items-center gap-2 text-xs text-muted-foreground/40 mt-1.5">
                 <Clock size={9} />
                 <span>{"\u6700\u8fd1\u4f7f\u7528"} {agent.updatedAt}</span>
               </div>
@@ -658,7 +682,7 @@ function AgentInfoPanel({ agent, onClose, onEdit }: {
           {tags.length > 0 && (
             <div className="flex items-center gap-1.5 flex-wrap">
               {tags.map(t => (
-                <span key={t} className="px-1.5 py-[2px] rounded text-[9px] bg-accent/30 text-foreground/70">{t}</span>
+                <span key={t} className="px-1.5 py-[2px] rounded text-xs bg-accent/25 text-foreground">{t}</span>
               ))}
             </div>
           )}
@@ -666,29 +690,29 @@ function AgentInfoPanel({ agent, onClose, onEdit }: {
           {/* Info rows */}
           <div className="space-y-[6px]">
             <div className="flex items-center justify-between text-xs">
-              <span className="text-muted-foreground/70">{"\u9ed8\u8ba4\u6a21\u578b"}</span>
-              <div className="flex items-center gap-1.5 px-2 py-[3px] rounded-md bg-accent/20">
-                <Sparkles size={9} className="text-muted-foreground/50" />
-                <span className="text-foreground/80">{agent.model}</span>
+              <span className="text-muted-foreground/60">{"\u9ed8\u8ba4\u6a21\u578b"}</span>
+              <div className="flex items-center gap-1.5 px-2 py-[3px] rounded-md bg-accent/25">
+                <BrandLogo id={agent.provider?.toLowerCase() || ''} fallbackLetter={agent.provider?.[0] || '?'} size={14} className="shrink-0" />
+                <span className="text-foreground">{agent.model}</span>
               </div>
             </div>
             <div className="flex items-center justify-between text-xs">
-              <span className="text-muted-foreground/70">{"\u8fd0\u884c\u6a21\u5f0f"}</span>
+              <span className="text-muted-foreground/60">{"\u8fd0\u884c\u6a21\u5f0f"}</span>
               <div className="flex items-center gap-1.5">
                 <Workflow size={9} className={modeInfo.color} />
                 <span className={modeInfo.color}>{modeInfo.label}</span>
               </div>
             </div>
             <div className="flex items-center justify-between text-xs">
-              <span className="text-muted-foreground/70">{"\u6700\u5927\u8f6e\u6b21"}</span>
-              <span className="text-foreground/70 tabular-nums">{agent.maxRounds}</span>
+              <span className="text-muted-foreground/60">{"\u6700\u5927\u8f6e\u6b21"}</span>
+              <span className="text-foreground tabular-nums">{agent.maxRounds}</span>
             </div>
             <div className="flex items-center justify-between text-xs">
-              <span className="text-muted-foreground/70">{"\u5de5\u4f5c\u76ee\u5f55"}</span>
-              <span className="text-foreground/60 font-mono text-[9px]">{agent.workDir}</span>
+              <span className="text-muted-foreground/60">{"\u5de5\u4f5c\u76ee\u5f55"}</span>
+              <span className="text-muted-foreground font-mono text-xs">{agent.workDir}</span>
             </div>
             <div className="flex items-center justify-between text-xs">
-              <span className="text-muted-foreground/70">{"\u81ea\u52a8\u6279\u51c6"}</span>
+              <span className="text-muted-foreground/60">{"\u81ea\u52a8\u6279\u51c6"}</span>
               <span className={agent.autoApprove ? 'text-cherry-primary' : 'text-muted-foreground/50'}>
                 {agent.autoApprove ? '\u5df2\u5f00\u542f' : '\u5df2\u5173\u95ed'}
               </span>
@@ -697,8 +721,8 @@ function AgentInfoPanel({ agent, onClose, onEdit }: {
 
           {/* System prompt — collapsible */}
           <div className="rounded-lg bg-muted/15 overflow-hidden">
-            <Button variant="ghost" size="xs" onClick={() => setPromptExpanded(!promptExpanded)}
-              className="w-full justify-start gap-2 px-3 py-2 h-auto text-xs text-foreground/80 hover:bg-accent/10">
+            <Button variant="ghost" size="inline" onClick={() => setPromptExpanded(!promptExpanded)}
+              className="w-full justify-start gap-2 px-3 py-2 text-xs text-foreground hover:bg-accent/15">
               <FileText size={10} className="text-muted-foreground flex-shrink-0" />
               <span className="flex-1 text-left">{"\u7cfb\u7edf\u63d0\u793a\u8bcd"}</span>
               <motion.div animate={{ rotate: promptExpanded ? 90 : 0 }} transition={{ duration: 0.1 }}>
@@ -709,7 +733,7 @@ function AgentInfoPanel({ agent, onClose, onEdit }: {
               {promptExpanded && (
                 <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.15 }} className="overflow-hidden">
                   <div className="px-3 pb-3">
-                    <pre className="text-xs text-foreground/60 leading-[1.7] whitespace-pre-wrap mt-1 font-sans">{agent.systemPrompt}</pre>
+                    <pre className="text-xs text-muted-foreground leading-[1.7] whitespace-pre-wrap mt-1 font-sans">{agent.systemPrompt}</pre>
                   </div>
                 </motion.div>
               )}
@@ -721,11 +745,11 @@ function AgentInfoPanel({ agent, onClose, onEdit }: {
             <div className="flex items-center justify-between mb-2.5">
               <div className="flex items-center gap-1.5">
                 <Layers size={10} className="text-muted-foreground" />
-                <span className="text-xs text-foreground/70">{"\u80fd\u529b\u6269\u5c55"}</span>
+                <span className="text-xs text-foreground">{"\u80fd\u529b\u6269\u5c55"}</span>
               </div>
               <Tooltip content={`\u6dfb\u52a0${capTab === 'tools' ? '\u5185\u7f6e\u5de5\u5177' : capTab === 'mcp' ? 'MCP Server' : 'Skill'}`} side="left">
                 <Button variant="ghost" size="icon-xs" onClick={() => setShowAddPanel(true)}
-                  className="p-[3px] w-auto h-auto text-muted-foreground/40 hover:text-foreground/70 hover:bg-accent/20">
+                  className="p-[3px] w-auto h-auto text-muted-foreground/40 hover:text-foreground hover:bg-accent/50">
                   <Plus size={11} />
                 </Button>
               </Tooltip>
@@ -739,17 +763,16 @@ function AgentInfoPanel({ agent, onClose, onEdit }: {
                   : `${enabledSkillCount}/${skills.length}`;
                 const active = capTab === t.key;
                 return (
-                  <Button
+                  <Button size="inline"
                     key={t.key}
                     variant="ghost"
-                    size="xs"
                     onClick={() => setCapTab(t.key)}
-                    className={`relative px-2.5 pb-[7px] pt-[3px] h-auto rounded-none text-xs ${
-                      active ? 'text-foreground' : 'text-muted-foreground/50 hover:text-muted-foreground/80'
+                    className={`relative px-2.5 pb-[7px] pt-[3px] rounded-none text-xs ${
+                      active ? 'text-foreground' : 'text-muted-foreground/50 hover:text-muted-foreground/60'
                     }`}
                   >
                     <span>{t.label}</span>
-                    <span className={`ml-1 text-[9px] ${active ? 'text-muted-foreground/60' : 'text-muted-foreground/30'}`}>{count}</span>
+                    <span className={`ml-1 text-xs ${active ? 'text-muted-foreground/60' : 'text-muted-foreground/50'}`}>{count}</span>
                     {active && (
                       <motion.div
                         layoutId="cap-tab-indicator"
@@ -767,11 +790,14 @@ function AgentInfoPanel({ agent, onClose, onEdit }: {
               {/* === Built-in Tools Tab === */}
               {capTab === 'tools' && (
                 builtinTools.length === 0 ? (
-                  <div className="flex flex-col items-center py-5 text-center">
-                    <Wrench size={16} className="text-muted-foreground/15 mb-1.5" />
-                    <span className="text-[9.5px] text-muted-foreground/35">{"\u672a\u6dfb\u52a0\u5185\u7f6e\u5de5\u5177"}</span>
-                    <Button variant="ghost" size="xs" onClick={() => setShowAddPanel(true)} className="text-[9px] text-cherry-text-muted hover:text-cherry-primary mt-1 h-auto p-0">{"+ \u6dfb\u52a0\u5de5\u5177"}</Button>
-                  </div>
+                  <EmptyState
+                    icon={Wrench}
+                    title="未添加内置工具"
+                    actionLabel="+ 添加工具"
+                    onAction={() => setShowAddPanel(true)}
+                    compact
+                    className="py-5"
+                  />
                 ) : (
                   <div className="space-y-3">
                     {Array.from(toolsByCategory.entries()).map(([cat, items]) => {
@@ -779,18 +805,18 @@ function AgentInfoPanel({ agent, onClose, onEdit }: {
                       return (
                         <div key={cat}>
                           <div className="flex items-center justify-between mb-1 px-0.5">
-                            <span className="text-[9px] text-muted-foreground/45">{cat}</span>
-                            <span className="text-[8px] text-muted-foreground/30">{catEnabled}/{items.length}</span>
+                            <span className="text-xs text-muted-foreground/40">{cat}</span>
+                            <span className="text-xs text-muted-foreground/50">{catEnabled}/{items.length}</span>
                           </div>
                           <div className="grid grid-cols-2 gap-x-2 gap-y-0.5">
                             {items.map(tool => (
-                              <div key={tool.id} className="flex items-center gap-2 px-2 py-[6px] rounded-md hover:bg-accent/10 transition-colors group">
-                                <Wrench size={10} className={`flex-shrink-0 ${tool.enabled ? 'text-foreground/50' : 'text-muted-foreground/25'}`} />
+                              <div key={tool.id} className="flex items-center gap-2 px-2 py-[6px] rounded-md hover:bg-accent/15 transition-colors group">
+                                <Wrench size={10} className={`flex-shrink-0 ${tool.enabled ? 'text-muted-foreground/60' : 'text-muted-foreground/50'}`} />
                                 <div className="flex-1 min-w-0">
-                                  <div className={`text-[9.5px] truncate ${tool.enabled ? 'text-foreground/70' : 'text-muted-foreground/35'}`}>{tool.name}</div>
-                                  <div className="text-[8px] text-muted-foreground/30 truncate">{tool.desc}</div>
+                                  <div className={`text-sm truncate ${tool.enabled ? 'text-foreground' : 'text-muted-foreground/50'}`}>{tool.name}</div>
+                                  <div className="text-xs text-muted-foreground/50 truncate">{tool.desc}</div>
                                 </div>
-                                <CapToggle checked={tool.enabled} onChange={() => {}} />
+                                <Switch size="sm" checked={tool.enabled} onCheckedChange={() => {}} />
                               </div>
                             ))}
                           </div>
@@ -804,24 +830,27 @@ function AgentInfoPanel({ agent, onClose, onEdit }: {
               {/* === MCP Tab === */}
               {capTab === 'mcp' && (
                 mcpServices.length === 0 ? (
-                  <div className="flex flex-col items-center py-5 text-center">
-                    <Cable size={16} className="text-muted-foreground/15 mb-1.5" />
-                    <span className="text-[9.5px] text-muted-foreground/35">{"\u672a\u6dfb\u52a0 MCP Server"}</span>
-                    <Button variant="ghost" size="xs" onClick={() => setShowAddPanel(true)} className="text-[9px] text-cherry-text-muted hover:text-cherry-primary mt-1 h-auto p-0">{"+ \u6dfb\u52a0 MCP"}</Button>
-                  </div>
+                  <EmptyState
+                    icon={Cable}
+                    title="未添加 MCP Server"
+                    actionLabel="+ 添加 MCP"
+                    onAction={() => setShowAddPanel(true)}
+                    compact
+                    className="py-5"
+                  />
                 ) : (
                   <div className="space-y-0.5">
                     {mcpServices.map(svc => (
-                      <div key={svc.id} className="flex items-center gap-2.5 px-2.5 py-[7px] rounded-lg hover:bg-accent/10 transition-colors group">
-                        <div className="w-6 h-6 rounded-md bg-accent/20 flex items-center justify-center flex-shrink-0">
+                      <div key={svc.id} className="flex items-center gap-2.5 px-2.5 py-[7px] rounded-lg hover:bg-accent/15 transition-colors group">
+                        <div className="w-6 h-6 rounded-md bg-accent/25 flex items-center justify-center flex-shrink-0">
                           <Cable size={11} className="text-info/60" />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <div className="text-xs text-foreground/75 truncate">{svc.name}</div>
-                          <div className="text-[8.5px] text-muted-foreground/35 truncate">{svc.desc}</div>
+                          <div className="text-sm text-foreground truncate">{svc.name}</div>
+                          <div className="text-xs text-muted-foreground/50 truncate">{svc.desc}</div>
                         </div>
                         <span className={`w-[6px] h-[6px] rounded-full flex-shrink-0 ${
-                          svc.status === 'connected' ? 'bg-cherry-primary' : 'bg-muted-foreground/25'
+                          svc.status === 'connected' ? 'bg-cherry-primary' : 'bg-muted-foreground/30'
                         }`} />
                       </div>
                     ))}
@@ -832,21 +861,24 @@ function AgentInfoPanel({ agent, onClose, onEdit }: {
               {/* === Skills Tab === */}
               {capTab === 'skills' && (
                 skills.length === 0 ? (
-                  <div className="flex flex-col items-center py-5 text-center">
-                    <Zap size={16} className="text-muted-foreground/15 mb-1.5" />
-                    <span className="text-[9.5px] text-muted-foreground/35">{"\u672a\u6dfb\u52a0 Skill"}</span>
-                    <Button variant="ghost" size="xs" onClick={() => setShowAddPanel(true)} className="text-[9px] text-cherry-text-muted hover:text-cherry-primary mt-1 h-auto p-0">{"+ \u6dfb\u52a0 Skill"}</Button>
-                  </div>
+                  <EmptyState
+                    icon={Zap}
+                    title="未添加 Skill"
+                    actionLabel="+ 添加 Skill"
+                    onAction={() => setShowAddPanel(true)}
+                    compact
+                    className="py-5"
+                  />
                 ) : (
                   <div className="space-y-0.5">
                     {skills.map(skill => (
-                      <div key={skill.id} className="flex items-center gap-2.5 px-2.5 py-[7px] rounded-lg hover:bg-accent/10 transition-colors">
-                        <Zap size={10} className={`flex-shrink-0 ${skill.enabled ? 'text-warning/60' : 'text-muted-foreground/25'}`} />
+                      <div key={skill.id} className="flex items-center gap-2.5 px-2.5 py-[7px] rounded-lg hover:bg-accent/15 transition-colors">
+                        <Zap size={10} className={`flex-shrink-0 ${skill.enabled ? 'text-warning/60' : 'text-muted-foreground/50'}`} />
                         <div className="flex-1 min-w-0">
-                          <div className={`text-xs truncate ${skill.enabled ? 'text-foreground/75' : 'text-muted-foreground/40'}`}>{skill.name}</div>
-                          <div className="text-[8.5px] text-muted-foreground/35 truncate">{skill.desc}</div>
+                          <div className={`text-sm truncate ${skill.enabled ? 'text-foreground' : 'text-muted-foreground/40'}`}>{skill.name}</div>
+                          <div className="text-xs text-muted-foreground/50 truncate">{skill.desc}</div>
                         </div>
-                        <CapToggle checked={skill.enabled} onChange={() => {}} />
+                        <Switch size="sm" checked={skill.enabled} onCheckedChange={() => {}} />
                       </div>
                     ))}
                   </div>
@@ -856,7 +888,7 @@ function AgentInfoPanel({ agent, onClose, onEdit }: {
           </div>
 
           {/* Footer */}
-          <div className="flex items-center justify-between text-[9px] text-muted-foreground/40 pt-2 border-t border-border/10">
+          <div className="flex items-center justify-between text-xs text-muted-foreground/40 pt-2 border-t border-border/15">
             <span>{"\u521b\u5efa\u4e8e"} {agent.createdAt}</span>
             <span>ID: {agent.id}</span>
           </div>
@@ -871,30 +903,18 @@ function AgentInfoPanel({ agent, onClose, onEdit }: {
 // ===========================
 
 export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
-  const { navigateToLibrary: _navLib, changeTabTitle: onTabTitleChange, openSettings: onOpenSettings } = useGlobalActions();
+  const { navigateToLibrary: _navLib, editAssistantInLibrary, changeTabTitle: onTabTitleChange, openSettings: onOpenSettings } = useGlobalActions();
   const onNavigateToLibrary = () => _navLib('agent');
+  const { pinnedIds: pinnedAgentIds, togglePin: togglePinAgent } = usePinnedAgents();
   const [sessions, setSessions] = useState<AgentSession[]>(MOCK_SESSIONS);
   const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
   const [localMessages, setLocalMessages] = useState<Record<string, ChatMessage[]>>({});
   const [selectedFile, setSelectedFile] = useState<string | null>('src/App.tsx');
   const [showModelPicker, setShowModelPicker] = useState(false);
   const [selectedModel, setSelectedModel] = useState(MODELS[0]);
-  const [mdlSearch, setMdlSearch] = useState('');
-  const [activeProvider, setActiveProvider] = useState<string>(() => MODELS[0].provider);
-  const [mdlCapFilter, setMdlCapFilter] = useState<AgentModelCapability | null>(null);
-  const mdlSearchRef = useRef<HTMLInputElement>(null);
-  const MODEL_PROVIDERS = useMemo(() => Array.from(new Set(MODELS.map(m => m.provider))), []);
-  const providerModels = useMemo(() => {
-    return MODELS.filter(m => {
-      const matchProvider = m.provider === activeProvider;
-      const matchSearch = !mdlSearch || m.name.toLowerCase().includes(mdlSearch.toLowerCase());
-      const matchCap = !mdlCapFilter || m.capabilities.includes(mdlCapFilter);
-      return matchProvider && matchSearch && matchCap;
-    });
-  }, [activeProvider, mdlSearch, mdlCapFilter]);
   const [showExplorer, setShowExplorer] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
-  const historySidebar = useHistorySidebar('hidden');
+  const historySidebar = useHistorySidebar('compact');
   const [historyDisplayMode, setHistoryDisplayMode] = useState<SessionDisplayMode>('floating');
   const [selectedAgent, setSelectedAgent] = useState(AVAILABLE_AGENTS[0]);
   const [previewMaximized, setPreviewMaximized] = useState(false);
@@ -924,6 +944,7 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
 
   const handleSelectSession = useCallback((id: string) => {
     setActiveSessionId(id);
+    setSessions(prev => prev.map(s => s.id === id && s.unread ? { ...s, unread: false } : s));
     const data = SESSION_DATA_MAP[id];
     if (data) {
       const firstKey = Object.keys(data.fileContents)[0] || null;
@@ -1060,21 +1081,22 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
               onUpdateItem={handleUpdateSession}
               onNewItem={handleNewSession}
               onExpand={() => historySidebar.expand()}
-              onHide={historySidebar.hide}
+              onClose={historySidebar.hide}
               entityLabel="会话"
+              showStatusDot
             />
           </motion.div>
         )}
       </AnimatePresence>
 
       {/* ===== Right: Header + Content ===== */}
-      <div className="flex flex-col flex-1 min-w-0 relative">
+      <div className="flex flex-col flex-1 min-w-0 min-h-0 relative">
         {/* ===== Header ===== */}
         <header className="flex items-center justify-between px-3 border-b border-transparent flex-shrink-0 h-[40px]">
           <div className="flex items-center gap-1.5">
             {onBack && (
               <Button variant="ghost" size="icon-xs" onClick={onBack}
-                className="p-1.5 w-auto h-auto text-muted-foreground hover:text-foreground hover:bg-accent/20">
+                className="p-1.5 w-auto h-auto text-muted-foreground hover:text-foreground hover:bg-accent/50">
                 <ArrowLeft size={13} />
               </Button>
             )}
@@ -1082,7 +1104,7 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
             {/* History sidebar toggle */}
             <Tooltip content={historySidebar.isCompact ? '收起会话列表' : '展开会话列表'} side="bottom">
               <Button variant="ghost" size="icon-xs" onClick={() => historySidebar.toggle()}
-                className={`p-1.5 w-auto h-auto mr-0.5 ${historySidebar.isCompact ? 'text-foreground/60 hover:text-foreground hover:bg-accent/15' : 'text-foreground/35 hover:text-foreground/60 hover:bg-accent/15'}`}>
+                className={`p-1.5 w-auto h-auto mr-0.5 ${historySidebar.isCompact ? 'text-muted-foreground hover:text-foreground hover:bg-accent/15' : 'text-muted-foreground/40 hover:text-foreground hover:bg-accent/15'}`}>
                 <History size={13} />
               </Button>
             </Tooltip>
@@ -1093,118 +1115,43 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
               onSelectAgent={setSelectedAgent}
               onCreateNew={() => onNavigateToLibrary?.()}
               onAvatarClick={() => setShowAgentInfo(true)}
+              onConfigureAgent={(agent) => editAssistantInLibrary(agent.name)}
+              pinnedIds={pinnedAgentIds}
+              onTogglePin={togglePinAgent}
             />
 
             {/* Model picker — always visible */}
-            <div className="w-px h-3.5 bg-border/25" />
-            <div className="relative">
-              <Button variant="ghost" size="xs" onClick={() => { setShowModelPicker(!showModelPicker); if (!showModelPicker) { setMdlSearch(''); setMdlCapFilter(null); setActiveProvider(selectedModel.provider); } }}
-                className={`gap-1 px-1.5 py-[3px] h-auto text-[9.5px] ${
-                showModelPicker
-                  ? 'bg-accent/25 text-foreground'
-                  : 'text-muted-foreground hover:text-foreground hover:bg-accent/15'
-              }`}>
-              <span>{selectedModel.name}</span>
-              <ChevronDown size={7} className={`text-muted-foreground/50 transition-transform duration-100 ${showModelPicker ? 'rotate-180' : ''}`} />
-            </Button>
-            <AnimatePresence>
-              {showModelPicker && (
-                <div>
-                  <div className="fixed inset-0 z-40" onClick={() => setShowModelPicker(false)} />
-                  <motion.div
-                    initial={{ opacity: 0, y: -3 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -3 }}
-                    transition={{ duration: 0.1 }}
-                    className="absolute top-full left-0 mt-1 z-50 bg-popover border border-border/40 rounded-lg shadow-xl shadow-black/8 w-[360px]"
-                    onAnimationComplete={() => mdlSearchRef.current?.focus()}
-                  >
-                    {/* Search */}
-                    <div className="px-2 pt-2 pb-1.5">
-                      <div className="flex items-center gap-1.5 px-2 py-[5px] rounded-md bg-accent/15 border border-border/20">
-                        <SearchIcon size={10} className="text-muted-foreground/40 flex-shrink-0" />
-                        <Input ref={mdlSearchRef} value={mdlSearch} onChange={e => setMdlSearch(e.target.value)}
-                          placeholder={"\u641c\u7d22\u6a21\u578b..."}
-                          className="flex-1 h-auto border-0 bg-transparent shadow-none focus-visible:ring-0 text-xs text-foreground placeholder:text-muted-foreground/30 p-0 rounded-none min-w-0" />
-                        {mdlSearch && <Button variant="ghost" size="icon-xs" onClick={() => setMdlSearch('')} className="w-auto h-auto p-0 text-muted-foreground/30 hover:text-muted-foreground/60 hover:bg-transparent"><X size={8} /></Button>}
-                      </div>
-                    </div>
-                    {/* Tag filters */}
-                    <div className="px-2.5 pb-1 pt-0.5 flex items-center gap-1 flex-wrap">
-                      {ALL_AGENT_CAPABILITIES.map(cap => {
-                        const Icon = AGENT_CAP_TAG_ICONS[cap];
-                        const active = mdlCapFilter === cap;
-                        return (
-                          <Button key={cap} variant="ghost" size="xs" onClick={() => setMdlCapFilter(active ? null : cap)}
-                            className={`gap-1 px-1.5 py-[2px] h-auto rounded-full text-[9px] border ${
-                              active
-                                ? 'bg-foreground/8 text-foreground/80 border-border/50'
-                                : 'bg-accent/15 text-muted-foreground/55 border-transparent hover:bg-accent/30 hover:text-muted-foreground/75'
-                            }`}>
-                            <Icon size={9} />
-                            <span>{AGENT_MODEL_CAPABILITY_LABELS[cap]}</span>
-                          </Button>
-                        );
-                      })}
-                    </div>
-                    <div className="h-px bg-border/20" />
-                    {/* Two-column: providers | models */}
-                    <div className="flex h-[240px]">
-                      {/* Left: providers */}
-                      <div className="w-[110px] border-r border-border/20 py-1 overflow-y-auto flex-shrink-0">
-                        {MODEL_PROVIDERS.map(p => {
-                          const count = MODELS.filter(m => m.provider === p && (!mdlCapFilter || m.capabilities.includes(mdlCapFilter))).length;
-                          const provColor = AGENT_PROVIDER_COLORS[p] || 'bg-gray-400';
-                          return (
-                            <Button key={p} variant="ghost" size="xs" onClick={() => setActiveProvider(p)}
-                              className={`w-full justify-start gap-1.5 px-2.5 py-[6px] h-auto rounded-none text-xs ${
-                                activeProvider === p
-                                  ? 'bg-accent/30 text-foreground'
-                                  : 'text-foreground/60 hover:text-foreground hover:bg-accent/15'
-                              }`}>
-                              <span className={`w-[6px] h-[6px] rounded-full flex-shrink-0 ${provColor}`} />
-                              <span className="truncate flex-1 text-left">{p}</span>
-                              <span className="text-[8px] text-muted-foreground/40 flex-shrink-0">{count}</span>
-                            </Button>
-                          );
-                        })}
-                      </div>
-                      {/* Right: models (single select only) */}
-                      <div className="flex-1 py-1 px-1.5 overflow-y-auto">
-                        {providerModels.length === 0 ? (
-                          <div className="px-2.5 py-3 text-center text-[9px] text-muted-foreground/40">{"\u65e0\u5339\u914d\u7ed3\u679c"}</div>
-                        ) : (
-                          providerModels.map(m => {
-                            const selected = selectedModel.id === m.id;
-                            return (
-                              <Button key={m.id} variant="ghost" size="xs" onClick={() => { setSelectedModel(m); setShowModelPicker(false); }}
-                                className={`w-full justify-start gap-2 px-2 py-[5px] h-auto text-xs mb-px ${
-                                  selected ? 'bg-accent/30 ring-1 ring-border/30' : 'text-foreground/70 hover:text-foreground hover:bg-accent/15'
-                                }`}>
-                                <span className={`flex-1 text-left truncate ${selected ? 'text-foreground' : ''}`}>{m.name}</span>
-                                <div className="flex items-center gap-[3px] flex-shrink-0">
-                                  {m.capabilities.map(cap => {
-                                    const ci = AGENT_CAP_ICONS[cap];
-                                    const CapIcon = ci.icon;
-                                    return <CapIcon key={cap} size={10} className={`${ci.color}/40`} />;
-                                  })}
-                                </div>
-                                {selected && <Check size={9} className="text-cherry-primary flex-shrink-0 ml-0.5" />}
-                              </Button>
-                            );
-                          })
-                        )}
-                      </div>
-                    </div>
-                  </motion.div>
-                </div>
-              )}
-            </AnimatePresence>
-          </div>
+            <div className="w-px h-3.5 bg-border/30" />
+            <Popover open={showModelPicker} onOpenChange={setShowModelPicker}>
+              <PopoverTrigger asChild>
+                <Button variant="ghost" size="inline"
+                  className={`gap-1 px-1.5 py-[3px] text-xs ${
+                  showModelPicker
+                    ? 'bg-accent/25 text-foreground'
+                    : 'text-muted-foreground hover:text-foreground hover:bg-accent/15'
+                }`}>
+                <BrandLogo id={selectedModel.provider.toLowerCase()} fallbackLetter={selectedModel.provider[0]} size={14} className="shrink-0" />
+                <span>{selectedModel.name}</span>
+                <ChevronDown size={7} className={`text-muted-foreground/50 transition-transform duration-100 ${showModelPicker ? 'rotate-180' : ''}`} />
+              </Button>
+              </PopoverTrigger>
+              <PopoverContent align="start" className="p-0 w-[480px]">
+                <ModelPickerPanel
+                  models={MODELS}
+                  selectedModels={[selectedModel.id]}
+                  onSelectModel={(id) => { const m = MODELS.find(m => m.id === id); if (m) setSelectedModel(m); }}
+                  multiModel={false}
+                  onToggleMultiModel={() => {}}
+                  showMultiModelToggle={false}
+                  providerColors={AGENT_PROVIDER_COLORS}
+                  onClose={() => setShowModelPicker(false)}
+                />
+              </PopoverContent>
+            </Popover>
 
           {/* WorkDir — always visible */}
-          <div className="w-px h-3.5 bg-border/25" />
-          <Button variant="ghost" size="xs" className="gap-1.5 px-1.5 py-0.5 h-auto text-[9.5px] text-muted-foreground hover:text-foreground/80 hover:bg-accent/15 font-mono">
+          <div className="w-px h-3.5 bg-border/30" />
+          <Button variant="ghost" size="xs" className="gap-1.5 px-1.5 text-xs text-muted-foreground hover:text-foreground hover:bg-accent/15 font-mono">
             <FolderOpen size={9} />
             {sessionData.workDir || '~/projects'}
           </Button>
@@ -1212,21 +1159,20 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
           {/* Session-specific controls — only when working */}
           {hasMessages && (
             <div className="flex items-center gap-1.5">
-              <div className="w-px h-3.5 bg-border/25" />
-
-              <CompactSessionSelector
-                sessions={sessions}
-                activeSession={activeSession}
-                onSelectSession={handleSelectSession}
-                onOpenHistory={() => historySidebar.expand()}
-              />
-
               {sessionData.workDir && (
                 <div className="flex items-center gap-1.5">
-                  <div className="w-px h-3.5 bg-border/25" />
-                  <div className="flex items-center gap-1 text-[9px] text-cherry-primary-dark">
-                    <Circle size={5} className="fill-cherry-primary" />
-                    {activeSession?.status === 'active' ? '\u8fd0\u884c\u4e2d' : '\u5df2\u5b8c\u6210'}
+                  <div className="w-px h-3.5 bg-border/30" />
+                  <div className={`flex items-center gap-1 text-xs ${
+                    activeSession?.status === 'active' ? 'text-warning' :
+                    activeSession?.status === 'error' ? 'text-destructive' :
+                    'text-cherry-primary-dark'
+                  }`}>
+                    <span className={`w-[5px] h-[5px] rounded-full flex-shrink-0 ${
+                      activeSession?.status === 'active' ? 'bg-warning animate-pulse' :
+                      activeSession?.status === 'error' ? 'bg-destructive' :
+                      'bg-success'
+                    }`} />
+                    {activeSession?.status === 'active' ? '运行中' : activeSession?.status === 'error' ? '失败' : '已完成'}
                   </div>
                 </div>
               )}
@@ -1246,7 +1192,7 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
           {/* Show preview panel — when preview is hidden */}
           {!showPreview && (
             <div className="flex items-center gap-0.5">
-              <div className="w-px h-3.5 bg-border/25 mx-0.5" />
+              <div className="w-px h-3.5 bg-border/30 mx-0.5" />
               <Tooltip content={"\u663e\u793a\u9884\u89c8\u9762\u677f"} side="bottom"><Button variant="ghost" size="icon-xs" onClick={() => { setShowPreview(true); }}
                 className="p-1.5 w-auto h-auto text-muted-foreground hover:text-foreground hover:bg-accent/15">
                 <Columns2 size={12} />
@@ -1256,12 +1202,9 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
 
           {hasMessages && (
             <div className="flex items-center gap-0.5">
-              <div className="w-px h-3.5 bg-border/25 mx-0.5" />
-              <Tooltip content={"\u5bfc\u51fa"} side="bottom"><Button variant="ghost" size="icon-xs" className="p-1.5 w-auto h-auto text-muted-foreground hover:text-foreground hover:bg-accent/15">
+              <div className="w-px h-3.5 bg-border/30 mx-0.5" />
+              <Tooltip content={"\u5bfc\u51fa"} side="bottom"><Button variant="ghost" size="icon-xs" className="text-muted-foreground hover:text-foreground hover:bg-accent/15">
                 <Download size={11} />
-              </Button></Tooltip>
-              <Tooltip content={"\u5206\u4eab"} side="bottom"><Button variant="ghost" size="icon-xs" className="p-1.5 w-auto h-auto text-muted-foreground hover:text-foreground hover:bg-accent/15">
-                <Share2 size={11} />
               </Button></Tooltip>
             </div>
           )}
@@ -1274,14 +1217,14 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
         {!previewMaximized && (
           !hasMessages ? (
             <div
-              className={`overflow-hidden ${showPreview ? 'flex-shrink-0' : 'flex-1'}`}
+              className={`min-h-0 h-full ${showPreview ? 'flex-shrink-0' : 'flex-1'}`}
               style={showPreview ? { width: 330 } : undefined}
             >
-              <NewSessionEmpty onSendMessage={handleSendMessage} />
+              <NewSessionEmpty onSendMessage={handleSendMessage} agentName={selectedAgent.name} />
             </div>
           ) : (
             <div
-              className={`overflow-hidden ${showPreview ? 'flex-shrink-0' : 'flex-1'}`}
+              className={`min-h-0 h-full ${showPreview ? 'flex-shrink-0' : 'flex-1'}`}
               style={showPreview ? { width: 330 } : undefined}
             >
               <ChatPanel
@@ -1311,7 +1254,7 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
                     animate={{ width: 200, opacity: 1 }}
                     exit={{ width: 0, opacity: 0 }}
                     transition={{ duration: 0.15, ease: [0.4, 0, 0.2, 1] }}
-                    className="border-r border-border/25 flex-shrink-0 overflow-hidden"
+                    className="border-r border-border/30 flex-shrink-0 overflow-hidden"
                   >
                     <FileExplorer
                       files={sessionData.files.length > 0 ? sessionData.files : DEFAULT_INITIAL_FILES}

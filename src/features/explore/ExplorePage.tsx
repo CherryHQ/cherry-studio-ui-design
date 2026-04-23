@@ -1,11 +1,11 @@
 import React, { useState, useMemo, useCallback } from 'react';
 import {
-  Search, Bot, MessageCircle, BookOpen, Wrench,
-  Zap, Puzzle, X, Sparkles, Heart,
+  Bot, MessageCircle, BookOpen, Wrench,
+  Zap, Puzzle, Sparkles, Heart,
   TrendingUp,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Button, Input } from '@cherry-studio/ui';
+import { Button, SearchInput, EmptyState } from '@cherry-studio/ui';
 import { AgentCard, AssistantCard, KnowledgeCard, ToolCard } from './ResourceCards';
 import { ExperienceModal } from './ExperienceModal';
 import { PreviewModal } from './PreviewModal';
@@ -55,12 +55,12 @@ function FeaturedBanner({ onTry }: { onTry: (agent: Agent) => void }) {
       transition={{ duration: 0.4, delay: 0.1 }}
       className="relative rounded-2xl overflow-hidden mb-5"
     >
-      <div className="absolute inset-0 bg-gradient-to-r from-violet-500/[0.08] via-blue-500/[0.05] to-foreground/[0.05]" />
+      <div className="absolute inset-0 bg-gradient-to-r from-accent-violet/[0.08] via-blue-500/[0.05] to-foreground/[0.05]" />
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(139,92,246,0.06),transparent_60%)]" />
       <div className="relative px-6 py-5 flex items-center gap-6">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-2">
-            <div className="flex items-center gap-1 text-[9px] text-violet-500/70 bg-violet-500/[0.08] px-2 py-0.5 rounded-full">
+            <div className="flex items-center gap-1 text-xs text-accent-violet/70 bg-accent-violet/[0.08] px-2 py-0.5 rounded-full">
               <TrendingUp size={8} />
               <span>本周热门</span>
             </div>
@@ -72,12 +72,12 @@ function FeaturedBanner({ onTry }: { onTry: (agent: Agent) => void }) {
               variant="ghost"
               size="xs"
               onClick={() => onTry(featured)}
-              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-foreground text-background text-xs hover:bg-foreground/90 transition-colors active:scale-[0.97]"
+              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs transition-colors active:scale-[0.97]"
             >
               <Sparkles size={10} />
               <span>立即体验</span>
             </Button>
-            <div className="flex items-center gap-2 text-[9px] text-muted-foreground/30">
+            <div className="flex items-center gap-2 text-xs text-muted-foreground/50">
               <span>{formatNumber(featured.stars)} 收藏</span>
               <span>{'\u00B7'}</span>
               <span>{formatNumber(featured.runs)} 次运行</span>
@@ -102,7 +102,7 @@ function FeaturedBanner({ onTry }: { onTry: (agent: Agent) => void }) {
 
 function FilterTabs({ active, onChange }: { active: ResourceCategory; onChange: (cat: ResourceCategory) => void }) {
   return (
-    <div className="flex items-center gap-0.5 overflow-x-auto [&::-webkit-scrollbar]:hidden pb-px">
+    <div className="flex items-center gap-0.5 overflow-x-auto scrollbar-hide pb-px">
       {categories.map(cat => {
         const isActive = active === cat.id;
         const Icon = cat.icon;
@@ -115,13 +115,13 @@ function FilterTabs({ active, onChange }: { active: ResourceCategory; onChange: 
             onClick={() => onChange(cat.id)}
             className={`relative flex items-center gap-1.5 px-3 py-2 text-xs rounded-lg transition-all whitespace-nowrap ${
               isActive
-                ? 'text-foreground bg-accent/60'
-                : 'text-muted-foreground/50 hover:text-foreground hover:bg-accent/30'
+                ? 'text-foreground bg-accent/50'
+                : 'text-muted-foreground/50 hover:text-foreground hover:bg-accent/50'
             }`}
           >
             <Icon size={12} strokeWidth={1.6} />
             <span>{cat.label}</span>
-            <span className={`text-[9px] tabular-nums ${isActive ? 'text-muted-foreground/50' : 'text-muted-foreground/25'}`}>
+            <span className={`text-xs tabular-nums ${isActive ? 'text-muted-foreground/50' : 'text-muted-foreground/50'}`}>
               {formatNumber(total)}
             </span>
           </Button>
@@ -140,7 +140,7 @@ function SubcategoryTags({ category, active, onChange }: {
 }) {
   const subs = subcategories[category];
   return (
-    <div className="flex items-center gap-1 overflow-x-auto [&::-webkit-scrollbar]:hidden py-2.5 px-0.5">
+    <div className="flex items-center gap-1 overflow-x-auto scrollbar-hide py-2.5 px-0.5">
       {subs.map(sub => {
         const isActive = active === sub;
         return (
@@ -152,7 +152,7 @@ function SubcategoryTags({ category, active, onChange }: {
             className={`px-2.5 py-[3px] rounded-full text-xs whitespace-nowrap transition-all border ${
               isActive
                 ? 'bg-foreground text-background border-foreground'
-                : 'bg-transparent text-muted-foreground/45 border-border/25 hover:border-border/50 hover:text-foreground'
+                : 'bg-transparent text-muted-foreground/40 border-border/30 hover:border-border/50 hover:text-foreground'
             }`}
           >
             {sub}
@@ -169,19 +169,14 @@ function SubcategoryTags({ category, active, onChange }: {
 
 function SearchBar({ value, onChange }: { value: string; onChange: (v: string) => void }) {
   return (
-    <div className="relative max-w-xs">
-      <Search size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground/30" />
-      <Input
+    <div className="max-w-xs">
+      <SearchInput
         value={value}
-        onChange={e => onChange(e.target.value)}
+        onChange={onChange}
         placeholder="搜索资源..."
-        className="w-full pl-7 pr-7 py-1.5 rounded-lg border border-border/25 bg-accent/15 text-xs text-foreground placeholder:text-muted-foreground/30 outline-none focus:border-border/50 focus:bg-accent/30 transition-all border-none shadow-none"
+        iconSize={12}
+        clearable
       />
-      {value && (
-        <Button variant="ghost" size="icon-xs" onClick={() => onChange('')} className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground/25 hover:text-foreground transition-colors">
-          <X size={10} />
-        </Button>
-      )}
     </div>
   );
 }
@@ -321,12 +316,12 @@ export function ExplorePage() {
               variant="ghost"
               size="xs"
               onClick={() => setFavDrawerOpen(true)}
-              className="relative flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-border/25 text-xs text-muted-foreground/50 hover:text-foreground hover:border-border/50 hover:bg-accent/30 transition-all"
+              className="relative flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-border/25 text-xs text-muted-foreground/50 hover:text-foreground hover:border-border/50 hover:bg-accent/50 transition-all"
             >
-              <Heart size={11} className={favorites.size > 0 ? 'text-red-500/70' : ''} fill={favorites.size > 0 ? 'currentColor' : 'none'} />
+              <Heart size={11} className={favorites.size > 0 ? 'text-destructive/70' : ''} fill={favorites.size > 0 ? 'currentColor' : 'none'} />
               <span>收藏夹</span>
               {favorites.size > 0 && (
-                <span className="ml-0.5 px-1 py-px rounded-full bg-red-500/10 text-red-500 text-[9px] tabular-nums">{favorites.size}</span>
+                <span className="ml-0.5 px-1 py-px rounded-full bg-destructive/10 text-destructive text-xs tabular-nums">{favorites.size}</span>
               )}
             </Button>
             <SearchBar value={search} onChange={setSearch} />
@@ -346,7 +341,7 @@ export function ExplorePage() {
       </motion.div>
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto px-6 pb-5 [&::-webkit-scrollbar]:w-[3px] [&::-webkit-scrollbar-thumb]:bg-border/30 [&::-webkit-scrollbar-thumb]:rounded-full">
+      <div className="flex-1 overflow-y-auto px-6 pb-5 scrollbar-thin">
         <AnimatePresence mode="wait">
           <motion.div
             key={category + subcategory}
@@ -364,7 +359,7 @@ export function ExplorePage() {
                     onTry={() => handleTryAgent(agent)}
                     onClick={() => handlePreview(agent, 'agents')} />
                 ))}
-                {filteredAgents.length === 0 && <EmptyState query={search} subcategory={subcategory} />}
+                {filteredAgents.length === 0 && <div className="col-span-full"><EmptyState preset="no-result" /></div>}
               </div>
             )}
 
@@ -377,7 +372,7 @@ export function ExplorePage() {
                     onChat={() => handleChatAssistant(a)}
                     onClick={() => handlePreview(a, 'assistants')} />
                 ))}
-                {filteredAssistants.length === 0 && <EmptyState query={search} subcategory={subcategory} />}
+                {filteredAssistants.length === 0 && <div className="col-span-full"><EmptyState preset="no-result" /></div>}
               </div>
             )}
 
@@ -389,7 +384,7 @@ export function ExplorePage() {
                     isFavorited={favorites.has(kb.id)}
                     onClick={() => handlePreview(kb, 'knowledge')} />
                 ))}
-                {filteredKBs.length === 0 && <EmptyState query={search} subcategory={subcategory} />}
+                {filteredKBs.length === 0 && <div className="col-span-full"><EmptyState preset="no-result" /></div>}
               </div>
             )}
 
@@ -401,7 +396,7 @@ export function ExplorePage() {
                     isFavorited={favorites.has(tool.id)}
                     onClick={() => handlePreview(tool, 'mcp')} />
                 ))}
-                {filteredMCP.length === 0 && <EmptyState query={search} subcategory={subcategory} />}
+                {filteredMCP.length === 0 && <div className="col-span-full"><EmptyState preset="no-result" /></div>}
               </div>
             )}
 
@@ -413,7 +408,7 @@ export function ExplorePage() {
                     isFavorited={favorites.has(skill.id)}
                     onClick={() => handlePreview(skill, 'skills')} />
                 ))}
-                {filteredSkills.length === 0 && <EmptyState query={search} subcategory={subcategory} />}
+                {filteredSkills.length === 0 && <div className="col-span-full"><EmptyState preset="no-result" /></div>}
               </div>
             )}
 
@@ -425,17 +420,17 @@ export function ExplorePage() {
                     isFavorited={favorites.has(plugin.id)}
                     onClick={() => handlePreview(plugin, 'plugins')} />
                 ))}
-                {filteredPlugins.length === 0 && <EmptyState query={search} subcategory={subcategory} />}
+                {filteredPlugins.length === 0 && <div className="col-span-full"><EmptyState preset="no-result" /></div>}
               </div>
             )}
 
             {/* Load more hint */}
             {getFilteredCount() > 0 && (
               <div className="flex flex-col items-center py-8">
-                <p className="text-xs text-muted-foreground/20 mb-0.5">
+                <p className="text-xs text-muted-foreground/50 mb-0.5">
                   当前展示 {getFilteredCount()} 个资源，共 {formatNumber(categoryTotalCounts[category])} 个
                 </p>
-                <Button variant="ghost" size="xs" className="text-xs text-muted-foreground/35 hover:text-foreground/60 transition-colors mt-1 px-3 py-1 rounded-lg hover:bg-accent/30">
+                <Button variant="ghost" size="xs" className="text-xs text-muted-foreground/50 hover:text-foreground transition-colors mt-1 px-3 py-1 hover:bg-accent/50">
                   加载更多...
                 </Button>
               </div>
@@ -500,18 +495,3 @@ export function ExplorePage() {
   }
 }
 
-// ===========================
-// Empty State
-// ===========================
-
-function EmptyState({ query, subcategory }: { query: string; subcategory: string }) {
-  return (
-    <div className="col-span-full flex flex-col items-center justify-center py-16">
-      <Search size={24} strokeWidth={1.2} className="text-muted-foreground/15 mb-2" />
-      <p className="text-sm text-muted-foreground/35 mb-0.5">
-        {query ? `未找到"${query}"相关结果` : subcategory !== '全部' ? `"${subcategory}" 分类暂无资源` : '暂无资源'}
-      </p>
-      <p className="text-xs text-muted-foreground/20">请尝试其他搜索词或分类</p>
-    </div>
-  );
-}

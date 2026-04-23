@@ -71,6 +71,12 @@ export type {
   GenerationParams, GeneratedImage,
 } from '../types/image';
 
+// --- Knowledge mock data (migrated to mock/knowledgeData.ts) ---
+export {
+  MOCK_KNOWLEDGE_BASE_LIST,
+  MOCK_DATA_SOURCES,
+} from './knowledgeData';
+
 // --- Constants mock data (extracted from config/constants.ts) ---
 export {
   MOCK_FOLDERS,

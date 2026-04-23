@@ -7,13 +7,13 @@
 import type { FileTag, FileFolder, FileItem } from '../types/file';
 
 export const FILE_TAGS: FileTag[] = [
-  { id: 't1', name: '工作', color: '#5b8dca' },
-  { id: 't2', name: '个人', color: '#6bab8d' },
-  { id: 't3', name: 'AI 生成', color: '#9b8ec4' },
-  { id: 't4', name: '重要', color: '#cd7b7b' },
-  { id: 't5', name: 'RAG', color: '#c4a556' },
-  { id: 't6', name: '参考', color: '#6ba5a5' },
-  { id: 't7', name: '草稿', color: '#9ca3af' },
+  { id: 't1', name: '工作',    color: { dot: 'bg-accent-blue',     badge: 'bg-accent-blue-muted text-accent-blue border-accent-blue/20' } },
+  { id: 't2', name: '个人',    color: { dot: 'bg-accent-emerald',  badge: 'bg-accent-emerald-muted text-accent-emerald border-accent-emerald/20' } },
+  { id: 't3', name: 'AI 生成', color: { dot: 'bg-accent-violet',   badge: 'bg-accent-violet-muted text-accent-violet border-accent-violet/20' } },
+  { id: 't4', name: '重要',    color: { dot: 'bg-destructive',     badge: 'bg-destructive/12 text-destructive border-destructive/20' } },
+  { id: 't5', name: 'RAG',     color: { dot: 'bg-accent-amber',    badge: 'bg-accent-amber-muted text-accent-amber border-accent-amber/20' } },
+  { id: 't6', name: '参考',    color: { dot: 'bg-accent-cyan',     badge: 'bg-accent-cyan-muted text-accent-cyan border-accent-cyan/20' } },
+  { id: 't7', name: '草稿',    color: { dot: 'bg-muted-foreground/40', badge: 'bg-muted text-muted-foreground border-border/50' } },
 ];
 
 export const FILE_FOLDERS: FileFolder[] = [

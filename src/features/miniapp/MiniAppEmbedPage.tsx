@@ -16,20 +16,20 @@ export function MiniAppEmbedPage({ tab }: { tab: Tab }) {
       {/* Browser-like toolbar */}
       <div className="h-10 flex items-center px-3 flex-shrink-0 border-b border-border/30">
         {/* Left: open externally */}
-        <Button variant="ghost" size="icon-xs" className="w-6 h-6"><ExternalLink size={13} /></Button>
+        <Button variant="ghost" size="icon-xs"><ExternalLink size={13} /></Button>
         <div className="flex-1" />
         {/* Right: nav + actions */}
         <div className="flex items-center gap-0.5">
-          <Button variant="ghost" size="icon-xs" className="w-6 h-6 text-muted-foreground/40 cursor-not-allowed" disabled><ChevronLeft size={14} /></Button>
-          <Button variant="ghost" size="icon-xs" className="w-6 h-6 text-muted-foreground/40 cursor-not-allowed" disabled><ChevronRight size={14} /></Button>
-          <Button variant="ghost" size="icon-xs" className="w-6 h-6"><RotateCcw size={12} /></Button>
+          <Button variant="ghost" size="icon-xs" className="text-muted-foreground/40 cursor-not-allowed" disabled><ChevronLeft size={14} /></Button>
+          <Button variant="ghost" size="icon-xs" className="text-muted-foreground/40 cursor-not-allowed" disabled><ChevronRight size={14} /></Button>
+          <Button variant="ghost" size="icon-xs"><RotateCcw size={12} /></Button>
           <Button
             variant="ghost" size="icon-xs"
             onClick={() => onPinTab(tab.id)}
-            className={`w-6 h-6 ${tab.pinned ? 'text-foreground bg-accent' : ''}`}
+            className={tab.pinned ? 'text-foreground bg-accent' : ''}
           ><Pin size={12} /></Button>
-          <Button variant="ghost" size="icon-xs" className="w-6 h-6"><Link size={12} /></Button>
-          <Button variant="ghost" size="icon-xs" className="w-6 h-6"><Copy size={12} /></Button>
+          <Button variant="ghost" size="icon-xs"><Link size={12} /></Button>
+          <Button variant="ghost" size="icon-xs"><Copy size={12} /></Button>
         </div>
       </div>
       {/* Content area */}
@@ -38,11 +38,11 @@ export function MiniAppEmbedPage({ tab }: { tab: Tab }) {
           {tab.miniAppLogoUrl ? (
             <img src={tab.miniAppLogoUrl} alt="" className="w-16 h-16 rounded-2xl mx-auto object-cover" />
           ) : (
-            <div className="w-16 h-16 rounded-2xl mx-auto flex items-center justify-center text-white text-xl" style={{ background: tab.miniAppColor }}>{tab.miniAppInitial}</div>
+            <div className={`w-16 h-16 rounded-2xl mx-auto flex items-center justify-center text-white text-xl ${tab.miniAppColor}`}>{tab.miniAppInitial}</div>
           )}
           <p className="text-sm text-foreground">{tab.title}</p>
           <p className="text-xs text-muted-foreground">{tab.miniAppUrl}</p>
-          <p className="text-xs text-muted-foreground/50">由于安全策略限制，嵌入式预览不可用</p>
+          <p className="text-xs text-muted-foreground/40">由于安全策略限制，嵌入式预览不可用</p>
         </div>
       </div>
     </div>

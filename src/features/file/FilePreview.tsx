@@ -4,7 +4,7 @@ import {
   File, Download, Share2, Tag, Clock, HardDrive,
   FolderClosed, MessageCircle, Maximize2,
 } from 'lucide-react';
-import { Button } from '@cherry-studio/ui';
+import { Button, Dialog, DialogContent } from '@cherry-studio/ui';
 import type { FileItem, FileTag, FileFolder } from './mockData';
 import { getFormatLabel, flattenFolders } from './mockData';
 
@@ -14,12 +14,12 @@ const typeIcons: Record<string, React.ElementType> = {
 };
 
 const typeIconColors: Record<string, string> = {
-  image: 'text-rose-400/50',
-  document: 'text-sky-400/50',
-  code: 'text-cyan-400/50',
-  audio: 'text-amber-400/50',
-  video: 'text-violet-400/50',
-  other: 'text-foreground/25',
+  image: 'text-accent-pink/50',
+  document: 'text-accent-blue/50',
+  code: 'text-accent-cyan/50',
+  audio: 'text-accent-amber/50',
+  video: 'text-accent-violet/50',
+  other: 'text-muted-foreground/40',
 };
 
 const codePreviews: Record<string, string> = {
@@ -128,7 +128,7 @@ export function FilePreview({
       return (
         <div className="flex-1 flex items-center justify-center bg-muted/15 rounded-lg p-4">
           <div className="w-full max-w-[360px] aspect-[4/3] bg-muted/20 rounded-lg flex items-center justify-center">
-            <ImageIcon size={48} className="text-rose-400/15" />
+            <ImageIcon size={48} className="text-accent-pink/15" />
           </div>
         </div>
       );
@@ -136,8 +136,8 @@ export function FilePreview({
     if (file.type === 'code') {
       const code = codePreviews[file.format] || '// No preview available';
       return (
-        <div className="flex-1 bg-foreground/[0.03] rounded-lg p-3 overflow-auto">
-          <pre className="text-xs text-cyan-300/50 whitespace-pre-wrap" style={{ fontFamily: 'ui-monospace, monospace' }}>
+        <div className="flex-1 bg-muted/30 rounded-lg p-3 overflow-auto">
+          <pre className="text-xs text-accent-cyan/50 whitespace-pre-wrap font-mono">
             {code}
           </pre>
         </div>
@@ -145,8 +145,8 @@ export function FilePreview({
     }
     if (file.type === 'document') {
       return (
-        <div className="flex-1 bg-foreground/[0.02] rounded-lg p-4 overflow-auto">
-          <div className="max-w-[400px] mx-auto text-xs text-foreground/60 whitespace-pre-wrap leading-relaxed">
+        <div className="flex-1 bg-muted/30 rounded-lg p-4 overflow-auto">
+          <div className="max-w-[400px] mx-auto text-xs text-muted-foreground whitespace-pre-wrap leading-relaxed">
             {mdPreview}
           </div>
         </div>
@@ -154,23 +154,23 @@ export function FilePreview({
     }
     if (file.type === 'audio') {
       return (
-        <div className="flex-1 flex flex-col items-center justify-center gap-3 bg-foreground/[0.02] rounded-lg">
-          <Music size={40} className="text-amber-400/20" />
+        <div className="flex-1 flex flex-col items-center justify-center gap-3 bg-muted/30 rounded-lg">
+          <Music size={40} className="text-accent-amber/20" />
           <div className="w-48 h-1 bg-muted rounded-full overflow-hidden">
-            <div className="w-1/3 h-full bg-amber-400/25 rounded-full" />
+            <div className="w-1/3 h-full bg-accent-amber/25 rounded-full" />
           </div>
-          <span className="text-[9px] text-foreground/25">03:24 / 12:08</span>
+          <span className="text-xs text-muted-foreground/40">03:24 / 12:08</span>
         </div>
       );
     }
     if (file.type === 'video') {
       return (
-        <div className="flex-1 flex items-center justify-center bg-foreground/[0.02] rounded-lg">
+        <div className="flex-1 flex items-center justify-center bg-muted/30 rounded-lg">
           <div className="relative">
-            <Video size={40} className="text-violet-400/20" />
+            <Video size={40} className="text-accent-violet/20" />
             <div className="absolute inset-0 flex items-center justify-center">
-              <div className="w-8 h-8 rounded-full bg-foreground/5 flex items-center justify-center">
-                <div className="w-0 h-0 border-l-[6px] border-l-foreground/40 border-t-[4px] border-t-transparent border-b-[4px] border-b-transparent ml-0.5" />
+              <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
+                <div className="w-0 h-0 border-l-[6px] border-l-border border-t-[4px] border-t-transparent border-b-[4px] border-b-transparent ml-0.5" />
               </div>
             </div>
           </div>
@@ -178,36 +178,33 @@ export function FilePreview({
       );
     }
     return (
-      <div className="flex-1 flex items-center justify-center bg-foreground/[0.02] rounded-lg">
-        <File size={40} className="text-foreground/8" />
+      <div className="flex-1 flex items-center justify-center bg-muted/30 rounded-lg">
+        <File size={40} className="text-muted-foreground/40" />
       </div>
     );
   };
 
   return (
-    <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/30 backdrop-blur-sm" onClick={onClose}>
-      <div
-        className="bg-background border border-border/50 rounded-2xl shadow-2xl w-[680px] max-w-[90vw] max-h-[85vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-150"
-        onClick={e => e.stopPropagation()}
-      >
+    <Dialog open onOpenChange={(open) => { if (!open) onClose(); }}>
+      <DialogContent className="w-[680px] max-w-[90vw] max-h-[85vh] flex flex-col overflow-hidden p-0" showCloseButton={false}>
         {/* Header */}
-        <div className="flex items-center gap-3 px-5 py-3 border-b border-border/25">
+        <div className="flex items-center gap-3 px-5 py-3 border-b border-border/30">
           <Icon size={15} className={typeIconColors[file.type] || typeIconColors.other} />
           <div className="flex-1 min-w-0">
-            <h3 className="text-sm text-foreground/85 truncate font-medium">{file.name}</h3>
-            <p className="text-[9px] text-foreground/40 mt-0.5">{getFormatLabel(file.format)} · {file.size}</p>
+            <h3 className="text-sm text-foreground truncate font-medium">{file.name}</h3>
+            <p className="text-xs text-muted-foreground/60 mt-0.5">{getFormatLabel(file.format)} · {file.size}</p>
           </div>
           <div className="flex items-center gap-1">
-            <Button variant="ghost" className="w-6 h-6 p-0 rounded-md flex items-center justify-center text-foreground/25 hover:text-foreground/50 hover:bg-accent transition-colors">
+            <Button variant="ghost" className="w-6 h-6 p-0 rounded-md flex items-center justify-center text-muted-foreground/40 hover:text-foreground hover:bg-accent transition-colors">
               <Download size={12} />
             </Button>
-            <Button variant="ghost" className="w-6 h-6 p-0 rounded-md flex items-center justify-center text-foreground/25 hover:text-foreground/50 hover:bg-accent transition-colors">
+            <Button variant="ghost" className="w-6 h-6 p-0 rounded-md flex items-center justify-center text-muted-foreground/40 hover:text-foreground hover:bg-accent transition-colors">
               <Share2 size={12} />
             </Button>
-            <Button variant="ghost" className="w-6 h-6 p-0 rounded-md flex items-center justify-center text-foreground/25 hover:text-foreground/50 hover:bg-accent transition-colors">
+            <Button variant="ghost" className="w-6 h-6 p-0 rounded-md flex items-center justify-center text-muted-foreground/40 hover:text-foreground hover:bg-accent transition-colors">
               <Maximize2 size={12} />
             </Button>
-            <Button variant="ghost" onClick={onClose} className="w-6 h-6 p-0 rounded-md flex items-center justify-center text-foreground/30 hover:text-foreground/60 hover:bg-accent transition-colors ml-1">
+            <Button variant="ghost" onClick={onClose} className="w-6 h-6 p-0 rounded-md flex items-center justify-center text-muted-foreground/40 hover:text-foreground hover:bg-accent transition-colors ml-1">
               <X size={13} />
             </Button>
           </div>
@@ -220,8 +217,8 @@ export function FilePreview({
             {renderPreviewContent()}
           </div>
           {/* Detail panel */}
-          <div className="w-[200px] flex-shrink-0 border-l border-border/25 p-4 overflow-y-auto [&::-webkit-scrollbar]:w-[2px] [&::-webkit-scrollbar-thumb]:bg-border/20">
-            <h4 className="text-xs text-foreground/45 uppercase tracking-wider mb-2">详细信息</h4>
+          <div className="w-[200px] flex-shrink-0 border-l border-border/30 p-4 overflow-y-auto scrollbar-thin-xs">
+            <h4 className="text-xs text-muted-foreground/60 uppercase tracking-wider mb-2">详细信息</h4>
             <div className="space-y-3">
               <DetailRow icon={HardDrive} label="大小" value={file.size} />
               <DetailRow icon={FileText} label="格式" value={getFormatLabel(file.format)} />
@@ -231,17 +228,16 @@ export function FilePreview({
               {file.session && <DetailRow icon={MessageCircle} label="会话" value={file.session} />}
               {file.description && (
                 <div>
-                  <p className="text-[9px] text-foreground/40 mb-1">描述</p>
-                  <p className="text-xs text-foreground/55 leading-relaxed">{file.description}</p>
+                  <p className="text-xs text-muted-foreground/60 mb-1">描述</p>
+                  <p className="text-xs text-muted-foreground leading-relaxed">{file.description}</p>
                 </div>
               )}
               {fileTags.length > 0 && (
                 <div>
-                  <p className="text-[9px] text-foreground/30 mb-1.5">标签</p>
+                  <p className="text-xs text-muted-foreground/40 mb-1.5">标签</p>
                   <div className="flex flex-wrap gap-1">
                     {fileTags.map(t => (
-                      <span key={t.id} className="flex items-center gap-1 px-1.5 py-[2px] rounded-full text-[9px]"
-                        style={{ backgroundColor: `${t.color}15`, color: t.color }}>
+                      <span key={t.id} className={`flex items-center gap-1 px-1.5 py-[2px] rounded-full text-xs border ${t.color.badge}`}>
                         <Tag size={7} />
                         {t.name}
                       </span>
@@ -252,18 +248,18 @@ export function FilePreview({
             </div>
           </div>
         </div>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 
 function DetailRow({ icon: Icon, label, value }: { icon: React.ElementType; label: string; value: string }) {
   return (
     <div className="flex items-start gap-2">
-      <Icon size={10} className="text-foreground/25 mt-[2px] flex-shrink-0" />
+      <Icon size={10} className="text-muted-foreground/40 mt-[2px] flex-shrink-0" />
       <div className="min-w-0">
-        <p className="text-[9px] text-foreground/40">{label}</p>
-        <p className="text-xs text-foreground/60 truncate">{value}</p>
+        <p className="text-xs text-muted-foreground/60">{label}</p>
+        <p className="text-xs text-muted-foreground truncate">{value}</p>
       </div>
     </div>
   );

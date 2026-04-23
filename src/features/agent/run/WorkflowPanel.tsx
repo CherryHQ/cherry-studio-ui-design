@@ -55,7 +55,7 @@ export function StepIcon({ type, status, size = 13 }: { type: WorkflowStep['icon
 export function StatusDot({ status, size = 10 }: { status: 'done' | 'running' | 'pending' | 'error'; size?: number }) {
   if (status === 'done') {
     return (
-      <div className="w-4 h-4 rounded-[4px] bg-cherry-active-bg flex items-center justify-center flex-shrink-0">
+      <div className="w-4 h-4 rounded-[var(--radius-dot)] bg-cherry-active-bg flex items-center justify-center flex-shrink-0">
         <Check size={size} className="text-cherry-primary-dark" />
       </div>
     );
@@ -69,14 +69,14 @@ export function StatusDot({ status, size = 10 }: { status: 'done' | 'running' | 
   }
   if (status === 'error') {
     return (
-      <div className="w-4 h-4 rounded-[4px] bg-destructive/15 flex items-center justify-center flex-shrink-0">
+      <div className="w-4 h-4 rounded-[var(--radius-dot)] bg-destructive/15 flex items-center justify-center flex-shrink-0">
         <X size={size} className="text-destructive" />
       </div>
     );
   }
   return (
     <div className="w-4 h-4 flex items-center justify-center flex-shrink-0">
-      <Circle size={size} className="text-muted-foreground/30" />
+      <Circle size={size} className="text-muted-foreground/40" />
     </div>
   );
 }
@@ -91,7 +91,7 @@ function TaskItem({ step }: { step: WorkflowStep }) {
       <StatusDot status={step.status} />
       <span className={`text-xs flex-1 truncate ${
         step.status === 'done'
-          ? 'text-foreground/80'
+          ? 'text-foreground'
           : step.status === 'running'
             ? 'text-foreground'
             : 'text-muted-foreground/50'
@@ -114,16 +114,16 @@ function ProcessDetail({ step }: { step: WorkflowStep }) {
     <div className="ml-6 mb-1">
       {step.description && (
         <div className="bg-muted/60 rounded-md px-3 py-2 mb-1">
-          <p className="text-xs text-foreground/60 leading-[1.6]">{step.description}</p>
+          <p className="text-xs text-muted-foreground leading-[1.6]">{step.description}</p>
         </div>
       )}
       {step.details && step.details.length > 0 && (
         <div className="bg-muted/60 rounded-md overflow-hidden">
           {step.detailLabel && (
-            <div className="flex items-center justify-between px-3 py-1.5 border-b border-border/40">
+            <div className="flex items-center justify-between px-3 py-1.5 border-b border-border/30">
               <div className="flex items-center gap-1.5">
                 <span className="text-xs text-muted-foreground">{step.detailLabel}</span>
-                <span className="text-[9px] text-muted-foreground/60">{step.details.length}</span>
+                <span className="text-xs text-muted-foreground/60">{step.details.length}</span>
               </div>
               <Share2 size={9} className="text-muted-foreground/50" />
             </div>
@@ -136,9 +136,9 @@ function ProcessDetail({ step }: { step: WorkflowStep }) {
                     {item.icon}
                   </span>
                 )}
-                <span className="text-xs text-foreground/70 flex-1 truncate">{item.label}</span>
+                <span className="text-xs text-foreground flex-1 truncate">{item.label}</span>
                 {item.meta && (
-                  <span className="text-[9px] text-muted-foreground/60 flex-shrink-0">{item.meta}</span>
+                  <span className="text-xs text-muted-foreground/60 flex-shrink-0">{item.meta}</span>
                 )}
               </div>
             ))}
@@ -162,12 +162,12 @@ export function WorkflowPanel({ steps }: { steps: WorkflowStep[] }) {
   const currentStep = steps.find(s => s.status === 'running') || steps.filter(s => s.status === 'done').pop();
 
   return (
-    <div className="mx-3 mt-3 mb-1 rounded-xl border border-border/60 shadow-[0_1px_4px_rgba(0,0,0,0.06)] bg-card overflow-hidden flex-shrink-0">
+    <div className="mx-3 mt-3 mb-1 rounded-xl border border-border/60 shadow-[0_1px_4px_var(--color-border)] bg-card overflow-hidden flex-shrink-0">
       {/* Collapsible header */}
-      <Button
+      <Button size="inline"
         variant="ghost"
         onClick={() => setPanelExpanded(!panelExpanded)}
-        className="w-full justify-start gap-2 px-3.5 py-2.5 h-auto font-normal hover:bg-muted/50 rounded-none"
+        className="w-full justify-start gap-2 px-3.5 py-2.5 font-normal hover:bg-muted/50 rounded-none"
       >
         <motion.div
           animate={{ rotate: panelExpanded ? 0 : -90 }}
@@ -176,19 +176,19 @@ export function WorkflowPanel({ steps }: { steps: WorkflowStep[] }) {
         >
           <ChevronDown size={10} className="text-muted-foreground" />
         </motion.div>
-        <span className={`text-xs text-foreground/85 text-left ${panelExpanded ? 'flex-1' : 'flex-shrink-0'}`}>{"任务"}</span>
+        <span className={`text-xs text-foreground text-left ${panelExpanded ? 'flex-1' : 'flex-shrink-0'}`}>{"任务"}</span>
         {/* Collapsed: show current task inline */}
         {!panelExpanded && currentStep && (
           <span className="flex items-center gap-1.5 flex-1 min-w-0">
             <StatusDot status={currentStep.status} size={8} />
             <span className={`text-xs truncate ${
-              currentStep.status === 'running' ? 'text-foreground' : 'text-foreground/70'
+              currentStep.status === 'running' ? 'text-foreground' : 'text-foreground'
             }`}>
               {currentStep.label}
             </span>
           </span>
         )}
-        <span className="text-[9px] text-muted-foreground tabular-nums flex-shrink-0">{doneCount}/{steps.length}</span>
+        <span className="text-xs text-muted-foreground tabular-nums flex-shrink-0">{doneCount}/{steps.length}</span>
       </Button>
 
       <AnimatePresence initial={false}>
@@ -210,10 +210,10 @@ export function WorkflowPanel({ steps }: { steps: WorkflowStep[] }) {
             {/* Process section (collapsible) */}
             {hasAnyProcess && (
               <div>
-                <Button
+                <Button size="inline"
                   variant="ghost"
                   onClick={(e) => { e.stopPropagation(); setProcessExpanded(!processExpanded); }}
-                  className="w-full justify-start gap-2 px-4 py-2 h-auto font-normal hover:bg-muted/50 rounded-none border-t border-border/40"
+                  className="w-full justify-start gap-2 px-4 py-2 font-normal hover:bg-muted/50 rounded-none border-t border-border/30"
                 >
                   <motion.div
                     animate={{ rotate: processExpanded ? 0 : -90 }}
@@ -251,7 +251,7 @@ export function WorkflowPanel({ steps }: { steps: WorkflowStep[] }) {
             )}
 
             {/* Bottom bar */}
-            <div className="flex items-center gap-2 px-3.5 py-2 border-t border-border/40">
+            <div className="flex items-center gap-2 px-3.5 py-2 border-t border-border/30">
               <ListFilter size={11} className="text-muted-foreground/60 flex-shrink-0" />
               <span className="text-xs text-muted-foreground flex-1">
                 {doneCount}/{steps.length} {"任务已完成"}

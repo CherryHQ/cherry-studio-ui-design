@@ -4,12 +4,12 @@ import {
   Server, Package, Store, ExternalLink, Eye, EyeOff, Pencil,
   ArrowLeft, Save, Settings2, Filter, FileText, Info,
 } from 'lucide-react';
-import { BrandLogo } from '@/app/components/ui/BrandLogos';
-import { Toggle } from './shared';
 import {
-  Button, Input,
+  Button, Input, Textarea, Switch,
   Tabs, TabsList, TabsTrigger, TabsContent,
   Popover, PopoverTrigger, PopoverContent,
+  BrandLogo, SearchInput, EmptyState, Typography,
+  RadioGroup, RadioGroupItem,
 } from '@cherry-studio/ui';
 
 // ===========================
@@ -165,12 +165,12 @@ const MOCK_MARKETPLACE: MarketplaceSite[] = [
 ];
 
 const MOCK_PROVIDERS: Provider[] = [
-  { id: 'aliyun', name: '\u963f\u91cc\u4e91\u767e\u70bc', icon: '\u2601\ufe0f', iconBg: 'bg-blue-500' },
-  { id: 'modelscope', name: 'ModelScope', icon: '\ud83d\udd2c', iconBg: 'bg-teal-500' },
-  { id: 'tokenflux', name: 'TokenFlux', icon: '\u26a1', iconBg: 'bg-purple-500' },
-  { id: 'lanyun', name: '\u84dd\u8018\u79d1\u6280', icon: '\ud83c\udf0a', iconBg: 'bg-cyan-500' },
-  { id: '302ai', name: '302.AI', icon: '\ud83e\udd16', iconBg: 'bg-orange-500' },
-  { id: 'mcp-router', name: 'MCP Router', icon: '\ud83d\udd00', iconBg: 'bg-gray-800' },
+  { id: 'aliyun', name: '\u963f\u91cc\u4e91\u767e\u70bc', icon: '\u2601\ufe0f', iconBg: 'bg-accent-blue' },
+  { id: 'modelscope', name: 'ModelScope', icon: '\ud83d\udd2c', iconBg: 'bg-accent-emerald' },
+  { id: 'tokenflux', name: 'TokenFlux', icon: '\u26a1', iconBg: 'bg-accent-purple' },
+  { id: 'lanyun', name: '\u84dd\u8018\u79d1\u6280', icon: '\ud83c\udf0a', iconBg: 'bg-accent-cyan' },
+  { id: '302ai', name: '302.AI', icon: '\ud83e\udd16', iconBg: 'bg-accent-orange' },
+  { id: 'mcp-router', name: 'MCP Router', icon: '\ud83d\udd00', iconBg: 'bg-accent/50' },
 ];
 
 const PKG_SOURCES = ['\u9ed8\u8ba4', '\u6e05\u534e\u5927\u5b66', '\u963f\u91cc\u4e91', '\u4e2d\u56fd\u79d1\u5b66\u6280\u672f\u5927\u5b66', '\u534e\u4e3a\u4e91', '\u817e\u8baf\u4e91'];
@@ -230,15 +230,15 @@ function ServerListPanel({ servers, onSelectServer }: {
       {/* Header */}
       <div className="flex items-center justify-between px-5 pt-4 pb-1.5 flex-shrink-0">
         <div className="flex items-center gap-2">
-          <h3 className="text-base text-foreground/85 font-semibold">MCP {'\u670d\u52a1\u5668'}</h3>
-          <span className="text-xs text-foreground/25 tabular-nums">{enabledCount}/{items.length}</span>
+          <Typography variant="subtitle">MCP {'\u670d\u52a1\u5668'}</Typography>
+          <span className="text-xs text-muted-foreground/40 tabular-nums">{enabledCount}/{items.length}</span>
         </div>
         <div className="flex items-center gap-1">
           <Button
             variant="ghost"
             size="icon-xs"
             onClick={() => setShowSearch(v => !v)}
-            className={showSearch ? 'bg-accent text-foreground/60' : 'text-foreground/30 hover:text-foreground/50 hover:bg-accent'}
+            className={showSearch ? 'bg-accent text-muted-foreground' : 'text-muted-foreground/40 hover:text-foreground hover:bg-accent'}
           >
             <Search size={12} />
           </Button>
@@ -247,7 +247,7 @@ function ServerListPanel({ servers, onSelectServer }: {
             size="xs"
             onClick={() => setIsEditing(v => !v)}
             className={`text-xs ${
-              isEditing ? 'text-cherry-primary-dark bg-cherry-active-bg' : 'text-foreground/40 hover:text-foreground/60 hover:bg-accent'
+              isEditing ? 'text-cherry-primary-dark bg-cherry-active-bg' : 'text-muted-foreground/60 hover:text-foreground hover:bg-accent'
             }`}
           >
             <Pencil size={9} />
@@ -263,35 +263,24 @@ function ServerListPanel({ servers, onSelectServer }: {
       {/* Search + Filters */}
       <div className="px-5 pb-2 flex-shrink-0 space-y-1.5">
         {showSearch && (
-          <div className="relative">
-            <Search size={11} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-foreground/25" />
-            <Input
-              type="text"
-              value={searchQuery}
-              onChange={e => setSearchQuery(e.target.value)}
-              placeholder={'\u641c\u7d22\u670d\u52a1\u5668...'}
-              autoFocus
-              className="w-full pl-7 pr-7 py-[5px] rounded-lg bg-foreground/[0.03] border border-foreground/[0.06] text-xs text-foreground/70 placeholder:text-foreground/20 focus:border-foreground/[0.12] transition-colors h-auto"
-            />
-            {searchQuery && (
-              <Button variant="ghost" size="icon-xs" onClick={() => setSearchQuery('')} className="absolute right-2 top-1/2 -translate-y-1/2 w-5 h-5 text-foreground/20 hover:text-foreground/40">
-                <X size={10} />
-              </Button>
-            )}
-          </div>
+          <SearchInput
+            value={searchQuery}
+            onChange={setSearchQuery}
+            placeholder={'\u641c\u7d22\u670d\u52a1\u5668...'}
+            autoFocus
+          />
         )}
         {/* Filter chips */}
         <div className="flex items-center gap-1 flex-wrap">
           {filters.map(f => (
-            <Button
+            <Button size="inline"
               key={f.id}
               variant="ghost"
-              size="xs"
               onClick={() => setActiveFilter(f.id)}
-              className={`px-2 py-[3px] h-auto rounded-md text-[9px] ${
+              className={`px-2 py-[3px] rounded-md text-xs ${
                 activeFilter === f.id
-                  ? (f.id === 'enabled' ? 'bg-primary/10 text-primary border border-primary/15 font-medium' : 'bg-foreground/[0.06] text-foreground/70 border border-foreground/[0.1] font-medium')
-                  : 'text-foreground/35 hover:text-foreground/55 hover:bg-foreground/[0.04] border border-transparent'
+                  ? (f.id === 'enabled' ? 'bg-primary/10 text-primary border border-primary/15 font-medium' : 'bg-muted/50 text-foreground border border-border/50 font-medium')
+                  : 'text-muted-foreground/40 hover:text-foreground hover:bg-accent/50 border border-transparent'
               }`}
             >
               {f.label}
@@ -301,12 +290,9 @@ function ServerListPanel({ servers, onSelectServer }: {
       </div>
 
       {/* Server list */}
-      <div className="flex-1 overflow-y-auto px-5 pb-4 [&::-webkit-scrollbar]:w-[3px] [&::-webkit-scrollbar-thumb]:bg-border/20">
+      <div className="flex-1 overflow-y-auto px-5 pb-4 scrollbar-thin">
         {filtered.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-12 text-center">
-            <Server size={18} className="text-foreground/10 mb-2" />
-            <p className="text-xs text-foreground/25">{'\u6ca1\u6709\u5339\u914d\u7684\u670d\u52a1\u5668'}</p>
-          </div>
+          <EmptyState preset="no-result" compact />
         ) : (
           <div className="space-y-[1px]">
             {filtered.map(server => {
@@ -316,17 +302,17 @@ function ServerListPanel({ servers, onSelectServer }: {
                   key={server.id}
                   className={`flex items-center gap-2.5 px-3 py-[9px] rounded-lg transition-all group cursor-pointer ${
                     isEnabled
-                      ? 'hover:bg-foreground/[0.03]'
-                      : 'opacity-50 hover:opacity-80 hover:bg-foreground/[0.02]'
+                      ? 'hover:bg-accent/50'
+                      : 'opacity-30 hover:opacity-80 hover:bg-accent/50'
                   }`}
                   onClick={() => onSelectServer(server)}
                 >
                   {/* Status dot */}
-                  <div className={`w-[5px] h-[5px] rounded-full flex-shrink-0 ${isEnabled ? 'bg-primary' : 'bg-foreground/12'}`} />
+                  <div className={`w-[5px] h-[5px] rounded-full flex-shrink-0 ${isEnabled ? 'bg-primary' : 'bg-accent'}`} />
 
                   {/* Name + inline tags */}
                   <div className="flex-1 min-w-0 flex items-center gap-1.5">
-                    <span className="text-xs text-foreground/75 truncate font-medium">{server.name}</span>
+                    <span className="text-sm text-foreground truncate font-medium">{server.name}</span>
                     {server.tags && server.tags.map((tag, i) => {
                       const isVersion = new RegExp('^' + String.fromCharCode(92) + 'd').test(tag);
                       const isType = tag === 'STDIO' || tag === 'SSE';
@@ -334,14 +320,14 @@ function ServerListPanel({ servers, onSelectServer }: {
                       return (
                         <span
                           key={i}
-                          className={`px-1 py-0 rounded text-[7px] flex-shrink-0 whitespace-nowrap font-medium ${
+                          className={`px-1 py-0 rounded text-xs flex-shrink-0 whitespace-nowrap font-medium ${
                             isBuiltin
                               ? 'bg-info/10 text-info'
                               : isVersion
-                                ? 'bg-foreground/[0.06] text-foreground/60'
+                                ? 'bg-muted/50 text-muted-foreground'
                                 : isType
-                                  ? 'bg-foreground/[0.05] text-foreground/30'
-                                  : 'bg-foreground/[0.05] text-foreground/30'
+                                  ? 'bg-muted/50 text-muted-foreground/40'
+                                  : 'bg-muted/50 text-muted-foreground/40'
                           }`}
                         >
                           {tag}
@@ -357,17 +343,17 @@ function ServerListPanel({ servers, onSelectServer }: {
                         variant="ghost"
                         size="icon-xs"
                         onClick={() => handleDelete(server.id)}
-                        className="w-5 h-5 text-foreground/15 hover:text-destructive hover:bg-destructive/[0.06]"
+                        className="text-muted-foreground/50 hover:text-destructive hover:bg-destructive/[0.06]"
                       >
                         <Trash2 size={10} />
                       </Button>
                     )}
-                    <Toggle checked={server.enabled} onChange={v => handleToggle(server.id, v)} />
+                    <Switch size="sm" checked={server.enabled} onCheckedChange={v => handleToggle(server.id, v)} />
                     <Button
                       variant="ghost"
                       size="icon-xs"
                       onClick={() => onSelectServer(server)}
-                      className="w-5 h-5 text-foreground/10 hover:text-foreground/35 opacity-0 group-hover:opacity-100"
+                      className="text-muted-foreground/40 hover:text-foreground opacity-0 group-hover:opacity-100"
                     >
                       <ChevronRight size={11} />
                     </Button>
@@ -421,39 +407,28 @@ function BuiltinServersPanel() {
       <div className="px-5 pt-4 pb-1.5 flex-shrink-0">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <h3 className="text-base text-foreground/85 font-semibold">{'\u5185\u7f6e\u670d\u52a1\u5668'}</h3>
-            <span className="text-xs text-foreground/25 tabular-nums">{installedCount}/{items.length}</span>
+            <Typography variant="subtitle">{'\u5185\u7f6e\u670d\u52a1\u5668'}</Typography>
+            <span className="text-xs text-muted-foreground/40 tabular-nums">{installedCount}/{items.length}</span>
           </div>
         </div>
       </div>
       {/* Search + Filter */}
       <div className="px-5 pb-2 flex-shrink-0 space-y-1.5">
-        <div className="relative">
-          <Search size={11} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-foreground/25" />
-          <Input
-            type="text"
-            value={searchQuery}
-            onChange={e => setSearchQuery(e.target.value)}
-            placeholder={'\u641c\u7d22\u5185\u7f6e\u670d\u52a1\u5668...'}
-            className="w-full pl-7 pr-7 py-[5px] rounded-lg bg-foreground/[0.03] border border-foreground/[0.06] text-xs text-foreground/70 placeholder:text-foreground/20 focus:border-foreground/[0.12] transition-colors h-auto"
-          />
-          {searchQuery && (
-            <Button variant="ghost" size="icon-xs" onClick={() => setSearchQuery('')} className="absolute right-2 top-1/2 -translate-y-1/2 w-5 h-5 text-foreground/20 hover:text-foreground/40">
-              <X size={10} />
-            </Button>
-          )}
-        </div>
+        <SearchInput
+          value={searchQuery}
+          onChange={setSearchQuery}
+          placeholder={'\u641c\u7d22\u5185\u7f6e\u670d\u52a1\u5668...'}
+        />
         <div className="flex items-center gap-1">
           {builtinFilters.map(f => (
-            <Button
+            <Button size="inline"
               key={f.id}
               variant="ghost"
-              size="xs"
               onClick={() => setFilterMode(f.id)}
-              className={`px-2 py-[3px] h-auto rounded-md text-[9px] ${
+              className={`px-2 py-[3px] rounded-md text-xs ${
                 filterMode === f.id
-                  ? 'bg-foreground/[0.06] text-foreground/70 border border-foreground/[0.1] font-medium'
-                  : 'text-foreground/35 hover:text-foreground/55 hover:bg-foreground/[0.04] border border-transparent'
+                  ? 'bg-muted/50 text-foreground border border-border/50 font-medium'
+                  : 'text-muted-foreground/40 hover:text-foreground hover:bg-accent/50 border border-transparent'
               }`}
             >
               {f.label}
@@ -461,52 +436,48 @@ function BuiltinServersPanel() {
           ))}
         </div>
       </div>
-      <div className="flex-1 overflow-y-auto px-5 pb-4 [&::-webkit-scrollbar]:w-[3px] [&::-webkit-scrollbar-thumb]:bg-border/20">
+      <div className="flex-1 overflow-y-auto px-5 pb-4 scrollbar-thin">
         {filtered.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-12 text-center">
-            <Package size={18} className="text-foreground/10 mb-2" />
-            <p className="text-xs text-foreground/25">{'\u6ca1\u6709\u5339\u914d\u7684\u670d\u52a1\u5668'}</p>
-          </div>
+          <EmptyState preset="no-result" compact />
         ) : (
           <div className="space-y-[1px]">
             {filtered.map(server => (
               <div
                 key={server.id}
-                className="flex items-center gap-2.5 px-3 py-[9px] rounded-lg transition-all group cursor-default hover:bg-foreground/[0.03]"
+                className="flex items-center gap-2.5 px-3 py-[9px] rounded-lg transition-all group cursor-default hover:bg-accent/50"
               >
                 {/* Status indicator */}
-                <div className={`w-[5px] h-[5px] rounded-full flex-shrink-0 ${server.installed ? 'bg-primary' : 'bg-foreground/12'}`} />
+                <div className={`w-[5px] h-[5px] rounded-full flex-shrink-0 ${server.installed ? 'bg-primary' : 'bg-accent'}`} />
 
                 {/* Name + description + tags */}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-1.5">
-                    <span className="text-xs text-foreground/75 truncate font-medium">
+                    <span className="text-sm text-foreground truncate font-medium">
                       {server.name.replace('@cherry/', '')}
                     </span>
                     {server.tags.map((tag, i) => (
                       <span
                         key={i}
-                        className={`px-1 py-0 rounded text-[7px] flex-shrink-0 whitespace-nowrap font-medium ${
+                        className={`px-1 py-0 rounded text-xs flex-shrink-0 whitespace-nowrap font-medium ${
                           tag === '\u5185\u7f6e'
                             ? 'bg-warning-muted text-warning'
-                            : 'bg-orange-500/10 text-orange-500'
+                            : 'bg-accent-orange-muted text-accent-orange'
                         }`}
                       >
                         {tag}
                       </span>
                     ))}
                   </div>
-                  <p className="text-[9px] text-foreground/25 mt-0.5 truncate">{server.description}</p>
+                  <p className="text-xs text-muted-foreground/60 mt-0.5 truncate">{server.description}</p>
                 </div>
 
                 {/* Install / Installed action */}
                 <div className="flex-shrink-0">
                   {server.installed ? (
-                    <Button
+                    <Button size="inline"
                       variant="ghost"
-                      size="xs"
                       onClick={() => handleUninstall(server.id)}
-                      className="px-2 py-[3px] h-auto rounded-md text-[9px] text-cherry-primary bg-cherry-active-bg hover:bg-destructive/[0.08] hover:text-destructive font-medium group/btn"
+                      className="px-2 py-[3px] rounded-md text-xs text-cherry-primary bg-cherry-active-bg hover:bg-destructive/[0.08] hover:text-destructive font-medium group/btn"
                     >
                       <Check size={9} className="group-hover/btn:hidden" />
                       <X size={9} className="hidden group-hover/btn:block" />
@@ -514,11 +485,10 @@ function BuiltinServersPanel() {
                       <span className="hidden group-hover/btn:block">{'\u5378\u8f7d'}</span>
                     </Button>
                   ) : (
-                    <Button
+                    <Button size="inline"
                       variant="ghost"
-                      size="xs"
                       onClick={() => handleInstall(server.id)}
-                      className="px-2 py-[3px] h-auto rounded-md text-[9px] text-foreground/35 hover:text-cherry-primary hover:bg-cherry-active-bg font-medium"
+                      className="px-2 py-[3px] rounded-md text-xs text-muted-foreground/40 hover:text-cherry-primary hover:bg-cherry-active-bg font-medium"
                     >
                       <Plus size={9} />
                       <span>{'\u5b89\u88c5'}</span>
@@ -548,55 +518,42 @@ function MarketplacePanel() {
     <div className="h-full flex flex-col">
       <div className="px-5 pt-4 pb-1.5 flex-shrink-0">
         <div className="flex items-center gap-2">
-          <h3 className="text-base text-foreground/85 font-semibold">{'\u66f4\u591a MCP'}</h3>
-          <span className="text-xs text-foreground/25 tabular-nums">{MOCK_MARKETPLACE.length}</span>
+          <Typography variant="subtitle">{'\u66f4\u591a MCP'}</Typography>
+          <span className="text-xs text-muted-foreground/40 tabular-nums">{MOCK_MARKETPLACE.length}</span>
         </div>
-        <p className="text-xs text-foreground/25 mt-0.5">{'\u63a2\u7d22\u793e\u533a MCP \u670d\u52a1\u5668\u548c\u5de5\u5177'}</p>
+        <p className="text-xs text-muted-foreground/60 mt-0.5">{'\u63a2\u7d22\u793e\u533a MCP \u670d\u52a1\u5668\u548c\u5de5\u5177'}</p>
       </div>
       {/* Search */}
       <div className="px-5 pb-2 flex-shrink-0">
-        <div className="relative">
-          <Search size={11} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-foreground/25" />
-          <Input
-            type="text"
-            value={searchQuery}
-            onChange={e => setSearchQuery(e.target.value)}
-            placeholder={'\u641c\u7d22\u5e02\u573a...'}
-            className="w-full pl-7 pr-7 py-[5px] rounded-lg bg-foreground/[0.03] border border-foreground/[0.06] text-xs text-foreground/70 placeholder:text-foreground/20 focus:border-foreground/[0.12] transition-colors h-auto"
-          />
-          {searchQuery && (
-            <Button variant="ghost" size="icon-xs" onClick={() => setSearchQuery('')} className="absolute right-2 top-1/2 -translate-y-1/2 w-5 h-5 text-foreground/20 hover:text-foreground/40">
-              <X size={10} />
-            </Button>
-          )}
-        </div>
+        <SearchInput
+          value={searchQuery}
+          onChange={setSearchQuery}
+          placeholder={'\u641c\u7d22\u5e02\u573a...'}
+        />
       </div>
-      <div className="flex-1 overflow-y-auto px-5 pb-4 [&::-webkit-scrollbar]:w-[3px] [&::-webkit-scrollbar-thumb]:bg-border/20">
+      <div className="flex-1 overflow-y-auto px-5 pb-4 scrollbar-thin">
         {filtered.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-12 text-center">
-            <Store size={18} className="text-foreground/10 mb-2" />
-            <p className="text-xs text-foreground/25">{'\u6ca1\u6709\u5339\u914d\u7684\u7ed3\u679c'}</p>
-          </div>
+          <EmptyState preset="no-result" compact />
         ) : (
           <div className="space-y-[1px]">
             {filtered.map(site => (
               <div
                 key={site.id}
-                className="flex items-center gap-2.5 px-3 py-[9px] rounded-lg transition-all cursor-pointer group hover:bg-foreground/[0.03]"
+                className="flex items-center gap-2.5 px-3 py-[9px] rounded-lg transition-all cursor-pointer group hover:bg-accent/50"
               >
                 {/* Icon */}
-                <div className="w-5 h-5 rounded-md bg-foreground/[0.04] flex items-center justify-center text-xs flex-shrink-0">
+                <div className="w-5 h-5 rounded-md bg-muted/50 flex items-center justify-center text-xs flex-shrink-0">
                   {site.icon}
                 </div>
 
                 {/* Name + description */}
                 <div className="flex-1 min-w-0">
-                  <span className="text-xs text-foreground/75 font-medium">{site.name}</span>
-                  <p className="text-[9px] text-foreground/25 mt-0.5 truncate">{site.description}</p>
+                  <span className="text-sm text-foreground font-medium">{site.name}</span>
+                  <p className="text-xs text-muted-foreground/60 mt-0.5 truncate">{site.description}</p>
                 </div>
 
                 {/* External link */}
-                <ExternalLink size={10} className="text-foreground/10 group-hover:text-foreground/35 transition-colors flex-shrink-0" />
+                <ExternalLink size={10} className="text-muted-foreground/40 group-hover:text-foreground transition-colors flex-shrink-0" />
               </div>
             ))}
           </div>
@@ -617,36 +574,36 @@ function ProviderPanel({ provider }: { provider: Provider }) {
     <div className="h-full flex flex-col">
       <div className="flex items-center justify-between px-5 pt-4 pb-3 flex-shrink-0">
         <div className="flex items-center gap-2">
-          <h3 className="text-base text-foreground/85 font-semibold">{provider.name}</h3>
-          <ExternalLink size={10} className="text-foreground/25" />
+          <Typography variant="subtitle">{provider.name}</Typography>
+          <ExternalLink size={10} className="text-muted-foreground/40" />
         </div>
-        <Button variant="outline" size="xs" className="px-2.5 py-[4px] h-auto rounded-lg border-border/30 text-xs text-foreground/45 hover:text-foreground/65 hover:bg-accent">
+        <Button variant="outline" size="xs" className="px-2.5 border-border/30 text-xs text-muted-foreground/60 hover:text-foreground hover:bg-accent">
           <span>{'\u83b7\u53d6\u670d\u52a1\u5668'}</span>
         </Button>
       </div>
-      <div className="flex-1 overflow-y-auto px-5 pb-4 [&::-webkit-scrollbar]:w-[3px] [&::-webkit-scrollbar-thumb]:bg-border/20">
+      <div className="flex-1 overflow-y-auto px-5 pb-4 scrollbar-thin">
         <div className="max-w-[560px]">
-          <p className="text-sm text-foreground/70 mb-2 font-semibold">API {'\u5bc6\u94a5'}</p>
+          <p className="text-sm text-foreground mb-2 font-semibold">API {'\u5bc6\u94a5'}</p>
           <div className="flex items-center gap-2">
-            <div className="flex-1 flex items-center px-3 py-[7px] bg-foreground/[0.03] rounded-lg border border-foreground/[0.06]">
+            <div className="flex-1 flex items-center px-3 py-[7px] bg-muted/30 rounded-lg border border-border/50">
               <Input
                 type={showKey ? 'text' : 'password'}
                 value={apiKey}
                 onChange={e => setApiKey(e.target.value)}
                 placeholder={'\u5728\u6b64\u8f93\u5165 API \u4ee4\u724c'}
-                className="flex-1 bg-transparent text-xs text-foreground/60 placeholder:text-foreground/20 min-w-0 border-0 h-auto p-0 focus-visible:ring-0"
+                className="flex-1 bg-transparent text-xs text-muted-foreground placeholder:text-muted-foreground/60 min-w-0 border-0 h-auto p-0 focus-visible:ring-0"
               />
               <Button
                 variant="ghost"
                 size="icon-xs"
                 onClick={() => setShowKey(v => !v)}
-                className="w-5 h-5 text-foreground/20 hover:text-foreground/45 ml-2"
+                className="text-muted-foreground/50 hover:text-foreground ml-2"
               >
                 {showKey ? <EyeOff size={11} /> : <Eye size={11} />}
               </Button>
             </div>
           </div>
-          <Button variant="link" size="xs" className="text-xs text-info hover:text-info mt-2 p-0 h-auto">
+          <Button variant="link" size="xs" className="text-xs text-info hover:text-info mt-2">
             {'\u70b9\u51fb\u8fd9\u91cc\u83b7\u53d6\u5bc6\u94a5'}
           </Button>
         </div>
@@ -691,57 +648,47 @@ function ServerDetailPanel({ server, onBack }: { server: MCPServer; onBack: () =
           variant="ghost"
           size="icon-xs"
           onClick={onBack}
-          className="p-1 -ml-1 mb-2 text-foreground/30 hover:text-foreground/60 hover:bg-accent"
+          className="p-1 -ml-1 mb-2 text-muted-foreground/40 hover:text-foreground hover:bg-accent"
         >
           <ArrowLeft size={15} />
         </Button>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <h3 className="text-sm text-foreground/85 font-semibold">{name}</h3>
+            <Typography variant="subtitle" className="font-semibold">{name}</Typography>
             {server.version && (
               <span className="px-2 py-[2px] rounded-md bg-cherry-primary text-white text-xs font-medium">{server.version}</span>
             )}
-            <Button variant="ghost" size="xs" className="text-xs text-foreground/40 hover:text-foreground/60 p-0 h-auto">{'\u65e5\u5fd7'}</Button>
-            <Button variant="ghost" size="icon-xs" className="w-5 h-5 text-foreground/20 hover:text-destructive">
+            <Button variant="ghost" size="xs" className="text-xs text-muted-foreground/60 hover:text-foreground">{'\u65e5\u5fd7'}</Button>
+            <Button variant="ghost" size="icon-xs" className="text-muted-foreground/50 hover:text-destructive">
               <Trash2 size={11} />
             </Button>
           </div>
           <div className="flex items-center gap-3">
-            <Toggle checked={enabled} onChange={setEnabled} />
-            <Button variant="outline" size="sm" className="px-3 py-[5px] h-auto rounded-lg border-border/30 text-xs text-foreground/45 hover:text-foreground/65 hover:bg-accent">
+            <Switch size="sm" checked={enabled} onCheckedChange={setEnabled} />
+            <Button variant="outline" size="xs" className="border-border/30 text-muted-foreground/60 hover:text-foreground hover:bg-accent">
               <Save size={10} />
               <span>{'\u4fdd\u5b58'}</span>
             </Button>
           </div>
         </div>
 
-        {/* Tabs */}
-        <div className="flex items-center gap-0 mt-3 border-b border-foreground/[0.06]">
-          {tabs.map(tab => {
-            const isActive = activeTab === tab.id;
-            return (
-              <Button
-                key={tab.id}
-                variant="ghost"
-                size="sm"
-                onClick={() => setActiveTab(tab.id)}
-                className={`px-3.5 pb-2.5 pt-1 h-auto rounded-none text-sm relative ${
-                  isActive ? 'text-primary font-medium' : 'text-foreground/40 hover:text-foreground/60'
-                }`}
-              >
-                {tab.label}{tab.count !== undefined ? ` (${tab.count})` : ''}
-                {isActive && (
-                  <div className="absolute bottom-0 left-3.5 right-3.5 h-[2px] bg-primary rounded-full" />
-                )}
-              </Button>
-            );
-          })}
-        </div>
       </div>
 
-      {/* Tab content */}
-      <div className="flex-1 overflow-y-auto px-5 py-4 [&::-webkit-scrollbar]:w-[3px] [&::-webkit-scrollbar-thumb]:bg-border/20">
-        {activeTab === 'general' && (
+      {/* Tabs */}
+      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as ServerTab)} className="flex-1 flex flex-col min-h-0 gap-0">
+        <TabsList variant="line" className="border-b border-border/30 h-auto px-5 flex-shrink-0">
+          {tabs.map(tab => (
+            <TabsTrigger
+              key={tab.id}
+              value={tab.id}
+              className="px-3.5 pb-2.5 pt-1 text-sm data-[state=active]:text-primary data-[state=active]:font-medium text-muted-foreground/60 hover:text-foreground"
+            >
+              {tab.label}{tab.count !== undefined ? ` (${tab.count})` : ''}
+            </TabsTrigger>
+          ))}
+        </TabsList>
+
+        <TabsContent value="general" className="flex-1 overflow-y-auto px-5 py-4 scrollbar-thin">
           <GeneralTab
             name={name} setName={setName}
             desc={desc} setDesc={setDesc}
@@ -753,17 +700,17 @@ function ServerDetailPanel({ server, onBack }: { server: MCPServer; onBack: () =
             envVars={envVars} setEnvVars={setEnvVars}
             longRunning={longRunning} setLongRunning={setLongRunning}
           />
-        )}
-        {activeTab === 'tools' && (
+        </TabsContent>
+        <TabsContent value="tools" className="flex-1 overflow-y-auto px-5 py-4 scrollbar-thin">
           <ToolsTab tools={tools} setTools={setTools} />
-        )}
-        {activeTab === 'prompts' && (
+        </TabsContent>
+        <TabsContent value="prompts" className="flex-1 overflow-y-auto px-5 py-4 scrollbar-thin">
           <PromptsTab prompts={server.prompts || []} />
-        )}
-        {activeTab === 'resources' && (
+        </TabsContent>
+        <TabsContent value="resources" className="flex-1 overflow-y-auto px-5 py-4 scrollbar-thin">
           <ResourcesTab resources={server.resources || []} />
-        )}
-      </div>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
@@ -786,37 +733,37 @@ function GeneralTab({ name, setName, desc, setDesc, serverType, setServerType, t
     <div className="max-w-[560px] space-y-5">
       {/* Name */}
       <div>
-        <label className="text-sm text-foreground/70 mb-1.5 flex items-center gap-0.5 font-medium">
+        <label className="text-sm text-muted-foreground mb-1.5 flex items-center gap-0.5 font-medium">
           <span className="text-destructive">*</span> {'\u540d\u79f0'}
         </label>
         <Input
           value={name}
           onChange={e => setName(e.target.value)}
-          className="w-full px-3 py-[8px] bg-foreground/[0.02] rounded-lg border border-border/30 text-sm text-foreground/70 focus:border-foreground/15 transition-colors h-auto"
+          className="w-full px-3 py-[8px] bg-muted/30 rounded-lg border border-border/30 text-sm text-foreground focus:border-border/50 transition-colors h-auto"
         />
       </div>
 
       {/* Description */}
       <div>
-        <label className="text-sm text-foreground/70 mb-1.5 block font-medium">{'\u63cf\u8ff0'}</label>
+        <label className="text-sm text-muted-foreground mb-1.5 block font-medium">{'\u63cf\u8ff0'}</label>
         <Input
           value={desc}
           onChange={e => setDesc(e.target.value)}
           placeholder={'\u63cf\u8ff0'}
-          className="w-full px-3 py-[8px] bg-foreground/[0.02] rounded-lg border border-border/30 text-sm text-foreground/70 placeholder:text-foreground/20 focus:border-foreground/15 transition-colors h-auto"
+          className="w-full px-3 py-[8px] bg-muted/30 rounded-lg border border-border/30 text-sm text-foreground placeholder:text-muted-foreground/60 focus:border-border/50 transition-colors h-auto"
         />
       </div>
 
       {/* Type */}
       <div>
-        <label className="text-sm text-foreground/70 mb-1.5 flex items-center gap-0.5 font-medium">
+        <label className="text-sm text-muted-foreground mb-1.5 flex items-center gap-0.5 font-medium">
           <span className="text-destructive">*</span> {'\u7c7b\u578b'}
         </label>
         <Popover open={typeOpen} onOpenChange={setTypeOpen}>
           <PopoverTrigger asChild>
-            <Button
+            <Button size="inline"
               variant="outline"
-              className="w-full flex items-center justify-between px-3 py-[8px] h-auto bg-foreground/[0.02] rounded-lg border-border/30 text-sm text-foreground/60 hover:border-foreground/15"
+              className="w-full flex items-center justify-between px-3 py-[8px] bg-muted/30 rounded-lg border-border/30 text-sm text-muted-foreground hover:border-border/50"
             >
               <span>{serverType === 'stdio' ? '\u6807\u51c6\u8f93\u5165 / \u8f93\u51fa (stdio)' : 'Server-Sent Events (SSE)'}</span>
               <ChevronDown size={10} className={`transition-transform ${typeOpen ? 'rotate-180' : ''}`} />
@@ -824,13 +771,12 @@ function GeneralTab({ name, setName, desc, setDesc, serverType, setServerType, t
           </PopoverTrigger>
           <PopoverContent align="start" className="w-[var(--radix-popover-trigger-width)] p-0.5">
             {['stdio', 'sse'].map(t => (
-              <Button
+              <Button size="inline"
                 key={t}
                 variant="ghost"
-                size="xs"
                 onClick={() => { setServerType(t); setTypeOpen(false); }}
-                className={`w-full text-left px-3 py-[6px] h-auto rounded-md text-xs justify-between ${
-                  serverType === t ? 'bg-accent text-foreground/75' : 'text-foreground/55 hover:bg-accent/50'
+                className={`w-full text-left px-3 py-[6px] rounded-md text-xs justify-between ${
+                  serverType === t ? 'bg-accent text-foreground' : 'text-muted-foreground hover:bg-accent/50'
                 }`}
               >
                 <span>{t === 'stdio' ? '\u6807\u51c6\u8f93\u5165 / \u8f93\u51fa (stdio)' : 'Server-Sent Events (SSE)'}</span>
@@ -843,71 +789,67 @@ function GeneralTab({ name, setName, desc, setDesc, serverType, setServerType, t
 
       {/* Command */}
       <div>
-        <label className="text-sm text-foreground/70 mb-1.5 flex items-center gap-0.5 font-medium">
+        <label className="text-sm text-muted-foreground mb-1.5 flex items-center gap-0.5 font-medium">
           <span className="text-destructive">*</span> {'\u547d\u4ee4'}
         </label>
         <Input
           value={command}
           onChange={e => setCommand(e.target.value)}
-          className="w-full px-3 py-[8px] bg-foreground/[0.02] rounded-lg border border-border/30 text-sm text-foreground/70 font-mono focus:border-foreground/15 transition-colors h-auto"
+          className="w-full px-3 py-[8px] bg-muted/30 rounded-lg border border-border/30 text-sm text-foreground font-mono focus:border-border/50 transition-colors h-auto"
         />
       </div>
 
       {/* Package Source */}
       <div>
-        <label className="text-sm text-foreground/70 mb-1.5 flex items-center gap-1 font-medium">
+        <label className="text-sm text-muted-foreground mb-1.5 flex items-center gap-1 font-medium">
           {'\u5305\u7ba1\u7406\u6e90'}
-          <Info size={11} className="text-foreground/20" />
+          <Info size={11} className="text-muted-foreground/40" />
         </label>
-        <div className="flex items-center gap-3 flex-wrap">
+        <RadioGroup value={pkgSource} onValueChange={setPkgSource} className="flex items-center gap-3 flex-wrap">
           {PKG_SOURCES.map(src => (
             <label key={src} className="flex items-center gap-1.5 cursor-pointer">
-              <div className={`w-3.5 h-3.5 rounded-full border-2 flex items-center justify-center transition-colors ${
-                pkgSource === src ? 'border-cherry-primary' : 'border-foreground/15'
-              }`}>
-                {pkgSource === src && <div className="w-1.5 h-1.5 rounded-full bg-cherry-primary" />}
-              </div>
-              <span className="text-sm text-foreground/55">{src}</span>
+              <RadioGroupItem value={src} />
+              <span className="text-sm text-muted-foreground">{src}</span>
             </label>
           ))}
-        </div>
+        </RadioGroup>
       </div>
 
       {/* Args */}
       <div>
-        <label className="text-sm text-foreground/70 mb-1.5 flex items-center gap-1 font-medium">
+        <label className="text-sm text-muted-foreground mb-1.5 flex items-center gap-1 font-medium">
           {'\u53c2\u6570'}
-          <Info size={11} className="text-foreground/20" />
+          <Info size={11} className="text-muted-foreground/40" />
         </label>
         <Input
           value={args}
           onChange={e => setArgs(e.target.value)}
-          className="w-full px-3 py-[8px] bg-foreground/[0.02] rounded-lg border border-border/30 text-sm text-foreground/70 font-mono focus:border-foreground/15 transition-colors h-auto"
+          className="w-full px-3 py-[8px] bg-muted/30 rounded-lg border border-border/30 text-sm text-foreground font-mono focus:border-border/50 transition-colors h-auto"
         />
       </div>
 
       {/* Env Vars */}
       <div>
-        <label className="text-sm text-foreground/70 mb-1.5 flex items-center gap-1 font-medium">
+        <label className="text-sm text-muted-foreground mb-1.5 flex items-center gap-1 font-medium">
           {'\u73af\u5883\u53d8\u91cf'}
-          <Info size={11} className="text-foreground/20" />
+          <Info size={11} className="text-muted-foreground/40" />
         </label>
-        <textarea
+        <Textarea
           value={envVars}
           onChange={e => setEnvVars(e.target.value)}
           placeholder={'KEY1=value1\nKEY2=value2'}
           rows={3}
-          className="w-full px-3 py-2.5 bg-foreground/[0.02] rounded-lg border border-border/30 text-sm text-foreground/70 outline-none font-mono placeholder:text-foreground/15 resize-y focus:border-foreground/15 transition-colors [&::-webkit-scrollbar]:w-[2px] [&::-webkit-scrollbar-thumb]:bg-border/20"
+          className="w-full px-3 py-2.5 bg-muted/30 rounded-lg border border-border/30 text-sm text-foreground outline-none font-mono placeholder:text-muted-foreground/60 resize-y focus:border-border/50 transition-colors scrollbar-thin-xs"
         />
       </div>
 
       {/* Long running */}
       <div className="flex items-center justify-between py-2">
         <div className="flex items-center gap-1.5">
-          <span className="text-sm text-foreground/70 font-medium">{'\u957f\u65f6\u95f4\u8fd0\u884c\u6a21\u5f0f'}</span>
-          <Info size={11} className="text-foreground/20" />
+          <span className="text-sm text-foreground font-medium">{'\u957f\u65f6\u95f4\u8fd0\u884c\u6a21\u5f0f'}</span>
+          <Info size={11} className="text-muted-foreground/40" />
         </div>
-        <Toggle checked={longRunning} onChange={setLongRunning} />
+        <Switch size="sm" checked={longRunning} onCheckedChange={setLongRunning} />
       </div>
     </div>
   );
@@ -929,29 +871,23 @@ function ToolsTab({ tools, setTools }: { tools: MCPTool[]; setTools: (t: MCPTool
 
   if (tools.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-16 text-center">
-        <div className="w-10 h-10 rounded-2xl bg-foreground/[0.04] flex items-center justify-center mb-3">
-          <Settings2 size={16} className="text-foreground/15" />
-        </div>
-        <p className="text-xs text-foreground/35">{'\u6682\u65e0\u53ef\u7528\u5de5\u5177'}</p>
-        <p className="text-[9px] text-foreground/20 mt-1">{'\u8bf7\u786e\u8ba4\u670d\u52a1\u5668\u5df2\u542f\u52a8\u5e76\u6b63\u786e\u914d\u7f6e'}</p>
-      </div>
+      <EmptyState icon={Settings2} title="暂无可用工具" description="请确认服务器已启动并正确配置" compact />
     );
   }
 
   return (
     <div>
       {/* Header row */}
-      <div className="flex items-center justify-between pb-3 border-b border-foreground/[0.06]">
+      <div className="flex items-center justify-between pb-3 border-b border-border/30">
         <div className="flex items-center gap-2">
-          <p className="text-sm text-foreground/70 font-semibold">{'\u53ef\u7528\u5de5\u5177'}</p>
-          <Button variant="ghost" size="icon-xs" className="w-5 h-5 text-foreground/20 hover:text-foreground/40">
+          <p className="text-sm text-foreground font-semibold">{'\u53ef\u7528\u5de5\u5177'}</p>
+          <Button variant="ghost" size="icon-xs" className="text-muted-foreground/50 hover:text-foreground">
             <Filter size={10} />
           </Button>
         </div>
         <div className="flex items-center gap-6">
-          <span className="text-xs text-foreground/35">{'\u542f\u7528\u5de5\u5177'}</span>
-          <span className="text-xs text-foreground/35">{'\u81ea\u52a8\u6279\u51c6'}</span>
+          <span className="text-xs text-muted-foreground/40">{'\u542f\u7528\u5de5\u5177'}</span>
+          <span className="text-xs text-muted-foreground/40">{'\u81ea\u52a8\u6279\u51c6'}</span>
         </div>
       </div>
 
@@ -966,24 +902,24 @@ function ToolsTab({ tools, setTools }: { tools: MCPTool[]; setTools: (t: MCPTool
                     variant="ghost"
                     size="icon-xs"
                     onClick={() => setExpandedTool(expandedTool === tool.name ? null : tool.name)}
-                    className="mt-0.5 w-5 h-5 text-foreground/25 hover:text-foreground/50 flex-shrink-0"
+                    className="mt-0.5 text-muted-foreground/40 hover:text-foreground flex-shrink-0"
                   >
                     <ChevronRight size={10} className={`transition-transform ${expandedTool === tool.name ? 'rotate-90' : ''}`} />
                   </Button>
                 ) : (
-                  <span className="mt-0.5 w-4 text-center text-foreground/15 flex-shrink-0">{'\u2014'}</span>
+                  <span className="mt-0.5 w-4 text-center text-muted-foreground/50 flex-shrink-0">{'\u2014'}</span>
                 )}
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-1.5">
-                    <p className="text-sm text-foreground/75 font-semibold">{tool.name}</p>
-                    <Info size={9} className="text-foreground/15" />
+                    <p className="text-sm text-foreground font-semibold">{tool.name}</p>
+                    <Info size={9} className="text-muted-foreground/40" />
                   </div>
-                  <p className="text-xs text-foreground/35 mt-0.5 leading-relaxed">{tool.description}</p>
+                  <p className="text-xs text-muted-foreground/60 mt-0.5 leading-relaxed">{tool.description}</p>
                 </div>
               </div>
               <div className="flex items-center gap-6 flex-shrink-0">
-                <Toggle checked={tool.enabled} onChange={() => handleToggleEnabled(tool.name)} />
-                <Toggle checked={tool.autoApprove} onChange={() => handleToggleAutoApprove(tool.name)} />
+                <Switch size="sm" checked={tool.enabled} onCheckedChange={() => handleToggleEnabled(tool.name)} />
+                <Switch size="sm" checked={tool.autoApprove} onCheckedChange={() => handleToggleAutoApprove(tool.name)} />
               </div>
             </div>
 
@@ -991,10 +927,10 @@ function ToolsTab({ tools, setTools }: { tools: MCPTool[]; setTools: (t: MCPTool
             {expandedTool === tool.name && tool.params && tool.params.length > 0 && (
               <div className="ml-6 mb-3">
                 {tool.params.map(param => (
-                  <div key={param.name} className="flex items-center gap-3 px-3 py-2 bg-foreground/[0.02] rounded-lg border border-foreground/[0.04] mb-1">
-                    <span className="text-xs text-foreground/60 font-mono flex-1">{param.name}</span>
-                    <span className="flex items-center gap-1 text-[9px] text-foreground/60">
-                      <span className="w-1 h-1 rounded-full bg-foreground/50" />
+                  <div key={param.name} className="flex items-center gap-3 px-3 py-2 bg-muted/30 rounded-lg border border-border/50 mb-1">
+                    <span className="text-xs text-muted-foreground font-mono flex-1">{param.name}</span>
+                    <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                      <span className="w-1 h-1 rounded-full bg-muted0" />
                       {param.type}
                     </span>
                   </div>
@@ -1014,22 +950,17 @@ function ToolsTab({ tools, setTools }: { tools: MCPTool[]; setTools: (t: MCPTool
 function PromptsTab({ prompts }: { prompts: MCPPrompt[] }) {
   if (prompts.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-16 text-center">
-        <div className="w-10 h-10 rounded-2xl bg-foreground/[0.04] flex items-center justify-center mb-3">
-          <FileText size={16} className="text-foreground/15" />
-        </div>
-        <p className="text-xs text-foreground/35">{'\u6682\u65e0\u63d0\u793a\u6a21\u677f'}</p>
-      </div>
+      <EmptyState icon={FileText} title="暂无提示模板" compact />
     );
   }
 
   return (
     <div>
-      <p className="text-sm text-foreground/70 pb-3 border-b border-foreground/[0.06] mb-1 font-semibold">{'\u53ef\u7528\u63d0\u793a'}</p>
+      <p className="text-sm text-foreground pb-3 border-b border-border/30 mb-1 font-semibold">{'\u53ef\u7528\u63d0\u793a'}</p>
       {prompts.map(p => (
         <div key={p.name} className="py-3 last:border-b-0">
-          <p className="text-sm text-foreground/75 font-medium">{p.name}</p>
-          <p className="text-xs text-foreground/35 mt-0.5">{p.description}</p>
+          <p className="text-sm text-foreground font-medium">{p.name}</p>
+          <p className="text-xs text-muted-foreground/60 mt-0.5">{p.description}</p>
         </div>
       ))}
     </div>
@@ -1044,37 +975,32 @@ function ResourcesTab({ resources }: { resources: MCPResource[] }) {
 
   if (resources.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-16 text-center">
-        <div className="w-10 h-10 rounded-2xl bg-foreground/[0.04] flex items-center justify-center mb-3">
-          <Server size={16} className="text-foreground/15" />
-        </div>
-        <p className="text-xs text-foreground/35">{'\u6682\u65e0\u53ef\u7528\u8d44\u6e90'}</p>
-      </div>
+      <EmptyState preset="no-resource" compact />
     );
   }
 
   return (
     <div>
-      <p className="text-sm text-foreground/70 pb-3 border-b border-foreground/[0.06] mb-1 font-semibold">{'\u53ef\u7528\u8d44\u6e90'}</p>
+      <p className="text-sm text-foreground pb-3 border-b border-border/30 mb-1 font-semibold">{'\u53ef\u7528\u8d44\u6e90'}</p>
       {resources.map(r => (
         <div key={r.name} className="last:border-b-0">
-          <Button
+          <Button size="inline"
             variant="ghost"
             onClick={() => setExpanded(expanded === r.name ? null : r.name)}
-            className="w-full flex items-center gap-2 py-3 h-auto text-left justify-start"
+            className="w-full flex items-center gap-2 py-3 text-left justify-start"
           >
-            <ChevronRight size={10} className={`text-foreground/30 transition-transform ${expanded === r.name ? 'rotate-90' : ''}`} />
+            <ChevronRight size={10} className={`text-muted-foreground/40 transition-transform ${expanded === r.name ? 'rotate-90' : ''}`} />
             <div className="flex-1 min-w-0">
-              <p className="text-sm text-foreground/75 font-medium">
-                {r.name} <span className="text-foreground/30 font-mono">({r.uri})</span>
+              <p className="text-sm text-foreground font-medium">
+                {r.name} <span className="text-muted-foreground/40 font-mono">({r.uri})</span>
               </p>
-              <p className="text-xs text-foreground/35 mt-0.5">{r.description}</p>
+              <p className="text-xs text-muted-foreground/60 mt-0.5">{r.description}</p>
             </div>
           </Button>
           {expanded === r.name && (
-            <div className="ml-6 mb-3 flex items-center gap-4 px-3 py-2.5 bg-foreground/[0.02] rounded-lg border border-foreground/[0.04]">
-              <span className="text-xs text-foreground/45 flex-1">MIME {'\u7c7b\u578b'}</span>
-              <span className="px-2 py-[2px] rounded-md bg-info/10 text-info text-[9px] border border-info/15 font-medium">{r.mimeType}</span>
+            <div className="ml-6 mb-3 flex items-center gap-4 px-3 py-2.5 bg-muted/30 rounded-lg border border-border/50">
+              <span className="text-xs text-muted-foreground/60 flex-1">MIME {'\u7c7b\u578b'}</span>
+              <span className="px-2 py-[2px] rounded-md bg-info/10 text-info text-xs border border-info/15 font-medium">{r.mimeType}</span>
             </div>
           )}
         </div>
@@ -1126,76 +1052,76 @@ export function MCPServicePage() {
   return (
     <div className="flex h-full min-h-0">
       {/* Middle Column: Navigation */}
-      <div className="w-[160px] flex-shrink-0 flex flex-col border-r border-foreground/[0.05] min-h-0">
+      <div className="w-[160px] flex-shrink-0 flex flex-col border-r border-border/30 min-h-0">
         <div className="px-3.5 pt-4 pb-2 flex-shrink-0">
-          <p className="text-xs text-foreground/40 font-medium">MCP {'\u670d\u52a1'}</p>
+          <p className="text-xs text-muted-foreground/60 font-medium">MCP {'\u670d\u52a1'}</p>
         </div>
 
-        <div className="flex-1 overflow-y-auto px-2.5 pb-3 [&::-webkit-scrollbar]:w-[2px] [&::-webkit-scrollbar-thumb]:bg-border/20">
+        <div className="flex-1 overflow-y-auto px-2.5 pb-3 scrollbar-thin-xs">
           <div className="space-y-[2px]">
             {/* Top item */}
-            <Button
+            <Button size="inline"
               variant="ghost"
               onClick={() => { setSelectedNav('servers'); setSelectedServer(null); }}
-              className={`w-full flex items-center justify-between px-3 py-[8px] h-auto rounded-xl text-left relative justify-start ${
+              className={`w-full flex items-center justify-between px-3 py-[8px] text-left relative justify-start ${
                 selectedNav === 'servers' && !selectedServer
                   ? 'bg-cherry-active-bg'
-                  : 'border border-transparent hover:bg-foreground/[0.03]'
+                  : 'border border-transparent hover:bg-accent/50'
               }`}
             >
               {selectedNav === 'servers' && !selectedServer && (
                 <div className="absolute inset-0 rounded-xl border border-cherry-active-border pointer-events-none" />
               )}
               <div className="flex items-center gap-2 min-w-0 flex-1">
-                <span className={`flex-shrink-0 ${selectedNav === 'servers' && !selectedServer ? 'text-foreground/50' : 'text-foreground/30'}`}><Server size={14} /></span>
-                <span className={`text-xs ${selectedNav === 'servers' && !selectedServer ? 'text-foreground/85 font-medium' : 'text-foreground/55'}`}>MCP {'\u670d\u52a1\u5668'}</span>
+                <span className={`flex-shrink-0 ${selectedNav === 'servers' && !selectedServer ? 'text-muted-foreground/60' : 'text-muted-foreground/40'}`}><Server size={14} /></span>
+                <span className={`text-sm ${selectedNav === 'servers' && !selectedServer ? 'text-foreground font-medium' : 'text-muted-foreground'}`}>MCP {'\u670d\u52a1\u5668'}</span>
               </div>
-              <ChevronRight size={9} className={`flex-shrink-0 ${selectedNav === 'servers' && !selectedServer ? 'text-foreground/25' : 'text-foreground/10'}`} />
+              <ChevronRight size={9} className={`flex-shrink-0 ${selectedNav === 'servers' && !selectedServer ? 'text-muted-foreground/40' : 'text-muted-foreground/50'}`} />
             </Button>
 
             {/* Discover */}
-            <p className="text-[8px] text-foreground/25 tracking-wider px-3 pt-2.5 pb-1 font-medium">{'\u53d1\u73b0'}</p>
+            <p className="text-xs text-muted-foreground/40 tracking-wider px-3 pt-2.5 pb-1 font-medium">{'\u53d1\u73b0'}</p>
             {[
               { id: 'builtin' as const, label: '\u5185\u7f6e\u670d\u52a1\u5668', icon: <Package size={14} /> },
               { id: 'marketplace' as const, label: '\u5e02\u573a', icon: <Store size={14} /> },
             ].map(item => {
               const isSelected = selectedNav === item.id;
               return (
-                <Button
+                <Button size="inline"
                   key={item.id}
                   variant="ghost"
                   onClick={() => { setSelectedNav(item.id); setSelectedServer(null); }}
-                  className={`w-full flex items-center justify-between px-3 py-[8px] h-auto rounded-xl text-left relative justify-start ${
+                  className={`w-full flex items-center justify-between px-3 py-[8px] text-left relative justify-start ${
                     isSelected
                       ? 'bg-cherry-active-bg'
-                      : 'border border-transparent hover:bg-foreground/[0.03]'
+                      : 'border border-transparent hover:bg-accent/50'
                   }`}
                 >
                   {isSelected && (
                     <div className="absolute inset-0 rounded-xl border border-cherry-active-border pointer-events-none" />
                   )}
                   <div className="flex items-center gap-2 min-w-0 flex-1">
-                    <span className={`flex-shrink-0 ${isSelected ? 'text-foreground/50' : 'text-foreground/30'}`}>{item.icon}</span>
-                    <span className={`text-xs ${isSelected ? 'text-foreground/85 font-medium' : 'text-foreground/55'}`}>{item.label}</span>
+                    <span className={`flex-shrink-0 ${isSelected ? 'text-muted-foreground/60' : 'text-muted-foreground/40'}`}>{item.icon}</span>
+                    <span className={`text-sm ${isSelected ? 'text-foreground font-medium' : 'text-muted-foreground'}`}>{item.label}</span>
                   </div>
-                  <ChevronRight size={9} className={`flex-shrink-0 ${isSelected ? 'text-foreground/25' : 'text-foreground/10'}`} />
+                  <ChevronRight size={9} className={`flex-shrink-0 ${isSelected ? 'text-muted-foreground/40' : 'text-muted-foreground/50'}`} />
                 </Button>
               );
             })}
 
             {/* Providers */}
-            <p className="text-[8px] text-foreground/25 tracking-wider px-3 pt-2.5 pb-1 font-medium">{'\u63d0\u4f9b\u5546'}</p>
+            <p className="text-xs text-muted-foreground/40 tracking-wider px-3 pt-2.5 pb-1 font-medium">{'\u63d0\u4f9b\u5546'}</p>
             {MOCK_PROVIDERS.map(provider => {
               const isSelected = selectedNav === provider.id;
               return (
-                <Button
+                <Button size="inline"
                   key={provider.id}
                   variant="ghost"
                   onClick={() => { setSelectedNav(provider.id); setSelectedServer(null); }}
-                  className={`w-full flex items-center justify-between px-3 py-[8px] h-auto rounded-xl text-left relative justify-start ${
+                  className={`w-full flex items-center justify-between px-3 py-[8px] text-left relative justify-start ${
                     isSelected
                       ? 'bg-cherry-active-bg'
-                      : 'border border-transparent hover:bg-foreground/[0.03]'
+                      : 'border border-transparent hover:bg-accent/50'
                   }`}
                 >
                   {isSelected && (
@@ -1203,9 +1129,9 @@ export function MCPServicePage() {
                   )}
                   <div className="flex items-center gap-2 min-w-0 flex-1">
                     <span className="flex-shrink-0"><BrandLogo id={provider.id} fallbackLetter={provider.icon} fallbackColor="#6b7280" size={15} /></span>
-                    <span className={`text-xs truncate ${isSelected ? 'text-foreground/85 font-medium' : 'text-foreground/55'}`}>{provider.name}</span>
+                    <span className={`text-sm truncate ${isSelected ? 'text-foreground font-medium' : 'text-muted-foreground'}`}>{provider.name}</span>
                   </div>
-                  <ChevronRight size={9} className={`flex-shrink-0 ${isSelected ? 'text-foreground/25' : 'text-foreground/10'}`} />
+                  <ChevronRight size={9} className={`flex-shrink-0 ${isSelected ? 'text-muted-foreground/40' : 'text-muted-foreground/50'}`} />
                 </Button>
               );
             })}

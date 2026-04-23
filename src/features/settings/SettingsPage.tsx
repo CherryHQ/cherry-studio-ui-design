@@ -25,9 +25,9 @@ import { GeneralSettingsPage } from './GeneralSettingsPage';
 import { MCPServicePage } from './MCPServicePage';
 import { DashboardPage } from './DashboardPage';
 import { DefaultModelSettingsPage } from './DefaultModelSettingsPage';
-import { Toggle, InlineSelect } from './shared';
+import { InlineSelect, SectionCard } from './shared';
 import { Tooltip } from '@/app/components/Tooltip';
-import { Button } from '@cherry-studio/ui';
+import { Button, Dialog, DialogContent, Typography, Switch, Card, CardContent, ToggleGroup, ToggleGroupItem } from '@cherry-studio/ui';
 
 // ===========================
 // Types
@@ -267,8 +267,8 @@ const CHANGELOG_DATA = [
 ];
 
 const CHANGE_TYPE_MAP = {
-  feature: { label: '\u65b0\u589e', color: 'text-foreground/60', bg: 'bg-foreground/[0.06]' },
-  improve: { label: '\u4f18\u5316', color: 'text-blue-400', bg: 'bg-blue-400/10' },
+  feature: { label: '\u65b0\u589e', color: 'text-muted-foreground', bg: 'bg-muted/50' },
+  improve: { label: '\u4f18\u5316', color: 'text-accent-blue', bg: 'bg-accent-blue/10' },
   fix: { label: '\u4fee\u590d', color: 'text-warning', bg: 'bg-warning/10' },
 };
 
@@ -277,34 +277,34 @@ const CHANGE_TYPE_MAP = {
 // ===========================
 function SettingsSidebar({ active, onSelect, onClose }: { active: SettingsSection; onSelect: (s: SettingsSection) => void; onClose: () => void }) {
   return (
-    <div className="w-[180px] flex-shrink-0 flex flex-col overflow-y-auto select-none [&::-webkit-scrollbar]:w-[2px] [&::-webkit-scrollbar-thumb]:bg-border/20">
+    <div className="w-[180px] flex-shrink-0 flex flex-col overflow-y-auto select-none scrollbar-thin-xs">
       {/* Traffic lights */}
       <div className="h-10 flex items-center px-4 flex-shrink-0">
         <div className="flex items-center gap-2">
-          <button onClick={onClose} className="w-3 h-3 rounded-full bg-[#ff5f57] border border-[#e0443e] hover:brightness-90 transition-all cursor-default" />
-          <div className="w-3 h-3 rounded-full bg-[#febc2e] border border-[#d4a528]" />
-          <div className="w-3 h-3 rounded-full bg-[#28c840] border border-[#24a732]" />
+          <Button variant="ghost" onClick={onClose} className="w-3 h-3 p-0 min-w-0 rounded-full bg-traffic-red border border-traffic-red-border hover:brightness-90 hover:bg-traffic-red transition-all cursor-default" />
+          <div className="w-3 h-3 rounded-full bg-traffic-yellow border border-traffic-yellow-border" />
+          <div className="w-3 h-3 rounded-full bg-traffic-green border border-traffic-green-border" />
         </div>
       </div>
       <div className="flex-1 px-2 pb-4 space-y-1">
         {NAV_GROUPS.map((group, gi) => (
           <div key={gi}>
             {group.label && (
-              <p className="px-3 pb-1 pt-2 text-[9px] text-foreground/40 leading-[12px]">{group.label}</p>
+              <p className="px-3 pb-1 pt-2 text-xs text-muted-foreground/60 leading-[12px]">{group.label}</p>
             )}
             <div className="space-y-[1px]">
               {group.items.map(item => {
                 const isActive = active === item.id;
                 const Icon = item.icon;
                 return (
-                  <Button
+                  <Button size="inline"
                     key={item.id}
                     variant="ghost"
                     onClick={() => onSelect(item.id)}
-                    className={`w-full justify-start gap-2.5 px-3 py-[5px] h-auto rounded-lg text-xs relative ${
+                    className={`w-full justify-start gap-2.5 px-3 py-[5px] rounded-lg text-sm relative ${
                       isActive
-                        ? 'bg-cherry-active-bg text-foreground/90'
-                        : 'text-foreground/70 hover:text-foreground/90 hover:bg-foreground/[0.04]'
+                        ? 'bg-cherry-active-bg text-foreground'
+                        : 'text-foreground hover:text-foreground hover:bg-accent/50'
                     }`}
                   >
                     {isActive && (
@@ -327,16 +327,9 @@ function SettingsSidebar({ active, onSelect, onClose }: { active: SettingsSectio
 // Section Components
 // ===========================
 function SectionTitle({ children }: { children: React.ReactNode }) {
-  return <h2 className="text-sm text-foreground/90 mb-3 font-medium">{children}</h2>;
+  return <h2 className="text-lg text-foreground mb-3 font-medium">{children}</h2>;
 }
 
-function SectionCard({ children, className }: { children: React.ReactNode; className?: string }) {
-  return (
-    <div className={`bg-foreground/[0.03] border border-foreground/[0.06] rounded-xl px-3.5 py-1 ${className || ''}`}>
-      {children}
-    </div>
-  );
-}
 
 // ===========================
 // Home Settings
@@ -354,8 +347,8 @@ function HomeSettings({ onNavigate }: { onNavigate: (s: SettingsSection) => void
   const totalModels = MOCK_PROVIDERS.reduce((sum, p) => sum + p.enabledModels, 0);
   const totalProviders = MOCK_PROVIDERS.length;
 
-  const card = "bg-foreground/[0.03] border border-foreground/[0.06] rounded-2xl p-3.5 hover:border-foreground/[0.12] transition-all duration-200";
-  const cardLabel = "text-[9px] text-foreground/30 tracking-wide";
+  const cardCls = "bg-muted/30 border-border/50 rounded-2xl p-3.5 py-3.5 px-3.5 gap-0 hover:border-border transition-all duration-200 shadow-none";
+  const cardLabel = "text-xs text-muted-foreground/40 tracking-wide";
 
   const recentModels = [
     { name: 'Claude 4 Sonnet', provider: 'Anthropic', count: 48, color: '#d97706' },
@@ -370,52 +363,52 @@ function HomeSettings({ onNavigate }: { onNavigate: (s: SettingsSection) => void
     <div className="grid grid-cols-4 gap-2">
 
       {/* Row 1 */}
-      <div className={`${card} cursor-pointer`} onClick={() => onNavigate('models')}>
+      <Card className={`${cardCls} cursor-pointer`} onClick={() => onNavigate('models')}>
         <p className={`${cardLabel} mb-2`}>{'\u670d\u52a1\u8fde\u63a5'}</p>
         <div className="flex items-baseline gap-1">
           <span className="text-xl text-primary font-bold">{connectedCount}</span>
-          <span className="text-xs text-foreground/20">/ {totalProviders}</span>
+          <span className="text-xs text-muted-foreground/50">/ {totalProviders}</span>
         </div>
         <div className="flex items-center gap-1 mt-1.5">
           <div className="w-1 h-1 rounded-full bg-primary animate-pulse" />
-          <span className="text-[9px] text-primary">{'\u5168\u90e8\u5728\u7ebf'}</span>
+          <span className="text-xs text-primary">{'\u5168\u90e8\u5728\u7ebf'}</span>
         </div>
-      </div>
+      </Card>
 
-      <div className={`${card} cursor-pointer`} onClick={() => onNavigate('models')}>
+      <Card className={`${cardCls} cursor-pointer`} onClick={() => onNavigate('models')}>
         <p className={`${cardLabel} mb-2`}>{'\u53ef\u7528\u6a21\u578b'}</p>
-        <span className="text-xl text-foreground/70 font-bold">{totalModels}</span>
-        <p className="text-[9px] text-foreground/20 mt-1.5">{'\u5df2\u542f\u7528'}</p>
-      </div>
+        <span className="text-xl text-foreground font-bold">{totalModels}</span>
+        <p className="text-xs text-muted-foreground/50 mt-1.5">{'\u5df2\u542f\u7528'}</p>
+      </Card>
 
-      <div className={`${card}`}>
+      <Card className={`${cardCls}`}>
         <p className={`${cardLabel} mb-2`}>{'\u4eca\u65e5\u5bf9\u8bdd'}</p>
-        <span className="text-xl text-foreground/70 font-bold">24</span>
+        <span className="text-xl text-foreground font-bold">24</span>
         <div className="flex items-center gap-1 mt-1.5">
-          <span className="text-[9px] text-foreground/40">{'\u2191 12%'}</span>
-          <span className="text-[9px] text-foreground/20">{'\u8f83\u6628\u65e5'}</span>
+          <span className="text-xs text-muted-foreground/60">{'\u2191 12%'}</span>
+          <span className="text-xs text-muted-foreground/50">{'\u8f83\u6628\u65e5'}</span>
         </div>
-      </div>
+      </Card>
 
-      <div className={`${card}`}>
+      <Card className={`${cardCls}`}>
         <p className={`${cardLabel} mb-2`}>Token {'\u7528\u91cf'}</p>
         <div className="flex items-baseline gap-0.5">
-          <span className="text-xl text-foreground/70 font-bold">1.2</span>
-          <span className="text-xs text-foreground/25">M</span>
+          <span className="text-xl text-foreground font-bold">1.2</span>
+          <span className="text-xs text-muted-foreground/40">M</span>
         </div>
         <div className="flex gap-[2px] items-end mt-1.5 h-[10px]">
           {[3, 5, 4, 7, 6, 8, 5, 9, 7, 6, 8, 10].map((h, i) => (
-            <div key={i} className="flex-1 rounded-[1px] bg-foreground/[0.08]" style={{ height: `${h}px` }} />
+            <div key={i} className="flex-1 rounded-[var(--radius-dot)] bg-muted" style={{ height: `${h}px` }} />
           ))}
         </div>
-      </div>
+      </Card>
 
       {/* Row 2 */}
-      <div className={`${card} col-span-2`}>
+      <Card className={`${cardCls} col-span-2`}>
         <div className="flex items-center justify-between mb-2.5">
           <p className={cardLabel}>{'\u9ed8\u8ba4\u6a21\u578b'}</p>
-          <div className="w-5 h-5 rounded-lg bg-gradient-to-br from-violet-500/15 to-indigo-500/15 flex items-center justify-center">
-            <Sparkles size={10} className="text-violet-400/80" />
+          <div className="w-5 h-5 rounded-lg bg-gradient-to-br from-accent-violet/15 to-indigo-500/15 flex items-center justify-center">
+            <Sparkles size={10} className="text-accent-violet/80" />
           </div>
         </div>
         <InlineSelect value={defaultModel} onChange={setDefaultModel} fullWidth
@@ -426,34 +419,34 @@ function HomeSettings({ onNavigate }: { onNavigate: (s: SettingsSection) => void
             { value: 'deepseek-chat', label: 'DeepSeek V3' },
           ]}
         />
-      </div>
+      </Card>
 
-      <div className={`${card} cursor-pointer`} onClick={() => onNavigate('mcp')}>
+      <Card className={`${cardCls} cursor-pointer`} onClick={() => onNavigate('mcp')}>
         <div className="flex items-center justify-between mb-2.5">
           <p className={cardLabel}>MCP {'\u670d\u52a1'}</p>
-          <div className="w-5 h-5 rounded-lg bg-foreground/[0.06] flex items-center justify-center">
-            <Plug size={10} className="text-foreground/50" />
+          <div className="w-5 h-5 rounded-lg bg-muted/50 flex items-center justify-center">
+            <Plug size={10} className="text-muted-foreground/60" />
           </div>
         </div>
         <div className="flex items-center gap-1.5">
           <div className="w-1 h-1 rounded-full bg-primary animate-pulse" />
           <span className="text-xs text-primary">3 {'\u4e2a\u5de5\u5177\u8fd0\u884c\u4e2d'}</span>
         </div>
-      </div>
+      </Card>
 
-      <div className={`${card}`}>
+      <Card className={`${cardCls}`}>
         <p className={`${cardLabel} mb-2`}>{'\u5b58\u50a8\u7a7a\u95f4'}</p>
         <div className="flex items-baseline gap-0.5">
-          <span className="text-base text-foreground/70 font-bold">256</span>
-          <span className="text-[9px] text-foreground/25">MB</span>
+          <span className="text-base text-foreground font-bold">256</span>
+          <span className="text-xs text-muted-foreground/40">MB</span>
         </div>
-        <div className="mt-1.5 h-[3px] rounded-full bg-foreground/[0.06] overflow-hidden">
+        <div className="mt-1.5 h-[3px] rounded-full bg-muted/50 overflow-hidden">
           <div className="h-full rounded-full bg-foreground/30" style={{ width: '32%' }} />
         </div>
-      </div>
+      </Card>
 
       {/* Row 3 */}
-      <div className={`${card} col-span-2`}>
+      <Card className={`${cardCls} col-span-2`}>
         <p className={`${cardLabel} mb-2.5`}>{'\u5916\u89c2\u4e0e\u8bed\u8a00'}</p>
         <div className="space-y-2">
           <div className="flex items-center justify-between">
@@ -461,7 +454,7 @@ function HomeSettings({ onNavigate }: { onNavigate: (s: SettingsSection) => void
               {theme === 'dark' ? <span className="text-xs">{'\ud83c\udf19'}</span>
                 : theme === 'light' ? <span className="text-xs">{'\u2600\ufe0f'}</span>
                 : <span className="text-xs">{'\ud83d\udcbb'}</span>}
-              <span className="text-xs text-foreground/55">{'\u4e3b\u9898\u5916\u89c2'}</span>
+              <span className="text-sm text-muted-foreground">{'\u4e3b\u9898\u5916\u89c2'}</span>
             </div>
             <InlineSelect value={theme} onChange={setTheme}
               options={[
@@ -473,8 +466,8 @@ function HomeSettings({ onNavigate }: { onNavigate: (s: SettingsSection) => void
           </div>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Globe2 size={12} className="text-foreground/30" />
-              <span className="text-xs text-foreground/55">{'\u754c\u9762\u8bed\u8a00'}</span>
+              <Globe2 size={12} className="text-muted-foreground/40" />
+              <span className="text-sm text-muted-foreground">{'\u754c\u9762\u8bed\u8a00'}</span>
             </div>
             <InlineSelect value={language} onChange={setLanguage}
               options={[
@@ -486,36 +479,36 @@ function HomeSettings({ onNavigate }: { onNavigate: (s: SettingsSection) => void
             />
           </div>
         </div>
-      </div>
+      </Card>
 
-      <div className={`${card} col-span-2`}>
+      <Card className={`${cardCls} col-span-2`}>
         <p className={`${cardLabel} mb-2.5`}>{'\u504f\u597d\u8bbe\u7f6e'}</p>
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Sparkles size={11} className="text-foreground/30" />
-              <span className="text-xs text-foreground/55">{'\u81ea\u52a8\u751f\u6210\u6807\u9898'}</span>
+              <Sparkles size={11} className="text-muted-foreground/40" />
+              <span className="text-sm text-muted-foreground">{'\u81ea\u52a8\u751f\u6210\u6807\u9898'}</span>
             </div>
-            <Toggle checked={autoTitle} onChange={setAutoTitle} />
+            <Switch size="sm" checked={autoTitle} onCheckedChange={setAutoTitle} />
           </div>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <RefreshCw size={11} className="text-foreground/30" />
-              <span className="text-xs text-foreground/55">{'\u5f00\u673a\u81ea\u542f\u52a8'}</span>
+              <RefreshCw size={11} className="text-muted-foreground/40" />
+              <span className="text-sm text-muted-foreground">{'\u5f00\u673a\u81ea\u542f\u52a8'}</span>
             </div>
-            <Toggle checked={launchAtLogin} onChange={setLaunchAtLogin} />
+            <Switch size="sm" checked={launchAtLogin} onCheckedChange={setLaunchAtLogin} />
           </div>
         </div>
-      </div>
+      </Card>
 
       {/* Row 4 */}
-      <div className={`${card} col-span-2`}>
+      <Card className={`${cardCls} col-span-2`}>
         <p className={`${cardLabel} mb-2.5`}>{'\u8f93\u5165\u4e0e\u53d1\u9001'}</p>
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Command size={11} className="text-foreground/30" />
-              <span className="text-xs text-foreground/55">{'\u53d1\u9001\u5feb\u6377\u952e'}</span>
+              <Command size={11} className="text-muted-foreground/40" />
+              <span className="text-sm text-muted-foreground">{'\u53d1\u9001\u5feb\u6377\u952e'}</span>
             </div>
             <InlineSelect value={sendKey} onChange={setSendKey}
               options={[
@@ -527,8 +520,8 @@ function HomeSettings({ onNavigate }: { onNavigate: (s: SettingsSection) => void
           </div>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Globe2 size={11} className="text-foreground/30" />
-              <span className="text-xs text-foreground/55">{'\u4ee3\u7406\u6a21\u5f0f'}</span>
+              <Globe2 size={11} className="text-muted-foreground/40" />
+              <span className="text-sm text-muted-foreground">{'\u4ee3\u7406\u6a21\u5f0f'}</span>
             </div>
             <InlineSelect value={proxyMode} onChange={setProxyMode}
               options={[
@@ -539,9 +532,9 @@ function HomeSettings({ onNavigate }: { onNavigate: (s: SettingsSection) => void
             />
           </div>
         </div>
-      </div>
+      </Card>
 
-      <div className={`${card} col-span-2`}>
+      <Card className={`${cardCls} col-span-2`}>
         <p className={`${cardLabel} mb-2`}>{'\u5feb\u6377\u8df3\u8f6c'}</p>
         <div className="grid grid-cols-4 gap-1">
           {[
@@ -552,47 +545,47 @@ function HomeSettings({ onNavigate }: { onNavigate: (s: SettingsSection) => void
           ].map(item => {
             const Icon = item.icon;
             return (
-              <Button
+              <Button size="inline"
                 key={item.target}
                 variant="ghost"
                 onClick={() => onNavigate(item.target)}
-                className="flex-col h-auto gap-1.5 py-2 rounded-xl bg-foreground/[0.03] hover:bg-foreground/[0.06] border border-transparent hover:border-foreground/[0.06] text-xs"
+                className="flex-col gap-1.5 py-2 rounded-xl bg-muted/30 hover:bg-accent/50 border border-transparent hover:border-border/50 text-xs"
               >
-                <Icon size={13} className="text-foreground/30" />
-                <span className="text-[9px] text-foreground/40">{item.label}</span>
+                <Icon size={13} className="text-muted-foreground/40" />
+                <span className="text-xs text-muted-foreground/60">{item.label}</span>
               </Button>
             );
           })}
         </div>
-      </div>
+      </Card>
 
       {/* Row 5 */}
-      <div className={`${card} col-span-2`}>
+      <Card className={`${cardCls} col-span-2`}>
         <p className={`${cardLabel} mb-2.5`}>{'\u6a21\u578b\u4f7f\u7528\u6392\u884c'}</p>
         <div className="space-y-[6px]">
           {recentModels.map((m, i) => (
             <div key={m.name} className="flex items-center gap-2">
-              <span className="text-[9px] text-foreground/20 w-3 text-right">{i + 1}</span>
+              <span className="text-xs text-muted-foreground/50 w-3 text-right">{i + 1}</span>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center justify-between mb-[2px]">
-                  <span className="text-xs text-foreground/60 truncate">{m.name}</span>
-                  <span className="text-[9px] text-foreground/25 flex-shrink-0 ml-2">{m.count} {'\u6b21'}</span>
+                  <span className="text-xs text-muted-foreground truncate">{m.name}</span>
+                  <span className="text-xs text-muted-foreground/40 flex-shrink-0 ml-2">{m.count} {'\u6b21'}</span>
                 </div>
-                <div className="h-[2px] rounded-full bg-foreground/[0.04] overflow-hidden">
+                <div className="h-[2px] rounded-full bg-muted/50 overflow-hidden">
                   <div className="h-full rounded-full transition-all" style={{ width: `${(m.count / maxCount) * 100}%`, backgroundColor: m.color, opacity: 0.5 }} />
                 </div>
               </div>
             </div>
           ))}
         </div>
-      </div>
+      </Card>
 
-      <div className={`${card} col-span-2`}>
+      <Card className={`${cardCls} col-span-2`}>
         <p className={`${cardLabel} mb-2.5`}>{'\u672c\u6708\u8d39\u7528\u6982\u89c8'}</p>
         <div className="flex items-baseline gap-1 mb-3">
-          <span className="text-[9px] text-foreground/25">$</span>
-          <span className="text-lg text-foreground/70 font-bold">4.28</span>
-          <span className="text-[9px] text-foreground/20 ml-1">/ {'\u672c\u6708'}</span>
+          <span className="text-xs text-muted-foreground/40">$</span>
+          <span className="text-lg text-foreground font-bold">4.28</span>
+          <span className="text-xs text-muted-foreground/50 ml-1">/ {'\u672c\u6708'}</span>
         </div>
         <div className="space-y-1.5">
           {[
@@ -602,15 +595,15 @@ function HomeSettings({ onNavigate }: { onNavigate: (s: SettingsSection) => void
           ].map(item => (
             <div key={item.label} className="flex items-center gap-2">
               <div className="w-1 h-1 rounded-full flex-shrink-0" style={{ backgroundColor: item.color }} />
-              <span className="text-xs text-foreground/50 flex-1">{item.label}</span>
-              <span className="text-[9px] text-foreground/30">{item.amount}</span>
-              <div className="w-12 h-[2px] rounded-full bg-foreground/[0.04] overflow-hidden">
+              <span className="text-xs text-muted-foreground/60 flex-1">{item.label}</span>
+              <span className="text-xs text-muted-foreground/40">{item.amount}</span>
+              <div className="w-12 h-[2px] rounded-full bg-muted/50 overflow-hidden">
                 <div className="h-full rounded-full" style={{ width: `${item.pct}%`, backgroundColor: item.color, opacity: 0.5 }} />
               </div>
             </div>
           ))}
         </div>
-      </div>
+      </Card>
 
     </div>
   );
@@ -675,8 +668,8 @@ function AboutPage() {
   const AboutRow = ({ icon: Icon, label, children }: { icon: React.ComponentType<{ size?: number; className?: string }>; label: string; children: React.ReactNode }) => (
     <div className="flex items-center justify-between gap-4 py-[5px]">
       <div className="flex items-center gap-2 min-w-0">
-        <Icon size={13} className="text-foreground/35 flex-shrink-0" />
-        <span className="text-xs text-foreground/80">{label}</span>
+        <Icon size={13} className="text-muted-foreground/40 flex-shrink-0" />
+        <span className="text-sm text-foreground">{label}</span>
       </div>
       <div className="flex-shrink-0">{children}</div>
     </div>
@@ -692,9 +685,9 @@ function AboutPage() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             transition={{ type: 'spring', damping: 25, stiffness: 400 }}
-            className="fixed top-4 left-1/2 -translate-x-1/2 z-[9999] px-4 py-2 rounded-xl bg-foreground/90 text-background text-xs shadow-2xl flex items-center gap-2"
+            className="fixed top-4 left-1/2 -translate-x-1/2 z-[var(--z-tooltip)] px-4 py-2 rounded-xl bg-foreground/90 text-background text-xs shadow-2xl flex items-center gap-2"
           >
-            <CheckCircle2 size={13} className="text-foreground/50 flex-shrink-0" />
+            <CheckCircle2 size={13} className="text-muted-foreground/60 flex-shrink-0" />
             {toastMsg}
           </motion.div>
         )}
@@ -708,7 +701,7 @@ function AboutPage() {
             variant="ghost"
             size="icon-xs"
             onClick={() => showToast('\u5df2\u5728\u6d4f\u89c8\u5668\u4e2d\u6253\u5f00 GitHub \u4ed3\u5e93')}
-            className="w-7 h-7 rounded-lg text-foreground/40 hover:text-foreground/70 hover:bg-foreground/[0.06]"
+            className="w-7 h-7 rounded-lg text-muted-foreground/60 hover:text-foreground hover:bg-accent/50"
           >
             <Github size={16} />
           </Button>
@@ -723,9 +716,9 @@ function AboutPage() {
               {'\ud83c\udf52'}
             </div>
             <div className="flex-1 min-w-0">
-              <h3 className="text-sm text-foreground/90 font-medium">Cherry Studio</h3>
-              <p className="text-xs text-foreground/45 mt-0.5">{'\u4e00\u6b3e\u4e3a\u521b\u9020\u8005\u800c\u751f\u7684 AI \u52a9\u624b'}</p>
-              <span className="inline-block mt-1 px-2 py-[1px] rounded-md border border-foreground/[0.15] text-[9px] text-foreground/60 font-medium">v2.6.0</span>
+              <Typography variant="subtitle">Cherry Studio</Typography>
+              <p className="text-xs text-muted-foreground/60 mt-0.5">{'\u4e00\u6b3e\u4e3a\u521b\u9020\u8005\u800c\u751f\u7684 AI \u52a9\u624b'}</p>
+              <span className="inline-block mt-1 px-2 py-[1px] rounded-md border border-border text-xs text-muted-foreground font-medium">v2.6.0</span>
             </div>
             <Button
               variant="outline"
@@ -734,10 +727,10 @@ function AboutPage() {
               disabled={updateStatus === 'checking'}
               className={`gap-1.5 px-3 py-[5px] rounded-lg text-xs flex-shrink-0 ${
                 updateStatus === 'latest'
-                  ? 'border-foreground/[0.15] text-foreground/60 bg-foreground/[0.03]'
+                  ? 'border-border text-muted-foreground bg-muted/30'
                   : updateStatus === 'checking'
-                    ? 'border-border/30 text-foreground/40 cursor-wait'
-                    : 'border-border/30 text-foreground/55 hover:text-foreground/75 hover:bg-accent'
+                    ? 'border-border/30 text-muted-foreground/60 cursor-wait'
+                    : 'border-border/30 text-muted-foreground hover:text-foreground hover:bg-accent'
               }`}
             >
               {updateStatus === 'checking' ? (
@@ -759,38 +752,20 @@ function AboutPage() {
       <SectionCard>
         <div className="px-2">
           <AboutRow icon={RefreshCw} label={'\u81ea\u52a8\u66f4\u65b0'}>
-            <Toggle checked={autoUpdate} onChange={setAutoUpdate} />
+            <Switch size="sm" checked={autoUpdate} onCheckedChange={setAutoUpdate} />
           </AboutRow>
           <AboutRow icon={Sparkles} label={'\u6d4b\u8bd5\u8ba1\u5212'}>
-            <Toggle checked={betaPlan} onChange={setBetaPlan} />
+            <Switch size="sm" checked={betaPlan} onCheckedChange={setBetaPlan} />
           </AboutRow>
           <AboutRow icon={Server} label={'\u7248\u672c\u9009\u62e9'}>
-            <div className="flex items-center bg-foreground/[0.06] rounded-lg p-[2px]">
-              <Button
-                variant="ghost"
-                size="xs"
-                onClick={() => setVersionChannel('rc')}
-                className={`px-2.5 py-[3px] h-auto rounded-md text-xs ${
-                  versionChannel === 'rc'
-                    ? 'bg-primary text-primary-foreground shadow-sm hover:bg-primary/90'
-                    : 'text-foreground/50 hover:text-foreground/70'
-                }`}
-              >
+            <ToggleGroup type="single" value={versionChannel} onValueChange={(v) => v && setVersionChannel(v as 'rc' | 'beta')} className="h-auto p-[2px] rounded-lg">
+              <ToggleGroupItem value="rc" className="px-2.5 py-[3px] text-xs h-auto rounded-md">
                 {'\u9884\u89c8\u7248 (RC)'}
-              </Button>
-              <Button
-                variant="ghost"
-                size="xs"
-                onClick={() => setVersionChannel('beta')}
-                className={`px-2.5 py-[3px] h-auto rounded-md text-xs ${
-                  versionChannel === 'beta'
-                    ? 'bg-primary text-primary-foreground shadow-sm hover:bg-primary/90'
-                    : 'text-foreground/50 hover:text-foreground/70'
-                }`}
-              >
+              </ToggleGroupItem>
+              <ToggleGroupItem value="beta" className="px-2.5 py-[3px] text-xs h-auto rounded-md">
                 {'\u6d4b\u8bd5\u7248 (Beta)'}
-              </Button>
-            </div>
+              </ToggleGroupItem>
+            </ToggleGroup>
           </AboutRow>
         </div>
       </SectionCard>
@@ -806,14 +781,13 @@ function AboutPage() {
                 className="flex items-center justify-between gap-4 py-[5px]"
               >
                 <div className="flex items-center gap-2 min-w-0">
-                  <Icon size={13} className="text-foreground/35 flex-shrink-0" />
-                  <span className="text-xs text-foreground/75">{link.label}</span>
+                  <Icon size={13} className="text-muted-foreground/40 flex-shrink-0" />
+                  <span className="text-sm text-foreground">{link.label}</span>
                 </div>
-                <Button
+                <Button size="inline"
                   variant="outline"
-                  size="xs"
                   onClick={() => handleLinkAction(link.label, link.action)}
-                  className="px-2 py-[2px] h-auto rounded-md border-border/30 text-xs text-foreground/45 hover:text-foreground/70 hover:bg-accent flex-shrink-0"
+                  className="px-2 py-[2px] rounded-md border-border/30 text-xs text-muted-foreground/60 hover:text-foreground hover:bg-accent flex-shrink-0"
                 >
                   {link.action}
                 </Button>
@@ -827,115 +801,98 @@ function AboutPage() {
       <SectionCard>
         <div className="px-2">
           <AboutRow icon={FileText} label={'\u5f00\u6e90\u534f\u8bae'}>
-            <span className="text-xs text-foreground/50">Apache-2.0</span>
+            <span className="text-xs text-muted-foreground/60">Apache-2.0</span>
           </AboutRow>
           <AboutRow icon={Zap} label="Electron">
-            <span className="text-xs text-foreground/50">v33.2.0</span>
+            <span className="text-xs text-muted-foreground/60">v33.2.0</span>
           </AboutRow>
           <AboutRow icon={Globe2} label="Chromium">
-            <span className="text-xs text-foreground/50">v130.0.6723.0</span>
+            <span className="text-xs text-muted-foreground/60">v130.0.6723.0</span>
           </AboutRow>
           <AboutRow icon={Command} label="Node.js">
-            <span className="text-xs text-foreground/50">v20.18.1</span>
+            <span className="text-xs text-muted-foreground/60">v20.18.1</span>
           </AboutRow>
         </div>
       </SectionCard>
 
       {/* Footer */}
       <div className="text-center pt-0.5 pb-1">
-        <p className="text-[9px] text-foreground/30">{'\u00a9 2024-2026 Cherry Studio. All rights reserved.'}</p>
+        <p className="text-xs text-muted-foreground/40">{'\u00a9 2024-2026 Cherry Studio. All rights reserved.'}</p>
       </div>
 
       {/* Changelog Panel */}
-      <AnimatePresence>
-        {showChangelog && (
-          <div className="fixed inset-0 z-[9998] flex items-center justify-center" onClick={() => setShowChangelog(false)}>
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="absolute inset-0 bg-black/40 backdrop-blur-[2px]"
-            />
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 12 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 12 }}
-              transition={{ type: 'spring', damping: 28, stiffness: 350 }}
-              className="relative w-[480px] max-w-[85vw] max-h-[75vh] bg-background rounded-2xl shadow-2xl border border-border/50 flex flex-col overflow-hidden"
-              onClick={(e) => e.stopPropagation()}
+      <Dialog open={showChangelog} onOpenChange={setShowChangelog}>
+        <DialogContent className="w-[480px] max-w-[85vw] max-h-[75vh] flex flex-col overflow-hidden p-0" showCloseButton={false}>
+          {/* Changelog header */}
+          <div className="flex items-center justify-between px-5 py-3.5 border-b border-border/30 flex-shrink-0">
+            <div className="flex items-center gap-2">
+              <Rss size={14} className="text-muted-foreground/60" />
+              <Typography variant="subtitle">{'\u66f4\u65b0\u65e5\u5fd7'}</Typography>
+            </div>
+            <Button
+              variant="ghost"
+              size="icon-xs"
+              onClick={() => setShowChangelog(false)}
+              className="w-6 h-6 rounded-lg text-muted-foreground/40 hover:text-foreground hover:bg-accent/50"
             >
-              {/* Changelog header */}
-              <div className="flex items-center justify-between px-5 py-3.5 border-b border-foreground/[0.06] flex-shrink-0">
-                <div className="flex items-center gap-2">
-                  <Rss size={14} className="text-foreground/50" />
-                  <h3 className="text-sm text-foreground/90 font-medium">{'\u66f4\u65b0\u65e5\u5fd7'}</h3>
-                </div>
-                <Button
-                  variant="ghost"
-                  size="icon-xs"
-                  onClick={() => setShowChangelog(false)}
-                  className="w-6 h-6 rounded-lg text-foreground/35 hover:text-foreground/70 hover:bg-foreground/[0.06]"
-                >
-                  <X size={14} />
-                </Button>
-              </div>
-
-              {/* Changelog body */}
-              <div className="flex-1 overflow-y-auto px-5 py-4 space-y-5 [&::-webkit-scrollbar]:w-[3px] [&::-webkit-scrollbar-thumb]:bg-border/20">
-                {CHANGELOG_DATA.map((release, ri) => (
-                  <div key={release.version}>
-                    {/* Version header */}
-                    <div className="flex items-center gap-2 mb-2.5">
-                      <span className="text-sm text-foreground/85 font-medium">{release.version}</span>
-                      {release.tag && (
-                        <span className="px-1.5 py-[1px] rounded-md bg-foreground/[0.06] text-[9px] text-foreground/60 font-medium">{release.tag}</span>
-                      )}
-                      <span className="text-[9px] text-foreground/30 ml-auto flex items-center gap-1">
-                        <Calendar size={9} />
-                        {release.date}
-                      </span>
-                    </div>
-
-                    {/* Changes list */}
-                    <div className="space-y-[6px] pl-0.5">
-                      {release.changes.map((change, ci) => {
-                        const typeInfo = CHANGE_TYPE_MAP[change.type];
-                        return (
-                          <div key={ci} className="flex items-start gap-2">
-                            <span className={`flex-shrink-0 mt-[1px] px-1.5 py-[1px] rounded text-[8px] font-medium ${typeInfo.bg} ${typeInfo.color}`}>
-                              {typeInfo.label}
-                            </span>
-                            <span className="text-xs text-foreground/65 leading-[16px]">{change.text}</span>
-                          </div>
-                        );
-                      })}
-                    </div>
-
-                    {/* Separator */}
-                    {ri < CHANGELOG_DATA.length - 1 && (
-                      <div className="mt-4 border-b border-foreground/[0.04]" />
-                    )}
-                  </div>
-                ))}
-              </div>
-
-              {/* Changelog footer */}
-              <div className="flex items-center justify-between px-5 py-3 border-t border-foreground/[0.06] flex-shrink-0">
-                <span className="text-[9px] text-foreground/30">{'\u5171'} {CHANGELOG_DATA.length} {'\u4e2a\u7248\u672c'}</span>
-                <Button
-                  variant="outline"
-                  size="xs"
-                  onClick={() => showToast('\u5df2\u5728\u6d4f\u89c8\u5668\u4e2d\u6253\u5f00\u5b8c\u6574\u66f4\u65b0\u65e5\u5fd7')}
-                  className="gap-1 px-2.5 py-[3px] rounded-lg border-border/30 text-xs text-foreground/50 hover:text-foreground/70 hover:bg-accent"
-                >
-                  <span>{'\u67e5\u770b\u5168\u90e8'}</span>
-                  <ArrowUpRight size={9} />
-                </Button>
-              </div>
-            </motion.div>
+              <X size={14} />
+            </Button>
           </div>
-        )}
-      </AnimatePresence>
+
+          {/* Changelog body */}
+          <div className="flex-1 overflow-y-auto px-5 py-4 space-y-5 scrollbar-thin">
+            {CHANGELOG_DATA.map((release, ri) => (
+              <div key={release.version}>
+                {/* Version header */}
+                <div className="flex items-center gap-2 mb-2.5">
+                  <span className="text-sm text-foreground font-medium">{release.version}</span>
+                  {release.tag && (
+                    <span className="px-1.5 py-[1px] rounded-md bg-muted/50 text-xs text-muted-foreground font-medium">{release.tag}</span>
+                  )}
+                  <span className="text-xs text-muted-foreground/40 ml-auto flex items-center gap-1">
+                    <Calendar size={9} />
+                    {release.date}
+                  </span>
+                </div>
+
+                {/* Changes list */}
+                <div className="space-y-[6px] pl-0.5">
+                  {release.changes.map((change, ci) => {
+                    const typeInfo = CHANGE_TYPE_MAP[change.type];
+                    return (
+                      <div key={ci} className="flex items-start gap-2">
+                        <span className={`flex-shrink-0 mt-[1px] px-1.5 py-[1px] rounded text-xs font-medium ${typeInfo.bg} ${typeInfo.color}`}>
+                          {typeInfo.label}
+                        </span>
+                        <span className="text-xs text-muted-foreground leading-[16px]">{change.text}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Separator */}
+                {ri < CHANGELOG_DATA.length - 1 && (
+                  <div className="mt-4 border-b border-border/30" />
+                )}
+              </div>
+            ))}
+          </div>
+
+          {/* Changelog footer */}
+          <div className="flex items-center justify-between px-5 py-3 border-t border-border/30 flex-shrink-0">
+            <span className="text-xs text-muted-foreground/40">{'\u5171'} {CHANGELOG_DATA.length} {'\u4e2a\u7248\u672c'}</span>
+            <Button
+              variant="outline"
+              size="xs"
+              onClick={() => showToast('\u5df2\u5728\u6d4f\u89c8\u5668\u4e2d\u6253\u5f00\u5b8c\u6574\u66f4\u65b0\u65e5\u5fd7')}
+              className="gap-1 px-2.5 py-[3px] rounded-lg border-border/30 text-xs text-muted-foreground/60 hover:text-foreground hover:bg-accent"
+            >
+              <span>{'\u67e5\u770b\u5168\u90e8'}</span>
+              <ArrowUpRight size={9} />
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
@@ -943,8 +900,18 @@ function AboutPage() {
 // ===========================
 // Main Settings Page (Modal Window)
 // ===========================
-export function SettingsPage({ open, onClose }: { open: boolean; onClose: () => void }) {
+export function SettingsPage({ open, onClose, initialSection }: { open: boolean; onClose: () => void; initialSection?: string }) {
   const [activeSection, setActiveSection] = useState<SettingsSection>('home');
+
+  // Jump to initial section when opened with one
+  React.useEffect(() => {
+    if (open && initialSection) {
+      setActiveSection(initialSection as SettingsSection);
+    }
+    if (!open) {
+      setActiveSection('home');
+    }
+  }, [open, initialSection]);
 
   const renderContent = () => {
     switch (activeSection) {
@@ -967,25 +934,15 @@ export function SettingsPage({ open, onClose }: { open: boolean; onClose: () => 
     }
   };
 
-  if (!open) return null;
-
   return (
-    <div className="fixed inset-0 z-[300] flex items-center justify-center" onClick={onClose}>
-      <div className="absolute inset-0 bg-black/40 backdrop-blur-[3px]" />
-
-      <motion.div
-        initial={{ opacity: 0, scale: 0.95, y: 10 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-        className="relative w-[820px] max-w-[90vw] h-[600px] max-h-[85vh] bg-background rounded-2xl shadow-2xl border border-border/50 flex flex-col overflow-hidden"
-        onClick={e => e.stopPropagation()}
-      >
+    <Dialog open={open} onOpenChange={(o) => { if (!o) onClose(); }}>
+      <DialogContent className="w-[860px] h-[620px] sm:max-w-none flex flex-col overflow-hidden p-0" showCloseButton={false} onInteractOutside={(e) => e.preventDefault()} onPointerDownOutside={(e) => e.preventDefault()} onEscapeKeyDown={(e) => { e.preventDefault(); onClose(); }}>
         {/* Body: sidebar + content */}
         <div className="flex flex-1 min-h-0 overflow-hidden">
           <SettingsSidebar active={activeSection} onSelect={setActiveSection} onClose={onClose} />
 
           {/* Content Area */}
-          <div className="flex-1 flex flex-col min-w-0 overflow-hidden mr-2 mb-2 mt-2 ml-0 bg-foreground/[0.02] border border-foreground/[0.06] rounded-2xl">
+          <div className="flex-1 flex flex-col min-w-0 overflow-hidden mr-2 mb-2 mt-2 ml-0 bg-muted/30 border border-border/50 rounded-2xl">
             {activeSection === 'models' || activeSection === 'default-model' || activeSection === 'search' || activeSection === 'documents' || activeSection === 'memories' || activeSection === 'data-settings' || activeSection === 'api-gateway' || activeSection === 'shortcuts' || activeSection === 'selection-assistant' || activeSection === 'quick-assistant' || activeSection === 'quick-phrases' || activeSection === 'general' || activeSection === 'mcp' || activeSection === 'dashboard' ? (
               activeSection === 'models' ? <ModelServicePage />
                 : activeSection === 'default-model' ? <DefaultModelSettingsPage />
@@ -1002,13 +959,13 @@ export function SettingsPage({ open, onClose }: { open: boolean; onClose: () => 
                 : activeSection === 'dashboard' ? <DashboardPage />
                 : <MCPServicePage />
             ) : (
-              <div className="flex-1 overflow-y-auto px-6 py-5 [&::-webkit-scrollbar]:w-[3px] [&::-webkit-scrollbar-thumb]:bg-border/20">
+              <div className="flex-1 overflow-y-auto px-6 py-5 scrollbar-thin">
                 {renderContent()}
               </div>
             )}
           </div>
         </div>
-      </motion.div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }

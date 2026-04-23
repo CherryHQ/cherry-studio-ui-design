@@ -3,7 +3,7 @@ import {
   Hash, ChevronRight, ChevronDown, Sparkles, Clock, Settings,
   Paperclip, MapPin, Send,
 } from 'lucide-react';
-import { Button, Input } from '@cherry-studio/ui';
+import { Button, Input, BrandLogo } from '@cherry-studio/ui';
 
 export function ChatPage({ title }: { title: string }) {
   return (
@@ -16,16 +16,16 @@ export function ChatPage({ title }: { title: string }) {
           <span className="text-foreground">{title}</span>
         </div>
         <div className="flex items-center gap-2">
-          <div className="flex items-center gap-1 text-xs text-primary">
-            <Sparkles size={12} />
+          <div className="flex items-center gap-1.5 text-xs text-foreground">
+            <BrandLogo id="gemini" size={14} />
             <span>Gemini 2.5 Flash Preview 04-17</span>
             <ChevronDown size={12} />
           </div>
           <div className="flex items-center gap-0.5 ml-2">
-            <Button variant="ghost" size="icon-sm" className="w-7 h-7">
+            <Button variant="ghost" size="icon-sm">
               <Clock size={14} strokeWidth={1.6} />
             </Button>
-            <Button variant="ghost" size="icon-sm" className="w-7 h-7">
+            <Button variant="ghost" size="icon-sm">
               <Settings size={14} strokeWidth={1.6} />
             </Button>
           </div>
@@ -39,13 +39,13 @@ export function ChatPage({ title }: { title: string }) {
             </div>
             <div className="flex items-center justify-between px-3 pb-3">
               <div className="flex items-center gap-1">
-                <Button variant="ghost" size="icon-sm" className="w-8 h-8"><Paperclip size={15} strokeWidth={1.6} /></Button>
+                <Button variant="ghost" size="icon-sm"><Paperclip size={15} strokeWidth={1.6} /></Button>
                 <Button variant="ghost" size="xs" className="gap-1 text-muted-foreground"><Hash size={13} /><span>模型</span><ChevronDown size={11} /></Button>
                 <Button variant="ghost" size="xs" className="gap-1 text-muted-foreground"><MapPin size={13} /><span>思考</span></Button>
               </div>
               <div className="flex items-center gap-2">
                 <Button variant="ghost" size="xs" className="gap-1 text-muted-foreground">默认助手<ChevronDown size={11} /></Button>
-                <Button variant="default" size="icon-sm" className="w-8 h-8 rounded-full"><Send size={14} className="ml-0.5" /></Button>
+                <Button variant="default" size="icon-sm" className="rounded-full"><Send size={14} className="ml-0.5" /></Button>
               </div>
             </div>
           </div>

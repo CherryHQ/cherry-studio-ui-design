@@ -10,14 +10,16 @@ function Section({ title, defaultOpen = true, children }: { title: string; defau
   const [open, setOpen] = useState(defaultOpen);
   return (
     <div className="border-b border-border/15 last:border-b-0">
-      <button
+      <Button
+        variant="ghost"
+        size="sm"
         onClick={() => setOpen(v => !v)}
-        className="flex items-center gap-1.5 py-2.5 w-full text-left text-xs text-muted-foreground hover:text-foreground transition-colors"
+        className="justify-start gap-1.5 py-2.5 w-full text-left text-xs text-muted-foreground hover:text-foreground font-normal"
       >
         {open ? <ChevronDown size={11} /> : <ChevronRight size={11} />}
         <span className="font-medium">{title}</span>
-      </button>
-      {open && <div className="pb-2">{children}</div>}
+      </Button>
+      {open && <div className="pb-1 space-y-0">{children}</div>}
     </div>
   );
 }
@@ -81,25 +83,25 @@ export function ChatSettingsPanel({ onClose }: { onClose: () => void }) {
       animate={{ opacity: 1, x: 0 }}
       exit={{ opacity: 0, x: 20 }}
       transition={{ type: 'spring', damping: 25, stiffness: 350 }}
-      className="absolute top-2 right-2 bottom-2 w-[340px] z-40 flex flex-col bg-popover border border-border/30 rounded-2xl shadow-2xl overflow-hidden"
+      className="absolute top-2 right-2 bottom-2 w-[340px] z-[var(--z-overlay)] slide-panel"
     >
       {/* Header */}
       <div className="h-[38px] flex items-center justify-between px-3 flex-shrink-0 border-b border-border/30">
-        <span className="text-xs text-foreground/80 flex items-center gap-1.5">
+        <span className="text-xs text-foreground flex items-center gap-1.5">
           <SlidersHorizontal size={11} className="text-muted-foreground/60" />
           参数设置
         </span>
         <Button
           variant="ghost"
           onClick={onClose}
-          className="w-6 h-6 rounded-md p-0 text-muted-foreground/50 hover:text-foreground hover:bg-accent/30"
+          className="w-6 h-6 rounded-md p-0 text-muted-foreground/50 hover:text-foreground hover:bg-accent/50"
         >
           <X size={12} />
         </Button>
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto px-4 py-1 [&::-webkit-scrollbar]:w-[3px] [&::-webkit-scrollbar-thumb]:bg-border/25 [&::-webkit-scrollbar-thumb]:rounded-full">
+      <div className="flex-1 overflow-y-auto px-4 py-1 scrollbar-thin">
         {/* OpenAI Settings */}
         <Section title="OpenAI 设置">
           <FormRow label="服务层级" desc=" ">
@@ -118,10 +120,10 @@ export function ChatSettingsPanel({ onClose }: { onClose: () => void }) {
 
         {/* Message Settings */}
         <Section title="消息设置">
-          <FormRow label="显示提示词"><Switch checked={showPrompt} onCheckedChange={setShowPrompt} /></FormRow>
-          <FormRow label="使用衬线字体"><Switch checked={useSerif} onCheckedChange={setUseSerif} /></FormRow>
-          <FormRow label="思考内容自动折叠" desc=" "><Switch checked={autoFoldThinking} onCheckedChange={setAutoFoldThinking} /></FormRow>
-          <FormRow label="显示消息大纲"><Switch checked={showOutline} onCheckedChange={setShowOutline} /></FormRow>
+          <FormRow label="显示提示词"><Switch size="sm" checked={showPrompt} onCheckedChange={setShowPrompt} /></FormRow>
+          <FormRow label="使用衬线字体"><Switch size="sm" checked={useSerif} onCheckedChange={setUseSerif} /></FormRow>
+          <FormRow label="思考内容自动折叠" desc=" "><Switch size="sm" checked={autoFoldThinking} onCheckedChange={setAutoFoldThinking} /></FormRow>
+          <FormRow label="显示消息大纲"><Switch size="sm" checked={showOutline} onCheckedChange={setShowOutline} /></FormRow>
           <FormRow label="消息样式">
             <InlineSelect value={msgStyle} options={toOpts(['气泡', '卡片', '紧凑'])} onChange={setMsgStyle} />
           </FormRow>
@@ -138,7 +140,7 @@ export function ChatSettingsPanel({ onClose }: { onClose: () => void }) {
               <span className="text-sm text-muted-foreground/40">A</span>
             </div>
             <div className="text-center">
-              <span className="text-xs text-muted-foreground/50 px-1.5 py-[1px] rounded bg-accent/40">默认</span>
+              <span className="text-xs text-muted-foreground/50 px-1.5 py-[1px] rounded bg-accent/50">默认</span>
             </div>
           </FormRow>
         </Section>
@@ -148,7 +150,7 @@ export function ChatSettingsPanel({ onClose }: { onClose: () => void }) {
           <FormRow label="数学公式引擎">
             <InlineSelect value={mathEngine} options={toOpts(['KaTeX', 'MathJax'])} onChange={setMathEngine} />
           </FormRow>
-          <FormRow label="启用 $...$ " desc=" "><Switch checked={enableDollar} onCheckedChange={setEnableDollar} /></FormRow>
+          <FormRow label="启用 $...$ " desc=" "><Switch size="sm" checked={enableDollar} onCheckedChange={setEnableDollar} /></FormRow>
         </Section>
 
         {/* Code Block Settings */}
@@ -156,8 +158,8 @@ export function ChatSettingsPanel({ onClose }: { onClose: () => void }) {
           <FormRow label="代码风格">
             <InlineSelect value={codeStyle} options={toOpts(['auto', 'monokai', 'github', 'dracula', 'nord'])} onChange={setCodeStyle} />
           </FormRow>
-          <FormRow label="花式代码块" desc=" "><Switch checked={fancyCode} onCheckedChange={setFancyCode} /></FormRow>
-          <FormRow label="代码执行" desc=" "><Switch checked={codeExec} onCheckedChange={setCodeExec} /></FormRow>
+          <FormRow label="花式代码块" desc=" "><Switch size="sm" checked={fancyCode} onCheckedChange={setFancyCode} /></FormRow>
+          <FormRow label="代码执行" desc=" "><Switch size="sm" checked={codeExec} onCheckedChange={setCodeExec} /></FormRow>
           {codeExec && (
             <FormRow label="超时时间" desc=" ">
               <div className="flex items-center gap-1">
@@ -165,34 +167,34 @@ export function ChatSettingsPanel({ onClose }: { onClose: () => void }) {
                   type="number"
                   value={execTimeout}
                   onChange={e => setExecTimeout(Number(e.target.value))}
-                  className="w-8 text-right text-xs text-foreground/70 bg-transparent h-auto py-0 px-0 border-0 shadow-none focus-visible:ring-0"
+                  className="w-8 text-right text-xs text-foreground bg-transparent h-auto py-0 px-0 border-0 shadow-none focus-visible:ring-0"
                   min={1}
                   max={60}
                 />
               </div>
             </FormRow>
           )}
-          <FormRow label="代码编辑器"><Switch checked={codeEditor} onCheckedChange={setCodeEditor} /></FormRow>
-          <FormRow label="高亮当前行"><Switch checked={highlightLine} onCheckedChange={setHighlightLine} /></FormRow>
-          <FormRow label="折叠控件"><Switch checked={foldControl} onCheckedChange={setFoldControl} /></FormRow>
-          <FormRow label="自动补全"><Switch checked={autoComplete} onCheckedChange={setAutoComplete} /></FormRow>
-          <FormRow label="快捷键"><Switch checked={shortcutKeys} onCheckedChange={setShortcutKeys} /></FormRow>
-          <FormRow label="代码显示行号"><Switch checked={showLineNum} onCheckedChange={setShowLineNum} /></FormRow>
-          <FormRow label="代码块可折叠"><Switch checked={codeFoldable} onCheckedChange={setCodeFoldable} /></FormRow>
-          <FormRow label="代码块可换行"><Switch checked={codeWrap} onCheckedChange={setCodeWrap} /></FormRow>
-          <FormRow label="启用预览工具" desc=" "><Switch checked={previewTool} onCheckedChange={setPreviewTool} /></FormRow>
+          <FormRow label="代码编辑器"><Switch size="sm" checked={codeEditor} onCheckedChange={setCodeEditor} /></FormRow>
+          <FormRow label="高亮当前行"><Switch size="sm" checked={highlightLine} onCheckedChange={setHighlightLine} /></FormRow>
+          <FormRow label="折叠控件"><Switch size="sm" checked={foldControl} onCheckedChange={setFoldControl} /></FormRow>
+          <FormRow label="自动补全"><Switch size="sm" checked={autoComplete} onCheckedChange={setAutoComplete} /></FormRow>
+          <FormRow label="快捷键"><Switch size="sm" checked={shortcutKeys} onCheckedChange={setShortcutKeys} /></FormRow>
+          <FormRow label="代码显示行号"><Switch size="sm" checked={showLineNum} onCheckedChange={setShowLineNum} /></FormRow>
+          <FormRow label="代码块可折叠"><Switch size="sm" checked={codeFoldable} onCheckedChange={setCodeFoldable} /></FormRow>
+          <FormRow label="代码块可换行"><Switch size="sm" checked={codeWrap} onCheckedChange={setCodeWrap} /></FormRow>
+          <FormRow label="启用预览工具" desc=" "><Switch size="sm" checked={previewTool} onCheckedChange={setPreviewTool} /></FormRow>
         </Section>
 
         {/* Input Settings */}
         <Section title="输入设置" defaultOpen={false}>
-          <FormRow label="显示预估 Token 数"><Switch checked={showTokenCount} onCheckedChange={setShowTokenCount} /></FormRow>
-          <FormRow label="长文本粘贴为文件"><Switch checked={longTextAsFile} onCheckedChange={setLongTextAsFile} /></FormRow>
-          <FormRow label="Markdown 渲染输入消息"><Switch checked={mdInput} onCheckedChange={setMdInput} /></FormRow>
-          <FormRow label="3 个空格快速翻译"><Switch checked={spaceTranslate} onCheckedChange={setSpaceTranslate} /></FormRow>
-          <FormRow label="显示翻译确认对话框"><Switch checked={showTranslateConfirm} onCheckedChange={setShowTranslateConfirm} /></FormRow>
-          <FormRow label="启用 / 和 @ 触发快捷菜单"><Switch checked={enableAtMenu} onCheckedChange={setEnableAtMenu} /></FormRow>
-          <FormRow label="删除消息前确认"><Switch checked={deleteConfirm} onCheckedChange={setDeleteConfirm} /></FormRow>
-          <FormRow label="重新生成消息前确认"><Switch checked={regenerateConfirm} onCheckedChange={setRegenerateConfirm} /></FormRow>
+          <FormRow label="显示预估 Token 数"><Switch size="sm" checked={showTokenCount} onCheckedChange={setShowTokenCount} /></FormRow>
+          <FormRow label="长文本粘贴为文件"><Switch size="sm" checked={longTextAsFile} onCheckedChange={setLongTextAsFile} /></FormRow>
+          <FormRow label="Markdown 渲染输入消息"><Switch size="sm" checked={mdInput} onCheckedChange={setMdInput} /></FormRow>
+          <FormRow label="3 个空格快速翻译"><Switch size="sm" checked={spaceTranslate} onCheckedChange={setSpaceTranslate} /></FormRow>
+          <FormRow label="显示翻译确认对话框"><Switch size="sm" checked={showTranslateConfirm} onCheckedChange={setShowTranslateConfirm} /></FormRow>
+          <FormRow label="启用 / 和 @ 触发快捷菜单"><Switch size="sm" checked={enableAtMenu} onCheckedChange={setEnableAtMenu} /></FormRow>
+          <FormRow label="删除消息前确认"><Switch size="sm" checked={deleteConfirm} onCheckedChange={setDeleteConfirm} /></FormRow>
+          <FormRow label="重新生成消息前确认"><Switch size="sm" checked={regenerateConfirm} onCheckedChange={setRegenerateConfirm} /></FormRow>
           <FormRow label="目标语言">
             <InlineSelect value={targetLang} options={toOpts(['简体中文', '英语', '日语', '韩语', '法语', '德语'])} onChange={setTargetLang} />
           </FormRow>

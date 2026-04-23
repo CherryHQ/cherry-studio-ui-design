@@ -14,20 +14,20 @@ const typeIcons: Record<string, React.ElementType> = {
 
 // Muted but distinguishable type colors
 const typeIconColors: Record<string, string> = {
-  image: 'text-rose-400/50',
-  document: 'text-sky-400/50',
-  code: 'text-cyan-400/50',
-  audio: 'text-amber-400/50',
-  video: 'text-violet-400/50',
-  other: 'text-foreground/20',
+  image: 'text-accent-pink/50',
+  document: 'text-accent-blue/50',
+  code: 'text-accent-cyan/50',
+  audio: 'text-accent-amber/50',
+  video: 'text-accent-violet/50',
+  other: 'text-muted-foreground/50',
 };
 
 const typeBgColors: Record<string, string> = {
-  image: 'bg-rose-500/[0.04]',
-  document: 'bg-sky-500/[0.04]',
-  code: 'bg-cyan-500/[0.04]',
-  audio: 'bg-amber-500/[0.04]',
-  video: 'bg-violet-500/[0.04]',
+  image: 'bg-accent-pink/[0.04]',
+  document: 'bg-accent-blue/[0.04]',
+  code: 'bg-accent-cyan/[0.04]',
+  audio: 'bg-accent-amber/[0.04]',
+  video: 'bg-accent-violet/[0.04]',
   other: 'bg-muted/20',
 };
 
@@ -69,15 +69,15 @@ export function FileGrid({
             onDoubleClick={() => { if (!isRenaming) onPreview(file); }}
             className={`group relative rounded-lg border transition-all cursor-pointer ${
               selected
-                ? 'border-foreground/15 bg-accent/60'
-                : 'border-border/30 hover:border-border/50 hover:bg-accent/20'
+                ? 'border-border/50 bg-accent/50'
+                : 'border-border/30 hover:border-border/50 hover:bg-accent/50'
             }`}
           >
             {/* Thumbnail */}
             <div className={`h-[88px] rounded-t-lg flex items-center justify-center ${typeBgColors[file.type] || typeBgColors.other} relative overflow-hidden`}>
               <Icon size={26} strokeWidth={1.2} className={typeIconColors[file.type] || typeIconColors.other} />
               {/* Format badge */}
-              <span className="absolute top-1.5 left-1.5 px-1.5 py-[1px] rounded text-[8px] tracking-wide bg-foreground/[0.04] text-foreground/50 font-medium">
+              <span className="absolute top-1.5 left-1.5 px-1.5 py-[1px] rounded text-xs tracking-wide bg-muted/50 text-muted-foreground/60 font-medium">
                 {getFormatLabel(file.format)}
               </span>
               {/* Hover actions */}
@@ -86,7 +86,7 @@ export function FileGrid({
                   variant="ghost"
                   onClick={(e) => { e.stopPropagation(); onToggleStar(file.id); }}
                   className={`w-5 h-5 p-0 rounded flex items-center justify-center transition-colors text-xs ${
-                    file.starred ? 'text-amber-400/70' : 'text-foreground/20 hover:text-amber-400/50 bg-background/70'
+                    file.starred ? 'text-accent-amber/70' : 'text-muted-foreground/50 hover:text-accent-amber/50 bg-background/70'
                   }`}
                 >
                   <Star size={11} fill={file.starred ? 'currentColor' : 'none'} />
@@ -94,21 +94,21 @@ export function FileGrid({
                 <Button
                   variant="ghost"
                   onClick={(e) => { e.stopPropagation(); onPreview(file); }}
-                  className="w-5 h-5 p-0 rounded flex items-center justify-center text-foreground/20 hover:text-foreground/50 bg-background/70 transition-colors"
+                  className="w-5 h-5 p-0 rounded flex items-center justify-center text-muted-foreground/50 hover:text-foreground bg-background/70 transition-colors"
                 >
                   <Eye size={11} />
                 </Button>
                 <Button
                   variant="ghost"
                   onClick={(e) => { e.stopPropagation(); onContextMenu(e, file.id); }}
-                  className="w-5 h-5 p-0 rounded flex items-center justify-center text-foreground/20 hover:text-foreground/50 bg-background/70 transition-colors"
+                  className="w-5 h-5 p-0 rounded flex items-center justify-center text-muted-foreground/50 hover:text-foreground bg-background/70 transition-colors"
                 >
                   <MoreHorizontal size={11} />
                 </Button>
               </div>
               {/* Star indicator */}
               {file.starred && (
-                <Star size={9} fill="currentColor" className="absolute bottom-1.5 right-1.5 text-amber-400/50" />
+                <Star size={9} fill="currentColor" className="absolute bottom-1.5 right-1.5 text-accent-amber/50" />
               )}
             </div>
             {/* Info */}
@@ -120,14 +120,14 @@ export function FileGrid({
                   onCancel={onRenameCancel}
                 />
               ) : (
-                <p className="text-xs text-foreground/80 truncate" title={file.name}>{file.name}</p>
+                <p className="text-sm text-foreground truncate" title={file.name}>{file.name}</p>
               )}
               <div className="flex items-center gap-1 mt-0.5">
-                <span className="text-[9px] text-foreground/40">{file.size}</span>
+                <span className="text-xs text-muted-foreground/50">{file.size}</span>
                 {fileTags.length > 0 && (
                   <div className="flex items-center gap-0.5 ml-auto">
                     {fileTags.slice(0, 2).map(t => (
-                      <span key={t.id} className="w-1.5 h-1.5 rounded-full flex-shrink-0 opacity-60" style={{ backgroundColor: t.color }} />
+                      <span key={t.id} className={`w-1.5 h-1.5 rounded-full flex-shrink-0 opacity-60 ${t.color.dot}`} />
                     ))}
                   </div>
                 )}
@@ -160,7 +160,7 @@ function InlineRename({ value, onConfirm, onCancel }: { value: string; onConfirm
         if (e.key === 'Escape') onCancel();
       }}
       onBlur={() => { if (text.trim()) onConfirm(text.trim()); else onCancel(); }}
-      className="w-full bg-transparent outline-none text-xs text-foreground border-b border-foreground/20 py-0 h-auto border-x-0 border-t-0 rounded-none shadow-none focus-visible:ring-0"
+      className="w-full bg-transparent outline-none text-xs text-foreground border-b border-border/50 py-0 h-auto border-x-0 border-t-0 rounded-none shadow-none focus-visible:ring-0"
       onClick={e => e.stopPropagation()}
     />
   );

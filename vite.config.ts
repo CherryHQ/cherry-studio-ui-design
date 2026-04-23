@@ -3,6 +3,8 @@ import path from 'path'
 import tailwindcss from '@tailwindcss/vite'
 import react from '@vitejs/plugin-react'
 
+const uiSrc = path.resolve(__dirname, 'packages/ui/src')
+
 // Stub out figma:asset/ imports so local dev doesn't break
 function figmaAssetStub() {
   return {
@@ -31,7 +33,8 @@ export default defineConfig({
   ],
   resolve: {
     alias: {
-      // Alias @ to the src directory
+      '@cherry-studio/ui/theme.css': path.resolve(uiSrc, 'styles/theme.css'),
+      '@cherry-studio/ui': path.resolve(uiSrc, 'index.ts'),
       '@': path.resolve(__dirname, './src'),
     },
   },

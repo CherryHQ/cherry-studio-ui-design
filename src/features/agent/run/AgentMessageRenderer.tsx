@@ -7,7 +7,7 @@ import {
   Settings, Rocket,
   Brain, Pencil, Eye, Play, Trash2, FolderOpen,
 } from 'lucide-react';
-import { Button } from '@cherry-studio/ui';
+import { Button, ThinkingBlock } from '@cherry-studio/ui';
 import { motion, AnimatePresence } from 'motion/react';
 import { shakeAnimation } from '@/app/config/animations';
 import type { AgentChatMessage } from '@/app/types/agent';
@@ -32,15 +32,15 @@ function CollapsibleRow({ icon, label, statusIndicator, children, defaultOpen = 
 
   return (
     <div>
-      <Button
+      <Button size="inline"
         variant="ghost"
         onClick={() => hasChildren && setOpen(!open)}
-        className={`w-full justify-start gap-2 py-[5px] px-1 h-auto font-normal ${
-          hasChildren ? 'hover:bg-accent/20 cursor-pointer' : 'hover:bg-transparent cursor-default'
+        className={`w-full !justify-start gap-2 py-[5px] px-1 font-normal text-left ${
+          hasChildren ? 'hover:bg-accent/50 cursor-pointer' : 'hover:bg-transparent cursor-default'
         }`}
       >
         {icon}
-        <span className="text-foreground/75 truncate">{label}</span>
+        <span className="text-foreground truncate">{label}</span>
         <span className="flex-1" />
         {statusIndicator}
         {hasChildren && (
@@ -59,7 +59,7 @@ function CollapsibleRow({ icon, label, statusIndicator, children, defaultOpen = 
               transition={{ duration: 0.12 }}
               className="overflow-hidden"
             >
-              <div className="ml-6 pl-2.5 border-l border-border/25 pb-1 pt-0.5">
+              <div className="ml-6 pl-2.5 border-l border-border/30 pb-1 pt-0.5">
                 {children}
               </div>
             </motion.div>
@@ -113,7 +113,7 @@ export function UserMessage({ msg }: { msg: ChatMessage }) {
       transition={{ duration: 0.15 }}
       className="flex justify-end"
     >
-      <div className="max-w-[85%] px-3.5 py-2.5 rounded-[14px] rounded-br-[4px] bg-foreground text-background text-xs leading-[1.65]">
+      <div className="max-w-[85%] px-3.5 py-2.5 rounded-[var(--radius-button)] rounded-br-[var(--radius-dot)] bg-foreground text-background text-xs leading-[1.65]">
         {msg.content}
       </div>
     </motion.div>
@@ -135,7 +135,7 @@ export function AgentMessageGroup({ msgs, onResolve, onAvatarClick }: {
         variant="ghost"
         size="icon-xs"
         onClick={onAvatarClick}
-        className="w-5 h-5 rounded-[5px] bg-accent/40 flex-shrink-0 mt-[1px] hover:bg-accent/70 active:scale-[0.92]"
+        className="w-5 h-5 rounded-[var(--radius-kbd)] bg-accent/50 flex-shrink-0 mt-[1px] active:scale-[0.97]"
       >
         <Bot size={10} className="text-muted-foreground" />
       </Button>
@@ -143,16 +143,7 @@ export function AgentMessageGroup({ msgs, onResolve, onAvatarClick }: {
         {msgs.map((msg) => (
           <div key={msg.id}>
             {msg.thinking && (
-              <CollapsibleRow
-                icon={
-                  <motion.div {...shakeAnimation} className="flex items-center justify-center flex-shrink-0">
-                    <Brain size={11} className="text-purple-500" />
-                  </motion.div>
-                }
-                label="思考中..."
-              >
-                <p className="text-xs text-muted-foreground/70 leading-[1.7]">{msg.thinking}</p>
-              </CollapsibleRow>
+              <ThinkingBlock content={msg.thinking} isStreaming />
             )}
 
             {msg.toolCall && (
@@ -170,7 +161,7 @@ export function AgentMessageGroup({ msgs, onResolve, onAvatarClick }: {
                     <Loader2 size={9} className="text-cherry-primary animate-spin flex-shrink-0" />
                   ) : msg.toolCall.status === 'done' ? (
                     <div className="flex items-center gap-1.5 flex-shrink-0">
-                      {msg.toolCall.duration && <span className="text-[9px] text-muted-foreground/55 tabular-nums">{msg.toolCall.duration}</span>}
+                      {msg.toolCall.duration && <span className="text-xs text-muted-foreground/60 tabular-nums">{msg.toolCall.duration}</span>}
                       <Check size={9} className="text-cherry-primary-dark" />
                     </div>
                   ) : msg.toolCall.status === 'error' ? (
@@ -185,7 +176,7 @@ export function AgentMessageGroup({ msgs, onResolve, onAvatarClick }: {
                 initial={{ opacity: 0, y: 3 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.15 }}
-                className="text-xs text-foreground/90 leading-[1.7] py-1 px-1"
+                className="text-xs text-foreground leading-[1.7] py-1 px-1"
               >
                 {msg.content}
               </motion.div>

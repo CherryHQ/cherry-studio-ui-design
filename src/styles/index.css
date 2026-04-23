@@ -1,3 +1,62 @@
 @import './fonts.css';
-@import './tailwind.css';
+@import 'tailwindcss';
+@import 'tw-animate-css';
 @import '@cherry-studio/ui/theme.css';
+
+@source '../../packages/ui/src/**/*.{ts,tsx}';
+
+@theme {
+  --animate-accordion-down: accordion-down 0.2s ease-out;
+  --animate-accordion-up: accordion-up 0.2s ease-out;
+
+  @keyframes accordion-down {
+    from { height: 0; }
+    to { height: var(--radix-accordion-content-height); }
+  }
+  @keyframes accordion-up {
+    from { height: var(--radix-accordion-content-height); }
+    to { height: 0; }
+  }
+}
+
+@layer utilities {
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+  .scrollbar-thin {
+    scrollbar-width: thin;
+    &::-webkit-scrollbar { width: 3px; }
+    &::-webkit-scrollbar-thumb { background: color-mix(in srgb, var(--border) 30%, transparent); border-radius: 9999px; }
+    &::-webkit-scrollbar-track { background: transparent; }
+  }
+  .scrollbar-thin-xs {
+    scrollbar-width: thin;
+    &::-webkit-scrollbar { width: 2px; }
+    &::-webkit-scrollbar-thumb { background: color-mix(in srgb, var(--border) 20%, transparent); border-radius: 9999px; }
+    &::-webkit-scrollbar-track { background: transparent; }
+  }
+
+  /* Slide-in panel (right side overlay) */
+  .slide-panel {
+    @apply bg-popover border border-border/30 rounded-2xl shadow-2xl flex flex-col overflow-hidden;
+  }
+
+  /* Fixed popover / dropdown menu */
+  .popover-panel {
+    @apply fixed bg-popover border border-border/50 rounded-2xl shadow-2xl p-1.5 z-[var(--z-drag)];
+  }
+
+  /* Custom accent textarea / input */
+  .input-accent {
+    @apply w-full px-3 py-2 rounded-xl border border-border/20 bg-accent/15 text-xs text-foreground outline-none focus:border-border/40 focus:bg-accent/15 transition-all;
+  }
+
+  /* Settings edit panel (right side, bg-background) */
+  .settings-panel {
+    @apply absolute inset-y-2 right-2 bg-background rounded-2xl shadow-2xl border border-border/50 flex flex-col overflow-hidden;
+  }
+}

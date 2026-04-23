@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import {
   Plus, X, ChevronDown,
 } from 'lucide-react';
-import { motion, AnimatePresence } from 'motion/react';
+import { Button, Popover, PopoverTrigger, PopoverContent } from '@cherry-studio/ui';
 import { Tooltip } from '@/app/components/Tooltip';
 import type { Tab } from '@/app/types';
 
@@ -33,13 +33,13 @@ export function TabBar({
     <div className="h-11 bg-sidebar flex items-center select-none flex-shrink-0">
       {/* Traffic lights */}
       <div className="flex items-center gap-2 px-4 flex-shrink-0">
-        <div className="w-3 h-3 rounded-full bg-[#ff5f57] border border-[#e0443e]" />
-        <div className="w-3 h-3 rounded-full bg-[#febc2e] border border-[#d4a528]" />
-        <div className="w-3 h-3 rounded-full bg-[#28c840] border border-[#24a732]" />
+        <div className="w-3 h-3 rounded-full bg-traffic-red border border-traffic-red-border" />
+        <div className="w-3 h-3 rounded-full bg-traffic-yellow border border-traffic-yellow-border" />
+        <div className="w-3 h-3 rounded-full bg-traffic-green border border-traffic-green-border" />
       </div>
 
       {/* Tabs area */}
-      <div className="flex-1 flex items-center gap-0.5 overflow-x-auto [&::-webkit-scrollbar]:hidden min-w-0 px-1">
+      <div className="flex-1 flex items-center gap-0.5 overflow-x-auto scrollbar-hide min-w-0 px-1">
         {/* Pinned tabs — grouped in a shared rounded container */}
         {pinnedTabs.length > 0 && (
           <div className="flex items-center bg-sidebar-accent/50 rounded-lg p-0.5 gap-0 flex-shrink-0">
@@ -59,8 +59,8 @@ export function TabBar({
                       }`}
                   >
                     {tab.miniAppId ? (
-                      tab.miniAppLogoUrl ? <img src={tab.miniAppLogoUrl} alt="" className="w-3.5 h-3.5 rounded-[3px] object-cover" /> :
-                      <div className="w-3.5 h-3.5 rounded-[3px] flex items-center justify-center text-white text-[6px]" style={{ background: tab.miniAppColor }}>{tab.miniAppInitial}</div>
+                      tab.miniAppLogoUrl ? <img src={tab.miniAppLogoUrl} alt="" className="w-3.5 h-3.5 rounded-[var(--radius-dot)] object-cover" /> :
+                      <div className={`w-3.5 h-3.5 rounded-[var(--radius-dot)] flex items-center justify-center text-white text-xs ${tab.miniAppColor}`}>{tab.miniAppInitial}</div>
                     ) : <Icon size={14} strokeWidth={1.6} />}
                   </div>
                 </Tooltip>
@@ -71,7 +71,7 @@ export function TabBar({
 
         {/* Separator between pinned group and unpinned */}
         {unpinnedTabs.length > 0 && (
-          <div className="w-px h-4 bg-border/50 mx-1 flex-shrink-0" />
+          <div className="w-px h-4 bg-border/30 mx-1 flex-shrink-0" />
         )}
 
         {/* Regular tabs — shrink when many */}
@@ -92,83 +92,80 @@ export function TabBar({
                 }`}
             >
               {tab.miniAppId ? (
-                tab.miniAppLogoUrl ? <img src={tab.miniAppLogoUrl} alt="" className="w-3.5 h-3.5 rounded-[3px] object-cover flex-shrink-0" /> :
-                <div className="w-3.5 h-3.5 rounded-[3px] flex items-center justify-center text-white text-[6px] flex-shrink-0" style={{ background: tab.miniAppColor }}>{tab.miniAppInitial}</div>
+                tab.miniAppLogoUrl ? <img src={tab.miniAppLogoUrl} alt="" className="w-3.5 h-3.5 rounded-[var(--radius-dot)] object-cover flex-shrink-0" /> :
+                <div className={`w-3.5 h-3.5 rounded-[var(--radius-dot)] flex items-center justify-center text-white text-xs flex-shrink-0 ${tab.miniAppColor}`}>{tab.miniAppInitial}</div>
               ) : <Icon size={13} strokeWidth={1.6} className="flex-shrink-0" />}
-              <span className="text-[11px] truncate">{tab.title}</span>
+              <span className="text-sm truncate">{tab.title}</span>
               {tab.closeable && (
-                <button
+                <Button
+                  variant="ghost"
+                  size="icon-xs"
                   onClick={(e) => { e.stopPropagation(); onTabClose(tab.id); }}
-                  className={`w-[18px] h-[18px] flex items-center justify-center rounded-sm hover:bg-foreground/10 transition-colors flex-shrink-0 ml-auto
+                  className={`w-[18px] h-[18px] rounded-sm hover:bg-accent/50 flex-shrink-0 ml-auto
                     ${isActive ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}
                 >
                   <X size={10} />
-                </button>
+                </Button>
               )}
             </div>
           );
         })}
 
-        <button
+        <Button
+          variant="ghost"
+          size="icon-xs"
           onClick={onNewTab}
-          className="w-7 h-7 flex items-center justify-center rounded-md text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-foreground transition-colors flex-shrink-0 ml-0.5"
+          className="w-7 h-7 text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-foreground flex-shrink-0 ml-0.5"
         >
           <Plus size={14} />
-        </button>
+        </Button>
       </div>
 
       {/* Right: All tabs dropdown */}
-      <div className="relative flex items-center px-2.5 flex-shrink-0">
-        <Tooltip content="全部标签页" side="bottom">
-          <button
-            onClick={() => setTabListOpen(!tabListOpen)}
-            className={`w-7 h-7 rounded-md flex items-center justify-center transition-colors ${
-              tabListOpen ? 'bg-sidebar-accent text-sidebar-foreground' : 'text-muted-foreground hover:text-sidebar-foreground hover:bg-sidebar-accent'
-            }`}
-          >
-            <ChevronDown size={15} strokeWidth={1.6} />
-          </button>
-        </Tooltip>
-        <AnimatePresence>
-          {tabListOpen && (
-            <>
-              <div className="fixed inset-0 z-40" onClick={() => setTabListOpen(false)} />
-              <motion.div
-                initial={{ opacity: 0, y: -4 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -4 }}
-                transition={{ duration: 0.12 }}
-                className="absolute top-full right-0 mt-1 z-50 w-[240px] bg-popover border border-border/40 rounded-xl shadow-xl shadow-black/10 overflow-hidden"
-              >
-                <div className="px-3 py-2 border-b border-border/25">
-                  <span className="text-[10px] text-muted-foreground uppercase tracking-wide">已打开的标签页 · {tabs.length}</span>
-                </div>
-                <div className="max-h-[300px] overflow-y-auto py-1 [&::-webkit-scrollbar]:w-[2px] [&::-webkit-scrollbar-thumb]:bg-border/25">
-                  {tabs.filter(t => !t.sidebarDocked).map(tab => {
-                    const Icon = tab.icon;
-                    const isActive = tab.id === activeTabId;
-                    return (
-                      <button
-                        key={tab.id}
-                        onClick={() => { onTabClick(tab.id); setTabListOpen(false); }}
-                        className={`w-full flex items-center gap-2 px-3 py-[5px] text-xs transition-colors ${
-                          isActive ? 'bg-accent/40 text-foreground' : 'text-muted-foreground hover:bg-accent/20 hover:text-foreground'
-                        }`}
-                      >
-                        {tab.miniAppId ? (
-                          tab.miniAppLogoUrl ? <img src={tab.miniAppLogoUrl} alt="" className="w-3.5 h-3.5 rounded-[3px] object-cover flex-shrink-0" /> :
-                          <div className="w-3.5 h-3.5 rounded-[3px] flex items-center justify-center text-white text-[6px] flex-shrink-0" style={{ background: tab.miniAppColor }}>{tab.miniAppInitial}</div>
-                        ) : <Icon size={12} strokeWidth={1.6} className="flex-shrink-0" />}
-                        <span className="truncate flex-1 text-left">{tab.title}</span>
-                        {isActive && <span className="w-1.5 h-1.5 rounded-full bg-foreground/40 flex-shrink-0" />}
-                      </button>
-                    );
-                  })}
-                </div>
-              </motion.div>
-            </>
-          )}
-        </AnimatePresence>
+      <div className="flex items-center px-2.5 flex-shrink-0">
+        <Popover open={tabListOpen} onOpenChange={setTabListOpen}>
+          <PopoverTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon-xs"
+              className={`w-7 h-7 ${
+                tabListOpen ? 'bg-sidebar-accent text-sidebar-foreground' : 'text-muted-foreground hover:text-sidebar-foreground hover:bg-sidebar-accent'
+              }`}
+              title="全部标签页"
+            >
+              <ChevronDown size={15} strokeWidth={1.6} />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent align="end" className="p-0 w-[240px] overflow-hidden">
+            <div className="px-3 py-2 border-b border-border/30">
+              <span className="text-xs text-muted-foreground uppercase tracking-wide">已打开的标签页 · {tabs.length}</span>
+            </div>
+            <div className="max-h-[300px] overflow-y-auto py-1 scrollbar-thin-xs">
+              {tabs.filter(t => !t.sidebarDocked).map(tab => {
+                const Icon = tab.icon;
+                const isActive = tab.id === activeTabId;
+                return (
+                  <Button
+                    key={tab.id}
+                    variant="ghost"
+                    size="xs"
+                    onClick={() => { onTabClick(tab.id); setTabListOpen(false); }}
+                    className={`w-full justify-start gap-2 px-3 py-[5px] font-normal ${
+                      isActive ? 'bg-accent/50 text-foreground' : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground'
+                    }`}
+                  >
+                    {tab.miniAppId ? (
+                      tab.miniAppLogoUrl ? <img src={tab.miniAppLogoUrl} alt="" className="w-3.5 h-3.5 rounded-[var(--radius-dot)] object-cover flex-shrink-0" /> :
+                      <div className={`w-3.5 h-3.5 rounded-[var(--radius-dot)] flex items-center justify-center text-white text-xs flex-shrink-0 ${tab.miniAppColor}`}>{tab.miniAppInitial}</div>
+                    ) : <Icon size={12} strokeWidth={1.6} className="flex-shrink-0" />}
+                    <span className="truncate flex-1 text-left">{tab.title}</span>
+                    {isActive && <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground flex-shrink-0" />}
+                  </Button>
+                );
+              })}
+            </div>
+          </PopoverContent>
+        </Popover>
       </div>
     </div>
   );

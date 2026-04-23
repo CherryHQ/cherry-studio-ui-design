@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect, useCallback, useImperativeHandle, f
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import {
-  Search, Star, Plus, Check, ChevronDown, X,
+  Star, Plus, Check, ChevronDown, X,
   Eye, EyeOff, Copy, ExternalLink, RefreshCw,
   Activity, Key, Shuffle, Trash2, Upload,
   MessageCircle, Zap,
@@ -14,12 +14,12 @@ import {
   HeartPulse, Loader2, CheckCircle2, XCircle,
   Download,
 } from 'lucide-react';
-import { BrandLogo } from '@/app/components/ui/BrandLogos';
 import {
-  VarManagerPanel, SYSTEM_VARIABLES, SYSTEM_VAR_ICONS,
+  Button, Input, Switch, Textarea, Slider, SearchInput, EmptyState, Typography, Checkbox,
+  BrandLogo, VarManagerPanel, SYSTEM_VARIABLES, SYSTEM_VAR_ICONS, RadioGroup, RadioGroupItem,
   type VariableDef, type VarType,
-} from '@/app/components/ui/VarManagerPanel';
-import { Toggle } from './shared';
+} from '@cherry-studio/ui';
+import type { ModelCapability } from '@/app/types/shared';
 
 // ===========================
 // Types
@@ -42,7 +42,6 @@ interface RotationKey {
   lastUsed: string;
 }
 
-type ModelCapability = 'chat' | 'vision' | 'reasoning' | 'code' | 'embedding' | 'image-gen' | 'function' | 'audio' | 'web-search' | 'free';
 
 interface ModelItem {
   id: string;
@@ -75,37 +74,37 @@ const CAPABILITY_ICONS: Record<ModelCapability, React.ComponentType<{ size?: num
 };
 
 const CAPABILITY_CONFIG: Record<ModelCapability, { label: string; color: string; iconColor: string }> = {
-  'chat': { label: '对话', color: 'text-blue-500/80 bg-blue-500/10', iconColor: 'text-blue-400/80' },
-  'vision': { label: '视觉', color: 'text-violet-500/80 bg-violet-500/10', iconColor: 'text-violet-400/80' },
-  'reasoning': { label: '推理', color: 'text-amber-500/80 bg-amber-500/10', iconColor: 'text-amber-400/80' },
-  'code': { label: '代码', color: 'text-foreground/55 bg-foreground/[0.06]', iconColor: 'text-foreground/45' },
-  'embedding': { label: '嵌入', color: 'text-cyan-500/80 bg-cyan-500/10', iconColor: 'text-cyan-400/80' },
-  'image-gen': { label: '图像生成', color: 'text-pink-500/80 bg-pink-500/10', iconColor: 'text-pink-400/80' },
-  'function': { label: '函数调用', color: 'text-orange-500/80 bg-orange-500/10', iconColor: 'text-orange-400/80' },
-  'audio': { label: '音频', color: 'text-indigo-500/80 bg-indigo-500/10', iconColor: 'text-indigo-400/80' },
-  'web-search': { label: '联网搜索', color: 'text-teal-500/80 bg-teal-500/10', iconColor: 'text-teal-400/80' },
-  'free': { label: '免费', color: 'text-lime-600/80 bg-lime-500/12', iconColor: 'text-lime-500/80' },
+  'chat': { label: '对话', color: 'text-info/80 bg-info/10', iconColor: 'text-info/80' },
+  'vision': { label: '视觉', color: 'text-accent-violet/80 bg-accent-violet/10', iconColor: 'text-accent-violet/80' },
+  'reasoning': { label: '推理', color: 'text-warning/80 bg-warning/10', iconColor: 'text-warning/80' },
+  'code': { label: '代码', color: 'text-muted-foreground bg-muted/50', iconColor: 'text-muted-foreground/60' },
+  'embedding': { label: '嵌入', color: 'text-accent-cyan/80 bg-accent-cyan/10', iconColor: 'text-accent-cyan/80' },
+  'image-gen': { label: '图像生成', color: 'text-accent-pink/80 bg-accent-pink/10', iconColor: 'text-accent-pink/80' },
+  'function': { label: '函数调用', color: 'text-accent-orange/80 bg-accent-orange/10', iconColor: 'text-accent-orange/80' },
+  'audio': { label: '音频', color: 'text-accent-indigo/80 bg-accent-indigo/10', iconColor: 'text-accent-indigo/80' },
+  'web-search': { label: '联网搜索', color: 'text-accent-emerald/80 bg-accent-emerald/10', iconColor: 'text-accent-emerald/80' },
+  'free': { label: '免费', color: 'text-accent-emerald/80 bg-accent-emerald/12', iconColor: 'text-accent-emerald/80' },
 };
 
 // Model logo icon mapping
 function getModelLogo(modelName: string): { emoji: string; bg: string } {
   const n = modelName.toLowerCase();
-  if (n.includes('gemini')) return { emoji: '✦', bg: 'bg-blue-500/10 text-blue-500' };
-  if (n.includes('gpt-4.1') || n.includes('gpt-4o') || n.includes('gpt-4-') || n.includes('gpt-4')) return { emoji: '◆', bg: 'bg-foreground/[0.06] text-foreground/70' };
-  if (n.includes('gpt-3.5')) return { emoji: '◇', bg: 'bg-foreground/[0.05] text-foreground/50' };
-  if (n.includes('o1') || n.includes('o3') || n.includes('o4')) return { emoji: '○', bg: 'bg-violet-500/10 text-violet-500' };
-  if (n.includes('codex')) return { emoji: '⟐', bg: 'bg-orange-500/10 text-orange-500' };
-  if (n.includes('dall-e')) return { emoji: '◐', bg: 'bg-pink-500/10 text-pink-500' };
-  if (n.includes('claude')) return { emoji: '◉', bg: 'bg-amber-500/10 text-amber-600' };
-  if (n.includes('llama')) return { emoji: '🦙', bg: 'bg-blue-500/8 text-blue-400' };
-  if (n.includes('qwen')) return { emoji: '★', bg: 'bg-indigo-500/10 text-indigo-500' };
-  if (n.includes('deepseek')) return { emoji: '◈', bg: 'bg-sky-500/10 text-sky-500' };
-  if (n.includes('cherry')) return { emoji: '🍒', bg: 'bg-foreground/[0.06] text-foreground/60' };
-  if (n.includes('whisper') || n.includes('tts')) return { emoji: '♪', bg: 'bg-indigo-500/8 text-indigo-400' };
-  if (n.includes('embed')) return { emoji: '⊡', bg: 'bg-cyan-500/10 text-cyan-500' };
-  if (n.includes('imagen') || n.includes('stable-diffusion')) return { emoji: '◑', bg: 'bg-pink-500/8 text-pink-400' };
-  if (n.includes('nomic')) return { emoji: '⊞', bg: 'bg-teal-500/10 text-teal-500' };
-  return { emoji: '●', bg: 'bg-foreground/5 text-foreground/45' };
+  if (n.includes('gemini')) return { emoji: '✦', bg: 'bg-info/10 text-info' };
+  if (n.includes('gpt-4.1') || n.includes('gpt-4o') || n.includes('gpt-4-') || n.includes('gpt-4')) return { emoji: '◆', bg: 'bg-muted/50 text-foreground' };
+  if (n.includes('gpt-3.5')) return { emoji: '◇', bg: 'bg-muted/50 text-muted-foreground/60' };
+  if (n.includes('o1') || n.includes('o3') || n.includes('o4')) return { emoji: '○', bg: 'bg-accent-violet/10 text-accent-violet' };
+  if (n.includes('codex')) return { emoji: '⟐', bg: 'bg-accent-orange-muted text-accent-orange' };
+  if (n.includes('dall-e')) return { emoji: '◐', bg: 'bg-accent-pink-muted text-accent-pink' };
+  if (n.includes('claude')) return { emoji: '◉', bg: 'bg-warning/10 text-warning' };
+  if (n.includes('llama')) return { emoji: '🦙', bg: 'bg-info/8 text-info' };
+  if (n.includes('qwen')) return { emoji: '★', bg: 'bg-accent-indigo-muted text-accent-indigo' };
+  if (n.includes('deepseek')) return { emoji: '◈', bg: 'bg-accent-blue-muted text-accent-blue' };
+  if (n.includes('cherry')) return { emoji: '🍒', bg: 'bg-muted/50 text-muted-foreground' };
+  if (n.includes('whisper') || n.includes('tts')) return { emoji: '♪', bg: 'bg-accent-indigo/8 text-accent-indigo' };
+  if (n.includes('embed')) return { emoji: '⊡', bg: 'bg-accent-cyan-muted text-accent-cyan' };
+  if (n.includes('imagen') || n.includes('stable-diffusion')) return { emoji: '◑', bg: 'bg-accent-pink/8 text-accent-pink' };
+  if (n.includes('nomic')) return { emoji: '⊞', bg: 'bg-accent-emerald-muted text-accent-emerald' };
+  return { emoji: '●', bg: 'bg-muted text-muted-foreground/60' };
 }
 
 function ModelLogo({ name, size = 16 }: { name: string; size?: number }) {
@@ -122,16 +121,16 @@ function ModelLogo({ name, size = 16 }: { name: string; size?: number }) {
 
 // Capability icon with tooltip
 function CapIcon({ cap, size: iconSize = 10 }: { cap: ModelCapability; size?: number }) {
-  const [show, setShow] = useState(false);
+  const [showTooltip, setShowTooltip] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const Icon = CAPABILITY_ICONS[cap];
   const cfg = CAPABILITY_CONFIG[cap];
   return (
-    <div ref={ref} className="relative" onMouseEnter={() => setShow(true)} onMouseLeave={() => setShow(false)}>
+    <div ref={ref} className="relative" onMouseEnter={() => setShowTooltip(true)} onMouseLeave={() => setShowTooltip(false)}>
       <Icon size={iconSize} className={`${cfg.iconColor} transition-colors`} />
-      {show && ref.current && createPortal(
+      {showTooltip && ref.current && createPortal(
         <div
-          className="fixed px-1.5 py-[3px] rounded-md bg-neutral-800 text-white text-[8px] whitespace-nowrap z-[9999] pointer-events-none font-medium"
+          className="fixed px-1.5 py-[3px] rounded-md bg-foreground text-background text-xs whitespace-nowrap z-[var(--z-drag)] pointer-events-none font-medium"
           style={{
             left: ref.current.getBoundingClientRect().left + ref.current.getBoundingClientRect().width / 2,
             top: ref.current.getBoundingClientRect().top - 4,
@@ -166,8 +165,8 @@ function ModelRow({ model, onToggle, onEdit }: {
 
   return (
     <div
-      className={`group flex items-center gap-3 px-3 py-[10px] rounded-xl hover:bg-foreground/[0.025] transition-colors cursor-pointer ${
-        !isEnabled ? 'opacity-50' : ''
+      className={`group flex items-center gap-3 px-3 py-[10px] rounded-xl hover:bg-accent/50 transition-colors cursor-pointer ${
+        !isEnabled ? 'opacity-30' : ''
       }`}
       onClick={() => onEdit(model)}
     >
@@ -177,15 +176,15 @@ function ModelRow({ model, onToggle, onEdit }: {
       {/* Info */}
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
-          <span className="text-xs text-foreground/90 truncate font-medium">
+          <span className="text-sm text-foreground truncate font-medium">
             {model.displayName || model.name}
           </span>
-          <span className="text-[9px] text-foreground/65 px-1.5 py-[1px] rounded bg-foreground/[0.05] flex-shrink-0 truncate max-w-[140px]" style={{ fontFamily: 'ui-monospace, monospace' }}>
+          <span className="text-xs text-muted-foreground px-1.5 py-[1px] rounded bg-muted/50 flex-shrink-0 truncate max-w-[140px] font-mono">
             {model.name}
           </span>
         </div>
         {infoParts.length > 0 && (
-          <p className="text-[9px] text-foreground/65 mt-[3px] truncate">
+          <p className="text-xs text-muted-foreground mt-[3px] truncate">
             {infoParts.join(' \u00B7 ')}
           </p>
         )}
@@ -197,18 +196,18 @@ function ModelRow({ model, onToggle, onEdit }: {
           <CapIcon key={cap} cap={cap} size={12} />
         ))}
         {(model.capabilities || []).includes('free') && (
-          <span className="text-[7px] text-lime-600/80 bg-lime-500/10 px-1 py-[1px] rounded font-medium">Free</span>
+          <span className="text-xs text-accent-emerald/80 bg-accent-emerald/10 px-1 py-[1px] rounded font-medium">Free</span>
         )}
       </div>
 
       {/* Context window */}
       {model.contextWindow && model.contextWindow !== '-' && (
-        <span className="text-[9px] text-foreground/65 flex-shrink-0 min-w-[30px] text-right">{model.contextWindow}</span>
+        <span className="text-xs text-muted-foreground flex-shrink-0 min-w-[30px] text-right">{model.contextWindow}</span>
       )}
 
       {/* Toggle */}
       <div className="flex-shrink-0" onClick={e => e.stopPropagation()}>
-        <Toggle checked={isEnabled} onChange={() => onToggle(model.id)} size="sm" />
+        <Switch size="sm" checked={isEnabled} onCheckedChange={() => onToggle(model.id)}  />
       </div>
     </div>
   );
@@ -431,18 +430,19 @@ function InlineSelect({ value, options, onChange, className }: {
   return (
     <div ref={ref} className={`relative ${className || ''}`}>
       <Button variant="ghost"
+        size="inline"
         onClick={() => setOpen(v => !v)}
-        className={`flex items-center gap-2 px-3.5 py-[5px] rounded-full bg-foreground/[0.06] text-xs min-w-[160px] justify-between h-auto ${
-          open ? 'bg-foreground/[0.09] text-foreground/80' : 'text-foreground/70 hover:bg-foreground/[0.08]'
+        className={`flex items-center gap-2 px-3.5 py-[5px] rounded-full bg-muted/50 text-sm min-w-[160px] justify-between ${
+          open ? 'bg-accent text-foreground' : 'text-foreground hover:bg-accent/50'
         }`}
       >
         <span className="truncate">{selected?.label || value}</span>
-        <ChevronDown size={10} className={`flex-shrink-0 text-foreground/40 transition-transform ${open ? 'rotate-180' : ''}`} />
+        <ChevronDown size={10} className={`flex-shrink-0 text-muted-foreground/60 transition-transform ${open ? 'rotate-180' : ''}`} />
       </Button>
       {open && rect && createPortal(
         <div
           ref={portalRef}
-          className="fixed min-w-[180px] bg-popover border border-border/50 rounded-2xl shadow-2xl p-1.5 z-[9999] animate-in fade-in slide-in-from-top-1 duration-100"
+          className="popover-panel min-w-[180px] animate-in fade-in slide-in-from-top-1 duration-100"
           style={{
             top: rect.bottom + 6,
             left: rect.left,
@@ -451,10 +451,11 @@ function InlineSelect({ value, options, onChange, className }: {
         >
           {options.map(opt => (
             <Button variant="ghost"
+              size="inline"
               key={opt.value}
               onClick={() => { onChange(opt.value); setOpen(false); }}
-              className={`w-full text-left px-3 py-[6px] rounded-xl text-xs flex items-center justify-between gap-3 h-auto ${
-                value === opt.value ? 'bg-foreground/[0.06] text-foreground/80' : 'text-foreground/65 hover:bg-foreground/[0.04]'
+              className={`w-full text-left px-3 py-[6px] rounded-xl text-sm flex items-center justify-between gap-3 ${
+                value === opt.value ? 'bg-muted/50 text-foreground' : 'text-muted-foreground hover:bg-accent/50'
               }`}
             >
               <span>{opt.label}</span>
@@ -471,12 +472,10 @@ function InlineSelect({ value, options, onChange, className }: {
 // ===========================
 // Rich Prompt Editor with / Slash + Variable Management
 // ===========================
-const SLIDER_THUMB = '[&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-cherry-primary [&::-webkit-slider-thumb]:shadow-sm';
-
 
 // Badge styles for contenteditable
-const BADGE_STYLE_SYS = 'display:inline-flex;align-items:center;gap:2px;padding:1px 6px;margin:0 1px;border-radius:4px;background:rgba(16,185,129,0.12);color:rgb(52,211,153);font-size:9px;line-height:1.6;cursor:default;user-select:all;vertical-align:baseline;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;white-space:nowrap;';
-const BADGE_STYLE_CUSTOM = 'display:inline-flex;align-items:center;gap:2px;padding:1px 6px;margin:0 1px;border-radius:4px;background:rgba(139,92,246,0.12);color:rgb(167,139,250);font-size:9px;line-height:1.6;cursor:default;user-select:all;vertical-align:baseline;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;white-space:nowrap;';
+const BADGE_STYLE_SYS = 'display:inline-flex;align-items:center;gap:2px;padding:1px 6px;margin:0 1px;border-radius:4px;background:var(--accent-emerald-muted);color:var(--accent-emerald);font-size:9px;line-height:1.6;cursor:default;user-select:all;vertical-align:baseline;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;white-space:nowrap;';
+const BADGE_STYLE_CUSTOM = 'display:inline-flex;align-items:center;gap:2px;padding:1px 6px;margin:0 1px;border-radius:4px;background:var(--accent-violet-muted);color:var(--accent-violet);font-size:9px;line-height:1.6;cursor:default;user-select:all;vertical-align:baseline;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;white-space:nowrap;';
 
 function rawToHTML(text: string, customVarNames: string[]): string {
   if (!text) return '<br>';
@@ -712,47 +711,48 @@ const PromptTextarea = forwardRef<PromptTextareaHandle, {
           onCompositionEnd={() => { isComposing.current = false; handleInput(); }}
           onBlur={saveSelection}
           style={{ minHeight, resize: 'vertical' }}
-          className="w-full px-3 py-2.5 bg-foreground/[0.03] border border-foreground/[0.06] rounded-xl text-xs text-foreground/75 outline-none focus:border-cherry-primary/25 transition-colors [&::-webkit-scrollbar]:w-[2px] [&::-webkit-scrollbar-thumb]:bg-border/20 overflow-y-auto"
+          className="w-full px-3 py-2.5 bg-muted/50 border border-border/50 rounded-xl text-sm text-foreground outline-none focus:border-cherry-primary/25 transition-colors scrollbar-thin-xs overflow-y-auto"
         />
         {editorEmpty && (
-          <div className="absolute top-2.5 left-3 text-xs text-foreground/35 pointer-events-none select-none">
+          <div className="absolute top-2.5 left-3 text-sm text-muted-foreground/40 pointer-events-none select-none">
             {placeholder || '输入提示词... 输入 / 插入变量'}
           </div>
         )}
 
         {/* Bottom toolbar */}
         <div className="absolute bottom-1.5 right-2 flex items-center gap-1">
-          <Button variant="ghost" size="xs"
+          <Button variant="ghost"
             onClick={onOpenVarPanel}
-            className="px-1.5 py-[2px] text-[8px] bg-foreground/[0.04] text-foreground/40 hover:text-foreground/60 hover:bg-foreground/[0.06] flex items-center gap-1 h-auto"
+            className="px-1.5 py-[2px] text-xs bg-muted/50 text-muted-foreground/60 hover:text-foreground hover:bg-accent/50 flex items-center gap-1" size="inline"
           >
             <Variable size={8} />
             <span>变量</span>
           </Button>
-          <span className="text-[8px] text-foreground/35">/ 插入</span>
+          <span className="text-xs text-muted-foreground/40">/ 插入</span>
         </div>
 
         {/* Slash menu */}
         {showSlash && filteredVars.length > 0 && (
           <div
             ref={slashMenuRef}
-            className="absolute z-50 bg-popover border border-border/50 rounded-lg shadow-xl p-0.5 min-w-[180px] max-h-[180px] overflow-y-auto [&::-webkit-scrollbar]:w-[2px] [&::-webkit-scrollbar-thumb]:bg-border/20"
+            className="absolute z-[var(--z-modal)] bg-popover border border-border/50 rounded-lg shadow-xl p-0.5 min-w-[180px] max-h-[180px] overflow-y-auto scrollbar-thin-xs"
             style={{ top: slashPos.top, left: slashPos.left }}
           >
-            <p className="text-[8px] text-foreground/45 px-2 py-1">插入变量</p>
+            <p className="text-xs text-muted-foreground/60 px-2 py-1">插入变量</p>
             {filteredVars.map((v, i) => {
               const Icon = v.isSystem ? (SYSTEM_VAR_ICONS[v.name] || Globe) : Braces;
               return (
                 <Button variant="ghost"
+                  size="inline"
                   key={v.id}
                   onMouseDown={e => { e.preventDefault(); insertBadge(v.name); }}
-                  className={`w-full text-left px-2 py-[5px] rounded-md text-[9px] flex items-center gap-2 h-auto justify-start ${
-                    i === slashIndex ? 'bg-accent/60' : 'hover:bg-accent/30'
+                  className={`w-full text-left px-2 py-[5px] rounded-md text-sm flex items-center gap-2 justify-start ${
+                    i === slashIndex ? 'bg-accent/50' : 'hover:bg-accent/50'
                   }`}
                 >
-                  <Icon size={10} className={v.isSystem ? 'text-foreground/45' : 'text-violet-400/60'} />
-                  <span className="text-foreground/70" style={{ fontFamily: 'ui-monospace, monospace' }}>{v.name}</span>
-                  <span className="text-foreground/45 text-[8px] ml-auto">{v.isSystem ? '系统' : '自定义'}</span>
+                  <Icon size={10} className={v.isSystem ? 'text-muted-foreground/60' : 'text-accent-violet/60'} />
+                  <span className="text-foreground font-mono">{v.name}</span>
+                  <span className="text-muted-foreground/60 text-xs ml-auto">{v.isSystem ? '系统' : '自定义'}</span>
                 </Button>
               );
             })}
@@ -868,27 +868,27 @@ function DefaultConfigPanel({ entry, onClose }: {
       animate={{ opacity: 1, scale: 1, y: 0 }}
       exit={{ opacity: 0, scale: 0.95, y: 8 }}
       transition={{ type: 'spring', damping: 28, stiffness: 350 }}
-      className="absolute right-4 top-4 bottom-4 w-[320px] bg-background border border-border/30 rounded-2xl shadow-2xl flex flex-col z-30"
+      className="absolute right-4 top-4 bottom-4 w-[320px] bg-background border border-border/30 rounded-2xl shadow-2xl flex flex-col z-[var(--z-sticky)]"
       onClick={e => e.stopPropagation()}
     >
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 flex-shrink-0">
         <div className="flex items-center gap-2">
           {entry.icon}
-          <h3 className="text-sm text-foreground/85 font-medium">{entry.label}</h3>
+          <Typography variant="subtitle">{entry.label}</Typography>
         </div>
-        <Button variant="ghost" size="icon-xs" onClick={onClose} className="w-5 h-5 text-foreground/40 hover:text-foreground/60 hover:bg-accent">
+        <Button variant="ghost" size="icon-xs" onClick={onClose} className="text-muted-foreground/60 hover:text-foreground hover:bg-accent">
           <X size={11} />
         </Button>
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto overflow-x-hidden px-4 py-3.5 [&::-webkit-scrollbar]:w-[2px] [&::-webkit-scrollbar-thumb]:bg-border/20">
+      <div className="flex-1 overflow-y-auto overflow-x-hidden px-4 py-3.5 scrollbar-thin-xs">
         <div className="space-y-4">
           {/* === Assistant: Prompt === */}
           {entry.key === 'assistant' && (
             <div>
-              <p className="text-xs text-foreground/70 mb-1.5 font-medium">助手提示词</p>
+              <p className="text-sm text-foreground mb-1.5 font-medium">助手提示词</p>
               <PromptTextarea ref={promptRef} value={promptText} onChange={setPromptText}
                 placeholder="你是一个有帮助的 AI 助手..." minHeight={120}
                 customVars={customVars} onOpenVarPanel={() => setShowVarPanel(true)} />
@@ -898,18 +898,18 @@ function DefaultConfigPanel({ entry, onClose }: {
           {/* === Fast: Topic Naming === */}
           {entry.key === 'fast' && (
             <div>
-              <p className="text-xs text-foreground/70 mb-3 font-medium">话题命名</p>
+              <p className="text-sm text-foreground mb-3 font-medium">话题命名</p>
               <div className="flex items-center justify-between mb-3">
-                <span className="text-xs text-foreground/70">话题自动重命名</span>
-                <Toggle checked={autoRename} onChange={setAutoRename} />
+                <span className="text-sm text-foreground">话题自动重命名</span>
+                <Switch size="sm" checked={autoRename} onCheckedChange={setAutoRename} />
               </div>
               {autoRename && (
                 <div>
                   <div className="flex items-center gap-1.5 mb-1.5">
-                    <span className="text-xs text-foreground/70">话题命名提示词</span>
-                    <span className="text-foreground/35 cursor-help" title="用于自动为话题生成标题"><Info size={8} /></span>
+                    <span className="text-sm text-foreground">话题命名提示词</span>
+                    <span className="text-muted-foreground/40 cursor-help" title="用于自动为话题生成标题"><Info size={8} /></span>
                     <Button variant="ghost" size="icon-xs" onClick={() => setTopicPrompt(DEFAULT_TOPIC_PROMPT)}
-                      className="text-foreground/35 hover:text-foreground/55 ml-0.5" title="重置为默认提示词">
+                      className="text-muted-foreground/40 hover:text-foreground ml-0.5" title="重置为默认提示词">
                       <RotateCcw size={9} />
                     </Button>
                   </div>
@@ -927,10 +927,10 @@ function DefaultConfigPanel({ entry, onClose }: {
           <div>
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-1.5">
-                <SlidersHorizontal size={10} className="text-foreground/50" />
-                <p className="text-xs text-foreground/70 font-medium">模型参数</p>
+                <SlidersHorizontal size={10} className="text-muted-foreground/60" />
+                <p className="text-sm text-foreground font-medium">模型参数</p>
               </div>
-              <Button variant="ghost" size="icon-xs" onClick={handleResetParams} className="text-foreground/40 hover:text-foreground/60" title="重置参数">
+              <Button variant="ghost" size="icon-xs" onClick={handleResetParams} className="text-muted-foreground/60 hover:text-foreground" title="重置参数">
                 <RotateCcw size={10} />
               </Button>
             </div>
@@ -939,29 +939,26 @@ function DefaultConfigPanel({ entry, onClose }: {
             <div className="mb-3.5">
               <div className="flex items-center justify-between mb-1.5">
                 <div className="flex items-center gap-1">
-                  <span className="text-xs text-foreground/70">模型温度</span>
-                  <span className="text-foreground/35 cursor-help" title="控制输出的随机性"><Info size={8} /></span>
+                  <span className="text-sm text-foreground">模型温度</span>
+                  <span className="text-muted-foreground/40 cursor-help" title="控制输出的随机性"><Info size={8} /></span>
                 </div>
-                <Toggle checked={tempEnabled} onChange={setTempEnabled} size="sm" />
+                <Switch size="sm" checked={tempEnabled} onCheckedChange={setTempEnabled}  />
               </div>
               {tempEnabled && (
                 <div>
                   <div className="flex items-center gap-2.5">
-                    <input type="range" min={0} max={2} step={0.01} value={temperature} onChange={e => setTemperature(Number(e.target.value))}
-                      className={`flex-1 h-[3px] rounded-full appearance-none cursor-pointer ${SLIDER_THUMB}`}
-                      style={{ background: `linear-gradient(to right, #10b981 ${(temperature / 2) * 100}%, rgba(255,255,255,0.08) ${(temperature / 2) * 100}%)` }}
-                    />
+                    <Slider min={0} max={2} step={0.01} value={[temperature]} onValueChange={([v]) => setTemperature(v)} className="flex-1" />
                     <Input value={temperature.toFixed(2)}
                       onChange={e => { const v = parseFloat(e.target.value); if (!isNaN(v) && v >= 0 && v <= 2) setTemperature(v); }}
-                      className="w-[46px] px-1.5 py-[3px] bg-foreground/[0.03] border border-foreground/[0.06] rounded-md text-[9px] text-foreground/70 text-center focus:border-foreground/15 h-auto shadow-none"
+                      className="w-[46px] px-1.5 py-[3px] bg-muted/50 border border-border/50 rounded-md text-xs text-foreground text-center focus:border-border/50 h-auto shadow-none"
                     />
                   </div>
                   <div className="flex justify-between pr-[58px] mt-1">
-                    <span className="text-[8px] text-foreground/40">0</span>
-                    <span className="text-[8px] text-foreground/40">0.5</span>
-                    <span className="text-[8px] text-foreground/40">1.0</span>
-                    <span className="text-[8px] text-foreground/40">1.5</span>
-                    <span className="text-[8px] text-foreground/40">2.0</span>
+                    <span className="text-xs text-muted-foreground/60">0</span>
+                    <span className="text-xs text-muted-foreground/60">0.5</span>
+                    <span className="text-xs text-muted-foreground/60">1.0</span>
+                    <span className="text-xs text-muted-foreground/60">1.5</span>
+                    <span className="text-xs text-muted-foreground/60">2.0</span>
                   </div>
                 </div>
               )}
@@ -971,27 +968,24 @@ function DefaultConfigPanel({ entry, onClose }: {
             <div className="mb-3.5">
               <div className="flex items-center justify-between mb-1.5">
                 <div className="flex items-center gap-1">
-                  <span className="text-xs text-foreground/70">Top-P</span>
-                  <span className="text-foreground/35 cursor-help" title="核采样参数"><Info size={8} /></span>
+                  <span className="text-sm text-foreground">Top-P</span>
+                  <span className="text-muted-foreground/40 cursor-help" title="核采样参数"><Info size={8} /></span>
                 </div>
-                <Toggle checked={topPEnabled} onChange={setTopPEnabled} size="sm" />
+                <Switch size="sm" checked={topPEnabled} onCheckedChange={setTopPEnabled}  />
               </div>
               {topPEnabled && (
                 <div>
                   <div className="flex items-center gap-2.5">
-                    <input type="range" min={0} max={1} step={0.01} value={topP} onChange={e => setTopP(Number(e.target.value))}
-                      className={`flex-1 h-[3px] rounded-full appearance-none cursor-pointer ${SLIDER_THUMB}`}
-                      style={{ background: `linear-gradient(to right, #10b981 ${topP * 100}%, rgba(255,255,255,0.08) ${topP * 100}%)` }}
-                    />
+                    <Slider min={0} max={1} step={0.01} value={[topP]} onValueChange={([v]) => setTopP(v)} className="flex-1" />
                     <Input value={topP.toFixed(2)}
                       onChange={e => { const v = parseFloat(e.target.value); if (!isNaN(v) && v >= 0 && v <= 1) setTopP(v); }}
-                      className="w-[46px] px-1.5 py-[3px] bg-foreground/[0.03] border border-foreground/[0.06] rounded-md text-[9px] text-foreground/70 text-center focus:border-foreground/15 h-auto shadow-none"
+                      className="w-[46px] px-1.5 py-[3px] bg-muted/50 border border-border/50 rounded-md text-xs text-foreground text-center focus:border-border/50 h-auto shadow-none"
                     />
                   </div>
                   <div className="flex justify-between pr-[58px] mt-1">
-                    <span className="text-[8px] text-foreground/40">0</span>
-                    <span className="text-[8px] text-foreground/40">0.5</span>
-                    <span className="text-[8px] text-foreground/40">1.0</span>
+                    <span className="text-xs text-muted-foreground/60">0</span>
+                    <span className="text-xs text-muted-foreground/60">0.5</span>
+                    <span className="text-xs text-muted-foreground/60">1.0</span>
                   </div>
                 </div>
               )}
@@ -1000,30 +994,29 @@ function DefaultConfigPanel({ entry, onClose }: {
             {/* Context Count */}
             <div className="mb-3.5">
               <div className="flex items-center gap-1 mb-1.5">
-                <span className="text-xs text-foreground/70">上下文数</span>
-                <span className="text-foreground/35 cursor-help" title="历史消息数量，∞ 表示不限制"><Info size={8} /></span>
+                <span className="text-sm text-foreground">上下文数</span>
+                <span className="text-muted-foreground/40 cursor-help" title="历史消息数量，∞ 表示不限制"><Info size={8} /></span>
               </div>
               <div>
                 <div className="flex items-center gap-2.5">
-                  <input type="range" min={0} max={21} step={1}
-                    value={contextCount > 20 ? 21 : contextCount}
-                    onChange={e => { const v = Number(e.target.value); setContextCount(v >= 21 ? Infinity : v); }}
-                    className={`flex-1 h-[3px] rounded-full appearance-none cursor-pointer ${SLIDER_THUMB}`}
-                    style={{ background: `linear-gradient(to right, #10b981 ${((contextCount > 20 ? 21 : contextCount) / 21) * 100}%, rgba(255,255,255,0.08) ${((contextCount > 20 ? 21 : contextCount) / 21) * 100}%)` }}
+                  <Slider min={0} max={21} step={1}
+                    value={[contextCount > 20 ? 21 : contextCount]}
+                    onValueChange={([v]) => { setContextCount(v >= 21 ? Infinity : v); }}
+                    className="flex-1"
                   />
                   <Input
                     value={contextCount === Infinity ? '\u221E' : contextCount}
                     onChange={e => { const raw = e.target.value.trim(); if (raw === '\u221E' || raw.toLowerCase() === 'inf') { setContextCount(Infinity); return; } const v = parseInt(raw); if (!isNaN(v) && v >= 0) setContextCount(v); }}
-                    className="w-[46px] px-1.5 py-[3px] bg-foreground/[0.03] border border-foreground/[0.06] rounded-md text-[9px] text-foreground/70 text-center focus:border-foreground/15 h-auto shadow-none"
+                    className="w-[46px] px-1.5 py-[3px] bg-muted/50 border border-border/50 rounded-md text-xs text-foreground text-center focus:border-border/50 h-auto shadow-none"
                   />
                 </div>
                 <div className="flex justify-between pr-[58px] mt-1">
-                  <span className="text-[8px] text-foreground/40">0</span>
-                  <span className="text-[8px] text-foreground/40">5</span>
-                  <span className="text-[8px] text-foreground/40">10</span>
-                  <span className="text-[8px] text-foreground/40">15</span>
-                  <span className="text-[8px] text-foreground/40">20</span>
-                  <span className="text-[8px] text-foreground/40">{'\u221E'}</span>
+                  <span className="text-xs text-muted-foreground/60">0</span>
+                  <span className="text-xs text-muted-foreground/60">5</span>
+                  <span className="text-xs text-muted-foreground/60">10</span>
+                  <span className="text-xs text-muted-foreground/60">15</span>
+                  <span className="text-xs text-muted-foreground/60">20</span>
+                  <span className="text-xs text-muted-foreground/60">{'\u221E'}</span>
                 </div>
               </div>
             </div>
@@ -1032,15 +1025,15 @@ function DefaultConfigPanel({ entry, onClose }: {
             <div className="mb-3.5">
               <div className="flex items-center justify-between mb-1.5">
                 <div className="flex items-center gap-1">
-                  <span className="text-xs text-foreground/70">最大 Token 数</span>
-                  <span className="text-foreground/35 cursor-help" title="0 表示不限制"><Info size={8} /></span>
+                  <span className="text-sm text-foreground">最大 Token 数</span>
+                  <span className="text-muted-foreground/40 cursor-help" title="0 表示不限制"><Info size={8} /></span>
                 </div>
-                <Toggle checked={maxTokensEnabled} onChange={setMaxTokensEnabled} size="sm" />
+                <Switch size="sm" checked={maxTokensEnabled} onCheckedChange={setMaxTokensEnabled}  />
               </div>
               {maxTokensEnabled && (
                 <Input value={maxTokens}
                   onChange={e => { const v = parseInt(e.target.value); if (!isNaN(v) && v >= 0) setMaxTokens(v); }}
-                  className="w-full px-2.5 py-[5px] bg-foreground/[0.03] border border-foreground/[0.06] rounded-lg text-xs text-foreground/70 focus:border-foreground/15 h-auto shadow-none"
+                  className="w-full px-2.5 py-[5px] bg-muted/50 border border-border/50 rounded-lg text-xs text-foreground focus:border-border/50 h-auto shadow-none"
                   placeholder="0"
                 />
               )}
@@ -1050,7 +1043,7 @@ function DefaultConfigPanel({ entry, onClose }: {
             {entry.key === 'assistant' && (
               <div className="mb-3.5">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs text-foreground/70">工具调用方式</span>
+                  <span className="text-sm text-foreground">工具调用方式</span>
                   <InlineSelect value={toolCallMode} onChange={setToolCallMode}
                     options={[
                       { value: 'function', label: '函数' },
@@ -1114,9 +1107,9 @@ function DefaultModelConfig() {
   ];
 
   const entries: DefaultConfigEntry[] = [
-    { key: 'assistant', label: '主力对话', sublabel: 'Chat', desc: '处理复杂的逻辑推理与日常对话', icon: <MessageCircle size={18} className="text-foreground/50" />, category: 'basic' },
-    { key: 'fast', label: '快速响应', sublabel: 'Fast', desc: '用于提取关键词、简单问答', icon: <Zap size={18} className="text-foreground/50" />, category: 'basic' },
-    { key: 'vision', label: '视觉识别', sublabel: 'Vision', desc: '图片理解与多模态输入', icon: <Eye size={18} className="text-foreground/50" />, category: 'special' },
+    { key: 'assistant', label: '主力对话', sublabel: 'Chat', desc: '处理复杂的逻辑推理与日常对话', icon: <MessageCircle size={18} className="text-muted-foreground/60" />, category: 'basic' },
+    { key: 'fast', label: '快速响应', sublabel: 'Fast', desc: '用于提取关键词、简单问答', icon: <Zap size={18} className="text-muted-foreground/60" />, category: 'basic' },
+    { key: 'vision', label: '视觉识别', sublabel: 'Vision', desc: '图片理解与多模态输入', icon: <Eye size={18} className="text-muted-foreground/60" />, category: 'special' },
   ];
 
   const basicEntries = entries.filter(e => e.category === 'basic');
@@ -1127,19 +1120,19 @@ function DefaultModelConfig() {
   const renderEntryCard = (entry: DefaultConfigEntry) => (
     <div
       key={entry.key}
-      className="flex items-center gap-3.5 px-4 py-3.5 bg-foreground/[0.03] border border-foreground/[0.06] rounded-xl hover:bg-foreground/[0.05] transition-colors group"
+      className="flex items-center gap-3.5 px-4 py-3.5 bg-muted/50 border border-border/50 rounded-xl hover:bg-accent/50 transition-colors group"
     >
-      <div className="w-9 h-9 rounded-lg bg-foreground/[0.04] flex items-center justify-center flex-shrink-0">
+      <div className="w-9 h-9 rounded-lg bg-muted/50 flex items-center justify-center flex-shrink-0">
         {entry.icon}
       </div>
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-1.5">
-          <span className="text-sm text-foreground/85 font-medium">{entry.label}</span>
+          <span className="text-sm text-foreground font-medium">{entry.label}</span>
           {entry.sublabel && (
-            <span className="text-xs text-foreground/45">({entry.sublabel})</span>
+            <span className="text-xs text-muted-foreground/60">({entry.sublabel})</span>
           )}
         </div>
-        <p className="text-xs text-foreground/50 mt-0.5">{entry.desc}</p>
+        <p className="text-xs text-muted-foreground/60 mt-0.5">{entry.desc}</p>
       </div>
       <InlineSelect
         value={models[entry.key]}
@@ -1151,7 +1144,7 @@ function DefaultModelConfig() {
         className={`w-7 h-7 flex-shrink-0 text-xs ${
           activeEntry === entry.key
             ? 'bg-cherry-active-bg text-cherry-primary'
-            : 'text-foreground/30 hover:text-foreground/50 hover:bg-foreground/[0.04] opacity-0 group-hover:opacity-100'
+            : 'text-muted-foreground/40 hover:text-foreground hover:bg-accent/50 opacity-0 group-hover:opacity-100'
         }`}
         title="配置提示词与参数"
       >
@@ -1162,21 +1155,21 @@ function DefaultModelConfig() {
 
   return (
     <div className="flex-1 flex flex-col min-h-0 relative">
-      <div className="flex-1 overflow-y-auto px-6 py-5 [&::-webkit-scrollbar]:w-[3px] [&::-webkit-scrollbar-thumb]:bg-border/20">
+      <div className="flex-1 overflow-y-auto px-6 py-5 scrollbar-thin">
         {/* Header */}
         <div className="flex items-center gap-3 mb-6">
           <div className="w-9 h-9 rounded-xl bg-cherry-active-bg flex items-center justify-center flex-shrink-0">
             <Star size={16} className="text-cherry-primary" />
           </div>
           <div>
-            <h3 className="text-sm text-foreground/90 font-semibold">默认模型配置</h3>
-            <p className="text-xs text-foreground/50 mt-0.5">设定系统在不同场景下调用的主力模型</p>
+            <Typography variant="subtitle" className="font-semibold">默认模型配置</Typography>
+            <p className="text-xs text-muted-foreground/60 mt-0.5">设定系统在不同场景下调用的主力模型</p>
           </div>
         </div>
 
         {/* Basic Section */}
         <div className="mb-5">
-          <h4 className="text-sm text-foreground/70 mb-2.5 px-0.5 font-medium">基础交互</h4>
+          <h4 className="text-sm text-foreground mb-2.5 px-0.5 font-medium">基础交互</h4>
           <div className="space-y-2">
             {basicEntries.map(renderEntryCard)}
           </div>
@@ -1184,7 +1177,7 @@ function DefaultModelConfig() {
 
         {/* Special Section */}
         <div className="pb-4">
-          <h4 className="text-sm text-foreground/70 mb-2.5 px-0.5 font-medium">专项能力</h4>
+          <h4 className="text-sm text-foreground mb-2.5 px-0.5 font-medium">专项能力</h4>
           <div className="space-y-2">
             {specialEntries.map(renderEntryCard)}
           </div>
@@ -1194,8 +1187,8 @@ function DefaultModelConfig() {
       {/* Floating Config Panel */}
       <AnimatePresence>
         {activeEntryData && (
-          <div className="absolute -left-[170px] top-0 right-0 bottom-0 z-20" onClick={() => setActiveEntry(null)}>
-            <div className="fixed inset-0 bg-black/10 backdrop-blur-[1px] z-[-1]" />
+          <div className="absolute -left-[170px] top-0 right-0 bottom-0 z-[var(--z-overlay)]" onClick={() => setActiveEntry(null)}>
+            <div className="fixed inset-0 bg-foreground/10 backdrop-blur-[1px] z-[-1]" />
             <DefaultConfigPanel
               entry={activeEntryData}
               onClose={() => setActiveEntry(null)}
@@ -1225,40 +1218,40 @@ function KeyManagementPanel({ provider, onClose }: { provider: Provider; onClose
       animate={{ x: 0 }}
       exit={{ x: '100%' }}
       transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-      className="absolute inset-y-2 right-2 w-[320px] bg-background border border-border/30 shadow-2xl flex flex-col z-30 rounded-2xl"
+      className="absolute inset-y-2 right-2 w-[320px] bg-background border border-border/30 shadow-2xl flex flex-col z-[var(--z-sticky)] rounded-2xl"
       onClick={e => e.stopPropagation()}
     >
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-border/20 flex-shrink-0">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-border/30 flex-shrink-0">
         <div className="flex items-center gap-2">
-          <Key size={12} className="text-foreground/55" />
-          <span className="text-xs text-foreground/85 font-semibold">多 Key 管理</span>
+          <Key size={12} className="text-muted-foreground" />
+          <span className="text-sm text-foreground font-semibold">多 Key 管理</span>
         </div>
-        <Button variant="ghost" size="icon-xs" onClick={onClose} className="w-5 h-5 text-foreground/40 hover:text-foreground/65 hover:bg-accent">
+        <Button variant="ghost" size="icon-xs" onClick={onClose} className="text-muted-foreground/60 hover:text-foreground hover:bg-accent">
           <X size={11} />
         </Button>
       </div>
 
-      <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3 [&::-webkit-scrollbar]:w-[2px] [&::-webkit-scrollbar-thumb]:bg-border/20">
+      <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3 scrollbar-thin-xs">
         {/* Rotation Strategy */}
-        <div className="bg-foreground/[0.03] border border-foreground/[0.06] rounded-xl p-3">
+        <div className="bg-muted/50 border border-border/50 rounded-xl p-3">
           <div className="flex items-center justify-between mb-2.5">
             <div className="flex items-center gap-2">
-              <Shuffle size={10} className="text-foreground/50" />
-              <span className="text-xs text-foreground/75 font-medium">Key 轮询</span>
+              <Shuffle size={10} className="text-muted-foreground/60" />
+              <span className="text-sm text-foreground font-medium">Key 轮询</span>
             </div>
-            <Toggle checked={rotationEnabled} onChange={setRotationEnabled} size="sm" />
+            <Switch size="sm" checked={rotationEnabled} onCheckedChange={setRotationEnabled}  />
           </div>
           {rotationEnabled && (
             <div className="flex gap-1 mt-1">
               {(['round-robin', 'random', 'failover'] as const).map(s => (
-                <Button variant="ghost" size="xs"
+                <Button variant="ghost" size="inline"
                   key={s}
                   onClick={() => setStrategy(s)}
-                  className={`flex-1 py-[3px] text-[9px] h-auto ${
+                  className={`flex-1 py-[3px] text-xs ${
                     strategy === s
                       ? 'bg-cherry-active-bg text-cherry-primary border border-cherry-ring'
-                      : 'bg-foreground/[0.03] text-foreground/55 border border-transparent hover:bg-foreground/[0.06]'
+                      : 'bg-muted/50 text-muted-foreground border border-transparent hover:bg-accent/50'
                   }`}
                 >
                   {s === 'round-robin' ? '轮询' : s === 'random' ? '随机' : '故障转移'}
@@ -1271,25 +1264,25 @@ function KeyManagementPanel({ provider, onClose }: { provider: Provider; onClose
         {/* Key List */}
         <div>
           <div className="flex items-center justify-between mb-2">
-            <span className="text-[9px] text-foreground/55">API Keys</span>
-            <span className="text-[9px] text-foreground/45">{keys.filter(k => k.enabled).length} / {keys.length} 已启用</span>
+            <span className="text-sm text-muted-foreground">API Keys</span>
+            <span className="text-xs text-muted-foreground/60">{keys.filter(k => k.enabled).length} / {keys.length} 已启用</span>
           </div>
           <div className="space-y-1.5">
             {keys.map(k => (
               <div key={k.id} className={`rounded-xl border p-2.5 transition-all ${
-                k.enabled ? 'border-cherry-primary/15 bg-cherry-active-bg' : 'border-foreground/[0.06] bg-foreground/[0.02]'
+                k.enabled ? 'border-cherry-primary/15 bg-cherry-active-bg' : 'border-border/50 bg-muted/30'
               }`}>
                 <div className="flex items-center justify-between mb-1.5">
-                  <span className="text-xs text-foreground/80 font-medium">{k.name}</span>
-                  <Toggle checked={k.enabled} onChange={() => toggleKey(k.id)} size="sm" />
+                  <span className="text-sm text-foreground font-medium">{k.name}</span>
+                  <Switch size="sm" checked={k.enabled} onCheckedChange={() => toggleKey(k.id)}  />
                 </div>
                 <div className="flex items-center gap-1.5 mb-1">
-                  <span className="text-[9px] text-foreground/45 flex-1 truncate" style={{ fontFamily: 'ui-monospace, monospace' }}>{k.key}</span>
-                  <Button variant="ghost" size="icon-xs" className="text-foreground/35 hover:text-foreground/55"><Copy size={8} /></Button>
+                  <span className="text-xs text-muted-foreground/60 flex-1 truncate font-mono">{k.key}</span>
+                  <Button variant="ghost" size="icon-xs" className="text-muted-foreground/40 hover:text-foreground"><Copy size={8} /></Button>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-[8px] text-foreground/40">调用 {k.usage.toLocaleString()} 次</span>
-                  <span className="text-[8px] text-foreground/40">{k.lastUsed}</span>
+                  <span className="text-xs text-muted-foreground/60">调用 {k.usage.toLocaleString()} 次</span>
+                  <span className="text-xs text-muted-foreground/60">{k.lastUsed}</span>
                 </div>
               </div>
             ))}
@@ -1297,7 +1290,7 @@ function KeyManagementPanel({ provider, onClose }: { provider: Provider; onClose
         </div>
 
         {/* Add Key */}
-        <Button variant="ghost" className="w-full flex items-center justify-center gap-1.5 py-2 rounded-xl border border-dashed border-foreground/15 text-xs text-foreground/50 hover:text-foreground/70 hover:border-foreground/25 h-auto">
+        <Button variant="ghost" size="inline" className="w-full flex items-center justify-center gap-1.5 py-2 rounded-xl border border-dashed border-border/50 text-xs text-muted-foreground/60 hover:text-foreground hover:border-border">
           <Plus size={10} />
           <span>添加 API Key</span>
         </Button>
@@ -1401,11 +1394,11 @@ function ModelEditPanel({ model, onClose, onSave }: {
   const FieldLabel = ({ label, required, hint }: { label: string; required?: boolean; hint?: string }) => (
     <div className="flex items-center gap-1 mb-1.5 min-w-[80px]">
       {required && <span className="text-destructive text-xs">*</span>}
-      <span className="text-xs text-foreground/70">{label}</span>
+      <span className="text-sm text-foreground">{label}</span>
       {hint && (
         <div className="relative group/tip">
-          <HelpCircle size={10} className="text-foreground/35 cursor-help" />
-          <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 px-2 py-1 rounded-md bg-foreground/90 text-background text-[8px] whitespace-nowrap z-50 pointer-events-none opacity-0 group-hover/tip:opacity-100 transition-opacity">
+          <HelpCircle size={10} className="text-muted-foreground/40 cursor-help" />
+          <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 px-2 py-1 rounded-md bg-foreground/90 text-background text-xs whitespace-nowrap z-[var(--z-tooltip)] pointer-events-none opacity-0 group-hover/tip:opacity-100 transition-opacity">
             {hint}
           </div>
         </div>
@@ -1419,27 +1412,27 @@ function ModelEditPanel({ model, onClose, onSave }: {
       animate={{ x: 0 }}
       exit={{ x: '100%' }}
       transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-      className="absolute inset-y-2 right-2 w-[340px] bg-background border border-border/30 shadow-2xl flex flex-col z-30 rounded-2xl"
+      className="absolute inset-y-2 right-2 w-[340px] bg-background border border-border/30 shadow-2xl flex flex-col z-[var(--z-sticky)] rounded-2xl"
       onClick={e => e.stopPropagation()}
     >
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-border/20 flex-shrink-0">
-        <span className="text-sm text-foreground/85 font-semibold">编辑模型</span>
-        <Button variant="ghost" size="icon-xs" onClick={onClose} className="w-5 h-5 text-foreground/40 hover:text-foreground/65 hover:bg-accent">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-border/30 flex-shrink-0">
+        <span className="text-sm text-foreground font-semibold">编辑模型</span>
+        <Button variant="ghost" size="icon-xs" onClick={onClose} className="text-muted-foreground/60 hover:text-foreground hover:bg-accent">
           <X size={12} />
         </Button>
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto px-4 py-3.5 space-y-4 [&::-webkit-scrollbar]:w-[2px] [&::-webkit-scrollbar-thumb]:bg-border/20">
+      <div className="flex-1 overflow-y-auto px-4 py-3.5 space-y-4 scrollbar-thin-xs">
         {/* Model ID (read-only) */}
         <div>
           <FieldLabel label="模型 ID" required hint="模型的唯一标识符" />
           <div className="flex items-center gap-1.5">
-            <div className="flex-1 px-2.5 py-[6px] bg-foreground/[0.03] rounded-lg border border-border/25 text-xs text-foreground/50 truncate" style={{ fontFamily: 'ui-monospace, monospace' }}>
+            <div className="flex-1 px-2.5 py-[6px] bg-muted/50 rounded-lg border border-border/25 text-xs text-muted-foreground/60 truncate font-mono">
               {model.id}
             </div>
-            <Button variant="ghost" size="icon-xs" onClick={handleCopy} className="w-7 h-7 text-foreground/40 hover:text-foreground/60 hover:bg-accent border border-border/25 flex-shrink-0">
+            <Button variant="ghost" size="icon-sm" onClick={handleCopy} className="text-muted-foreground/60 hover:text-foreground hover:bg-accent border border-border/25 flex-shrink-0">
               {copied ? <Check size={11} className="text-cherry-primary" /> : <Copy size={11} />}
             </Button>
           </div>
@@ -1451,7 +1444,7 @@ function ModelEditPanel({ model, onClose, onSave }: {
           <Input
             value={name}
             onChange={e => setName(e.target.value)}
-            className="w-full px-2.5 py-[6px] bg-foreground/[0.03] rounded-lg border border-border/25 text-xs text-foreground/70 focus:border-cherry-primary/30 h-auto shadow-none"
+            className="w-full px-2.5 py-[6px] bg-muted/50 rounded-lg border border-border/25 text-sm text-foreground focus:border-cherry-primary/30 h-auto shadow-none"
           />
         </div>
 
@@ -1462,7 +1455,7 @@ function ModelEditPanel({ model, onClose, onSave }: {
             value={group}
             onChange={e => setGroup(e.target.value)}
             placeholder="例如: agent"
-            className="w-full px-2.5 py-[6px] bg-foreground/[0.03] rounded-lg border border-border/25 text-xs text-foreground/75 placeholder:text-foreground/35 focus:border-cherry-primary/30 h-auto shadow-none"
+            className="w-full px-2.5 py-[6px] bg-muted/50 rounded-lg border border-border/25 text-sm text-foreground placeholder:text-muted-foreground/60 focus:border-cherry-primary/30 h-auto shadow-none"
           />
         </div>
 
@@ -1470,20 +1463,20 @@ function ModelEditPanel({ model, onClose, onSave }: {
         <div>
           <FieldLabel label="端点类型" required hint="模型的 API 端点兼容类型" />
           <div className="relative">
-            <Button variant="ghost"
+            <Button variant="ghost" size="inline"
               ref={endpointRef}
               onClick={() => setShowEndpointDrop(!showEndpointDrop)}
-              className={`w-full flex items-center justify-between px-3.5 py-[6px] rounded-full bg-foreground/[0.06] text-xs h-auto ${
-                showEndpointDrop ? 'bg-foreground/[0.09] text-foreground/80' : 'text-foreground/70 hover:bg-foreground/[0.08]'
+              className={`w-full flex items-center justify-between px-3.5 py-[6px] rounded-full bg-muted/50 text-sm ${
+                showEndpointDrop ? 'bg-accent text-foreground' : 'text-foreground hover:bg-accent/50'
               }`}
             >
               <span>{endpointType}</span>
-              <ChevronDown size={10} className={`text-foreground/40 transition-transform ${showEndpointDrop ? 'rotate-180' : ''}`} />
+              <ChevronDown size={10} className={`text-muted-foreground/60 transition-transform ${showEndpointDrop ? 'rotate-180' : ''}`} />
             </Button>
             {showEndpointDrop && endpointRef.current && createPortal(
               <div
                 data-drop-id="endpoint"
-                className="fixed bg-popover rounded-2xl border border-border/50 shadow-2xl z-[9999] p-1.5"
+                className="popover-panel"
                 style={{
                   top: endpointRef.current.getBoundingClientRect().bottom + 4,
                   left: endpointRef.current.getBoundingClientRect().left,
@@ -1491,13 +1484,13 @@ function ModelEditPanel({ model, onClose, onSave }: {
                 }}
               >
                 {ENDPOINT_TYPES.map(t => (
-                  <Button variant="ghost"
+                  <Button variant="ghost" size="inline"
                     key={t}
                     onClick={() => { setEndpointType(t); setShowEndpointDrop(false); }}
-                    className={`w-full text-left px-3 py-[6px] rounded-xl text-xs flex items-center justify-between gap-3 h-auto ${
+                    className={`w-full text-left px-3 py-[6px] rounded-xl text-sm flex items-center justify-between gap-3 ${
                       endpointType === t
-                        ? 'bg-foreground/[0.06] text-foreground/80'
-                        : 'text-foreground/65 hover:bg-foreground/[0.04]'
+                        ? 'bg-muted/50 text-foreground'
+                        : 'text-muted-foreground hover:bg-accent/50'
                     }`}
                   >
                     <span>{t}</span>
@@ -1511,9 +1504,9 @@ function ModelEditPanel({ model, onClose, onSave }: {
         </div>
 
         {/* More Settings toggle */}
-        <Button variant="ghost" size="xs"
+        <Button variant="ghost" size="inline"
           onClick={() => setShowMore(!showMore)}
-          className="flex items-center gap-1.5 px-2.5 py-[5px] bg-foreground/[0.03] text-xs text-foreground/55 hover:text-foreground/75 hover:bg-foreground/[0.06] border border-border/20 h-auto"
+          className="flex items-center gap-1.5 px-2.5 py-[5px] bg-muted/50 text-xs text-muted-foreground hover:text-foreground hover:bg-accent/50 border border-border/20"
         >
           {showMore ? <ChevronUp size={10} /> : <ChevronDown size={10} />}
           <span>更多设置</span>
@@ -1522,12 +1515,12 @@ function ModelEditPanel({ model, onClose, onSave }: {
         {showMore && (
           <div className="space-y-4 pt-1">
             {/* Divider */}
-            <div className="h-px bg-foreground/[0.06]" />
+            <div className="h-px bg-muted/50" />
 
             {/* Model Capabilities */}
             <div>
               <div className="flex items-center gap-1.5 mb-2">
-                <span className="text-xs text-foreground/70 font-medium">模型类型</span>
+                <span className="text-sm text-foreground font-medium">模型类型</span>
                 <AlertTriangle size={10} className="text-warning/70" />
               </div>
               <div className="flex flex-wrap gap-1.5">
@@ -1536,13 +1529,13 @@ function ModelEditPanel({ model, onClose, onSave }: {
                   const Icon = CAPABILITY_ICONS[key];
                   const cfg = CAPABILITY_CONFIG[key];
                   return (
-                    <Button variant="ghost" size="xs"
+                    <Button variant="ghost" size="inline"
                       key={key}
                       onClick={() => toggleCap(key)}
-                      className={`flex items-center gap-1 px-2.5 py-[4px] rounded-full text-xs border h-auto ${
+                      className={`flex items-center gap-1 px-2.5 py-[4px] rounded-full text-xs border ${
                         active
                           ? cfg.color + ' border-current/20 font-medium'
-                          : 'text-foreground/55 border-foreground/[0.1] hover:border-foreground/18 hover:text-foreground/70'
+                          : 'text-muted-foreground border-border/50 hover:border-border hover:text-foreground'
                       }`}
                     >
                       <Icon size={10} />
@@ -1556,51 +1549,51 @@ function ModelEditPanel({ model, onClose, onSave }: {
             {/* Streaming */}
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-1">
-                <span className="text-xs text-foreground/70">支持增量文本输出</span>
+                <span className="text-sm text-foreground">支持增量文本输出</span>
                 <div className="relative group/tip">
-                  <HelpCircle size={10} className="text-foreground/35 cursor-help" />
-                  <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 px-2 py-1 rounded-md bg-foreground/90 text-background text-[8px] whitespace-nowrap z-50 pointer-events-none opacity-0 group-hover/tip:opacity-100 transition-opacity">
+                  <HelpCircle size={10} className="text-muted-foreground/40 cursor-help" />
+                  <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 px-2 py-1 rounded-md bg-foreground/90 text-background text-xs whitespace-nowrap z-[var(--z-tooltip)] pointer-events-none opacity-0 group-hover/tip:opacity-100 transition-opacity">
                     Streaming 流式输出
                   </div>
                 </div>
               </div>
-              <Toggle checked={streaming} onChange={setStreaming} size="sm" />
+              <Switch size="sm" checked={streaming} onCheckedChange={setStreaming}  />
             </div>
 
             {/* Divider */}
-            <div className="h-px bg-foreground/[0.06]" />
+            <div className="h-px bg-muted/50" />
 
             {/* Currency */}
             <div className="flex items-center gap-3">
-              <span className="text-xs text-foreground/70 min-w-[32px]">币种</span>
+              <span className="text-sm text-foreground min-w-[32px]">币种</span>
               <div className="relative">
-                <Button variant="ghost"
+                <Button variant="ghost" size="inline"
                   ref={currencyRef}
                   onClick={() => setShowCurrencyDrop(!showCurrencyDrop)}
-                  className={`flex items-center gap-2 px-3 py-[5px] rounded-full bg-foreground/[0.06] text-xs min-w-[60px] h-auto ${
-                    showCurrencyDrop ? 'bg-foreground/[0.09] text-foreground/80' : 'text-foreground/70 hover:bg-foreground/[0.08]'
+                  className={`flex items-center gap-2 px-3 py-[5px] rounded-full bg-muted/50 text-sm min-w-[60px] ${
+                    showCurrencyDrop ? 'bg-accent text-foreground' : 'text-foreground hover:bg-accent/50'
                   }`}
                 >
                   <span>{currency}</span>
-                  <ChevronDown size={9} className={`text-foreground/40 transition-transform ${showCurrencyDrop ? 'rotate-180' : ''}`} />
+                  <ChevronDown size={9} className={`text-muted-foreground/60 transition-transform ${showCurrencyDrop ? 'rotate-180' : ''}`} />
                 </Button>
                 {showCurrencyDrop && currencyRef.current && createPortal(
                   <div
                     data-drop-id="currency"
-                    className="fixed bg-popover rounded-2xl border border-border/50 shadow-2xl z-[9999] p-1.5 min-w-[80px]"
+                    className="popover-panel min-w-[80px]"
                     style={{
                       top: currencyRef.current.getBoundingClientRect().bottom + 4,
                       left: currencyRef.current.getBoundingClientRect().left,
                     }}
                   >
                     {CURRENCY_OPTIONS.map(c => (
-                      <Button variant="ghost"
+                      <Button variant="ghost" size="inline"
                         key={c}
                         onClick={() => { setCurrency(c); setShowCurrencyDrop(false); }}
-                        className={`w-full text-left px-3 py-[6px] rounded-xl text-xs flex items-center justify-between gap-3 h-auto ${
+                        className={`w-full text-left px-3 py-[6px] rounded-xl text-sm flex items-center justify-between gap-3 ${
                           currency === c
-                            ? 'bg-foreground/[0.06] text-foreground/80'
-                            : 'text-foreground/65 hover:bg-foreground/[0.04]'
+                            ? 'bg-muted/50 text-foreground'
+                            : 'text-muted-foreground hover:bg-accent/50'
                         }`}
                       >
                         <span>{c}</span>
@@ -1615,15 +1608,14 @@ function ModelEditPanel({ model, onClose, onSave }: {
 
             {/* Input Price */}
             <div className="flex items-center gap-3">
-              <span className="text-xs text-foreground/70 min-w-[56px]">输入价格</span>
+              <span className="text-sm text-foreground min-w-[56px]">输入价格</span>
               <div className="flex items-center gap-0 flex-1">
                 <Input
                   value={inputPrice}
                   onChange={e => setInputPrice(e.target.value)}
-                  className="w-[80px] px-2.5 py-[5px] bg-foreground/[0.03] rounded-l-lg rounded-r-none border border-r-0 border-border/25 text-xs text-foreground/75 focus:border-cherry-primary/30 text-right h-auto shadow-none"
-                  style={{ fontFamily: 'ui-monospace, monospace' }}
+                  className="w-[80px] px-2.5 py-[5px] bg-muted/50 rounded-l-lg rounded-r-none border border-r-0 border-border/25 text-sm text-foreground focus:border-cherry-primary/30 text-right h-auto shadow-none font-mono"
                 />
-                <div className="px-2.5 py-[5px] bg-foreground/[0.04] border border-border/25 rounded-r-lg text-xs text-foreground/50 whitespace-nowrap">
+                <div className="px-2.5 py-[5px] bg-muted/50 border border-border/25 rounded-r-lg text-xs text-muted-foreground/60 whitespace-nowrap">
                   {currency} / 百万 Token
                 </div>
               </div>
@@ -1631,15 +1623,14 @@ function ModelEditPanel({ model, onClose, onSave }: {
 
             {/* Output Price */}
             <div className="flex items-center gap-3">
-              <span className="text-xs text-foreground/70 min-w-[56px]">输出价格</span>
+              <span className="text-sm text-foreground min-w-[56px]">输出价格</span>
               <div className="flex items-center gap-0 flex-1">
                 <Input
                   value={outputPrice}
                   onChange={e => setOutputPrice(e.target.value)}
-                  className="w-[80px] px-2.5 py-[5px] bg-foreground/[0.03] rounded-l-lg rounded-r-none border border-r-0 border-border/25 text-xs text-foreground/75 focus:border-cherry-primary/30 text-right h-auto shadow-none"
-                  style={{ fontFamily: 'ui-monospace, monospace' }}
+                  className="w-[80px] px-2.5 py-[5px] bg-muted/50 rounded-l-lg rounded-r-none border border-r-0 border-border/25 text-sm text-foreground focus:border-cherry-primary/30 text-right h-auto shadow-none font-mono"
                 />
-                <div className="px-2.5 py-[5px] bg-foreground/[0.04] border border-border/25 rounded-r-lg text-xs text-foreground/50 whitespace-nowrap">
+                <div className="px-2.5 py-[5px] bg-muted/50 border border-border/25 rounded-r-lg text-xs text-muted-foreground/60 whitespace-nowrap">
                   {currency} / 百万 Token
                 </div>
               </div>
@@ -1649,16 +1640,16 @@ function ModelEditPanel({ model, onClose, onSave }: {
       </div>
 
       {/* Footer */}
-      <div className="px-4 py-3 border-t border-border/20 flex items-center justify-end gap-2 flex-shrink-0">
-        <Button variant="outline" size="xs"
+      <div className="px-4 py-3 border-t border-border/30 flex items-center justify-end gap-2 flex-shrink-0">
+        <Button variant="outline" size="inline"
           onClick={onClose}
-          className="px-3 py-[5px] text-xs text-foreground/60 hover:text-foreground/80 hover:bg-accent h-auto"
+          className="px-3 py-[5px] text-xs text-muted-foreground hover:text-foreground hover:bg-accent"
         >
           取消
         </Button>
-        <Button variant="default"
+        <Button variant="default" size="inline"
           onClick={handleSave}
-          className="flex items-center gap-1.5 px-3.5 py-[5px] text-xs h-auto"
+          className="flex items-center gap-1.5 px-3.5 py-[5px] text-xs"
         >
           <Save size={10} />
           <span>保存</span>
@@ -1760,13 +1751,13 @@ function HealthCheckPanel({ provider, models, onClose }: {
 
   // Segmented control helper
   const SegBtn = ({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) => (
-    <Button
+    <Button size="inline"
       variant="ghost"
       onClick={onClick}
-      className={`relative px-3.5 py-[4px] text-xs transition-all duration-200 h-auto ${
+      className={`relative px-3.5 py-[4px] text-sm transition-all duration-200 ${
         active
-          ? 'text-foreground/85 bg-foreground/[0.07] shadow-[0_0.5px_2px_rgba(0,0,0,0.06)] font-medium'
-          : 'text-foreground/50 hover:text-foreground/65'
+          ? 'text-foreground bg-muted shadow-[0_0.5px_2px_rgba(0,0,0,0.06)] font-medium'
+          : 'text-muted-foreground/60 hover:text-foreground'
       }`}
     >
       {children}
@@ -1779,30 +1770,30 @@ function HealthCheckPanel({ provider, models, onClose }: {
       animate={{ x: 0 }}
       exit={{ x: '100%' }}
       transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-      className="absolute inset-y-2 right-2 w-[360px] bg-background border border-border/30 shadow-2xl flex flex-col z-30 rounded-2xl"
+      className="absolute inset-y-2 right-2 w-[360px] bg-background border border-border/30 shadow-2xl flex flex-col z-[var(--z-sticky)] rounded-2xl"
       onClick={e => e.stopPropagation()}
     >
       {/* Header */}
       <div className="flex items-center justify-between px-5 py-3.5 border-b border-border/15 flex-shrink-0">
         <div className="flex items-center gap-2">
-          <div className="w-[22px] h-[22px] rounded-lg bg-foreground/[0.06] flex items-center justify-center">
-            <HeartPulse size={11} className="text-foreground/60" />
+          <div className="w-[22px] h-[22px] rounded-lg bg-muted/50 flex items-center justify-center">
+            <HeartPulse size={11} className="text-muted-foreground" />
           </div>
-          <span className="text-sm text-foreground/85 font-semibold">模型健康检测</span>
+          <span className="text-sm text-foreground font-semibold">模型健康检测</span>
         </div>
-        <Button variant="ghost" size="icon-xs" onClick={onClose} className="w-6 h-6 text-foreground/40 hover:text-foreground/60 hover:bg-foreground/[0.05] transition-colors">
+        <Button variant="ghost" size="icon-xs" onClick={onClose} className="text-muted-foreground/60 hover:text-foreground hover:bg-accent/50 transition-colors">
           <X size={12} />
         </Button>
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto px-5 py-4 [&::-webkit-scrollbar]:w-[2px] [&::-webkit-scrollbar-thumb]:bg-border/20">
+      <div className="flex-1 overflow-y-auto px-5 py-4 scrollbar-thin-xs">
         {/* Warning banner */}
         <div className="flex items-start gap-2.5 p-3 rounded-xl bg-warning/[0.05] border border-warning/[0.12]">
           <div className="w-[18px] h-[18px] rounded-md bg-warning/15 flex items-center justify-center flex-shrink-0 mt-[1px]">
             <AlertTriangle size={10} className="text-warning/80" />
           </div>
-          <p className="text-xs text-foreground/60" style={{ lineHeight: '1.65' }}>
+          <p className="text-xs text-muted-foreground leading-relaxed">
             健康检查需要发送请求，请谨慎使用。按次收费的模型可能产生更多费用，请自行承担。
           </p>
         </div>
@@ -1812,8 +1803,8 @@ function HealthCheckPanel({ provider, models, onClose }: {
           <div className="mt-5 space-y-0">
             {/* Key mode */}
             <div className="flex items-center justify-between py-[9px]">
-              <span className="text-xs text-foreground/70">使用密钥</span>
-              <div className="flex items-center gap-[3px] p-[3px] rounded-lg bg-foreground/[0.03]">
+              <span className="text-sm text-foreground">使用密钥</span>
+              <div className="flex items-center gap-[3px] p-[3px] rounded-lg bg-muted/50">
                 <SegBtn active={keyMode === 'single'} onClick={() => setKeyMode('single')}>单个</SegBtn>
                 <SegBtn active={keyMode === 'all'} onClick={() => setKeyMode('all')}>所有</SegBtn>
               </div>
@@ -1821,8 +1812,8 @@ function HealthCheckPanel({ provider, models, onClose }: {
 
             {/* Concurrent */}
             <div className="flex items-center justify-between py-[9px]">
-              <span className="text-xs text-foreground/70">并发检测</span>
-              <div className="flex items-center gap-[3px] p-[3px] rounded-lg bg-foreground/[0.03]">
+              <span className="text-sm text-foreground">并发检测</span>
+              <div className="flex items-center gap-[3px] p-[3px] rounded-lg bg-muted/50">
                 <SegBtn active={!concurrent} onClick={() => setConcurrent(false)}>关闭</SegBtn>
                 <SegBtn active={concurrent} onClick={() => setConcurrent(true)}>开启</SegBtn>
               </div>
@@ -1830,25 +1821,25 @@ function HealthCheckPanel({ provider, models, onClose }: {
 
             {/* Timeout */}
             <div className="flex items-center justify-between py-[9px]">
-              <span className="text-xs text-foreground/70">超时时间</span>
+              <span className="text-sm text-foreground">超时时间</span>
               <div className="flex items-center">
                 <Input
                   type="number"
                   value={timeout}
                   onChange={e => setTimeoutVal(Math.max(1, parseInt(e.target.value) || 15))}
-                  className="w-[52px] px-2 py-[4px] bg-foreground/[0.03] border border-border/20 rounded-l-lg text-xs text-foreground/70 focus:border-foreground/15 transition-colors text-center h-auto shadow-none"
+                  className="w-[52px] px-2 py-[4px] bg-muted/50 border border-border/20 rounded-l-lg text-xs text-foreground focus:border-border/50 transition-colors text-center h-auto shadow-none"
                 />
-                <div className="px-2 py-[4px] bg-foreground/[0.05] border border-l-0 border-border/20 rounded-r-lg text-xs text-foreground/50">
+                <div className="px-2 py-[4px] bg-muted/50 border border-l-0 border-border/20 rounded-r-lg text-xs text-muted-foreground/60">
                   s
                 </div>
               </div>
             </div>
 
             {/* Enabled models info */}
-            <div className="pt-3 mt-2 border-t border-foreground/[0.05]">
+            <div className="pt-3 mt-2 border-t border-border/30">
               <div className="flex items-center gap-1.5 px-1">
-                <Info size={10} className="text-foreground/35" />
-                <span className="text-[9px] text-foreground/50">
+                <Info size={10} className="text-muted-foreground/40" />
+                <span className="text-xs text-muted-foreground/60">
                   将检测 {enabledModels.length} 个已启用的模型
                 </span>
               </div>
@@ -1863,12 +1854,12 @@ function HealthCheckPanel({ provider, models, onClose }: {
             {running && (
               <div className="mb-4">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-xs text-foreground/55">检测进度</span>
-                  <span className="text-xs text-foreground/50 tabular-nums">{progress} / {enabledModels.length}</span>
+                  <span className="text-xs text-muted-foreground">检测进度</span>
+                  <span className="text-xs text-muted-foreground/60 tabular-nums">{progress} / {enabledModels.length}</span>
                 </div>
-                <div className="w-full h-[3px] bg-foreground/[0.06] rounded-full overflow-hidden">
+                <div className="w-full h-[3px] bg-muted/50 rounded-full overflow-hidden">
                   <motion.div
-                    className="h-full bg-foreground/50 rounded-full"
+                    className="h-full bg-muted0 rounded-full"
                     initial={{ width: 0 }}
                     animate={{ width: `${enabledModels.length > 0 ? (progress / enabledModels.length) * 100 : 0}%` }}
                     transition={{ duration: 0.4, ease: 'easeOut' }}
@@ -1879,12 +1870,12 @@ function HealthCheckPanel({ provider, models, onClose }: {
 
             {/* Summary (when done) */}
             {!running && hasResults && (
-              <div className="flex items-center gap-4 mb-4 px-3.5 py-2.5 rounded-xl bg-foreground/[0.025] border border-foreground/[0.04]">
+              <div className="flex items-center gap-4 mb-4 px-3.5 py-2.5 rounded-xl bg-muted/50 border border-border/50">
                 <div className="flex items-center gap-1.5">
-                  <div className="w-[14px] h-[14px] rounded-full bg-foreground/[0.07] flex items-center justify-center">
-                    <CheckCircle2 size={9} className="text-foreground/60" />
+                  <div className="w-[14px] h-[14px] rounded-full bg-muted flex items-center justify-center">
+                    <CheckCircle2 size={9} className="text-muted-foreground" />
                   </div>
-                  <span className="text-xs text-foreground/55">{successCount} 成功</span>
+                  <span className="text-xs text-muted-foreground">{successCount} 成功</span>
                 </div>
                 {failCount > 0 && (
                   <div className="flex items-center gap-1.5">
@@ -1895,7 +1886,7 @@ function HealthCheckPanel({ provider, models, onClose }: {
                   </div>
                 )}
                 <div className="flex-1" />
-                <span className="text-[9px] text-foreground/45">共 {results.length} 项</span>
+                <span className="text-xs text-muted-foreground/60">共 {results.length} 项</span>
               </div>
             )}
 
@@ -1908,16 +1899,16 @@ function HealthCheckPanel({ provider, models, onClose }: {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: idx * 0.02, duration: 0.2 }}
                   className={`flex items-center gap-2.5 px-2.5 py-[6px] rounded-lg transition-colors ${
-                    r.status === 'fail' ? 'bg-destructive/[0.03]' : 'hover:bg-foreground/[0.02]'
+                    r.status === 'fail' ? 'bg-destructive/[0.03]' : 'hover:bg-accent/50'
                   }`}
                 >
                   {/* Status icon */}
                   <div className="w-4 h-4 flex items-center justify-center flex-shrink-0">
-                    {r.status === 'pending' && <div className="w-[6px] h-[6px] rounded-full bg-foreground/[0.08]" />}
+                    {r.status === 'pending' && <div className="w-[6px] h-[6px] rounded-full bg-muted" />}
                     {r.status === 'checking' && <Loader2 size={11} className="text-warning animate-spin" />}
                     {r.status === 'success' && (
                       <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: 'spring', damping: 15, stiffness: 400 }}>
-                        <CheckCircle2 size={11} className="text-foreground/60" />
+                        <CheckCircle2 size={11} className="text-muted-foreground" />
                       </motion.div>
                     )}
                     {r.status === 'fail' && (
@@ -1929,18 +1920,18 @@ function HealthCheckPanel({ provider, models, onClose }: {
                   {/* Model logo */}
                   <ModelLogo name={r.modelName} size={14} />
                   {/* Name */}
-                  <span className="text-xs text-foreground/65 truncate flex-1 min-w-0" style={{ fontFamily: 'ui-monospace, monospace' }}>
+                  <span className="text-xs text-muted-foreground truncate flex-1 min-w-0 font-mono">
                     {r.modelName}
                   </span>
                   {/* Latency or error */}
                   {r.status === 'success' && r.latency && (
-                    <span className="text-[9px] text-foreground/45 flex-shrink-0 tabular-nums">{r.latency}ms</span>
+                    <span className="text-xs text-muted-foreground/60 flex-shrink-0 tabular-nums">{r.latency}ms</span>
                   )}
                   {r.status === 'fail' && r.error && (
-                    <span className="text-[9px] text-destructive/60 flex-shrink-0">{r.error}</span>
+                    <span className="text-xs text-destructive/60 flex-shrink-0">{r.error}</span>
                   )}
                   {r.status === 'checking' && (
-                    <span className="text-[9px] text-warning/60 flex-shrink-0">检测中...</span>
+                    <span className="text-xs text-warning/60 flex-shrink-0">检测中...</span>
                   )}
                 </motion.div>
               ))}
@@ -1951,29 +1942,29 @@ function HealthCheckPanel({ provider, models, onClose }: {
 
       {/* Footer */}
       <div className="px-5 py-3.5 border-t border-border/15 flex items-center justify-end gap-2.5 flex-shrink-0">
-        <Button
+        <Button size="inline"
           variant="ghost"
           onClick={() => { handleCancel(); onClose(); }}
-          className="px-4 py-[5px] text-xs text-foreground/55 hover:text-foreground/75 hover:bg-foreground/[0.04] transition-colors h-auto"
+          className="px-4 py-[5px] text-xs text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-colors"
         >
           {hasResults && !running ? '关闭' : '取消'}
         </Button>
         {!hasResults && (
-          <Button
+          <Button size="inline"
             variant="default"
             onClick={handleStart}
             disabled={enabledModels.length === 0}
-            className="flex items-center gap-1.5 px-5 py-[6px] text-xs text-white bg-cherry-primary hover:bg-cherry-primary-dark transition-all duration-200 disabled:opacity-40 shadow-sm shadow-cherry-primary/20 h-auto"
+            className="flex items-center gap-1.5 px-5 py-[6px] text-xs disabled:opacity-30"
           >
             <HeartPulse size={10} />
             <span>开始检测</span>
           </Button>
         )}
         {hasResults && !running && (
-          <Button
+          <Button size="inline"
             variant="default"
             onClick={() => { setResults([]); setProgress(0); }}
-            className="flex items-center gap-1.5 px-5 py-[6px] text-xs text-white bg-cherry-primary hover:bg-cherry-primary-dark transition-all duration-200 shadow-sm shadow-cherry-primary/20 h-auto"
+            className="flex items-center gap-1.5 px-5 py-[6px] text-xs "
           >
             <RotateCcw size={10} />
             <span>重新检测</span>
@@ -2041,19 +2032,19 @@ function ModelManagementPanel({ provider, onClose }: { provider: Provider; onClo
       animate={{ x: 0 }}
       exit={{ x: '100%' }}
       transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-      className="absolute inset-y-2 right-2 w-[340px] bg-background border border-border/30 shadow-2xl flex flex-col z-30 rounded-2xl"
+      className="absolute inset-y-2 right-2 w-[340px] bg-background border border-border/30 shadow-2xl flex flex-col z-[var(--z-sticky)] rounded-2xl"
       onClick={e => e.stopPropagation()}
     >
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-border/20 flex-shrink-0">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-border/30 flex-shrink-0">
         <div className="flex items-center gap-2">
-          <span className="text-xs text-foreground/85 font-semibold">模型管理</span>
-          <span className="text-[9px] text-foreground/50 px-1.5 py-[1px] rounded-full bg-foreground/[0.04]">{enabledCount} / {models.length}</span>
+          <span className="text-sm text-foreground font-semibold">模型管理</span>
+          <span className="text-xs text-muted-foreground/60 px-1.5 py-[1px] rounded-full bg-muted/50">{enabledCount} / {models.length}</span>
         </div>
         <div className="flex items-center gap-1">
-          <Button variant="ghost" onClick={enableAll} className="text-[9px] text-foreground/50 hover:text-cherry-primary transition-colors px-1.5 py-[2px] h-auto">全选</Button>
-          <Button variant="ghost" onClick={disableAll} className="text-[9px] text-foreground/50 hover:text-destructive transition-colors px-1.5 py-[2px] h-auto">全不选</Button>
-          <Button variant="ghost" size="icon-xs" onClick={onClose} className="w-5 h-5 text-foreground/40 hover:text-foreground/65 hover:bg-accent transition-colors ml-1">
+          <Button variant="ghost" onClick={enableAll} size="inline" className="text-xs text-muted-foreground/60 hover:text-cherry-primary transition-colors px-1.5 py-[2px]">全选</Button>
+          <Button variant="ghost" onClick={disableAll} size="inline" className="text-xs text-muted-foreground/60 hover:text-destructive transition-colors px-1.5 py-[2px]">全不选</Button>
+          <Button variant="ghost" size="icon-xs" onClick={onClose} className="text-muted-foreground/60 hover:text-foreground hover:bg-accent transition-colors ml-1">
             <X size={11} />
           </Button>
         </div>
@@ -2061,52 +2052,45 @@ function ModelManagementPanel({ provider, onClose }: { provider: Provider; onClo
 
       {/* Search */}
       <div className="px-4 pt-3 pb-1.5 flex-shrink-0">
-        <div className="flex items-center gap-2 px-2.5 py-[5px] bg-foreground/[0.03] rounded-lg border border-border/30">
-          <Search size={10} className="text-foreground/40 flex-shrink-0" />
-          <Input
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            placeholder="搜索模型..."
-            className="flex-1 bg-transparent text-xs text-foreground/75 placeholder:text-foreground/35 min-w-0 h-auto shadow-none border-none p-0"
-          />
-          {search && (
-            <Button variant="ghost" size="icon-xs" onClick={() => setSearch('')} className="text-foreground/40 hover:text-foreground/60">
-              <X size={9} />
-            </Button>
-          )}
-        </div>
+        <SearchInput
+          value={search}
+          onChange={setSearch}
+          placeholder="搜索模型..."
+          iconSize={10}
+          wrapperClassName="flex items-center gap-2 px-2.5 py-[5px] bg-muted/50 rounded-lg border border-border/30"
+        />
       </div>
 
       {/* Filter tags */}
       <div className="px-4 pb-2 flex items-center gap-1 flex-wrap flex-shrink-0">
         {([['all', '全部'], ['enabled', '已启用'], ['disabled', '未启用']] as const).map(([key, label]) => (
-          <Button
+          <Button size="inline"
             variant="ghost"
             key={key}
             onClick={() => setStatusFilter(key)}
-            className={`px-2 py-[2px] rounded-full text-[9px] transition-colors h-auto ${
+            className={`px-2 py-[2px] rounded-full text-xs transition-colors ${
               statusFilter === key
-                ? 'bg-foreground/80 text-background font-medium'
-                : 'text-foreground/50 hover:text-foreground/70 hover:bg-foreground/[0.06]'
+                ? 'bg-accent/50 text-background font-medium'
+                : 'text-muted-foreground/60 hover:text-foreground hover:bg-accent/50'
             }`}
           >
             {label}
           </Button>
         ))}
-        <div className="w-px h-3 bg-foreground/[0.08] mx-0.5" />
+        <div className="w-px h-3 bg-muted mx-0.5" />
         {(Object.keys(CAPABILITY_CONFIG) as ModelCapability[]).filter(cap =>
           models.some(m => (m.capabilities || []).includes(cap))
         ).map(cap => {
           const Icon = CAPABILITY_ICONS[cap];
           return (
-            <Button
+            <Button size="inline"
               variant="ghost"
               key={cap}
               onClick={() => setMgmtCapFilter(mgmtCapFilter === cap ? null : cap)}
-              className={`flex items-center gap-[3px] px-1.5 py-[2px] rounded-full text-[9px] transition-colors h-auto ${
+              className={`flex items-center gap-[3px] px-1.5 py-[2px] rounded-full text-xs transition-colors ${
                 mgmtCapFilter === cap
                   ? CAPABILITY_CONFIG[cap].color + ' ring-1 ring-current'
-                  : 'text-foreground/55 hover:text-foreground/70 hover:bg-foreground/[0.05]'
+                  : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
               }`}
             >
               <Icon size={8} />
@@ -2117,25 +2101,25 @@ function ModelManagementPanel({ provider, onClose }: { provider: Provider; onClo
       </div>
 
       {/* Model List */}
-      <div className="flex-1 overflow-y-auto px-4 py-1 [&::-webkit-scrollbar]:w-[2px] [&::-webkit-scrollbar-thumb]:bg-border/20">
+      <div className="flex-1 overflow-y-auto px-4 py-1 scrollbar-thin-xs">
         {filtered.length === 0 ? (
-          <div className="py-8 text-center text-xs text-foreground/55">没有匹配的模型</div>
+          <EmptyState preset="no-result" title="没有匹配的模型" compact />
         ) : (
           Object.keys(mgmtGrouped).map(group => (
             <div key={group} className="mb-1">
               {/* Group header */}
               <div className="px-1 py-[3px] flex items-center gap-1.5">
-                <span className="text-[8px] text-foreground/55 font-medium">{group}</span>
-                <div className="flex-1 h-px bg-foreground/[0.06]" />
+                <span className="text-xs text-muted-foreground font-medium">{group}</span>
+                <div className="flex-1 h-px bg-muted/50" />
               </div>
               {mgmtGrouped[group].map(model => (
-                <div key={model.id} className="flex items-center gap-2 px-1.5 py-[5px] rounded-lg hover:bg-foreground/[0.03] transition-colors group">
+                <div key={model.id} className="flex items-center gap-2 px-1.5 py-[5px] rounded-lg hover:bg-accent/50 transition-colors group">
                   {/* Toggle */}
-                  <Toggle checked={model.enabled} onChange={() => toggleModel(model.id)} size="sm" />
+                  <Switch size="sm" checked={model.enabled} onCheckedChange={() => toggleModel(model.id)}  />
                   {/* Logo */}
                   <ModelLogo name={model.name} size={14} />
                   {/* Name */}
-                  <span className={`text-xs truncate flex-1 min-w-0 ${model.enabled ? 'text-foreground/85' : 'text-foreground/50'}`} style={{ fontFamily: 'ui-monospace, monospace' }}>
+                  <span className={`text-sm truncate flex-1 min-w-0 font-mono ${model.enabled ? 'text-foreground' : 'text-muted-foreground/60'}`}>
                     {model.name}
                   </span>
                   {/* Capability icons */}
@@ -2145,7 +2129,7 @@ function ModelManagementPanel({ provider, onClose }: { provider: Provider; onClo
                       return <Ic key={cap} size={8} className={CAPABILITY_CONFIG[cap].iconColor} />;
                     })}
                     {(model.capabilities || []).includes('free') && (
-                      <span className="text-[7px] text-lime-600/80 bg-lime-500/10 px-[3px] rounded ml-0.5">Free</span>
+                      <span className="text-xs text-accent-emerald/80 bg-accent-emerald/10 px-[3px] rounded ml-0.5">Free</span>
                     )}
                   </div>
                 </div>
@@ -2164,16 +2148,16 @@ function ModelManagementPanel({ provider, onClose }: { provider: Provider; onClo
                 onChange={e => setCustomName(e.target.value)}
                 onKeyDown={e => { if (e.key === 'Enter') addCustomModel(); if (e.key === 'Escape') setAddingCustom(false); }}
                 placeholder="输入模型 ID..."
-                className="flex-1 bg-transparent text-xs text-foreground/75 placeholder:text-foreground/40 min-w-0 h-auto shadow-none border-none p-0"
+                className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground/60 min-w-0 h-auto shadow-none border-none p-0"
               />
               <Button variant="ghost" size="icon-xs" onClick={addCustomModel} className="text-cherry-primary hover:text-cherry-primary-dark transition-colors"><Check size={11} /></Button>
-              <Button variant="ghost" size="icon-xs" onClick={() => setAddingCustom(false)} className="text-foreground/40 hover:text-foreground/60 transition-colors"><X size={11} /></Button>
+              <Button variant="ghost" size="icon-xs" onClick={() => setAddingCustom(false)} className="text-muted-foreground/60 hover:text-foreground transition-colors"><X size={11} /></Button>
             </div>
           ) : (
-            <Button
+            <Button size="inline"
               variant="ghost"
               onClick={() => setAddingCustom(true)}
-              className="w-full flex items-center justify-center gap-1.5 py-2 rounded-xl border border-dashed border-foreground/15 text-xs text-foreground/50 hover:text-foreground/70 hover:border-foreground/25 transition-colors h-auto"
+              className="w-full flex items-center justify-center gap-1.5 py-2 rounded-xl border border-dashed border-border/50 text-xs text-muted-foreground/60 hover:text-foreground hover:border-border transition-colors"
             >
               <Plus size={10} />
               <span>添加自定义模型</span>
@@ -2183,16 +2167,16 @@ function ModelManagementPanel({ provider, onClose }: { provider: Provider; onClo
       </div>
 
       {/* Footer actions */}
-      <div className="px-4 py-2.5 border-t border-border/20 flex items-center gap-2 flex-shrink-0">
-        <Button variant="outline" size="xs" className="flex items-center gap-1.5 px-2.5 py-[4px] text-xs text-foreground/55 hover:text-foreground/75 hover:bg-accent transition-colors h-auto">
+      <div className="px-4 py-2.5 border-t border-border/30 flex items-center gap-2 flex-shrink-0">
+        <Button variant="outline" size="xs" className="flex items-center gap-1.5 px-2.5 text-xs text-muted-foreground hover:text-foreground hover:bg-accent transition-colors">
           <RefreshCw size={9} />
           <span>刷新列表</span>
         </Button>
         <div className="flex-1" />
-        <Button
+        <Button size="inline"
           variant="default"
           onClick={onClose}
-          className="px-3 py-[4px] text-xs text-white bg-cherry-primary hover:bg-cherry-primary-dark transition-colors h-auto"
+          className="px-3 py-[4px] text-xs "
         >
           完成
         </Button>
@@ -2254,18 +2238,18 @@ function FetchResultPanel({ result, onClose, onConfirm }: {
       animate={{ x: 0 }}
       exit={{ x: '100%' }}
       transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-      className="absolute inset-y-2 right-2 w-[320px] bg-background border border-border/30 shadow-2xl flex flex-col z-30 rounded-2xl"
+      className="absolute inset-y-2 right-2 w-[320px] bg-background border border-border/30 shadow-2xl flex flex-col z-[var(--z-sticky)] rounded-2xl"
       onClick={e => e.stopPropagation()}
     >
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-border/20 flex-shrink-0">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-border/30 flex-shrink-0">
         <div className="flex items-center gap-2">
           <div className="w-5 h-5 rounded-full bg-cherry-active-bg flex items-center justify-center">
             <Download size={10} className="text-cherry-primary" />
           </div>
-          <span className="text-xs text-foreground/85 font-semibold">拉取结果</span>
+          <span className="text-sm text-foreground font-semibold">拉取结果</span>
         </div>
-        <Button variant="ghost" size="icon-xs" onClick={onClose} className="w-5 h-5 text-foreground/40 hover:text-foreground/65 hover:bg-accent transition-colors">
+        <Button variant="ghost" size="icon-xs" onClick={onClose} className="text-muted-foreground/60 hover:text-foreground hover:bg-accent transition-colors">
           <X size={11} />
         </Button>
       </div>
@@ -2274,11 +2258,11 @@ function FetchResultPanel({ result, onClose, onConfirm }: {
       <div className="flex-1 overflow-y-auto px-4 py-3 space-y-4">
         {!hasChanges && (
           <div className="flex flex-col items-center justify-center py-10 text-center">
-            <div className="w-10 h-10 rounded-full bg-foreground/[0.04] flex items-center justify-center mb-3">
-              <CheckCircle2 size={16} className="text-foreground/45" />
+            <div className="w-10 h-10 rounded-full bg-muted/50 flex items-center justify-center mb-3">
+              <CheckCircle2 size={16} className="text-muted-foreground/60" />
             </div>
-            <p className="text-xs text-foreground/65 font-medium">模型列表已是最新</p>
-            <p className="text-[9px] text-foreground/45 mt-1">没有发现新模型或失效模型</p>
+            <p className="text-xs text-muted-foreground font-medium">模型列表已是最新</p>
+            <p className="text-xs text-muted-foreground/60 mt-1">没有发现新模型或失效模型</p>
           </div>
         )}
 
@@ -2288,13 +2272,13 @@ function FetchResultPanel({ result, onClose, onConfirm }: {
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-1.5">
                 <div className="w-[6px] h-[6px] rounded-full bg-cherry-primary" />
-                <span className="text-xs text-foreground/75 font-medium">新增模型</span>
-                <span className="text-[9px] text-foreground/45">({result.newModels.length})</span>
+                <span className="text-sm text-foreground font-medium">新增模型</span>
+                <span className="text-xs text-muted-foreground/60">({result.newModels.length})</span>
               </div>
-              <Button
+              <Button size="inline"
                 variant="ghost"
                 onClick={toggleAllNew}
-                className="text-[9px] text-foreground/50 hover:text-cherry-primary transition-colors px-1.5 py-[2px] hover:bg-cherry-active-bg h-auto"
+                className="text-xs text-muted-foreground/60 hover:text-cherry-primary transition-colors px-1.5 py-[2px] hover:bg-cherry-active-bg"
               >
                 {allNewSelected ? '取消全选' : '全选添加'}
               </Button>
@@ -2307,27 +2291,21 @@ function FetchResultPanel({ result, onClose, onConfirm }: {
                     key={model.id}
                     onClick={() => toggleNewItem(model.id)}
                     className={`flex items-center gap-2.5 px-2.5 py-[8px] rounded-xl cursor-pointer transition-colors ${
-                      checked ? 'bg-cherry-active-bg' : 'hover:bg-foreground/[0.025]'
+                      checked ? 'bg-cherry-active-bg' : 'hover:bg-accent/50'
                     }`}
                   >
-                    <div className={`w-[14px] h-[14px] rounded-[4px] border flex items-center justify-center flex-shrink-0 transition-colors ${
-                      checked
-                        ? 'bg-cherry-primary border-cherry-primary'
-                        : 'border-foreground/15 hover:border-foreground/25'
-                    }`}>
-                      {checked && <Check size={9} className="text-white" />}
-                    </div>
+                    <Checkbox checked={checked} className="flex-shrink-0" />
                     <ModelLogo name={model.name} size={22} />
                     <div className="flex-1 min-w-0">
-                      <p className="text-xs text-foreground/80 truncate font-medium">
+                      <p className="text-sm text-foreground truncate font-medium">
                         {model.displayName || model.name}
                       </p>
-                      <p className="text-[8px] text-foreground/40 mt-[1px] truncate" style={{ fontFamily: 'ui-monospace, monospace' }}>
+                      <p className="text-xs text-muted-foreground/60 mt-[1px] truncate font-mono">
                         {model.name}
                       </p>
                     </div>
                     {model.contextWindow && (
-                      <span className="text-[8px] text-foreground/40 flex-shrink-0">{model.contextWindow}</span>
+                      <span className="text-xs text-muted-foreground/60 flex-shrink-0">{model.contextWindow}</span>
                     )}
                     <div className="flex items-center gap-[3px] flex-shrink-0">
                       {(model.capabilities || []).filter(c => c !== 'free').slice(0, 3).map(cap => {
@@ -2349,13 +2327,13 @@ function FetchResultPanel({ result, onClose, onConfirm }: {
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-1.5">
                 <div className="w-[6px] h-[6px] rounded-full bg-destructive" />
-                <span className="text-xs text-foreground/75 font-medium">已失效模型</span>
-                <span className="text-[9px] text-foreground/45">({result.removedModels.length})</span>
+                <span className="text-sm text-foreground font-medium">已失效模型</span>
+                <span className="text-xs text-muted-foreground/60">({result.removedModels.length})</span>
               </div>
-              <Button
+              <Button size="inline"
                 variant="ghost"
                 onClick={toggleAllRemoved}
-                className="text-[9px] text-foreground/50 hover:text-destructive transition-colors px-1.5 py-[2px] hover:bg-destructive/[0.06] h-auto"
+                className="text-xs text-muted-foreground/60 hover:text-destructive transition-colors px-1.5 py-[2px] hover:bg-destructive/[0.06]"
               >
                 {allRemovedSelected ? '取消全选' : '全选删除'}
               </Button>
@@ -2363,7 +2341,7 @@ function FetchResultPanel({ result, onClose, onConfirm }: {
             <div className="p-2.5 rounded-xl bg-destructive/[0.03] border border-destructive/[0.08]">
               <div className="flex items-start gap-1.5 mb-2.5">
                 <AlertTriangle size={10} className="text-destructive/50 mt-[1px] flex-shrink-0" />
-                <p className="text-[9px] text-foreground/50">以下模型在服务商接口中已不存在，勾选以从列表中删除</p>
+                <p className="text-xs text-muted-foreground/60">以下模型在服务商接口中已不存在，勾选以从列表中删除</p>
               </div>
               <div className="space-y-[2px]">
                 {result.removedModels.map(model => {
@@ -2373,22 +2351,16 @@ function FetchResultPanel({ result, onClose, onConfirm }: {
                       key={model.id}
                       onClick={() => toggleRemovedItem(model.id)}
                       className={`flex items-center gap-2.5 px-2 py-[7px] rounded-lg cursor-pointer transition-colors ${
-                        checked ? 'bg-destructive/[0.06]' : 'hover:bg-foreground/[0.025]'
+                        checked ? 'bg-destructive/[0.06]' : 'hover:bg-accent/50'
                       }`}
                     >
-                      <div className={`w-[14px] h-[14px] rounded-[4px] border flex items-center justify-center flex-shrink-0 transition-colors ${
-                        checked
-                          ? 'bg-destructive border-destructive'
-                          : 'border-foreground/15 hover:border-foreground/25'
-                      }`}>
-                        {checked && <Check size={9} className="text-white" />}
-                      </div>
+                      <Checkbox checked={checked} className="flex-shrink-0" />
                       <ModelLogo name={model.name} size={20} />
                       <div className="flex-1 min-w-0">
-                        <p className="text-xs text-foreground/60 truncate line-through font-medium">
+                        <p className="text-sm text-muted-foreground truncate line-through font-medium">
                           {model.displayName || model.name}
                         </p>
-                        <p className="text-[8px] text-foreground/35 mt-[1px] truncate" style={{ fontFamily: 'ui-monospace, monospace' }}>
+                        <p className="text-xs text-muted-foreground/40 mt-[1px] truncate font-mono">
                           {model.name}
                         </p>
                       </div>
@@ -2403,8 +2375,8 @@ function FetchResultPanel({ result, onClose, onConfirm }: {
 
       {/* Summary & Actions */}
       {hasChanges && (
-        <div className="px-4 py-3 border-t border-border/20 flex-shrink-0 space-y-2.5">
-          <div className="flex items-center gap-3 text-[9px] text-foreground/50">
+        <div className="px-4 py-3 border-t border-border/30 flex-shrink-0 space-y-2.5">
+          <div className="flex items-center gap-3 text-xs text-muted-foreground/60">
             {hasNewModels && (
               <span className="flex items-center gap-1">
                 <Plus size={8} className="text-cherry-primary/60" />
@@ -2419,18 +2391,18 @@ function FetchResultPanel({ result, onClose, onConfirm }: {
             )}
           </div>
           <div className="flex items-center gap-2">
-            <Button
+            <Button size="inline"
               variant="outline"
               onClick={onClose}
-              className="flex-1 px-3 py-[5px] text-xs text-foreground/55 hover:text-foreground/75 hover:bg-accent transition-colors h-auto"
+              className="flex-1 px-3 py-[5px] text-xs text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
             >
               取消
             </Button>
-            <Button
+            <Button size="inline"
               variant="default"
               onClick={() => onConfirm(selectedNew, selectedRemoved)}
               disabled={selectedNew.size === 0 && selectedRemoved.size === 0}
-              className="flex-1 px-3 py-[5px] text-xs text-white bg-cherry-primary hover:bg-cherry-primary-dark transition-colors disabled:opacity-40 disabled:cursor-not-allowed h-auto"
+              className="flex-1 px-3 py-[5px] text-xs disabled:opacity-30"
             >
               确认应用
             </Button>
@@ -2439,11 +2411,11 @@ function FetchResultPanel({ result, onClose, onConfirm }: {
       )}
 
       {!hasChanges && (
-        <div className="px-4 py-3 border-t border-border/20 flex-shrink-0">
-          <Button
+        <div className="px-4 py-3 border-t border-border/30 flex-shrink-0">
+          <Button size="inline"
             variant="default"
             onClick={onClose}
-            className="w-full px-3 py-[5px] text-xs text-white bg-cherry-primary hover:bg-cherry-primary-dark transition-colors h-auto"
+            className="w-full px-3 py-[5px] text-xs "
           >
             好的
           </Button>
@@ -2462,53 +2434,53 @@ function CherryINAccountSection() {
 
   if (!loggedIn) {
     return (
-      <div className="bg-gradient-to-br from-foreground/[0.04] to-foreground/[0.03] border border-foreground/[0.08] rounded-2xl p-4">
+      <div className="bg-gradient-to-br from-muted/50 to-muted/30 border border-border/50 rounded-2xl p-4">
         <div className="flex items-center gap-3 mb-3">
           <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-foreground/50 to-foreground/55 flex items-center justify-center text-white text-sm shadow-lg shadow-foreground/[0.1]">
             🍒
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-xs text-foreground/85 font-medium">Cherry IN 账户</p>
-            <p className="text-[9px] text-foreground/45 mt-0.5">登录后即可使用所有模型服务</p>
+            <p className="text-sm text-foreground font-medium">Cherry IN 账户</p>
+            <p className="text-xs text-muted-foreground/60 mt-0.5">登录后即可使用所有模型服务</p>
           </div>
         </div>
-        <Button
+        <Button size="inline"
           variant="default"
           onClick={() => setLoggedIn(true)}
-          className="w-full flex items-center justify-center gap-2 py-[7px] rounded-xl bg-gradient-to-r from-foreground/50 to-foreground/55 text-white text-xs hover:from-foreground/60 hover:to-foreground/55 transition-all shadow-sm font-medium h-auto"
+          className="w-full flex items-center justify-center gap-2 py-[7px] rounded-xl bg-gradient-to-r from-foreground/50 to-foreground/55 text-xs hover:from-foreground/60 hover:to-foreground/55 transition-all shadow-sm font-medium"
         >
           <ExternalLink size={11} />
           <span>OAuth 授权登录</span>
         </Button>
         <div className="flex items-center justify-center gap-4 mt-2.5">
-          <Button variant="ghost" className="text-[9px] text-foreground/40 hover:text-foreground/60 transition-colors h-auto p-0">使用 API Key 登录</Button>
-          <span className="text-foreground/15">|</span>
-          <Button variant="ghost" className="text-[9px] text-foreground/40 hover:text-foreground/60 transition-colors h-auto p-0">注册账户</Button>
+          <Button variant="ghost" size="inline" className="text-xs text-muted-foreground/60 hover:text-foreground transition-colors p-0">使用 API Key 登录</Button>
+          <span className="text-muted-foreground/50">|</span>
+          <Button variant="ghost" size="inline" className="text-xs text-muted-foreground/60 hover:text-foreground transition-colors p-0">注册账户</Button>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="bg-gradient-to-br from-foreground/[0.04] to-foreground/[0.03] border border-foreground/[0.08] rounded-2xl p-4">
+    <div className="bg-gradient-to-br from-muted/50 to-muted/30 border border-border/50 rounded-2xl p-4">
       <div className="flex items-center gap-3 mb-3">
         <div className="relative">
           <div className="w-9 h-9 rounded-full bg-gradient-to-br from-foreground/45 to-foreground/50 flex items-center justify-center text-white text-sm shadow-lg shadow-foreground/[0.1] font-semibold">
             S
           </div>
-          <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-foreground/50 border-2 border-background" />
+          <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-muted0 border-2 border-background" />
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1.5">
-            <p className="text-xs text-foreground/85 truncate font-medium">Siin</p>
-            <span className="px-1.5 py-[1px] rounded-md bg-amber-500/10 text-[8px] text-amber-500 font-medium">Pro</span>
+            <p className="text-sm text-foreground truncate font-medium">Siin</p>
+            <span className="px-1.5 py-[1px] rounded-md bg-warning/10 text-xs text-warning font-medium">Pro</span>
           </div>
-          <p className="text-[9px] text-foreground/40 mt-0.5 truncate">siin@gmail.com</p>
+          <p className="text-xs text-muted-foreground/60 mt-0.5 truncate">siin@gmail.com</p>
         </div>
-        <Button
+        <Button size="inline"
           variant="ghost"
           onClick={() => setLoggedIn(false)}
-          className="text-[9px] text-foreground/35 hover:text-foreground/55 transition-colors px-2 py-1 hover:bg-foreground/[0.04] h-auto"
+          className="text-xs text-muted-foreground/40 hover:text-foreground transition-colors px-2 py-1 hover:bg-accent/50"
         >
           退出登录
         </Button>
@@ -2516,44 +2488,44 @@ function CherryINAccountSection() {
 
       {/* Balance & Usage */}
       <div className="grid grid-cols-3 gap-2">
-        <div className="bg-background/60 rounded-xl px-3 py-2.5 border border-foreground/[0.04]">
-          <p className="text-[8px] text-foreground/30 tracking-wide">账户余额</p>
+        <div className="bg-background/60 rounded-xl px-3 py-2.5 border border-border/50">
+          <p className="text-xs text-muted-foreground/40 tracking-wide">账户余额</p>
           <div className="flex items-baseline gap-0.5 mt-1">
-            <span className="text-[9px] text-foreground/25">$</span>
-            <span className="text-base text-foreground/60 font-bold">128.50</span>
+            <span className="text-xs text-muted-foreground/40">$</span>
+            <span className="text-base text-muted-foreground font-bold">128.50</span>
           </div>
-          <Button variant="ghost" className="mt-1.5 text-[8px] text-cherry-primary/70 hover:text-cherry-primary transition-colors h-auto p-0">充值</Button>
+          <Button variant="ghost" size="inline" className="mt-1.5 text-xs text-cherry-primary/70 hover:text-cherry-primary transition-colors p-0">充值</Button>
         </div>
-        <div className="bg-background/60 rounded-xl px-3 py-2.5 border border-foreground/[0.04]">
-          <p className="text-[8px] text-foreground/30 tracking-wide">本月用量</p>
+        <div className="bg-background/60 rounded-xl px-3 py-2.5 border border-border/50">
+          <p className="text-xs text-muted-foreground/40 tracking-wide">本月用量</p>
           <div className="flex items-baseline gap-0.5 mt-1">
-            <span className="text-base text-foreground/65 font-bold">2.4</span>
-            <span className="text-[9px] text-foreground/25">M</span>
+            <span className="text-base text-muted-foreground font-bold">2.4</span>
+            <span className="text-xs text-muted-foreground/40">M</span>
           </div>
-          <p className="mt-1.5 text-[8px] text-foreground/25">Tokens</p>
+          <p className="mt-1.5 text-xs text-muted-foreground/40">Tokens</p>
         </div>
-        <div className="bg-background/60 rounded-xl px-3 py-2.5 border border-foreground/[0.04]">
-          <p className="text-[8px] text-foreground/30 tracking-wide">本月消费</p>
+        <div className="bg-background/60 rounded-xl px-3 py-2.5 border border-border/50">
+          <p className="text-xs text-muted-foreground/40 tracking-wide">本月消费</p>
           <div className="flex items-baseline gap-0.5 mt-1">
-            <span className="text-[9px] text-foreground/25">$</span>
-            <span className="text-base text-foreground/65 font-bold">6.82</span>
+            <span className="text-xs text-muted-foreground/40">$</span>
+            <span className="text-base text-muted-foreground font-bold">6.82</span>
           </div>
           <div className="flex items-center gap-1 mt-1.5">
-            <span className="text-[8px] text-foreground/45">↓ 8%</span>
-            <span className="text-[8px] text-foreground/20">较上月</span>
+            <span className="text-xs text-muted-foreground/60">↓ 8%</span>
+            <span className="text-xs text-muted-foreground/50">较上月</span>
           </div>
         </div>
       </div>
 
       {/* Usage breakdown */}
-      <div className="mt-2.5 bg-background/60 rounded-xl px-3 py-2.5 border border-foreground/[0.04]">
+      <div className="mt-2.5 bg-background/60 rounded-xl px-3 py-2.5 border border-border/50">
         <div className="flex items-center justify-between mb-2">
-          <p className="text-[8px] text-foreground/30 tracking-wide">模型消费分布</p>
+          <p className="text-xs text-muted-foreground/40 tracking-wide">模型消费分布</p>
           <Button
             variant="ghost"
             size="icon-xs"
             onClick={() => setShowBalance(v => !v)}
-            className="text-foreground/30 hover:text-foreground/50 transition-colors"
+            className="text-muted-foreground/40 hover:text-foreground transition-colors"
           >
             {showBalance ? <Eye size={9} /> : <EyeOff size={9} />}
           </Button>
@@ -2568,9 +2540,9 @@ function CherryINAccountSection() {
             ].map(item => (
               <div key={item.name} className="flex items-center gap-2">
                 <div className="w-1 h-1 rounded-full flex-shrink-0" style={{ backgroundColor: item.color }} />
-                <span className="text-[9px] text-foreground/50 flex-1 truncate">{item.name}</span>
-                <span className="text-[9px] text-foreground/30 flex-shrink-0">{item.amount}</span>
-                <div className="w-10 h-[2px] rounded-full bg-foreground/[0.04] overflow-hidden flex-shrink-0">
+                <span className="text-xs text-muted-foreground/60 flex-1 truncate">{item.name}</span>
+                <span className="text-xs text-muted-foreground/40 flex-shrink-0">{item.amount}</span>
+                <div className="w-10 h-[2px] rounded-full bg-muted/50 overflow-hidden flex-shrink-0">
                   <div className="h-full rounded-full" style={{ width: `${item.pct}%`, backgroundColor: item.color, opacity: 0.5 }} />
                 </div>
               </div>
@@ -2702,32 +2674,30 @@ function ProviderDetail({ provider }: { provider: Provider }) {
     <div className="flex-1 flex flex-col min-h-0 relative">
       {/* Header */}
       <div className="flex items-center gap-3 px-5 py-3.5 flex-shrink-0">
-        <div className="w-8 h-8 rounded-xl flex items-center justify-center text-sm text-white flex-shrink-0 font-semibold" style={{ background: provider.color }}>
-          {provider.logo}
-        </div>
+        <BrandLogo id={provider.id} fallbackLetter={provider.logo} fallbackColor={provider.color} size={32} className="rounded-xl" />
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
-            <h3 className="text-sm text-foreground/90 font-semibold">{provider.name}</h3>
+            <Typography variant="subtitle" className="font-semibold">{provider.name}</Typography>
             {provider.docsUrl && (
-              <a href={provider.docsUrl} className="text-[9px] text-cherry-primary/80 hover:text-cherry-primary transition-colors">文档</a>
+              <a href={provider.docsUrl} className="text-xs text-cherry-primary/80 hover:text-cherry-primary transition-colors">文档</a>
             )}
           </div>
-          <p className="text-[9px] text-foreground/65 mt-0.5">{provider.subtitle}</p>
+          <p className="text-xs text-muted-foreground mt-0.5">{provider.subtitle}</p>
         </div>
-        <Toggle checked={enabled} onChange={setEnabled} />
+        <Switch size="sm" checked={enabled} onCheckedChange={setEnabled} />
       </div>
 
       {/* Endpoint Tabs */}
-      <div className="flex items-center gap-0.5 px-5 flex-shrink-0 border-b border-foreground/[0.05]">
+      <div className="flex items-center gap-0.5 px-5 flex-shrink-0 border-b border-border/30">
         {provider.endpoints.map(ep => (
-          <Button
+          <Button size="inline"
             variant="ghost"
             key={ep.id}
             onClick={() => setActiveEndpoint(ep.id)}
-            className={`px-2.5 py-[6px] text-xs transition-colors relative h-auto ${
+            className={`px-2.5 py-[6px] text-sm transition-colors relative ${
               activeEndpoint === ep.id
                 ? 'text-cherry-primary font-medium'
-                : 'text-foreground/65 hover:text-foreground/85'
+                : 'text-muted-foreground hover:text-foreground'
             }`}
           >
             {ep.name}
@@ -2736,14 +2706,14 @@ function ProviderDetail({ provider }: { provider: Provider }) {
             )}
           </Button>
         ))}
-        <Button variant="ghost" className="flex items-center gap-1 px-2 py-[6px] text-xs text-cherry-primary/70 hover:text-cherry-primary transition-colors ml-auto h-auto">
+        <Button variant="ghost" size="inline" className="flex items-center gap-1 px-2 py-[6px] text-sm text-cherry-primary/70 hover:text-cherry-primary transition-colors ml-auto">
           <Plus size={9} />
           <span>新建端点</span>
         </Button>
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto px-5 py-4 space-y-4 [&::-webkit-scrollbar]:w-[3px] [&::-webkit-scrollbar-thumb]:bg-border/20">
+      <div className="flex-1 overflow-y-auto px-5 py-4 space-y-4 scrollbar-thin">
         {/* Cherry IN OAuth & Balance Section */}
         {provider.id === 'cherry-in' && (
           <CherryINAccountSection />
@@ -2751,26 +2721,26 @@ function ProviderDetail({ provider }: { provider: Provider }) {
 
         {/* Connection Config */}
         <div>
-          <p className="text-xs text-foreground/80 mb-2.5 font-medium">连接认证 (Authentication)</p>
+          <p className="text-sm text-foreground mb-2.5 font-medium">连接认证 (Authentication)</p>
           <div className="space-y-2.5">
             {/* API Key / Base URL */}
             {endpoint?.authType === 'api-key' && (
               <div>
-                <label className="text-[9px] text-foreground/65 mb-1 block">API Key</label>
+                <label className="text-sm text-muted-foreground mb-1 block">API Key</label>
                 <div className="flex items-center gap-1.5">
-                  <div className="flex-1 flex items-center px-2.5 py-[5px] bg-foreground/[0.03] rounded-lg border border-border/30">
+                  <div className="flex-1 flex items-center px-2.5 py-[5px] bg-muted/50 rounded-lg border border-border/30">
                     <Input
                       type={showKey ? 'text' : 'password'}
                       value={endpoint.apiKey}
                       readOnly
                       placeholder="输入 API Key"
-                      className="flex-1 bg-transparent text-xs text-foreground/75 placeholder:text-foreground/30 min-w-0 h-auto shadow-none border-none p-0"
+                      className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground/60 min-w-0 h-auto shadow-none border-none p-0"
                     />
-                    <Button variant="ghost" size="icon-xs" onClick={() => setShowKey(v => !v)} className="text-foreground/45 hover:text-foreground/65 transition-colors ml-1.5">
+                    <Button variant="ghost" size="icon-xs" onClick={() => setShowKey(v => !v)} className="text-muted-foreground/60 hover:text-foreground transition-colors ml-1.5">
                       {showKey ? <EyeOff size={10} /> : <Eye size={10} />}
                     </Button>
                   </div>
-                  <Button variant="outline" size="icon-xs" className="w-6 h-6 border border-border/30 text-foreground/45 hover:text-foreground/65 hover:bg-accent transition-colors">
+                  <Button variant="outline" size="icon-xs" className="border border-border/30 text-muted-foreground/60 hover:text-foreground hover:bg-accent transition-colors">
                     <Copy size={9} />
                   </Button>
                 </div>
@@ -2778,16 +2748,16 @@ function ProviderDetail({ provider }: { provider: Provider }) {
             )}
 
             <div>
-              <label className="text-[9px] text-foreground/65 mb-1 block">API 地址 (Endpoint URL)</label>
+              <label className="text-sm text-muted-foreground mb-1 block">API 地址 (Endpoint URL)</label>
               <div className="flex items-center gap-1.5">
-                <div className="flex-1 flex items-center px-2.5 py-[5px] bg-foreground/[0.03] rounded-lg border border-border/30">
+                <div className="flex-1 flex items-center px-2.5 py-[5px] bg-muted/50 rounded-lg border border-border/30">
                   <Input
                     type="text"
                     value={endpoint?.baseUrl || ''}
                     readOnly
-                    className="flex-1 bg-transparent text-xs text-foreground/75 min-w-0 h-auto shadow-none border-none p-0"
+                    className="flex-1 bg-transparent text-sm text-foreground min-w-0 h-auto shadow-none border-none p-0"
                   />
-                  <Button variant="ghost" size="icon-xs" className="text-foreground/40 hover:text-foreground/60 transition-colors ml-1.5">
+                  <Button variant="ghost" size="icon-xs" className="text-muted-foreground/60 hover:text-foreground transition-colors ml-1.5">
                     <ExternalLink size={9} />
                   </Button>
                 </div>
@@ -2795,7 +2765,7 @@ function ProviderDetail({ provider }: { provider: Provider }) {
                   variant="outline"
                   size="icon-xs"
                   onClick={() => setShowHeadersPanel(true)}
-                  className="w-6 h-6 border border-border/30 text-foreground/45 hover:text-foreground/65 hover:bg-accent transition-colors"
+                  className="w-6 h-6 border border-border/30 text-muted-foreground/60 hover:text-foreground hover:bg-accent transition-colors"
                   title="自定义请求头"
                 >
                   <SlidersHorizontal size={9} />
@@ -2805,13 +2775,13 @@ function ProviderDetail({ provider }: { provider: Provider }) {
 
             {endpoint?.projectId && (
               <div>
-                <label className="text-[9px] text-foreground/65 mb-1 block">项目 ID (Project ID)</label>
-                <div className="flex items-center px-2.5 py-[5px] bg-foreground/[0.03] rounded-lg border border-border/30">
+                <label className="text-sm text-muted-foreground mb-1 block">项目 ID (Project ID)</label>
+                <div className="flex items-center px-2.5 py-[5px] bg-muted/50 rounded-lg border border-border/30">
                   <Input
                     type="text"
                     value={endpoint.projectId}
                     readOnly
-                    className="flex-1 bg-transparent text-xs text-foreground/75 min-w-0 h-auto shadow-none border-none p-0"
+                    className="flex-1 bg-transparent text-sm text-foreground min-w-0 h-auto shadow-none border-none p-0"
                   />
                 </div>
               </div>
@@ -2820,30 +2790,22 @@ function ProviderDetail({ provider }: { provider: Provider }) {
             {/* Auth Type */}
             {(endpoint?.authType === 'service-account' || endpoint?.authType === 'access-token') && (
               <div>
-                <label className="text-[9px] text-foreground/65 mb-1.5 block">认证方式</label>
-                <div className="flex items-center gap-3">
+                <label className="text-sm text-muted-foreground mb-1.5 block">认证方式</label>
+                <RadioGroup value={endpoint.authType} onValueChange={v => setEndpoint(p => ({ ...p, authType: v as 'service-account' | 'access-token' }))} className="flex items-center gap-3">
                   <label className="flex items-center gap-1.5 cursor-pointer">
-                    <div className={`w-3.5 h-3.5 rounded-full border-2 flex items-center justify-center ${
-                      endpoint.authType === 'service-account' ? 'border-cherry-primary' : 'border-foreground/20'
-                    }`}>
-                      {endpoint.authType === 'service-account' && <div className="w-1.5 h-1.5 rounded-full bg-cherry-primary" />}
-                    </div>
-                    <span className="text-xs text-foreground/70">Service Account (JSON)</span>
+                    <RadioGroupItem value="service-account" />
+                    <span className="text-sm text-foreground">Service Account (JSON)</span>
                   </label>
                   <label className="flex items-center gap-1.5 cursor-pointer">
-                    <div className={`w-3.5 h-3.5 rounded-full border-2 flex items-center justify-center ${
-                      endpoint.authType === 'access-token' ? 'border-cherry-primary' : 'border-foreground/20'
-                    }`}>
-                      {endpoint.authType === 'access-token' && <div className="w-1.5 h-1.5 rounded-full bg-cherry-primary" />}
-                    </div>
-                    <span className="text-xs text-foreground/70">Access Token</span>
+                    <RadioGroupItem value="access-token" />
+                    <span className="text-sm text-foreground">Access Token</span>
                   </label>
-                </div>
+                </RadioGroup>
 
                 {endpoint.authType === 'service-account' && (
-                  <div className="mt-2.5 border-2 border-dashed border-foreground/[0.08] rounded-xl p-4 flex flex-col items-center justify-center bg-foreground/[0.015] cursor-pointer hover:border-foreground/15 transition-colors">
-                    <Upload size={16} className="text-foreground/40 mb-1.5" />
-                    <p className="text-[9px] text-foreground/60">拖拽 JSON 密钥文件到此处，或点击上传</p>
+                  <div className="mt-2.5 border-2 border-dashed border-border/50 rounded-xl p-4 flex flex-col items-center justify-center bg-muted/30 cursor-pointer hover:border-border/50 transition-colors">
+                    <Upload size={16} className="text-muted-foreground/60 mb-1.5" />
+                    <p className="text-xs text-muted-foreground">拖拽 JSON 密钥文件到此处，或点击上传</p>
                   </div>
                 )}
               </div>
@@ -2851,16 +2813,15 @@ function ProviderDetail({ provider }: { provider: Provider }) {
 
             {/* Test & Action buttons */}
             <div className="flex items-center gap-2 pt-1">
-              <Button variant="ghost" className="flex items-center gap-1.5 px-2.5 py-[4px] bg-cherry-active-bg text-cherry-primary text-xs hover:bg-cherry-primary/15 transition-colors h-auto">
+              <Button variant="ghost" size="inline" className="flex items-center gap-1.5 px-2.5 py-[4px] bg-cherry-active-bg text-cherry-primary text-xs hover:bg-cherry-primary/15 transition-colors">
                 <Activity size={9} />
                 <span>测试连接</span>
               </Button>
               {provider.rotationKeys.length > 0 && (
-                <Button
+                <Button size="inline"
                   variant="outline"
-                  size="xs"
                   onClick={() => setShowKeyPanel(true)}
-                  className="flex items-center gap-1.5 px-2.5 py-[4px] text-xs text-foreground/70 hover:text-foreground/85 hover:bg-accent transition-colors h-auto"
+                  className="flex items-center gap-1.5 px-2.5 py-[4px] text-xs text-foreground hover:text-foreground hover:bg-accent transition-colors"
                 >
                   <Key size={9} />
                   <span>多 Key 管理</span>
@@ -2875,14 +2836,14 @@ function ProviderDetail({ provider }: { provider: Provider }) {
           {/* Title row */}
           <div className="flex items-center justify-between mb-2.5">
             <div className="flex items-baseline gap-2.5">
-              <p className="text-sm text-foreground/90 font-semibold">模型列表</p>
-              <span className="text-[9px] text-foreground/70">{enabledCount}/{localModels.length} 已启用</span>
+              <p className="text-sm text-foreground font-semibold">模型列表</p>
+              <span className="text-xs text-foreground">{enabledCount}/{localModels.length} 已启用</span>
             </div>
             <div className="flex items-center gap-1">
-              <Button
+              <Button size="inline"
                 variant="ghost"
                 onClick={allEnabled ? disableAllModels : enableAllModels}
-                className={`flex items-center gap-1 px-2 py-[3px] text-[9px] text-foreground/70 transition-colors h-auto ${
+                className={`flex items-center gap-1 px-2 py-[3px] text-xs text-foreground transition-colors ${
                   allEnabled
                     ? 'hover:text-destructive/80 hover:bg-destructive/[0.06]'
                     : 'hover:text-cherry-primary/80 hover:bg-cherry-active-bg'
@@ -2891,18 +2852,18 @@ function ProviderDetail({ provider }: { provider: Provider }) {
                 {allEnabled ? <EyeOff size={9} /> : <Eye size={9} />}
                 <span>{allEnabled ? '全部关闭' : '全部打开'}</span>
               </Button>
-              <Button
+              <Button size="inline"
                 variant="ghost"
                 onClick={() => setShowHealthCheck(true)}
-                className="flex items-center gap-1 px-2 py-[3px] text-[9px] text-foreground/70 hover:text-foreground/85 hover:bg-foreground/[0.04] transition-colors h-auto"
+                className="flex items-center gap-1 px-2 py-[3px] text-xs text-foreground hover:text-foreground hover:bg-accent/50 transition-colors"
               >
                 <HeartPulse size={9} />
                 <span>检测</span>
               </Button>
-              <Button
+              <Button size="inline"
                 variant="ghost"
                 onClick={() => setShowModelPanel(true)}
-                className="flex items-center gap-1 px-2 py-[3px] text-[9px] text-foreground/70 hover:text-foreground/85 hover:bg-foreground/[0.04] transition-colors h-auto"
+                className="flex items-center gap-1 px-2 py-[3px] text-xs text-foreground hover:text-foreground hover:bg-accent/50 transition-colors"
               >
                 <Edit3 size={9} />
                 <span>管理</span>
@@ -2912,27 +2873,18 @@ function ProviderDetail({ provider }: { provider: Provider }) {
 
           {/* Search + Fetch row */}
           <div className="flex items-center gap-2 mb-2">
-            <div className="flex-1 flex items-center gap-1.5 px-2.5 py-[5px] rounded-lg bg-foreground/[0.03] border border-foreground/[0.06]">
-              <Search size={10} className="text-foreground/55 flex-shrink-0" />
-              <Input
-                type="text"
-                placeholder="搜索模型..."
-                value={modelSearch}
-                onChange={e => setModelSearch(e.target.value)}
-                className="flex-1 bg-transparent text-xs text-foreground/80 placeholder:text-foreground/50 min-w-0 h-auto shadow-none border-none p-0"
-              />
-              {modelSearch && (
-                <Button variant="ghost" size="icon-xs" onClick={() => setModelSearch('')} className="text-foreground/45 hover:text-foreground/65 transition-colors">
-                  <X size={9} />
-                </Button>
-              )}
-            </div>
-            <Button
+            <SearchInput
+              value={modelSearch}
+              onChange={setModelSearch}
+              placeholder="搜索模型..."
+              iconSize={10}
+              wrapperClassName="flex-1 flex items-center gap-1.5 px-2.5 py-[5px] rounded-lg bg-muted/50 border border-border/50"
+            />
+            <Button size="inline"
               variant="outline"
-              size="xs"
               onClick={handleFetchModels}
               disabled={fetching}
-              className="flex items-center gap-1.5 px-3 py-[5px] text-xs text-foreground/75 hover:text-foreground/90 hover:bg-foreground/[0.04] transition-colors border border-foreground/[0.1] disabled:opacity-40 flex-shrink-0 h-auto"
+              className="flex items-center gap-1.5 px-3 py-[5px] text-xs text-foreground hover:text-foreground hover:bg-accent/50 transition-colors border border-border/50 disabled:opacity-30 flex-shrink-0"
             >
               {fetching ? <Loader2 size={10} className="animate-spin" /> : <Download size={10} />}
               <span>拉取模型</span>
@@ -2941,7 +2893,7 @@ function ProviderDetail({ provider }: { provider: Provider }) {
               variant="outline"
               size="icon-xs"
               onClick={() => setShowModelPanel(true)}
-              className="w-[28px] h-[28px] text-foreground/65 hover:text-foreground/80 hover:bg-foreground/[0.04] transition-colors border border-foreground/[0.1] flex-shrink-0"
+              className="w-[28px] h-[28px] text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-colors border border-border/50 flex-shrink-0"
             >
               <Plus size={11} />
             </Button>
@@ -2959,43 +2911,41 @@ function ProviderDetail({ provider }: { provider: Provider }) {
               const capCfg = CAPABILITY_CONFIG[capKey as ModelCapability];
               const CapTagIcon = CAPABILITY_ICONS[capKey as ModelCapability];
               return (
-                <Button
+                <Button size="inline"
                   variant="ghost"
                   key={tab.key}
                   onClick={() => setCapFilter(isActive && tab.key !== 'all' ? 'all' : tab.key)}
-                  className={`flex items-center gap-[4px] px-2 py-[3px] rounded-full text-[9px] transition-all border h-auto ${
+                  className={`flex items-center gap-[4px] px-2 py-[3px] rounded-full text-xs transition-all border ${
                     isActive
                       ? tab.key === 'all'
-                        ? 'bg-foreground/[0.1] border-foreground/[0.15] text-foreground/85 font-medium'
+                        ? 'bg-accent border-border text-foreground font-medium'
                         : `${capCfg.color} border-current/20 font-medium`
-                      : 'bg-transparent border-foreground/[0.12] text-foreground/65 hover:text-foreground/80 hover:border-foreground/[0.2] hover:bg-foreground/[0.04]'
+                      : 'bg-transparent border-border text-muted-foreground hover:text-foreground hover:border-border hover:bg-accent/50'
                   }`}
                 >
                   {tab.key !== 'all' && CapTagIcon && (
                     <CapTagIcon size={8} className={isActive ? '' : 'opacity-70'} />
                   )}
                   <span>{tab.label}</span>
-                  <span className={`text-[8px] ${isActive ? 'opacity-70' : 'opacity-55'}`}>{count}</span>
+                  <span className={`text-xs ${isActive ? 'opacity-70' : 'opacity-55'}`}>{count}</span>
                 </Button>
               );
             })}
           </div>
 
           {/* Model List Content */}
-          <div className="max-h-[380px] overflow-y-auto -mx-1 [&::-webkit-scrollbar]:w-[2px] [&::-webkit-scrollbar-thumb]:bg-border/20">
+          <div className="max-h-[380px] overflow-y-auto -mx-1 scrollbar-thin-xs">
             {filteredModels.length === 0 ? (
-              <div className="py-10 text-center text-xs text-foreground/55">
-                没有匹配的模型
-              </div>
+              <EmptyState preset="no-result" title="没有匹配的模型" compact />
             ) : (
               <div>
                 {/* Enabled Section */}
                 {enabledFiltered.length > 0 && (
                   <div className="mb-2">
                     <div className="flex items-center gap-2 px-3 py-[4px]">
-                      <span className="text-[9px] text-foreground/75 font-medium">已启用</span>
-                      <div className="flex-1 h-px bg-foreground/[0.08]" />
-                      <span className="text-[9px] text-foreground/60">{enabledFiltered.length}</span>
+                      <span className="text-sm text-foreground font-medium">已启用</span>
+                      <div className="flex-1 h-px bg-muted" />
+                      <span className="text-xs text-muted-foreground">{enabledFiltered.length}</span>
                     </div>
                     {enabledGrouped.order.map(group => {
                       const isCollapsed = collapsedGroups.has(`enabled-${group}`);
@@ -3010,15 +2960,15 @@ function ProviderDetail({ provider }: { provider: Provider }) {
                       return (
                         <div key={group}>
                           {enabledGrouped.order.length > 1 && (
-                            <Button
+                            <Button size="inline"
                               variant="ghost"
                               onClick={toggleCollapse}
-                              className="w-full px-3 py-[3px] flex items-center gap-1.5 hover:bg-foreground/[0.015] transition-colors text-left h-auto"
+                              className="w-full px-3 py-[3px] flex items-center gap-1.5 hover:bg-accent/50 transition-colors text-left"
                             >
-                              <ChevronDown size={9} className={`text-foreground/55 transition-transform flex-shrink-0 ${isCollapsed ? '-rotate-90' : ''}`} />
-                              <span className="text-[9px] text-foreground/75 font-medium">{group}</span>
-                              <div className="flex-1 h-px bg-foreground/[0.06]" />
-                              <span className="text-[8px] text-foreground/60">{enabledGrouped.groups[group].length}</span>
+                              <ChevronDown size={9} className={`text-muted-foreground transition-transform flex-shrink-0 ${isCollapsed ? '-rotate-90' : ''}`} />
+                              <span className="text-sm text-foreground font-medium">{group}</span>
+                              <div className="flex-1 h-px bg-muted/50" />
+                              <span className="text-xs text-muted-foreground">{enabledGrouped.groups[group].length}</span>
                             </Button>
                           )}
                           {!isCollapsed && enabledGrouped.groups[group].map(model => (
@@ -3034,9 +2984,9 @@ function ProviderDetail({ provider }: { provider: Provider }) {
                 {disabledFiltered.length > 0 && (
                   <div className="mt-1">
                     <div className="flex items-center gap-2 px-3 py-[4px]">
-                      <span className="text-[9px] text-foreground/70 font-medium">未启用</span>
-                      <div className="flex-1 h-px bg-foreground/[0.07]" />
-                      <span className="text-[9px] text-foreground/55">{disabledFiltered.length}</span>
+                      <span className="text-sm text-foreground font-medium">未启用</span>
+                      <div className="flex-1 h-px bg-muted" />
+                      <span className="text-xs text-muted-foreground">{disabledFiltered.length}</span>
                     </div>
                     {disabledGrouped.order.map(group => {
                       const isCollapsed = collapsedGroups.has(`disabled-${group}`);
@@ -3051,15 +3001,15 @@ function ProviderDetail({ provider }: { provider: Provider }) {
                       return (
                         <div key={group}>
                           {disabledGrouped.order.length > 1 && (
-                            <Button
+                            <Button size="inline"
                               variant="ghost"
                               onClick={toggleCollapse}
-                              className="w-full px-3 py-[3px] flex items-center gap-1.5 hover:bg-foreground/[0.015] transition-colors text-left h-auto"
+                              className="w-full px-3 py-[3px] flex items-center gap-1.5 hover:bg-accent/50 transition-colors text-left"
                             >
-                              <ChevronDown size={9} className={`text-foreground/50 transition-transform flex-shrink-0 ${isCollapsed ? '-rotate-90' : ''}`} />
-                              <span className="text-[9px] text-foreground/70 font-medium">{group}</span>
-                              <div className="flex-1 h-px bg-foreground/[0.05]" />
-                              <span className="text-[8px] text-foreground/55">{disabledGrouped.groups[group].length}</span>
+                              <ChevronDown size={9} className={`text-muted-foreground/60 transition-transform flex-shrink-0 ${isCollapsed ? '-rotate-90' : ''}`} />
+                              <span className="text-sm text-foreground font-medium">{group}</span>
+                              <div className="flex-1 h-px bg-muted/50" />
+                              <span className="text-xs text-muted-foreground">{disabledGrouped.groups[group].length}</span>
                             </Button>
                           )}
                           {!isCollapsed && disabledGrouped.groups[group].map(model => (
@@ -3080,8 +3030,8 @@ function ProviderDetail({ provider }: { provider: Provider }) {
       {/* Floating Panels */}
       <AnimatePresence>
         {fetchResult && (
-          <div className="absolute -left-[170px] top-0 right-0 bottom-0 z-20" onClick={() => setFetchResult(null)}>
-            <div className="fixed inset-0 bg-black/10 backdrop-blur-[1px] z-[-1]" />
+          <div className="absolute -left-[170px] top-0 right-0 bottom-0 z-[var(--z-overlay)]" onClick={() => setFetchResult(null)}>
+            <div className="fixed inset-0 bg-foreground/10 backdrop-blur-[1px] z-[-1]" />
             <FetchResultPanel
               result={fetchResult}
               onClose={() => setFetchResult(null)}
@@ -3092,46 +3042,46 @@ function ProviderDetail({ provider }: { provider: Provider }) {
       </AnimatePresence>
       <AnimatePresence>
         {showKeyPanel && (
-          <div className="absolute -left-[170px] top-0 right-0 bottom-0 z-20" onClick={() => setShowKeyPanel(false)}>
-            <div className="fixed inset-0 bg-black/10 backdrop-blur-[1px] z-[-1]" />
+          <div className="absolute -left-[170px] top-0 right-0 bottom-0 z-[var(--z-overlay)]" onClick={() => setShowKeyPanel(false)}>
+            <div className="fixed inset-0 bg-foreground/10 backdrop-blur-[1px] z-[-1]" />
             <KeyManagementPanel provider={provider} onClose={() => setShowKeyPanel(false)} />
           </div>
         )}
       </AnimatePresence>
       <AnimatePresence>
         {showModelPanel && (
-          <div className="absolute -left-[170px] top-0 right-0 bottom-0 z-20" onClick={() => setShowModelPanel(false)}>
-            <div className="fixed inset-0 bg-black/10 backdrop-blur-[1px] z-[-1]" />
+          <div className="absolute -left-[170px] top-0 right-0 bottom-0 z-[var(--z-overlay)]" onClick={() => setShowModelPanel(false)}>
+            <div className="fixed inset-0 bg-foreground/10 backdrop-blur-[1px] z-[-1]" />
             <ModelManagementPanel provider={provider} onClose={() => setShowModelPanel(false)} />
           </div>
         )}
       </AnimatePresence>
       <AnimatePresence>
         {showHeadersPanel && (
-          <div className="absolute -left-[170px] top-0 right-0 bottom-0 z-20" onClick={() => setShowHeadersPanel(false)}>
-            <div className="fixed inset-0 bg-black/10 backdrop-blur-[1px] z-[-1]" />
+          <div className="absolute -left-[170px] top-0 right-0 bottom-0 z-[var(--z-overlay)]" onClick={() => setShowHeadersPanel(false)}>
+            <div className="fixed inset-0 bg-foreground/10 backdrop-blur-[1px] z-[-1]" />
             <motion.div
               initial={{ x: '100%' }}
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
               transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-              className="absolute inset-y-2 right-2 w-[280px] bg-background border border-border/30 shadow-2xl flex flex-col z-30 rounded-2xl"
+              className="absolute inset-y-2 right-2 w-[280px] bg-background border border-border/30 shadow-2xl flex flex-col z-[var(--z-sticky)] rounded-2xl"
               onClick={e => e.stopPropagation()}
             >
               {/* Header */}
-              <div className="flex items-center justify-between px-4 py-3 border-b border-border/20 flex-shrink-0">
-                <span className="text-xs text-foreground/80 font-semibold">自定义请求头</span>
-                <Button variant="ghost" size="icon-xs" onClick={() => setShowHeadersPanel(false)} className="w-5 h-5 text-foreground/30 hover:text-foreground/60 hover:bg-accent transition-colors">
+              <div className="flex items-center justify-between px-4 py-3 border-b border-border/30 flex-shrink-0">
+                <span className="text-sm text-foreground font-semibold">自定义请求头</span>
+                <Button variant="ghost" size="icon-xs" onClick={() => setShowHeadersPanel(false)} className="text-muted-foreground/40 hover:text-foreground hover:bg-accent transition-colors">
                   <X size={11} />
                 </Button>
               </div>
 
               {/* Header entries */}
-              <div className="flex-1 overflow-y-auto px-4 py-3 space-y-2.5 [&::-webkit-scrollbar]:w-[2px] [&::-webkit-scrollbar-thumb]:bg-border/20">
+              <div className="flex-1 overflow-y-auto px-4 py-3 space-y-2.5 scrollbar-thin-xs">
                 {customHeaders.map((h, i) => (
-                  <div key={i} className="space-y-1.5 p-2.5 rounded-xl bg-foreground/[0.03] border border-border/20">
+                  <div key={i} className="space-y-1.5 p-2.5 rounded-xl bg-muted/50 border border-border/20">
                     <div className="flex items-center gap-1.5">
-                      <label className="text-[8px] text-foreground/30 w-10 flex-shrink-0">Header</label>
+                      <label className="text-xs text-muted-foreground/40 w-10 flex-shrink-0">Header</label>
                       <Input
                         type="text"
                         value={h.key}
@@ -3140,12 +3090,12 @@ function ProviderDetail({ provider }: { provider: Provider }) {
                           next[i] = { ...next[i], key: e.target.value };
                           setCustomHeaders(next);
                         }}
-                        className="flex-1 bg-transparent text-xs text-foreground/60 border-b border-border/20 pb-0.5 min-w-0 h-auto shadow-none border-t-0 border-l-0 border-r-0 rounded-none p-0"
+                        className="flex-1 bg-transparent text-sm text-muted-foreground border-b border-border/30 pb-0.5 min-w-0 h-auto shadow-none border-t-0 border-l-0 border-r-0 rounded-none p-0"
                         placeholder="Header Name"
                       />
                     </div>
                     <div className="flex items-center gap-1.5">
-                      <label className="text-[8px] text-foreground/30 w-10 flex-shrink-0">Value</label>
+                      <label className="text-xs text-muted-foreground/40 w-10 flex-shrink-0">Value</label>
                       <Input
                         type="text"
                         value={h.value}
@@ -3154,7 +3104,7 @@ function ProviderDetail({ provider }: { provider: Provider }) {
                           next[i] = { ...next[i], value: e.target.value };
                           setCustomHeaders(next);
                         }}
-                        className="flex-1 bg-transparent text-xs text-foreground/60 border-b border-border/20 pb-0.5 min-w-0 h-auto shadow-none border-t-0 border-l-0 border-r-0 rounded-none p-0"
+                        className="flex-1 bg-transparent text-sm text-muted-foreground border-b border-border/30 pb-0.5 min-w-0 h-auto shadow-none border-t-0 border-l-0 border-r-0 rounded-none p-0"
                         placeholder="Header Value"
                       />
                     </div>
@@ -3163,17 +3113,17 @@ function ProviderDetail({ provider }: { provider: Provider }) {
                         variant="ghost"
                         size="icon-xs"
                         onClick={() => setCustomHeaders(prev => prev.filter((_, j) => j !== i))}
-                        className="text-[9px] text-destructive/50 hover:text-destructive transition-colors"
+                        className="text-xs text-destructive/50 hover:text-destructive transition-colors"
                       >
                         <Trash2 size={9} />
                       </Button>
                     </div>
                   </div>
                 ))}
-                <Button
+                <Button size="inline"
                   variant="ghost"
                   onClick={() => setCustomHeaders(prev => [...prev, { key: '', value: '' }])}
-                  className="w-full flex items-center justify-center gap-1.5 py-2 rounded-xl border border-dashed border-foreground/10 text-xs text-foreground/35 hover:text-foreground/55 hover:border-foreground/20 transition-colors h-auto"
+                  className="w-full flex items-center justify-center gap-1.5 py-2 rounded-xl border border-dashed border-border/50 text-xs text-muted-foreground/40 hover:text-foreground hover:border-border/50 transition-colors"
                 >
                   <Plus size={10} />
                   <span>添加请求头</span>
@@ -3181,11 +3131,11 @@ function ProviderDetail({ provider }: { provider: Provider }) {
               </div>
 
               {/* Footer */}
-              <div className="px-4 py-2.5 border-t border-border/20 flex items-center justify-end gap-2 flex-shrink-0">
-                <Button variant="outline" size="xs" onClick={() => setShowHeadersPanel(false)} className="px-2.5 py-[4px] text-xs text-foreground/40 hover:text-foreground/60 hover:bg-accent transition-colors h-auto">
+              <div className="px-4 py-2.5 border-t border-border/30 flex items-center justify-end gap-2 flex-shrink-0">
+                <Button variant="outline" size="inline" onClick={() => setShowHeadersPanel(false)} className="px-2.5 py-[4px] text-xs text-muted-foreground/60 hover:text-foreground hover:bg-accent transition-colors">
                   取消
                 </Button>
-                <Button variant="default" onClick={() => setShowHeadersPanel(false)} className="px-3 py-[4px] text-xs text-white bg-cherry-primary hover:bg-cherry-primary-dark transition-colors h-auto">
+                <Button variant="default" onClick={() => setShowHeadersPanel(false)} size="inline" className="px-3 py-[4px] text-xs">
                   保存
                 </Button>
               </div>
@@ -3195,8 +3145,8 @@ function ProviderDetail({ provider }: { provider: Provider }) {
       </AnimatePresence>
       <AnimatePresence>
         {editingModel && (
-          <div className="absolute -left-[170px] top-0 right-0 bottom-0 z-20" onClick={() => setEditingModel(null)}>
-            <div className="fixed inset-0 bg-black/10 backdrop-blur-[1px] z-[-1]" />
+          <div className="absolute -left-[170px] top-0 right-0 bottom-0 z-[var(--z-overlay)]" onClick={() => setEditingModel(null)}>
+            <div className="fixed inset-0 bg-foreground/10 backdrop-blur-[1px] z-[-1]" />
             <ModelEditPanel
               model={editingModel}
               onClose={() => setEditingModel(null)}
@@ -3209,8 +3159,8 @@ function ProviderDetail({ provider }: { provider: Provider }) {
       </AnimatePresence>
       <AnimatePresence>
         {showHealthCheck && (
-          <div className="absolute -left-[170px] top-0 right-0 bottom-0 z-20" onClick={() => setShowHealthCheck(false)}>
-            <div className="fixed inset-0 bg-black/10 backdrop-blur-[1px] z-[-1]" />
+          <div className="absolute -left-[170px] top-0 right-0 bottom-0 z-[var(--z-overlay)]" onClick={() => setShowHealthCheck(false)}>
+            <div className="fixed inset-0 bg-foreground/10 backdrop-blur-[1px] z-[-1]" />
             <HealthCheckPanel
               provider={provider}
               models={localModels}
@@ -3264,66 +3214,66 @@ function AddProviderPanel({ onClose, onAdd }: { onClose: () => void; onAdd: (nam
       animate={{ opacity: 1, x: 0 }}
       exit={{ opacity: 0, x: 30 }}
       transition={{ type: 'spring', damping: 28, stiffness: 350 }}
-      className="absolute inset-0 flex flex-col min-h-0 overflow-hidden bg-background rounded-2xl shadow-2xl z-30"
+      className="absolute inset-0 flex flex-col min-h-0 overflow-hidden bg-background rounded-2xl shadow-2xl z-[var(--z-sticky)]"
       onClick={e => e.stopPropagation()}
     >
       {/* Header */}
       <div className="flex items-center gap-3 px-5 py-3.5 flex-shrink-0">
         <div
-          className="w-8 h-8 rounded-xl flex items-center justify-center text-sm flex-shrink-0 bg-foreground/[0.06] font-semibold"
+          className="w-8 h-8 rounded-xl flex items-center justify-center text-sm flex-shrink-0 bg-muted/50 font-semibold"
         >
-          <span className="text-foreground/55">{initial}</span>
+          <span className="text-muted-foreground">{initial}</span>
         </div>
         <div className="flex-1 min-w-0">
-          <h3 className="text-sm text-foreground/90 font-semibold">添加服务商</h3>
-          <p className="text-[9px] text-foreground/50 mt-0.5">配置新的模型服务提供商</p>
+          <Typography variant="subtitle" className="font-semibold">添加服务商</Typography>
+          <p className="text-xs text-muted-foreground/60 mt-0.5">配置新的模型服务提供商</p>
         </div>
-        <Button variant="ghost" size="icon-xs" onClick={onClose} className="w-6 h-6 text-foreground/40 hover:text-foreground/60 hover:bg-accent transition-colors">
+        <Button variant="ghost" size="icon-xs" onClick={onClose} className="text-muted-foreground/60 hover:text-foreground hover:bg-accent transition-colors">
           <X size={12} />
         </Button>
       </div>
 
-      <div className="h-px bg-foreground/[0.05] mx-5" />
+      <div className="h-px bg-muted/50 mx-5" />
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto px-5 py-4 space-y-4 [&::-webkit-scrollbar]:w-[3px] [&::-webkit-scrollbar-thumb]:bg-border/20">
+      <div className="flex-1 overflow-y-auto px-5 py-4 space-y-4 scrollbar-thin">
         {/* Avatar preview */}
         <div className="flex justify-center pt-2 pb-1">
-          <div className="w-16 h-16 rounded-2xl bg-foreground/[0.04] border border-foreground/[0.06] flex items-center justify-center text-2xl text-foreground/40 transition-all font-semibold">
+          <div className="w-16 h-16 rounded-2xl bg-muted/50 border border-border/50 flex items-center justify-center text-2xl text-muted-foreground/60 transition-all font-semibold">
             {initial}
           </div>
         </div>
 
         {/* Name */}
         <div>
-          <label className="text-[9px] text-foreground/55 mb-1 block">提供商名称</label>
+          <label className="text-sm text-muted-foreground mb-1 block">提供商名称</label>
           <Input
             autoFocus
             value={name}
             onChange={e => setName(e.target.value)}
             placeholder="例如 My Provider"
-            className="w-full px-3 py-[6px] bg-foreground/[0.03] border border-foreground/[0.06] rounded-lg text-xs text-foreground/75 focus:border-cherry-primary/30 transition-colors placeholder:text-foreground/35 h-auto shadow-none"
+            className="w-full px-3 py-[6px] bg-muted/50 border border-border/50 rounded-lg text-sm text-foreground focus:border-cherry-primary/30 transition-colors placeholder:text-muted-foreground/60 h-auto shadow-none"
           />
         </div>
 
         {/* Type - Dropdown */}
         <div>
-          <label className="text-[9px] text-foreground/55 mb-1 block">提供商类型</label>
+          <label className="text-sm text-muted-foreground mb-1 block">提供商类型</label>
           <div ref={typeRef} className="relative">
-            <Button
+            <Button size="inline"
               variant="ghost"
               onClick={() => setTypeOpen(v => !v)}
-              className={`w-full flex items-center justify-between px-3.5 py-[6px] rounded-full bg-foreground/[0.06] text-xs transition-colors h-auto ${
-                typeOpen ? 'bg-foreground/[0.09] text-foreground/80' : 'text-foreground/70 hover:bg-foreground/[0.08]'
+              className={`w-full flex items-center justify-between px-3.5 py-[6px] rounded-full bg-muted/50 text-sm transition-colors ${
+                typeOpen ? 'bg-accent text-foreground' : 'text-foreground hover:bg-accent/50'
               }`}
             >
               <span>{type}</span>
-              <ChevronDown size={10} className={`flex-shrink-0 text-foreground/40 transition-transform ${typeOpen ? 'rotate-180' : ''}`} />
+              <ChevronDown size={10} className={`flex-shrink-0 text-muted-foreground/60 transition-transform ${typeOpen ? 'rotate-180' : ''}`} />
             </Button>
             {typeOpen && typeRect && createPortal(
               <div
                 ref={typePortalRef}
-                className="fixed bg-popover border border-border/50 rounded-2xl shadow-2xl p-1.5 z-[9999] animate-in fade-in slide-in-from-top-1 duration-100"
+                className="popover-panel animate-in fade-in slide-in-from-top-1 duration-100"
                 style={{
                   top: typeRect.bottom + 4,
                   left: typeRect.left,
@@ -3331,12 +3281,12 @@ function AddProviderPanel({ onClose, onAdd }: { onClose: () => void; onAdd: (nam
                 }}
               >
                 {PROVIDER_TYPES.map(t => (
-                  <Button
+                  <Button size="inline"
                     variant="ghost"
                     key={t}
                     onClick={() => { setType(t); setTypeOpen(false); }}
-                    className={`w-full text-left px-3 py-[6px] rounded-xl text-xs transition-colors flex items-center justify-between gap-3 h-auto ${
-                      type === t ? 'bg-foreground/[0.06] text-foreground/80' : 'text-foreground/65 hover:bg-foreground/[0.04]'
+                    className={`w-full text-left px-3 py-[6px] rounded-xl text-sm transition-colors flex items-center justify-between gap-3 ${
+                      type === t ? 'bg-muted/50 text-foreground' : 'text-muted-foreground hover:bg-accent/50'
                     }`}
                   >
                     <span>{t}</span>
@@ -3351,41 +3301,41 @@ function AddProviderPanel({ onClose, onAdd }: { onClose: () => void; onAdd: (nam
 
         {/* API Key */}
         <div>
-          <label className="text-[9px] text-foreground/55 mb-1 block">API Key</label>
+          <label className="text-sm text-muted-foreground mb-1 block">API Key</label>
           <Input
             value={apiKey}
             onChange={e => setApiKey(e.target.value)}
             type="password"
             placeholder="sk-..."
-            className="w-full px-3 py-[6px] bg-foreground/[0.03] border border-foreground/[0.06] rounded-lg text-xs text-foreground/75 focus:border-cherry-primary/30 transition-colors placeholder:text-foreground/35 h-auto shadow-none"
+            className="w-full px-3 py-[6px] bg-muted/50 border border-border/50 rounded-lg text-sm text-foreground focus:border-cherry-primary/30 transition-colors placeholder:text-muted-foreground/60 h-auto shadow-none"
           />
         </div>
 
         {/* Base URL */}
         <div>
-          <label className="text-[9px] text-foreground/55 mb-1 block">API 地址 (Endpoint URL)</label>
+          <label className="text-sm text-muted-foreground mb-1 block">API 地址 (Endpoint URL)</label>
           <Input
             value={baseUrl}
             onChange={e => setBaseUrl(e.target.value)}
             placeholder="https://api.example.com/v1"
-            className="w-full px-3 py-[6px] bg-foreground/[0.03] border border-foreground/[0.06] rounded-lg text-xs text-foreground/75 focus:border-cherry-primary/30 transition-colors placeholder:text-foreground/35 h-auto shadow-none"
+            className="w-full px-3 py-[6px] bg-muted/50 border border-border/50 rounded-lg text-sm text-foreground focus:border-cherry-primary/30 transition-colors placeholder:text-muted-foreground/60 h-auto shadow-none"
           />
         </div>
       </div>
 
       {/* Footer */}
-      <div className="px-5 py-3 border-t border-foreground/[0.05] flex items-center gap-2 flex-shrink-0">
-        <Button
+      <div className="px-5 py-3 border-t border-border/30 flex items-center gap-2 flex-shrink-0">
+        <Button size="inline"
           variant="outline"
           onClick={onClose}
-          className="flex-1 py-[5px] text-xs text-foreground/60 hover:text-foreground/80 hover:bg-accent transition-colors h-auto"
+          className="flex-1 py-[5px] text-xs text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
         >
           取消
         </Button>
-        <Button
+        <Button size="inline"
           variant="default"
           onClick={() => { if (name.trim()) { onAdd(name.trim(), type); } }}
-          className="flex-1 py-[5px] text-xs text-white bg-cherry-primary hover:bg-cherry-primary-dark transition-colors disabled:opacity-40 h-auto"
+          className="flex-1 py-[5px] text-xs disabled:opacity-30"
           disabled={!name.trim()}
         >
           添加
@@ -3490,26 +3440,26 @@ export function ModelServicePage() {
         onDragEnd={handleDragEnd}
         className={`group ${isDragging ? 'opacity-40' : ''} ${isDragOver ? 'border-t-2 border-cherry-primary/40' : ''}`}
       >
-        <Button
+        <Button size="inline"
           variant="ghost"
           onClick={() => { setSelectedId(provider.id); setShowAddPanel(false); }}
-          className={`w-full flex items-center justify-between px-2 py-[7px] rounded-xl transition-all text-left relative h-auto ${
+          className={`w-full flex items-center justify-between px-2 py-[7px] rounded-xl transition-all text-left relative ${
             isSelected && !showAddPanel
               ? 'bg-cherry-active-bg'
-              : 'border border-transparent hover:bg-foreground/[0.03]'
+              : 'border border-transparent hover:bg-accent/50'
           }`}
         >
           {isSelected && !showAddPanel && (
             <div className="absolute inset-0 rounded-xl border border-cherry-active-border pointer-events-none" />
           )}
           <div className="flex items-center gap-2 min-w-0 flex-1">
-            <span className="flex-shrink-0 text-foreground/40 opacity-0 group-hover:opacity-100 transition-opacity cursor-grab active:cursor-grabbing">
+            <span className="flex-shrink-0 text-muted-foreground/60 opacity-0 group-hover:opacity-100 transition-opacity cursor-grab active:cursor-grabbing">
               <GripVertical size={9} />
             </span>
             <span className="flex-shrink-0"><BrandLogo id={provider.id} fallbackLetter={provider.logo} fallbackColor={provider.color} size={14} /></span>
-            <span className={`text-xs truncate ${isSelected ? 'text-foreground/90 font-medium' : 'text-foreground/80'}`}>{provider.name}</span>
+            <span className={`text-sm truncate ${isSelected ? 'text-foreground font-medium' : 'text-foreground'}`}>{provider.name}</span>
           </div>
-          <ChevronRight size={9} className={`flex-shrink-0 ${isSelected ? 'text-foreground/50' : 'text-foreground/35'}`} />
+          <ChevronRight size={9} className={`flex-shrink-0 ${isSelected ? 'text-muted-foreground/60' : 'text-muted-foreground/40'}`} />
         </Button>
       </motion.div>
     );
@@ -3518,37 +3468,30 @@ export function ModelServicePage() {
   return (
     <div className="flex h-full min-h-0">
       {/* Middle Column: Provider List */}
-      <div className="w-[170px] flex-shrink-0 flex flex-col border-r border-foreground/[0.05] min-h-0">
+      <div className="w-[170px] flex-shrink-0 flex flex-col border-r border-border/30 min-h-0">
         <div className="px-3 pt-3.5 pb-1.5 flex-shrink-0">
-          <p className="text-xs text-foreground/85 mb-2 font-medium">模型服务</p>
+          <p className="text-sm text-foreground mb-2 font-medium">模型服务</p>
           {/* Search */}
-          <div className="flex items-center gap-1.5 px-2 py-[4px] bg-foreground/[0.03] rounded-lg border border-border/20">
-            <Search size={9} className="text-foreground/50 flex-shrink-0" />
-            <Input
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-              placeholder="搜索服务商..."
-              className="flex-1 bg-transparent text-[9px] text-foreground/80 placeholder:text-foreground/40 min-w-0 h-auto shadow-none border-none p-0"
-            />
-            {search && (
-              <Button variant="ghost" size="icon-xs" onClick={() => setSearch('')} className="text-foreground/45 hover:text-foreground/65 transition-colors">
-                <X size={8} />
-              </Button>
-            )}
-          </div>
+          <SearchInput
+            value={search}
+            onChange={setSearch}
+            placeholder="搜索服务商..."
+            iconSize={9}
+            wrapperClassName="flex items-center gap-1.5 px-2 py-[4px] bg-muted/50 rounded-lg border border-border/20"
+          />
         </div>
 
         {/* Provider List */}
-        <div className="flex-1 overflow-y-auto px-2.5 pb-2 [&::-webkit-scrollbar]:w-[2px] [&::-webkit-scrollbar-thumb]:bg-border/20">
+        <div className="flex-1 overflow-y-auto px-2.5 pb-2 scrollbar-thin-xs">
           <div className="space-y-[1px]">
             {/* Default Model - Pinned */}
-            <Button
+            <Button size="inline"
               variant="ghost"
               onClick={() => { setSelectedId('default-model'); setShowAddPanel(false); }}
-              className={`w-full flex items-center justify-between px-2 py-[7px] rounded-xl transition-all text-left relative h-auto ${
+              className={`w-full flex items-center justify-between px-2 py-[7px] rounded-xl transition-all text-left relative ${
                 selectedId === 'default-model' && !showAddPanel
                   ? 'bg-cherry-active-bg'
-                  : 'border border-transparent hover:bg-foreground/[0.03]'
+                  : 'border border-transparent hover:bg-accent/50'
               }`}
             >
               {selectedId === 'default-model' && !showAddPanel && (
@@ -3556,16 +3499,16 @@ export function ModelServicePage() {
               )}
               <div className="flex items-center gap-2 min-w-0 flex-1">
                 <span className="w-[9px] flex-shrink-0" />
-                <span className={`flex-shrink-0 ${selectedId === 'default-model' && !showAddPanel ? 'text-warning' : 'text-foreground/55'}`}><Star size={13} /></span>
-                <span className={`text-xs truncate ${selectedId === 'default-model' && !showAddPanel ? 'text-foreground/90 font-medium' : 'text-foreground/75'}`}>默认模型</span>
+                <span className={`flex-shrink-0 ${selectedId === 'default-model' && !showAddPanel ? 'text-warning' : 'text-muted-foreground'}`}><Star size={13} /></span>
+                <span className={`text-sm truncate ${selectedId === 'default-model' && !showAddPanel ? 'text-foreground font-medium' : 'text-foreground'}`}>默认模型</span>
               </div>
-              <ChevronRight size={9} className={`flex-shrink-0 ${selectedId === 'default-model' && !showAddPanel ? 'text-foreground/50' : 'text-foreground/35'}`} />
+              <ChevronRight size={9} className={`flex-shrink-0 ${selectedId === 'default-model' && !showAddPanel ? 'text-muted-foreground/60' : 'text-muted-foreground/40'}`} />
             </Button>
 
             {/* Enabled Providers */}
             {enabledProviders.length > 0 && (
               <div className="pt-1.5 pb-0.5">
-                <p className="text-[8px] text-foreground/60 px-2 mb-0.5">已开启 ({enabledProviders.length})</p>
+                <p className="text-xs text-muted-foreground px-2 mb-0.5">已开启 ({enabledProviders.length})</p>
               </div>
             )}
             {enabledProviders.map(p => {
@@ -3576,7 +3519,7 @@ export function ModelServicePage() {
             {/* Disabled Providers */}
             {disabledProviders.length > 0 && (
               <div className="pt-2 pb-0.5">
-                <p className="text-[8px] text-foreground/55 px-2 mb-0.5">未开启 ({disabledProviders.length})</p>
+                <p className="text-xs text-muted-foreground px-2 mb-0.5">未开启 ({disabledProviders.length})</p>
               </div>
             )}
             {disabledProviders.map(p => {
@@ -3587,11 +3530,11 @@ export function ModelServicePage() {
         </div>
 
         {/* Add Provider */}
-        <div className="px-2.5 py-2 flex-shrink-0 border-t border-foreground/[0.04]">
-          <Button
+        <div className="px-2.5 py-2 flex-shrink-0 border-t border-border/30">
+          <Button size="inline"
             variant="ghost"
             onClick={() => setShowAddPanel(true)}
-            className="w-full flex items-center justify-center gap-1.5 py-[5px] text-[9px] text-foreground/65 hover:text-foreground/80 hover:bg-foreground/[0.03] transition-colors border border-dashed border-foreground/20 hover:border-foreground/30 h-auto"
+            className="w-full flex items-center justify-center gap-1.5 py-[5px] text-xs text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-colors border border-dashed border-border/50 hover:border-border"
           >
             <Plus size={9} />
             <span>添加服务商</span>
@@ -3607,14 +3550,14 @@ export function ModelServicePage() {
           <ProviderDetail provider={selectedProvider} />
         ) : (
           <div className="flex-1 flex items-center justify-center">
-            <p className="text-xs text-foreground/25">选择一个服务商查看详情</p>
+            <p className="text-xs text-muted-foreground/40">选择一个服务商查看详情</p>
           </div>
         )}
 
         {/* Add Provider Floating Panel */}
         <AnimatePresence>
           {showAddPanel && (
-            <div className="absolute inset-y-0 right-0 z-20 w-[280px]">
+            <div className="absolute inset-y-0 right-0 z-[var(--z-sticky)] w-[280px]">
               <AddProviderPanel
                 onClose={() => { setShowAddPanel(false); setSelectedId('default-model'); }}
                 onAdd={handleAddProvider}

@@ -4,7 +4,7 @@ import {
   CheckCircle2, AlertCircle, File,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Button, Input, Dialog, DialogContent, DialogTitle } from '@cherry-studio/ui';
+import { Button, Input, Textarea, Dialog, DialogContent, DialogTitle } from '@cherry-studio/ui';
 
 interface Props {
   open: boolean;
@@ -79,7 +79,7 @@ export function ImportModal({ open, onClose }: Props) {
         <div className="flex items-center justify-between px-5 py-4 border-b border-border/15">
           <div>
             <DialogTitle className="text-sm text-foreground">导入资源</DialogTitle>
-            <p className="text-[9px] text-muted-foreground/45 mt-0.5">支持 JSON / YAML 格式的配置文件</p>
+            <p className="text-xs text-muted-foreground/40 mt-0.5">支持 JSON / YAML 格式的配置文件</p>
           </div>
         </div>
 
@@ -89,9 +89,9 @@ export function ImportModal({ open, onClose }: Props) {
             const Icon = t.icon;
             const active = tab === t.id;
             return (
-              <Button key={t.id} variant="ghost" size="sm" onClick={() => setTab(t.id)}
-                className={`flex items-center gap-1.5 px-3 py-1.5 h-auto rounded-lg text-xs transition-all ${
-                  active ? 'bg-accent/60 text-foreground' : 'text-muted-foreground/50 hover:text-foreground hover:bg-accent/30'
+              <Button key={t.id} variant="ghost" size="inline" onClick={() => setTab(t.id)}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs transition-all ${
+                  active ? 'bg-accent/50 text-foreground' : 'text-muted-foreground/50 hover:text-foreground hover:bg-accent/50'
                 }`}>
                 <Icon size={11} />
                 <span>{t.label}</span>
@@ -112,12 +112,12 @@ export function ImportModal({ open, onClose }: Props) {
                   onDrop={handleDrop}
                   onClick={() => fileRef.current?.click()}
                   className={`border-2 border-dashed rounded-xl p-8 flex flex-col items-center justify-center transition-all cursor-pointer ${
-                    dragOver ? 'border-primary/40 bg-primary/5' : 'border-border/20 hover:border-border/40 hover:bg-accent/10'
+                    dragOver ? 'border-primary/40 bg-primary/5' : 'border-border/20 hover:border-border/40 hover:bg-accent/15'
                   }`}
                 >
-                  <Upload size={24} strokeWidth={1.2} className="text-muted-foreground/30 mb-3" />
+                  <Upload size={24} strokeWidth={1.2} className="text-muted-foreground/40 mb-3" />
                   <p className="text-xs text-muted-foreground/50 mb-1">拖放文件到此处，或点击选择文件</p>
-                  <p className="text-[9px] text-muted-foreground/35">支持 .json / .yaml / .yml</p>
+                  <p className="text-xs text-muted-foreground/50">支持 .json / .yaml / .yml</p>
                 </div>
                 <input ref={fileRef} type="file" accept=".json,.yaml,.yml" className="hidden" onChange={handleFileSelect} />
               </motion.div>
@@ -126,18 +126,17 @@ export function ImportModal({ open, onClose }: Props) {
             {/* Clipboard */}
             {tab === 'clipboard' && (
               <motion.div key="clipboard" initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}>
-                <textarea
+                <Textarea
                   value={clipboardText}
                   onChange={e => setClipboardText(e.target.value)}
                   placeholder="在此粘贴 JSON 或 YAML 配置内容..."
-                  className="w-full h-[160px] p-3 rounded-xl border border-border/20 bg-accent/10 text-xs text-foreground placeholder:text-muted-foreground/35 resize-none outline-none focus:border-border/40 focus:bg-accent/15 transition-all font-mono [&::-webkit-scrollbar]:w-[3px] [&::-webkit-scrollbar-thumb]:bg-border/30 [&::-webkit-scrollbar-thumb]:rounded-full"
+                  className="input-accent h-[160px] p-3 placeholder:text-muted-foreground/60 resize-none font-mono scrollbar-thin"
                 />
-                <Button
+                <Button size="inline"
                   variant="default"
-                  size="sm"
                   onClick={handleImportClipboard}
                   disabled={!clipboardText.trim()}
-                  className="mt-3 flex items-center gap-1.5 px-3 py-1.5 h-auto rounded-lg bg-foreground text-background text-xs hover:bg-foreground/90 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                  className="mt-3 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
                 >
                   <FileJson size={10} />
                   <span>解析并导入</span>
@@ -153,20 +152,19 @@ export function ImportModal({ open, onClose }: Props) {
                   value={urlText}
                   onChange={e => setUrlText(e.target.value)}
                   placeholder="https://gist.github.com/..."
-                  className="w-full px-3 py-2 h-auto rounded-xl border border-border/20 bg-accent/10 text-xs text-foreground placeholder:text-muted-foreground/35 outline-none focus:border-border/40 focus:bg-accent/15 transition-all font-mono"
+                  className="input-accent h-auto placeholder:text-muted-foreground/60 font-mono"
                 />
                 <div className="mt-3 flex items-center gap-3">
-                  <Button
+                  <Button size="inline"
                     variant="default"
-                    size="sm"
                     onClick={handleImportUrl}
                     disabled={!urlText.trim()}
-                    className="flex items-center gap-1.5 px-3 py-1.5 h-auto rounded-lg bg-foreground text-background text-xs hover:bg-foreground/90 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
                   >
                     <Link size={10} />
                     <span>获取并导入</span>
                   </Button>
-                  <p className="text-[9px] text-muted-foreground/35">支持 raw 文件链接</p>
+                  <p className="text-xs text-muted-foreground/50">支持 raw 文件链接</p>
                 </div>
               </motion.div>
             )}
@@ -185,9 +183,9 @@ export function ImportModal({ open, onClose }: Props) {
             )}
             {importState === 'error' && (
               <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-                className="flex items-center gap-2 mt-4 px-3 py-2 rounded-lg bg-red-500/10 border border-red-500/20">
-                <AlertCircle size={12} className="text-red-500" />
-                <span className="text-xs text-red-600">解析失败，请检查配置格式</span>
+                className="flex items-center gap-2 mt-4 px-3 py-2 rounded-lg bg-destructive/10 border border-destructive/20">
+                <AlertCircle size={12} className="text-destructive" />
+                <span className="text-xs text-destructive">解析失败，请检查配置格式</span>
               </motion.div>
             )}
           </AnimatePresence>

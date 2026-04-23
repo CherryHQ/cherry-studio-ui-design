@@ -8,10 +8,18 @@ import type { ImageModel, AspectRatio, ImageSize, GeneratedImage } from '../type
 
 export const IMAGE_MODELS: ImageModel[] = [
   { id: 'midjourney-v6', name: 'Midjourney v6', provider: 'Midjourney' },
+  { id: 'midjourney-v7', name: 'Midjourney v7', provider: 'Midjourney' },
   { id: 'dall-e-3', name: 'DALL-E 3', provider: 'OpenAI' },
+  { id: 'gpt-image-1', name: 'GPT Image 1', provider: 'OpenAI' },
   { id: 'sdxl-1.0', name: 'Stable Diffusion XL', provider: 'Stability AI' },
+  { id: 'sd3-medium', name: 'Stable Diffusion 3 Medium', provider: 'Stability AI' },
+  { id: 'sd3-ultra', name: 'Stable Image Ultra', provider: 'Stability AI' },
   { id: 'flux-pro', name: 'FLUX.1 Pro', provider: 'Black Forest Labs' },
+  { id: 'flux-dev', name: 'FLUX.1 Dev', provider: 'Black Forest Labs' },
+  { id: 'flux-schnell', name: 'FLUX.1 Schnell', provider: 'Black Forest Labs' },
   { id: 'ideogram-v2', name: 'Ideogram v2', provider: 'Ideogram' },
+  { id: 'ideogram-v3', name: 'Ideogram v3', provider: 'Ideogram' },
+  { id: 'gemini-image', name: 'Gemini Image', provider: 'Google' },
 ];
 
 export const RATIO_DIMENSIONS: Record<AspectRatio, { w: number; h: number }> = {

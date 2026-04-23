@@ -39,7 +39,7 @@ export function DragGhost({ tabId, x, y, overSidebar, tabs }: DragGhostProps) {
         }`}>
         {ghostTab.miniAppId ? (
           ghostTab.miniAppLogoUrl ? <img src={ghostTab.miniAppLogoUrl} alt="" className="w-3.5 h-3.5 rounded-[var(--radius-dot)] object-cover" /> :
-          <div className="w-3.5 h-3.5 rounded-[var(--radius-dot)] flex items-center justify-center text-primary-foreground text-xs" style={{ background: ghostTab.miniAppColor }}>{ghostTab.miniAppInitial}</div>
+          <div className={`w-3.5 h-3.5 rounded-[var(--radius-dot)] flex items-center justify-center text-primary-foreground text-xs ${ghostTab.miniAppColor}`}>{ghostTab.miniAppInitial}</div>
         ) : <GIcon size={13} strokeWidth={1.6} />}
         <span>{ghostTab.title}</span>
       </div>

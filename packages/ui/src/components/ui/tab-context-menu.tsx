@@ -5,7 +5,7 @@ import { Pin, X, ChevronLeft } from 'lucide-react';
 import { Button } from './button';
 
 export interface ContextMenuState {
-  visible: boolean;
+  open: boolean;
   x: number;
   y: number;
   tabId: string;
@@ -38,7 +38,7 @@ export function TabContextMenu({
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (!state.visible) return;
+    if (!state.open) return;
     const handleClick = (e: MouseEvent) => {
       if (ref.current && !ref.current.contains(e.target as Node)) onDismiss();
     };
@@ -51,9 +51,9 @@ export function TabContextMenu({
       document.removeEventListener('mousedown', handleClick);
       document.removeEventListener('keydown', handleKey);
     };
-  }, [state.visible, onDismiss]);
+  }, [state.open, onDismiss]);
 
-  if (!state.visible || !tab) return null;
+  if (!state.open || !tab) return null;
 
   const isHome = tab.id === 'home';
 

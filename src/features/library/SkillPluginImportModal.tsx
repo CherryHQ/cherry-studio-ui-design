@@ -135,7 +135,7 @@ export function SkillPluginImportModal({ open, importType, onClose, onImportComp
     <Dialog open={open} onOpenChange={v => { if (!v) handleClose(); }}>
       <DialogContent className="w-[440px] p-0">
           {/* Header */}
-          <DialogHeader className="px-5 py-4 border-b border-border/10">
+          <DialogHeader className="px-5 py-4 border-b border-border/15">
             <DialogTitle className="text-sm">{cfg.title}</DialogTitle>
           </DialogHeader>
 
@@ -153,30 +153,30 @@ export function SkillPluginImportModal({ open, importType, onClose, onImportComp
                   border-2 border-dashed rounded-xl cursor-pointer transition-all
                   ${dragOver
                     ? 'border-primary/40 bg-primary/5'
-                    : 'border-border/20 hover:border-border/40 hover:bg-accent/10'
+                    : 'border-border/20 hover:border-border/40 hover:bg-accent/15'
                   }
                 `}
               >
-                <Package size={28} strokeWidth={1.2} className={`mb-4 transition-colors ${dragOver ? 'text-primary/50' : 'text-muted-foreground/15'}`} />
+                <Package size={28} strokeWidth={1.2} className={`mb-4 transition-colors ${dragOver ? 'text-primary/50' : 'text-muted-foreground/50'}`} />
                 <p className="text-xs text-muted-foreground/50 mb-1.5">{cfg.desc}</p>
-                <p className="text-[9px] text-muted-foreground/25">{cfg.formats}</p>
+                <p className="text-xs text-muted-foreground/50">{cfg.formats}</p>
                 <input ref={inputRef} type="file" accept={accept} onChange={handleFileSelect} className="hidden" />
               </div>
             ) : (
               /* File Preview */
               <div className="space-y-4">
-                <div className="flex items-center gap-3 px-4 py-3.5 rounded-xl border border-border/20 bg-accent/10">
+                <div className="flex items-center gap-3 px-4 py-3.5 rounded-xl border border-border/20 bg-accent/15">
                   <div className="w-10 h-10 rounded-xl bg-accent/50 flex items-center justify-center flex-shrink-0">
                     <FileIcon size={18} strokeWidth={1.3} className="text-muted-foreground/40" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-xs text-foreground truncate">{parsedFile.rawName}</p>
                     <div className="flex items-center gap-2 mt-0.5">
-                      <span className="text-[9px] text-muted-foreground/30">{parsedFile.size}</span>
-                      <span className="text-[9px] px-1.5 py-px rounded-full bg-accent/40 text-muted-foreground/35 uppercase">{parsedFile.type}</span>
+                      <span className="text-xs text-muted-foreground/50">{parsedFile.size}</span>
+                      <span className="text-xs px-1.5 py-px rounded-full bg-accent/50 text-muted-foreground/50 uppercase">{parsedFile.type}</span>
                     </div>
                   </div>
-                  <Button variant="ghost" size="icon-xs" onClick={resetState} className="text-muted-foreground/20 hover:text-foreground hover:bg-accent/40 flex-shrink-0">
+                  <Button variant="ghost" size="icon-xs" onClick={resetState} className="text-muted-foreground/50 hover:text-foreground hover:bg-accent/50 flex-shrink-0">
                     <X size={10} />
                   </Button>
                 </div>
@@ -184,15 +184,15 @@ export function SkillPluginImportModal({ open, importType, onClose, onImportComp
                 {/* Parsed meta preview */}
                 <div className="px-4 py-3 rounded-xl border border-border/15 bg-accent/5 space-y-2">
                   <div className="flex items-center gap-2">
-                    <span className="text-[9px] text-muted-foreground/30 w-12 flex-shrink-0">名称</span>
+                    <span className="text-xs text-muted-foreground/50 w-12 flex-shrink-0">名称</span>
                     <span className="text-xs text-foreground">{parsedFile.name.replace(reDashUnderscore, ' ').replace(reWordBoundary, c => c.toUpperCase())}</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="text-[9px] text-muted-foreground/30 w-12 flex-shrink-0">类型</span>
+                    <span className="text-xs text-muted-foreground/50 w-12 flex-shrink-0">类型</span>
                     <span className="text-xs text-foreground">{importType === 'skill' ? '技能' : '插件'}</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="text-[9px] text-muted-foreground/30 w-12 flex-shrink-0">格式</span>
+                    <span className="text-xs text-muted-foreground/50 w-12 flex-shrink-0">格式</span>
                     <span className="text-xs text-foreground font-mono">.{parsedFile.type}</span>
                   </div>
                 </div>
@@ -212,7 +212,7 @@ export function SkillPluginImportModal({ open, importType, onClose, onImportComp
           </div>
 
           {/* Footer */}
-          <DialogFooter className="px-5 py-4 border-t border-border/10">
+          <DialogFooter className="px-5 py-4 border-t border-border/15">
             <Button variant="ghost" size="sm" onClick={handleClose}>
               取消
             </Button>

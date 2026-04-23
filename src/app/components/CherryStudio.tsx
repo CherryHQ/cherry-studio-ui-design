@@ -2,18 +2,17 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Puzzle } from 'lucide-react';
 import { Sidebar } from './layout/Sidebar';
 import { TabBar } from './layout/TabBar';
-import { TabContextMenu } from './ui/TabContextMenu';
-import { FloatingWindow } from './ui/FloatingWindow';
-import { NewTabDialog } from './ui/NewTabDialog';
-import { SearchDialog } from './ui/SearchDialog';
-import { DragGhost } from './ui/DragGhost';
+import { TabContextMenu, FloatingWindow, NewTabDialog, SearchDialog, DragGhost } from '@cherry-studio/ui';
 import { MainContent } from './MainContent';
 import {
   menuItems, getLayout,
-  dialogAppIcons, MOCK_RESOURCES,
+  dialogAppIcons, dialogFilterTabs,
+  newTabHistoryItems, newTabFileItems, dialogQuickActions,
+  searchFilterTabs, searchRecentItems, searchFileItems, searchQuickActions,
+  MOCK_RESOURCES,
 } from '@/app/config/constants';
 import type { Tab, MenuItem, ContextMenuState } from '@/app/types';
-import { SettingsPage } from './settings/SettingsPage';
+import { SettingsPage } from '@/features/settings/SettingsPage';
 import { SettingsProvider, useSettings } from '@/app/context/SettingsContext';
 import { GlobalActionProvider } from '@/app/context/GlobalActionContext';
 import type { GlobalActions } from '@/app/context/GlobalActionContext';
@@ -32,7 +31,8 @@ function CherryStudioInner() {
   const [sidebarWidth, setSidebarWidth] = useState(170);
   const [activeItem, setActiveItem] = useState('chat');
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const [contextMenu, setContextMenu] = useState<ContextMenuState>({ visible: false, x: 0, y: 0, tabId: '' });
+  const [settingsInitialSection, setSettingsInitialSection] = useState<string | undefined>();
+  const [contextMenu, setContextMenu] = useState<ContextMenuState>({ open: false, x: 0, y: 0, tabId: '' });
   const [hoverVisible, setHoverVisible] = useState(false);
   const [newTabDialogOpen, setNewTabDialogOpen] = useState(false);
   const [newTabSearch, setNewTabSearch] = useState('');
@@ -199,7 +199,7 @@ function CherryStudioInner() {
     navigateToLibrary: handleNavigateToLibrary,
     libraryReturn: handleLibraryReturn,
     changeTabTitle: handleTabTitleChange,
-    openSettings: () => setSettingsOpen(true),
+    openSettings: (section?: string) => { setSettingsInitialSection(section); setSettingsOpen(true); },
     libraryEditResourceId,
     libraryCreateType,
   }), [
@@ -213,8 +213,8 @@ function CherryStudioInner() {
   // ===========================
   return (
     <GlobalActionProvider value={globalActions}>
-      <div className="flex items-center justify-center h-screen w-full bg-neutral-200 dark:bg-neutral-900 p-6">
-        <div id="cherry-app-root" className="flex flex-col w-full h-full max-w-[1200px] max-h-[800px] bg-sidebar text-foreground rounded-2xl border border-border overflow-hidden shadow-2xl relative">
+      <div className="flex items-center justify-center h-screen w-full bg-muted dark:bg-background p-6">
+        <div id="cherry-app-root" className="flex flex-col w-full h-full max-w-[1440px] max-h-[900px] bg-sidebar text-foreground rounded-2xl border border-border overflow-hidden shadow-2xl relative">
           <TabBar
             tabs={tabs}
             activeTabId={activeTabId}
@@ -222,7 +222,7 @@ function CherryStudioInner() {
             onTabClose={handleCloseTab}
             onTabContext={(e, tabId) => {
               e.preventDefault();
-              setContextMenu({ visible: true, x: e.clientX, y: e.clientY, tabId });
+              setContextMenu({ open: true, x: e.clientX, y: e.clientY, tabId });
             }}
             onNewTab={() => { setNewTabSearch(''); setNewTabDialogOpen(true); }}
             startTabDrag={onStartTabDrag}
@@ -251,7 +251,7 @@ function CherryStudioInner() {
               />
             </div>
 
-            <div className={`flex-1 flex flex-col min-w-0 pr-2 pb-2 ${getLayout(sidebarWidth) === 'hidden' ? 'pl-2' : ''}`}>
+            <div className={`flex-1 flex flex-col min-w-0 min-h-0 pr-2 pb-2 ${getLayout(sidebarWidth) === 'hidden' ? 'pl-2' : ''}`}>
               <div className="flex-1 bg-background rounded-xl overflow-hidden flex flex-col min-h-0 relative">
                 <MainContent tabs={tabs} activeTabId={activeTabId || 'home'} />
               </div>
@@ -280,7 +280,7 @@ function CherryStudioInner() {
           {hoverVisible && getLayout(sidebarWidth) === 'hidden' && (
             <Sidebar
               isFloating
-              onDismiss={() => setHoverVisible(false)}
+              onClose={() => setHoverVisible(false)}
               width={sidebarWidth}
               setWidth={setSidebarWidth}
               activeItem={activeItem}
@@ -312,7 +312,7 @@ function CherryStudioInner() {
             if (t?.sidebarDocked) handleUndockFromSidebar(tabId);
             else handleDockToSidebar(tabId);
           }}
-          onDismiss={() => setContextMenu(prev => ({ ...prev, visible: false }))}
+          onDismiss={() => setContextMenu(prev => ({ ...prev, open: false }))}
         />
 
         <NewTabDialog
@@ -325,16 +325,26 @@ function CherryStudioInner() {
           setHiddenApps={setHiddenApps}
           appOrder={appOrder}
           setAppOrder={setAppOrder}
+          dialogAppIcons={dialogAppIcons}
+          dialogFilterTabs={dialogFilterTabs}
+          newTabHistoryItems={newTabHistoryItems}
+          newTabFileItems={newTabFileItems}
+          dialogQuickActions={dialogQuickActions}
         />
 
         <SearchDialog
           open={searchDialogOpen}
           onClose={() => setSearchDialogOpen(false)}
+          searchFilterTabs={searchFilterTabs}
+          searchRecentItems={searchRecentItems}
+          searchFileItems={searchFileItems}
+          searchQuickActions={searchQuickActions}
         />
 
         <SettingsPage
           open={settingsOpen}
-          onClose={() => setSettingsOpen(false)}
+          onClose={() => { setSettingsOpen(false); setSettingsInitialSection(undefined); }}
+          initialSection={settingsInitialSection}
         />
       </div>
     </GlobalActionProvider>

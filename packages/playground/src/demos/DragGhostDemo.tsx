@@ -5,7 +5,7 @@ import { MessageCircle, FileText, Compass } from "lucide-react"
 
 const sampleTabs: DragGhostTab[] = [
   { id: "chat", title: "New Chat", icon: MessageCircle },
-  { id: "notes", title: "My Notes", icon: FileText, miniAppId: "notes", miniAppColor: "var(--accent-indigo)", miniAppInitial: "N" },
+  { id: "notes", title: "My Notes", icon: FileText, miniAppId: "notes", miniAppColor: "bg-accent-indigo", miniAppInitial: "N" },
   { id: "explore", title: "Explore", icon: Compass },
 ]
 

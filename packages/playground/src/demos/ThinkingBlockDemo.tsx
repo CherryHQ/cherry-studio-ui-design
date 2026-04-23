@@ -8,6 +8,7 @@ const thinkingProps: PropDef[] = [
   { name: "content", type: "string", description: "Thinking content text" },
   { name: "defaultOpen", type: "boolean", default: "true", description: "Whether expanded by default" },
   { name: "duration", type: "number", default: "undefined", description: "Thinking duration in ms" },
+  { name: "isStreaming", type: "boolean", default: "false", description: "Whether thinking is in progress (shows shake animation)" },
 ]
 
 export function ThinkingBlockDemo() {
@@ -22,6 +23,15 @@ export function ThinkingBlockDemo() {
         <div className="max-w-lg">
           <ThinkingBlock
             content={"Let me analyze the user's question carefully.\n\n1. First, I need to understand the requirements\n2. Then I'll consider the best approach\n3. Finally, I'll formulate a clear response\n\nThe key insight here is that we need to balance performance with readability."}
+          />
+        </div>
+      </Section>
+
+      <Section title="Streaming (Thinking in Progress)">
+        <div className="max-w-lg">
+          <ThinkingBlock
+            isStreaming
+            content={"分析用户的请求内容...\n确定最佳回答策略...\n准备生成回复..."}
           />
         </div>
       </Section>

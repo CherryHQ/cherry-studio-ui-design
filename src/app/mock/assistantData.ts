@@ -610,15 +610,15 @@ export const MOCK_MESSAGES: AssistantMessage[] = [
 function StatCard({ title, value, change, icon }: StatCardProps) {
   const isPositive = change > 0;
   return (
-    <div className="bg-white rounded-xl p-4 border border-gray-100 shadow-sm">
+    <div className="bg-background rounded-xl p-4 border border-border shadow-sm">
       <div className="flex items-center justify-between mb-3">
-        <span className="text-sm text-gray-500">{title}</span>
-        <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center">
+        <span className="text-sm text-muted-foreground">{title}</span>
+        <div className="w-8 h-8 rounded-lg bg-accent flex items-center justify-center">
           {icon}
         </div>
       </div>
-      <div className="text-2xl font-semibold text-gray-900">{value}</div>
-      <div className={\`text-xs mt-1 \${isPositive ? 'text-green-600' : 'text-red-500'}\`}>
+      <div className="text-2xl font-semibold text-foreground">{value}</div>
+      <div className={\`text-xs mt-1 \${isPositive ? 'text-success' : 'text-destructive'}\`}>
         {isPositive ? '+' : ''}{change}% vs last month
       </div>
     </div>

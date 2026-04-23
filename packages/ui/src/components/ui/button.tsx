@@ -28,6 +28,8 @@ const buttonVariants = cva(
           "border bg-background shadow-button hover:bg-accent hover:text-accent-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50",
         ghost:
           "hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50",
+        overlay:
+          "bg-foreground/40 text-background hover:bg-foreground/70 backdrop-blur-sm",
         link: "text-accent-blue underline-offset-4 hover:underline",
       },
       size: {
@@ -39,6 +41,7 @@ const buttonVariants = cva(
         "icon-xs": "size-6 rounded-[var(--radius-control)] [&_svg:not([class*='size-'])]:size-3",
         "icon-sm": "size-9",
         "icon-lg": "size-10",
+        inline: "h-auto gap-1 rounded-[var(--radius-control)] px-2 py-[3px] text-xs has-[>svg]:px-1.5 [&_svg:not([class*='size-'])]:size-3",
       },
     },
     defaultVariants: {

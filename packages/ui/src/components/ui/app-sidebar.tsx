@@ -64,7 +64,7 @@ function MiniAppIcon({ tab, size = "sm" }: { tab: AppSidebarTab; size?: "sm" | "
     return <img src={tab.miniAppLogoUrl} alt="" className={`${s} rounded-[var(--radius-kbd)] object-cover flex-shrink-0`} />
   }
   return (
-    <div className={`${s} rounded-[var(--radius-kbd)] flex items-center justify-center text-primary-foreground ${fontSize} flex-shrink-0`} style={{ background: tab.miniAppColor }}>
+    <div className={`${s} rounded-[var(--radius-kbd)] flex items-center justify-center text-primary-foreground ${fontSize} flex-shrink-0 ${tab.miniAppColor}`}>
       {tab.miniAppInitial}
     </div>
   )

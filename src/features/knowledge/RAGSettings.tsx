@@ -1,11 +1,11 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   ChevronDown, Check, Info, RotateCcw,
   AlertTriangle, RefreshCw, Layers, Search as SearchIcon,
   Cpu, MessageSquare,
 } from 'lucide-react';
 import { Tooltip } from '@/app/components/Tooltip';
-import { Button, Input } from '@cherry-studio/ui';
+import { Button, Input, Slider, Popover, PopoverTrigger, PopoverContent } from '@cherry-studio/ui';
 
 // ===========================
 // Options data
@@ -74,76 +74,44 @@ function MiniSelect({ items, selectedId, onSelect }: {
   onSelect: (id: string) => void;
 }) {
   const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (!open) return;
-    const h = (e: MouseEvent) => { if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false); };
-    document.addEventListener('mousedown', h);
-    return () => document.removeEventListener('mousedown', h);
-  }, [open]);
-
   const selected = items.find(i => i.id === selectedId);
 
   return (
-    <div ref={ref} className="relative">
-      <Button
-        variant="outline"
-        size="sm"
-        onClick={() => setOpen(!open)}
-        className={`w-full justify-between px-2.5 py-[6px] text-xs bg-transparent hover:bg-muted/20 transition-colors ${open ? 'border-cherry-primary/40 ring-1 ring-cherry-primary/15' : 'border-border/40'}`}
-      >
-        <span className="text-foreground truncate">{selected?.name || '选择...'}</span>
-        <ChevronDown size={10} className={`text-muted-foreground/40 transition-transform flex-shrink-0 ml-2 ${open ? 'rotate-180' : ''}`} />
-      </Button>
-      {open && (
-        <div className="absolute top-full left-0 right-0 mt-1 bg-popover border border-border/40 rounded-lg shadow-lg z-50 p-1 overflow-y-auto max-h-[200px] animate-in fade-in slide-in-from-top-1 duration-150 [&::-webkit-scrollbar]:w-[3px] [&::-webkit-scrollbar-thumb]:bg-border/30 [&::-webkit-scrollbar-thumb]:rounded-full">
-          {items.map(item => (
-            <Button
-              key={item.id}
-              variant="ghost"
-              onClick={() => { onSelect(item.id); setOpen(false); }}
-              className={`w-full justify-start h-auto py-[5px] px-2 text-xs rounded-md transition-colors flex items-center gap-1.5 ${selectedId === item.id ? 'bg-cherry-active-bg text-cherry-primary-dark' : 'text-foreground hover:bg-accent/60'}`}
-            >
-              <span className="truncate flex-1">{item.name}</span>
-              {item.provider && <span className="text-[9px] text-muted-foreground/30 flex-shrink-0">{item.provider}</span>}
-              {item.dim && <span className="text-[9px] text-muted-foreground/25 flex-shrink-0">{item.dim}d</span>}
-              {selectedId === item.id && <Check size={10} className="text-cherry-primary flex-shrink-0" />}
-            </Button>
-          ))}
-        </div>
-      )}
-    </div>
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button
+          variant="outline"
+          size="sm"
+          className={`w-full justify-between px-2.5 py-[6px] text-xs bg-transparent hover:bg-muted/20 transition-colors ${open ? 'border-cherry-primary/40 ring-1 ring-cherry-primary/15' : 'border-border/40'}`}
+        >
+          <span className="text-foreground truncate">{selected?.name || '选择...'}</span>
+          <ChevronDown size={10} className={`text-muted-foreground/40 transition-transform flex-shrink-0 ml-2 ${open ? 'rotate-180' : ''}`} />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent align="start" className="p-1 overflow-y-auto max-h-[200px] scrollbar-thin w-[var(--radix-popover-trigger-width)]">
+        {items.map(item => (
+          <Button size="inline"
+            key={item.id}
+            variant="ghost"
+            onClick={() => { onSelect(item.id); setOpen(false); }}
+            className={`w-full justify-start py-[5px] px-2 text-xs rounded-md transition-colors flex items-center gap-1.5 ${selectedId === item.id ? 'bg-cherry-active-bg text-cherry-primary-dark' : 'text-foreground hover:bg-accent/50'}`}
+          >
+            <span className="truncate flex-1">{item.name}</span>
+            {item.provider && <span className="text-xs text-muted-foreground/50 flex-shrink-0">{item.provider}</span>}
+            {item.dim && <span className="text-xs text-muted-foreground/50 flex-shrink-0">{item.dim}d</span>}
+            {selectedId === item.id && <Check size={10} className="text-cherry-primary flex-shrink-0" />}
+          </Button>
+        ))}
+      </PopoverContent>
+    </Popover>
   );
 }
 
-function GreenSlider({ value, onChange, min, max, step }: {
-  value: number; onChange: (v: number) => void; min: number; max: number; step: number;
-}) {
-  const pct = ((value - min) / (max - min)) * 100;
-  return (
-    <div className="relative h-5 flex items-center">
-      <div className="absolute inset-x-0 h-[3px] bg-border/25 rounded-full" />
-      <div className="absolute left-0 h-[3px] bg-cherry-primary rounded-full" style={{ width: `${pct}%` }} />
-      <div className="absolute left-0 w-[5px] h-[5px] rounded-full bg-cherry-primary -translate-x-[1px]" />
-      <div className="absolute right-0 w-[5px] h-[5px] rounded-full bg-border/40 translate-x-[1px]" />
-      <input
-        type="range" min={min} max={max} step={step} value={value}
-        onChange={e => onChange(parseFloat(e.target.value))}
-        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
-      />
-      <div
-        className="absolute w-[13px] h-[13px] rounded-full bg-white border-[2px] border-cherry-primary shadow-sm pointer-events-none transition-[left] duration-75"
-        style={{ left: `calc(${pct}% - 6px)` }}
-      />
-    </div>
-  );
-}
 
 function FieldLabel({ children, hint }: { children: React.ReactNode; hint?: string }) {
   return (
     <div className="flex items-center gap-1 mb-1">
-      <span className="text-xs text-foreground/75">{children}</span>
+      <span className="text-xs text-foreground">{children}</span>
       {hint && (
         <Tooltip content={hint} side="top">
           <Info size={9} className="text-muted-foreground/40 cursor-help" />
@@ -162,7 +130,7 @@ function FieldInput({ value, onChange, placeholder, suffix }: { value: string; o
         placeholder={placeholder}
         className="text-xs"
       />
-      {suffix && <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[9px] text-muted-foreground/25 pointer-events-none">{suffix}</span>}
+      {suffix && <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-xs text-muted-foreground/50 pointer-events-none">{suffix}</span>}
     </div>
   );
 }
@@ -217,7 +185,7 @@ export function RAGSettings() {
   }, [embeddingModel]);
 
   return (
-    <div className="flex-1 overflow-y-auto [&::-webkit-scrollbar]:w-[3px] [&::-webkit-scrollbar-thumb]:bg-border/30 [&::-webkit-scrollbar-thumb]:rounded-full">
+    <div className="flex-1 overflow-y-auto scrollbar-thin">
       <div className="max-w-[480px] mx-auto px-5 py-4 space-y-5">
 
         {/* ========== Section 1: 文档预处理 ========== */}
@@ -231,7 +199,7 @@ export function RAGSettings() {
 
           <div className="flex items-start gap-2 px-2.5 py-1.5 rounded-md bg-cherry-active-bg border border-cherry-ring">
             <Info size={10} className="text-cherry-primary/60 flex-shrink-0 mt-px" />
-            <span className="text-[9px] text-cherry-text-muted leading-relaxed">文档预处理将在文档导入时自动执行，选择合适的处理服务商可提升文档解析质量</span>
+            <span className="text-xs text-cherry-text-muted leading-relaxed">文档预处理将在文档导入时自动执行，选择合适的处理服务商可提升文档解析质量</span>
           </div>
         </div>
 
@@ -245,7 +213,7 @@ export function RAGSettings() {
               variant="ghost"
               size="xs"
               onClick={handleResetChunking}
-              className="h-5 px-2 text-[9px] text-muted-foreground/50 hover:text-foreground hover:bg-accent/60 transition-colors flex items-center gap-1"
+              className="h-5 px-2 text-xs text-muted-foreground/50 hover:text-foreground hover:bg-accent/50 transition-colors flex items-center gap-1"
             >
               <RotateCcw size={8} />
               <span>恢复默认</span>
@@ -276,9 +244,9 @@ export function RAGSettings() {
             </div>
           )}
 
-          <div className="flex items-start gap-2 px-2.5 py-1.5 rounded-md bg-amber-500/[0.06] border border-amber-500/12">
-            <AlertTriangle size={10} className="text-amber-500/60 flex-shrink-0 mt-px" />
-            <span className="text-[9px] text-amber-600/60 leading-relaxed">分段大小和重叠大小修改只针对新添加的内容有效，不会影响已索引的数据</span>
+          <div className="flex items-start gap-2 px-2.5 py-1.5 rounded-md bg-warning/[0.06] border border-warning/12">
+            <AlertTriangle size={10} className="text-warning/60 flex-shrink-0 mt-px" />
+            <span className="text-xs text-warning/60 leading-relaxed">分段大小和重叠大小修改只针对新添加的内容有效，不会影响已索引的数据</span>
           </div>
         </div>
 
@@ -323,8 +291,8 @@ export function RAGSettings() {
               <FieldLabel hint="检索返回的最大文档片段数">请求文档片段数 (Top K)</FieldLabel>
               <span className="text-xs text-cherry-primary-dark tabular-nums">{topK}</span>
             </div>
-            <GreenSlider value={topK} onChange={v => setTopK(Math.round(v))} min={1} max={50} step={1} />
-            <div className="flex items-center justify-between mt-px text-[8px] text-muted-foreground/25">
+            <Slider min={1} max={50} step={1} value={[topK]} onValueChange={([v]) => setTopK(Math.round(v))} />
+            <div className="flex items-center justify-between mt-px text-xs text-muted-foreground/50">
               <span>1</span><span>50</span>
             </div>
           </div>
@@ -335,8 +303,8 @@ export function RAGSettings() {
               <FieldLabel hint="低于此分数的结果将被过滤，0 表示不过滤">匹配度阈值</FieldLabel>
               <span className="text-xs text-cherry-primary-dark tabular-nums">{scoreThreshold}</span>
             </div>
-            <GreenSlider value={parseFloat(scoreThreshold)} onChange={v => setScoreThreshold(v.toFixed(2))} min={0} max={1} step={0.01} />
-            <div className="flex items-center justify-between mt-px text-[8px] text-muted-foreground/25">
+            <Slider min={0} max={1} step={0.01} value={[parseFloat(scoreThreshold)]} onValueChange={([v]) => setScoreThreshold(v.toFixed(2))} />
+            <div className="flex items-center justify-between mt-px text-xs text-muted-foreground/50">
               <span>0.00</span><span>1.00</span>
             </div>
           </div>
@@ -359,7 +327,7 @@ export function RAGSettings() {
             <RotateCcw size={9} />
             <span>恢复默认</span>
           </Button>
-          <Button size="sm" className="h-6 px-3 bg-cherry-primary text-white hover:bg-cherry-primary-dark transition-colors">
+          <Button size="sm">
             保存
           </Button>
         </div>

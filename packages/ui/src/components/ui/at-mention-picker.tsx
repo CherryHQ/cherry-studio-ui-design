@@ -168,7 +168,7 @@ export function AtMentionPicker({
         <div
           onMouseEnter={handleSubpanelEnter}
           onMouseLeave={handleSubpanelLeave}
-          className="ml-1.5 bg-popover border border-border rounded-[var(--radius-button)] shadow-popover z-[var(--z-popover)] animate-in fade-in slide-in-from-left-1 duration-[var(--duration-fast)] overflow-hidden w-[380px]"
+          className="ml-1.5 bg-popover border border-border rounded-[var(--radius-button)] shadow-popover z-[var(--z-popover)] animate-in fade-in slide-in-from-left-1 duration-[var(--duration-fast)] overflow-hidden w-[480px]"
         >
           <ModelPickerPanel
             {...modelPickerProps}

@@ -6,7 +6,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Tooltip } from '@/app/components/Tooltip';
-import { Button, Input } from '@cherry-studio/ui';
+import { Button, Input, SearchInput, EmptyState, Dialog, DialogContent, Popover, PopoverTrigger, PopoverContent, ContextMenu, ContextMenuTrigger, ContextMenuContent, ContextMenuItem, ContextMenuSeparator, Badge , Checkbox} from '@cherry-studio/ui';
 import type { AssistantTopic } from '@/app/types/assistant';
 
 type SortKey = 'time' | 'name' | 'messages';
@@ -31,23 +31,23 @@ interface Props {
 // ===========================
 
 const TAG_COLORS: Record<string, string> = {
-  'React': 'bg-cyan-500/12 text-cyan-700 border-cyan-500/20',
-  'Next.js': 'bg-neutral-500/12 text-neutral-700 border-neutral-500/20',
-  '\u524d\u7aef': 'bg-blue-500/12 text-blue-700 border-blue-500/20',
-  '\u540e\u7aef': 'bg-violet-500/12 text-violet-700 border-violet-500/20',
-  '\u5199\u4f5c': 'bg-amber-500/12 text-amber-700 border-amber-500/20',
-  '\u62a5\u544a': 'bg-orange-500/12 text-orange-700 border-orange-500/20',
-  'TypeScript': 'bg-sky-500/12 text-sky-700 border-sky-500/20',
-  'CSS': 'bg-pink-500/12 text-pink-700 border-pink-500/20',
-  '\u4ea7\u54c1': 'bg-foreground/[0.07] text-foreground/80 border-foreground/[0.1]',
-  '\u6570\u636e\u5e93': 'bg-indigo-500/12 text-indigo-700 border-indigo-500/20',
-  'DevOps': 'bg-teal-500/12 text-teal-700 border-teal-500/20',
-  'AI': 'bg-purple-500/12 text-purple-700 border-purple-500/20',
-  '\u67b6\u6784': 'bg-red-500/12 text-red-700 border-red-500/20',
-  '\u6548\u7387': 'bg-yellow-500/12 text-yellow-700 border-yellow-500/20',
-  'MCP': 'bg-rose-500/12 text-rose-700 border-rose-500/20',
-  '\u5bf9\u6bd4': 'bg-lime-500/12 text-lime-700 border-lime-500/20',
-  '\u672a\u6807\u8bb0': 'bg-gray-500/12 text-gray-700 border-gray-500/20',
+  'React': 'bg-accent-cyan-muted text-accent-cyan border-accent-cyan/20',
+  'Next.js': 'bg-muted text-muted-foreground border-border/50',
+  '\u524d\u7aef': 'bg-accent-blue-muted text-accent-blue border-accent-blue/20',
+  '\u540e\u7aef': 'bg-accent-violet-muted text-accent-violet border-accent-violet/20',
+  '\u5199\u4f5c': 'bg-accent-amber-muted text-accent-amber border-accent-amber/20',
+  '\u62a5\u544a': 'bg-accent-orange-muted text-accent-orange border-accent-orange/20',
+  'TypeScript': 'bg-accent-blue-muted text-accent-blue border-accent-blue/20',
+  'CSS': 'bg-accent-pink-muted text-accent-pink border-accent-pink/20',
+  '\u4ea7\u54c1': 'bg-muted text-foreground border-border/50',
+  '\u6570\u636e\u5e93': 'bg-accent-indigo-muted text-accent-indigo border-accent-indigo/20',
+  'DevOps': 'bg-accent-emerald-muted text-accent-emerald border-accent-emerald/20',
+  'AI': 'bg-accent-purple-muted text-accent-purple border-accent-purple/20',
+  '\u67b6\u6784': 'bg-destructive/12 text-destructive border-destructive/20',
+  '\u6548\u7387': 'bg-accent-amber-muted text-accent-amber border-accent-amber/20',
+  'MCP': 'bg-accent-pink-muted text-accent-pink border-accent-pink/20',
+  '\u5bf9\u6bd4': 'bg-accent-emerald-muted text-accent-emerald border-accent-emerald/20',
+  '\u672a\u6807\u8bb0': 'bg-muted text-foreground border-border/50',
 };
 
 function TagBadge({ tag, selected, onClick, onRemove, size = 'sm' }: {
@@ -57,15 +57,16 @@ function TagBadge({ tag, selected, onClick, onRemove, size = 'sm' }: {
   onRemove?: () => void;
   size?: 'sm' | 'xs';
 }) {
-  const color = TAG_COLORS[tag] || 'bg-gray-500/12 text-gray-700 border-gray-500/20';
-  const sizeClass = size === 'sm' ? 'px-2 py-[2px] text-xs' : 'px-1.5 py-[1px] text-[9px]';
+  const color = TAG_COLORS[tag] || 'bg-muted text-foreground border-border/50';
+  const sizeClass = size === 'sm' ? 'px-2 py-[2px]' : 'px-1.5 py-[1px]';
 
   return (
-    <span
+    <Badge
+      variant="outline"
       onClick={onClick}
-      className={`inline-flex items-center gap-0.5 rounded-md border transition-all duration-100 ${sizeClass} ${color} ${
-        selected ? 'ring-1 ring-foreground/20 shadow-sm' : ''
-      } ${onClick ? 'cursor-pointer hover:shadow-sm active:scale-[0.96]' : 'cursor-default'}`}
+      className={`gap-0.5 rounded-md transition-all duration-100 ${sizeClass} ${color} ${
+        selected ? 'ring-1 ring-ring/20 shadow-sm' : ''
+      } ${onClick ? 'cursor-pointer hover:shadow-sm active:scale-[0.97]' : 'cursor-default'}`}
     >
       {tag}
       {onRemove && (
@@ -78,7 +79,7 @@ function TagBadge({ tag, selected, onClick, onRemove, size = 'sm' }: {
           <X size={8} />
         </Button>
       )}
-    </span>
+    </Badge>
   );
 }
 
@@ -114,18 +115,17 @@ function GroupSection({ title, count, children, defaultOpen = true, icon }: {
 
   return (
     <div className="mb-2">
-      <Button
+      <Button size="inline"
         variant="ghost"
-        size="sm"
         onClick={() => setOpen(!open)}
-        className="flex items-center gap-2 w-full px-2 py-1.5 rounded-md hover:bg-accent/15 transition-colors h-auto"
+        className="flex items-center gap-2 w-full px-2 py-1.5 rounded-md hover:bg-accent/15 transition-colors"
       >
         <motion.div animate={{ rotate: open ? 0 : -90 }} transition={{ duration: 0.1 }}>
           <ChevronDown size={11} className="text-muted-foreground" />
         </motion.div>
         {icon || <FolderOpen size={11} className="text-muted-foreground" />}
-        <span className="text-xs text-foreground/90 flex-1 text-left">{title}</span>
-        <span className="text-xs text-muted-foreground bg-accent/30 px-1.5 py-[1px] rounded-md tabular-nums">{count}</span>
+        <span className="text-xs text-foreground flex-1 text-left">{title}</span>
+        <span className="text-xs text-muted-foreground bg-accent/25 px-1.5 py-[1px] rounded-md tabular-nums">{count}</span>
       </Button>
       <AnimatePresence initial={false}>
         {open && (
@@ -140,72 +140,6 @@ function GroupSection({ title, count, children, defaultOpen = true, icon }: {
           </motion.div>
         )}
       </AnimatePresence>
-    </div>
-  );
-}
-
-// ===========================
-// Context Menu
-// ===========================
-
-function TopicContextMenu({ x, y, topic, onClose, onAction }: {
-  x: number;
-  y: number;
-  topic: AssistantTopic;
-  onClose: () => void;
-  onAction: (action: string) => void;
-}) {
-  const cx = Math.min(x, window.innerWidth - 180);
-  const cy = Math.min(y, window.innerHeight - 260);
-
-  return (
-    <div>
-      <div className="fixed inset-0 z-[60]" onClick={onClose} />
-      <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        exit={{ opacity: 0, scale: 0.95 }}
-        transition={{ duration: 0.08 }}
-        className="fixed z-[60] bg-popover border border-border/40 rounded-lg shadow-xl shadow-black/10 py-1 min-w-[160px]"
-        style={{ left: cx, top: cy }}
-      >
-        {/* Edit tags */}
-        <Button
-          variant="ghost"
-          size="xs"
-          onClick={() => { onAction('editTags'); onClose(); }}
-          className="flex items-center gap-2.5 w-full px-3 py-[6px] text-xs text-foreground/80 hover:bg-accent/20 transition-colors rounded-none justify-start h-auto"
-        >
-          <Tag size={11} className="text-muted-foreground" />
-          <span>{'\u7f16\u8f91\u6807\u7b7e'}</span>
-        </Button>
-
-        <div className="h-px bg-border/20 my-1" />
-
-        {/* Pin/Unpin */}
-        <Button
-          variant="ghost"
-          size="xs"
-          onClick={() => { onAction('togglePin'); onClose(); }}
-          className="flex items-center gap-2.5 w-full px-3 py-[6px] text-xs text-foreground/80 hover:bg-accent/20 transition-colors rounded-none justify-start h-auto"
-        >
-          <Pin size={11} className={`text-muted-foreground ${topic.pinned ? '' : '-rotate-45'}`} />
-          <span>{topic.pinned ? '\u53d6\u6d88\u7f6e\u9876' : '\u7f6e\u9876'}</span>
-        </Button>
-
-        <div className="h-px bg-border/20 my-1" />
-
-        {/* Delete */}
-        <Button
-          variant="destructive"
-          size="xs"
-          onClick={() => { onAction('delete'); onClose(); }}
-          className="flex items-center gap-2.5 w-full px-3 py-[6px] text-xs text-destructive/80 hover:bg-destructive/8 transition-colors rounded-none justify-start h-auto bg-transparent"
-        >
-          <Trash2 size={11} />
-          <span>{'\u5220\u9664'}</span>
-        </Button>
-      </motion.div>
     </div>
   );
 }
@@ -246,21 +180,14 @@ function TagEditorPopover({ topic, allTags, onUpdate, onClose }: {
   const unusedTags = allTags.filter(t => !tags.includes(t));
 
   return (
-    <div>
-      <div className="fixed inset-0 z-[60] bg-black/10" onClick={onClose} />
-      <motion.div
-        initial={{ opacity: 0, scale: 0.95, y: 8 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.95, y: 8 }}
-        transition={{ duration: 0.12 }}
-        className="fixed z-[60] top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-popover border border-border/40 rounded-xl shadow-2xl shadow-black/15 w-[340px] overflow-hidden"
-      >
-        <div className="flex items-center justify-between px-4 py-3 border-b border-border/25">
+    <Dialog open onOpenChange={(open) => { if (!open) onClose(); }}>
+      <DialogContent className="w-[340px] overflow-hidden p-0" showCloseButton={false}>
+        <div className="flex items-center justify-between px-4 py-3 border-b border-border/30">
           <div className="flex items-center gap-2">
             <Tag size={12} className="text-muted-foreground" />
-            <span className="text-[11.5px] text-foreground">{'\u7f16\u8f91\u6807\u7b7e'}</span>
+            <span className="text-xs text-foreground">{'\u7f16\u8f91\u6807\u7b7e'}</span>
           </div>
-          <Button variant="ghost" size="icon-xs" onClick={onClose} className="p-1 rounded text-muted-foreground hover:text-foreground hover:bg-accent/20 transition-colors">
+          <Button variant="ghost" size="icon-xs" onClick={onClose} className="p-1 rounded text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-colors">
             <X size={12} />
           </Button>
         </div>
@@ -284,14 +211,13 @@ function TagEditorPopover({ topic, allTags, onUpdate, onClose }: {
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => { if (e.key === 'Enter') addTag(input); }}
               placeholder={'\u8f93\u5165\u65b0\u6807\u7b7e\u540d...'}
-              className="flex-1 bg-accent/15 border border-border/30 rounded-md px-2.5 py-[5px] text-xs text-foreground placeholder:text-muted-foreground/40 focus:border-cherry-primary/40 h-auto"
+              className="flex-1 bg-accent/15 border border-border/30 rounded-md px-2.5 py-[5px] text-xs text-foreground placeholder:text-muted-foreground/60 focus:border-cherry-primary/40 h-auto"
             />
-            <Button
+            <Button size="inline"
               variant="default"
-              size="xs"
               onClick={() => addTag(input)}
               disabled={!input.trim()}
-              className="px-2.5 py-[5px] rounded-md bg-cherry-active-bg text-xs text-cherry-text hover:bg-cherry-active-border transition-colors disabled:opacity-30 h-auto"
+              className="px-2.5 py-[5px] rounded-md bg-cherry-active-bg text-xs text-cherry-text hover:bg-cherry-active-border transition-colors disabled:opacity-30"
             >
               {'\u6dfb\u52a0'}
             </Button>
@@ -300,7 +226,7 @@ function TagEditorPopover({ topic, allTags, onUpdate, onClose }: {
           {/* Suggested tags */}
           {unusedTags.length > 0 && (
             <div>
-              <span className="text-[9px] text-muted-foreground uppercase tracking-[0.06em]">{'\u53ef\u7528\u6807\u7b7e'}</span>
+              <span className="text-xs text-muted-foreground uppercase tracking-[0.06em]">{'\u53ef\u7528\u6807\u7b7e'}</span>
               <div className="flex flex-wrap gap-1 mt-1.5">
                 {unusedTags.map(t => (
                   <TagBadge key={t} tag={t} size="sm" onClick={() => toggleTag(t)} />
@@ -310,16 +236,16 @@ function TagEditorPopover({ topic, allTags, onUpdate, onClose }: {
           )}
         </div>
 
-        <div className="flex items-center justify-end gap-2 px-4 py-2.5 border-t border-border/25">
-          <Button variant="outline" size="xs" onClick={onClose} className="px-3 py-[4px] rounded-md text-xs text-muted-foreground hover:text-foreground hover:bg-accent/20 transition-colors h-auto">
+        <div className="flex items-center justify-end gap-2 px-4 py-2.5 border-t border-border/30">
+          <Button variant="outline" size="xs" onClick={onClose} className="px-3 rounded-md text-xs text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-colors">
             {'\u53d6\u6d88'}
           </Button>
-          <Button variant="default" size="xs" onClick={save} className="px-3 py-[4px] rounded-md text-xs bg-foreground text-background hover:opacity-90 transition-opacity h-auto">
+          <Button variant="default" size="xs" onClick={save} className="px-3 rounded-md text-xs transition-opacity">
             {'\u4fdd\u5b58'}
           </Button>
         </div>
-      </motion.div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -327,67 +253,79 @@ function TagEditorPopover({ topic, allTags, onUpdate, onClose }: {
 // Topic Card (card view)
 // ===========================
 
-function TopicCard({ topic, isActive, isHovered, onSelect, onContextMenu, onMouseEnter, onMouseLeave }: {
+function TopicCard({ topic, isActive, isHovered, onSelect, onEditTags, onTogglePin, onDelete, onMouseEnter, onMouseLeave }: {
   topic: AssistantTopic;
   isActive: boolean;
   isHovered: boolean;
   onSelect: () => void;
-  onContextMenu: (e: React.MouseEvent) => void;
+  onEditTags: () => void;
+  onTogglePin: () => void;
+  onDelete: () => void;
   onMouseEnter: () => void;
   onMouseLeave: () => void;
 }) {
   return (
-    <div
-      onClick={onSelect}
-      onContextMenu={onContextMenu}
-      onMouseEnter={onMouseEnter}
-      onMouseLeave={onMouseLeave}
-      className={`flex items-center gap-2.5 px-3 py-2 rounded-lg cursor-pointer transition-all duration-100 ${
-        isActive
-          ? 'bg-cherry-active-bg border border-cherry-ring'
-          : 'border border-transparent hover:bg-accent/10 hover:border-border/30'
-      }`}
-    >
-      <span className="text-sm flex-shrink-0">{ASSISTANT_ICONS[topic.assistantName] || '\u{1F916}'}</span>
+    <ContextMenu>
+      <ContextMenuTrigger asChild>
+        <div
+          onClick={onSelect}
+          onMouseEnter={onMouseEnter}
+          onMouseLeave={onMouseLeave}
+          className={`flex items-center gap-2.5 px-3 py-2 rounded-lg cursor-pointer transition-all duration-100 ${
+            isActive
+              ? 'bg-cherry-active-bg border border-cherry-ring'
+              : 'border border-transparent hover:bg-accent/15 hover:border-border/30'
+          }`}
+        >
+          <span className="text-sm flex-shrink-0">{ASSISTANT_ICONS[topic.assistantName] || '\u{1F916}'}</span>
 
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-1.5">
-          {topic.status === 'active' && (
-            <span className="w-[5px] h-[5px] rounded-full bg-cherry-primary animate-pulse flex-shrink-0" />
-          )}
-          {topic.pinned && <Pin size={8} className="text-muted-foreground/50 -rotate-45 flex-shrink-0" />}
-          <span className="text-xs text-foreground truncate">{topic.title}</span>
-        </div>
-        <div className="flex items-center gap-1.5 mt-[2px]">
-          <span className="text-[9.5px] text-muted-foreground/60 flex-shrink-0">{topic.assistantName}</span>
-          <span className="text-muted-foreground/20">{'\u00b7'}</span>
-          <span className="text-[9.5px] text-muted-foreground/50 tabular-nums flex-shrink-0">{topic.messageCount} {'\u6761'}</span>
-          <span className="text-muted-foreground/20">{'\u00b7'}</span>
-          <span className="text-[9.5px] text-muted-foreground/50 flex-shrink-0">{topic.timestamp}</span>
-          {topic.tags && topic.tags.length > 0 && (
-            <div className="flex items-center gap-0.5 overflow-hidden ml-0.5">
-              {topic.tags.slice(0, 2).map(tag => <TagBadge key={tag} tag={tag} size="xs" />)}
-              {topic.tags.length > 2 && <span className="text-[8px] text-muted-foreground/40">+{topic.tags.length - 2}</span>}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-1.5">
+              {topic.status === 'active' && (
+                <span className="w-[5px] h-[5px] rounded-full bg-cherry-primary animate-pulse flex-shrink-0" />
+              )}
+              {topic.pinned && <Pin size={8} className="text-muted-foreground/50 -rotate-45 flex-shrink-0" />}
+              <span className="text-sm text-foreground truncate">{topic.title}</span>
             </div>
-          )}
-        </div>
-      </div>
+            <div className="flex items-center gap-1.5 mt-[2px]">
+              <span className="text-xs text-muted-foreground/60 flex-shrink-0">{topic.assistantName}</span>
+              <span className="text-muted-foreground/30">{'\u00b7'}</span>
+              <span className="text-xs text-muted-foreground/50 tabular-nums flex-shrink-0">{topic.messageCount} {'\u6761'}</span>
+              <span className="text-muted-foreground/30">{'\u00b7'}</span>
+              <span className="text-xs text-muted-foreground/50 flex-shrink-0">{topic.timestamp}</span>
+              {topic.tags && topic.tags.length > 0 && (
+                <div className="flex items-center gap-0.5 overflow-hidden ml-0.5">
+                  {topic.tags.slice(0, 2).map(tag => <TagBadge key={tag} tag={tag} size="xs" />)}
+                  {topic.tags.length > 2 && <span className="text-xs text-muted-foreground/40">+{topic.tags.length - 2}</span>}
+                </div>
+              )}
+            </div>
+          </div>
 
-      <div className="w-[20px] flex-shrink-0 flex justify-center">
-        {isHovered && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-            <Button
-              variant="ghost"
-              size="icon-xs"
-              onClick={(e) => { e.stopPropagation(); onContextMenu(e); }}
-              className="p-1 rounded text-muted-foreground/40 hover:text-foreground hover:bg-accent/20 transition-colors h-auto w-auto"
-            >
-              <MoreHorizontal size={11} />
-            </Button>
-          </motion.div>
-        )}
-      </div>
-    </div>
+          <div className="w-[20px] flex-shrink-0 flex justify-center">
+            {isHovered && (
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+                <MoreHorizontal size={11} className="text-muted-foreground/40" />
+              </motion.div>
+            )}
+          </div>
+        </div>
+      </ContextMenuTrigger>
+      <ContextMenuContent>
+        <ContextMenuItem onClick={onEditTags}>
+          <Tag size={14} /> {'\u7f16\u8f91\u6807\u7b7e'}
+        </ContextMenuItem>
+        <ContextMenuSeparator />
+        <ContextMenuItem onClick={onTogglePin}>
+          <Pin size={14} className={topic.pinned ? '' : '-rotate-45'} />
+          {topic.pinned ? '\u53d6\u6d88\u7f6e\u9876' : '\u7f6e\u9876'}
+        </ContextMenuItem>
+        <ContextMenuSeparator />
+        <ContextMenuItem variant="destructive" onClick={onDelete}>
+          <Trash2 size={14} /> {'\u5220\u9664'}
+        </ContextMenuItem>
+      </ContextMenuContent>
+    </ContextMenu>
   );
 }
 
@@ -395,55 +333,67 @@ function TopicCard({ topic, isActive, isHovered, onSelect, onContextMenu, onMous
 // Topic List Row (list view)
 // ===========================
 
-function TopicListRow({ topic, isActive, isHovered, onSelect, onContextMenu, onMouseEnter, onMouseLeave }: {
+function TopicListRow({ topic, isActive, isHovered, onSelect, onEditTags, onTogglePin, onDelete, onMouseEnter, onMouseLeave }: {
   topic: AssistantTopic;
   isActive: boolean;
   isHovered: boolean;
   onSelect: () => void;
-  onContextMenu: (e: React.MouseEvent) => void;
+  onEditTags: () => void;
+  onTogglePin: () => void;
+  onDelete: () => void;
   onMouseEnter: () => void;
   onMouseLeave: () => void;
 }) {
   return (
-    <div
-      onClick={onSelect}
-      onContextMenu={onContextMenu}
-      onMouseEnter={onMouseEnter}
-      onMouseLeave={onMouseLeave}
-      className={`flex items-center gap-2.5 px-3 py-[7px] rounded-lg cursor-pointer transition-all duration-75 group ${
-        isActive ? 'bg-cherry-active-bg' : 'hover:bg-accent/10'
-      }`}
-    >
-      <span className="text-sm flex-shrink-0 w-5 text-center">{ASSISTANT_ICONS[topic.assistantName] || '\u{1F916}'}</span>
-      {topic.status === 'active' && <span className="w-[5px] h-[5px] rounded-full bg-cherry-primary animate-pulse flex-shrink-0" />}
-      {topic.pinned && <Pin size={8} className="text-muted-foreground/50 -rotate-45 flex-shrink-0" />}
-      <span className={`text-xs flex-1 truncate ${isActive ? 'text-foreground' : 'text-foreground/85'}`}>
-        {topic.title}
-      </span>
-      <div className="flex items-center gap-1 flex-shrink-0">
-        {topic.tags?.slice(0, 2).map(tag => <TagBadge key={tag} tag={tag} size="xs" />)}
-      </div>
-      <span className="text-xs text-muted-foreground truncate flex-shrink-0 w-[70px] text-right">{topic.assistantName}</span>
-      <div className="flex items-center gap-0.5 flex-shrink-0 w-[36px] justify-end">
-        <MessageCircle size={8} className="text-muted-foreground/40" />
-        <span className="text-[9px] text-muted-foreground tabular-nums">{topic.messageCount}</span>
-      </div>
-      <span className="text-xs text-muted-foreground flex-shrink-0 w-[40px] text-right tabular-nums">{topic.timestamp}</span>
-      <div className="w-[24px] flex-shrink-0 flex justify-center">
-        {isHovered ? (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-            <Button
-              variant="ghost"
-              size="icon-xs"
-              onClick={(e) => { e.stopPropagation(); onContextMenu(e); }}
-              className="p-1 rounded text-muted-foreground/40 hover:text-foreground hover:bg-accent/20 transition-colors h-auto w-auto"
-            >
-              <MoreHorizontal size={11} />
-            </Button>
-          </motion.div>
-        ) : null}
-      </div>
-    </div>
+    <ContextMenu>
+      <ContextMenuTrigger asChild>
+        <div
+          onClick={onSelect}
+          onMouseEnter={onMouseEnter}
+          onMouseLeave={onMouseLeave}
+          className={`flex items-center gap-2.5 px-3 py-[7px] rounded-lg cursor-pointer transition-all duration-75 group ${
+            isActive ? 'bg-cherry-active-bg' : 'hover:bg-accent/15'
+          }`}
+        >
+          <span className="text-sm flex-shrink-0 w-5 text-center">{ASSISTANT_ICONS[topic.assistantName] || '\u{1F916}'}</span>
+          {topic.status === 'active' && <span className="w-[5px] h-[5px] rounded-full bg-cherry-primary animate-pulse flex-shrink-0" />}
+          {topic.pinned && <Pin size={8} className="text-muted-foreground/50 -rotate-45 flex-shrink-0" />}
+          <span className={`text-sm flex-1 truncate ${isActive ? 'text-foreground' : 'text-foreground'}`}>
+            {topic.title}
+          </span>
+          <div className="flex items-center gap-1 flex-shrink-0">
+            {topic.tags?.slice(0, 2).map(tag => <TagBadge key={tag} tag={tag} size="xs" />)}
+          </div>
+          <span className="text-xs text-muted-foreground truncate flex-shrink-0 w-[70px] text-right">{topic.assistantName}</span>
+          <div className="flex items-center gap-0.5 flex-shrink-0 w-[36px] justify-end">
+            <MessageCircle size={8} className="text-muted-foreground/40" />
+            <span className="text-xs text-muted-foreground tabular-nums">{topic.messageCount}</span>
+          </div>
+          <span className="text-xs text-muted-foreground flex-shrink-0 w-[40px] text-right tabular-nums">{topic.timestamp}</span>
+          <div className="w-[24px] flex-shrink-0 flex justify-center">
+            {isHovered ? (
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+                <MoreHorizontal size={11} className="text-muted-foreground/40" />
+              </motion.div>
+            ) : null}
+          </div>
+        </div>
+      </ContextMenuTrigger>
+      <ContextMenuContent>
+        <ContextMenuItem onClick={onEditTags}>
+          <Tag size={14} /> {'\u7f16\u8f91\u6807\u7b7e'}
+        </ContextMenuItem>
+        <ContextMenuSeparator />
+        <ContextMenuItem onClick={onTogglePin}>
+          <Pin size={14} className={topic.pinned ? '' : '-rotate-45'} />
+          {topic.pinned ? '\u53d6\u6d88\u7f6e\u9876' : '\u7f6e\u9876'}
+        </ContextMenuItem>
+        <ContextMenuSeparator />
+        <ContextMenuItem variant="destructive" onClick={onDelete}>
+          <Trash2 size={14} /> {'\u5220\u9664'}
+        </ContextMenuItem>
+      </ContextMenuContent>
+    </ContextMenu>
   );
 }
 
@@ -461,8 +411,6 @@ export function TopicHistoryPage({ topics, activeTopicId, onSelectTopic, onDelet
   const [hoveredId, setHoveredId] = useState<string | null>(null);
   const [assistantQuery, setAssistantQuery] = useState('');
 
-  // Context menu
-  const [ctxMenu, setCtxMenu] = useState<{ x: number; y: number; topic: AssistantTopic } | null>(null);
   // Tag editing
   const [tagEditTopic, setTagEditTopic] = useState<AssistantTopic | null>(null);
 
@@ -542,26 +490,14 @@ export function TopicHistoryPage({ topics, activeTopicId, onSelectTopic, onDelet
   const hasFilters = selectedTags.length > 0 || selectedAssistant !== null;
   const clearFilters = () => { setSelectedTags([]); setSelectedAssistant(null); setSearchQuery(''); };
 
-  const handleCtxMenu = (e: React.MouseEvent, topic: AssistantTopic) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setCtxMenu({ x: e.clientX, y: e.clientY, topic });
-  };
-
-  const handleCtxAction = (action: string) => {
-    if (!ctxMenu) return;
-    const t = ctxMenu.topic;
-    if (action === 'editTags') setTagEditTopic(t);
-    else if (action === 'togglePin') onUpdateTopic(t.id, { pinned: !t.pinned });
-    else if (action === 'delete') onDeleteTopic(t.id);
-  };
-
   const topicProps = (topic: AssistantTopic) => ({
     topic,
     isActive: activeTopicId === topic.id,
     isHovered: hoveredId === topic.id,
     onSelect: () => { onSelectTopic(topic.id); onClose(); },
-    onContextMenu: (e: React.MouseEvent) => handleCtxMenu(e, topic),
+    onEditTags: () => setTagEditTopic(topic),
+    onTogglePin: () => onUpdateTopic(topic.id, { pinned: !topic.pinned }),
+    onDelete: () => onDeleteTopic(topic.id),
     onMouseEnter: () => setHoveredId(topic.id),
     onMouseLeave: () => setHoveredId(null),
   });
@@ -579,13 +515,13 @@ export function TopicHistoryPage({ topics, activeTopicId, onSelectTopic, onDelet
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.15 }}
-      className="absolute inset-0 z-50 bg-background flex flex-col"
+      className="absolute inset-0 z-[var(--z-popover)] bg-background flex flex-col"
     >
       {/* Header */}
-      <div className="flex items-center justify-between px-5 h-[48px] border-b border-border/40 flex-shrink-0">
+      <div className="flex items-center justify-between px-5 h-[48px] border-b border-border/30 flex-shrink-0">
         <div className="flex items-center gap-3">
-          <div className="w-7 h-7 rounded-lg bg-accent/40 flex items-center justify-center">
-            <History size={14} className="text-foreground/70" />
+          <div className="w-7 h-7 rounded-lg bg-accent/50 flex items-center justify-center">
+            <History size={14} className="text-foreground" />
           </div>
           <div>
             <h2 className="text-sm text-foreground">
@@ -599,7 +535,7 @@ export function TopicHistoryPage({ topics, activeTopicId, onSelectTopic, onDelet
           </div>
         </div>
         <div className="flex items-center gap-1">
-          <Button variant="ghost" size="icon-xs" onClick={onClose} className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent/20 transition-colors">
+          <Button variant="ghost" size="icon-xs" onClick={onClose} className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-colors">
             <X size={15} />
           </Button>
         </div>
@@ -608,37 +544,29 @@ export function TopicHistoryPage({ topics, activeTopicId, onSelectTopic, onDelet
       {/* Main Layout */}
       <div className="flex flex-1 min-h-0">
         {/* Left Filter Sidebar */}
-        <div className="w-[200px] border-r border-border/30 flex flex-col flex-shrink-0 overflow-y-auto py-3 px-3 [&::-webkit-scrollbar]:w-[2px] [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-border/25 [&::-webkit-scrollbar-thumb]:rounded-full">
+        <div className="w-[200px] border-r border-border/30 flex flex-col flex-shrink-0 overflow-y-auto py-3 px-3 scrollbar-thin-xs">
           {/* Assistant section */}
           <div className="mb-2">
-            <div className="text-[9.5px] text-muted-foreground uppercase tracking-[0.08em] px-1 mb-2">{'\u52a9\u624b'}</div>
+            <div className="text-xs text-muted-foreground uppercase tracking-[0.08em] px-1 mb-2">{'\u52a9\u624b'}</div>
             {/* Assistant search */}
-            <div className="flex items-center gap-2 px-2.5 py-[5px] rounded-md bg-accent/15 border border-border/25 mb-2">
-              <Search size={10} className="text-muted-foreground/50 flex-shrink-0" />
-              <Input
-                value={assistantQuery}
-                onChange={(e) => setAssistantQuery(e.target.value)}
-                placeholder={'\u641c\u7d22\u52a9\u624b...'}
-                className="flex-1 bg-transparent text-xs text-foreground placeholder:text-muted-foreground/40 border-none shadow-none h-auto p-0"
-              />
-              {assistantQuery && (
-                <Button variant="ghost" size="icon-xs" onClick={() => setAssistantQuery('')} className="text-muted-foreground hover:text-foreground transition-colors h-auto w-auto p-0">
-                  <X size={9} />
-                </Button>
-              )}
-            </div>
+            <SearchInput
+              value={assistantQuery}
+              onChange={setAssistantQuery}
+              placeholder="搜索助手..."
+              iconSize={10}
+              wrapperClassName="px-2.5 py-[5px] rounded-md bg-accent/15 border border-border/25 mb-2"
+            />
             <div className="flex flex-col gap-[2px]">
               {!assistantQuery && (
-                <Button
+                <Button size="inline"
                   variant="ghost"
-                  size="xs"
                   onClick={() => setSelectedAssistant(null)}
-                  className={`flex items-center gap-2 px-2.5 py-[5px] rounded-md text-xs transition-all duration-75 w-full justify-start h-auto ${
-                    !selectedAssistant ? 'bg-foreground/8 text-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-accent/15'
+                  className={`flex items-center gap-2 px-2.5 py-[5px] rounded-md text-xs transition-all duration-75 w-full justify-start ${
+                    !selectedAssistant ? 'bg-accent/50 text-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-accent/15'
                   }`}
                 >
                   <span className="flex-1 text-left">{'\u5168\u90e8'}</span>
-                  <span className="text-[9px] text-muted-foreground tabular-nums">{topics.length}</span>
+                  <span className="text-xs text-muted-foreground tabular-nums">{topics.length}</span>
                 </Button>
               )}
               {allAssistants
@@ -646,18 +574,17 @@ export function TopicHistoryPage({ topics, activeTopicId, onSelectTopic, onDelet
                 .map(ast => {
                 const count = topics.filter(t => t.assistantName === ast).length;
                 return (
-                  <Button
+                  <Button size="inline"
                     variant="ghost"
-                    size="xs"
                     key={ast}
                     onClick={() => setSelectedAssistant(selectedAssistant === ast ? null : ast)}
-                    className={`flex items-center gap-2 px-2.5 py-[5px] rounded-md text-xs transition-all duration-75 w-full justify-start h-auto ${
-                      selectedAssistant === ast ? 'bg-foreground/8 text-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-accent/15'
+                    className={`flex items-center gap-2 px-2.5 py-[5px] rounded-md text-xs transition-all duration-75 w-full justify-start ${
+                      selectedAssistant === ast ? 'bg-accent/50 text-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-accent/15'
                     }`}
                   >
                     <span className="text-xs flex-shrink-0">{ASSISTANT_ICONS[ast] || '\u{1F916}'}</span>
                     <span className="flex-1 text-left truncate">{ast}</span>
-                    <span className="text-[9px] text-muted-foreground tabular-nums">{count}</span>
+                    <span className="text-xs text-muted-foreground tabular-nums">{count}</span>
                   </Button>
                 );
               })}
@@ -668,11 +595,10 @@ export function TopicHistoryPage({ topics, activeTopicId, onSelectTopic, onDelet
           </div>
 
           {hasFilters && (
-            <Button
+            <Button size="inline"
               variant="outline"
-              size="xs"
               onClick={clearFilters}
-              className="flex items-center justify-center gap-1.5 px-2.5 py-[5px] rounded-md text-xs text-muted-foreground hover:text-foreground hover:bg-accent/15 transition-colors border border-dashed border-border/30 mt-auto h-auto w-full"
+              className="flex items-center justify-center gap-1.5 px-2.5 py-[5px] rounded-md text-xs text-muted-foreground hover:text-foreground hover:bg-accent/15 transition-colors border border-dashed border-border/30 mt-auto w-full"
             >
               <X size={9} />
               {'\u6e05\u9664\u6240\u6709\u7b5b\u9009'}
@@ -683,82 +609,68 @@ export function TopicHistoryPage({ topics, activeTopicId, onSelectTopic, onDelet
         {/* Right Content */}
         <div className="flex-1 flex flex-col min-w-0">
           {/* Toolbar */}
-          <div className="flex items-center justify-between px-4 py-2 border-b border-border/25 flex-shrink-0">
+          <div className="flex items-center justify-between px-4 py-2 border-b border-border/30 flex-shrink-0">
             <div className="flex items-center gap-2">
-              <span className="text-xs text-foreground/70">{filteredTopics.length} {'\u6761\u7ed3\u679c'}</span>
+              <span className="text-xs text-foreground">{filteredTopics.length} {'\u6761\u7ed3\u679c'}</span>
               {/* Tag filter */}
-              <div className="relative">
-                <Button
-                  variant="ghost"
-                  size="xs"
-                  onClick={() => setTagDropdownOpen(!tagDropdownOpen)}
-                  className={`flex items-center gap-1 px-2 py-[3px] rounded-md text-xs transition-all duration-100 h-auto ${
-                    tagDropdownOpen || selectedTags.length > 0
-                      ? 'bg-foreground/8 text-foreground'
-                      : 'text-muted-foreground hover:text-foreground hover:bg-accent/15'
-                  }`}
+              <Popover open={tagDropdownOpen} onOpenChange={(open) => { setTagDropdownOpen(open); if (!open) setTagManageMode(false); }}>
+                <PopoverTrigger asChild>
+                  <Button size="inline"
+                    variant="ghost"
+                    className={`flex items-center gap-1 px-2 py-[3px] rounded-md text-xs transition-all duration-100 ${
+                      tagDropdownOpen || selectedTags.length > 0
+                        ? 'bg-accent/50 text-foreground'
+                        : 'text-muted-foreground hover:text-foreground hover:bg-accent/15'
+                    }`}
+                  >
+                    <Tag size={9} />
+                    <span>{selectedTags.length > 0 ? `${selectedTags.length} \u4e2a\u6807\u7b7e` : '\u6807\u7b7e'}</span>
+                    <ChevronDown size={8} className={`transition-transform duration-100 ${tagDropdownOpen ? 'rotate-180' : ''}`} />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent
+                  align="start"
+                  className="w-[220px] p-0 py-1 max-h-[280px] overflow-y-auto scrollbar-thin-xs"
                 >
-                  <Tag size={9} />
-                  <span>{selectedTags.length > 0 ? `${selectedTags.length} \u4e2a\u6807\u7b7e` : '\u6807\u7b7e'}</span>
-                  <ChevronDown size={8} className={`transition-transform duration-100 ${tagDropdownOpen ? 'rotate-180' : ''}`} />
-                </Button>
-                <AnimatePresence>
-                  {tagDropdownOpen && (
-                    <div>
-                      <div className="fixed inset-0 z-[55]" onClick={() => { setTagDropdownOpen(false); setTagManageMode(false); }} />
-                      <motion.div
-                        initial={{ opacity: 0, y: -3 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -3 }}
-                        transition={{ duration: 0.1 }}
-                        className="absolute left-0 top-full mt-1 z-[56] w-[220px] bg-popover border border-border/40 rounded-lg shadow-xl shadow-black/10 py-1 max-h-[280px] overflow-y-auto [&::-webkit-scrollbar]:w-[2px] [&::-webkit-scrollbar-thumb]:bg-border/30"
-                      >
                         {!tagManageMode ? (
                           <div>
                             {(managedTags.length > 0 ? managedTags : allTags).map(tag => {
                               const isSelected = selectedTags.includes(tag);
                               const count = topics.filter(t => t.tags?.includes(tag)).length;
                               return (
-                                <Button
+                                <Button size="inline"
                                   variant="ghost"
-                                  size="xs"
                                   key={tag}
                                   onClick={() => toggleTag(tag)}
-                                  className={`flex items-center gap-2 w-full px-2.5 py-[5px] text-xs transition-colors rounded-none justify-start h-auto ${
+                                  className={`flex items-center gap-2 w-full px-2.5 py-[5px] text-xs transition-colors rounded-none justify-start ${
                                     isSelected ? 'bg-foreground/6 text-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-accent/15'
                                   }`}
                                 >
-                                  <div className={`w-3.5 h-3.5 rounded border flex items-center justify-center flex-shrink-0 transition-all ${
-                                    isSelected ? 'border-cherry-primary bg-cherry-primary' : 'border-border/50'
-                                  }`}>
-                                    {isSelected && <Check size={8} className="text-background" />}
-                                  </div>
+                                  <Checkbox checked={isSelected} className="flex-shrink-0" />
                                   <TagBadge tag={tag} size="xs" />
                                   <span className="flex-1" />
-                                  <span className="text-[9px] text-muted-foreground/50 tabular-nums">{count}</span>
+                                  <span className="text-xs text-muted-foreground/50 tabular-nums">{count}</span>
                                 </Button>
                               );
                             })}
                             {selectedTags.length > 0 && (
                               <div>
-                                <div className="h-px bg-border/20 my-0.5" />
-                                <Button
+                                <div className="h-px bg-border/30 my-0.5" />
+                                <Button size="inline"
                                   variant="ghost"
-                                  size="xs"
                                   onClick={() => setSelectedTags([])}
-                                  className="flex items-center gap-2 w-full px-2.5 py-[5px] text-xs text-muted-foreground hover:text-foreground hover:bg-accent/15 transition-colors rounded-none justify-start h-auto"
+                                  className="flex items-center gap-2 w-full px-2.5 py-[5px] text-xs text-muted-foreground hover:text-foreground hover:bg-accent/15 transition-colors rounded-none justify-start"
                                 >
                                   <X size={9} className="flex-shrink-0" />
                                   <span>{'\u6e05\u9664\u9009\u62e9'}</span>
                                 </Button>
                               </div>
                             )}
-                            <div className="h-px bg-border/20 my-0.5" />
-                            <Button
+                            <div className="h-px bg-border/30 my-0.5" />
+                            <Button size="inline"
                               variant="ghost"
-                              size="xs"
                               onClick={() => setTagManageMode(true)}
-                              className="flex items-center gap-2 w-full px-2.5 py-[5px] text-xs text-muted-foreground hover:text-foreground hover:bg-accent/15 transition-colors rounded-none justify-start h-auto"
+                              className="flex items-center gap-2 w-full px-2.5 py-[5px] text-xs text-muted-foreground hover:text-foreground hover:bg-accent/15 transition-colors rounded-none justify-start"
                             >
                               <Edit3 size={9} className="flex-shrink-0" />
                               <span>{'\u7ba1\u7406\u6807\u7b7e'}</span>
@@ -766,12 +678,12 @@ export function TopicHistoryPage({ topics, activeTopicId, onSelectTopic, onDelet
                           </div>
                         ) : (
                           <div>
-                            <div className="px-2.5 py-1.5 border-b border-border/20">
+                            <div className="px-2.5 py-1.5 border-b border-border/30">
                               <div className="flex items-center justify-between mb-1.5">
-                                <span className="text-xs text-foreground/70">{'\u7ba1\u7406\u6807\u7b7e'}</span>
-                                <Button variant="ghost" size="xs"
+                                <span className="text-xs text-foreground">{'\u7ba1\u7406\u6807\u7b7e'}</span>
+                                <Button variant="ghost" size="inline"
                                   onClick={() => setTagManageMode(false)}
-                                  className="text-[9px] text-muted-foreground hover:text-foreground transition-colors h-auto p-0"
+                                  className="text-xs text-muted-foreground hover:text-foreground transition-colors p-0"
                                 >
                                   {'\u8fd4\u56de'}
                                 </Button>
@@ -789,7 +701,7 @@ export function TopicHistoryPage({ topics, activeTopicId, onSelectTopic, onDelet
                                     }
                                   }}
                                   placeholder={'\u65b0\u5efa\u6807\u7b7e...'}
-                                  className="flex-1 bg-accent/15 border border-border/30 rounded px-2 py-[4px] text-xs text-foreground placeholder:text-muted-foreground/40 focus:border-cherry-primary/40 h-auto"
+                                  className="flex-1 bg-accent/15 border border-border/30 rounded px-2 py-[4px] text-xs text-foreground placeholder:text-muted-foreground/60 focus:border-cherry-primary/40 h-auto"
                                 />
                                 <Button variant="ghost" size="icon-xs"
                                   onClick={() => {
@@ -809,17 +721,17 @@ export function TopicHistoryPage({ topics, activeTopicId, onSelectTopic, onDelet
                               return (
                                 <div
                                   key={tag}
-                                  className="flex items-center gap-2 px-2.5 py-[5px] text-[10.5px] text-foreground/75 group/tag hover:bg-accent/10 transition-colors"
+                                  className="flex items-center gap-2 px-2.5 py-[5px] text-xs text-foreground group/tag hover:bg-accent/15 transition-colors"
                                 >
                                   <TagBadge tag={tag} size="xs" />
                                   <span className="flex-1" />
-                                  <span className="text-[9px] text-muted-foreground/50 tabular-nums">{count}</span>
+                                  <span className="text-xs text-muted-foreground/50 tabular-nums">{count}</span>
                                   <Tooltip content={'\u5220\u9664\u6807\u7b7e'} side="right"><Button variant="ghost" size="icon-xs"
                                     onClick={() => {
                                       setManagedTags(prev => prev.filter(t => t !== tag));
                                       setSelectedTags(prev => prev.filter(t => t !== tag));
                                     }}
-                                    className="p-0.5 rounded text-muted-foreground/30 hover:text-destructive opacity-0 group-hover/tag:opacity-100 transition-all h-auto w-auto"
+                                    className="p-0.5 rounded text-muted-foreground/40 hover:text-destructive opacity-0 group-hover/tag:opacity-100 transition-all h-auto w-auto"
                                   >
                                     <Trash2 size={9} />
                                   </Button></Tooltip>
@@ -828,11 +740,8 @@ export function TopicHistoryPage({ topics, activeTopicId, onSelectTopic, onDelet
                             })}
                           </div>
                         )}
-                      </motion.div>
-                    </div>
-                  )}
-                </AnimatePresence>
-              </div>
+                </PopoverContent>
+              </Popover>
               {/* Selected tag badges inline */}
               {selectedTags.length > 0 && (
                 <div className="flex items-center gap-1">
@@ -843,21 +752,14 @@ export function TopicHistoryPage({ topics, activeTopicId, onSelectTopic, onDelet
 
             <div className="flex items-center gap-1.5">
               {/* Topic search */}
-              <div className="flex items-center gap-1.5 px-2 py-[3px] rounded-md bg-accent/15 border border-border/25 w-[160px]">
-                <Search size={10} className="text-muted-foreground/50 flex-shrink-0" />
-                <Input
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder={'\u641c\u7d22\u8bdd\u9898...'}
-                  className="flex-1 bg-transparent text-xs text-foreground placeholder:text-muted-foreground/40 min-w-0 border-none shadow-none h-auto p-0"
-                />
-                {searchQuery && (
-                  <Button variant="ghost" size="icon-xs" onClick={() => setSearchQuery('')} className="text-muted-foreground hover:text-foreground transition-colors flex-shrink-0 h-auto w-auto p-0">
-                    <X size={9} />
-                  </Button>
-                )}
-              </div>
-              <div className="w-px h-4 bg-border/25" />
+              <SearchInput
+                value={searchQuery}
+                onChange={setSearchQuery}
+                placeholder="搜索话题..."
+                iconSize={10}
+                wrapperClassName="px-2 py-[3px] rounded-md bg-accent/15 border border-border/25 w-[160px]"
+              />
+              <div className="w-px h-4 bg-border/30" />
               {/* View mode */}
               <div className="flex items-center gap-[1px] bg-accent/15 rounded-md p-[2px]">
                 <Tooltip content={'\u5217\u8868\u89c6\u56fe'} side="bottom"><Button variant="ghost" size="icon-xs"
@@ -873,7 +775,7 @@ export function TopicHistoryPage({ topics, activeTopicId, onSelectTopic, onDelet
                   <LayoutGrid size={12} />
                 </Button></Tooltip>
               </div>
-              <div className="w-px h-4 bg-border/25" />
+              <div className="w-px h-4 bg-border/30" />
               {/* Group */}
               <div className="flex items-center gap-[2px] bg-accent/15 rounded-md p-[2px]">
                 {([
@@ -881,10 +783,10 @@ export function TopicHistoryPage({ topics, activeTopicId, onSelectTopic, onDelet
                   { key: 'assistant' as GroupMode, label: '\u6309\u52a9\u624b' },
                   { key: 'tag' as GroupMode, label: '\u6309\u6807\u7b7e' },
                 ] as const).map(g => (
-                  <Button variant="ghost" size="xs"
+                  <Button variant="ghost" size="inline"
                     key={g.key}
                     onClick={() => setGroupMode(g.key)}
-                    className={`px-2 py-[3px] rounded text-xs transition-all duration-100 h-auto ${
+                    className={`px-2 py-[3px] rounded text-xs transition-all duration-100 ${
                       groupMode === g.key ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
                     }`}
                   >
@@ -892,15 +794,15 @@ export function TopicHistoryPage({ topics, activeTopicId, onSelectTopic, onDelet
                   </Button>
                 ))}
               </div>
-              <div className="w-px h-4 bg-border/25" />
+              <div className="w-px h-4 bg-border/30" />
               {/* Sort */}
-              <Button variant="ghost" size="xs"
+              <Button variant="ghost" size="inline"
                 onClick={() => {
                   if (sortKey === 'time') setSortKey('name');
                   else if (sortKey === 'name') setSortKey('messages');
                   else setSortKey('time');
                 }}
-                className="flex items-center gap-1 px-2 py-[3px] rounded-md text-xs text-muted-foreground hover:text-foreground hover:bg-accent/15 transition-colors h-auto"
+                className="flex items-center gap-1 px-2 py-[3px] rounded-md text-xs text-muted-foreground hover:text-foreground hover:bg-accent/15 transition-colors"
               >
                 <ArrowUpDown size={10} />
                 {sortKey === 'time' ? '\u6309\u65f6\u95f4' : sortKey === 'name' ? '\u6309\u540d\u79f0' : '\u6309\u6d88\u606f\u6570'}
@@ -910,7 +812,7 @@ export function TopicHistoryPage({ topics, activeTopicId, onSelectTopic, onDelet
 
           {/* List header */}
           {viewMode === 'list' && filteredTopics.length > 0 && (
-            <div className="flex items-center gap-2.5 px-3 py-[5px] border-b border-border/15 text-[9px] text-muted-foreground uppercase tracking-[0.06em] flex-shrink-0">
+            <div className="flex items-center gap-2.5 px-3 py-[5px] border-b border-border/15 text-xs text-muted-foreground uppercase tracking-[0.06em] flex-shrink-0">
               <span className="w-5 flex-shrink-0 text-center">{'\u52a9\u624b'}</span>
               <span className="flex-1">{'\u6807\u9898'}</span>
               <span className="w-[70px] text-right flex-shrink-0">{'\u7c7b\u578b'}</span>
@@ -921,7 +823,7 @@ export function TopicHistoryPage({ topics, activeTopicId, onSelectTopic, onDelet
           )}
 
           {/* Topic List */}
-          <div className="flex-1 overflow-y-auto px-2 py-1.5 [&::-webkit-scrollbar]:w-[3px] [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-border/25 [&::-webkit-scrollbar-thumb]:rounded-full">
+          <div className="flex-1 overflow-y-auto px-2 py-1.5 scrollbar-thin">
             {groupedTopics ? (
               Object.entries(groupedTopics).map(([groupName, groupTopics]) => (
                 <GroupSection
@@ -947,47 +849,25 @@ export function TopicHistoryPage({ topics, activeTopicId, onSelectTopic, onDelet
             )}
 
             {filteredTopics.length === 0 && (
-              <div className="flex flex-col items-center justify-center py-20">
-                <div className="w-12 h-12 rounded-xl bg-accent/25 flex items-center justify-center mb-3">
-                  <Search size={18} className="text-muted-foreground/40" />
-                </div>
-                <p className="text-xs text-foreground/70 mb-1">{'\u6ca1\u6709\u627e\u5230\u5339\u914d\u7684\u8bdd\u9898'}</p>
-                <p className="text-xs text-muted-foreground mb-3">{'\u5c1d\u8bd5\u4fee\u6539\u641c\u7d22\u6761\u4ef6\u6216\u7b5b\u9009\u6807\u7b7e'}</p>
-                {hasFilters && (
-                  <Button variant="ghost" size="xs" onClick={clearFilters} className="px-3 py-1.5 rounded-md text-xs text-foreground/70 bg-accent/20 hover:bg-accent/30 transition-colors h-auto">
-                    {'\u6e05\u9664\u7b5b\u9009\u6761\u4ef6'}
-                  </Button>
-                )}
-              </div>
+              <EmptyState
+                preset="no-result"
+                actionLabel={hasFilters ? '清除筛选条件' : undefined}
+                onAction={hasFilters ? clearFilters : undefined}
+              />
             )}
           </div>
         </div>
       </div>
 
-      {/* Context Menu */}
-      <AnimatePresence>
-        {ctxMenu && (
-          <TopicContextMenu
-            x={ctxMenu.x}
-            y={ctxMenu.y}
-            topic={ctxMenu.topic}
-            onClose={() => setCtxMenu(null)}
-            onAction={handleCtxAction}
-          />
-        )}
-      </AnimatePresence>
-
       {/* Tag Editor */}
-      <AnimatePresence>
-        {tagEditTopic && (
-          <TagEditorPopover
-            topic={tagEditTopic}
-            allTags={allTags}
-            onUpdate={(tags) => onUpdateTopic(tagEditTopic.id, { tags })}
-            onClose={() => setTagEditTopic(null)}
-          />
-        )}
-      </AnimatePresence>
+      {tagEditTopic && (
+        <TagEditorPopover
+          topic={tagEditTopic}
+          allTags={allTags}
+          onUpdate={(tags) => onUpdateTopic(tagEditTopic.id, { tags })}
+          onClose={() => setTagEditTopic(null)}
+        />
+      )}
     </motion.div>
   );
 }

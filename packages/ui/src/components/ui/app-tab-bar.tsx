@@ -132,7 +132,7 @@ export function AppTabBar({
                   >
                     {tab.miniAppId ? (
                       tab.miniAppLogoUrl ? <img src={tab.miniAppLogoUrl} alt="" className="w-3.5 h-3.5 rounded-[var(--radius-dot)] object-cover" /> :
-                      <div className="w-3.5 h-3.5 rounded-[var(--radius-dot)] flex items-center justify-center text-primary-foreground text-xs" style={{ background: tab.miniAppColor }}>{tab.miniAppInitial}</div>
+                      <div className={`w-3.5 h-3.5 rounded-[var(--radius-dot)] flex items-center justify-center text-primary-foreground text-xs ${tab.miniAppColor}`}>{tab.miniAppInitial}</div>
                     ) : <Icon size={14} strokeWidth={1.6} />}
                   </Button>
                 </SimpleTooltip>
@@ -169,7 +169,7 @@ export function AppTabBar({
               >
                 {tab.miniAppId ? (
                   tab.miniAppLogoUrl ? <img src={tab.miniAppLogoUrl} alt="" className="w-3.5 h-3.5 rounded-[var(--radius-dot)] object-cover flex-shrink-0" /> :
-                  <div className="w-3.5 h-3.5 rounded-[var(--radius-dot)] flex items-center justify-center text-primary-foreground text-xs flex-shrink-0" style={{ background: tab.miniAppColor }}>{tab.miniAppInitial}</div>
+                  <div className={`w-3.5 h-3.5 rounded-[var(--radius-dot)] flex items-center justify-center text-primary-foreground text-xs flex-shrink-0 ${tab.miniAppColor}`}>{tab.miniAppInitial}</div>
                 ) : <Icon size={13} strokeWidth={1.6} className="flex-shrink-0" />}
                 <span className="text-xs tracking-[-0.14px] truncate">{tab.title}</span>
               </Button>

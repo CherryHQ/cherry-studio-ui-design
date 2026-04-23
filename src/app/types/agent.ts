@@ -29,8 +29,9 @@ export interface AgentSession {
   lastMessage: string;
   timestamp: string;
   messageCount: number;
-  status: 'active' | 'completed' | 'paused';
+  status: 'active' | 'completed' | 'error' | 'paused';
   pinned?: boolean;
+  unread?: boolean;
   tags?: string[];
   group?: string;
 }

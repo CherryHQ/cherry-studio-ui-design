@@ -1,17 +1,17 @@
 import React, { useState, useRef, useEffect } from 'react';
 import {
-  Search, Plus, BookOpen, ChevronRight, Database,
+  Plus, BookOpen, ChevronRight, Database,
   Briefcase, User, FolderKanban, MoreHorizontal,
-  Pencil, Trash2, FolderPlus, ArrowRightLeft, X, Check,
+  Pencil, Trash2, FolderPlus, ArrowRightLeft, Check,
 } from 'lucide-react';
 import { Tooltip } from '@/app/components/Tooltip';
-import { Button, Input, Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@cherry-studio/ui';
+import { Button, Input, InlineSelect, Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, SearchInput } from '@cherry-studio/ui';
 
 export interface KnowledgeBase {
   id: string;
   name: string;
   icon: string;
-  color: string;
+  colorClass: string; // Tailwind bg class for icon background, e.g. 'bg-accent-violet-muted'
   docCount: number;
   status: 'ready' | 'indexing' | 'error';
   group: string;
@@ -25,7 +25,17 @@ const defaultGroupIcons: Record<string, React.ElementType> = {
 };
 
 const kbIcons = ['📁', '📚', '🤖', '🎨', '📡', '📊', '🧠', '🍒', '✈️', '🍳', '🔬', '💼', '🎯', '📝', '🌐', '⚡', '🛠️', '🎵'];
-const kbColors = ['#8b5cf6', '#ec4899', '#3b82f6', '#f59e0b', '#10b981', '#06b6d4', '#f97316', '#ef4444', '#a855f7', '#14b8a6'];
+const kbColorOptions: { value: string; swatch: string }[] = [
+  { value: 'bg-accent-violet-muted', swatch: 'bg-accent-violet' },
+  { value: 'bg-accent-pink-muted',   swatch: 'bg-accent-pink' },
+  { value: 'bg-accent-blue-muted',   swatch: 'bg-accent-blue' },
+  { value: 'bg-accent-amber-muted',  swatch: 'bg-accent-amber' },
+  { value: 'bg-accent-emerald-muted', swatch: 'bg-accent-emerald' },
+  { value: 'bg-accent-cyan-muted',   swatch: 'bg-accent-cyan' },
+  { value: 'bg-accent-orange-muted', swatch: 'bg-accent-orange' },
+  { value: 'bg-destructive/12',      swatch: 'bg-destructive' },
+  { value: 'bg-accent-purple-muted', swatch: 'bg-accent-purple' },
+];
 
 function InlineEditor({ value, onConfirm, onCancel, fontSize = 'text-xs' }: {
   value: string;
@@ -37,7 +47,7 @@ function InlineEditor({ value, onConfirm, onCancel, fontSize = 'text-xs' }: {
   const ref = useRef<HTMLInputElement>(null);
   useEffect(() => { ref.current?.select(); }, []);
   return (
-    <input
+    <Input
       ref={ref}
       autoFocus
       value={text}
@@ -47,20 +57,20 @@ function InlineEditor({ value, onConfirm, onCancel, fontSize = 'text-xs' }: {
         if (e.key === 'Escape') onCancel();
       }}
       onBlur={() => { if (text.trim()) onConfirm(text.trim()); else onCancel(); }}
-      className={`flex-1 bg-transparent outline-none ${fontSize} text-foreground border-b border-primary/50 py-0.5 min-w-0`}
+      className={`flex-1 bg-transparent outline-none ${fontSize} text-foreground border-b border-primary/50 py-0.5 min-w-0 border-t-0 border-l-0 border-r-0 rounded-none shadow-none focus-visible:ring-0 h-auto p-0`}
     />
   );
 }
 
-function ContextMenu({ x, y, children, onDismiss }: { x: number; y: number; children: React.ReactNode; onDismiss: () => void }) {
+function ContextMenu({ x, y, children, onClose }: { x: number; y: number; children: React.ReactNode; onClose: () => void }) {
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    const h = (e: MouseEvent) => { if (ref.current && !ref.current.contains(e.target as Node)) onDismiss(); };
-    const k = (e: KeyboardEvent) => { if (e.key === 'Escape') onDismiss(); };
+    const h = (e: MouseEvent) => { if (ref.current && !ref.current.contains(e.target as Node)) onClose(); };
+    const k = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
     document.addEventListener('mousedown', h);
     document.addEventListener('keydown', k);
     return () => { document.removeEventListener('mousedown', h); document.removeEventListener('keydown', k); };
-  }, [onDismiss]);
+  }, [onClose]);
 
   const [pos, setPos] = useState({ left: x, top: y });
   useEffect(() => {
@@ -72,7 +82,7 @@ function ContextMenu({ x, y, children, onDismiss }: { x: number; y: number; chil
   }, [x, y]);
 
   return (
-    <div ref={ref} className="fixed z-[300] bg-popover border border-border rounded-lg shadow-xl p-1 min-w-[130px] animate-in fade-in zoom-in-95 duration-100" style={pos}>
+    <div ref={ref} className="fixed z-[var(--z-sticky)] bg-popover border border-border rounded-lg shadow-xl p-1 min-w-[130px] animate-in fade-in zoom-in-95 duration-100" style={pos}>
       {children}
     </div>
   );
@@ -80,10 +90,10 @@ function ContextMenu({ x, y, children, onDismiss }: { x: number; y: number; chil
 
 function MenuItem({ icon: Icon, label, danger, onClick }: { icon: React.ElementType; label: string; danger?: boolean; onClick: () => void }) {
   return (
-    <Button
+    <Button size="inline"
       variant="ghost"
       onClick={onClick}
-      className={`w-full flex items-center gap-2 px-2 py-1 rounded-md transition-colors text-left text-xs h-auto justify-start ${danger ? 'text-destructive hover:bg-destructive/10' : 'text-popover-foreground hover:bg-accent'}`}
+      className={`w-full flex items-center gap-2 px-2 py-1 rounded-md transition-colors text-left text-xs justify-start ${danger ? 'text-destructive hover:bg-destructive/10' : 'text-popover-foreground hover:bg-accent'}`}
     >
       <Icon size={11} />
       <span>{label}</span>
@@ -93,13 +103,13 @@ function MenuItem({ icon: Icon, label, danger, onClick }: { icon: React.ElementT
 
 function CreateKBDialog({ groups, onConfirm, onCancel }: {
   groups: string[];
-  onConfirm: (name: string, group: string, icon: string, color: string) => void;
+  onConfirm: (name: string, group: string, icon: string, colorClass: string) => void;
   onCancel: () => void;
 }) {
   const [name, setName] = useState('');
   const [group, setGroup] = useState(groups[0] || '工作');
   const [icon, setIcon] = useState('📁');
-  const [color, setColor] = useState('#8b5cf6');
+  const [colorClass, setColorClass] = useState(kbColorOptions[0].value);
 
   return (
     <Dialog open onOpenChange={open => { if (!open) onCancel(); }}>
@@ -108,26 +118,25 @@ function CreateKBDialog({ groups, onConfirm, onCancel }: {
           <DialogTitle className="text-xs text-foreground">新建知识库</DialogTitle>
         </DialogHeader>
 
-        <label className="block text-xs text-muted-foreground/60 mb-1">名称</label>
+        <label className="block text-sm text-muted-foreground/60 mb-1">名称</label>
         <Input
           autoFocus
           value={name}
           onChange={e => setName(e.target.value)}
           placeholder="输入知识库名称..."
           className="w-full px-2 py-1.5 rounded-md text-xs mb-2.5"
-          onKeyDown={e => { if (e.key === 'Enter' && name.trim()) onConfirm(name.trim(), group, icon, color); }}
+          onKeyDown={e => { if (e.key === 'Enter' && name.trim()) onConfirm(name.trim(), group, icon, colorClass); }}
         />
 
-        <label className="block text-xs text-muted-foreground/60 mb-1">分组</label>
-        <select
+        <label className="block text-sm text-muted-foreground/60 mb-1">分组</label>
+        <InlineSelect
           value={group}
-          onChange={e => setGroup(e.target.value)}
-          className="w-full px-2 py-1.5 rounded-md border border-border/40 bg-transparent text-xs text-foreground outline-none focus:border-primary/40 mb-2.5 cursor-pointer"
-        >
-          {groups.map(g => <option key={g} value={g}>{g}</option>)}
-        </select>
+          options={groups.map(g => ({ value: g, label: g }))}
+          onChange={setGroup}
+          className="mb-2.5"
+        />
 
-        <label className="block text-xs text-muted-foreground/60 mb-1">图标</label>
+        <label className="block text-sm text-muted-foreground/60 mb-1">图标</label>
         <div className="flex flex-wrap gap-0.5 mb-2.5">
           {kbIcons.map(ic => (
             <Button
@@ -140,16 +149,15 @@ function CreateKBDialog({ groups, onConfirm, onCancel }: {
           ))}
         </div>
 
-        <label className="block text-xs text-muted-foreground/60 mb-1">颜色</label>
+        <label className="block text-sm text-muted-foreground/60 mb-1">颜色</label>
         <div className="flex flex-wrap gap-1 mb-3">
-          {kbColors.map(c => (
+          {kbColorOptions.map(opt => (
             <Button
-              key={c}
+              key={opt.value}
               variant="ghost"
               size="icon-xs"
-              onClick={() => setColor(c)}
-              className={`w-5 h-5 rounded-full transition-all ${color === c ? 'ring-2 ring-offset-1 ring-offset-popover ring-primary' : 'hover:scale-110'}`}
-              style={{ background: c }}
+              onClick={() => setColorClass(opt.value)}
+              className={`w-5 h-5 rounded-full transition-all ${opt.swatch} ${colorClass === opt.value ? 'ring-2 ring-offset-1 ring-offset-popover ring-primary' : 'hover:scale-110'}`}
             />
           ))}
         </div>
@@ -159,7 +167,7 @@ function CreateKBDialog({ groups, onConfirm, onCancel }: {
           <Button
             variant="default"
             size="xs"
-            onClick={() => { if (name.trim()) onConfirm(name.trim(), group, icon, color); }}
+            onClick={() => { if (name.trim()) onConfirm(name.trim(), group, icon, colorClass); }}
             disabled={!name.trim()}
             className="h-6 px-2.5 text-xs"
           >创建</Button>
@@ -173,7 +181,7 @@ interface KnowledgeSidebarProps {
   items: KnowledgeBase[];
   selectedId: string;
   onSelect: (id: string) => void;
-  onCreateKb: (name: string, group: string, icon: string, color: string) => void;
+  onCreateKb: (name: string, group: string, icon: string, colorClass: string) => void;
   onRenameKb: (id: string, name: string) => void;
   onDeleteKb: (id: string) => void;
   onMoveKb: (id: string, toGroup: string) => void;
@@ -241,12 +249,12 @@ export function KnowledgeSidebar({
         </div>
         <div className="flex items-center gap-0.5">
           <Tooltip content="新建分组" side="bottom">
-            <Button variant="ghost" size="icon-xs" onClick={() => setCreatingGroup(true)} className="w-5 h-5 rounded text-muted-foreground hover:text-foreground">
+            <Button variant="ghost" size="icon-xs" onClick={() => setCreatingGroup(true)} className="rounded text-muted-foreground hover:text-foreground">
               <FolderPlus size={11} strokeWidth={1.8} />
             </Button>
           </Tooltip>
           <Tooltip content="新建知识库" side="bottom">
-            <Button variant="ghost" size="icon-xs" onClick={() => setShowCreateDialog(true)} className="w-5 h-5 rounded text-muted-foreground hover:text-foreground">
+            <Button variant="ghost" size="icon-xs" onClick={() => setShowCreateDialog(true)} className="rounded text-muted-foreground hover:text-foreground">
               <Plus size={12} strokeWidth={1.8} />
             </Button>
           </Tooltip>
@@ -255,24 +263,17 @@ export function KnowledgeSidebar({
 
       {/* Search */}
       <div className="px-2 pb-1.5 flex-shrink-0">
-        <div className="flex items-center gap-1.5 px-2 py-[4px] rounded-md bg-muted/50 border border-transparent focus-within:border-border/50 transition-colors">
-          <Search size={10} className="text-muted-foreground/50 flex-shrink-0" />
-          <Input
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            placeholder="搜索知识库..."
-            className="flex-1 bg-transparent outline-none text-xs text-foreground placeholder:text-muted-foreground/40 border-none shadow-none focus-visible:ring-0 h-auto p-0"
-          />
-          {search && (
-            <Button variant="ghost" size="icon-xs" onClick={() => setSearch('')} className="text-muted-foreground/30 hover:text-foreground w-4 h-4">
-              <X size={9} />
-            </Button>
-          )}
-        </div>
+        <SearchInput
+          value={search}
+          onChange={setSearch}
+          placeholder="搜索知识库..."
+          iconSize={10}
+          wrapperClassName="px-2 py-[4px] rounded-md bg-muted/50 border border-transparent focus-within:border-border/50 transition-colors"
+        />
       </div>
 
       {/* Grouped list */}
-      <div className="flex-1 overflow-y-auto [&::-webkit-scrollbar]:w-[3px] [&::-webkit-scrollbar-thumb]:bg-border/30 [&::-webkit-scrollbar-thumb]:rounded-full px-1.5 space-y-px">
+      <div className="flex-1 overflow-y-auto scrollbar-thin px-1.5 space-y-px">
         {groupedItems.map(({ group, items: gItems }) => {
           const isCollapsed = collapsedGroups.has(group);
           const GroupIcon = defaultGroupIcons[group] || Database;
@@ -282,9 +283,9 @@ export function KnowledgeSidebar({
             <div key={group}>
               <div
                 onContextMenu={e => handleGroupContext(e, group)}
-                className="w-full flex items-center gap-1.5 px-1.5 py-[4px] text-xs text-foreground/45 hover:text-foreground/60 transition-colors group/grp"
+                className="w-full flex items-center gap-1.5 px-1.5 py-[4px] text-xs text-muted-foreground/60 hover:text-foreground transition-colors group/grp"
               >
-                <Button variant="ghost" onClick={() => toggleGroup(group)} className="flex items-center gap-1.5 min-w-0 flex-1 text-xs h-auto p-0 justify-start">
+                <Button variant="ghost" onClick={() => toggleGroup(group)} size="inline" className="flex items-center gap-1.5 min-w-0 flex-1 text-xs p-0 justify-start">
                   <ChevronRight size={10} className={`transition-transform duration-150 flex-shrink-0 ${isCollapsed ? '' : 'rotate-90'}`} />
                   <GroupIcon size={11} strokeWidth={1.5} className="flex-shrink-0" />
                   {isEditingGroup ? (
@@ -303,7 +304,7 @@ export function KnowledgeSidebar({
                   variant="ghost"
                   size="icon-xs"
                   onClick={e => handleGroupContext(e, group)}
-                  className="w-4 h-4 rounded text-muted-foreground/35 hover:text-foreground opacity-0 group-hover/grp:opacity-100 transition-all flex-shrink-0"
+                  className="w-4 h-4 rounded text-muted-foreground/40 hover:text-foreground opacity-0 group-hover/grp:opacity-100 transition-all flex-shrink-0"
                 >
                   <MoreHorizontal size={10} />
                 </Button>
@@ -326,8 +327,7 @@ export function KnowledgeSidebar({
                           }`}
                       >
                         <div
-                          className="w-6 h-6 rounded flex items-center justify-center text-xs flex-shrink-0"
-                          style={{ background: `${kb.color}20` }}
+                          className={`w-6 h-6 rounded flex items-center justify-center text-xs flex-shrink-0 ${kb.colorClass}`}
                         >
                           <span>{kb.icon}</span>
                         </div>
@@ -340,13 +340,13 @@ export function KnowledgeSidebar({
                             />
                           ) : (
                             <div className="contents">
-                              <div className="text-xs truncate">{kb.name}</div>
+                              <div className="text-sm truncate">{kb.name}</div>
                               <div className="flex items-center gap-1 mt-px">
-                                <span className="text-[9px] text-muted-foreground/45">{kb.docCount} 文档</span>
+                                <span className="text-xs text-muted-foreground/40">{kb.docCount} 文档</span>
                                 <span className={`w-1 h-1 rounded-full flex-shrink-0 ${
                                   kb.status === 'ready' ? 'bg-primary' :
-                                  kb.status === 'indexing' ? 'bg-amber-500 animate-pulse' :
-                                  'bg-red-500'
+                                  kb.status === 'indexing' ? 'bg-warning animate-pulse' :
+                                  'bg-destructive'
                                 }`} />
                               </div>
                             </div>
@@ -357,7 +357,7 @@ export function KnowledgeSidebar({
                             variant="ghost"
                             size="icon-xs"
                             onClick={e => handleKbDots(e, kb.id)}
-                            className="w-4 h-4 rounded text-muted-foreground/25 hover:text-foreground hover:bg-foreground/5 opacity-0 group-hover/kb:opacity-100 transition-all flex-shrink-0"
+                            className="w-4 h-4 rounded text-muted-foreground/40 hover:text-foreground hover:bg-muted opacity-0 group-hover/kb:opacity-100 transition-all flex-shrink-0"
                           >
                             <MoreHorizontal size={9} />
                           </Button>
@@ -398,11 +398,10 @@ export function KnowledgeSidebar({
 
       {/* Bottom new button */}
       <div className="px-2 py-1.5 flex-shrink-0 border-t border-border/30">
-        <Button
+        <Button size="inline"
           variant="outline"
-          size="xs"
           onClick={() => setShowCreateDialog(true)}
-          className="w-full flex items-center justify-center gap-1 py-[5px] text-xs text-muted-foreground hover:text-foreground border-dashed border-border/40 hover:border-border/70 h-auto"
+          className="w-full flex items-center justify-center gap-1 py-[5px] text-xs text-muted-foreground hover:text-foreground border-dashed border-border/40 hover:border-border/70"
         >
           <Plus size={11} strokeWidth={1.8} />
           <span>新建知识库</span>
@@ -411,7 +410,7 @@ export function KnowledgeSidebar({
 
       {/* Context menus */}
       {contextMenu && contextMenu.type === 'group' && (
-        <ContextMenu x={contextMenu.x} y={contextMenu.y} onDismiss={() => setContextMenu(null)}>
+        <ContextMenu x={contextMenu.x} y={contextMenu.y} onClose={() => setContextMenu(null)}>
           <MenuItem icon={Pencil} label="重命名分组" onClick={() => { setEditingGroupName(contextMenu.id); setContextMenu(null); }} />
           <MenuItem icon={Plus} label="在此分组新建" onClick={() => { setShowCreateDialog(true); setContextMenu(null); }} />
           {groups.length > 1 && (
@@ -425,17 +424,17 @@ export function KnowledgeSidebar({
         if (!kb) return null;
         const otherGroups = groups.filter(g => g !== kb.group);
         return (
-          <ContextMenu x={contextMenu.x} y={contextMenu.y} onDismiss={() => setContextMenu(null)}>
+          <ContextMenu x={contextMenu.x} y={contextMenu.y} onClose={() => setContextMenu(null)}>
             <MenuItem icon={Pencil} label="重命名" onClick={() => { setEditingKbId(contextMenu.id); setContextMenu(null); }} />
             {otherGroups.length > 0 && (
               <div className="contents">
-                <div className="px-2 py-0.5 text-[9px] text-muted-foreground/30">移动到</div>
+                <div className="px-2 py-0.5 text-xs text-muted-foreground/50">移动到</div>
                 {otherGroups.map(g => (
                   <MenuItem key={g} icon={ArrowRightLeft} label={g} onClick={() => { onMoveKb(contextMenu.id, g); setContextMenu(null); }} />
                 ))}
               </div>
             )}
-            <div className="border-t border-border/20 my-0.5" />
+            <div className="border-t border-border/30 my-0.5" />
             <MenuItem icon={Trash2} label="删除知识库" danger onClick={() => { onDeleteKb(contextMenu.id); setContextMenu(null); }} />
           </ContextMenu>
         );
@@ -444,7 +443,7 @@ export function KnowledgeSidebar({
       {showCreateDialog && (
         <CreateKBDialog
           groups={groups}
-          onConfirm={(name, group, icon, color) => { onCreateKb(name, group, icon, color); setShowCreateDialog(false); }}
+          onConfirm={(name, group, icon, colorClass) => { onCreateKb(name, group, icon, colorClass); setShowCreateDialog(false); }}
           onCancel={() => setShowCreateDialog(false)}
         />
       )}
