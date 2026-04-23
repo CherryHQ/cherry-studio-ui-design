@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import { useGlobalActions } from '@/app/context/GlobalActionContext';
 import {
-  ChevronDown, ChevronRight, ChevronUp, X, Copy, Check, Maximize2, Minimize2,
+  ChevronDown, ChevronRight, ChevronLeft, ChevronUp, X, Copy, Check, Maximize2, Minimize2,
   Bot, Plus, ArrowUp, FileText, Code2, Eye, BookOpen,
   Clock, Settings, History, MessageCirclePlus, AtSign,
   ExternalLink, File, Globe,
@@ -1155,7 +1155,7 @@ const EXPORT_ITEMS = [
   '导出到 Notion', '导出到 Obsidian', '导出到语雀', '导出到 Joplin', '导出到思源笔记',
 ];
 
-function MessageActionBar({ onCopy, onQuote, onDelete, onBookmark, onShare, onInfo, onRetry, ctxMenuOpen, onOpenChange, alignRight }: {
+function MessageActionBar({ onCopy, onQuote, onDelete, onBookmark, onShare, onInfo, onRetry, ctxMenuOpen, onOpenChange, alignRight, retryCount, activeRetryIndex, onRetryNav }: {
   onCopy: () => void;
   onQuote: () => void;
   onDelete: () => void;
@@ -1166,9 +1166,38 @@ function MessageActionBar({ onCopy, onQuote, onDelete, onBookmark, onShare, onIn
   ctxMenuOpen: boolean;
   onOpenChange: (open: boolean) => void;
   alignRight?: boolean;
+  /** Total number of versions (original + retries). 1 = no retries yet */
+  retryCount?: number;
+  /** Currently active version index (0-based) */
+  activeRetryIndex?: number;
+  /** Navigate to a specific retry version */
+  onRetryNav?: (index: number) => void;
 }) {
+  const totalVersions = retryCount ?? 1;
+  const currentVersion = (activeRetryIndex ?? 0) + 1;
+
   return (
     <div className="flex items-center gap-0.5 mt-1 -ml-1">
+      {/* Retry pagination: < 2/3 > */}
+      {totalVersions > 1 && onRetryNav && (
+        <div className="flex items-center gap-0 mr-0.5">
+          <Button variant="ghost" size="icon-xs"
+            onClick={() => onRetryNav(Math.max(0, (activeRetryIndex ?? 0) - 1))}
+            disabled={currentVersion <= 1}
+            className="p-[3px] w-auto h-auto text-muted-foreground/40 hover:text-foreground hover:bg-accent/15 disabled:opacity-20"
+          >
+            <ChevronLeft size={11} />
+          </Button>
+          <span className="text-xs text-muted-foreground/50 tabular-nums min-w-[28px] text-center">{currentVersion}/{totalVersions}</span>
+          <Button variant="ghost" size="icon-xs"
+            onClick={() => onRetryNav(Math.min(totalVersions - 1, (activeRetryIndex ?? 0) + 1))}
+            disabled={currentVersion >= totalVersions}
+            className="p-[3px] w-auto h-auto text-muted-foreground/40 hover:text-foreground hover:bg-accent/15 disabled:opacity-20"
+          >
+            <ChevronRight size={11} />
+          </Button>
+        </div>
+      )}
       <Tooltip content="复制" side="bottom"><Button variant="ghost" size="icon-xs" onClick={onCopy} className="p-[4px] w-auto h-auto text-muted-foreground/40 hover:text-foreground hover:bg-accent/15"><Copy size={12} /></Button></Tooltip>
       {onRetry && <Tooltip content="重试" side="bottom"><Button variant="ghost" size="icon-xs" onClick={onRetry} className="p-[4px] w-auto h-auto text-muted-foreground/40 hover:text-foreground hover:bg-accent/15"><RotateCcw size={12} /></Button></Tooltip>}
       <Tooltip content="字体" side="bottom"><Button variant="ghost" size="icon-xs" className="p-[4px] w-auto h-auto text-muted-foreground/40 hover:text-foreground hover:bg-accent/15"><Type size={12} /></Button></Tooltip>
@@ -1205,7 +1234,7 @@ function MessageActionBar({ onCopy, onQuote, onDelete, onBookmark, onShare, onIn
 // Chat Message Bubble (Enhanced)
 // ===========================
 
-function MessageBubble({ msg, onOpenPanel, onAvatarClick, onOpenArtifact, assistantEmoji, assistantName, modelDisplayName }: {
+function MessageBubble({ msg, onOpenPanel, onAvatarClick, onOpenArtifact, assistantEmoji, assistantName, modelDisplayName, onRetry, onRetryNav }: {
   msg: AssistantMessage;
   onOpenPanel: (panel: 'chatDetail' | 'rag' | 'search', msg: AssistantMessage) => void;
   onAvatarClick: () => void;
@@ -1213,11 +1242,20 @@ function MessageBubble({ msg, onOpenPanel, onAvatarClick, onOpenArtifact, assist
   assistantEmoji?: string;
   assistantName?: string;
   modelDisplayName?: string;
+  onRetry?: (msgId: string) => void;
+  onRetryNav?: (msgId: string, index: number) => void;
 }) {
   const [ctxMenu, setCtxMenu] = useState(false);
-  const handleCopy = () => { copyToClipboard(msg.content); };
 
-  const sources = useMemo(() => buildSourceMap(msg), [msg]);
+  // Retry version handling: determine which version to display
+  const retryVersions = msg.retryVersions || [];
+  const totalVersions = 1 + retryVersions.length; // original + retries
+  const activeIdx = msg.activeRetryIndex ?? 0;
+  const displayMsg = activeIdx === 0 ? msg : retryVersions[activeIdx - 1] || msg;
+
+  const handleCopy = () => { copyToClipboard(displayMsg.content); };
+
+  const sources = useMemo(() => buildSourceMap(displayMsg), [displayMsg]);
   const hasCitations = sources.length > 0;
 
   // === User Message ===
@@ -1272,16 +1310,16 @@ function MessageBubble({ msg, onOpenPanel, onAvatarClick, onOpenArtifact, assist
       <div className="flex-1 min-w-0">
         {/* Assistant name + model */}
         <div className="flex items-center gap-1.5 mb-0.5">
-          <span className="text-xs text-foreground">{msg.assistantLabel || assistantName || '助手'}</span>
+          <span className="text-xs text-foreground">{displayMsg.assistantLabel || assistantName || '助手'}</span>
           {modelDisplayName && <span className="text-xs text-muted-foreground/50">{modelDisplayName}</span>}
         </div>
 
         {/* Thinking block */}
-        {msg.thinking && <ThinkingBlock content={msg.thinking} />}
+        {displayMsg.thinking && <ThinkingBlock content={displayMsg.thinking} />}
 
         {/* Content */}
         <div className="text-xs text-foreground leading-[1.75] py-1">
-          {msg.content.split('\n').map((line, i) => {
+          {(displayMsg.content || '').split('\n').map((line, i) => {
             if (line.startsWith('- **')) {
               const match = line.match(RE_DASH_BOLD);
               if (match) {
@@ -1349,9 +1387,12 @@ function MessageBubble({ msg, onOpenPanel, onAvatarClick, onOpenArtifact, assist
         {/* Action bar */}
         <MessageActionBar
           onCopy={handleCopy} onQuote={() => {}} onDelete={() => {}} onBookmark={() => {}} onShare={() => {}}
-          onRetry={() => {}}
+          onRetry={onRetry ? () => onRetry(msg.id) : undefined}
           onInfo={msg.metadata ? () => onOpenPanel('chatDetail', msg) : undefined}
           ctxMenuOpen={ctxMenu} onOpenChange={setCtxMenu}
+          retryCount={totalVersions}
+          activeRetryIndex={activeIdx}
+          onRetryNav={onRetryNav ? (idx) => onRetryNav(msg.id, idx) : undefined}
         />
       </div>
     </motion.div>
@@ -1554,6 +1595,28 @@ export function AssistantRunPage() {
     setNewTopicCounter(c => c + 1);
   }, [newTopicCounter]);
 
+  // Copy branch node as new topic — inherits messages up to (and including) the node
+  const handleCopyAsTopic = useCallback((truncatedMessages: AssistantMessage[], _sourceNodeId: string) => {
+    const newId = `branch-topic-${Date.now()}`;
+    const firstMsg = truncatedMessages[0]?.content?.slice(0, 20) || '分支话题';
+    const newTopic: AssistantTopic = {
+      id: newId,
+      title: firstMsg,
+      assistantName: currentAssistant.name,
+      lastMessage: truncatedMessages[truncatedMessages.length - 1]?.content?.slice(0, 50) || '',
+      timestamp: '刚刚',
+      messageCount: truncatedMessages.length,
+      status: 'active' as const,
+    };
+    setTopics(prev => [newTopic, ...prev]);
+    setActiveTopicId(newId);
+    setMessages([...truncatedMessages]);
+    setActiveArtifact(null);
+    setShowArtifacts(false);
+    setArtifactFullscreen(false);
+    setActiveBranchId('main');
+  }, [currentAssistant]);
+
   // Sync topic name to tab title
   useEffect(() => {
     if (onTabTitleChange) {
@@ -1595,6 +1658,7 @@ export function AssistantRunPage() {
   const historySidebar = useHistorySidebar('compact');
   const [showBranchTree, setShowBranchTree] = useState(false);
   const [showChatSettings, setShowChatSettings] = useState(false);
+  const [activeBranchId, setActiveBranchId] = useState('main');
 
   type RightPanel = null | 'assistantInfo' | 'chatDetail' | 'rag' | 'search';
   const [rightPanel, setRightPanel] = useState<RightPanel>(null);
@@ -1827,6 +1891,36 @@ export function AssistantRunPage() {
       }, 800);
     }
   }, [input, selectedModels, selectedAssistants]);
+
+  // Retry: create a new version of an assistant message
+  const handleRetry = useCallback((msgId: string) => {
+    setMessages(prev => prev.map(msg => {
+      if (msg.id !== msgId || msg.role !== 'assistant') return msg;
+      const ts = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
+      const versions = msg.retryVersions || [];
+      const newVersion: AssistantMessage = {
+        id: `retry-${Date.now()}`,
+        role: 'assistant',
+        content: `[重试版本 ${versions.length + 2}] ${msg.content?.split('\n')[0] || '重新生成的回答'}...\n\n这是对同一问题的重新生成回答，提供了不同的视角和分析。`,
+        timestamp: ts,
+        assistantLabel: msg.assistantLabel,
+        thinking: '重新分析问题...\n从不同角度思考...\n生成新的回答...',
+      };
+      return {
+        ...msg,
+        retryVersions: [...versions, newVersion],
+        activeRetryIndex: versions.length + 1, // Switch to the new version (0 = original, 1+ = retries)
+      };
+    }));
+  }, []);
+
+  // Navigate between retry versions
+  const handleRetryNav = useCallback((msgId: string, index: number) => {
+    setMessages(prev => prev.map(msg => {
+      if (msg.id !== msgId) return msg;
+      return { ...msg, activeRetryIndex: index };
+    }));
+  }, []);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Escape' && showAtMenu) { e.preventDefault(); setShowAtMenu(false); return; }
@@ -2090,7 +2184,7 @@ export function AssistantRunPage() {
             }
           >
             {messages.map(msg => (
-              <MessageBubble key={msg.id} msg={msg} onOpenPanel={handleOpenPanel} onAvatarClick={handleAvatarClick} onOpenArtifact={handleOpenArtifact} assistantEmoji={currentAssistantEmoji} assistantName={currentAssistant.name} modelDisplayName={currentModelDisplayName} />
+              <MessageBubble key={msg.id} msg={msg} onOpenPanel={handleOpenPanel} onAvatarClick={handleAvatarClick} onOpenArtifact={handleOpenArtifact} assistantEmoji={currentAssistantEmoji} assistantName={currentAssistant.name} modelDisplayName={currentModelDisplayName} onRetry={handleRetry} onRetryNav={handleRetryNav} />
             ))}
           </ChatInterface>
         </div>
@@ -2136,6 +2230,21 @@ export function AssistantRunPage() {
               assistantName={currentAssistant.name}
               modelName={ASSISTANT_MODELS.find(m => m.id === selectedModels[0])?.name || 'Gemini 3 Pro'}
               topicName={activeTopic?.title}
+              onCopyAsTopic={handleCopyAsTopic}
+              onBranchChange={(branchId, newNode) => {
+                setActiveBranchId(branchId);
+                if (newNode) {
+                  // Add a system-like message indicating branch switch
+                  const ts = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
+                  setMessages(prev => [...prev, {
+                    id: `branch-${Date.now()}`,
+                    role: 'assistant' as const,
+                    content: `[已切换到新分支 ${branchId}] 从此处开始新的对话分支。`,
+                    timestamp: ts,
+                    assistantLabel: newNode.model || '助手',
+                  }]);
+                }
+              }}
             />
           )}
         </AnimatePresence>

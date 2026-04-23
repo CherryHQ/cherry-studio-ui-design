@@ -188,6 +188,24 @@ function buildFromMessages(messages: AssistantMessage[], modelName: string): Bra
       }
     } else {
       current.children.push(child);
+
+      // Add retry versions as sibling nodes
+      if (msg.retryVersions && msg.retryVersions.length > 0) {
+        msg.retryVersions.forEach((rv, rvIdx) => {
+          const retryNode: BranchNode = {
+            id: rv.id,
+            role: 'assistant',
+            label: '\u52a9\u624b',
+            branchId: `retry-${msg.id}-${rvIdx + 1}`,
+            preview: rv.content?.slice(0, 120) || `\u91cd\u8bd5\u7248\u672c ${rvIdx + 2}`,
+            model: modelName,
+            assistantName: rv.assistantLabel,
+            children: [],
+          };
+          current.children.push(retryNode);
+        });
+      }
+
       current = child;
     }
 
@@ -216,6 +234,44 @@ function findParent(root: BranchNode, childId: string): BranchNode | null {
     if (r) return r;
   }
   return null;
+}
+
+/** Collect all ancestor node IDs from root to targetId (inclusive), walking the tree. */
+function collectAncestorIds(node: BranchNode, targetId: string): string[] | null {
+  if (node.id === targetId) return [node.id];
+  for (const child of node.children) {
+    const path = collectAncestorIds(child, targetId);
+    if (path) return [node.id, ...path];
+  }
+  return null;
+}
+
+/** Get messages up to and including the node with given ID. */
+function getMessagesUpToNode(messages: AssistantMessage[], nodeId: string, tree: BranchNode): AssistantMessage[] {
+  // The root node uses messages[0], subsequent nodes use messages[1..N] in order.
+  // Node IDs match message IDs (except root which is 'root').
+  const ancestorIds = collectAncestorIds(tree, nodeId);
+  if (!ancestorIds) return messages;
+
+  // Collect message IDs from ancestor path (skip 'root' which maps to messages[0])
+  const nodeIdSet = new Set(ancestorIds);
+  const result: AssistantMessage[] = [];
+
+  // First message is always included (root)
+  if (messages.length > 0) result.push(messages[0]);
+
+  for (let i = 1; i < messages.length; i++) {
+    const msg = messages[i];
+    if (nodeIdSet.has(msg.id)) {
+      result.push(msg);
+      if (msg.id === nodeId) break; // Stop after the target node
+    }
+  }
+
+  // If we didn't find by exact ID match (e.g. locally created nodes), return all messages
+  if (result.length <= 1 && messages.length > 1) return messages;
+
+  return result;
 }
 
 // ===========================
@@ -413,6 +469,7 @@ function TreeNode({
   onSetActiveBranch,
   onPinBranch,
   onCopyBranch,
+  onNodeContextMenu,
 }: {
   layout: LayoutNode;
   collapsed: Set<string>;
@@ -427,6 +484,7 @@ function TreeNode({
   onSetActiveBranch: (node: BranchNode) => void;
   onPinBranch: (node: BranchNode) => void;
   onCopyBranch: (node: BranchNode) => void;
+  onNodeContextMenu: (e: React.MouseEvent, node: BranchNode) => void;
 }) {
   const { node } = layout;
   const isActive = layout.isActive;
@@ -459,12 +517,11 @@ function TreeNode({
     <div>
       {/* This node */}
       <div
+        data-node
         className={`absolute select-none transition-all duration-150`}
         style={{ left: layout.x, top: layout.y, width: layout.width, height: isNodeExpanded ? NODE_H_EXPANDED : NODE_H }}
       >
-        {/* Node pill wrapped in ContextMenu */}
-        <ContextMenu>
-          <ContextMenuTrigger asChild>
+        {/* Node pill */}
             <div
               className={`relative rounded-lg border cursor-pointer transition-all ${borderColor} ${bgColor} ${isActive ? 'shadow-sm' : ''}`}
               style={{ height: isNodeExpanded ? NODE_H_EXPANDED : NODE_H }}
@@ -473,6 +530,11 @@ function TreeNode({
                 if (hasChildren) onToggleCollapse(node.id);
                 else onToggleExpand(node.id);
                 if (!isActive) onSwitchBranch(node.branchId);
+              }}
+              onContextMenu={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                onNodeContextMenu(e, node);
               }}
               onMouseEnter={(e) => {
                 if (!isNodeExpanded && node.preview) {
@@ -532,37 +594,6 @@ function TreeNode({
                 />
               )}
             </div>
-          </ContextMenuTrigger>
-          <ContextMenuContent className="min-w-[160px]">
-            <ContextMenuItem onSelect={() => onCreateNode(node)} className="gap-2.5 text-xs">
-              <Plus size={11} className="text-cherry-primary" />
-              {'\u521b\u5efa\u65b0\u8282\u70b9'}
-            </ContextMenuItem>
-            <ContextMenuItem
-              onSelect={() => onSetActiveBranch(node)}
-              disabled={isBranchActive}
-              className="gap-2.5 text-xs"
-            >
-              <Star size={11} className="text-accent-amber/70" />
-              {'\u8bbe\u7f6e\u4e3a\u6d3b\u8dc3\u5206\u652f'}
-              {isBranchActive && <Check size={9} className="text-cherry-primary ml-auto" />}
-            </ContextMenuItem>
-            <ContextMenuItem
-              onSelect={() => onPinBranch(node)}
-              disabled={isBranchPinned}
-              className="gap-2.5 text-xs"
-            >
-              <Pencil size={11} className="text-muted-foreground" />
-              {'\u56fa\u5b9a\u4e3a\u6807\u7b7e'}
-              {isBranchPinned && <Check size={9} className="text-cherry-primary ml-auto" />}
-            </ContextMenuItem>
-            <ContextMenuSeparator />
-            <ContextMenuItem onSelect={() => onCopyBranch(node)} className="gap-2.5 text-xs">
-              <Copy size={11} className="text-muted-foreground" />
-              {'\u590d\u5236\u4e3a\u65b0\u8bdd\u9898'}
-            </ContextMenuItem>
-          </ContextMenuContent>
-        </ContextMenu>
       </div>
 
       {/* Recurse children */}
@@ -582,6 +613,7 @@ function TreeNode({
           onSetActiveBranch={onSetActiveBranch}
           onPinBranch={onPinBranch}
           onCopyBranch={onCopyBranch}
+          onNodeContextMenu={onNodeContextMenu}
         />
       ))}
     </div>
@@ -641,9 +673,13 @@ interface BranchTreePanelProps {
   assistantName: string;
   modelName: string;
   topicName?: string;
+  /** Called when active branch changes (e.g. new node created, branch switched) */
+  onBranchChange?: (branchId: string, newNode?: BranchNode) => void;
+  /** Called when user copies a branch node as a new topic. Receives messages up to (and including) the node. */
+  onCopyAsTopic?: (messagesUpToNode: AssistantMessage[], sourceNodeId: string) => void;
 }
 
-export function BranchTreePanel({ messages, onClose, assistantName, modelName, topicName }: BranchTreePanelProps) {
+export function BranchTreePanel({ messages, onClose, assistantName, modelName, topicName, onBranchChange, onCopyAsTopic }: BranchTreePanelProps) {
   const [scale, setScale] = useState(0.9);
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [dragging, setDragging] = useState(false);
@@ -661,16 +697,31 @@ export function BranchTreePanel({ messages, onClose, assistantName, modelName, t
   const [renameValue, setRenameValue] = useState('');
   // Mock counter for new nodes
   const [newNodeCounter, setNewNodeCounter] = useState(0);
+  // Locally created branch nodes: map of parentId -> new child nodes
+  const [localNodes, setLocalNodes] = useState<Map<string, BranchNode[]>>(new Map());
   // Toast message
   const [toastMsg, setToastMsg] = useState<string | null>(null);
+  // Custom node context menu (replaces Radix ContextMenu which doesn't work inside scaled canvas)
+  const [nodeMenu, setNodeMenu] = useState<{ x: number; y: number; node: BranchNode } | null>(null);
   const canvasRef = useRef<HTMLDivElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
   const renameInputRef = useRef<HTMLInputElement>(null);
 
-  const tree = useMemo(
+  const baseTree = useMemo(
     () => buildFromMessages(messages, modelName),
     [messages, modelName]
   );
+
+  // Merge locally created nodes into the tree
+  const tree = useMemo(() => {
+    if (localNodes.size === 0) return baseTree;
+    const merge = (node: BranchNode): BranchNode => {
+      const extras = localNodes.get(node.id) || [];
+      const mergedChildren = [...node.children.map(merge), ...extras];
+      return { ...node, children: mergedChildren };
+    };
+    return merge(baseTree);
+  }, [baseTree, localNodes]);
 
   // Reset view state when messages change (topic switch)
   const prevMessagesRef = useRef(messages);
@@ -682,6 +733,7 @@ export function BranchTreePanel({ messages, onClose, assistantName, modelName, t
       setActiveBranch('main');
       setPosition({ x: 0, y: 0 });
       setScale(0.9);
+      setLocalNodes(new Map());
     }
   }, [messages]);
 
@@ -735,8 +787,9 @@ export function BranchTreePanel({ messages, onClose, assistantName, modelName, t
   const zoomOut = () => setScale(s => Math.max(s - 0.15, 0.3));
   const fitView = () => { setScale(0.85); setPosition({ x: 0, y: 0 }); };
 
-  // Canvas drag
+  // Canvas drag (only left button, skip right-click and node clicks)
   const handleMouseDown = (e: React.MouseEvent) => {
+    if (e.button !== 0) return; // only left click
     if ((e.target as HTMLElement).closest('[data-node]')) return;
     setDragging(true);
     setDragStart({ x: e.clientX - position.x, y: e.clientY - position.y });
@@ -761,15 +814,31 @@ export function BranchTreePanel({ messages, onClose, assistantName, modelName, t
   }, [dragging, handleMouseMove, handleMouseUp]);
 
   const handleWheel = useCallback((e: React.WheelEvent) => {
-    e.preventDefault();
-    const delta = e.deltaY > 0 ? -0.06 : 0.06;
-    setScale(s => Math.min(Math.max(s + delta, 0.3), 2.5));
+    // Only zoom on actual wheel scroll (deltaMode 0 = pixel), not synthetic events
+    if (e.ctrlKey || Math.abs(e.deltaY) > 0) {
+      e.stopPropagation();
+      const delta = e.deltaY > 0 ? -0.06 : 0.06;
+      setScale(s => Math.min(Math.max(s + delta, 0.3), 2.5));
+    }
   }, []);
 
   // Panel sizing
   const panelClasses = isFullscreen
     ? 'absolute inset-2 z-[var(--z-popover)] rounded-2xl'
     : 'absolute right-2 top-2 bottom-2 w-[380px] z-[var(--z-overlay)] rounded-2xl';
+
+  // Close node context menu on any click
+  useEffect(() => {
+    if (!nodeMenu) return;
+    const handler = () => setNodeMenu(null);
+    document.addEventListener('click', handler);
+    document.addEventListener('contextmenu', handler);
+    return () => { document.removeEventListener('click', handler); document.removeEventListener('contextmenu', handler); };
+  }, [nodeMenu]);
+
+  const handleNodeContextMenu = useCallback((e: React.MouseEvent, node: BranchNode) => {
+    setNodeMenu({ x: e.clientX, y: e.clientY, node });
+  }, []);
 
   const showToast = (msg: string) => {
     setToastMsg(msg);
@@ -889,6 +958,12 @@ export function BranchTreePanel({ messages, onClose, assistantName, modelName, t
         className={`flex-1 overflow-hidden relative ${dragging ? 'cursor-grabbing' : 'cursor-grab'}`}
         onMouseDown={handleMouseDown}
         onWheel={handleWheel}
+        onContextMenu={(e) => {
+          // Allow right-click context menu on nodes, prevent on canvas background
+          if (!(e.target as HTMLElement).closest('[data-node]')) {
+            e.preventDefault();
+          }
+        }}
       >
         {/* Dot grid background */}
         <div className="absolute inset-0" style={{
@@ -930,15 +1005,45 @@ export function BranchTreePanel({ messages, onClose, assistantName, modelName, t
               pinnedBranches={pinnedBranches}
               onToggleCollapse={handleToggleCollapse}
               onToggleExpand={handleToggleExpand}
-              onSwitchBranch={setActiveBranch}
+              onSwitchBranch={(branchId) => { setActiveBranch(branchId); onBranchChange?.(branchId); }}
               onHover={setHoverInfo}
               onCreateNode={(node) => {
-                setNewNodeCounter(c => c + 1);
-                showToast(`\u5df2\u5728 ${node.label} \u4e0b\u521b\u5efa\u65b0\u8282\u70b9`);
+                const counter = newNodeCounter + 1;
+                setNewNodeCounter(counter);
+                const newBranchId = `branch-new-${counter}`;
+                const newNode: BranchNode = {
+                  id: `new-node-${counter}`,
+                  role: 'assistant',
+                  label: '助手',
+                  branchId: newBranchId,
+                  preview: `新分支节点 #${counter}`,
+                  model: modelName,
+                  children: [],
+                };
+                const parentId = findParent(tree, node.id)?.id;
+                if (parentId) {
+                  setLocalNodes(prev => {
+                    const next = new Map(prev);
+                    const existing = next.get(parentId) || [];
+                    next.set(parentId, [...existing, newNode]);
+                    return next;
+                  });
+                } else {
+                  setLocalNodes(prev => {
+                    const next = new Map(prev);
+                    const existing = next.get(node.id) || [];
+                    next.set(node.id, [...existing, newNode]);
+                    return next;
+                  });
+                }
+                setActiveBranch(newBranchId);
+                onBranchChange?.(newBranchId, newNode);
+                showToast('已创建新分支并切换');
               }}
               onSetActiveBranch={(node) => {
                 setActiveBranch(node.branchId);
-                showToast(`\u5df2\u5207\u6362\u5230\u5206\u652f: ${node.branchId === 'main' ? '\u4e3b\u7ebf' : node.branchId}`);
+                onBranchChange?.(node.branchId);
+                showToast(`已切换到分支: ${node.branchId === 'main' ? '主线' : node.branchId}`);
               }}
               onPinBranch={(node) => {
                 const bid = node.branchId;
@@ -952,6 +1057,7 @@ export function BranchTreePanel({ messages, onClose, assistantName, modelName, t
               onCopyBranch={() => {
                 showToast(`\u5df2\u590d\u5236\u5206\u652f\u4e3a\u65b0\u8bdd\u9898`);
               }}
+              onNodeContextMenu={handleNodeContextMenu}
             />
           </div>
         </div>
@@ -1083,6 +1189,104 @@ export function BranchTreePanel({ messages, onClose, assistantName, modelName, t
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Custom node context menu (fixed position, works inside scaled canvas) */}
+      {nodeMenu && (
+        <div
+          className="fixed z-[9999] bg-popover border border-border rounded-lg shadow-popover py-1 px-1 animate-in fade-in zoom-in-95 duration-100 min-w-[160px]"
+          style={{ left: nodeMenu.x, top: nodeMenu.y }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          {nodeMenu.node.role !== 'user' && (
+            <button
+              onClick={() => {
+                const counter = newNodeCounter + 1;
+                setNewNodeCounter(counter);
+                const newBranchId = `branch-new-${counter}`;
+                const newNode: BranchNode = {
+                  id: `new-node-${counter}`,
+                  role: 'assistant',
+                  label: '助手',
+                  branchId: newBranchId,
+                  preview: `新分支节点 #${counter}`,
+                  model: modelName,
+                  children: [],
+                };
+                const parentId = findParent(tree, nodeMenu.node.id)?.id;
+                if (parentId) {
+                  setLocalNodes(prev => {
+                    const next = new Map(prev);
+                    const existing = next.get(parentId) || [];
+                    next.set(parentId, [...existing, newNode]);
+                    return next;
+                  });
+                } else {
+                  setLocalNodes(prev => {
+                    const next = new Map(prev);
+                    const existing = next.get(nodeMenu.node.id) || [];
+                    next.set(nodeMenu.node.id, [...existing, newNode]);
+                    return next;
+                  });
+                }
+                setActiveBranch(newBranchId);
+                onBranchChange?.(newBranchId, newNode);
+                showToast(`已创建新分支并切换`);
+                setNodeMenu(null);
+              }}
+              className="flex items-center gap-2.5 w-full px-2.5 py-[5px] text-xs text-foreground/80 hover:bg-accent/30 rounded-md transition-colors cursor-pointer text-left"
+            >
+              <Plus size={11} className="text-cherry-primary" />
+              创建新节点
+            </button>
+          )}
+          <button
+            onClick={() => {
+              setActiveBranch(nodeMenu.node.branchId);
+              onBranchChange?.(nodeMenu.node.branchId);
+              showToast(`已切换到分支: ${nodeMenu.node.branchId === 'main' ? '主线' : nodeMenu.node.branchId}`);
+              setNodeMenu(null);
+            }}
+            disabled={activeBranch === nodeMenu.node.branchId}
+            className="flex items-center gap-2.5 w-full px-2.5 py-[5px] text-xs text-foreground/80 hover:bg-accent/30 rounded-md transition-colors cursor-pointer text-left disabled:opacity-40 disabled:cursor-default"
+          >
+            <Star size={11} className="text-accent-amber/70" />
+            设置为活跃分支
+            {activeBranch === nodeMenu.node.branchId && <Check size={9} className="text-cherry-primary ml-auto" />}
+          </button>
+          <button
+            onClick={() => {
+              const bid = nodeMenu.node.branchId;
+              if (!pinnedBranches.has(bid)) {
+                const defaultName = bid === 'main' ? '主线' : bid.replace('branch-', '').replace('ws', 'WebSocket').replace('vue', 'Vue').replace('alt', '重新生成').replace('expert', '代码专家');
+                setRenamingBranch(bid);
+                setRenameValue(defaultName);
+              }
+              setNodeMenu(null);
+            }}
+            disabled={pinnedBranches.has(nodeMenu.node.branchId)}
+            className="flex items-center gap-2.5 w-full px-2.5 py-[5px] text-xs text-foreground/80 hover:bg-accent/30 rounded-md transition-colors cursor-pointer text-left disabled:opacity-40 disabled:cursor-default"
+          >
+            <Pencil size={11} className="text-muted-foreground" />
+            固定为标签
+            {pinnedBranches.has(nodeMenu.node.branchId) && <Check size={9} className="text-cherry-primary ml-auto" />}
+          </button>
+          <div className="h-px bg-border/30 my-0.5" />
+          <button
+            onClick={() => {
+              if (onCopyAsTopic) {
+                const truncatedMessages = getMessagesUpToNode(messages, nodeMenu.node.id, tree);
+                onCopyAsTopic(truncatedMessages, nodeMenu.node.id);
+              }
+              showToast('已复制为新话题');
+              setNodeMenu(null);
+            }}
+            className="flex items-center gap-2.5 w-full px-2.5 py-[5px] text-xs text-foreground/80 hover:bg-accent/30 rounded-md transition-colors cursor-pointer text-left"
+          >
+            <Copy size={11} className="text-muted-foreground" />
+            复制为新话题
+          </button>
+        </div>
+      )}
     </motion.div>
   );
 }

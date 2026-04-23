@@ -181,4 +181,8 @@ export interface Message {
   toolCall?: ToolCallData;
   generativeUI?: GenerativeUIData;
   steps?: WorkflowStep[];
+  // Retry versions: array of alternative responses for this message slot
+  retryVersions?: Message[];
+  // Index of active retry version (0-based, undefined means original)
+  activeRetryIndex?: number;
 }
