@@ -1,7 +1,7 @@
-import React, { useState, useMemo, useCallback, useRef } from 'react';
+import React, { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import {
-  Trash2, Pin, Plus,
-  Clock, Maximize2, ListFilter, ChevronDown, ChevronRight, Check, FolderOpen,
+  Trash2, Pin, Plus, Pencil, Sparkles,
+  Clock, Maximize2, ListFilter, ChevronDown, ChevronRight, ChevronsDown, Check, FolderOpen,
 } from 'lucide-react';
 import { Button, SearchInput, EmptyState, Popover, PopoverTrigger, PopoverContent } from '@cherry-studio/ui';
 import { motion, AnimatePresence } from 'motion/react';
@@ -26,7 +26,6 @@ export interface HistoryItem {
 type GroupByMode = 'none' | 'status' | 'group' | 'time' | 'custom';
 
 const GROUP_BY_OPTIONS: { key: GroupByMode; label: string }[] = [
-  { key: 'none', label: '不分组' },
   { key: 'group', label: '工作目录' },
   { key: 'status', label: '状态' },
   { key: 'time', label: '时间' },
@@ -59,14 +58,15 @@ interface HistorySidebarProps<T extends HistoryItem> {
     getGroupKey: (item: T) => string;
   };
   onNewItemForGroup?: (groupKey: string) => void;
+  onRenameGroup?: (oldName: string, newName: string) => void;
 }
 
 // ===========================
 // Context Menu
 // ===========================
 
-function ItemContextMenu({ x, y, onClose, onDelete, onPin, isPinned }: {
-  x: number; y: number; onClose: () => void; onDelete: () => void; onPin: () => void; isPinned?: boolean;
+function ItemContextMenu({ x, y, onClose, onDelete, onPin, onEdit, onGenerate, isPinned }: {
+  x: number; y: number; onClose: () => void; onDelete: () => void; onPin: () => void; onEdit: () => void; onGenerate: () => void; isPinned?: boolean;
 }) {
   const clampedX = Math.min(x, window.innerWidth - 160);
   const clampedY = Math.min(y, window.innerHeight - 160);
@@ -79,26 +79,43 @@ function ItemContextMenu({ x, y, onClose, onDelete, onPin, isPinned }: {
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.95 }}
         transition={{ duration: 0.08 }}
-        className="fixed z-[var(--z-overlay)] bg-popover border border-border/40 rounded-lg shadow-xl shadow-black/10 p-1 min-w-[140px]"
+        className="fixed z-[var(--z-overlay)] bg-popover border border-border/40 rounded-lg shadow-xl shadow-black/10 p-0.5 min-w-0"
         style={{ left: clampedX, top: clampedY }}
       >
         <Button
           variant="ghost"
-          size="xs"
-          onClick={onPin}
-          className="w-full justify-start gap-2 text-foreground hover:bg-accent/15"
+          size="inline"
+          onClick={onEdit}
+          className="w-full justify-start gap-1.5 px-2 py-[3px] text-foreground hover:bg-accent/15"
         >
-          <Pin size={11} className={isPinned ? '' : '-rotate-45'} />
-          <span>{isPinned ? '取消置顶' : '置顶'}</span>
+          <Pencil size={10} />
+          <span>编辑</span>
         </Button>
-        <div className="h-px bg-border/30 my-1" />
         <Button
           variant="ghost"
-          size="xs"
-          onClick={onDelete}
-          className="w-full justify-start gap-2 text-destructive/70 hover:bg-destructive/8"
+          size="inline"
+          onClick={onGenerate}
+          className="w-full justify-start gap-1.5 px-2 py-[3px] text-foreground hover:bg-accent/15"
         >
-          <Trash2 size={11} />
+          <Sparkles size={10} />
+          <span>生成话题名</span>
+        </Button>
+        <Button
+          variant="ghost"
+          size="inline"
+          onClick={onPin}
+          className="w-full justify-start gap-1.5 px-2 py-[3px] text-foreground hover:bg-accent/15"
+        >
+          <Pin size={10} className={isPinned ? '' : '-rotate-45'} />
+          <span>{isPinned ? '取消置顶' : '置顶'}</span>
+        </Button>
+        <Button
+          variant="ghost"
+          size="inline"
+          onClick={onDelete}
+          className="w-full justify-start gap-1.5 px-2 py-[3px] text-destructive/70 hover:bg-destructive/8"
+        >
+          <Trash2 size={10} />
           <span>删除</span>
         </Button>
       </motion.div>
@@ -117,17 +134,57 @@ const STATUS_DOT_COLORS: Record<string, { className: string; animate?: boolean }
   paused:    { className: 'bg-muted-foreground/40' },
 };
 
-function SidebarItem<T extends HistoryItem>({ item, isActive, onClick, onContextMenu, showStatusDot, onDragStart, onDragOver, onDrop }: {
+function SidebarItem<T extends HistoryItem>({ item, isActive, isEditing, onClick, onContextMenu, onCommitEdit, showStatusDot, onDragStart, onDragOver, onDrop }: {
   item: T;
   isActive: boolean;
+  isEditing?: boolean;
   onClick: () => void;
   onContextMenu: (e: React.MouseEvent) => void;
+  onCommitEdit?: (newTitle: string) => void;
   showStatusDot?: boolean;
   onDragStart?: (e: React.DragEvent) => void;
   onDragOver?: (e: React.DragEvent) => void;
   onDrop?: (e: React.DragEvent) => void;
 }) {
   const statusCfg = showStatusDot ? STATUS_DOT_COLORS[item.status] : null;
+  const editRef = useRef<HTMLInputElement>(null);
+  const [editVal, setEditVal] = useState(item.title);
+
+  useEffect(() => {
+    if (isEditing && editRef.current) {
+      setEditVal(item.title);
+      editRef.current.focus();
+      editRef.current.select();
+    }
+  }, [isEditing, item.title]);
+
+  const commit = () => {
+    const trimmed = editVal.trim();
+    if (trimmed && trimmed !== item.title && onCommitEdit) {
+      onCommitEdit(trimmed);
+    } else if (onCommitEdit) {
+      onCommitEdit(item.title);
+    }
+  };
+
+  if (isEditing) {
+    return (
+      <div className={`w-full px-2.5 py-[3px] rounded-md ${isActive ? 'bg-accent/25' : ''}`}>
+        <input
+          ref={editRef}
+          value={editVal}
+          onChange={(e) => setEditVal(e.target.value)}
+          onBlur={commit}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') commit();
+            if (e.key === 'Escape') onCommitEdit?.(item.title);
+          }}
+          className="w-full text-sm bg-accent/50 rounded px-1.5 py-[2px] border border-border/40 outline-none focus:border-primary/50 text-foreground"
+        />
+      </div>
+    );
+  }
+
   return (
     <Button size="inline"
       variant="ghost"
@@ -171,6 +228,9 @@ function GroupSection<T extends HistoryItem>({
   onContextMenu,
   showStatusDot,
   dragHandlers,
+  onRenameGroup,
+  editingItemId,
+  onCommitEdit,
 }: {
   groupLabel: string;
   groupItems: T[];
@@ -190,7 +250,30 @@ function GroupSection<T extends HistoryItem>({
     onDrop: (e: React.DragEvent) => void;
     onDragEnd: () => void;
   };
+  onRenameGroup?: (oldName: string, newName: string) => void;
+  editingItemId: string | null;
+  onCommitEdit: (id: string, newTitle: string) => void;
 }) {
+  const [isEditing, setIsEditing] = useState(false);
+  const [editValue, setEditValue] = useState(groupLabel);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (isEditing && inputRef.current) {
+      inputRef.current.focus();
+      inputRef.current.select();
+    }
+  }, [isEditing]);
+
+  const commitRename = () => {
+    const trimmed = editValue.trim();
+    if (trimmed && trimmed !== groupLabel && onRenameGroup) {
+      onRenameGroup(groupLabel, trimmed);
+    }
+    setIsEditing(false);
+    setEditValue(trimmed || groupLabel);
+  };
+
   const hasMore = groupItems.length > GROUP_COLLAPSE_LIMIT;
   const visibleItems = (!isCollapsed && hasMore && !isExpanded)
     ? groupItems.slice(0, GROUP_COLLAPSE_LIMIT)
@@ -200,20 +283,44 @@ function GroupSection<T extends HistoryItem>({
   return (
     <div
       className="mb-1"
-      draggable
+      draggable={!isEditing}
       onDragStart={dragHandlers.onDragStart}
       onDragOver={dragHandlers.onDragOver}
       onDrop={dragHandlers.onDrop}
       onDragEnd={dragHandlers.onDragEnd}
     >
-      <div className="group/grp flex items-center gap-1 px-2.5 py-1 cursor-pointer" onClick={onToggleCollapse}>
+      <div className="group/grp flex items-center gap-1 px-2.5 py-1 cursor-pointer" onClick={() => !isEditing && onToggleCollapse()}>
         {isCollapsed
           ? <ChevronRight size={9} className="text-muted-foreground/40 flex-shrink-0" />
           : <ChevronDown size={9} className="text-muted-foreground/40 flex-shrink-0" />
         }
-        <span className="text-xs text-muted-foreground/40 truncate">{groupLabel}</span>
+        {isEditing ? (
+          <input
+            ref={inputRef}
+            value={editValue}
+            onChange={(e) => setEditValue(e.target.value)}
+            onBlur={commitRename}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') commitRename();
+              if (e.key === 'Escape') { setIsEditing(false); setEditValue(groupLabel); }
+            }}
+            onClick={(e) => e.stopPropagation()}
+            className="text-xs text-muted-foreground bg-accent/50 rounded px-1 py-0 border border-border/40 outline-none focus:border-primary/50 w-20"
+          />
+        ) : (
+          <span className="text-xs text-muted-foreground/40 truncate">{groupLabel}</span>
+        )}
         <span className="text-xs text-muted-foreground/40 tabular-nums flex-shrink-0">{groupItems.length}</span>
         <span className="flex-1" />
+        {onRenameGroup && !isEditing && (
+          <Button variant="ghost" size="icon-xs"
+            onClick={(e) => { e.stopPropagation(); setEditValue(groupLabel); setIsEditing(true); }}
+            className="p-0.5 w-auto h-auto text-muted-foreground/30 hover:text-foreground hover:bg-accent/15 opacity-0 group-hover/grp:opacity-100 transition-opacity"
+            title="重命名"
+          >
+            <Pencil size={9} />
+          </Button>
+        )}
         <Button variant="ghost" size="icon-xs"
           onClick={(e) => { e.stopPropagation(); onNewItem(); }}
           className="p-0.5 w-auto h-auto text-muted-foreground/30 hover:text-foreground hover:bg-accent/15 opacity-0 group-hover/grp:opacity-100 transition-opacity"
@@ -229,30 +336,21 @@ function GroupSection<T extends HistoryItem>({
               key={item.id}
               item={item}
               isActive={activeItemId === item.id}
+              isEditing={editingItemId === item.id}
               onClick={() => { if (item.unread) onUpdateItem(item.id, { unread: false } as Partial<T>); onSelectItem(item.id); }}
               onContextMenu={(e) => onContextMenu(e, item.id)}
+              onCommitEdit={(newTitle) => onCommitEdit(item.id, newTitle)}
               showStatusDot={showStatusDot}
             />
           ))}
-          {hasMore && !isExpanded && (
+          {hasMore && (
             <Button
               variant="ghost"
-              size="xs"
+              size="icon-xs"
               onClick={onToggleExpand}
-              className="w-full justify-center gap-1 px-2 py-0.5 text-muted-foreground/50 hover:text-foreground"
+              className="w-full justify-center py-0 text-muted-foreground/40 hover:text-foreground"
             >
-              <span className="text-xs">展开更多</span>
-              <span className="text-xs tabular-nums">({hiddenCount})</span>
-            </Button>
-          )}
-          {hasMore && isExpanded && (
-            <Button
-              variant="ghost"
-              size="xs"
-              onClick={onToggleExpand}
-              className="w-full justify-center gap-1 px-2 py-0.5 text-muted-foreground/50 hover:text-foreground"
-            >
-              <span className="text-xs">收起</span>
+              <ChevronsDown size={12} className={`transition-transform duration-150 ${isExpanded ? 'rotate-180' : ''}`} />
             </Button>
           )}
         </>
@@ -278,10 +376,12 @@ export function HistorySidebar<T extends HistoryItem>({
   showStatusDot = false,
   customGroupBy,
   onNewItemForGroup,
+  onRenameGroup,
 }: HistorySidebarProps<T>) {
   const [searchQuery, setSearchQuery] = useState('');
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number; itemId: string } | null>(null);
-  const [groupBy, setGroupBy] = useState<GroupByMode>('none');
+  const [groupBy, setGroupBy] = useState<GroupByMode>('group');
+  const [editingItemId, setEditingItemId] = useState<string | null>(null);
   const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set());
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
   const [groupOrder, setGroupOrder] = useState<string[] | null>(null);
@@ -312,7 +412,7 @@ export function HistorySidebar<T extends HistoryItem>({
       if (groupBy === 'status') {
         key = STATUS_LABELS[item.status] || item.status;
       } else if (groupBy === 'group') {
-        key = item.group || '未分类';
+        key = item.group || '任务';
       } else if (groupBy === 'custom' && customGroupBy) {
         key = customGroupBy.getGroupKey(item);
       } else {
@@ -329,12 +429,15 @@ export function HistorySidebar<T extends HistoryItem>({
     return groups;
   }, [filteredRecent, groupBy, showStatusDot, customGroupBy]);
 
-  // Sorted group entries — respect user drag order
+  // Sorted group entries — '任务' first, then respect user drag order
   const sortedGroupEntries = useMemo((): [string, T[]][] | null => {
     if (!groupedRecent) return null;
     const entries: [string, T[]][] = Object.entries(groupedRecent);
-    if (!groupOrder) return entries;
-    return [...entries].sort((a: [string, T[]], b: [string, T[]]) => {
+    // Default sort: '任务' always first
+    const sorted = [...entries].sort((a: [string, T[]], b: [string, T[]]) => {
+      if (a[0] === '任务') return -1;
+      if (b[0] === '任务') return 1;
+      if (!groupOrder) return 0;
       const ia = groupOrder.indexOf(a[0]);
       const ib = groupOrder.indexOf(b[0]);
       if (ia === -1 && ib === -1) return 0;
@@ -342,6 +445,7 @@ export function HistorySidebar<T extends HistoryItem>({
       if (ib === -1) return -1;
       return ia - ib;
     });
+    return sorted;
   }, [groupedRecent, groupOrder]);
 
   const toggleCollapse = useCallback((label: string) => {
@@ -427,7 +531,7 @@ export function HistorySidebar<T extends HistoryItem>({
               <Popover>
                 <PopoverTrigger asChild>
                   <Button variant="ghost" size="icon-xs"
-                    className={`p-1 w-auto h-auto ${groupBy !== 'none' ? 'text-primary' : 'text-muted-foreground/40'} hover:text-foreground hover:bg-accent/15`}>
+                    className="p-1 w-auto h-auto text-muted-foreground hover:text-foreground hover:bg-accent/15">
                     <ListFilter size={11} />
                   </Button>
                 </PopoverTrigger>
@@ -478,8 +582,10 @@ export function HistorySidebar<T extends HistoryItem>({
                 key={item.id}
                 item={item}
                 isActive={activeItemId === item.id}
+                isEditing={editingItemId === item.id}
                 onClick={() => { if (item.unread) onUpdateItem(item.id, { unread: false } as Partial<T>); onSelectItem(item.id); }}
                 onContextMenu={(e) => handleContextMenu(e, item.id)}
+                onCommitEdit={(newTitle) => { onUpdateItem(item.id, { title: newTitle } as Partial<T>); setEditingItemId(null); }}
                 showStatusDot={showStatusDot}
               />
             ))}
@@ -505,6 +611,9 @@ export function HistorySidebar<T extends HistoryItem>({
               onContextMenu={handleContextMenu}
               showStatusDot={showStatusDot}
               dragHandlers={makeGroupDragHandlers(groupLabel)}
+              onRenameGroup={onRenameGroup}
+              editingItemId={editingItemId}
+              onCommitEdit={(id, newTitle) => { onUpdateItem(id, { title: newTitle } as Partial<T>); setEditingItemId(null); }}
             />
           ))
         ) : (
@@ -521,8 +630,10 @@ export function HistorySidebar<T extends HistoryItem>({
                 key={item.id}
                 item={item}
                 isActive={activeItemId === item.id}
+                isEditing={editingItemId === item.id}
                 onClick={() => { if (item.unread) onUpdateItem(item.id, { unread: false } as Partial<T>); onSelectItem(item.id); }}
                 onContextMenu={(e) => handleContextMenu(e, item.id)}
+                onCommitEdit={(newTitle) => { onUpdateItem(item.id, { title: newTitle } as Partial<T>); setEditingItemId(null); }}
                 showStatusDot={showStatusDot}
               />
             ))}
@@ -542,6 +653,18 @@ export function HistorySidebar<T extends HistoryItem>({
             y={contextMenu.y}
             onClose={() => setContextMenu(null)}
             isPinned={items.find(s => s.id === contextMenu.itemId)?.pinned}
+            onEdit={() => {
+              setEditingItemId(contextMenu.itemId);
+              setContextMenu(null);
+            }}
+            onGenerate={() => {
+              const item = items.find(s => s.id === contextMenu.itemId);
+              if (item) {
+                const generated = `${item.title} — AI`;
+                onUpdateItem(item.id, { title: generated } as Partial<T>);
+              }
+              setContextMenu(null);
+            }}
             onPin={() => {
               const item = items.find(s => s.id === contextMenu.itemId);
               if (item) onUpdateItem(item.id, { pinned: !item.pinned } as Partial<T>);

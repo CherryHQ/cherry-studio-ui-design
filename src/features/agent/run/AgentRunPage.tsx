@@ -12,7 +12,7 @@ import {
   Edit3, Clock,
   Workflow, Cable, Layers,
   Compass, Wrench, PenTool, Bolt, Filter, Pin, ArrowDown,
-  Paperclip, Globe, Brain,
+  Paperclip, Globe, Brain, Pencil,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Tooltip } from '@/app/components/Tooltip';
@@ -76,13 +76,6 @@ function AgentPicker({
 
   const pinnedSet = useMemo(() => new Set(pinnedIds), [pinnedIds]);
 
-  // Close context menu on outside click
-  useEffect(() => {
-    if (!contextMenu) return;
-    const handler = () => setContextMenu(null);
-    document.addEventListener('click', handler);
-    return () => document.removeEventListener('click', handler);
-  }, [contextMenu]);
 
   const { pinned, unpinned } = useMemo(() => {
     let filtered = AVAILABLE_AGENTS.filter(a => {
@@ -120,36 +113,37 @@ function AgentPicker({
     return (
       <button
         key={a.id}
-        onClick={() => { onSelectAgent(a); setOpen(false); }}
+        onClick={() => { onSelectAgent(a); if (!isSelected) setOpen(false); }}
         onContextMenu={(e) => handleContextMenu(e, a.id)}
         className={`group w-full flex items-center gap-2.5 px-3 py-[5px] mb-0.5 text-left transition-all duration-[var(--duration-fast)] rounded-lg cursor-pointer ${
           isSelected ? 'bg-accent/40 text-foreground' : 'text-foreground/80 hover:bg-accent/20'
         }`}
       >
-        <span className="text-base leading-none flex-shrink-0">{a.avatar}</span>
-        <div className="flex flex-col items-start min-w-0 flex-1">
-          <span className={`text-sm truncate w-full ${isSelected ? 'font-medium' : ''}`}>{a.name}</span>
-          <span className="text-xs text-muted-foreground/40 truncate w-full">{a.desc}</span>
-        </div>
-        <span className="w-5 h-5 flex items-center justify-center flex-shrink-0">
+        <span className="w-4 flex items-center justify-center flex-shrink-0">
           {isSelected ? (
-            <Check size={14} className="text-foreground/50" />
+            <Check size={12} className="text-foreground/50" />
           ) : isPinned ? (
             <button
               onClick={(e) => { e.stopPropagation(); onTogglePin?.(a.id); }}
-              className="text-muted-foreground/40 hover:text-muted-foreground/60 transition-colors"
+              className="text-muted-foreground/40 hover:text-destructive/60 transition-colors"
+              title="取消固定"
             >
-              <Pin size={13} className="rotate-45" />
-            </button>
-          ) : onConfigureAgent ? (
-            <button
-              onClick={(e) => { e.stopPropagation(); onConfigureAgent(a); setOpen(false); }}
-              className="text-muted-foreground/15 opacity-0 group-hover:opacity-100 hover:text-muted-foreground/40 transition-all"
-            >
-              <Bolt size={13} />
+              <Pin size={10} />
             </button>
           ) : null}
         </span>
+        <span className="text-base leading-none flex-shrink-0">{a.avatar}</span>
+        <div className="flex items-center min-w-0 flex-1">
+          <span className={`text-sm truncate ${isSelected ? 'font-medium' : ''}`}>{a.name}</span>
+        </div>
+        {onConfigureAgent && (
+          <button
+            onClick={(e) => { e.stopPropagation(); onConfigureAgent(a); setOpen(false); }}
+            className="w-5 h-5 flex items-center justify-center flex-shrink-0 text-muted-foreground/15 opacity-0 group-hover:opacity-100 hover:text-muted-foreground/40 transition-all"
+          >
+            <Bolt size={13} />
+          </button>
+        )}
       </button>
     );
   };
@@ -174,7 +168,7 @@ function AgentPicker({
             <ChevronDown size={8} className={`text-muted-foreground/50 flex-shrink-0 transition-transform duration-100 ${open ? 'rotate-180' : ''}`} />
           </Button>
         </PopoverTrigger>
-        <PopoverContent align="start" className="p-0 w-[380px]">
+        <PopoverContent align="start" className="p-0 w-[380px]" onPointerDownOutside={(e) => { if ((e.target as HTMLElement)?.closest('[data-context-menu]')) e.preventDefault(); }}>
           {/* Search + Filter toggle */}
           <div className="px-3 pt-3 pb-2">
             <div className="flex items-center gap-2 px-2.5 py-[7px] rounded-xl bg-muted/40">
@@ -224,19 +218,6 @@ function AgentPicker({
             </div>
           )}
 
-          {!showFilter && (
-            <div className="px-3 pb-2 flex items-center gap-1.5 flex-wrap">
-              <Tag size={10} className="text-muted-foreground/30 flex-shrink-0" />
-              {AGENT_TAGS.map(tag => (
-                <button key={tag} onClick={() => setActiveTag(activeTag === tag ? null : tag)}
-                  className={`px-2 py-[3px] rounded-full text-xs border transition-colors cursor-pointer ${
-                    activeTag === tag
-                      ? 'bg-foreground/8 text-foreground/80 border-border/60'
-                      : 'bg-transparent text-muted-foreground/50 border-border/40 hover:bg-accent/20 hover:text-muted-foreground/70'
-                  }`}>{tag}</button>
-              ))}
-            </div>
-          )}
 
           <Separator className="bg-border/20" />
 
@@ -269,20 +250,36 @@ function AgentPicker({
           </div>
         </PopoverContent>
       </Popover>
-
-      {/* Context menu for Pin */}
+      {/* Context menu — rendered outside Popover to avoid focus issues */}
       {contextMenu && (
-        <div
-          className="fixed z-[9999] bg-popover border border-border rounded-lg shadow-popover py-1 px-1 animate-in fade-in zoom-in-95 duration-100"
-          style={{ left: contextMenu.x, top: contextMenu.y }}
-          onClick={() => setContextMenu(null)}
-        >
-          <button onClick={() => { onTogglePin?.(contextMenu.id); setContextMenu(null); }}
-            className="flex items-center gap-2 px-2.5 py-[5px] text-sm text-foreground/80 hover:bg-accent/30 rounded-md transition-colors cursor-pointer w-full text-left">
-            <Pin size={12} className={pinnedSet.has(contextMenu.id) ? 'rotate-45' : ''} />
-            <span>{pinnedSet.has(contextMenu.id) ? '取消固定' : '固定'}</span>
-          </button>
-        </div>
+        <>
+          <div className="fixed inset-0 z-[9998]" data-context-menu onMouseDown={() => setContextMenu(null)} />
+          <div
+            className="fixed z-[9999] bg-popover border border-border rounded-lg shadow-popover p-0.5 min-w-0 animate-in fade-in zoom-in-95 duration-100"
+            style={{ left: contextMenu.x, top: contextMenu.y }}
+            data-context-menu
+          >
+            <button onMouseDown={(e) => {
+              e.stopPropagation();
+              const agent = AVAILABLE_AGENTS.find(a => a.id === contextMenu.id);
+              if (agent && onConfigureAgent) { onConfigureAgent(agent); setOpen(false); }
+              setContextMenu(null);
+            }}
+              className="flex items-center gap-1.5 px-2 py-[3px] text-xs text-foreground hover:bg-accent/15 rounded-md transition-colors cursor-pointer w-full text-left">
+              <Pencil size={10} />
+              <span>编辑</span>
+            </button>
+            <button onMouseDown={(e) => {
+              e.stopPropagation();
+              onTogglePin?.(contextMenu.id);
+              setContextMenu(null);
+            }}
+              className="flex items-center gap-1.5 px-2 py-[3px] text-xs text-foreground hover:bg-accent/15 rounded-md transition-colors cursor-pointer w-full text-left">
+              <Pin size={10} className={pinnedSet.has(contextMenu.id) ? 'rotate-45' : ''} />
+              <span>{pinnedSet.has(contextMenu.id) ? '取消固定' : '固定'}</span>
+            </button>
+          </div>
+        </>
       )}
     </div>
   );
@@ -992,6 +989,12 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
     }
   }, [activeSessionId]);
 
+  const handleRenameGroup = useCallback((oldName: string, newName: string) => {
+    setSessions(prev => prev.map(s =>
+      (s.group || '任务') === oldName ? { ...s, group: newName } : s
+    ));
+  }, []);
+
   const handleUpdateSession = useCallback((id: string, updates: Partial<AgentSession>) => {
     setSessions(prev => prev.map(s => s.id === id ? { ...s, ...updates } : s));
   }, []);
@@ -1111,6 +1114,7 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
                 getGroupKey: (item) => item.agentName,
               }}
               onNewItemForGroup={handleNewSessionForAgent}
+              onRenameGroup={handleRenameGroup}
             />
           </motion.div>
         )}

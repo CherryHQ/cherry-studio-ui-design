@@ -17,7 +17,7 @@ export function GenUIButtons({ data, msgId, onResolve }: {
       initial={{ opacity: 0, y: 6 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.2 }}
-      className="rounded-lg border border-border/30 overflow-hidden inline-block"
+      className="rounded-lg border border-border/50 overflow-hidden inline-block"
     >
       <div className="px-3 pt-2.5 pb-2">
         <p className="text-xs text-foreground leading-[1.6]">{data.prompt}</p>
@@ -28,29 +28,27 @@ export function GenUIButtons({ data, msgId, onResolve }: {
           const isOther = resolved && !isSelected;
           return (
             <Button
-              variant="outline"
+              variant={isSelected ? 'default' : 'outline'}
               size="xs"
               key={i}
               onClick={() => !resolved && onResolve(msgId, opt.label)}
-              disabled={!!resolved || opt.disabled}
+              disabled={opt.disabled}
               className={`active:scale-[0.97] ${
-                isSelected
-                  ? 'border-cherry-ring bg-cherry-active-bg text-cherry-text'
-                  : isOther
-                    ? 'border-border/15 text-muted-foreground/40 cursor-default'
-                    : opt.variant === 'danger'
-                      ? 'border-border/30 text-destructive hover:bg-destructive/8'
-                      : 'border-border/30 text-foreground hover:bg-accent/50 hover:text-foreground'
+                isOther
+                  ? 'text-muted-foreground pointer-events-none'
+                  : opt.variant === 'danger' && !isSelected
+                    ? 'text-destructive hover:bg-destructive/8'
+                    : ''
               }`}
             >
-              {isSelected && <Check size={9} className="inline mr-1 -mt-px text-cherry-primary-dark" />}
+              {isSelected && <Check size={9} className="inline mr-1 -mt-px" />}
               {opt.label}
             </Button>
           );
         })}
       </div>
       {resolved && data.resolvedValue && (
-        <div className="px-3 pb-2.5 border-t border-border/30 pt-2">
+        <div className="px-3 pb-2.5 border-t border-border/50 pt-2">
           <p className="text-xs text-muted-foreground leading-[1.6]">
             {"已选择 "}<span className="text-cherry-primary-dark">{data.resolvedValue}</span>{"，正在执行..."}
           </p>
@@ -73,7 +71,7 @@ export function GenUISelection({ data, msgId, onResolve }: {
       initial={{ opacity: 0, y: 6 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.2 }}
-      className="rounded-lg border border-border/30 overflow-hidden inline-block"
+      className="rounded-lg border border-border/50 overflow-hidden inline-block"
     >
       <div className="px-3 pt-2.5 pb-2">
         <p className="text-xs text-foreground leading-[1.6]">{data.prompt}</p>
@@ -88,24 +86,23 @@ export function GenUISelection({ data, msgId, onResolve }: {
               size="xs"
               key={i}
               onClick={() => !resolved && onResolve(msgId, item.label)}
-              disabled={!!resolved}
               className={`!justify-start gap-2.5 text-left ${
                 isSelected
                   ? 'bg-cherry-active-bg text-cherry-text'
                   : isOther
-                    ? 'text-muted-foreground/40 cursor-default'
+                    ? 'text-muted-foreground pointer-events-none'
                     : 'text-foreground hover:bg-accent/50 hover:text-foreground'
               }`}
             >
               <div className={`w-3.5 h-3.5 rounded-full border-[1.5px] flex items-center justify-center flex-shrink-0 transition-all ${
-                isSelected ? 'border-cherry-primary-dark bg-cherry-primary-dark' : isOther ? 'border-border/25' : 'border-border/40'
+                isSelected ? 'border-cherry-primary-dark bg-cherry-primary-dark' : 'border-border'
               }`}>
                 {isSelected && <Check size={7} className="text-background" />}
               </div>
               <div className="flex-1 min-w-0">
                 <span className="font-mono text-xs">{item.label}</span>
                 {item.description && (
-                  <span className="text-xs text-muted-foreground/60 ml-2">{item.description}</span>
+                  <span className="text-xs text-muted-foreground ml-2">{item.description}</span>
                 )}
               </div>
             </Button>
@@ -113,7 +110,7 @@ export function GenUISelection({ data, msgId, onResolve }: {
         })}
       </div>
       {resolved && data.resolvedValue && (
-        <div className="px-3 pb-2.5 border-t border-border/30 pt-2">
+        <div className="px-3 pb-2.5 border-t border-border/50 pt-2">
           <p className="text-xs text-muted-foreground leading-[1.6]">
             {"已选择 "}<span className="text-cherry-primary-dark">{data.resolvedValue}</span>
           </p>
@@ -136,7 +133,7 @@ export function GenUIConfirmation({ data, msgId, onResolve }: {
       initial={{ opacity: 0, y: 6 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.2 }}
-      className="rounded-lg border border-border/30 overflow-hidden inline-block"
+      className="rounded-lg border border-border/50 overflow-hidden inline-block"
     >
       <div className="flex items-start gap-2 px-3 pt-2.5 pb-2">
         <AlertTriangle size={12} className="text-warning flex-shrink-0 mt-[1px]" />
@@ -144,43 +141,39 @@ export function GenUIConfirmation({ data, msgId, onResolve }: {
       </div>
       <div className="flex items-center gap-2 px-3 pb-3">
         <Button
-          variant="outline"
+          variant={resolved && data.resolvedValue === 'confirm'
+            ? (data.confirmVariant === 'danger' ? 'destructive' : 'default')
+            : 'outline'}
           size="xs"
           onClick={() => !resolved && onResolve(msgId, 'confirm')}
-          disabled={!!resolved}
           className={`active:scale-[0.97] ${
-            resolved && data.resolvedValue === 'confirm'
-              ? (data.confirmVariant === 'danger'
-                  ? 'border-destructive/30 bg-destructive/10 text-destructive'
-                  : 'border-cherry-ring bg-cherry-active-bg text-cherry-text')
-              : resolved
-                ? 'border-border/15 text-muted-foreground/50 cursor-default'
-                : data.confirmVariant === 'danger'
-                  ? 'border-border/30 text-destructive hover:bg-destructive/8'
-                  : 'border-border/30 text-foreground hover:bg-accent/50'
+            resolved
+              ? (data.resolvedValue === 'confirm' ? 'pointer-events-none' : 'text-muted-foreground pointer-events-none')
+              : data.confirmVariant === 'danger'
+                ? 'text-destructive hover:bg-destructive/8'
+                : ''
           }`}
         >
-          {resolved && data.resolvedValue === 'confirm' && <Check size={9} className="inline mr-1 -mt-px text-cherry-primary-dark" />}
+          {resolved && data.resolvedValue === 'confirm' && <Check size={9} className="inline mr-1 -mt-px" />}
           {data.confirmLabel || '确认'}
         </Button>
         <Button
           variant="outline"
           size="xs"
           onClick={() => !resolved && onResolve(msgId, 'cancel')}
-          disabled={!!resolved}
           className={`active:scale-[0.97] ${
             resolved && data.resolvedValue === 'cancel'
-              ? 'border-border bg-accent/50 text-foreground'
+              ? 'bg-accent/50 text-foreground pointer-events-none'
               : resolved
-                ? 'border-border/15 text-muted-foreground/50 cursor-default'
-                : 'border-border/30 text-muted-foreground/60 hover:text-foreground hover:bg-accent/50'
+                ? 'text-muted-foreground pointer-events-none'
+                : ''
           }`}
         >
           {data.cancelLabel || '取消'}
         </Button>
       </div>
       {resolved && (
-        <div className="px-3 pb-2.5 border-t border-border/30 pt-2">
+        <div className="px-3 pb-2.5 border-t border-border/50 pt-2">
           <p className="text-xs text-muted-foreground leading-[1.6]">
             {data.resolvedValue === 'confirm'
               ? <span>{"已确认 "}<span className="text-cherry-primary-dark">{data.confirmLabel || '确认'}</span></span>

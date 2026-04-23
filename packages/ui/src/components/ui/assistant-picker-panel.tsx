@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import {
-  Search, X, Check, Plus, ChevronRight, Bolt, Filter, Pin,
+  Search, X, Check, Plus, ChevronRight, Bolt, Filter, Pin, Pencil,
   ArrowUpDown, ArrowUp, ArrowDown,
 } from 'lucide-react';
 import { cn } from "../../lib/utils"
@@ -82,13 +82,6 @@ export function AssistantPickerPanel({
     }
   }, [autoFocus]);
 
-  // Close context menu on outside click
-  useEffect(() => {
-    if (!contextMenu) return;
-    const handler = () => setContextMenu(null);
-    document.addEventListener('click', handler);
-    return () => document.removeEventListener('click', handler);
-  }, [contextMenu]);
 
   // Collect all tags
   const allTags = useMemo(() => {
@@ -125,10 +118,10 @@ export function AssistantPickerPanel({
   };
 
   const handleContextMenu = useCallback((e: React.MouseEvent, id: string) => {
-    if (!onTogglePin) return;
+    if (!onTogglePin && !onConfigureAssistant) return;
     e.preventDefault();
     setContextMenu({ x: e.clientX, y: e.clientY, id });
-  }, [onTogglePin]);
+  }, [onTogglePin, onConfigureAssistant]);
 
   const renderRow = (a: AssistantItem) => {
     const selected = selectedAssistants.includes(a.id);
@@ -146,33 +139,34 @@ export function AssistantPickerPanel({
             : 'text-foreground/80 hover:bg-accent/20'
         )}
       >
-        {multiAssistant && (
+        {multiAssistant ? (
           <Checkbox checked={selected} className="size-3.5 pointer-events-none data-[state=checked]:border-cherry-primary data-[state=checked]:bg-cherry-primary flex-shrink-0" tabIndex={-1} />
+        ) : (
+          <span className="w-4 flex items-center justify-center flex-shrink-0">
+            {selected ? (
+              <Check size={12} className="text-foreground/50" />
+            ) : isPinned ? (
+              <button
+                onClick={(e) => { e.stopPropagation(); onTogglePin?.(a.id); }}
+                className="text-muted-foreground/40 hover:text-destructive/60 transition-colors"
+                title="取消固定"
+              >
+                <Pin size={10} />
+              </button>
+            ) : null}
+          </span>
         )}
         <span className="text-base leading-none flex-shrink-0">{emojiMap[a.name] || '\uD83E\uDD16'}</span>
         <span className={cn("text-sm truncate flex-1 min-w-0", selected && 'font-medium')}>{a.name}</span>
-        {/* Trailing icon area */}
-        <span className="w-5 h-5 flex items-center justify-center flex-shrink-0">
-          {!multiAssistant && selected ? (
-            <Check size={14} className="text-foreground/50" />
-          ) : isPinned ? (
-            <button
-              onClick={(e) => { e.stopPropagation(); onTogglePin?.(a.id); }}
-              className="text-muted-foreground/40 hover:text-muted-foreground/60 transition-colors"
-              aria-label="Unpin"
-            >
-              <Pin size={13} className="rotate-45" />
-            </button>
-          ) : onConfigureAssistant ? (
-            <button
-              onClick={(e) => { e.stopPropagation(); onConfigureAssistant(a.id); }}
-              className="text-muted-foreground/15 opacity-0 group-hover:opacity-100 hover:text-muted-foreground/40 transition-all"
-              aria-label="Configure"
-            >
-              <Bolt size={13} />
-            </button>
-          ) : null}
-        </span>
+        {onConfigureAssistant && (
+          <button
+            onClick={(e) => { e.stopPropagation(); onConfigureAssistant(a.id); }}
+            className="w-5 h-5 flex items-center justify-center flex-shrink-0 text-muted-foreground/15 opacity-0 group-hover:opacity-100 hover:text-muted-foreground/40 transition-all"
+            aria-label="Configure"
+          >
+            <Bolt size={13} />
+          </button>
+        )}
       </button>
     );
   };
@@ -300,21 +294,31 @@ export function AssistantPickerPanel({
         </button>
       </div>
 
-      {/* Context menu for Pin */}
+      {/* Context menu */}
       {contextMenu && (
-        <div
-          className="fixed z-[9999] bg-popover border border-border rounded-lg shadow-popover py-1 px-1 animate-in fade-in zoom-in-95 duration-100"
-          style={{ left: contextMenu.x, top: contextMenu.y }}
-          onClick={() => setContextMenu(null)}
-        >
-          <button
-            onClick={() => { onTogglePin?.(contextMenu.id); setContextMenu(null); }}
-            className="flex items-center gap-2 px-2.5 py-[5px] text-sm text-foreground/80 hover:bg-accent/30 rounded-md transition-colors cursor-pointer w-full text-left"
+        <>
+          <div className="fixed inset-0 z-[9998]" data-context-menu onMouseDown={() => setContextMenu(null)} />
+          <div
+            className="fixed z-[9999] bg-popover border border-border rounded-lg shadow-popover p-0.5 min-w-0 animate-in fade-in zoom-in-95 duration-100"
+            style={{ left: contextMenu.x, top: contextMenu.y }}
+            data-context-menu
           >
-            <Pin size={12} className={pinnedSet.has(contextMenu.id) ? 'rotate-45' : ''} />
-            <span>{pinnedSet.has(contextMenu.id) ? '取消固定' : '固定'}</span>
-          </button>
-        </div>
+            <button
+              onClick={(e) => { e.stopPropagation(); onConfigureAssistant?.(contextMenu.id); setContextMenu(null); }}
+              className="flex items-center gap-1.5 px-2 py-[3px] text-xs text-foreground hover:bg-accent/15 rounded-md transition-colors cursor-pointer w-full text-left"
+            >
+              <Pencil size={10} />
+              <span>编辑</span>
+            </button>
+            <button
+              onClick={(e) => { e.stopPropagation(); onTogglePin?.(contextMenu.id); setContextMenu(null); }}
+              className="flex items-center gap-1.5 px-2 py-[3px] text-xs text-foreground hover:bg-accent/15 rounded-md transition-colors cursor-pointer w-full text-left"
+            >
+              <Pin size={10} className={pinnedSet.has(contextMenu.id) ? 'rotate-45' : ''} />
+              <span>{pinnedSet.has(contextMenu.id) ? '取消固定' : '固定'}</span>
+            </button>
+          </div>
+        </>
       )}
     </div>
   );

@@ -934,9 +934,9 @@ export function NotePage() {
           )}
           <div className="flex items-center gap-0.5 flex-shrink-0 ml-1">
             <div className="flex items-center bg-accent/50 rounded-lg p-0.5 gap-0.5">
-              <Tooltip content="实时编辑"><Button variant="ghost" size="icon-xs" onClick={() => setEditorMode('edit')} className={editorMode === 'edit' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground/60 hover:text-foreground'}><PenLine size={11} /></Button></Tooltip>
-              <Tooltip content="Markdown 源码"><Button variant="ghost" size="icon-xs" onClick={() => setEditorMode('markdown')} className={editorMode === 'markdown' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground/60 hover:text-foreground'}><Code size={11} /></Button></Tooltip>
-              <Tooltip content="只读预览"><Button variant="ghost" size="icon-xs" onClick={() => setEditorMode('preview')} className={editorMode === 'preview' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground/60 hover:text-foreground'}><Eye size={11} /></Button></Tooltip>
+              <Tooltip content="实时编辑"><Button variant={editorMode === 'edit' ? 'secondary' : 'ghost'} size="icon-xs" onClick={() => setEditorMode('edit')} className={editorMode !== 'edit' ? 'text-muted-foreground hover:text-foreground' : ''}><PenLine size={11} /></Button></Tooltip>
+              <Tooltip content="Markdown 源码"><Button variant={editorMode === 'markdown' ? 'secondary' : 'ghost'} size="icon-xs" onClick={() => setEditorMode('markdown')} className={editorMode !== 'markdown' ? 'text-muted-foreground hover:text-foreground' : ''}><Code size={11} /></Button></Tooltip>
+              <Tooltip content="只读预览"><Button variant={editorMode === 'preview' ? 'secondary' : 'ghost'} size="icon-xs" onClick={() => setEditorMode('preview')} className={editorMode !== 'preview' ? 'text-muted-foreground hover:text-foreground' : ''}><Eye size={11} /></Button></Tooltip>
             </div>
           </div>
           <div className="w-px h-4 bg-border/30 mx-1" />
@@ -1086,7 +1086,7 @@ export function NotePage() {
                       <div className="flex items-center gap-1 flex-wrap">
                         <Tag size={8} className="text-muted-foreground/40 flex-shrink-0" />
                         {allAstTags.map(tag => (
-                          <Button key={tag} variant="ghost" size="inline" onClick={() => setAstTag(astTag === tag ? null : tag)} className={`px-1.5 py-px rounded-full text-xs ${astTag === tag ? 'bg-foreground/10 text-foreground border border-border/40' : 'bg-accent/25 text-muted-foreground/50 border border-transparent hover:bg-accent/15 hover:text-muted-foreground/60'}`}>{tag}</Button>
+                          <Button key={tag} variant={astTag === tag ? 'secondary' : 'ghost'} size="inline" onClick={() => setAstTag(astTag === tag ? null : tag)} className={`px-1.5 py-px rounded-full text-xs ${astTag !== tag ? 'bg-accent/25 text-muted-foreground hover:bg-accent/15' : ''}`}>{tag}</Button>
                         ))}
                       </div>
                     </div>

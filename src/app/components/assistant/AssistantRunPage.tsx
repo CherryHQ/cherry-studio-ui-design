@@ -925,8 +925,8 @@ function RAGPanel({ ragInfo, onClose }: { ragInfo: RAGInfo; onClose: () => void 
           <div className="flex items-center justify-between text-xs"><span className="text-muted-foreground/60">检索方式</span><span className="text-foreground">{ragInfo.retrievalMethod}</span></div>
         </div>
         <div className="flex items-center gap-0.5">
-          <Button variant="ghost" size="inline" onClick={() => setSubTab('chunks')} className={`px-2.5 py-[4px] text-xs transition-all ${subTab === 'chunks' ? 'bg-accent/50 text-foreground' : 'text-muted-foreground/60 hover:text-foreground'}`}>top-k</Button>
-          <Button variant="ghost" size="inline" onClick={() => setSubTab('process')} className={`px-2.5 py-[4px] text-xs transition-all ${subTab === 'process' ? 'bg-accent/50 text-foreground' : 'text-muted-foreground/60 hover:text-foreground'}`}>过程</Button>
+          <Button variant={subTab === 'chunks' ? 'secondary' : 'ghost'} size="inline" onClick={() => setSubTab('chunks')} className={`px-2.5 py-[4px] text-xs transition-all ${subTab !== 'chunks' ? 'text-muted-foreground hover:text-foreground' : ''}`}>top-k</Button>
+          <Button variant={subTab === 'process' ? 'secondary' : 'ghost'} size="inline" onClick={() => setSubTab('process')} className={`px-2.5 py-[4px] text-xs transition-all ${subTab !== 'process' ? 'text-muted-foreground hover:text-foreground' : ''}`}>过程</Button>
         </div>
         {subTab === 'chunks' && (
           <div className="space-y-2">
@@ -1472,7 +1472,7 @@ function MultiSelectPicker({
             <ChevronDown size={8} className={`text-muted-foreground/50 flex-shrink-0 transition-transform duration-100 ${open && mode === 'assistant' ? 'rotate-180' : ''}`} />
           </Button>
         </PopoverTrigger>
-        <PopoverContent align="start" className="p-0 w-[380px] overflow-hidden">
+        <PopoverContent align="start" className="p-0 w-[380px] overflow-hidden" onPointerDownOutside={(e) => { if ((e.target as HTMLElement)?.closest('[data-context-menu]')) e.preventDefault(); }}>
           <AssistantPickerPanel
             selectedAssistants={selectedAssistants}
             onSelectAssistant={onSelectAssistant}
