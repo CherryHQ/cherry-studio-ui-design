@@ -715,10 +715,8 @@ export function BranchTreePanel({ messages, onClose, assistantName, modelName, t
   // Merge locally created nodes into the tree
   const tree = useMemo(() => {
     if (localNodes.size === 0) return baseTree;
-    console.log('[tree merge] localNodes size:', localNodes.size, 'entries:', Array.from(localNodes.keys()));
     const merge = (node: BranchNode): BranchNode => {
       const extras = localNodes.get(node.id) || [];
-      if (extras.length > 0) console.log('[tree merge] node', node.id, 'has', extras.length, 'extras');
       const mergedChildren = [...node.children.map(merge), ...extras];
       return { ...node, children: mergedChildren };
     };
@@ -729,7 +727,6 @@ export function BranchTreePanel({ messages, onClose, assistantName, modelName, t
   const prevMessagesRef = useRef(messages);
   useEffect(() => {
     if (prevMessagesRef.current !== messages) {
-      console.log('[reset] messages changed! prev length:', prevMessagesRef.current?.length, 'new length:', messages?.length, 'same ref:', prevMessagesRef.current === messages);
       prevMessagesRef.current = messages;
       setCollapsed(new Set());
       setExpandedNodes(new Set());
@@ -1219,13 +1216,11 @@ export function BranchTreePanel({ messages, onClose, assistantName, modelName, t
                   children: [],
                 };
                 const parentId = findParent(tree, sourceNode.id)?.id;
-                console.log('[创建新节点] sourceNode:', sourceNode.id, 'parentId:', parentId, 'newNode:', newNode.id);
                 if (parentId) {
                   setLocalNodes(prev => {
                     const next = new Map(prev);
                     const existing = next.get(parentId) || [];
                     next.set(parentId, [...existing, newNode]);
-                    console.log('[创建新节点] localNodes after set:', Array.from(next.entries()));
                     return next;
                   });
                 } else {
@@ -1233,14 +1228,11 @@ export function BranchTreePanel({ messages, onClose, assistantName, modelName, t
                     const next = new Map(prev);
                     const existing = next.get(sourceNode.id) || [];
                     next.set(sourceNode.id, [...existing, newNode]);
-                    console.log('[创建新节点] localNodes (fallback) after set:', Array.from(next.entries()));
                     return next;
                   });
                 }
                 setActiveBranch(newBranchId);
-                // Temporarily skip onBranchChange to test if parent re-render is the issue
-                // onBranchChange?.(newBranchId);
-                showToast(`已创建新分支 parentId=${parentId}`);
+                showToast('已创建新分支并切换');
                 setNodeMenu(null);
               }}
               className="flex items-center gap-2.5 w-full px-2.5 py-[5px] text-xs text-foreground/80 hover:bg-accent/30 rounded-md transition-colors cursor-pointer text-left"

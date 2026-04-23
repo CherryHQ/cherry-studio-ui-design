@@ -87,6 +87,7 @@ export function ChatPanel({
               msgs={group.msgs}
               onResolve={onResolveUI ?? (() => {})}
               onAvatarClick={onAvatarClick}
+              isRunning={group.msgs.some(m => m.toolCall?.status === 'running' || (m.thinking && !m.content))}
             />
           );
         })}

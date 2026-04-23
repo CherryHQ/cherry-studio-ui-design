@@ -1355,21 +1355,19 @@ function MessageBubble({ msg, onOpenPanel, onAvatarClick, onOpenArtifact, assist
         {/* Generated images */}
         {msg.images && msg.images.length > 0 && <ImageGallery images={msg.images} />}
 
-        {/* Artifact indicator — clickable to open preview */}
-        {msg.artifact && (
-          <Button variant="ghost" size="inline"
-            onClick={() => onOpenArtifact?.(msg.artifact!)}
-            className="mt-2 mb-1 w-full justify-start gap-2 px-2.5 py-[6px] rounded-lg bg-accent/25 border border-border/25 text-xs text-foreground hover:bg-accent/50 hover:border-border/40 group"
-          >
-            <Layers size={10} className="text-cherry-primary flex-shrink-0" />
-            <span className="flex-1 truncate">{msg.artifact.title}</span>
-            <span className="text-xs text-muted-foreground/50">{msg.artifact.type === 'document' ? '文档' : msg.artifact.type === 'code' ? '代码' : '预览'}</span>
-            <ExternalLink size={9} className="text-muted-foreground/40 group-hover:text-muted-foreground/60 transition-colors flex-shrink-0" />
-          </Button>
-        )}
-
         {/* Triggered indicators */}
         <div className="flex items-center gap-1.5 mt-1 flex-wrap">
+          {/* Artifact indicator */}
+          {msg.artifact && (
+            <Button variant="ghost" size="inline"
+              onClick={() => onOpenArtifact?.(msg.artifact!)}
+              className="gap-1 px-2 py-[3px] rounded-md text-xs text-cherry-primary/60 bg-cherry-primary/8 hover:bg-cherry-primary/15 hover:text-cherry-primary"
+            >
+              <Layers size={9} />
+              <span className="truncate max-w-[160px]">{msg.artifact.title}</span>
+              <ExternalLink size={8} className="opacity-50" />
+            </Button>
+          )}
           {msg.ragInfo && (
             <Button variant="ghost" size="inline" onClick={() => onOpenPanel('rag', msg)}
               className="gap-1 px-2 py-[3px] rounded-md text-xs text-info/60 bg-info/8 hover:bg-info/15 hover:text-info">

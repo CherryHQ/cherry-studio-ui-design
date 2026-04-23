@@ -13,3 +13,4 @@ src/imports/
 .vscode/
 *.swp
 *.swo
+.vercel

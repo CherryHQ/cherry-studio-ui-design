@@ -961,6 +961,28 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
     setSelectedFile(null);
   }, []);
 
+  const handleNewSessionForAgent = useCallback((agentName: string) => {
+    const agent = AVAILABLE_AGENTS.find(a => a.name === agentName);
+    if (agent) setSelectedAgent(agent);
+    const newId = `new-${Date.now()}`;
+    const ts = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
+    const newSession: AgentSession = {
+      id: newId,
+      title: '新会话',
+      agentName: agentName,
+      agentIcon: agent?.avatar,
+      lastMessage: '',
+      timestamp: ts,
+      messageCount: 0,
+      status: 'active',
+    };
+    setSessions(prev => [newSession, ...prev]);
+    setActiveSessionId(newId);
+    setShowPreview(false);
+    setShowExplorer(false);
+    setSelectedFile(null);
+  }, []);
+
   const handleDeleteSession = useCallback((id: string) => {
     setSessions(prev => prev.filter(s => s.id !== id));
     if (activeSessionId === id) {
@@ -1084,6 +1106,11 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
               onClose={historySidebar.hide}
               entityLabel="会话"
               showStatusDot
+              customGroupBy={{
+                label: '智能体',
+                getGroupKey: (item) => item.agentName,
+              }}
+              onNewItemForGroup={handleNewSessionForAgent}
             />
           </motion.div>
         )}

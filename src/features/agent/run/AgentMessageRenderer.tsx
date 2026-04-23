@@ -124,11 +124,22 @@ export function UserMessage({ msg }: { msg: ChatMessage }) {
 // Agent Message Group
 // ===========================
 
-export function AgentMessageGroup({ msgs, onResolve, onAvatarClick }: {
+export function AgentMessageGroup({ msgs, onResolve, onAvatarClick, isRunning = true }: {
   msgs: ChatMessage[];
   onResolve: (msgId: string, value: string) => void;
   onAvatarClick?: () => void;
+  isRunning?: boolean;
 }) {
+  const [processExpanded, setProcessExpanded] = useState(false);
+
+  // Separate process messages (tool calls, thinking, generativeUI) from final content
+  const hasProcessInfo = msgs.some(m => m.toolCall || m.thinking || m.generativeUI);
+  const finalMessages = msgs.filter(m => m.content && !m.toolCall && !m.thinking);
+  const processMessages = msgs.filter(m => m.toolCall || m.thinking || m.generativeUI);
+
+  // Show process info when running, or when manually expanded
+  const showProcess = isRunning || processExpanded;
+
   return (
     <div className="flex gap-2 max-w-[95%]">
       <Button
@@ -140,56 +151,99 @@ export function AgentMessageGroup({ msgs, onResolve, onAvatarClick }: {
         <Bot size={10} className="text-muted-foreground" />
       </Button>
       <div className="flex-1 min-w-0 flex flex-col gap-0.5">
-        {msgs.map((msg) => (
-          <div key={msg.id}>
-            {msg.thinking && (
-              <ThinkingBlock content={msg.thinking} isStreaming />
-            )}
+        {/* Collapsed process toggle (only when not running and has process info) */}
+        {!isRunning && hasProcessInfo && (
+          <Button
+            variant="ghost"
+            size="inline"
+            onClick={() => setProcessExpanded(v => !v)}
+            className="!justify-start gap-1.5 px-1 py-[3px] text-xs text-muted-foreground/50 hover:text-muted-foreground w-fit"
+          >
+            <motion.div animate={{ rotate: processExpanded ? 90 : 0 }} transition={{ duration: 0.1 }}>
+              <ChevronRight size={9} />
+            </motion.div>
+            <span>{processMessages.length} 个执行步骤</span>
+          </Button>
+        )}
 
-            {msg.toolCall && (
-              <CollapsibleRow
-                icon={
-                  msg.toolCall.status === 'running' ? (
-                    <motion.div {...shakeAnimation} className="flex items-center justify-center flex-shrink-0">
-                      {resolveToolIcon(msg.toolCall.name)}
-                    </motion.div>
-                  ) : resolveToolIcon(msg.toolCall.name)
-                }
-                label={msg.toolCall.name}
-                statusIndicator={
-                  msg.toolCall.status === 'running' ? (
-                    <Loader2 size={9} className="text-cherry-primary animate-spin flex-shrink-0" />
-                  ) : msg.toolCall.status === 'done' ? (
-                    <div className="flex items-center gap-1.5 flex-shrink-0">
-                      {msg.toolCall.duration && <span className="text-xs text-muted-foreground/60 tabular-nums">{msg.toolCall.duration}</span>}
-                      <Check size={9} className="text-cherry-primary-dark" />
+        {/* Process info (tool calls, thinking, generativeUI) */}
+        <AnimatePresence initial={false}>
+          {showProcess && (
+            <motion.div
+              initial={isRunning ? false : { height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.15 }}
+              className="overflow-hidden flex flex-col gap-0.5"
+            >
+              {processMessages.map((msg) => (
+                <div key={msg.id}>
+                  {msg.thinking && (
+                    <ThinkingBlock content={msg.thinking} isStreaming />
+                  )}
+
+                  {msg.toolCall && (
+                    <CollapsibleRow
+                      icon={
+                        msg.toolCall.status === 'running' ? (
+                          <motion.div {...shakeAnimation} className="flex items-center justify-center flex-shrink-0">
+                            {resolveToolIcon(msg.toolCall.name)}
+                          </motion.div>
+                        ) : resolveToolIcon(msg.toolCall.name)
+                      }
+                      label={msg.toolCall.name}
+                      statusIndicator={
+                        msg.toolCall.status === 'running' ? (
+                          <Loader2 size={9} className="text-cherry-primary animate-spin flex-shrink-0" />
+                        ) : msg.toolCall.status === 'done' ? (
+                          <div className="flex items-center gap-1.5 flex-shrink-0">
+                            {msg.toolCall.duration && <span className="text-xs text-muted-foreground/60 tabular-nums">{msg.toolCall.duration}</span>}
+                            <Check size={9} className="text-cherry-primary-dark" />
+                          </div>
+                        ) : msg.toolCall.status === 'error' ? (
+                          <X size={9} className="text-destructive flex-shrink-0" />
+                        ) : undefined
+                      }
+                    />
+                  )}
+
+                  {msg.generativeUI && (
+                    <div className="py-0.5">
+                      {msg.generativeUI.type === 'buttons' && <GenUIButtons data={msg.generativeUI} msgId={msg.id} onResolve={onResolve} />}
+                      {msg.generativeUI.type === 'selection' && <GenUISelection data={msg.generativeUI} msgId={msg.id} onResolve={onResolve} />}
+                      {msg.generativeUI.type === 'confirmation' && <GenUIConfirmation data={msg.generativeUI} msgId={msg.id} onResolve={onResolve} />}
                     </div>
-                  ) : msg.toolCall.status === 'error' ? (
-                    <X size={9} className="text-destructive flex-shrink-0" />
-                  ) : undefined
-                }
-              />
-            )}
+                  )}
+                </div>
+              ))}
+            </motion.div>
+          )}
+        </AnimatePresence>
 
-            {msg.content && (
-              <motion.div
-                initial={{ opacity: 0, y: 3 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.15 }}
-                className="text-xs text-foreground leading-[1.7] py-1 px-1"
-              >
-                {msg.content}
-              </motion.div>
-            )}
+        {/* Final content — always visible */}
+        {finalMessages.map((msg) => (
+          <motion.div
+            key={msg.id}
+            initial={{ opacity: 0, y: 3 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.15 }}
+            className="text-xs text-foreground leading-[1.7] py-1 px-1"
+          >
+            {msg.content}
+          </motion.div>
+        ))}
 
-            {msg.generativeUI && (
-              <div className="py-0.5">
-                {msg.generativeUI.type === 'buttons' && <GenUIButtons data={msg.generativeUI} msgId={msg.id} onResolve={onResolve} />}
-                {msg.generativeUI.type === 'selection' && <GenUISelection data={msg.generativeUI} msgId={msg.id} onResolve={onResolve} />}
-                {msg.generativeUI.type === 'confirmation' && <GenUIConfirmation data={msg.generativeUI} msgId={msg.id} onResolve={onResolve} />}
-              </div>
-            )}
-          </div>
+        {/* Inline content from process messages (e.g. tool call results with text) */}
+        {isRunning && msgs.filter(m => m.content && (m.toolCall || m.thinking)).map((msg) => (
+          <motion.div
+            key={`content-${msg.id}`}
+            initial={{ opacity: 0, y: 3 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.15 }}
+            className="text-xs text-foreground leading-[1.7] py-1 px-1"
+          >
+            {msg.content}
+          </motion.div>
         ))}
       </div>
     </div>

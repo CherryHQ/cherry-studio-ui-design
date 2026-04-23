@@ -26,8 +26,8 @@ function FormRow({ label, desc, disabled, direction = "horizontal", className, c
       data-slot="form-row"
       className={cn(
         isVertical
-          ? "flex flex-col gap-1.5 py-1.5 tracking-[-0.14px]"
-          : "flex items-center justify-between gap-6 py-1.5 tracking-[-0.14px]",
+          ? "flex flex-col gap-1 py-1 tracking-[-0.14px]"
+          : "flex items-center justify-between gap-4 py-1 tracking-[-0.14px]",
         disabled && "opacity-50 pointer-events-none",
         className
       )}
@@ -41,7 +41,7 @@ function FormRow({ label, desc, disabled, direction = "horizontal", className, c
               <Tooltip>
                 <TooltipTrigger asChild>
                   <span className="text-muted-foreground hover:text-muted-foreground transition-colors cursor-help flex-shrink-0">
-                    <Info size={14} />
+                    <Info size={11} />
                   </span>
                 </TooltipTrigger>
                 <TooltipContent side="top">

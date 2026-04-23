@@ -17,7 +17,7 @@ export function GenUIButtons({ data, msgId, onResolve }: {
       initial={{ opacity: 0, y: 6 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.2 }}
-      className="rounded-lg border border-border/30 overflow-hidden"
+      className="rounded-lg border border-border/30 overflow-hidden inline-block"
     >
       <div className="px-3 pt-2.5 pb-2">
         <p className="text-xs text-foreground leading-[1.6]">{data.prompt}</p>
@@ -73,7 +73,7 @@ export function GenUISelection({ data, msgId, onResolve }: {
       initial={{ opacity: 0, y: 6 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.2 }}
-      className="rounded-lg border border-border/30 overflow-hidden"
+      className="rounded-lg border border-border/30 overflow-hidden inline-block"
     >
       <div className="px-3 pt-2.5 pb-2">
         <p className="text-xs text-foreground leading-[1.6]">{data.prompt}</p>
@@ -89,7 +89,7 @@ export function GenUISelection({ data, msgId, onResolve }: {
               key={i}
               onClick={() => !resolved && onResolve(msgId, item.label)}
               disabled={!!resolved}
-              className={`w-full !justify-start gap-2.5 text-left ${
+              className={`!justify-start gap-2.5 text-left ${
                 isSelected
                   ? 'bg-cherry-active-bg text-cherry-text'
                   : isOther
@@ -136,7 +136,7 @@ export function GenUIConfirmation({ data, msgId, onResolve }: {
       initial={{ opacity: 0, y: 6 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.2 }}
-      className="rounded-lg border border-border/30 overflow-hidden"
+      className="rounded-lg border border-border/30 overflow-hidden inline-block"
     >
       <div className="flex items-start gap-2 px-3 pt-2.5 pb-2">
         <AlertTriangle size={12} className="text-warning flex-shrink-0 mt-[1px]" />

@@ -1,7 +1,7 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback, useRef } from 'react';
 import {
-  Trash2, Pin,
-  Clock, Maximize2, ListFilter, ChevronDown, Check, FolderOpen,
+  Trash2, Pin, Plus,
+  Clock, Maximize2, ListFilter, ChevronDown, ChevronRight, Check, FolderOpen,
 } from 'lucide-react';
 import { Button, SearchInput, EmptyState, Popover, PopoverTrigger, PopoverContent } from '@cherry-studio/ui';
 import { motion, AnimatePresence } from 'motion/react';
@@ -23,7 +23,7 @@ export interface HistoryItem {
   group?: string;
 }
 
-type GroupByMode = 'none' | 'status' | 'group' | 'time';
+type GroupByMode = 'none' | 'status' | 'group' | 'time' | 'custom';
 
 const GROUP_BY_OPTIONS: { key: GroupByMode; label: string }[] = [
   { key: 'none', label: '不分组' },
@@ -39,6 +39,8 @@ const STATUS_LABELS: Record<string, string> = {
   paused: '已暂停',
 };
 
+const GROUP_COLLAPSE_LIMIT = 6;
+
 interface HistorySidebarProps<T extends HistoryItem> {
   items: T[];
   activeItemId: string | null;
@@ -52,6 +54,11 @@ interface HistorySidebarProps<T extends HistoryItem> {
   showStatusDot?: boolean;
   renderIcon?: (item: T) => React.ReactNode;
   renderSubtitle?: (item: T) => React.ReactNode;
+  customGroupBy?: {
+    label: string;
+    getGroupKey: (item: T) => string;
+  };
+  onNewItemForGroup?: (groupKey: string) => void;
 }
 
 // ===========================
@@ -110,12 +117,15 @@ const STATUS_DOT_COLORS: Record<string, { className: string; animate?: boolean }
   paused:    { className: 'bg-muted-foreground/40' },
 };
 
-function SidebarItem<T extends HistoryItem>({ item, isActive, onClick, onContextMenu, showStatusDot }: {
+function SidebarItem<T extends HistoryItem>({ item, isActive, onClick, onContextMenu, showStatusDot, onDragStart, onDragOver, onDrop }: {
   item: T;
   isActive: boolean;
   onClick: () => void;
   onContextMenu: (e: React.MouseEvent) => void;
   showStatusDot?: boolean;
+  onDragStart?: (e: React.DragEvent) => void;
+  onDragOver?: (e: React.DragEvent) => void;
+  onDrop?: (e: React.DragEvent) => void;
 }) {
   const statusCfg = showStatusDot ? STATUS_DOT_COLORS[item.status] : null;
   return (
@@ -123,6 +133,10 @@ function SidebarItem<T extends HistoryItem>({ item, isActive, onClick, onContext
       variant="ghost"
       onClick={onClick}
       onContextMenu={onContextMenu}
+      draggable={!!onDragStart}
+      onDragStart={onDragStart}
+      onDragOver={onDragOver}
+      onDrop={onDrop}
       className={`w-full px-2.5 py-[5px] font-normal rounded-md justify-start gap-1.5 ${
         isActive
           ? 'bg-accent/25 text-foreground'
@@ -140,6 +154,114 @@ function SidebarItem<T extends HistoryItem>({ item, isActive, onClick, onContext
 }
 
 // ===========================
+// Group Section
+// ===========================
+
+function GroupSection<T extends HistoryItem>({
+  groupLabel,
+  groupItems,
+  isCollapsed,
+  isExpanded,
+  onToggleCollapse,
+  onToggleExpand,
+  onNewItem,
+  activeItemId,
+  onSelectItem,
+  onUpdateItem,
+  onContextMenu,
+  showStatusDot,
+  dragHandlers,
+}: {
+  groupLabel: string;
+  groupItems: T[];
+  isCollapsed: boolean;
+  isExpanded: boolean;
+  onToggleCollapse: () => void;
+  onToggleExpand: () => void;
+  onNewItem: () => void;
+  activeItemId: string | null;
+  onSelectItem: (id: string) => void;
+  onUpdateItem: (id: string, updates: Partial<T>) => void;
+  onContextMenu: (e: React.MouseEvent, itemId: string) => void;
+  showStatusDot?: boolean;
+  dragHandlers: {
+    onDragStart: (e: React.DragEvent) => void;
+    onDragOver: (e: React.DragEvent) => void;
+    onDrop: (e: React.DragEvent) => void;
+    onDragEnd: () => void;
+  };
+}) {
+  const hasMore = groupItems.length > GROUP_COLLAPSE_LIMIT;
+  const visibleItems = (!isCollapsed && hasMore && !isExpanded)
+    ? groupItems.slice(0, GROUP_COLLAPSE_LIMIT)
+    : groupItems;
+  const hiddenCount = groupItems.length - GROUP_COLLAPSE_LIMIT;
+
+  return (
+    <div
+      className="mb-1"
+      draggable
+      onDragStart={dragHandlers.onDragStart}
+      onDragOver={dragHandlers.onDragOver}
+      onDrop={dragHandlers.onDrop}
+      onDragEnd={dragHandlers.onDragEnd}
+    >
+      <div className="group/grp flex items-center gap-1 px-2.5 py-1 cursor-pointer" onClick={onToggleCollapse}>
+        {isCollapsed
+          ? <ChevronRight size={9} className="text-muted-foreground/40 flex-shrink-0" />
+          : <ChevronDown size={9} className="text-muted-foreground/40 flex-shrink-0" />
+        }
+        <span className="text-xs text-muted-foreground/40 truncate">{groupLabel}</span>
+        <span className="text-xs text-muted-foreground/40 tabular-nums flex-shrink-0">{groupItems.length}</span>
+        <span className="flex-1" />
+        <Button variant="ghost" size="icon-xs"
+          onClick={(e) => { e.stopPropagation(); onNewItem(); }}
+          className="p-0.5 w-auto h-auto text-muted-foreground/30 hover:text-foreground hover:bg-accent/15 opacity-0 group-hover/grp:opacity-100 transition-opacity"
+          title="新建"
+        >
+          <Plus size={10} />
+        </Button>
+      </div>
+      {!isCollapsed && (
+        <>
+          {visibleItems.map(item => (
+            <SidebarItem
+              key={item.id}
+              item={item}
+              isActive={activeItemId === item.id}
+              onClick={() => { if (item.unread) onUpdateItem(item.id, { unread: false } as Partial<T>); onSelectItem(item.id); }}
+              onContextMenu={(e) => onContextMenu(e, item.id)}
+              showStatusDot={showStatusDot}
+            />
+          ))}
+          {hasMore && !isExpanded && (
+            <Button
+              variant="ghost"
+              size="xs"
+              onClick={onToggleExpand}
+              className="w-full justify-center gap-1 px-2 py-0.5 text-muted-foreground/50 hover:text-foreground"
+            >
+              <span className="text-xs">展开更多</span>
+              <span className="text-xs tabular-nums">({hiddenCount})</span>
+            </Button>
+          )}
+          {hasMore && isExpanded && (
+            <Button
+              variant="ghost"
+              size="xs"
+              onClick={onToggleExpand}
+              className="w-full justify-center gap-1 px-2 py-0.5 text-muted-foreground/50 hover:text-foreground"
+            >
+              <span className="text-xs">收起</span>
+            </Button>
+          )}
+        </>
+      )}
+    </div>
+  );
+}
+
+// ===========================
 // History Sidebar
 // ===========================
 
@@ -149,14 +271,29 @@ export function HistorySidebar<T extends HistoryItem>({
   onSelectItem,
   onDeleteItem,
   onUpdateItem,
+  onNewItem,
   onExpand,
   onClose,
   entityLabel,
   showStatusDot = false,
+  customGroupBy,
+  onNewItemForGroup,
 }: HistorySidebarProps<T>) {
   const [searchQuery, setSearchQuery] = useState('');
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number; itemId: string } | null>(null);
   const [groupBy, setGroupBy] = useState<GroupByMode>('none');
+  const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set());
+  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
+  const [groupOrder, setGroupOrder] = useState<string[] | null>(null);
+  const dragRef = useRef<{ dragging: string | null }>({ dragging: null });
+
+  const groupOptions = useMemo(() => {
+    const base = [...GROUP_BY_OPTIONS];
+    if (customGroupBy) {
+      base.push({ key: 'custom', label: customGroupBy.label });
+    }
+    return base;
+  }, [customGroupBy]);
 
   const pinnedItems = items.filter(s => s.pinned);
   const recentItems = items.filter(s => !s.pinned);
@@ -176,6 +313,8 @@ export function HistorySidebar<T extends HistoryItem>({
         key = STATUS_LABELS[item.status] || item.status;
       } else if (groupBy === 'group') {
         key = item.group || '未分类';
+      } else if (groupBy === 'custom' && customGroupBy) {
+        key = customGroupBy.getGroupKey(item);
       } else {
         // time
         const t = item.timestamp;
@@ -188,12 +327,90 @@ export function HistorySidebar<T extends HistoryItem>({
       groups[key].push(item);
     }
     return groups;
-  }, [filteredRecent, groupBy, showStatusDot]);
+  }, [filteredRecent, groupBy, showStatusDot, customGroupBy]);
+
+  // Sorted group entries — respect user drag order
+  const sortedGroupEntries = useMemo((): [string, T[]][] | null => {
+    if (!groupedRecent) return null;
+    const entries: [string, T[]][] = Object.entries(groupedRecent);
+    if (!groupOrder) return entries;
+    return [...entries].sort((a: [string, T[]], b: [string, T[]]) => {
+      const ia = groupOrder.indexOf(a[0]);
+      const ib = groupOrder.indexOf(b[0]);
+      if (ia === -1 && ib === -1) return 0;
+      if (ia === -1) return 1;
+      if (ib === -1) return -1;
+      return ia - ib;
+    });
+  }, [groupedRecent, groupOrder]);
+
+  const toggleCollapse = useCallback((label: string) => {
+    setCollapsedGroups((prev: Set<string>) => {
+      const next = new Set(prev);
+      if (next.has(label)) next.delete(label);
+      else next.add(label);
+      return next;
+    });
+  }, []);
+
+  const toggleExpand = useCallback((label: string) => {
+    setExpandedGroups((prev: Set<string>) => {
+      const next = new Set(prev);
+      if (next.has(label)) next.delete(label);
+      else next.add(label);
+      return next;
+    });
+  }, []);
 
   const handleContextMenu = (e: React.MouseEvent, itemId: string) => {
     e.preventDefault();
     setContextMenu({ x: e.clientX, y: e.clientY, itemId });
   };
+
+  // Reset group UI state when switching groupBy mode
+  const handleSetGroupBy = useCallback((mode: GroupByMode) => {
+    setGroupBy(mode);
+    setCollapsedGroups(new Set());
+    setExpandedGroups(new Set());
+    setGroupOrder(null);
+  }, []);
+
+  // Drag handlers for group reordering
+  const makeGroupDragHandlers = useCallback((groupLabel: string) => ({
+    onDragStart: (e: React.DragEvent) => {
+      dragRef.current.dragging = groupLabel;
+      e.dataTransfer.effectAllowed = 'move';
+      // Make drag image semi-transparent
+      if (e.currentTarget instanceof HTMLElement) {
+        e.currentTarget.style.opacity = '0.5';
+      }
+    },
+    onDragOver: (e: React.DragEvent) => {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+    },
+    onDrop: (e: React.DragEvent) => {
+      e.preventDefault();
+      const from = dragRef.current.dragging;
+      if (!from || from === groupLabel || !sortedGroupEntries) return;
+      const currentOrder = sortedGroupEntries.map(([k]: [string, T[]]) => k);
+      const fromIdx = currentOrder.indexOf(from);
+      const toIdx = currentOrder.indexOf(groupLabel);
+      if (fromIdx === -1 || toIdx === -1) return;
+      const next = [...currentOrder];
+      next.splice(fromIdx, 1);
+      next.splice(toIdx, 0, from);
+      setGroupOrder(next);
+      dragRef.current.dragging = null;
+    },
+    onDragEnd: () => {
+      dragRef.current.dragging = null;
+      // Restore opacity on all group elements
+      document.querySelectorAll('[draggable="true"]').forEach(el => {
+        (el as HTMLElement).style.opacity = '';
+      });
+    },
+  }), [sortedGroupEntries]);
 
   return (
     <div className="flex flex-col h-full select-none border-r border-border/15">
@@ -216,9 +433,9 @@ export function HistorySidebar<T extends HistoryItem>({
                 </PopoverTrigger>
                 <PopoverContent align="end" className="w-[140px] p-1">
                   <div className="text-xs text-muted-foreground/60 px-2 py-1">Group by</div>
-                  {GROUP_BY_OPTIONS.map(opt => (
+                  {groupOptions.map((opt: { key: GroupByMode; label: string }) => (
                     <Button key={opt.key} variant="ghost" size="xs"
-                      onClick={() => setGroupBy(opt.key)}
+                      onClick={() => handleSetGroupBy(opt.key)}
                       className={`w-full justify-start gap-2 px-2 ${groupBy === opt.key ? 'text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
                     >
                       <span className="flex-1 text-left">{opt.label}</span>
@@ -270,26 +487,25 @@ export function HistorySidebar<T extends HistoryItem>({
         )}
 
         {/* Recent */}
-        {groupedRecent ? (
+        {sortedGroupEntries ? (
           /* Grouped mode */
-          Object.entries(groupedRecent).map(([groupLabel, groupItems]) => (
-            <div key={groupLabel} className="mb-1">
-              <div className="flex items-center gap-1 px-2.5 py-1">
-                <FolderOpen size={9} className="text-muted-foreground/40" />
-                <span className="text-xs text-muted-foreground/40">{groupLabel}</span>
-                <span className="text-xs text-muted-foreground/40 tabular-nums">{groupItems.length}</span>
-              </div>
-              {groupItems.map(item => (
-                <SidebarItem
-                  key={item.id}
-                  item={item}
-                  isActive={activeItemId === item.id}
-                  onClick={() => { if (item.unread) onUpdateItem(item.id, { unread: false } as Partial<T>); onSelectItem(item.id); }}
-                  onContextMenu={(e) => handleContextMenu(e, item.id)}
-                  showStatusDot={showStatusDot}
-                />
-              ))}
-            </div>
+          sortedGroupEntries.map(([groupLabel, groupItems]: [string, T[]]) => (
+            <GroupSection
+              key={groupLabel}
+              groupLabel={groupLabel}
+              groupItems={groupItems}
+              isCollapsed={collapsedGroups.has(groupLabel)}
+              isExpanded={expandedGroups.has(groupLabel)}
+              onToggleCollapse={() => toggleCollapse(groupLabel)}
+              onToggleExpand={() => toggleExpand(groupLabel)}
+              onNewItem={() => onNewItemForGroup ? onNewItemForGroup(groupLabel) : onNewItem()}
+              activeItemId={activeItemId}
+              onSelectItem={onSelectItem}
+              onUpdateItem={onUpdateItem}
+              onContextMenu={handleContextMenu}
+              showStatusDot={showStatusDot}
+              dragHandlers={makeGroupDragHandlers(groupLabel)}
+            />
           ))
         ) : (
           /* Flat mode */

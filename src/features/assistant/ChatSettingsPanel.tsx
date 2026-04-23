@@ -14,7 +14,7 @@ function Section({ title, defaultOpen = true, children }: { title: string; defau
         variant="ghost"
         size="sm"
         onClick={() => setOpen(v => !v)}
-        className="justify-start gap-1.5 py-2.5 w-full text-left text-xs text-muted-foreground hover:text-foreground font-normal"
+        className="justify-start gap-1.5 py-1.5 w-full text-left text-xs text-muted-foreground hover:text-foreground font-normal"
       >
         {open ? <ChevronDown size={11} /> : <ChevronRight size={11} />}
         <span className="font-medium">{title}</span>
@@ -100,8 +100,8 @@ export function ChatSettingsPanel({ onClose }: { onClose: () => void }) {
         </Button>
       </div>
 
-      {/* Content */}
-      <div className="flex-1 overflow-y-auto px-4 py-1 scrollbar-thin">
+      {/* Content — compact spacing via CSS variable override */}
+      <div className="flex-1 overflow-y-auto px-3 py-1 scrollbar-thin [&_[data-slot=form-row]]:py-[3px] [&_[data-slot=form-row]]:gap-3">
         {/* OpenAI Settings */}
         <Section title="OpenAI 设置">
           <FormRow label="服务层级" desc=" ">
