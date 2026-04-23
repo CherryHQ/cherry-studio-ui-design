@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import {
-  Trash2, Pin, Plus, Pencil, Sparkles,
+  Trash2, Pin, Plus, Pencil, Sparkles, Archive,
   Clock, Maximize2, ListFilter, ChevronDown, ChevronRight, ChevronsDown, Check, FolderOpen,
 } from 'lucide-react';
 import { Button, SearchInput, EmptyState, Popover, PopoverTrigger, PopoverContent } from '@cherry-studio/ui';
@@ -21,6 +21,7 @@ export interface HistoryItem {
   pinned?: boolean;
   unread?: boolean;
   group?: string;
+  archived?: boolean;
 }
 
 type GroupByMode = 'none' | 'status' | 'group' | 'time' | 'custom';
@@ -65,8 +66,8 @@ interface HistorySidebarProps<T extends HistoryItem> {
 // Context Menu
 // ===========================
 
-function ItemContextMenu({ x, y, onClose, onDelete, onPin, onEdit, onGenerate, isPinned }: {
-  x: number; y: number; onClose: () => void; onDelete: () => void; onPin: () => void; onEdit: () => void; onGenerate: () => void; isPinned?: boolean;
+function ItemContextMenu({ x, y, onClose, onDelete, onPin, onEdit, onGenerate, onArchive, isPinned }: {
+  x: number; y: number; onClose: () => void; onDelete: () => void; onPin: () => void; onEdit: () => void; onGenerate: () => void; onArchive: () => void; isPinned?: boolean;
 }) {
   const clampedX = Math.min(x, window.innerWidth - 160);
   const clampedY = Math.min(y, window.innerHeight - 160);
@@ -112,6 +113,15 @@ function ItemContextMenu({ x, y, onClose, onDelete, onPin, onEdit, onGenerate, i
         <Button
           variant="ghost"
           size="inline"
+          onClick={onArchive}
+          className="w-full justify-start gap-1.5 px-2 py-[3px] text-foreground hover:bg-accent/15"
+        >
+          <Archive size={10} />
+          <span>归档</span>
+        </Button>
+        <Button
+          variant="ghost"
+          size="inline"
           onClick={onDelete}
           className="w-full justify-start gap-1.5 px-2 py-[3px] text-destructive/70 hover:bg-destructive/8"
         >
@@ -134,13 +144,14 @@ const STATUS_DOT_COLORS: Record<string, { className: string; animate?: boolean }
   paused:    { className: 'bg-muted-foreground/40' },
 };
 
-function SidebarItem<T extends HistoryItem>({ item, isActive, isEditing, onClick, onContextMenu, onCommitEdit, showStatusDot, onDragStart, onDragOver, onDrop }: {
+function SidebarItem<T extends HistoryItem>({ item, isActive, isEditing, onClick, onContextMenu, onCommitEdit, onArchive, showStatusDot, onDragStart, onDragOver, onDrop }: {
   item: T;
   isActive: boolean;
   isEditing?: boolean;
   onClick: () => void;
   onContextMenu: (e: React.MouseEvent) => void;
   onCommitEdit?: (newTitle: string) => void;
+  onArchive?: () => void;
   showStatusDot?: boolean;
   onDragStart?: (e: React.DragEvent) => void;
   onDragOver?: (e: React.DragEvent) => void;
@@ -186,27 +197,38 @@ function SidebarItem<T extends HistoryItem>({ item, isActive, isEditing, onClick
   }
 
   return (
-    <Button size="inline"
-      variant="ghost"
-      onClick={onClick}
-      onContextMenu={onContextMenu}
-      draggable={!!onDragStart}
-      onDragStart={onDragStart}
-      onDragOver={onDragOver}
-      onDrop={onDrop}
-      className={`w-full px-2.5 py-[5px] font-normal rounded-md justify-start gap-1.5 ${
-        isActive
-          ? 'bg-accent/25 text-foreground'
-          : 'text-foreground hover:bg-accent/15 hover:text-foreground'
-      }`}
-    >
-      {statusCfg && item.unread && !isActive && (
-        <span className={`w-[5px] h-[5px] rounded-full flex-shrink-0 ${statusCfg.className} ${statusCfg.animate ? 'animate-pulse' : ''}`} />
+    <div className="group/item flex items-center">
+      <Button size="inline"
+        variant="ghost"
+        onClick={onClick}
+        onContextMenu={onContextMenu}
+        draggable={!!onDragStart}
+        onDragStart={onDragStart}
+        onDragOver={onDragOver}
+        onDrop={onDrop}
+        className={`flex-1 min-w-0 px-2.5 py-[5px] font-normal rounded-md justify-start gap-1.5 ${
+          isActive
+            ? 'bg-accent/25 text-foreground'
+            : 'text-foreground hover:bg-accent/15 hover:text-foreground'
+        }`}
+      >
+        {statusCfg && item.unread && !isActive && (
+          <span className={`w-[5px] h-[5px] rounded-full flex-shrink-0 ${statusCfg.className} ${statusCfg.animate ? 'animate-pulse' : ''}`} />
+        )}
+        <span className="text-sm truncate flex-1 text-left">
+          {item.title}
+        </span>
+      </Button>
+      {onArchive && (
+        <button
+          onClick={(e) => { e.stopPropagation(); onArchive(); }}
+          className="p-0.5 flex-shrink-0 text-muted-foreground/30 hover:text-foreground opacity-0 group-hover/item:opacity-100 transition-opacity"
+          title="归档"
+        >
+          <Archive size={11} />
+        </button>
       )}
-      <span className="text-sm truncate flex-1 text-left">
-        {item.title}
-      </span>
-    </Button>
+    </div>
   );
 }
 
@@ -231,6 +253,7 @@ function GroupSection<T extends HistoryItem>({
   onRenameGroup,
   editingItemId,
   onCommitEdit,
+  onArchiveItem,
 }: {
   groupLabel: string;
   groupItems: T[];
@@ -253,6 +276,7 @@ function GroupSection<T extends HistoryItem>({
   onRenameGroup?: (oldName: string, newName: string) => void;
   editingItemId: string | null;
   onCommitEdit: (id: string, newTitle: string) => void;
+  onArchiveItem?: (id: string) => void;
 }) {
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState(groupLabel);
@@ -340,6 +364,7 @@ function GroupSection<T extends HistoryItem>({
               onClick={() => { if (item.unread) onUpdateItem(item.id, { unread: false } as Partial<T>); onSelectItem(item.id); }}
               onContextMenu={(e) => onContextMenu(e, item.id)}
               onCommitEdit={(newTitle) => onCommitEdit(item.id, newTitle)}
+              onArchive={onArchiveItem ? () => onArchiveItem(item.id) : undefined}
               showStatusDot={showStatusDot}
             />
           ))}
@@ -395,8 +420,11 @@ export function HistorySidebar<T extends HistoryItem>({
     return base;
   }, [customGroupBy]);
 
-  const pinnedItems = items.filter(s => s.pinned);
-  const recentItems = items.filter(s => !s.pinned);
+  const [showArchived, setShowArchived] = useState(false);
+  const activeItems = items.filter(s => !s.archived);
+  const archivedItems = items.filter(s => s.archived);
+  const pinnedItems = activeItems.filter(s => s.pinned);
+  const recentItems = activeItems.filter(s => !s.pinned);
 
   const filterFn = (s: HistoryItem) =>
     s.title.toLowerCase().includes(searchQuery.toLowerCase());
@@ -586,6 +614,7 @@ export function HistorySidebar<T extends HistoryItem>({
                 onClick={() => { if (item.unread) onUpdateItem(item.id, { unread: false } as Partial<T>); onSelectItem(item.id); }}
                 onContextMenu={(e) => handleContextMenu(e, item.id)}
                 onCommitEdit={(newTitle) => { onUpdateItem(item.id, { title: newTitle } as Partial<T>); setEditingItemId(null); }}
+                onArchive={() => onUpdateItem(item.id, { archived: true } as Partial<T>)}
                 showStatusDot={showStatusDot}
               />
             ))}
@@ -614,6 +643,7 @@ export function HistorySidebar<T extends HistoryItem>({
               onRenameGroup={onRenameGroup}
               editingItemId={editingItemId}
               onCommitEdit={(id, newTitle) => { onUpdateItem(id, { title: newTitle } as Partial<T>); setEditingItemId(null); }}
+              onArchiveItem={(id) => onUpdateItem(id, { archived: true } as Partial<T>)}
             />
           ))
         ) : (
@@ -634,6 +664,7 @@ export function HistorySidebar<T extends HistoryItem>({
                 onClick={() => { if (item.unread) onUpdateItem(item.id, { unread: false } as Partial<T>); onSelectItem(item.id); }}
                 onContextMenu={(e) => handleContextMenu(e, item.id)}
                 onCommitEdit={(newTitle) => { onUpdateItem(item.id, { title: newTitle } as Partial<T>); setEditingItemId(null); }}
+                onArchive={() => onUpdateItem(item.id, { archived: true } as Partial<T>)}
                 showStatusDot={showStatusDot}
               />
             ))}
@@ -642,6 +673,39 @@ export function HistorySidebar<T extends HistoryItem>({
 
         {filteredPinned.length === 0 && filteredRecent.length === 0 && searchQuery && (
           <EmptyState preset="no-result" title={`未找到${entityLabel}`} compact />
+        )}
+
+        {/* Archived */}
+        {archivedItems.length > 0 && (
+          <div className="mt-2">
+            <div className="flex items-center gap-1 px-2.5 py-1 cursor-pointer" onClick={() => setShowArchived(v => !v)}>
+              {showArchived
+                ? <ChevronDown size={9} className="text-muted-foreground/40 flex-shrink-0" />
+                : <ChevronRight size={9} className="text-muted-foreground/40 flex-shrink-0" />
+              }
+              <Archive size={9} className="text-muted-foreground/40" />
+              <span className="text-xs text-muted-foreground/40">归档</span>
+              <span className="text-xs text-muted-foreground/40 tabular-nums">{archivedItems.length}</span>
+            </div>
+            {showArchived && archivedItems.filter(filterFn).map(item => (
+              <div key={item.id} className="group/item flex items-center">
+                <Button size="inline"
+                  variant="ghost"
+                  onClick={() => onSelectItem(item.id)}
+                  className="flex-1 min-w-0 px-2.5 py-[5px] font-normal rounded-md justify-start gap-1.5 text-muted-foreground hover:bg-accent/15 hover:text-foreground"
+                >
+                  <span className="text-sm truncate flex-1 text-left">{item.title}</span>
+                </Button>
+                <button
+                  onClick={() => onUpdateItem(item.id, { archived: false } as Partial<T>)}
+                  className="p-0.5 flex-shrink-0 text-muted-foreground/30 hover:text-foreground opacity-0 group-hover/item:opacity-100 transition-opacity"
+                  title="取消归档"
+                >
+                  <Archive size={11} />
+                </button>
+              </div>
+            ))}
+          </div>
         )}
       </div>
 
@@ -668,6 +732,10 @@ export function HistorySidebar<T extends HistoryItem>({
             onPin={() => {
               const item = items.find(s => s.id === contextMenu.itemId);
               if (item) onUpdateItem(item.id, { pinned: !item.pinned } as Partial<T>);
+              setContextMenu(null);
+            }}
+            onArchive={() => {
+              onUpdateItem(contextMenu.itemId, { archived: true } as Partial<T>);
               setContextMenu(null);
             }}
             onDelete={() => {

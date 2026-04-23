@@ -102,10 +102,10 @@ function AgentPicker({
   };
 
   const handleContextMenu = useCallback((e: React.MouseEvent, id: string) => {
-    if (!onTogglePin) return;
+    if (!onTogglePin && !onConfigureAgent) return;
     e.preventDefault();
     setContextMenu({ x: e.clientX, y: e.clientY, id });
-  }, [onTogglePin]);
+  }, [onTogglePin, onConfigureAgent]);
 
   const renderAgentRow = (a: typeof AVAILABLE_AGENTS[0]) => {
     const isSelected = selectedAgent.id === a.id;

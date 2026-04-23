@@ -5,7 +5,7 @@ import {
   Plug, RefreshCw,
   X,
   Globe2, Command,
-  Cloud, FileScan, BrainCircuit, Database, Server, Sparkles, Info, MousePointer,
+  Cloud, FileScan, BrainCircuit, Database, Server, Sparkles, Info, MousePointer, Archive,
   Home, Zap, MessageSquareText,
   HelpCircle, Rss, MessageSquare, Building2, Mail, Users, Bug, Github,
   Loader2, CheckCircle2, Calendar, ArrowUpRight,
@@ -24,6 +24,7 @@ import { QuickPhrasesPage } from './QuickPhrasesPage';
 import { GeneralSettingsPage } from './GeneralSettingsPage';
 import { MCPServicePage } from './MCPServicePage';
 import { DashboardPage } from './DashboardPage';
+import { ArchiveManagePage } from './ArchiveManagePage';
 import { DefaultModelSettingsPage } from './DefaultModelSettingsPage';
 import { InlineSelect, SectionCard } from './shared';
 import { Tooltip } from '@/app/components/Tooltip';
@@ -34,7 +35,7 @@ import { Button, Dialog, DialogContent, Typography, Switch, Card, CardContent, T
 // ===========================
 type SettingsSection =
   | 'home'
-  | 'general' | 'data-settings' | 'api-gateway' | 'shortcuts' | 'about' | 'dashboard'
+  | 'general' | 'data-settings' | 'archive' | 'api-gateway' | 'shortcuts' | 'about' | 'dashboard'
   | 'models' | 'default-model' | 'mcp' | 'search' | 'documents' | 'memories'
   | 'quick-assistant' | 'selection-assistant' | 'quick-phrases';
 
@@ -89,6 +90,7 @@ const NAV_GROUPS: NavGroup[] = [
     items: [
       { id: 'general', label: '\u901a\u7528\u8bbe\u7f6e', icon: Settings2 },
       { id: 'data-settings', label: '\u6570\u636e\u8bbe\u7f6e', icon: Database },
+      { id: 'archive', label: '\u5f52\u6863\u7ba1\u7406', icon: Archive },
     ],
   },
   {
@@ -923,6 +925,7 @@ export function SettingsPage({ open, onClose, initialSection }: { open: boolean;
       case 'default-model': return null; // handled separately
       case 'mcp': return null; // handled separately
       case 'data-settings': return null; // handled separately
+      case 'archive': return null; // handled separately
       case 'api-gateway': return null; // handled separately
       case 'search': return null; // handled separately
       case 'documents': return null; // handled separately
@@ -943,13 +946,14 @@ export function SettingsPage({ open, onClose, initialSection }: { open: boolean;
 
           {/* Content Area */}
           <div className="flex-1 flex flex-col min-w-0 overflow-hidden mr-2 mb-2 mt-2 ml-0 bg-muted/30 border border-border/50 rounded-2xl">
-            {activeSection === 'models' || activeSection === 'default-model' || activeSection === 'search' || activeSection === 'documents' || activeSection === 'memories' || activeSection === 'data-settings' || activeSection === 'api-gateway' || activeSection === 'shortcuts' || activeSection === 'selection-assistant' || activeSection === 'quick-assistant' || activeSection === 'quick-phrases' || activeSection === 'general' || activeSection === 'mcp' || activeSection === 'dashboard' ? (
+            {activeSection === 'models' || activeSection === 'default-model' || activeSection === 'search' || activeSection === 'documents' || activeSection === 'memories' || activeSection === 'data-settings' || activeSection === 'archive' || activeSection === 'api-gateway' || activeSection === 'shortcuts' || activeSection === 'selection-assistant' || activeSection === 'quick-assistant' || activeSection === 'quick-phrases' || activeSection === 'general' || activeSection === 'mcp' || activeSection === 'dashboard' ? (
               activeSection === 'models' ? <ModelServicePage />
                 : activeSection === 'default-model' ? <DefaultModelSettingsPage />
                 : activeSection === 'search' ? <WebSearchPage />
                 : activeSection === 'documents' ? <DocumentServicePage />
                 : activeSection === 'memories' ? <MemoriesPage />
                 : activeSection === 'data-settings' ? <DataSettingsPage />
+                : activeSection === 'archive' ? <ArchiveManagePage />
                 : activeSection === 'api-gateway' ? <ApiGatewayPage />
                 : activeSection === 'shortcuts' ? <ShortcutsPage />
                 : activeSection === 'selection-assistant' ? <SelectionAssistantPage />

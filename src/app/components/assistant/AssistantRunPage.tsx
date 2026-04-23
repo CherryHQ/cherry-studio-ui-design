@@ -1472,7 +1472,7 @@ function MultiSelectPicker({
             <ChevronDown size={8} className={`text-muted-foreground/50 flex-shrink-0 transition-transform duration-100 ${open && mode === 'assistant' ? 'rotate-180' : ''}`} />
           </Button>
         </PopoverTrigger>
-        <PopoverContent align="start" className="p-0 w-[380px] overflow-hidden" onPointerDownOutside={(e) => { if ((e.target as HTMLElement)?.closest('[data-context-menu]')) e.preventDefault(); }}>
+        <PopoverContent align="start" className="p-0 w-[380px]" onPointerDownOutside={(e) => { if ((e.target as HTMLElement)?.closest('[data-context-menu]')) e.preventDefault(); }}>
           <AssistantPickerPanel
             selectedAssistants={selectedAssistants}
             onSelectAssistant={onSelectAssistant}

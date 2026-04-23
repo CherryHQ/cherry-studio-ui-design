@@ -118,10 +118,9 @@ export function AssistantPickerPanel({
   };
 
   const handleContextMenu = useCallback((e: React.MouseEvent, id: string) => {
-    if (!onTogglePin && !onConfigureAssistant) return;
     e.preventDefault();
     setContextMenu({ x: e.clientX, y: e.clientY, id });
-  }, [onTogglePin, onConfigureAssistant]);
+  }, []);
 
   const renderRow = (a: AssistantItem) => {
     const selected = selectedAssistants.includes(a.id);

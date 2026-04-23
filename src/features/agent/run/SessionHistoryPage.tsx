@@ -635,26 +635,20 @@ export function SessionHistoryPage({ sessions, activeSessionId, onSelectSession,
             </div>
           </div>
 
-          {/* Agent list — direct click with search (like assistant page) */}
+          {/* Agent list */}
           <div className="mb-4">
-            <div className="text-xs text-muted-foreground uppercase tracking-[0.08em] px-1 mb-2">{"智能体"}</div>
-            {/* Agent search */}
-            <SearchInput value={agentQuery} onChange={setAgentQuery} placeholder="搜索智能体..." clearable wrapperClassName="flex items-center gap-2 px-2.5 py-[5px] rounded-md bg-accent/15 border border-border/25 mb-2" />
+            <div className="text-xs text-muted-foreground uppercase tracking-[0.08em] px-1 mb-2">智能体</div>
             <div className="flex flex-col gap-[2px]">
-              {!agentQuery && (
-                <Button variant="ghost" size="xs"
-                  onClick={() => setSelectedAgent(null)}
-                  className={`w-full justify-start gap-2 ${
-                    !selectedAgent ? 'bg-accent/50 text-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-accent/15'
-                  }`}
-                >
-                  <span className="flex-1 text-left">{"全部"}</span>
-                  <span className="text-xs text-muted-foreground tabular-nums">{sessions.length}</span>
-                </Button>
-              )}
-              {allAgents
-                .filter(agent => !agentQuery || agent.toLowerCase().includes(agentQuery.toLowerCase()))
-                .map(agent => {
+              <Button variant="ghost" size="xs"
+                onClick={() => setSelectedAgent(null)}
+                className={`w-full justify-start gap-2 ${
+                  !selectedAgent ? 'bg-accent/50 text-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-accent/15'
+                }`}
+              >
+                <span className="flex-1 text-left">全部</span>
+                <span className="text-xs text-muted-foreground tabular-nums">{sessions.length}</span>
+              </Button>
+              {allAgents.map(agent => {
                 const count = sessions.filter(s => s.agentName === agent).length;
                 return (
                   <Button variant="ghost" size="xs"
@@ -670,9 +664,6 @@ export function SessionHistoryPage({ sessions, activeSessionId, onSelectSession,
                   </Button>
                 );
               })}
-              {agentQuery && allAgents.filter(agent => agent.toLowerCase().includes(agentQuery.toLowerCase())).length === 0 && (
-                <div className="px-2.5 py-3 text-xs text-muted-foreground/40 text-center">{"无匹配智能体"}</div>
-              )}
             </div>
           </div>
 
@@ -831,27 +822,10 @@ export function SessionHistoryPage({ sessions, activeSessionId, onSelectSession,
               {/* Topic search */}
               <SearchInput value={searchQuery} onChange={setSearchQuery} placeholder="搜索话题..." clearable wrapperClassName="flex items-center gap-1.5 px-2 py-[3px] rounded-md bg-accent/15 border border-border/25 w-[160px]" />
               <div className="w-px h-4 bg-border/30" />
-              {/* View mode */}
-              <div className="flex items-center gap-[1px] bg-accent/15 rounded-md p-[2px]">
-                <Tooltip content="列表视图" side="bottom"><Button variant="ghost" size="icon-xs"
-                  onClick={() => setViewMode('list')}
-                  className={viewMode === 'list' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}
-                >
-                  <List size={12} />
-                </Button></Tooltip>
-                <Tooltip content="卡片视图" side="bottom"><Button variant="ghost" size="icon-xs"
-                  onClick={() => setViewMode('card')}
-                  className={viewMode === 'card' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}
-                >
-                  <LayoutGrid size={12} />
-                </Button></Tooltip>
-              </div>
-              <div className="w-px h-4 bg-border/30" />
               {/* Group */}
               <div className="flex items-center gap-[2px] bg-accent/15 rounded-md p-[2px]">
                 {([
                   { key: 'none' as GroupMode, label: '平铺' },
-                  { key: 'agent' as GroupMode, label: '智能体' },
                   { key: 'tag' as GroupMode, label: '标签' },
                 ] as const).map(g => (
                   <Button variant="ghost" size="xs"
@@ -882,9 +856,8 @@ export function SessionHistoryPage({ sessions, activeSessionId, onSelectSession,
           </div>
 
           {/* List header */}
-          {viewMode === 'list' && filteredSessions.length > 0 && (
+          {filteredSessions.length > 0 && (
             <div className="flex items-center gap-2.5 px-3 py-[5px] border-b border-border/15 text-xs text-muted-foreground uppercase tracking-[0.06em] flex-shrink-0">
-              <span className="w-5 flex-shrink-0 text-center">{"智能体"}</span>
               <span className="flex-1">{"标题"}</span>
               <span className="w-[90px] text-right flex-shrink-0">{"类型"}</span>
               <span className="w-[36px] text-right flex-shrink-0">{"消息"}</span>
