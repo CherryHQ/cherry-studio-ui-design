@@ -2,9 +2,8 @@ import React, { useState, useMemo, useCallback, useRef, useEffect } from 'react'
 import {
   Trash2, Pin, Plus, Pencil, Sparkles, Archive,
   Clock, Maximize2, ListFilter, ChevronDown, ChevronRight, ChevronsDown, Check, FolderOpen,
-  Tag, X, User,
 } from 'lucide-react';
-import { Button, SearchInput, EmptyState, Popover, PopoverTrigger, PopoverContent, Checkbox, Badge } from '@cherry-studio/ui';
+import { Button, SearchInput, EmptyState, Popover, PopoverTrigger, PopoverContent } from '@cherry-studio/ui';
 import { motion, AnimatePresence } from 'motion/react';
 import { Tooltip } from '@/app/components/Tooltip';
 
@@ -27,12 +26,18 @@ export interface HistoryItem {
   tags?: string[];
 }
 
-type GroupByMode = 'none' | 'status' | 'group' | 'time' | 'custom';
+type GroupByMode = 'none' | 'status' | 'group' | 'time' | 'custom' | 'assistant' | 'tag';
 
 const GROUP_BY_OPTIONS: { key: GroupByMode; label: string }[] = [
   { key: 'group', label: '工作目录' },
   { key: 'status', label: '状态' },
   { key: 'time', label: '时间' },
+];
+
+const TOPIC_GROUP_BY_OPTIONS: { key: GroupByMode; label: string }[] = [
+  { key: 'time', label: '时间' },
+  { key: 'assistant', label: '助手' },
+  { key: 'tag', label: '标签' },
 ];
 
 const STATUS_LABELS: Record<string, string> = {
@@ -408,40 +413,30 @@ export function HistorySidebar<T extends HistoryItem>({
 }: HistorySidebarProps<T>) {
   const [searchQuery, setSearchQuery] = useState('');
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number; itemId: string } | null>(null);
-  const [groupBy, setGroupBy] = useState<GroupByMode>('group');
   const [editingItemId, setEditingItemId] = useState<string | null>(null);
   const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set());
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
   const [groupOrder, setGroupOrder] = useState<string[] | null>(null);
   const dragRef = useRef<{ dragging: string | null }>({ dragging: null });
 
-  // --- Filter state ---
-  const [selectedTags, setSelectedTags] = useState<string[]>([]);
-  const [selectedAssistant, setSelectedAssistant] = useState<string | null>(null);
-  const [tagFilterOpen, setTagFilterOpen] = useState(false);
-  const [assistantFilterOpen, setAssistantFilterOpen] = useState(false);
-
-  const allTags = useMemo(() => {
-    const tags = new Set<string>();
-    items.forEach(item => item.tags?.forEach(tag => tags.add(tag)));
-    return Array.from(tags).sort();
+  // Detect if items have assistant/tag metadata (topic-style data)
+  const hasItemMetadata = useMemo(() => {
+    return items.some(item => item.assistantName || (item.tags && item.tags.length > 0));
   }, [items]);
 
-  const allAssistants = useMemo(() => Array.from(new Set(items.map(item => item.assistantName).filter(Boolean) as string[])), [items]);
-
-  const hasItemMetadata = allTags.length > 0 || allAssistants.length > 0;
-
-  const toggleTag = useCallback((tag: string) => {
-    setSelectedTags(prev => prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]);
-  }, []);
+  // Default groupBy depends on data type
+  const [groupBy, setGroupBy] = useState<GroupByMode>(() => hasItemMetadata ? 'time' : 'group');
 
   const groupOptions = useMemo(() => {
-    const base = [...GROUP_BY_OPTIONS];
-    if (customGroupBy) {
-      base.push({ key: 'custom', label: customGroupBy.label });
+    if (hasItemMetadata) {
+      const base = [...TOPIC_GROUP_BY_OPTIONS];
+      if (customGroupBy) base.push({ key: 'custom', label: customGroupBy.label });
+      return base;
     }
+    const base = [...GROUP_BY_OPTIONS];
+    if (customGroupBy) base.push({ key: 'custom', label: customGroupBy.label });
     return base;
-  }, [customGroupBy]);
+  }, [customGroupBy, hasItemMetadata]);
 
   const [showArchived, setShowArchived] = useState(false);
   const activeItems = items.filter(s => !s.archived);
@@ -449,20 +444,16 @@ export function HistorySidebar<T extends HistoryItem>({
   const pinnedItems = activeItems.filter(s => s.pinned);
   const recentItems = activeItems.filter(s => !s.pinned);
 
-  const filterFn = (s: HistoryItem) => {
-    const matchesSearch = s.title.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesTags = selectedTags.length === 0 || selectedTags.some(tag => s.tags?.includes(tag));
-    const matchesAssistant = !selectedAssistant || s.assistantName === selectedAssistant;
-    return matchesSearch && matchesTags && matchesAssistant;
-  };
-
-  const hasActiveFilters = selectedTags.length > 0 || selectedAssistant !== null;
+  const filterFn = (s: HistoryItem) =>
+    s.title.toLowerCase().includes(searchQuery.toLowerCase());
 
   const filteredPinned = pinnedItems.filter(filterFn);
   const filteredRecent = recentItems.filter(filterFn);
 
   const groupedRecent = useMemo(() => {
-    if (!showStatusDot || groupBy === 'none') return null;
+    if (groupBy === 'none') return null;
+    // For non-metadata items, only group when showStatusDot is on
+    if (!hasItemMetadata && !showStatusDot) return null;
     const groups: Record<string, T[]> = {};
     for (const item of filteredRecent) {
       let key: string;
@@ -472,6 +463,16 @@ export function HistorySidebar<T extends HistoryItem>({
         key = item.group || '任务';
       } else if (groupBy === 'custom' && customGroupBy) {
         key = customGroupBy.getGroupKey(item);
+      } else if (groupBy === 'assistant') {
+        key = item.assistantName || '未指定助手';
+      } else if (groupBy === 'tag') {
+        // For tag grouping, an item can appear in multiple groups
+        const tags = item.tags && item.tags.length > 0 ? item.tags : ['未标记'];
+        tags.forEach(tag => {
+          if (!groups[tag]) groups[tag] = [];
+          groups[tag].push(item);
+        });
+        continue;
       } else {
         // time
         const t = item.timestamp;
@@ -484,7 +485,7 @@ export function HistorySidebar<T extends HistoryItem>({
       groups[key].push(item);
     }
     return groups;
-  }, [filteredRecent, groupBy, showStatusDot, customGroupBy]);
+  }, [filteredRecent, groupBy, showStatusDot, customGroupBy, hasItemMetadata]);
 
   // Sorted group entries — '任务' first, then respect user drag order
   const sortedGroupEntries = useMemo((): [string, T[]][] | null => {
@@ -584,7 +585,7 @@ export function HistorySidebar<T extends HistoryItem>({
             <span className="text-xs text-muted-foreground/40 tabular-nums">{items.length}</span>
           </div>
           <div className="flex items-center gap-0.5">
-            {showStatusDot && (
+            {(showStatusDot || hasItemMetadata) && (
               <Popover>
                 <PopoverTrigger asChild>
                   <Button variant="ghost" size="icon-xs"
@@ -593,7 +594,7 @@ export function HistorySidebar<T extends HistoryItem>({
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent align="end" className="w-[140px] p-1">
-                  <div className="text-xs text-muted-foreground/60 px-2 py-1">Group by</div>
+                  <div className="text-xs text-muted-foreground/60 px-2 py-1">展示方式</div>
                   {groupOptions.map((opt: { key: GroupByMode; label: string }) => (
                     <Button key={opt.key} variant="ghost" size="xs"
                       onClick={() => handleSetGroupBy(opt.key)}
@@ -624,115 +625,6 @@ export function HistorySidebar<T extends HistoryItem>({
           placeholder={`搜索${entityLabel}...`}
         />
       </div>
-
-      {/* Tag & Assistant Filters */}
-      {hasItemMetadata && (
-        <div className="px-2.5 pb-1.5 flex-shrink-0 flex flex-wrap items-center gap-1">
-          {/* Tag filter */}
-          {allTags.length > 0 && (
-            <Popover open={tagFilterOpen} onOpenChange={setTagFilterOpen}>
-              <PopoverTrigger asChild>
-                <Button variant="ghost" size="inline"
-                  className={`flex items-center gap-1 px-1.5 py-[2px] rounded-md text-xs transition-all duration-100 ${
-                    tagFilterOpen || selectedTags.length > 0
-                      ? 'bg-accent/50 text-foreground'
-                      : 'text-muted-foreground/60 hover:text-foreground hover:bg-accent/15'
-                  }`}
-                >
-                  <Tag size={9} />
-                  <span>{selectedTags.length > 0 ? `${selectedTags.length}` : '标签'}</span>
-                  <ChevronDown size={8} className={`transition-transform duration-100 ${tagFilterOpen ? 'rotate-180' : ''}`} />
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent align="start" className="w-[180px] p-0 py-1 max-h-[240px] overflow-y-auto scrollbar-thin-xs">
-                {allTags.map(tag => {
-                  const isSelected = selectedTags.includes(tag);
-                  const count = items.filter(item => item.tags?.includes(tag)).length;
-                  return (
-                    <Button size="inline" variant="ghost" key={tag}
-                      onClick={() => toggleTag(tag)}
-                      className={`flex items-center gap-2 w-full px-2.5 py-[4px] text-xs transition-colors rounded-none justify-start ${
-                        isSelected ? 'bg-foreground/6 text-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-accent/15'
-                      }`}
-                    >
-                      <Checkbox checked={isSelected} className="flex-shrink-0" />
-                      <span className="flex-1 text-left truncate">{tag}</span>
-                      <span className="text-xs text-muted-foreground/50 tabular-nums">{count}</span>
-                    </Button>
-                  );
-                })}
-                {selectedTags.length > 0 && (
-                  <>
-                    <div className="h-px bg-border/30 my-0.5" />
-                    <Button size="inline" variant="ghost"
-                      onClick={() => setSelectedTags([])}
-                      className="flex items-center gap-2 w-full px-2.5 py-[4px] text-xs text-muted-foreground hover:text-foreground hover:bg-accent/15 transition-colors rounded-none justify-start"
-                    >
-                      <X size={9} className="flex-shrink-0" />
-                      <span>清除选择</span>
-                    </Button>
-                  </>
-                )}
-              </PopoverContent>
-            </Popover>
-          )}
-
-          {/* Assistant filter */}
-          {allAssistants.length > 0 && (
-            <Popover open={assistantFilterOpen} onOpenChange={setAssistantFilterOpen}>
-              <PopoverTrigger asChild>
-                <Button variant="ghost" size="inline"
-                  className={`flex items-center gap-1 px-1.5 py-[2px] rounded-md text-xs transition-all duration-100 ${
-                    assistantFilterOpen || selectedAssistant
-                      ? 'bg-accent/50 text-foreground'
-                      : 'text-muted-foreground/60 hover:text-foreground hover:bg-accent/15'
-                  }`}
-                >
-                  <User size={9} />
-                  <span className="truncate max-w-[60px]">{selectedAssistant || '助手'}</span>
-                  <ChevronDown size={8} className={`transition-transform duration-100 ${assistantFilterOpen ? 'rotate-180' : ''}`} />
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent align="start" className="w-[160px] p-0 py-1 max-h-[240px] overflow-y-auto scrollbar-thin-xs">
-                <Button size="inline" variant="ghost"
-                  onClick={() => { setSelectedAssistant(null); setAssistantFilterOpen(false); }}
-                  className={`flex items-center gap-2 w-full px-2.5 py-[4px] text-xs transition-colors rounded-none justify-start ${
-                    !selectedAssistant ? 'bg-foreground/6 text-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-accent/15'
-                  }`}
-                >
-                  <span className="flex-1 text-left">全部</span>
-                  <span className="text-xs text-muted-foreground/50 tabular-nums">{items.length}</span>
-                </Button>
-                {allAssistants.map(ast => {
-                  const count = items.filter(item => item.assistantName === ast).length;
-                  return (
-                    <Button size="inline" variant="ghost" key={ast}
-                      onClick={() => { setSelectedAssistant(selectedAssistant === ast ? null : ast); setAssistantFilterOpen(false); }}
-                      className={`flex items-center gap-2 w-full px-2.5 py-[4px] text-xs transition-colors rounded-none justify-start ${
-                        selectedAssistant === ast ? 'bg-foreground/6 text-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-accent/15'
-                      }`}
-                    >
-                      <span className="flex-1 text-left truncate">{ast}</span>
-                      <span className="text-xs text-muted-foreground/50 tabular-nums">{count}</span>
-                    </Button>
-                  );
-                })}
-              </PopoverContent>
-            </Popover>
-          )}
-
-          {/* Clear filters */}
-          {hasActiveFilters && (
-            <Button variant="ghost" size="inline"
-              onClick={() => { setSelectedTags([]); setSelectedAssistant(null); }}
-              className="p-0.5 text-muted-foreground/40 hover:text-foreground transition-colors"
-              title="清除筛选"
-            >
-              <X size={10} />
-            </Button>
-          )}
-        </div>
-      )}
 
       {/* Item List */}
       <div className="flex-1 overflow-y-auto px-1.5 py-1 space-y-px [&::-webkit-scrollbar]:w-[2px] [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-transparent [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-foreground/10">
