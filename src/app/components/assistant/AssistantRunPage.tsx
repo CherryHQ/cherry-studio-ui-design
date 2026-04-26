@@ -5,7 +5,7 @@ import {
   Bot, Plus, ArrowUp, FileText, Code2, Eye, BookOpen,
   Clock, Settings, History, MessageCirclePlus, AtSign,
   ExternalLink, File, Globe,
-  Layers, Activity, Database, Link2, Info,
+  Layers, Activity, Database, Info, Languages,
   Trash2, Bookmark, Share2, MoreHorizontal,
   GitBranch, GitFork, ListChecks, Edit3,
   Quote, Type, Brain, RotateCcw,
@@ -2168,8 +2168,14 @@ export function AssistantRunPage() {
                     </div>
                     <div className="flex items-center gap-2">
                       <div className="flex items-center gap-2.5 text-xs text-muted-foreground">
-                        <span className="flex items-center gap-1"><Layers size={10} />6/20</span>
-                        <span className="flex items-center gap-1"><Link2 size={10} />0/0</span>
+                        <Tooltip content="预估 Token 数" side="top">
+                          <span className="flex items-center gap-1 cursor-default"><Layers size={10} />{Math.ceil(input.length * 1.3) || 0}</span>
+                        </Tooltip>
+                        <Tooltip content="翻译 (中↔英)" side="top">
+                          <button className="flex items-center gap-1 hover:text-foreground transition-colors cursor-pointer">
+                            <Languages size={12} />
+                          </button>
+                        </Tooltip>
                       </div>
                       <Button variant="default" size="icon" onClick={handleSend} disabled={!input.trim()}
                         className="w-7 h-7 rounded-full">
