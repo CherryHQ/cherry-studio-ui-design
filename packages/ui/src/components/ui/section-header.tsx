@@ -13,7 +13,7 @@ function SectionHeader({ title, className, ref, ...props }: SectionHeaderProps &
       ref={ref}
       data-slot="section-header"
       className={cn(
-        "text-xs text-muted-foreground font-medium tracking-[-0.12px] mb-0 mt-2",
+        "text-xs text-foreground/70 font-medium tracking-[-0.12px] mb-0 mt-2",
         className
       )}
       {...props}

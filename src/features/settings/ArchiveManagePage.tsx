@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { Archive, ArchiveRestore, Folder, Trash2, MessageSquare } from 'lucide-react';
-import { Button, SearchInput, EmptyState } from '@cherry-studio/ui';
+import { Button, SearchInput, EmptyState, Typography } from '@cherry-studio/ui';
 import { InlineSelect } from './shared';
 
 // ===========================
@@ -71,8 +71,8 @@ export function ArchiveManagePage() {
       {/* Header */}
       <div className="px-6 pt-5 pb-3 flex-shrink-0">
         <div className="flex items-center gap-2 mb-1">
-          <Archive size={16} className="text-foreground" />
-          <h2 className="text-sm font-medium text-foreground">归档管理</h2>
+          <Archive size={16} className="text-muted-foreground" />
+          <Typography variant="subtitle">归档管理</Typography>
           <span className="text-xs text-muted-foreground tabular-nums">{sessions.length}</span>
         </div>
         <p className="text-xs text-muted-foreground mb-3">已归档的会话记录，可随时恢复或永久删除。</p>

@@ -733,7 +733,7 @@ function GeneralTab({ name, setName, desc, setDesc, serverType, setServerType, t
     <div className="max-w-[560px] space-y-5">
       {/* Name */}
       <div>
-        <label className="text-sm text-muted-foreground mb-1.5 flex items-center gap-0.5 font-medium">
+        <label className="text-xs text-muted-foreground mb-1.5 flex items-center gap-0.5 font-medium">
           <span className="text-destructive">*</span> {'\u540d\u79f0'}
         </label>
         <Input
@@ -745,7 +745,7 @@ function GeneralTab({ name, setName, desc, setDesc, serverType, setServerType, t
 
       {/* Description */}
       <div>
-        <label className="text-sm text-muted-foreground mb-1.5 block font-medium">{'\u63cf\u8ff0'}</label>
+        <label className="text-xs text-muted-foreground mb-1.5 block font-medium">{'\u63cf\u8ff0'}</label>
         <Input
           value={desc}
           onChange={e => setDesc(e.target.value)}
@@ -756,7 +756,7 @@ function GeneralTab({ name, setName, desc, setDesc, serverType, setServerType, t
 
       {/* Type */}
       <div>
-        <label className="text-sm text-muted-foreground mb-1.5 flex items-center gap-0.5 font-medium">
+        <label className="text-xs text-muted-foreground mb-1.5 flex items-center gap-0.5 font-medium">
           <span className="text-destructive">*</span> {'\u7c7b\u578b'}
         </label>
         <Popover open={typeOpen} onOpenChange={setTypeOpen}>
@@ -789,7 +789,7 @@ function GeneralTab({ name, setName, desc, setDesc, serverType, setServerType, t
 
       {/* Command */}
       <div>
-        <label className="text-sm text-muted-foreground mb-1.5 flex items-center gap-0.5 font-medium">
+        <label className="text-xs text-muted-foreground mb-1.5 flex items-center gap-0.5 font-medium">
           <span className="text-destructive">*</span> {'\u547d\u4ee4'}
         </label>
         <Input
@@ -801,7 +801,7 @@ function GeneralTab({ name, setName, desc, setDesc, serverType, setServerType, t
 
       {/* Package Source */}
       <div>
-        <label className="text-sm text-muted-foreground mb-1.5 flex items-center gap-1 font-medium">
+        <label className="text-xs text-muted-foreground mb-1.5 flex items-center gap-1 font-medium">
           {'\u5305\u7ba1\u7406\u6e90'}
           <Info size={11} className="text-muted-foreground/40" />
         </label>
@@ -817,7 +817,7 @@ function GeneralTab({ name, setName, desc, setDesc, serverType, setServerType, t
 
       {/* Args */}
       <div>
-        <label className="text-sm text-muted-foreground mb-1.5 flex items-center gap-1 font-medium">
+        <label className="text-xs text-muted-foreground mb-1.5 flex items-center gap-1 font-medium">
           {'\u53c2\u6570'}
           <Info size={11} className="text-muted-foreground/40" />
         </label>
@@ -830,7 +830,7 @@ function GeneralTab({ name, setName, desc, setDesc, serverType, setServerType, t
 
       {/* Env Vars */}
       <div>
-        <label className="text-sm text-muted-foreground mb-1.5 flex items-center gap-1 font-medium">
+        <label className="text-xs text-muted-foreground mb-1.5 flex items-center gap-1 font-medium">
           {'\u73af\u5883\u53d8\u91cf'}
           <Info size={11} className="text-muted-foreground/40" />
         </label>
@@ -1054,7 +1054,7 @@ export function MCPServicePage() {
       {/* Middle Column: Navigation */}
       <div className="w-[160px] flex-shrink-0 flex flex-col border-r border-section-border min-h-0">
         <div className="px-3.5 pt-4 pb-2 flex-shrink-0">
-          <p className="text-xs text-muted-foreground/60 font-medium">MCP {'\u670d\u52a1'}</p>
+          <p className="text-xs text-muted-foreground font-medium">MCP {'\u670d\u52a1'}</p>
         </div>
 
         <div className="flex-1 overflow-y-auto px-2.5 pb-3 scrollbar-thin-xs">
@@ -1073,7 +1073,7 @@ export function MCPServicePage() {
                 <div className="absolute inset-0 rounded-xl border border-cherry-active-border pointer-events-none" />
               )}
               <div className="flex items-center gap-2 min-w-0 flex-1">
-                <span className={`flex-shrink-0 ${selectedNav === 'servers' && !selectedServer ? 'text-muted-foreground/60' : 'text-muted-foreground/40'}`}><Server size={14} /></span>
+                <span className={`flex-shrink-0 ${selectedNav === 'servers' && !selectedServer ? 'text-foreground' : 'text-muted-foreground'}`}><Server size={14} /></span>
                 <span className={`text-sm ${selectedNav === 'servers' && !selectedServer ? 'text-foreground font-medium' : 'text-muted-foreground'}`}>MCP {'\u670d\u52a1\u5668'}</span>
               </div>
               <ChevronRight size={9} className={`flex-shrink-0 ${selectedNav === 'servers' && !selectedServer ? 'text-muted-foreground/40' : 'text-muted-foreground/50'}`} />
@@ -1101,7 +1101,7 @@ export function MCPServicePage() {
                     <div className="absolute inset-0 rounded-xl border border-cherry-active-border pointer-events-none" />
                   )}
                   <div className="flex items-center gap-2 min-w-0 flex-1">
-                    <span className={`flex-shrink-0 ${isSelected ? 'text-muted-foreground/60' : 'text-muted-foreground/40'}`}>{item.icon}</span>
+                    <span className={`flex-shrink-0 ${isSelected ? 'text-foreground' : 'text-muted-foreground'}`}>{item.icon}</span>
                     <span className={`text-sm ${isSelected ? 'text-foreground font-medium' : 'text-muted-foreground'}`}>{item.label}</span>
                   </div>
                   <ChevronRight size={9} className={`flex-shrink-0 ${isSelected ? 'text-muted-foreground/40' : 'text-muted-foreground/50'}`} />

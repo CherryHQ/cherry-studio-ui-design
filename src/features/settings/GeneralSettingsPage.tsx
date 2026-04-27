@@ -298,7 +298,7 @@ export function GeneralSettingsPage() {
       {/* Middle Column: Navigation */}
       <div className="w-[160px] flex-shrink-0 flex flex-col border-r border-section-border min-h-0">
         <div className="px-3.5 pt-4 pb-2 flex-shrink-0">
-          <p className="text-xs text-muted-foreground/60 font-medium">通用配置</p>
+          <p className="text-xs text-muted-foreground font-medium">通用配置</p>
         </div>
 
         <div className="flex-1 overflow-y-auto px-2.5 pb-3 scrollbar-thin-xs">
@@ -320,7 +320,7 @@ export function GeneralSettingsPage() {
                     <div className="absolute inset-0 rounded-xl border border-cherry-active-border pointer-events-none" />
                   )}
                   <div className="flex items-center gap-2 min-w-0 flex-1">
-                    <span className={`flex-shrink-0 ${isSelected ? 'text-muted-foreground/60' : 'text-muted-foreground/40'}`}>{item.icon}</span>
+                    <span className={`flex-shrink-0 ${isSelected ? 'text-foreground' : 'text-muted-foreground'}`}>{item.icon}</span>
                     <span className={`text-sm truncate ${isSelected ? 'text-foreground font-medium' : 'text-muted-foreground'}`}>
                       {item.label}
                     </span>

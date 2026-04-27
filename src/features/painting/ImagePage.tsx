@@ -871,6 +871,9 @@ function GalleryGrid({ images, onSelect, onToggleFavorite }: {
         </div>
       </div>
       <div className="flex-1 overflow-y-auto p-4 scrollbar-thin">
+        {filtered.length === 0 ? (
+          <EmptyState preset="no-image" />
+        ) : (
         <div className="columns-3 sm:columns-4 md:columns-5 lg:columns-6 xl:columns-7 gap-2.5">
           {filtered.map((img, i) => (
             <motion.div
@@ -919,6 +922,7 @@ function GalleryGrid({ images, onSelect, onToggleFavorite }: {
             </motion.div>
           ))}
         </div>
+        )}
       </div>
     </div>
   );

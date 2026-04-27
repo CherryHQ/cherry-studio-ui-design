@@ -27,13 +27,13 @@
   --switch-background: #ececec;
   /* Figma surface/stroke aliases → shadcn tokens */
   --surface-01: var(--popover);
-  --surface-02: #F8F7F7;
+  --surface-02: #F7F8F7;
   --surface-03: var(--muted);
   --stroke-01: var(--border);
   --stroke-02: #E2E2E2;
   --section-border: #F0F0EF;
   --content-bg: #FFFFFF;
-  --content-border: #E2E2E2;
+  --content-border: #EAEBE8;
   --app-bg: #F2F2F2;
   --shade-7: #323232;
   --shade-8: #222222;
@@ -245,7 +245,7 @@
   --input: oklch(0.269 0 0);
   --input-background: oklch(0.205 0 0);
   --surface-01: var(--popover);
-  --surface-02: oklch(0.205 0 0);
+  --surface-02: #090A05;
   --surface-03: var(--muted);
   --stroke-01: var(--border);
   --stroke-02: oklch(0.3 0 0);
@@ -295,7 +295,7 @@
   --chart-3: #a78bfa;
   --chart-4: #22d3ee;
   --chart-5: #94a3b8;
-  --sidebar: oklch(0.205 0 0);
+  --sidebar: #090A05;
   --sidebar-foreground: oklch(0.985 0 0);
   --sidebar-primary: oklch(0.488 0.243 264.376);
   --sidebar-primary-foreground: oklch(0.985 0 0);

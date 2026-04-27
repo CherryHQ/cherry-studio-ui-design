@@ -254,16 +254,16 @@ function WebDAVPanel() {
       <ConfigSection title="服务器配置" hint="推荐使用坚果云或自建 NAS">
         <div className="space-y-2.5">
           <div>
-            <label className="text-sm text-muted-foreground mb-1 block">WebDAV 地址</label>
+            <label className="text-xs text-muted-foreground mb-1 block">WebDAV 地址</label>
             <TextInput value={url} onChange={setUrl} mono />
           </div>
           <div>
-            <label className="text-sm text-muted-foreground mb-1 block">用户名</label>
+            <label className="text-xs text-muted-foreground mb-1 block">用户名</label>
             <TextInput value={user} onChange={setUser} mono />
           </div>
           <div>
-            <label className="text-sm text-muted-foreground mb-1 block">密码 / 应用令牌</label>
-            <div className="flex items-center px-2.5 py-[5px] bg-muted/30 rounded-lg border border-section-border">
+            <label className="text-xs text-muted-foreground mb-1 block">密码 / 应用令牌</label>
+            <div className="flex items-center px-2.5 py-[5px] bg-transparent rounded-lg border border-section-border">
               <Input
                 type={showPwd ? 'text' : 'password'}
                 value={pwd}
@@ -276,7 +276,7 @@ function WebDAVPanel() {
             </div>
           </div>
           <div>
-            <label className="text-sm text-muted-foreground mb-1 block">存储路径</label>
+            <label className="text-xs text-muted-foreground mb-1 block">存储路径</label>
             <div className="flex items-center gap-1.5">
               <div className="flex-1">
                 <TextInput value={path} onChange={setPath} mono />
@@ -331,12 +331,12 @@ function JianguoyunPanel() {
       <ConfigSection title="账户信息" hint={'请在坚果云设置中生成「应用密码」'}>
         <div className="space-y-2.5">
           <div>
-            <label className="text-sm text-muted-foreground mb-1 block">坚果云账号</label>
+            <label className="text-xs text-muted-foreground mb-1 block">坚果云账号</label>
             <TextInput value={account} onChange={setAccount} placeholder="your@email.com" />
           </div>
           <div>
-            <label className="text-sm text-muted-foreground mb-1 block">应用密码</label>
-            <div className="flex items-center px-2.5 py-[5px] bg-muted/30 rounded-lg border border-section-border">
+            <label className="text-xs text-muted-foreground mb-1 block">应用密码</label>
+            <div className="flex items-center px-2.5 py-[5px] bg-transparent rounded-lg border border-section-border">
               <Input
                 type={showPwd ? 'text' : 'password'}
                 value={appPwd}
@@ -353,7 +353,7 @@ function JianguoyunPanel() {
             </a>
           </div>
           <div>
-            <label className="text-sm text-muted-foreground mb-1 block">同步目录</label>
+            <label className="text-xs text-muted-foreground mb-1 block">同步目录</label>
             <TextInput value={path} onChange={setPath} mono />
           </div>
         </div>
@@ -418,7 +418,7 @@ function S3Panel() {
         </FormRow>
         <FormRow label="Secret Access Key">
           <div className="w-[240px]">
-            <div className="flex items-center px-2.5 py-[5px] bg-muted/30 rounded-lg border border-section-border">
+            <div className="flex items-center px-2.5 py-[5px] bg-transparent rounded-lg border border-section-border">
               <Input
                 type={showSecret ? 'text' : 'password'}
                 value={secretKey}
@@ -593,7 +593,7 @@ function ExportPanel() {
                 ) : (
                   <span className="text-xs">{item.icon}</span>
                 )}
-                <span className="text-sm text-muted-foreground font-normal">{item.label}</span>
+                <span className="text-xs text-muted-foreground font-normal">{item.label}</span>
               </div>
               <Switch size="sm" checked={item.checked} onCheckedChange={item.onChange} />
             </div>
@@ -636,7 +636,7 @@ function NotionPanel() {
       <ConfigSection title="授权配置">
         <div className="space-y-2.5">
           <div>
-            <label className="text-sm text-muted-foreground mb-1 block">Notion Integration Token</label>
+            <label className="text-xs text-muted-foreground mb-1 block">Notion Integration Token</label>
             <div className="flex items-center gap-1.5">
               <div className="flex-1">
                 <TextInput value={token} onChange={setToken} mono />
@@ -647,7 +647,7 @@ function NotionPanel() {
             </div>
           </div>
           <div>
-            <label className="text-sm text-muted-foreground mb-1 block">Database ID</label>
+            <label className="text-xs text-muted-foreground mb-1 block">Database ID</label>
             <TextInput value={dbId} onChange={setDbId} placeholder="从 Notion 链接中获取..." mono />
           </div>
         </div>
@@ -701,7 +701,7 @@ function ThirdPartyPanel({ icon, name, desc, fields }: {
         <div className="space-y-2.5">
           {fields.map(field => (
             <div key={field.label}>
-              <label className="text-sm text-muted-foreground mb-1 block">{field.label}</label>
+              <label className="text-xs text-muted-foreground mb-1 block">{field.label}</label>
               <TextInput
                 value={values[field.label] || ''}
                 onChange={v => setValues(prev => ({ ...prev, [field.label]: v }))}
@@ -781,7 +781,7 @@ export function DataSettingsPage() {
       {/* Middle Column: Navigation */}
       <div className="w-[160px] flex-shrink-0 flex flex-col border-r border-section-border min-h-0">
         <div className="px-3.5 pt-4 pb-2 flex-shrink-0">
-          <p className="text-xs text-muted-foreground/60 font-medium">数据与存储</p>
+          <p className="text-xs text-muted-foreground font-medium">数据与存储</p>
         </div>
 
         <div className="flex-1 overflow-y-auto px-2.5 pb-3 scrollbar-thin-xs">
@@ -806,7 +806,7 @@ export function DataSettingsPage() {
                         <div className="absolute inset-0 rounded-xl border border-cherry-active-border pointer-events-none" />
                       )}
                       <div className="flex items-center gap-2 min-w-0 flex-1">
-                        <span className={`flex-shrink-0 ${isSelected ? 'text-muted-foreground/60' : 'text-muted-foreground/40'}`}>
+                        <span className={`flex-shrink-0 ${isSelected ? 'text-foreground' : 'text-muted-foreground'}`}>
                           {item.iconType === 'brand' && item.icon ? (
                             <BrandLogo id={item.icon} fallbackLetter={item.icon[0].toUpperCase()} fallbackColor="#6b7280" size={15} />
                           ) : item.lucideIcon ? item.lucideIcon : null}

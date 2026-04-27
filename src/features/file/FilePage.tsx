@@ -179,7 +179,8 @@ function FilterDropdown({ label, options, value, onChange }: {
       <PopoverTrigger asChild>
         <Button
           variant="outline"
-          className={`flex items-center gap-1 px-2 py-[4px] rounded-md text-xs transition-colors ${
+          size="inline"
+          className={`flex items-center gap-1 px-2 py-[2px] rounded-md text-xs transition-colors ${
             open ? 'border-border bg-accent text-foreground' : 'border-border/30 text-muted-foreground/60 hover:border-border hover:text-foreground'
           }`}
         >
@@ -193,7 +194,7 @@ function FilterDropdown({ label, options, value, onChange }: {
             key={opt.value}
             variant="ghost"
             onClick={() => { onChange(opt.value); setOpen(false); }}
-            className={`w-full text-left px-2 py-[4px] rounded-md text-xs transition-colors justify-start ${
+            className={`w-full text-left px-2 py-[3px] rounded-md text-xs transition-colors justify-start ${
               value === opt.value ? 'bg-accent text-foreground' : 'text-muted-foreground/60 hover:bg-accent/50'
             }`}
           >
@@ -503,7 +504,7 @@ export function FilePage() {
         onDrop={(e) => { e.preventDefault(); setDragOver(false); }}
       >
         {/* Header Toolbar */}
-        <div className="flex items-center gap-2 px-4 py-2 border-b border-border/30">
+        <div className="flex items-center gap-1.5 px-4 py-1.5 border-b border-border/30">
           <h2 className="text-sm text-foreground flex-shrink-0 mr-1 font-medium">{filterTitle}</h2>
 
           {/* Search */}
@@ -542,14 +543,15 @@ export function FilePage() {
             </Button>
           </div>
 
-          <Button variant="outline" size="inline" className="flex items-center gap-1 px-2.5 py-[4px] rounded-md text-xs text-muted-foreground/60 hover:text-foreground hover:bg-accent transition-colors border-border/30">
+          <Button variant="outline" size="inline" className="flex items-center gap-1 px-2 py-[2px] rounded-md text-xs text-muted-foreground/60 hover:text-foreground hover:bg-accent transition-colors border-border/30">
             <Upload size={10} />
             <span>上传</span>
           </Button>
           <Button
             variant="outline"
+            size="inline"
             onClick={() => handleCreateFolder('新建文件夹', null)}
-            className="flex items-center gap-1 px-2.5 py-[4px] rounded-md text-xs text-muted-foreground/60 hover:text-foreground hover:bg-accent transition-colors border-border/30"
+            className="flex items-center gap-1 px-2 py-[2px] rounded-md text-xs text-muted-foreground/60 hover:text-foreground hover:bg-accent transition-colors border-border/30"
           >
             <FolderPlus size={10} />
             <span>新建</span>

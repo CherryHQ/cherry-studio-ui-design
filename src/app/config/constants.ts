@@ -1,6 +1,6 @@
 import {
   MessageCircle, Bot, Palette, Languages, Compass,
-  Library, BookOpen, FileText, Code2, Puzzle, NotebookPen,
+  Library, BookOpen, FileText, Code2, Puzzle, NotebookPen, Layers,
   Sparkles, MousePointerClick, Blocks,
   Zap, Cloud, MessageSquareText,
   Shield, ShieldCheck, ShieldAlert,
@@ -28,6 +28,7 @@ export const menuItems: MenuItem[] = [
   { id: 'miniapp', label: '小程序', icon: Puzzle },
   { id: 'note', label: '笔记', icon: NotebookPen },
   { id: 'extensions', label: '扩展', icon: Blocks },
+  { id: 'empty-preview', label: 'Empty State', icon: Layers },
 ];
 
 // Multi-instance types: clicking sidebar always creates a new tab

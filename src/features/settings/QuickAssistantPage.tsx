@@ -9,7 +9,7 @@ import {
   CircleHelp, AtSign, Layers, Bot, Link2,
 } from 'lucide-react';
 import { Tooltip } from '@/app/components/Tooltip';
-import { Button, Input, Textarea, Popover, PopoverTrigger, PopoverContent, Typography, Switch } from '@cherry-studio/ui';
+import { Button, Input, Textarea, Popover, PopoverTrigger, PopoverContent, Typography, Switch, EmptyState } from '@cherry-studio/ui';
 import { FormRow, SectionHeader, SectionCard, Tabs, TabsList, TabsTrigger } from './shared';
 
 // ===========================
@@ -307,16 +307,7 @@ function ActionsManagePanel({ open, onClose, actions, setActions, onAdd, onEdit 
                 );
               })}
 
-              {actions.length === 0 && (
-                <div className="py-8 text-center">
-                  <Layers size={22} className="text-muted-foreground/40 mx-auto mb-2" />
-                  <p className="text-xs text-muted-foreground/40">暂无快捷功能</p>
-                  <Button variant="ghost" size="xs" onClick={onAdd} className="mt-2 text-xs text-cherry-primary hover:bg-cherry-active-bg mx-auto">
-                    <Plus size={11} />
-                    <span>添加第一个功能</span>
-                  </Button>
-                </div>
-              )}
+              {actions.length === 0 && <EmptyState preset="no-action" compact />}
             </div>
 
             {/* Footer */}
@@ -574,11 +565,7 @@ function ModelPanel({ disabled, actions, onOpenManagePanel }: {
             })}
           </div>
 
-          {enabledActions.length === 0 && (
-            <div className="px-3 py-4 text-center">
-              <p className="text-xs text-muted-foreground/40">暂无启用的功能</p>
-            </div>
-          )}
+          {enabledActions.length === 0 && <EmptyState preset="no-action" compact />}
 
           {/* Footer */}
           <div className="flex items-center justify-between px-3 py-2 mt-1 border-t border-section-border">
@@ -700,7 +687,7 @@ export function QuickAssistantPage() {
       {/* Left nav */}
       <div className="w-[160px] flex-shrink-0 flex flex-col border-r border-section-border min-h-0">
         <div className="px-3.5 pt-4 pb-2 flex items-center justify-between flex-shrink-0">
-          <p className="text-xs text-muted-foreground/60 font-medium">快捷助手</p>
+          <p className="text-xs text-muted-foreground font-medium">快捷助手</p>
           <Switch size="sm" checked={masterEnabled} onCheckedChange={setMasterEnabled} />
         </div>
 
@@ -728,7 +715,7 @@ export function QuickAssistantPage() {
                     <div className="absolute inset-0 rounded-xl border border-cherry-active-border pointer-events-none" />
                   )}
                   <div className="flex items-center gap-2 min-w-0 flex-1">
-                    <span className={`flex-shrink-0 ${isSelected ? 'text-muted-foreground/60' : 'text-muted-foreground/40'}`}>{item.icon}</span>
+                    <span className={`flex-shrink-0 ${isSelected ? 'text-foreground' : 'text-muted-foreground'}`}>{item.icon}</span>
                     <span className={`text-sm truncate ${isSelected ? 'text-foreground font-medium' : 'text-muted-foreground font-normal'}`}>
                       {item.label}
                     </span>

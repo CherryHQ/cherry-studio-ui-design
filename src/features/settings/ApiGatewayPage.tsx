@@ -6,7 +6,7 @@ import {
   AlertTriangle, CheckCircle2, XCircle,
   ChevronRight,
 } from 'lucide-react';
-import { Button, Input, Typography, Switch } from '@cherry-studio/ui';
+import { Button, Input, Typography, Switch, EmptyState } from '@cherry-studio/ui';
 import { copyToClipboard } from '@/app/utils/clipboard';
 import { Tooltip } from '@/app/components/Tooltip';
 import { InlineSelect, ConfigSection, FormRow } from './shared';
@@ -230,12 +230,7 @@ function SecurityPanel({ enabled }: { enabled: boolean }) {
               </div>
             </div>
           ))}
-          {keys.length === 0 && (
-            <div className="py-6 text-center">
-              <p className="text-xs text-muted-foreground/40">暂无 API Key</p>
-              <p className="text-xs text-muted-foreground/50 mt-0.5">点击上方按钮创建你的第一个密钥</p>
-            </div>
-          )}
+          {keys.length === 0 && <EmptyState preset="no-api-key" compact />}
         </div>
       </ConfigSection>
 
@@ -397,7 +392,7 @@ export function ApiGatewayPage() {
       {/* Middle Column: Navigation */}
       <div className="w-[160px] flex-shrink-0 flex flex-col border-r border-section-border min-h-0">
         <div className="px-3.5 pt-4 pb-2 flex-shrink-0">
-          <p className="text-xs text-muted-foreground/60 font-medium">API 网关</p>
+          <p className="text-xs text-muted-foreground font-medium">API 网关</p>
         </div>
 
         <div className="flex-1 overflow-y-auto px-2.5 pb-3 scrollbar-thin-xs">
@@ -419,7 +414,7 @@ export function ApiGatewayPage() {
                     <div className="absolute inset-0 rounded-xl border border-cherry-active-border pointer-events-none" />
                   )}
                   <div className="flex items-center gap-2 min-w-0 flex-1">
-                    <span className={`flex-shrink-0 ${isSelected ? 'text-muted-foreground/60' : 'text-muted-foreground/40'}`}>{item.icon}</span>
+                    <span className={`flex-shrink-0 ${isSelected ? 'text-foreground' : 'text-muted-foreground'}`}>{item.icon}</span>
                     <span className={`text-sm truncate ${isSelected ? 'text-foreground font-medium' : 'text-muted-foreground'}`}>
                       {item.label}
                     </span>
@@ -437,9 +432,9 @@ export function ApiGatewayPage() {
         {/* Top bar with master toggle */}
         <div className="flex items-center justify-between px-6 pt-4 pb-0 flex-shrink-0">
           <div>
-            <h2 className="text-sm text-foreground font-semibold">
+            <Typography variant="subtitle">
               {selectedId === 'connection' ? '配置 API 服务' : selectedId === 'security' ? '安全凭证管理' : '模型映射管理'}
-            </h2>
+            </Typography>
           </div>
           <div className="flex items-center gap-2">
             <span className="text-xs text-muted-foreground/60">{serviceEnabled ? '服务已开启' : '服务已关闭'}</span>

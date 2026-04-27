@@ -5,7 +5,7 @@ import {
   Pencil, Trash2, FolderPlus, ArrowRightLeft, Check,
 } from 'lucide-react';
 import { Tooltip } from '@/app/components/Tooltip';
-import { Button, Input, InlineSelect, Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, SearchInput } from '@cherry-studio/ui';
+import { Button, Input, InlineSelect, Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, SearchInput, EmptyState } from '@cherry-studio/ui';
 
 export interface KnowledgeBase {
   id: string;
@@ -370,6 +370,8 @@ export function KnowledgeSidebar({
             </div>
           );
         })}
+
+        {groupedItems.length === 0 && <EmptyState preset="no-result" compact />}
 
         {creatingGroup && (
           <div className="flex items-center gap-1 px-1.5 py-[3px]">

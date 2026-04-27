@@ -192,7 +192,7 @@ export function FavoritesDrawer({ open, favorites, onClose, onRemove, onPreview 
             {/* Content */}
             <div className="flex-1 overflow-y-auto scrollbar-thin">
               {favorites.length === 0 ? (
-                <EmptyState icon={Heart} title="暂无收藏" description="点击资源卡片可以收藏" compact />
+                <EmptyState preset="no-favorite" compact />
               ) : filtered.length === 0 ? (
                 <EmptyState preset="no-result" compact />
               ) : (

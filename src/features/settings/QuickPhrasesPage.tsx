@@ -5,7 +5,7 @@ import {
   Variable, CircleHelp, FileText, Search,
 } from 'lucide-react';
 import {
-  Button, Input, VarManagerPanel, SYSTEM_VARIABLES, VAR_TYPE_CONFIG, SearchInput, Typography, Switch,
+  Button, Input, VarManagerPanel, SYSTEM_VARIABLES, VAR_TYPE_CONFIG, SearchInput, Typography, Switch, EmptyState,
   type VariableDef, type VarType,
 } from '@cherry-studio/ui';
 
@@ -481,23 +481,9 @@ export function QuickPhrasesPage() {
               );
             })}
 
-            {phrases.length === 0 && (
-              <div className="py-6 text-center">
-                <FileText size={18} className="text-muted-foreground/40 mx-auto mb-1.5" />
-                <p className="text-xs text-muted-foreground/40">暂无短语</p>
-                <Button variant="ghost" size="xs" onClick={openAdd} className="mt-2 text-muted-foreground mx-auto">
-                  <Plus size={11} /><span>添加第一个短语</span>
-                </Button>
-              </div>
-            )}
+            {phrases.length === 0 && <EmptyState preset="no-phrase" compact />}
 
-            {phrases.length > 0 && filteredPhrases.length === 0 && (
-              <div className="py-6 text-center">
-                <Search size={16} className="text-muted-foreground/40 mx-auto mb-1.5" />
-                <p className="text-xs text-muted-foreground/40">没有找到匹配的短语</p>
-                <p className="text-xs text-muted-foreground/50 mt-0.5">尝试其他关键词，或清除搜索条件</p>
-              </div>
-            )}
+            {phrases.length > 0 && filteredPhrases.length === 0 && <EmptyState preset="no-result" compact />}
           </div>
 
           <div className="flex items-start gap-1.5 px-3 py-2.5 border-t border-section-border">

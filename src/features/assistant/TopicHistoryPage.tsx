@@ -848,11 +848,15 @@ export function TopicHistoryPage({ topics, activeTopicId, onSelectTopic, onDelet
             )}
 
             {filteredTopics.length === 0 && (
-              <EmptyState
-                preset="no-result"
-                actionLabel={hasFilters ? '清除筛选条件' : undefined}
-                onAction={hasFilters ? clearFilters : undefined}
-              />
+              (searchQuery || hasFilters) ? (
+                <EmptyState
+                  preset="no-result"
+                  actionLabel={hasFilters ? '清除筛选条件' : undefined}
+                  onAction={hasFilters ? clearFilters : undefined}
+                />
+              ) : (
+                <EmptyState preset="no-topic" />
+              )
             )}
           </div>
         </div>

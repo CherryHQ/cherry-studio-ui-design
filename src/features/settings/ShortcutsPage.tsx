@@ -214,7 +214,7 @@ export function ShortcutsPage() {
       {/* Left nav */}
       <div className="w-[140px] flex-shrink-0 flex flex-col border-r border-section-border min-h-0">
         <div className="px-3 pt-4 pb-2 flex-shrink-0">
-          <p className="text-xs text-muted-foreground/60 font-medium">快捷键分组</p>
+          <p className="text-xs text-muted-foreground font-medium">快捷键分组</p>
         </div>
         <div className="flex-1 overflow-y-auto px-2 pb-3 scrollbar-thin-xs">
           <div className="space-y-[1px]">
@@ -233,7 +233,7 @@ export function ShortcutsPage() {
                     <div className="absolute inset-0 rounded-lg border border-cherry-active-border pointer-events-none" />
                   )}
                   <div className="flex items-center gap-1.5 min-w-0 flex-1">
-                    <span className={`flex-shrink-0 ${sel ? 'text-muted-foreground/60' : 'text-muted-foreground/40'}`}>{cat.icon}</span>
+                    <span className={`flex-shrink-0 ${sel ? 'text-foreground' : 'text-muted-foreground'}`}>{cat.icon}</span>
                     <span className={`text-sm truncate ${sel ? 'text-foreground font-medium' : 'text-muted-foreground'}`}>
                       {cat.label}
                     </span>

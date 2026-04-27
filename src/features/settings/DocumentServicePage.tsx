@@ -483,7 +483,7 @@ export function DocumentServicePage() {
       {/* Middle Column: Service List */}
       <div className="w-[160px] flex-shrink-0 flex flex-col border-r border-section-border min-h-0">
         <div className="px-3.5 pt-4 pb-2 flex-shrink-0">
-          <p className="text-xs font-medium text-muted-foreground/60">文档服务</p>
+          <p className="text-xs font-medium text-muted-foreground">文档服务</p>
         </div>
 
         {/* List */}

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { Puzzle } from 'lucide-react';
+import { Puzzle, Layers } from 'lucide-react';
 import { Sidebar } from './layout/Sidebar';
 import { TabBar } from './layout/TabBar';
 import { TabContextMenu, FloatingWindow, NewTabDialog, SearchDialog, DragGhost, AnnotationProvider, AnnotationOverlay, AnnotationToggle, AnnotationList } from '@cherry-studio/ui';
@@ -135,7 +135,7 @@ function CherryStudioInner() {
     .filter(id => !hiddenApps.has(id))
     .map(id => menuItems.find(m => m.id === id))
     .filter((m): m is MenuItem => !!m);
-  const unmanagedItems = menuItems.filter(m => !managedIds.has(m.id));
+  const unmanagedItems = menuItems.filter(m => !managedIds.has(m.id) && m.id !== 'empty-preview');
   const visibleMenuItems = [...orderedVisible, ...unmanagedItems];
 
   // ===========================
@@ -216,7 +216,16 @@ function CherryStudioInner() {
   return (
     <GlobalActionProvider value={globalActions}>
       <AnnotationProvider page={settingsOpen ? 'settings' : activeItem} boundarySelector="body" appName="cherry-studio">
-      <div className="flex items-center justify-center h-screen w-full bg-muted dark:bg-background p-6">
+      <div className="flex items-center justify-center h-screen w-full bg-muted dark:bg-background p-6 relative">
+        {/* Dev: Empty State Preview — outside app window */}
+        <button
+          onClick={() => navigateToMenuTab('empty-preview')}
+          className="absolute right-0 top-1/2 -translate-y-1/2 flex items-center gap-1 px-1 py-3 rounded-l-lg bg-foreground/10 border border-border/30 border-r-0 text-foreground/40 hover:text-foreground hover:bg-foreground/20 hover:px-1.5 transition-all"
+          title="Empty State Preview"
+        >
+          <Layers size={11} />
+          <span className="text-[10px] [writing-mode:vertical-rl]">Empty</span>
+        </button>
         <div id="cherry-app-root" className="flex flex-col w-full h-full max-w-[1440px] max-h-[900px] bg-sidebar text-foreground rounded-2xl border border-border overflow-hidden shadow-2xl relative">
           <TabBar
             tabs={tabs}
@@ -256,7 +265,7 @@ function CherryStudioInner() {
             </div>
 
             <div className={`flex-1 flex flex-col min-w-0 min-h-0 pr-2 pb-2 ${getLayout(sidebarWidth) === 'hidden' ? 'pl-2' : ''}`}>
-              <div className="flex-1 bg-background rounded-xl overflow-hidden flex flex-col min-h-0 relative">
+              <div className="flex-1 bg-content-bg border border-content-border rounded-xl overflow-hidden flex flex-col min-h-0 relative">
                 <MainContent tabs={tabs} activeTabId={activeTabId || 'home'} />
               </div>
             </div>

@@ -109,7 +109,7 @@ function EngineConfigPanel({ onClose }: { onClose: () => void }) {
         <div>
           <div className="flex items-center gap-1.5 mb-1.5">
             <span className="text-xs">🧠</span>
-            <label className="text-sm text-muted-foreground font-medium">提取模型 (LLM)</label>
+            <label className="text-xs text-muted-foreground font-medium">提取模型 (LLM)</label>
           </div>
           <InlineSelect
             value={llmModel}
@@ -128,7 +128,7 @@ function EngineConfigPanel({ onClose }: { onClose: () => void }) {
         <div>
           <div className="flex items-center gap-1.5 mb-1.5">
             <span className="text-xs">📦</span>
-            <label className="text-sm text-muted-foreground font-medium">嵌入模型 (Embedding)</label>
+            <label className="text-xs text-muted-foreground font-medium">嵌入模型 (Embedding)</label>
           </div>
           <InlineSelect
             value={embeddingModel}
@@ -144,7 +144,7 @@ function EngineConfigPanel({ onClose }: { onClose: () => void }) {
         </div>
 
         <div>
-          <label className="text-sm text-muted-foreground mb-1.5 block font-medium">向量维度</label>
+          <label className="text-xs text-muted-foreground mb-1.5 block font-medium">向量维度</label>
           <div className="flex items-center px-2.5 py-[5px] bg-muted/30 rounded-lg border border-section-border">
             <Input
               type="text"
@@ -200,7 +200,7 @@ function NewUserPanel({ onClose, onAdd }: { onClose: () => void; onAdd: (userId:
 
       <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4 scrollbar-thin-xs">
         <div>
-          <label className="text-sm text-muted-foreground mb-1.5 block font-medium">用户 ID / 命名空间</label>
+          <label className="text-xs text-muted-foreground mb-1.5 block font-medium">用户 ID / 命名空间</label>
           <div className="flex items-center px-2.5 py-[5px] bg-muted/30 rounded-lg border border-section-border">
             <Input
               autoFocus
@@ -214,7 +214,7 @@ function NewUserPanel({ onClose, onAdd }: { onClose: () => void; onAdd: (userId:
           <p className="text-xs text-muted-foreground/40 mt-1.5">唯一标识符，用于隔离记忆数据。</p>
         </div>
         <div>
-          <label className="text-sm text-muted-foreground mb-1.5 block font-medium">显示名称 (可选)</label>
+          <label className="text-xs text-muted-foreground mb-1.5 block font-medium">显示名称 (可选)</label>
           <div className="flex items-center px-2.5 py-[5px] bg-muted/30 rounded-lg border border-section-border">
             <Input
               type="text"
@@ -282,7 +282,7 @@ function AddMemoryPanel({ userName, onClose, onAdd }: {
 
       <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3 scrollbar-thin-xs">
         <div>
-          <label className="text-sm text-muted-foreground mb-1.5 block font-medium">记忆内容</label>
+          <label className="text-xs text-muted-foreground mb-1.5 block font-medium">记忆内容</label>
           <Textarea
             autoFocus
             value={content}
@@ -450,7 +450,7 @@ export function MemoriesPage() {
       <div className="w-[160px] flex-shrink-0 flex flex-col border-r border-section-border min-h-0">
         {/* Header */}
         <div className="px-3.5 pt-4 pb-2 flex items-center justify-between flex-shrink-0">
-          <p className="text-xs text-muted-foreground/60 font-medium">记忆管理</p>
+          <p className="text-xs text-muted-foreground font-medium">记忆管理</p>
           <Switch size="sm" checked={enabled} onCheckedChange={setEnabled} />
         </div>
 
@@ -490,7 +490,7 @@ export function MemoriesPage() {
                     <div className="absolute inset-0 rounded-xl border border-cherry-active-border pointer-events-none" />
                   )}
                   <div className="flex items-center gap-2 min-w-0 flex-1">
-                    <span className={`flex-shrink-0 ${isSelected ? 'text-muted-foreground/60' : 'text-muted-foreground/40'}`}><User size={14} /></span>
+                    <span className={`flex-shrink-0 ${isSelected ? 'text-foreground' : 'text-muted-foreground'}`}><User size={14} /></span>
                     <span className={`text-sm truncate ${isSelected ? 'text-foreground font-medium' : 'text-muted-foreground font-normal'}`}>{user.displayName}</span>
                   </div>
                   <ChevronRight size={9} className={`flex-shrink-0 ${isSelected ? 'text-muted-foreground/40' : 'text-muted-foreground/50'}`} />

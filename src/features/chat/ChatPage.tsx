@@ -3,7 +3,7 @@ import {
   Hash, ChevronRight, ChevronDown, Sparkles, Clock, Settings,
   Paperclip, MapPin, Send,
 } from 'lucide-react';
-import { Button, Input, BrandLogo } from '@cherry-studio/ui';
+import { Button, Input, BrandLogo, EmptyState } from '@cherry-studio/ui';
 
 export function ChatPage({ title }: { title: string }) {
   return (
@@ -55,7 +55,7 @@ export function ChatPage({ title }: { title: string }) {
             <h3 className="text-sm text-foreground">最近话题</h3>
             <Button variant="ghost" size="xs" className="text-muted-foreground">查看更多</Button>
           </div>
-          <p className="text-xs text-muted-foreground">发送消息以开始你的第一个话题。</p>
+          <EmptyState preset="no-chat" compact />
         </div>
       </div>
     </div>

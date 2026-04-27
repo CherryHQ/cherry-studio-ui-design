@@ -587,7 +587,7 @@ export function TranslatePage() {
                 ) : (
                   <div className="p-2 space-y-1">
                     {displayedHistory.length === 0 ? (
-                      <EmptyState icon={Star} title="暂无收藏记录" compact />
+                      <EmptyState preset={filterStarred ? "no-favorite" : "no-history"} compact />
                     ) : displayedHistory.map(item => (
                       <div
                         key={item.id}

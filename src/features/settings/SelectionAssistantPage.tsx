@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Tooltip } from '@/app/components/Tooltip';
 import { FormRow, SectionHeader, SectionCard, InlineSelect, Tabs, TabsList, TabsTrigger } from './shared';
-import { Button, Input, Popover, PopoverTrigger, PopoverContent, Typography, Switch } from '@cherry-studio/ui';
+import { Button, Input, Popover, PopoverTrigger, PopoverContent, Typography, Switch, EmptyState } from '@cherry-studio/ui';
 import {
   Zap, Scissors, ShieldAlert, Languages, Search, FileText,
   Sparkles, Plus, Pencil, ChevronRight,
@@ -449,16 +449,7 @@ function MenuPanel({ disabled, showFormPanel, setShowFormPanel, editingItem, set
             );
           })}
 
-          {items.length === 0 && (
-            <div className="py-6 text-center">
-              <Layers size={18} className="text-muted-foreground/40 mx-auto mb-1.5" />
-              <p className="text-xs text-muted-foreground/40">暂无功能</p>
-              <Button variant="ghost" size="xs" onClick={openAdd} className="mt-2 text-xs text-cherry-primary hover:bg-cherry-active-bg mx-auto">
-                <Plus size={11} />
-                <span>添加第一个功能</span>
-              </Button>
-            </div>
-          )}
+          {items.length === 0 && <EmptyState preset="no-action" compact />}
         </div>
 
         {/* Hint */}
@@ -616,7 +607,7 @@ export function SelectionAssistantPage() {
       {/* Left nav */}
       <div className={`w-[160px] flex-shrink-0 flex flex-col border-r border-section-border min-h-0 transition-opacity duration-200 ${showFormPanel ? 'opacity-40 pointer-events-none' : ''}`}>
         <div className="px-3.5 pt-4 pb-2 flex items-center justify-between flex-shrink-0">
-          <p className="text-xs text-muted-foreground/60 font-medium">划词助手</p>
+          <p className="text-xs text-muted-foreground font-medium">划词助手</p>
           <Switch size="sm" checked={masterEnabled} onCheckedChange={setMasterEnabled} />
         </div>
 
@@ -643,7 +634,7 @@ export function SelectionAssistantPage() {
                     <div className="absolute inset-0 rounded-xl border border-cherry-active-border pointer-events-none" />
                   )}
                   <div className="flex items-center gap-2 min-w-0 flex-1">
-                    <span className={`flex-shrink-0 ${isSelected ? 'text-muted-foreground/60' : item.iconColor}`}>{item.icon}</span>
+                    <span className={`flex-shrink-0 ${isSelected ? 'text-foreground' : 'text-muted-foreground'}`}>{item.icon}</span>
                     <span className={`text-sm truncate ${isSelected ? 'text-foreground font-medium' : 'text-muted-foreground font-normal'}`}>
                       {item.label}
                     </span>

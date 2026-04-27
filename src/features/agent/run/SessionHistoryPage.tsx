@@ -893,11 +893,15 @@ export function SessionHistoryPage({ sessions, activeSessionId, onSelectSession,
             )}
 
             {filteredSessions.length === 0 && (
-              <EmptyState
-                preset="no-result"
-                actionLabel={hasFilters ? '清除筛选条件' : undefined}
-                onAction={hasFilters ? clearFilters : undefined}
-              />
+              (searchQuery || hasFilters) ? (
+                <EmptyState
+                  preset="no-result"
+                  actionLabel={hasFilters ? '清除筛选条件' : undefined}
+                  onAction={hasFilters ? clearFilters : undefined}
+                />
+              ) : (
+                <EmptyState preset="no-session" />
+              )
             )}
           </div>
         </div>

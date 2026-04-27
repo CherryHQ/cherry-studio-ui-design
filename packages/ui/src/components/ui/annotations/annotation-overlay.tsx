@@ -4,7 +4,7 @@ import { useAnnotationContext } from "./annotation-provider"
 import { AnnotationBubble } from "./annotation-bubble"
 import { Badge } from "../badge"
 import { cn } from "../../../lib/utils"
-import { generateSelector, generateElementLabel, generateBreadcrumb, captureComputedStyles, getSourceHint } from "./utils"
+import { generateSelector, generateElementLabel, generateBreadcrumb, captureComputedStyles, getSourceHint, copyJSON, downloadJSON } from "./utils"
 import type { Annotation, CapturedStyles } from "./types"
 
 interface MarkerPosition {
@@ -44,6 +44,7 @@ function isValidTarget(el: HTMLElement | null): el is HTMLElement {
 
 export function AnnotationOverlay() {
   const {
+    allAnnotations,
     annotations,
     enabled,
     setEnabled,
@@ -51,6 +52,7 @@ export function AnnotationOverlay() {
     updateAnnotation,
     removeAnnotation,
     resolveAnnotation,
+    exportAnnotations,
     boundarySelector,
     page,
     appName,
@@ -83,18 +85,40 @@ export function AnnotationOverlay() {
     }
   }, [page])
 
-  // ─── ⌘+Shift+X shortcut to toggle annotation mode ─────────────────────
+  // ─── Keyboard shortcuts ────────────────────────────────────────────────
+  //   ⌘+Shift+X  → toggle annotation mode
+  //   ⌘+Shift+F  → copy AI prompt
+  //   ⌘+Shift+E  → export JSON (download)
+  //   ⌘+Shift+D  → clear all annotations
 
   useEffect(() => {
     const handleShortcut = (e: KeyboardEvent) => {
-      if (e.key.toLowerCase() === "x" && (e.metaKey || e.ctrlKey) && e.shiftKey && !e.altKey) {
+      if (!(e.metaKey || e.ctrlKey) || !e.shiftKey || e.altKey) return
+      const key = e.key.toLowerCase()
+
+      if (key === "x") {
         e.preventDefault()
         setEnabled(!enabled)
+      } else if (key === "f") {
+        e.preventDefault()
+        const json = exportAnnotations()
+        const parsed = JSON.parse(json)
+        copyJSON(parsed.actionPrompt || "")
+      } else if (key === "e") {
+        e.preventDefault()
+        const json = exportAnnotations()
+        downloadJSON(json, "annotations.json")
+      } else if (key === "d") {
+        e.preventDefault()
+        if (allAnnotations.length === 0) return
+        if (confirm("Clear all annotations? This cannot be undone.")) {
+          for (const ann of [...allAnnotations]) removeAnnotation(ann.id)
+        }
       }
     }
     document.addEventListener("keydown", handleShortcut)
     return () => document.removeEventListener("keydown", handleShortcut)
-  }, [enabled, setEnabled])
+  }, [enabled, setEnabled, allAnnotations, removeAnnotation, exportAnnotations])
 
   // ─── Crosshair cursor on body ─────────────────────────────────────────
 

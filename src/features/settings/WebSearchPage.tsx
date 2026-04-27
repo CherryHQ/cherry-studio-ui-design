@@ -6,7 +6,7 @@ import {
   Settings2, Globe, Trash2, Save,
   ChevronRight, Info,
 } from 'lucide-react';
-import { Button, Input, Slider, Textarea, BrandLogo, Typography, Switch } from '@cherry-studio/ui';
+import { Button, Input, Slider, Textarea, BrandLogo, Typography, Switch, EmptyState } from '@cherry-studio/ui';
 import { Tooltip } from '@/app/components/Tooltip';
 import type { SearchProvider, BlacklistSubscription } from '@/app/types/shared';
 import { InlineSelect } from './shared';
@@ -112,12 +112,12 @@ function GlobalStrategyConfig() {
 
       {/* 常规设置 */}
       <div className="mb-5 border border-section-border rounded-[var(--radius-button)] px-3.5 py-3">
-        <p className="text-sm font-medium text-foreground/70 mb-3">常规设置</p>
+        <p className="text-xs font-medium text-foreground/70 mb-3">常规设置</p>
 
         {/* Top K Slider */}
         <div className="mb-4">
           <div className="flex items-center justify-between mb-1.5">
-            <label className="text-sm text-muted-foreground">搜索结果个数 (Top K)</label>
+            <label className="text-xs text-muted-foreground">搜索结果个数 (Top K)</label>
             <span className="text-xs font-semibold text-primary">{topK}</span>
           </div>
           <div className="flex items-center gap-2.5">
@@ -136,7 +136,7 @@ function GlobalStrategyConfig() {
         {/* Include Dates */}
         <div className="flex items-center justify-between mb-1">
           <div className="flex items-center gap-1.5">
-            <p className="text-sm text-muted-foreground">搜索包含日期</p>
+            <p className="text-xs text-muted-foreground">搜索包含日期</p>
             <Tooltip content="开启后，搜索结果将优先包含发布时间的元数据。" side="top">
               <span className="text-muted-foreground/50 hover:text-muted-foreground/50 transition-colors cursor-help flex-shrink-0">
                 <Info size={10} />
@@ -149,10 +149,10 @@ function GlobalStrategyConfig() {
 
       {/* 结果处理 */}
       <div className="mb-5 border border-section-border rounded-[var(--radius-button)] px-3.5 py-3">
-        <p className="text-sm font-medium text-foreground/70 mb-3">结果处理 (Post-Processing)</p>
+        <p className="text-xs font-medium text-foreground/70 mb-3">结果处理 (Post-Processing)</p>
 
         <div className="mb-3.5">
-          <label className="text-sm text-muted-foreground mb-1.5 block">压缩方法</label>
+          <label className="text-xs text-muted-foreground mb-1.5 block">压缩方法</label>
           <InlineSelect
             value={compression}
             onChange={setCompression}
@@ -167,7 +167,7 @@ function GlobalStrategyConfig() {
 
         <div className="mb-1">
           <div className="flex items-center gap-1.5 mb-1.5">
-            <label className="text-sm text-muted-foreground">最大上下文长度 (Tokens)</label>
+            <label className="text-xs text-muted-foreground">最大上下文长度 (Tokens)</label>
             <Tooltip content="限制搜索结果注入到提示词中的最大 Token 数量，防止超出上下文窗口。" side="top">
               <span className="text-muted-foreground/50 hover:text-muted-foreground/50 transition-colors cursor-help flex-shrink-0">
                 <Info size={10} />
@@ -183,7 +183,7 @@ function GlobalStrategyConfig() {
       {/* 黑名单 */}
       <div className="mb-5 border border-section-border rounded-[var(--radius-button)] px-3.5 py-3">
         <div className="flex items-center gap-2 mb-3">
-          <p className="text-sm font-medium text-foreground/70">黑名单 (Blacklist)</p>
+          <p className="text-xs font-medium text-foreground/70">黑名单 (Blacklist)</p>
           <span className="text-xs text-primary bg-primary/10 px-1.5 py-[1px] rounded-md font-medium">
             {blacklistRules.split('\n').filter(r => r.trim()).length} Rules
           </span>
@@ -191,7 +191,7 @@ function GlobalStrategyConfig() {
 
         <div className="mb-3">
           <div className="flex items-center gap-1.5 mb-1.5">
-            <label className="text-sm text-muted-foreground">自定义黑名单规则</label>
+            <label className="text-xs text-muted-foreground">自定义黑名单规则</label>
             <Tooltip content="支持域名匹配与正则表达式。被匹配的 URL 将不会出现在搜索结果中。" side="top">
               <span className="text-muted-foreground/50 hover:text-muted-foreground/50 transition-colors cursor-help flex-shrink-0">
                 <Info size={10} />
@@ -215,17 +215,19 @@ function GlobalStrategyConfig() {
 
         <div>
           <div className="flex items-center gap-2 mb-2.5">
-            <label className="text-sm text-muted-foreground">订阅黑名单源</label>
+            <label className="text-xs text-muted-foreground">订阅黑名单源</label>
             <Button variant="outline" size="xs" className="text-xs">
               <Plus size={8} />
               <span>添加订阅</span>
             </Button>
           </div>
           <div className="bg-muted/30 border border-section-border rounded-xl overflow-hidden">
-            {subscriptions.map((sub, i) => (
+            {subscriptions.length === 0 ? (
+              <EmptyState preset="no-search-engine" compact />
+            ) : subscriptions.map((sub, i) => (
               <div key={sub.id} className={`flex items-center justify-between px-3.5 py-2.5`}>
                 <div className="min-w-0 flex-1 mr-3">
-                  <p className="text-sm font-medium text-muted-foreground">{sub.name}</p>
+                  <p className="text-xs font-medium text-muted-foreground">{sub.name}</p>
                   <p className="text-xs text-muted-foreground/40 mt-0.5 truncate font-mono">{sub.url}</p>
                 </div>
                 <Switch size="sm" checked={sub.enabled} onCheckedChange={() => toggleSubscription(sub.id)} />
@@ -282,11 +284,11 @@ function ProviderDetailConfig({ provider }: { provider: SearchProvider }) {
       </div>
 
       <div className="mb-5 border border-section-border rounded-[var(--radius-button)] px-3.5 py-3">
-        <p className="text-sm font-medium text-foreground/70 mb-3">认证 (Authentication)</p>
+        <p className="text-xs font-medium text-foreground/70 mb-3">认证 (Authentication)</p>
 
         {provider.id !== 'searxng' && (
           <div className="mb-3">
-            <label className="text-sm text-muted-foreground mb-1.5 block">API Key</label>
+            <label className="text-xs text-muted-foreground mb-1.5 block">API Key</label>
             <div className="flex items-center gap-1.5">
               <div className="flex-1 flex items-center px-2.5 py-[5px] bg-muted/30 rounded-lg border border-section-border">
                 <Input
@@ -318,7 +320,7 @@ function ProviderDetailConfig({ provider }: { provider: SearchProvider }) {
 
         {provider.baseUrl !== undefined && (
           <div>
-            <label className="text-sm text-muted-foreground mb-1.5 block">Base URL</label>
+            <label className="text-xs text-muted-foreground mb-1.5 block">Base URL</label>
             <div className="flex items-center px-2.5 py-[5px] bg-muted/30 rounded-lg border border-section-border">
               <Input type="text" value={baseUrl} onChange={e => setBaseUrl(e.target.value)} className="flex-1 bg-transparent text-xs text-muted-foreground border-0 shadow-none h-auto p-0 min-w-0" />
               <Button variant="ghost" size="icon-xs" className="text-muted-foreground/50 hover:text-foreground ml-1.5">
@@ -331,14 +333,14 @@ function ProviderDetailConfig({ provider }: { provider: SearchProvider }) {
 
       {provider.params.length > 0 && (
         <div className="border border-section-border rounded-[var(--radius-button)] px-3.5 py-3">
-          <p className="text-sm font-medium text-foreground/70 mb-3">参数配置</p>
+          <p className="text-xs font-medium text-foreground/70 mb-3">参数配置</p>
           <div className="space-y-3.5">
             {provider.params.map(param => (
               <div key={param.id}>
                 {param.type === 'select' && param.options && (
                   <div>
                     <div className="flex items-center gap-1.5 mb-1.5">
-                      <label className="text-sm text-muted-foreground">{param.label}</label>
+                      <label className="text-xs text-muted-foreground">{param.label}</label>
                       {param.desc && (
                         <Tooltip content={param.desc} side="top">
                           <span className="text-muted-foreground/50 hover:text-muted-foreground/50 transition-colors cursor-help flex-shrink-0">
@@ -353,7 +355,7 @@ function ProviderDetailConfig({ provider }: { provider: SearchProvider }) {
                 {param.type === 'toggle' && (
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-1.5">
-                      <p className="text-sm text-muted-foreground">{param.label}</p>
+                      <p className="text-xs text-muted-foreground">{param.label}</p>
                       {param.desc && (
                         <Tooltip content={param.desc} side="top">
                           <span className="text-muted-foreground/50 hover:text-muted-foreground/50 transition-colors cursor-help flex-shrink-0">
@@ -368,7 +370,7 @@ function ProviderDetailConfig({ provider }: { provider: SearchProvider }) {
                 {param.type === 'text' && (
                   <div>
                     <div className="flex items-center gap-1.5 mb-1.5">
-                      <label className="text-sm text-muted-foreground">{param.label}</label>
+                      <label className="text-xs text-muted-foreground">{param.label}</label>
                       {param.desc && (
                         <Tooltip content={param.desc} side="top">
                           <span className="text-muted-foreground/50 hover:text-muted-foreground/50 transition-colors cursor-help flex-shrink-0">
@@ -385,7 +387,7 @@ function ProviderDetailConfig({ provider }: { provider: SearchProvider }) {
                 {param.type === 'number' && (
                   <div>
                     <div className="flex items-center gap-1.5 mb-1.5">
-                      <label className="text-sm text-muted-foreground">{param.label}</label>
+                      <label className="text-xs text-muted-foreground">{param.label}</label>
                       {param.desc && (
                         <Tooltip content={param.desc} side="top">
                           <span className="text-muted-foreground/50 hover:text-muted-foreground/50 transition-colors cursor-help flex-shrink-0">
@@ -424,7 +426,7 @@ export function WebSearchPage() {
       {/* Middle Column: Service List */}
       <div className="w-[160px] flex-shrink-0 flex flex-col border-r border-section-border min-h-0">
         <div className="px-3.5 pt-4 pb-2 flex-shrink-0">
-          <p className="text-xs font-medium text-muted-foreground/60">网络搜索</p>
+          <p className="text-xs font-medium text-muted-foreground">网络搜索</p>
         </div>
 
         <div className="flex-1 overflow-y-auto px-2.5 pb-3 scrollbar-thin-xs">
@@ -443,7 +445,7 @@ export function WebSearchPage() {
                 <div className="absolute inset-0 rounded-xl border border-cherry-active-border pointer-events-none" />
               )}
               <div className="flex items-center gap-2 min-w-0 flex-1">
-                <span className={`flex-shrink-0 ${selectedId === 'global' ? 'text-muted-foreground/60' : 'text-muted-foreground/40'}`}><Settings2 size={14} /></span>
+                <span className={`flex-shrink-0 ${selectedId === 'global' ? 'text-foreground' : 'text-muted-foreground'}`}><Settings2 size={14} /></span>
                 <span className={`text-sm truncate ${selectedId === 'global' ? 'font-medium text-foreground' : 'text-muted-foreground'}`}>全局搜索策略</span>
               </div>
               <ChevronRight size={9} className={`flex-shrink-0 ${selectedId === 'global' ? 'text-muted-foreground/40' : 'text-muted-foreground/50'}`} />

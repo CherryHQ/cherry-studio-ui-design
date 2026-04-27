@@ -6,7 +6,7 @@ import {
   X,
   Globe2, Command,
   Cloud, FileScan, BrainCircuit, Database, Server, Sparkles, Info, MousePointer, Archive,
-  Home, Zap, MessageSquareText,
+  Home, Zap, MessageSquareText, Radio, CalendarClock,
   HelpCircle, Rss, MessageSquare, Building2, Mail, Users, Bug, Github,
   Loader2, CheckCircle2, Calendar, ArrowUpRight,
   FileText, BarChart3,
@@ -26,6 +26,8 @@ import { MCPServicePage } from './MCPServicePage';
 import { DashboardPage } from './DashboardPage';
 import { ArchiveManagePage } from './ArchiveManagePage';
 import { DefaultModelSettingsPage } from './DefaultModelSettingsPage';
+import { ChannelsPage } from './ChannelsPage';
+import { ScheduledTasksPage } from './ScheduledTasksPage';
 import { InlineSelect, SectionCard } from './shared';
 import { Tooltip } from '@/app/components/Tooltip';
 import { Button, Dialog, DialogContent, Typography, Switch, Card, CardContent, ToggleGroup, ToggleGroupItem } from '@cherry-studio/ui';
@@ -37,7 +39,8 @@ type SettingsSection =
   | 'home'
   | 'general' | 'data-settings' | 'archive' | 'api-gateway' | 'shortcuts' | 'about' | 'dashboard'
   | 'models' | 'default-model' | 'mcp' | 'search' | 'documents'
-  | 'quick-assistant' | 'selection-assistant';
+  | 'quick-assistant' | 'selection-assistant'
+  | 'channels' | 'scheduled-tasks';
 
 interface NavGroup {
   label: string;
@@ -95,6 +98,8 @@ const NAV_GROUPS: NavGroup[] = [
   {
     label: '效率',
     items: [
+      { id: 'channels', label: '频道', icon: Radio },
+      { id: 'scheduled-tasks', label: '定时任务', icon: CalendarClock },
       { id: 'selection-assistant', label: '划词助手', icon: MousePointer },
       { id: 'shortcuts', label: '快捷键', icon: Command },
       { id: 'quick-assistant', label: '快捷助手', icon: Sparkles },
@@ -304,7 +309,7 @@ function SettingsSidebar({ active, onSelect, onClose }: { active: SettingsSectio
                     className={`w-full justify-start gap-2.5 px-3 py-[5px] rounded-lg text-sm relative ${
                       isActive
                         ? 'bg-cherry-active-bg text-foreground'
-                        : 'text-foreground hover:text-foreground hover:bg-accent/50'
+                        : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
                     }`}
                   >
                     {isActive && (
@@ -925,12 +930,12 @@ export function SettingsPage({ open, onClose, initialSection }: { open: boolean;
     <Dialog open={open} onOpenChange={(o) => { if (!o) onClose(); }}>
       <DialogContent className="w-[860px] h-[620px] sm:max-w-none flex flex-col overflow-hidden p-0 bg-app-bg" showCloseButton={false} onInteractOutside={(e) => e.preventDefault()} onPointerDownOutside={(e) => e.preventDefault()} onEscapeKeyDown={(e) => { e.preventDefault(); onClose(); }}>
         {/* Body: sidebar + content */}
-        <div className="flex flex-1 min-h-0 overflow-hidden">
+        <div className="flex flex-1 min-h-0 overflow-hidden bg-sidebar">
           <SettingsSidebar active={activeSection} onSelect={setActiveSection} onClose={onClose} />
 
           {/* Content Area */}
           <div className="flex-1 flex flex-col min-w-0 overflow-hidden mr-2 mb-2 mt-2 ml-0 bg-content-bg border border-content-border rounded-2xl">
-            {activeSection === 'models' || activeSection === 'default-model' || activeSection === 'search' || activeSection === 'documents' || activeSection === 'data-settings' || activeSection === 'archive' || activeSection === 'api-gateway' || activeSection === 'shortcuts' || activeSection === 'selection-assistant' || activeSection === 'quick-assistant' || activeSection === 'general' || activeSection === 'mcp' || activeSection === 'dashboard' ? (
+            {activeSection === 'models' || activeSection === 'default-model' || activeSection === 'search' || activeSection === 'documents' || activeSection === 'data-settings' || activeSection === 'archive' || activeSection === 'api-gateway' || activeSection === 'shortcuts' || activeSection === 'selection-assistant' || activeSection === 'quick-assistant' || activeSection === 'general' || activeSection === 'mcp' || activeSection === 'dashboard' || activeSection === 'channels' || activeSection === 'scheduled-tasks' ? (
               activeSection === 'models' ? <ModelServicePage />
                 : activeSection === 'default-model' ? <DefaultModelSettingsPage />
                 : activeSection === 'search' ? <WebSearchPage />
@@ -943,6 +948,8 @@ export function SettingsPage({ open, onClose, initialSection }: { open: boolean;
                 : activeSection === 'quick-assistant' ? <QuickAssistantPage />
                 : activeSection === 'general' ? <GeneralSettingsPage />
                 : activeSection === 'dashboard' ? <DashboardPage />
+                : activeSection === 'channels' ? <ChannelsPage />
+                : activeSection === 'scheduled-tasks' ? <ScheduledTasksPage />
                 : <MCPServicePage />
             ) : (
               <div className="flex-1 overflow-y-auto px-6 py-5 scrollbar-thin">
