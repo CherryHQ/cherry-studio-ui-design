@@ -52,7 +52,7 @@ const RECENT_CONVERSATIONS = [
 // ===========================
 // Sub-components
 // ===========================
-const cardCls = "bg-muted/30 border-border/50 rounded-2xl p-3.5 py-3.5 px-3.5 gap-0 hover:border-border transition-all duration-200 shadow-none";
+const cardCls = "bg-muted/30 border-section-border rounded-2xl p-3.5 py-3.5 px-3.5 gap-0 hover:border-border transition-all duration-200 shadow-none";
 const cardLabel = "text-xs text-muted-foreground/40 tracking-wide";
 
 function MiniBarChart({ data, maxVal, color, height = 40 }: { data: number[]; maxVal: number; color: string; height?: number }) {
@@ -261,7 +261,7 @@ export function DashboardPage() {
             })}
           </div>
           {/* Summary */}
-          <div className="mt-3 pt-2.5 border-t border-border/30">
+          <div className="mt-3 pt-2.5 border-t border-section-border">
             <div className="flex items-center justify-between">
               <span className="text-xs text-muted-foreground/40">6 个月总计</span>
               <span className="text-xs text-muted-foreground font-semibold">
@@ -366,7 +366,7 @@ export function DashboardPage() {
           </div>
 
           {/* Performance metrics */}
-          <div className="mt-3 pt-2.5 border-t border-border/30 grid grid-cols-3 gap-2">
+          <div className="mt-3 pt-2.5 border-t border-section-border grid grid-cols-3 gap-2">
             <div className="text-center">
               <p className="text-xs text-muted-foreground/40 mb-0.5">平均延迟</p>
               <p className="text-xs text-muted-foreground font-semibold">118ms</p>

@@ -77,7 +77,7 @@ function ConnectionPanel({ enabled }: { enabled: boolean }) {
           <Typography variant="subtitle">连接设置</Typography>
           <p className="text-xs text-muted-foreground/60 mt-0.5">配置 API 服务监听的地址和端口。</p>
         </div>
-        <Button variant="outline" size="xs" className="border-border/30 text-muted-foreground/60 hover:text-foreground">
+        <Button variant="outline" size="xs" className="border-section-border text-muted-foreground/60 hover:text-foreground">
           <RefreshCw size={9} />
           <span>重置默认</span>
         </Button>
@@ -89,7 +89,7 @@ function ConnectionPanel({ enabled }: { enabled: boolean }) {
             <Input
               value={port}
               onChange={e => setPort(e.target.value)}
-              className="px-2.5 py-[5px] bg-muted/30 border-border/30 text-xs text-muted-foreground font-mono"
+              className="px-2.5 py-[5px] bg-muted/30 border-section-border text-xs text-muted-foreground font-mono"
             />
           </div>
         </FormRow>
@@ -117,7 +117,7 @@ function ConnectionPanel({ enabled }: { enabled: boolean }) {
       <ConfigSection title="当前活跃凭证">
         <div className="space-y-1">
           <p className="text-xs text-muted-foreground/40">主密钥 (Primary Key)</p>
-          <div className="flex items-center px-3 py-[7px] bg-muted/30 rounded-lg border border-border/30">
+          <div className="flex items-center px-3 py-[7px] bg-muted/30 rounded-lg border border-section-border">
             <span className="flex-1 text-xs text-muted-foreground/60 font-mono truncate">sk-cherry-82js...92ks</span>
             <CopyButton text="sk-cherry-82js-xxxx-xxxx-92ks" />
           </div>
@@ -180,13 +180,13 @@ function SecurityPanel({ enabled }: { enabled: boolean }) {
         }
       >
         {showCreate && (
-          <div className="flex items-center gap-2 p-2.5 bg-cherry-active-bg border border-cherry-ring rounded-lg mb-2">
+          <div className="flex items-center gap-2 p-2.5 bg-accent/30 border border-section-border rounded-lg mb-2">
             <div className="flex-1">
               <Input
                 value={newName}
                 onChange={e => setNewName(e.target.value)}
                 placeholder="密钥名称，例如: My App"
-                className="px-2.5 py-[5px] h-auto bg-background rounded-lg border-border/30 text-xs text-muted-foreground placeholder:text-muted-foreground/60"
+                className="px-2.5 py-[5px] h-auto bg-background rounded-lg border-section-border text-xs text-muted-foreground placeholder:text-muted-foreground/60"
                 onKeyDown={e => e.key === 'Enter' && handleCreate()}
                 autoFocus
               />
@@ -203,7 +203,7 @@ function SecurityPanel({ enabled }: { enabled: boolean }) {
               variant="outline"
               size="xs"
               onClick={() => { setShowCreate(false); setNewName(''); }}
-              className="border-border/30 text-muted-foreground/60 hover:text-foreground"
+              className="border-section-border text-muted-foreground/60 hover:text-foreground"
             >
               取消
             </Button>
@@ -312,7 +312,7 @@ function ModelMappingPanel({ enabled }: { enabled: boolean }) {
         </div>
       </ConfigSection>
 
-      <div className="bg-muted/30 border border-border/50 rounded-xl p-4">
+      <div className="bg-muted/30 border border-section-border rounded-xl p-4">
         <div className="flex items-start gap-2">
           <AlertTriangle size={11} className="text-muted-foreground/40 flex-shrink-0 mt-0.5" />
           <p className="text-xs text-muted-foreground/40 leading-relaxed">
@@ -340,7 +340,7 @@ function IntegrationSection({ enabled, port }: { enabled: boolean; port: string 
         title="集成指南 (Integration)"
         hint={'如何在第三方应用中使用 Cherry Studio。'}
         actions={
-          <Button variant="outline" size="xs" className="border-border/30 text-muted-foreground/60 hover:text-foreground">
+          <Button variant="outline" size="xs" className="border-section-border text-muted-foreground/60 hover:text-foreground">
             <span>查看完整文档</span>
             <ExternalLink size={7} />
           </Button>
@@ -349,7 +349,7 @@ function IntegrationSection({ enabled, port }: { enabled: boolean; port: string 
         <div className="space-y-3">
           <div>
             <p className="text-xs text-muted-foreground/60 mb-1">API Base URL</p>
-            <div className="flex items-center px-3 py-[7px] bg-muted/30 rounded-lg border border-border/30">
+            <div className="flex items-center px-3 py-[7px] bg-muted/30 rounded-lg border border-section-border">
               <span className="flex-1 text-xs text-muted-foreground/60 font-mono truncate">{baseUrl}</span>
               <CopyButton text={baseUrl} />
             </div>
@@ -358,7 +358,7 @@ function IntegrationSection({ enabled, port }: { enabled: boolean; port: string 
           <div>
             <p className="text-xs text-muted-foreground/60 mb-1">示例调用 (Curl)</p>
             <div className="relative">
-              <pre className="px-3 py-3 bg-muted/50 border border-border/50 rounded-lg text-xs text-muted-foreground/60 font-mono leading-relaxed overflow-x-auto whitespace-pre-wrap break-all">
+              <pre className="px-3 py-3 bg-muted/50 border border-section-border rounded-lg text-xs text-muted-foreground/60 font-mono leading-relaxed overflow-x-auto whitespace-pre-wrap break-all">
                 {curlExample}
               </pre>
               <div className="absolute top-2 right-2">
@@ -395,7 +395,7 @@ export function ApiGatewayPage() {
   return (
     <div className="flex h-full min-h-0">
       {/* Middle Column: Navigation */}
-      <div className="w-[160px] flex-shrink-0 flex flex-col border-r border-border/30 min-h-0">
+      <div className="w-[160px] flex-shrink-0 flex flex-col border-r border-section-border min-h-0">
         <div className="px-3.5 pt-4 pb-2 flex-shrink-0">
           <p className="text-xs text-muted-foreground/60 font-medium">API 网关</p>
         </div>
@@ -450,19 +450,19 @@ export function ApiGatewayPage() {
         <div className="flex-1 overflow-y-auto px-6 py-4 scrollbar-thin">
           {/* Status banner */}
           {serviceEnabled && (
-            <div className="flex items-center gap-2.5 px-3.5 py-2.5 bg-cherry-active-bg border border-cherry-ring rounded-xl mb-4">
-              <CheckCircle2 size={13} className="text-cherry-primary flex-shrink-0" />
+            <div className="flex items-center gap-2.5 px-3.5 py-2.5 bg-success/[0.08] border border-success/20 rounded-xl mb-4">
+              <CheckCircle2 size={13} className="text-success flex-shrink-0" />
               <div className="flex-1 min-w-0">
-                <p className="text-xs text-cherry-primary-dark font-medium">API 网关正在运行</p>
-                <p className="text-xs text-cherry-text-muted mt-0.5">{'兼容 OpenAI 接口标准，可供第三方应用直接调用。'}</p>
+                <p className="text-xs text-success font-medium">API 网关正在运行</p>
+                <p className="text-xs text-success/60 mt-0.5">{'兼容 OpenAI 接口标准，可供第三方应用直接调用。'}</p>
               </div>
-              <Button variant="outline" size="xs" className="border-cherry-ring text-cherry-text-muted hover:bg-cherry-active-bg">
+              <Button variant="outline" size="xs" className="border-success/30 text-success/80 hover:bg-success/10">
                 查看日志
               </Button>
             </div>
           )}
           {!serviceEnabled && (
-            <div className="flex items-center gap-2.5 px-3.5 py-2.5 bg-muted/30 border border-border/50 rounded-xl mb-4">
+            <div className="flex items-center gap-2.5 px-3.5 py-2.5 bg-muted/30 border border-section-border rounded-xl mb-4">
               <XCircle size={13} className="text-muted-foreground/40 flex-shrink-0" />
               <div className="flex-1">
                 <p className="text-xs text-muted-foreground/60 font-medium">API 服务未启用</p>

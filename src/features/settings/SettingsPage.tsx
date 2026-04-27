@@ -347,7 +347,7 @@ function HomeSettings({ onNavigate }: { onNavigate: (s: SettingsSection) => void
   const totalModels = MOCK_PROVIDERS.reduce((sum, p) => sum + p.enabledModels, 0);
   const totalProviders = MOCK_PROVIDERS.length;
 
-  const cardCls = "bg-muted/30 border-border/50 rounded-2xl p-3.5 py-3.5 px-3.5 gap-0 hover:border-border transition-all duration-200 shadow-none";
+  const cardCls = "bg-muted/30 border-section-border rounded-2xl p-3.5 py-3.5 px-3.5 gap-0 hover:border-border transition-all duration-200 shadow-none";
   const cardLabel = "text-xs text-muted-foreground/40 tracking-wide";
 
   const recentModels = [
@@ -549,7 +549,7 @@ function HomeSettings({ onNavigate }: { onNavigate: (s: SettingsSection) => void
                 key={item.target}
                 variant="ghost"
                 onClick={() => onNavigate(item.target)}
-                className="flex-col gap-1.5 py-2 rounded-xl bg-muted/30 hover:bg-accent/50 border border-transparent hover:border-border/50 text-xs"
+                className="flex-col gap-1.5 py-2 rounded-xl bg-muted/30 hover:bg-accent/50 border border-transparent hover:border-section-border text-xs"
               >
                 <Icon size={13} className="text-muted-foreground/40" />
                 <span className="text-xs text-muted-foreground/60">{item.label}</span>
@@ -729,8 +729,8 @@ function AboutPage() {
                 updateStatus === 'latest'
                   ? 'border-border text-muted-foreground bg-muted/30'
                   : updateStatus === 'checking'
-                    ? 'border-border/30 text-muted-foreground/60 cursor-wait'
-                    : 'border-border/30 text-muted-foreground hover:text-foreground hover:bg-accent'
+                    ? 'border-section-border text-muted-foreground/60 cursor-wait'
+                    : 'border-section-border text-muted-foreground hover:text-foreground hover:bg-accent'
               }`}
             >
               {updateStatus === 'checking' ? (
@@ -787,7 +787,7 @@ function AboutPage() {
                 <Button size="inline"
                   variant="outline"
                   onClick={() => handleLinkAction(link.label, link.action)}
-                  className="px-2 py-[2px] rounded-md border-border/30 text-xs text-muted-foreground/60 hover:text-foreground hover:bg-accent flex-shrink-0"
+                  className="px-2 py-[2px] rounded-md border-section-border text-xs text-muted-foreground/60 hover:text-foreground hover:bg-accent flex-shrink-0"
                 >
                   {link.action}
                 </Button>
@@ -824,7 +824,7 @@ function AboutPage() {
       <Dialog open={showChangelog} onOpenChange={setShowChangelog}>
         <DialogContent className="w-[480px] max-w-[85vw] max-h-[75vh] flex flex-col overflow-hidden p-0" showCloseButton={false}>
           {/* Changelog header */}
-          <div className="flex items-center justify-between px-5 py-3.5 border-b border-border/30 flex-shrink-0">
+          <div className="flex items-center justify-between px-5 py-3.5 border-b border-section-border flex-shrink-0">
             <div className="flex items-center gap-2">
               <Rss size={14} className="text-muted-foreground/60" />
               <Typography variant="subtitle">{'\u66f4\u65b0\u65e5\u5fd7'}</Typography>
@@ -872,20 +872,20 @@ function AboutPage() {
 
                 {/* Separator */}
                 {ri < CHANGELOG_DATA.length - 1 && (
-                  <div className="mt-4 border-b border-border/30" />
+                  <div className="mt-4 border-b border-section-border" />
                 )}
               </div>
             ))}
           </div>
 
           {/* Changelog footer */}
-          <div className="flex items-center justify-between px-5 py-3 border-t border-border/30 flex-shrink-0">
+          <div className="flex items-center justify-between px-5 py-3 border-t border-section-border flex-shrink-0">
             <span className="text-xs text-muted-foreground/40">{'\u5171'} {CHANGELOG_DATA.length} {'\u4e2a\u7248\u672c'}</span>
             <Button
               variant="outline"
               size="xs"
               onClick={() => showToast('\u5df2\u5728\u6d4f\u89c8\u5668\u4e2d\u6253\u5f00\u5b8c\u6574\u66f4\u65b0\u65e5\u5fd7')}
-              className="gap-1 px-2.5 py-[3px] rounded-lg border-border/30 text-xs text-muted-foreground/60 hover:text-foreground hover:bg-accent"
+              className="gap-1 px-2.5 py-[3px] rounded-lg border-section-border text-xs text-muted-foreground/60 hover:text-foreground hover:bg-accent"
             >
               <span>{'\u67e5\u770b\u5168\u90e8'}</span>
               <ArrowUpRight size={9} />
@@ -923,13 +923,13 @@ export function SettingsPage({ open, onClose, initialSection }: { open: boolean;
 
   return (
     <Dialog open={open} onOpenChange={(o) => { if (!o) onClose(); }}>
-      <DialogContent className="w-[860px] h-[620px] sm:max-w-none flex flex-col overflow-hidden p-0" showCloseButton={false} onInteractOutside={(e) => e.preventDefault()} onPointerDownOutside={(e) => e.preventDefault()} onEscapeKeyDown={(e) => { e.preventDefault(); onClose(); }}>
+      <DialogContent className="w-[860px] h-[620px] sm:max-w-none flex flex-col overflow-hidden p-0 bg-app-bg" showCloseButton={false} onInteractOutside={(e) => e.preventDefault()} onPointerDownOutside={(e) => e.preventDefault()} onEscapeKeyDown={(e) => { e.preventDefault(); onClose(); }}>
         {/* Body: sidebar + content */}
         <div className="flex flex-1 min-h-0 overflow-hidden">
           <SettingsSidebar active={activeSection} onSelect={setActiveSection} onClose={onClose} />
 
           {/* Content Area */}
-          <div className="flex-1 flex flex-col min-w-0 overflow-hidden mr-2 mb-2 mt-2 ml-0 bg-muted/30 border border-border/50 rounded-2xl">
+          <div className="flex-1 flex flex-col min-w-0 overflow-hidden mr-2 mb-2 mt-2 ml-0 bg-content-bg border border-content-border rounded-2xl">
             {activeSection === 'models' || activeSection === 'default-model' || activeSection === 'search' || activeSection === 'documents' || activeSection === 'data-settings' || activeSection === 'archive' || activeSection === 'api-gateway' || activeSection === 'shortcuts' || activeSection === 'selection-assistant' || activeSection === 'quick-assistant' || activeSection === 'general' || activeSection === 'mcp' || activeSection === 'dashboard' ? (
               activeSection === 'models' ? <ModelServicePage />
                 : activeSection === 'default-model' ? <DefaultModelSettingsPage />

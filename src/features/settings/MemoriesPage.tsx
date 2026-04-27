@@ -92,10 +92,10 @@ function EngineConfigPanel({ onClose }: { onClose: () => void }) {
       animate={{ x: 0 }}
       exit={{ x: '100%' }}
       transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-      className="absolute inset-y-0 right-0 w-[300px] bg-background border-l border-border/30 shadow-xl flex flex-col z-[var(--z-sticky)] rounded-r-2xl"
+      className="absolute inset-y-0 right-0 w-[300px] bg-background border-l border-section-border shadow-xl flex flex-col z-[var(--z-sticky)] rounded-r-2xl"
       onClick={e => e.stopPropagation()}
     >
-      <div className="flex items-center justify-between px-4 py-3 border-b border-border/30 flex-shrink-0">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-section-border flex-shrink-0">
         <div className="flex items-center gap-2">
           <Settings2 size={12} className="text-muted-foreground/60" />
           <span className="text-xs text-foreground font-semibold">记忆引擎配置</span>
@@ -145,7 +145,7 @@ function EngineConfigPanel({ onClose }: { onClose: () => void }) {
 
         <div>
           <label className="text-sm text-muted-foreground mb-1.5 block font-medium">向量维度</label>
-          <div className="flex items-center px-2.5 py-[5px] bg-muted/30 rounded-lg border border-border/30">
+          <div className="flex items-center px-2.5 py-[5px] bg-muted/30 rounded-lg border border-section-border">
             <Input
               type="text"
               value={dimensions}
@@ -157,8 +157,8 @@ function EngineConfigPanel({ onClose }: { onClose: () => void }) {
         </div>
       </div>
 
-      <div className="px-4 py-3 border-t border-border/30 flex items-center gap-2 flex-shrink-0">
-        <Button variant="outline" size="xs" onClick={onClose} className="flex-1 text-muted-foreground/60 hover:text-foreground border-border/25">
+      <div className="px-4 py-3 border-t border-section-border flex items-center gap-2 flex-shrink-0">
+        <Button variant="outline" size="xs" onClick={onClose} className="flex-1 text-muted-foreground/60 hover:text-foreground border-section-border">
           取消
         </Button>
         <Button variant="ghost" size="xs" onClick={onClose} className="flex-1 text-cherry-primary-dark bg-cherry-active-bg hover:bg-cherry-active-border">
@@ -188,10 +188,10 @@ function NewUserPanel({ onClose, onAdd }: { onClose: () => void; onAdd: (userId:
       animate={{ x: 0 }}
       exit={{ x: '100%' }}
       transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-      className="absolute inset-y-0 right-0 w-[300px] bg-background border-l border-border/30 shadow-xl flex flex-col z-[var(--z-sticky)] rounded-r-2xl"
+      className="absolute inset-y-0 right-0 w-[300px] bg-background border-l border-section-border shadow-xl flex flex-col z-[var(--z-sticky)] rounded-r-2xl"
       onClick={e => e.stopPropagation()}
     >
-      <div className="flex items-center justify-between px-4 py-3 border-b border-border/30 flex-shrink-0">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-section-border flex-shrink-0">
         <span className="text-xs text-foreground font-semibold">新建用户空间</span>
         <Button variant="ghost" size="icon-xs" onClick={onClose} className="text-muted-foreground/40 hover:text-foreground hover:bg-accent">
           <X size={11} />
@@ -201,7 +201,7 @@ function NewUserPanel({ onClose, onAdd }: { onClose: () => void; onAdd: (userId:
       <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4 scrollbar-thin-xs">
         <div>
           <label className="text-sm text-muted-foreground mb-1.5 block font-medium">用户 ID / 命名空间</label>
-          <div className="flex items-center px-2.5 py-[5px] bg-muted/30 rounded-lg border border-border/30">
+          <div className="flex items-center px-2.5 py-[5px] bg-muted/30 rounded-lg border border-section-border">
             <Input
               autoFocus
               type="text"
@@ -215,7 +215,7 @@ function NewUserPanel({ onClose, onAdd }: { onClose: () => void; onAdd: (userId:
         </div>
         <div>
           <label className="text-sm text-muted-foreground mb-1.5 block font-medium">显示名称 (可选)</label>
-          <div className="flex items-center px-2.5 py-[5px] bg-muted/30 rounded-lg border border-border/30">
+          <div className="flex items-center px-2.5 py-[5px] bg-muted/30 rounded-lg border border-section-border">
             <Input
               type="text"
               value={displayName}
@@ -227,8 +227,8 @@ function NewUserPanel({ onClose, onAdd }: { onClose: () => void; onAdd: (userId:
         </div>
       </div>
 
-      <div className="px-4 py-3 border-t border-border/30 flex items-center gap-2 flex-shrink-0">
-        <Button variant="outline" size="xs" onClick={onClose} className="flex-1 text-muted-foreground/60 hover:text-foreground border-border/25">
+      <div className="px-4 py-3 border-t border-section-border flex items-center gap-2 flex-shrink-0">
+        <Button variant="outline" size="xs" onClick={onClose} className="flex-1 text-muted-foreground/60 hover:text-foreground border-section-border">
           取消
         </Button>
         <Button
@@ -267,10 +267,10 @@ function AddMemoryPanel({ userName, onClose, onAdd }: {
       animate={{ x: 0 }}
       exit={{ x: '100%' }}
       transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-      className="absolute inset-y-0 right-0 w-[300px] bg-background border-l border-border/30 shadow-xl flex flex-col z-[var(--z-sticky)] rounded-r-2xl"
+      className="absolute inset-y-0 right-0 w-[300px] bg-background border-l border-section-border shadow-xl flex flex-col z-[var(--z-sticky)] rounded-r-2xl"
       onClick={e => e.stopPropagation()}
     >
-      <div className="flex items-center justify-between px-4 py-3 border-b border-border/30 flex-shrink-0">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-section-border flex-shrink-0">
         <div>
           <span className="text-xs text-foreground font-semibold">添加记忆</span>
           <p className="text-xs text-muted-foreground/40 mt-0.5">添加至 {userName}</p>
@@ -289,10 +289,10 @@ function AddMemoryPanel({ userName, onClose, onAdd }: {
             onChange={e => setContent(e.target.value)}
             placeholder="输入要记住的事实或偏好..."
             rows={5}
-            className="w-full px-2.5 py-2 bg-muted/30 rounded-lg border border-border/30 text-xs text-muted-foreground outline-none resize-none placeholder:text-muted-foreground/60 scrollbar-thin-xs"
+            className="w-full px-2.5 py-2 bg-muted/30 rounded-lg border border-section-border text-xs text-muted-foreground outline-none resize-none placeholder:text-muted-foreground/60 scrollbar-thin-xs"
           />
         </div>
-        <div className="bg-muted/30 border border-border/50 rounded-lg p-2.5">
+        <div className="bg-muted/30 border border-section-border rounded-lg p-2.5">
           <p className="text-xs text-muted-foreground/40">
             <span className="text-muted-foreground/60 font-medium">提示：</span>
             手动添加的记忆将标记为 "Manual" 来源，可随时编辑或删除。
@@ -300,8 +300,8 @@ function AddMemoryPanel({ userName, onClose, onAdd }: {
         </div>
       </div>
 
-      <div className="px-4 py-3 border-t border-border/30 flex items-center gap-2 flex-shrink-0">
-        <Button variant="outline" size="xs" onClick={onClose} className="flex-1 text-muted-foreground/60 hover:text-foreground border-border/25">
+      <div className="px-4 py-3 border-t border-section-border flex items-center gap-2 flex-shrink-0">
+        <Button variant="outline" size="xs" onClick={onClose} className="flex-1 text-muted-foreground/60 hover:text-foreground border-section-border">
           取消
         </Button>
         <Button
@@ -447,7 +447,7 @@ export function MemoriesPage() {
   return (
     <div className="flex h-full min-h-0 relative">
       {/* Middle Column: Control Panel */}
-      <div className="w-[160px] flex-shrink-0 flex flex-col border-r border-border/30 min-h-0">
+      <div className="w-[160px] flex-shrink-0 flex flex-col border-r border-section-border min-h-0">
         {/* Header */}
         <div className="px-3.5 pt-4 pb-2 flex items-center justify-between flex-shrink-0">
           <p className="text-xs text-muted-foreground/60 font-medium">记忆管理</p>
@@ -515,7 +515,7 @@ export function MemoriesPage() {
       {/* Right Column: Memory List */}
       <div className="flex-1 flex flex-col min-w-0 min-h-0 relative">
         {/* Header */}
-        <div className="flex items-center gap-3 px-5 py-3 flex-shrink-0 border-b border-border/30">
+        <div className="flex items-center gap-3 px-5 py-3 flex-shrink-0 border-b border-section-border">
           {/* User info */}
           <div className="flex items-center gap-2 flex-shrink-0">
             <div
@@ -535,7 +535,7 @@ export function MemoriesPage() {
             onChange={setSearch}
             placeholder="搜索记忆内容..."
             iconSize={10}
-            wrapperClassName="flex-1 flex items-center gap-2 px-2.5 py-[4px] bg-muted/30 rounded-lg border border-border/25 mx-3"
+            wrapperClassName="flex-1 flex items-center gap-2 px-2.5 py-[4px] bg-muted/30 rounded-lg border border-section-border mx-3"
           />
 
           {/* Actions */}
@@ -580,7 +580,7 @@ export function MemoriesPage() {
             filteredMemories.map(memory => (
               <div
                 key={memory.id}
-                className="bg-muted/50 border border-border/50 rounded-xl px-4 py-3 group hover:border-border/50 transition-colors"
+                className="bg-muted/50 border border-section-border rounded-xl px-4 py-3 group hover:border-section-border transition-colors"
               >
                 <div className="flex items-start justify-between mb-1.5">
                   <div className="flex items-center gap-2">

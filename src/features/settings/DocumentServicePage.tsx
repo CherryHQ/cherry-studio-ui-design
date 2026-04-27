@@ -125,7 +125,7 @@ function TesseractConfig() {
       <ConfigSection title="语言包">
         <div className="flex flex-wrap gap-1.5">
           {langs.map(lang => (
-            <div key={lang.id} className="flex items-center gap-1.5 px-2.5 py-[4px] bg-muted/50 border border-border/50 rounded-lg">
+            <div key={lang.id} className="flex items-center gap-1.5 px-2.5 py-[4px] bg-muted/50 border border-section-border rounded-lg">
               <span className="text-xs font-medium text-foreground">{lang.name}</span>
               <span className="text-xs text-muted-foreground/60">({lang.code})</span>
               <Button
@@ -138,7 +138,7 @@ function TesseractConfig() {
               </Button>
             </div>
           ))}
-          <Button variant="outline" size="xs" className="border-dashed border-border/50 text-muted-foreground/40 hover:text-foreground hover:border-border">
+          <Button variant="outline" size="xs" className="border-dashed border-section-border text-muted-foreground/40 hover:text-foreground hover:border-border">
             <Plus size={9} />
             <span>添加语言</span>
           </Button>
@@ -222,7 +222,7 @@ function MistralConfig() {
         <div>
           <FieldLabel>API 密钥 (API Key)</FieldLabel>
           <div className="flex items-center gap-1.5">
-            <div className="flex-1 flex items-center px-2.5 py-[5px] bg-muted/30 rounded-lg border border-border/30">
+            <div className="flex-1 flex items-center px-2.5 py-[5px] bg-muted/30 rounded-lg border border-section-border">
               <Input
                 type={showKey ? 'text' : 'password'}
                 value={apiKey}
@@ -295,7 +295,7 @@ function MinerUConfig() {
         <div>
           <FieldLabel>API 密钥 (Token)</FieldLabel>
           <div className="flex items-center gap-1.5">
-            <div className="flex-1 flex items-center px-2.5 py-[5px] bg-muted/30 rounded-lg border border-border/30">
+            <div className="flex-1 flex items-center px-2.5 py-[5px] bg-muted/30 rounded-lg border border-section-border">
               <Input
                 type={showKey ? 'text' : 'password'}
                 value={apiKey}
@@ -481,7 +481,7 @@ export function DocumentServicePage() {
   return (
     <div className="flex h-full min-h-0">
       {/* Middle Column: Service List */}
-      <div className="w-[160px] flex-shrink-0 flex flex-col border-r border-border/30 min-h-0">
+      <div className="w-[160px] flex-shrink-0 flex flex-col border-r border-section-border min-h-0">
         <div className="px-3.5 pt-4 pb-2 flex-shrink-0">
           <p className="text-xs font-medium text-muted-foreground/60">文档服务</p>
         </div>

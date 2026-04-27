@@ -111,8 +111,8 @@ function GlobalStrategyConfig() {
       </div>
 
       {/* 常规设置 */}
-      <div className="mb-5">
-        <p className="text-sm font-medium text-muted-foreground mb-3">常规设置</p>
+      <div className="mb-5 border border-section-border rounded-[var(--radius-button)] px-3.5 py-3">
+        <p className="text-sm font-medium text-foreground/70 mb-3">常规设置</p>
 
         {/* Top K Slider */}
         <div className="mb-4">
@@ -148,8 +148,8 @@ function GlobalStrategyConfig() {
       </div>
 
       {/* 结果处理 */}
-      <div className="mb-5">
-        <p className="text-sm font-medium text-muted-foreground mb-3">结果处理 (Post-Processing)</p>
+      <div className="mb-5 border border-section-border rounded-[var(--radius-button)] px-3.5 py-3">
+        <p className="text-sm font-medium text-foreground/70 mb-3">结果处理 (Post-Processing)</p>
 
         <div className="mb-3.5">
           <label className="text-sm text-muted-foreground mb-1.5 block">压缩方法</label>
@@ -174,16 +174,16 @@ function GlobalStrategyConfig() {
               </span>
             </Tooltip>
           </div>
-          <div className="flex items-center px-2.5 py-[5px] bg-muted/30 rounded-lg border border-border/30">
+          <div className="flex items-center px-2.5 py-[5px] bg-muted/30 rounded-lg border border-section-border">
             <Input type="text" value={maxTokens} onChange={e => setMaxTokens(e.target.value)} className="flex-1 bg-transparent text-xs text-muted-foreground border-0 shadow-none h-auto p-0 min-w-0" />
           </div>
         </div>
       </div>
 
       {/* 黑名单 */}
-      <div className="mb-5">
+      <div className="mb-5 border border-section-border rounded-[var(--radius-button)] px-3.5 py-3">
         <div className="flex items-center gap-2 mb-3">
-          <p className="text-sm font-medium text-muted-foreground">黑名单 (Blacklist)</p>
+          <p className="text-sm font-medium text-foreground/70">黑名单 (Blacklist)</p>
           <span className="text-xs text-primary bg-primary/10 px-1.5 py-[1px] rounded-md font-medium">
             {blacklistRules.split('\n').filter(r => r.trim()).length} Rules
           </span>
@@ -202,7 +202,7 @@ function GlobalStrategyConfig() {
             value={blacklistRules}
             onChange={e => setBlacklistRules(e.target.value)}
             rows={4}
-            className="w-full px-2.5 py-2 bg-muted/30 rounded-lg border border-border/30 text-xs text-muted-foreground outline-none resize-none font-mono scrollbar-thin-xs"
+            className="w-full px-2.5 py-2 bg-muted/30 rounded-lg border border-section-border text-xs text-muted-foreground outline-none resize-none font-mono scrollbar-thin-xs"
           />
         </div>
 
@@ -221,7 +221,7 @@ function GlobalStrategyConfig() {
               <span>添加订阅</span>
             </Button>
           </div>
-          <div className="bg-muted/30 border border-border/50 rounded-xl overflow-hidden">
+          <div className="bg-muted/30 border border-section-border rounded-xl overflow-hidden">
             {subscriptions.map((sub, i) => (
               <div key={sub.id} className={`flex items-center justify-between px-3.5 py-2.5`}>
                 <div className="min-w-0 flex-1 mr-3">
@@ -281,14 +281,14 @@ function ProviderDetailConfig({ provider }: { provider: SearchProvider }) {
         <Switch size="sm" checked={enabled} onCheckedChange={setEnabled} />
       </div>
 
-      <div className="mb-5">
-        <p className="text-sm font-medium text-muted-foreground mb-3">认证 (Authentication)</p>
+      <div className="mb-5 border border-section-border rounded-[var(--radius-button)] px-3.5 py-3">
+        <p className="text-sm font-medium text-foreground/70 mb-3">认证 (Authentication)</p>
 
         {provider.id !== 'searxng' && (
           <div className="mb-3">
             <label className="text-sm text-muted-foreground mb-1.5 block">API Key</label>
             <div className="flex items-center gap-1.5">
-              <div className="flex-1 flex items-center px-2.5 py-[5px] bg-muted/30 rounded-lg border border-border/30">
+              <div className="flex-1 flex items-center px-2.5 py-[5px] bg-muted/30 rounded-lg border border-section-border">
                 <Input
                   type={showKey ? 'text' : 'password'}
                   value={apiKey}
@@ -319,7 +319,7 @@ function ProviderDetailConfig({ provider }: { provider: SearchProvider }) {
         {provider.baseUrl !== undefined && (
           <div>
             <label className="text-sm text-muted-foreground mb-1.5 block">Base URL</label>
-            <div className="flex items-center px-2.5 py-[5px] bg-muted/30 rounded-lg border border-border/30">
+            <div className="flex items-center px-2.5 py-[5px] bg-muted/30 rounded-lg border border-section-border">
               <Input type="text" value={baseUrl} onChange={e => setBaseUrl(e.target.value)} className="flex-1 bg-transparent text-xs text-muted-foreground border-0 shadow-none h-auto p-0 min-w-0" />
               <Button variant="ghost" size="icon-xs" className="text-muted-foreground/50 hover:text-foreground ml-1.5">
                 <ExternalLink size={9} />
@@ -330,8 +330,8 @@ function ProviderDetailConfig({ provider }: { provider: SearchProvider }) {
       </div>
 
       {provider.params.length > 0 && (
-        <div>
-          <p className="text-sm font-medium text-muted-foreground mb-3">参数配置</p>
+        <div className="border border-section-border rounded-[var(--radius-button)] px-3.5 py-3">
+          <p className="text-sm font-medium text-foreground/70 mb-3">参数配置</p>
           <div className="space-y-3.5">
             {provider.params.map(param => (
               <div key={param.id}>
@@ -377,7 +377,7 @@ function ProviderDetailConfig({ provider }: { provider: SearchProvider }) {
                         </Tooltip>
                       )}
                     </div>
-                    <div className="flex items-center px-2.5 py-[5px] bg-muted/30 rounded-lg border border-border/30">
+                    <div className="flex items-center px-2.5 py-[5px] bg-muted/30 rounded-lg border border-section-border">
                       <Input type="text" value={String(paramValues[param.id])} onChange={e => updateParam(param.id, e.target.value)} className="flex-1 bg-transparent text-xs text-muted-foreground border-0 shadow-none h-auto p-0 min-w-0" />
                     </div>
                   </div>
@@ -394,7 +394,7 @@ function ProviderDetailConfig({ provider }: { provider: SearchProvider }) {
                         </Tooltip>
                       )}
                     </div>
-                    <div className="flex items-center px-2.5 py-[5px] bg-muted/30 rounded-lg border border-border/30">
+                    <div className="flex items-center px-2.5 py-[5px] bg-muted/30 rounded-lg border border-section-border">
                       <Input type="number" value={String(paramValues[param.id])} onChange={e => updateParam(param.id, Number(e.target.value))} className="flex-1 bg-transparent text-xs text-muted-foreground border-0 shadow-none h-auto p-0 min-w-0" />
                     </div>
                   </div>
@@ -422,7 +422,7 @@ export function WebSearchPage() {
   return (
     <div className="flex h-full min-h-0">
       {/* Middle Column: Service List */}
-      <div className="w-[160px] flex-shrink-0 flex flex-col border-r border-border/30 min-h-0">
+      <div className="w-[160px] flex-shrink-0 flex flex-col border-r border-section-border min-h-0">
         <div className="px-3.5 pt-4 pb-2 flex-shrink-0">
           <p className="text-xs font-medium text-muted-foreground/60">网络搜索</p>
         </div>

@@ -82,7 +82,7 @@ function MiniSelect({ items, selectedId, onSelect }: {
         <Button
           variant="outline"
           size="sm"
-          className={`w-full justify-between px-2.5 py-[6px] text-xs bg-transparent hover:bg-muted/20 transition-colors ${open ? 'border-cherry-primary/40 ring-1 ring-cherry-primary/15' : 'border-border/40'}`}
+          className={`w-full justify-between px-2.5 py-[6px] text-xs bg-transparent hover:bg-muted/20 transition-colors ${open ? 'border-cherry-primary/40 ring-1 ring-cherry-primary/15' : 'border-section-border'}`}
         >
           <span className="text-foreground truncate">{selected?.name || '选择...'}</span>
           <ChevronDown size={10} className={`text-muted-foreground/40 transition-transform flex-shrink-0 ml-2 ${open ? 'rotate-180' : ''}`} />
@@ -203,7 +203,7 @@ export function RAGSettings() {
           </div>
         </div>
 
-        <div className="border-t border-border/15" />
+        <div className="border-t border-section-border" />
 
         {/* ========== Section 2: 分块规则 ========== */}
         <div className="space-y-2.5">
@@ -250,7 +250,7 @@ export function RAGSettings() {
           </div>
         </div>
 
-        <div className="border-t border-border/15" />
+        <div className="border-t border-section-border" />
 
         {/* ========== Section 3: Embedding ========== */}
         <div className="space-y-2.5">
@@ -270,7 +270,7 @@ export function RAGSettings() {
                   variant="ghost"
                   size="icon-xs"
                   onClick={() => { const m = embeddingModels.find(m => m.id === embeddingModel); if (m) setEmbeddingDim(String(m.dim)); }}
-                  className="w-7 h-7 rounded-md border border-border/40 text-muted-foreground/40 hover:text-foreground hover:bg-accent transition-colors flex-shrink-0"
+                  className="w-7 h-7 rounded-md border border-section-border text-muted-foreground/40 hover:text-foreground hover:bg-accent transition-colors flex-shrink-0"
                 >
                   <RefreshCw size={10} />
                 </Button>
@@ -279,7 +279,7 @@ export function RAGSettings() {
           </div>
         </div>
 
-        <div className="border-t border-border/15" />
+        <div className="border-t border-section-border" />
 
         {/* ========== Section 4: 检索设置 ========== */}
         <div className="space-y-2.5">
@@ -317,7 +317,7 @@ export function RAGSettings() {
         </div>
 
         {/* ========== Footer ========== */}
-        <div className="flex items-center justify-end gap-2 pt-3 border-t border-border/15">
+        <div className="flex items-center justify-end gap-2 pt-3 border-t border-section-border">
           <Button
             variant="ghost"
             size="xs"

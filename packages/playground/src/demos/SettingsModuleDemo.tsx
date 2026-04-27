@@ -495,7 +495,7 @@ function HomeContent() {
             { icon: Database, label: "数据设置", desc: "备份与存储" },
             { icon: Command, label: "快捷键", desc: "自定义快捷键" },
           ].map((item, i) => (
-            <div key={i} className="flex items-center gap-2.5 px-3 py-2.5 rounded-[12px] border border-border/30 hover:bg-accent/30 transition-colors cursor-pointer">
+            <div key={i} className="flex items-center gap-2.5 px-3 py-2.5 rounded-[12px] border border-section-border hover:bg-accent/30 transition-colors cursor-pointer">
               <item.icon size={14} className="text-muted-foreground flex-shrink-0" />
               <div className="min-w-0">
                 <p className="text-xs font-medium tracking-tight">{item.label}</p>

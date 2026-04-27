@@ -16,7 +16,7 @@ function ConfigSection({ title, hint, actions, disabled, className, children, re
       ref={ref}
       data-slot="config-section"
       className={cn(
-        "bg-muted/50 border border-border rounded-[var(--radius-button)] px-3.5 py-3 space-y-2 tracking-[-0.14px]",
+        "border border-section-border rounded-[var(--radius-button)] px-3.5 py-3 space-y-2 tracking-[-0.14px]",
         disabled && "opacity-50 pointer-events-none",
         className
       )}
@@ -24,7 +24,7 @@ function ConfigSection({ title, hint, actions, disabled, className, children, re
     >
       <div className="flex items-start justify-between">
         <div>
-          <p className="text-xs text-muted-foreground font-medium">{title}</p>
+          <p className="text-xs text-foreground/70 font-medium">{title}</p>
           {hint && (
             <p className="text-xs text-muted-foreground mt-0.5">{hint}</p>
           )}

@@ -9,7 +9,7 @@ import { Button, Input, Switch, Slider, InlineSelect, FormRow } from '@cherry-st
 function Section({ title, defaultOpen = true, children }: { title: string; defaultOpen?: boolean; children: React.ReactNode }) {
   const [open, setOpen] = useState(defaultOpen);
   return (
-    <div className="border-b border-border/15 last:border-b-0">
+    <div className="border-b border-section-border last:border-b-0">
       <Button
         variant="ghost"
         size="sm"
@@ -89,7 +89,7 @@ export function ChatSettingsPanel({ onClose, minimalInput, onMinimalInputChange 
       className="absolute top-2 right-2 bottom-2 w-[340px] z-[var(--z-overlay)] slide-panel"
     >
       {/* Header */}
-      <div className="h-[38px] flex items-center justify-between px-3 flex-shrink-0 border-b border-border/30">
+      <div className="h-[38px] flex items-center justify-between px-3 flex-shrink-0 border-b border-section-border">
         <span className="text-xs text-foreground flex items-center gap-1.5">
           <SlidersHorizontal size={11} className="text-muted-foreground/60" />
           参数设置

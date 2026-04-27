@@ -37,7 +37,7 @@ function ModelPickerButton({ value, onChange }: { value: string; onChange: (v: s
         <Button
           variant="outline"
           size="xs"
-          className="min-w-[200px] justify-between gap-2 px-2.5 py-[5px] h-auto text-xs border-border/30 hover:border-border/60"
+          className="min-w-[200px] justify-between gap-2 px-2.5 py-[5px] h-auto text-xs border-section-border hover:border-section-border"
         >
           <span className="truncate text-foreground">{selected?.name || value || '选择模型'}</span>
           <ChevronDown size={9} className={`text-muted-foreground/40 transition-transform flex-shrink-0 ${open ? 'rotate-180' : ''}`} />
@@ -76,7 +76,7 @@ function DefaultAssistantPanel({ onClose }: { onClose: () => void }) {
 
   return (
     <div className="flex flex-col h-full">
-      <div className="flex items-center justify-between px-5 py-3.5 border-b border-border/30 flex-shrink-0">
+      <div className="flex items-center justify-between px-5 py-3.5 border-b border-section-border flex-shrink-0">
         <Typography variant="subtitle">默认助手</Typography>
         <Button variant="ghost" size="icon-xs" onClick={onClose} className="text-muted-foreground/40 hover:text-foreground"><X size={14} /></Button>
       </div>
@@ -84,14 +84,14 @@ function DefaultAssistantPanel({ onClose }: { onClose: () => void }) {
         {/* Name */}
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-accent-amber/15 flex items-center justify-center text-lg flex-shrink-0">⭐</div>
-          <Input value={name} onChange={e => setName(e.target.value)} className="flex-1 bg-muted/30 border border-border/40 px-3 py-2 text-sm rounded-lg" />
+          <Input value={name} onChange={e => setName(e.target.value)} className="flex-1 bg-muted/30 border border-section-border px-3 py-2 text-sm rounded-lg" />
         </div>
 
         {/* Prompt */}
         <div>
           <p className="text-sm text-foreground font-medium mb-2">提示词</p>
           <Textarea value={prompt} onChange={e => setPrompt(e.target.value)} placeholder="助手提示词"
-            className="w-full bg-muted/30 border border-border/40 rounded-xl px-3.5 py-3 text-sm outline-none focus:border-border/50 resize-none leading-relaxed placeholder:text-muted-foreground/40"
+            className="w-full bg-muted/30 border border-section-border rounded-xl px-3.5 py-3 text-sm outline-none focus:border-section-border resize-none leading-relaxed placeholder:text-muted-foreground/40"
             style={{ minHeight: '120px' }} />
         </div>
 
@@ -111,7 +111,7 @@ function DefaultAssistantPanel({ onClose }: { onClose: () => void }) {
               {tempEnabled && (
                 <div className="flex items-center gap-3">
                   <div className="flex-1"><Slider value={[temperature]} onValueChange={v => setTemperature(v[0])} min={0} max={2} step={0.01} /></div>
-                  <Input value={temperature.toFixed(2)} onChange={e => setTemperature(parseFloat(e.target.value) || 0)} className="w-[60px] text-center text-xs bg-muted/30 border border-border/40 rounded-md px-2 py-1" />
+                  <Input value={temperature.toFixed(2)} onChange={e => setTemperature(parseFloat(e.target.value) || 0)} className="w-[60px] text-center text-xs bg-muted/30 border border-section-border rounded-md px-2 py-1" />
                 </div>
               )}
             </div>
@@ -124,7 +124,7 @@ function DefaultAssistantPanel({ onClose }: { onClose: () => void }) {
               {topPEnabled && (
                 <div className="flex items-center gap-3">
                   <div className="flex-1"><Slider value={[topP]} onValueChange={v => setTopP(v[0])} min={0} max={1} step={0.01} /></div>
-                  <Input value={topP.toFixed(2)} onChange={e => setTopP(parseFloat(e.target.value) || 0)} className="w-[60px] text-center text-xs bg-muted/30 border border-border/40 rounded-md px-2 py-1" />
+                  <Input value={topP.toFixed(2)} onChange={e => setTopP(parseFloat(e.target.value) || 0)} className="w-[60px] text-center text-xs bg-muted/30 border border-section-border rounded-md px-2 py-1" />
                 </div>
               )}
             </div>
@@ -133,7 +133,7 @@ function DefaultAssistantPanel({ onClose }: { onClose: () => void }) {
               <div className="flex items-center gap-1 mb-2"><span className="text-sm text-foreground">上下文数</span><HelpCircle size={10} className="text-muted-foreground/40" /></div>
               <div className="flex items-center gap-3">
                 <div className="flex-1"><Slider value={[contextCount]} onValueChange={v => setContextCount(v[0])} min={0} max={30} step={1} /></div>
-                <Input value={String(contextCount)} onChange={e => setContextCount(parseInt(e.target.value) || 0)} className="w-[60px] text-center text-xs bg-muted/30 border border-border/40 rounded-md px-2 py-1" />
+                <Input value={String(contextCount)} onChange={e => setContextCount(parseInt(e.target.value) || 0)} className="w-[60px] text-center text-xs bg-muted/30 border border-section-border rounded-md px-2 py-1" />
               </div>
             </div>
             {/* Max Tokens */}
@@ -143,13 +143,13 @@ function DefaultAssistantPanel({ onClose }: { onClose: () => void }) {
                 <Switch size="sm" checked={maxTokensEnabled} onCheckedChange={setMaxTokensEnabled} />
               </div>
               {maxTokensEnabled && (
-                <Input value={String(maxTokens)} onChange={e => setMaxTokens(parseInt(e.target.value) || 0)} className="w-full bg-muted/30 border border-border/40 rounded-lg px-3 py-2 text-sm" />
+                <Input value={String(maxTokens)} onChange={e => setMaxTokens(parseInt(e.target.value) || 0)} className="w-full bg-muted/30 border border-section-border rounded-lg px-3 py-2 text-sm" />
               )}
             </div>
             {/* Tool Call Mode */}
             <div className="flex items-center justify-between">
               <span className="text-sm text-foreground">工具调用方式</span>
-              <Button variant="outline" size="xs" className="text-xs px-2.5 py-[3px] gap-1 border-border/30">
+              <Button variant="outline" size="xs" className="text-xs px-2.5 py-[3px] gap-1 border-section-border">
                 {toolCallMode}<ChevronDown size={8} className="text-muted-foreground/40" />
               </Button>
             </div>
@@ -172,7 +172,7 @@ function FastModelPanel({ onClose }: { onClose: () => void }) {
 
   return (
     <div className="flex flex-col h-full">
-      <div className="flex items-center justify-between px-5 py-3.5 border-b border-border/30 flex-shrink-0">
+      <div className="flex items-center justify-between px-5 py-3.5 border-b border-section-border flex-shrink-0">
         <Typography variant="subtitle">快速模型设置</Typography>
         <Button variant="ghost" size="icon-xs" onClick={onClose} className="text-muted-foreground/40 hover:text-foreground"><X size={14} /></Button>
       </div>
@@ -189,12 +189,12 @@ function FastModelPanel({ onClose }: { onClose: () => void }) {
               <HelpCircle size={10} className="text-muted-foreground/40" />
             </div>
             <Textarea value={namingPrompt} onChange={e => setNamingPrompt(e.target.value)}
-              className="w-full bg-muted/30 border border-border/40 rounded-xl px-3.5 py-3 text-sm outline-none focus:border-border/50 resize-none leading-relaxed"
+              className="w-full bg-muted/30 border border-section-border rounded-xl px-3.5 py-3 text-sm outline-none focus:border-section-border resize-none leading-relaxed"
               style={{ minHeight: '120px' }} />
           </div>
         </div>
       </div>
-      <div className="flex items-center justify-end gap-2 px-5 py-3.5 border-t border-border/30 flex-shrink-0">
+      <div className="flex items-center justify-end gap-2 px-5 py-3.5 border-t border-section-border flex-shrink-0">
         <Button variant="ghost" size="sm" onClick={onClose} className="text-muted-foreground">取消</Button>
         <Button variant="default" size="sm" onClick={onClose}>确定</Button>
       </div>
@@ -225,21 +225,21 @@ function TranslateModelPanel({ onClose }: { onClose: () => void }) {
 
   return (
     <div className="flex flex-col h-full">
-      <div className="flex items-center justify-between px-5 py-3.5 border-b border-border/30 flex-shrink-0">
+      <div className="flex items-center justify-between px-5 py-3.5 border-b border-section-border flex-shrink-0">
         <Typography variant="subtitle">翻译设置</Typography>
         <Button variant="ghost" size="icon-xs" onClick={onClose} className="text-muted-foreground/40 hover:text-foreground"><X size={14} /></Button>
       </div>
       <div className="flex-1 overflow-y-auto px-5 py-4 space-y-5 scrollbar-thin">
         {/* Translate Prompt */}
-        <div className="bg-muted/20 border border-border/30 rounded-xl p-4">
+        <div className="bg-muted/20 border border-section-border rounded-xl p-4">
           <p className="text-sm text-muted-foreground/60 mb-2">翻译提示词</p>
           <Textarea value={translatePrompt} onChange={e => setTranslatePrompt(e.target.value)}
-            className="w-full bg-background border border-border/30 rounded-xl px-3.5 py-3 text-sm outline-none focus:border-border/50 resize-none leading-relaxed"
+            className="w-full bg-background border border-section-border rounded-xl px-3.5 py-3 text-sm outline-none focus:border-section-border resize-none leading-relaxed"
             style={{ minHeight: '160px' }} />
         </div>
 
         {/* Custom Languages */}
-        <div className="bg-muted/20 border border-border/30 rounded-xl p-4">
+        <div className="bg-muted/20 border border-section-border rounded-xl p-4">
           <div className="flex items-center justify-between mb-3">
             <p className="text-sm text-foreground font-medium">自定义语言</p>
             <Button variant="default" size="xs" onClick={() => setShowAddLang(true)} className="gap-1 px-2.5 text-xs">
@@ -247,7 +247,7 @@ function TranslateModelPanel({ onClose }: { onClose: () => void }) {
             </Button>
           </div>
           {/* Table header */}
-          <div className="grid grid-cols-[60px_1fr_1fr_60px] gap-2 px-2 py-1.5 text-xs text-muted-foreground/60 font-medium border-b border-border/30">
+          <div className="grid grid-cols-[60px_1fr_1fr_60px] gap-2 px-2 py-1.5 text-xs text-muted-foreground/60 font-medium border-b border-section-border">
             <span>Emoji</span>
             <span>语言名称</span>
             <span>语言代码</span>
@@ -273,22 +273,22 @@ function TranslateModelPanel({ onClose }: { onClose: () => void }) {
 
           {/* Add language dialog (inline) */}
           {showAddLang && (
-            <div className="mt-3 border border-border/40 rounded-xl p-4 bg-background space-y-3">
+            <div className="mt-3 border border-section-border rounded-xl p-4 bg-background space-y-3">
               <p className="text-sm text-foreground font-medium">添加自定义语言</p>
               <div className="flex items-center gap-3">
                 <span className="text-xs text-muted-foreground/60 w-[60px]">Emoji</span>
                 <Input value={newLang.emoji} onChange={e => setNewLang(prev => ({ ...prev, emoji: e.target.value }))}
-                  className="w-[60px] bg-muted/30 border border-border/40 rounded-md px-2 py-1.5 text-center text-base" />
+                  className="w-[60px] bg-muted/30 border border-section-border rounded-md px-2 py-1.5 text-center text-base" />
               </div>
               <div className="flex items-center gap-3">
                 <span className="text-xs text-muted-foreground/60 w-[60px]">语言名称</span>
                 <Input value={newLang.name} onChange={e => setNewLang(prev => ({ ...prev, name: e.target.value }))}
-                  placeholder="中文" className="flex-1 bg-muted/30 border border-border/40 rounded-md px-3 py-1.5 text-sm" />
+                  placeholder="中文" className="flex-1 bg-muted/30 border border-section-border rounded-md px-3 py-1.5 text-sm" />
               </div>
               <div className="flex items-center gap-3">
                 <span className="text-xs text-muted-foreground/60 w-[60px]">语言代码</span>
                 <Input value={newLang.code} onChange={e => setNewLang(prev => ({ ...prev, code: e.target.value }))}
-                  placeholder="zh-cn" className="flex-1 bg-muted/30 border border-border/40 rounded-md px-3 py-1.5 text-sm" />
+                  placeholder="zh-cn" className="flex-1 bg-muted/30 border border-section-border rounded-md px-3 py-1.5 text-sm" />
               </div>
               <div className="flex justify-end gap-2">
                 <Button variant="ghost" size="sm" onClick={() => setShowAddLang(false)} className="text-muted-foreground">取消</Button>
@@ -320,7 +320,7 @@ export function DefaultModelSettingsPage() {
   return (
     <div className="flex-1 flex flex-col min-h-0 relative">
       {/* Header */}
-      <div className="flex items-center gap-3 px-5 py-3.5 flex-shrink-0 border-b border-border/30">
+      <div className="flex items-center gap-3 px-5 py-3.5 flex-shrink-0 border-b border-section-border">
         <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-accent-amber/20 to-accent-orange/20 flex items-center justify-center flex-shrink-0">
           <Star size={14} className="text-warning" />
         </div>
@@ -336,7 +336,7 @@ export function DefaultModelSettingsPage() {
         {CONFIG_ENTRIES.map(entry => (
           <div
             key={entry.key}
-            className="flex items-center justify-between gap-4 px-4 py-3 bg-muted/30 border border-border/50 rounded-xl hover:border-border/60 transition-colors cursor-pointer"
+            className="flex items-center justify-between gap-4 px-4 py-3 bg-muted/30 border border-section-border rounded-xl hover:border-section-border transition-colors cursor-pointer"
             onClick={() => setActivePanel(entry.key)}
           >
             <div className="flex items-center gap-3 min-w-0">
@@ -373,7 +373,7 @@ export function DefaultModelSettingsPage() {
               animate={{ x: 0, opacity: 1 }}
               exit={{ x: '100%', opacity: 0.8 }}
               transition={{ type: 'spring', damping: 28, stiffness: 320 }}
-              className="absolute top-2 right-2 bottom-2 w-[55%] z-20 bg-background border border-border/30 rounded-2xl shadow-2xl shadow-black/10 flex flex-col overflow-hidden"
+              className="absolute top-2 right-2 bottom-2 w-[55%] z-20 bg-background border border-section-border rounded-2xl shadow-2xl shadow-black/10 flex flex-col overflow-hidden"
             >
               {activePanel === 'default' && <DefaultAssistantPanel onClose={() => setActivePanel(null)} />}
               {activePanel === 'fast' && <FastModelPanel onClose={() => setActivePanel(null)} />}

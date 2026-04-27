@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Tooltip } from '@/app/components/Tooltip';
-import { FormRow, SectionHeader, SectionCard, Tabs, TabsList, TabsTrigger } from './shared';
+import { FormRow, SectionHeader, SectionCard, InlineSelect, Tabs, TabsList, TabsTrigger } from './shared';
 import { Button, Input, Popover, PopoverTrigger, PopoverContent, Typography, Switch } from '@cherry-studio/ui';
 import {
   Zap, Scissors, ShieldAlert, Languages, Search, FileText,
@@ -181,7 +181,7 @@ function EditFormPanel({ open, onClose, item, onSave }: {
       className="settings-panel w-[280px] z-[var(--z-dropdown)]"
     >
       {/* Header */}
-      <div className="flex items-center justify-between px-5 py-3.5 border-b border-border/30 flex-shrink-0">
+      <div className="flex items-center justify-between px-5 py-3.5 border-b border-section-border flex-shrink-0">
         <div className="flex items-center gap-2">
           {isAdd ? <Plus size={14} className="text-cherry-primary" /> : <Pencil size={14} className="text-muted-foreground/60" />}
           <Typography variant="subtitle">
@@ -203,7 +203,7 @@ function EditFormPanel({ open, onClose, item, onSave }: {
             <Input
               value={name}
               onChange={e => setName(e.target.value)}
-              className="flex-1 bg-muted/50 border border-border/50 rounded-xl px-3 py-[8px] text-xs text-foreground focus:border-cherry-primary/30"
+              className="flex-1 bg-muted/50 border border-section-border rounded-xl px-3 py-[8px] text-xs text-foreground focus:border-cherry-primary/30"
               placeholder="功能名称"
               autoFocus
               onKeyDown={e => { if (e.key === 'Enter' && canSave) handleSave(); if (e.key === 'Escape') onClose(); }}
@@ -219,14 +219,14 @@ function EditFormPanel({ open, onClose, item, onSave }: {
             contentEditable
             onInput={handlePromptInput}
             data-placeholder={'可选，例如：请将以下文本翻译为中文：{{text}}'}
-            className="w-full bg-muted/50 border border-border/50 rounded-xl px-3 py-[8px] text-xs text-muted-foreground/60 outline-none focus:border-cherry-primary/30 transition-colors min-h-[120px] whitespace-pre-wrap break-words empty:before:content-[attr(data-placeholder)] empty:before:text-muted-foreground/50"
+            className="w-full bg-muted/50 border border-section-border rounded-xl px-3 py-[8px] text-xs text-muted-foreground/60 outline-none focus:border-cherry-primary/30 transition-colors min-h-[120px] whitespace-pre-wrap break-words empty:before:content-[attr(data-placeholder)] empty:before:text-muted-foreground/50"
           />
           <p className="text-xs text-muted-foreground/50 mt-1.5">{'使用 {{text}} 代表用户选中的文本'}</p>
         </div>
       </div>
 
       {/* Footer */}
-      <div className="flex items-center justify-end gap-2 px-5 py-3.5 border-t border-border/30 flex-shrink-0">
+      <div className="flex items-center justify-end gap-2 px-5 py-3.5 border-t border-section-border flex-shrink-0">
         <Button variant="ghost" size="xs" onClick={onClose} className="text-muted-foreground/60 hover:text-foreground">
           取消
         </Button>
@@ -268,7 +268,7 @@ function TriggerPanel({ disabled, enabledItems, compact, setCompact }: {
       {/* Toolbar preview */}
       <SectionCard className="!px-4 !py-3">
         <SectionHeader title="工具栏预览" />
-        <div className="bg-muted/30 border border-border/50 rounded-xl overflow-hidden px-2.5 py-2 mb-2">
+        <div className="bg-muted/30 border border-section-border rounded-xl overflow-hidden px-2.5 py-2 mb-2">
           {enabledItems.length > 0 ? (
             <div className="flex items-center gap-0.5">
               {enabledItems.map((item, i) => {
@@ -313,12 +313,10 @@ function TriggerPanel({ disabled, enabledItems, compact, setCompact }: {
         <div className="px-1">
           <SectionHeader title="工具栏行为" />
           <FormRow label="取词方式" desc="决定划词后如何唤起工具栏。">
-            <Tabs value={triggerMode} onValueChange={setTriggerMode}>
-              <TabsList>
-                <TabsTrigger value="instant">划词即现</TabsTrigger>
-                <TabsTrigger value="hotkey">按住快捷键</TabsTrigger>
-              </TabsList>
-            </Tabs>
+            <InlineSelect value={triggerMode} onChange={setTriggerMode} options={[
+              { value: 'instant', label: '划词即现' },
+              { value: 'hotkey', label: '按住快捷键' },
+            ]} />
           </FormRow>
           <FormRow label="紧凑模式" desc="仅显示图标，不显示文字标签，节省屏幕空间。">
             <Switch size="sm" checked={compact} onCheckedChange={setCompact} />
@@ -464,7 +462,7 @@ function MenuPanel({ disabled, showFormPanel, setShowFormPanel, editingItem, set
         </div>
 
         {/* Hint */}
-        <div className="flex items-start gap-1.5 px-3 py-2.5 border-t border-border/30">
+        <div className="flex items-start gap-1.5 px-3 py-2.5 border-t border-section-border">
           <CircleHelp size={9} className="text-muted-foreground/40 mt-[1px] flex-shrink-0" />
           <p className="text-xs text-muted-foreground/50 leading-relaxed">
             功能按顺序显示在划词工具栏中。Hover 行可编辑或删除。
@@ -521,7 +519,7 @@ function RulesPanel({ disabled }: { disabled: boolean }) {
         {filterMode !== 'all' && (
           <div className="px-1 pb-3">
             <div className="flex items-center gap-2 mb-2 mt-1">
-              <div className="flex-1 flex items-center px-3 py-[6px] bg-muted/30 rounded-lg border border-dashed border-border/50">
+              <div className="flex-1 flex items-center px-3 py-[6px] bg-muted/30 rounded-lg border border-dashed border-section-border">
                 <Input
                   value={inputVal}
                   onChange={e => setInputVal(e.target.value)}
@@ -540,7 +538,7 @@ function RulesPanel({ disabled }: { disabled: boolean }) {
             {blacklist.length > 0 ? (
               <div className="space-y-1">
                 {blacklist.map(app => (
-                  <div key={app} className="flex items-center justify-between px-3 py-[6px] bg-muted/30 rounded-lg border border-border/50">
+                  <div key={app} className="flex items-center justify-between px-3 py-[6px] bg-muted/30 rounded-lg border border-section-border">
                     <span className="text-xs text-muted-foreground">{app}</span>
                     <Button variant="ghost" size="icon-xs" onClick={() => handleRemove(app)} className="text-muted-foreground/50 hover:text-destructive/60">
                       <X size={9} />
@@ -549,7 +547,7 @@ function RulesPanel({ disabled }: { disabled: boolean }) {
                 ))}
               </div>
             ) : (
-              <div className="py-4 text-center border border-dashed border-border/50 rounded-lg">
+              <div className="py-4 text-center border border-dashed border-section-border rounded-lg">
                 <p className="text-xs text-muted-foreground/40">{listLabel}为空</p>
                 <p className="text-xs text-muted-foreground/40 mt-0.5">输入应用名称后按 Enter 添加</p>
               </div>
@@ -566,7 +564,7 @@ function RulesPanel({ disabled }: { disabled: boolean }) {
               <Input
                 value={minLen}
                 onChange={e => setMinLen(e.target.value)}
-                className="w-full px-2.5 py-[5px] bg-muted/30 rounded-lg border border-border/50 text-xs text-muted-foreground text-center min-w-0 font-mono h-auto"
+                className="w-full px-2.5 py-[5px] bg-muted/30 rounded-lg border border-section-border text-xs text-muted-foreground text-center min-w-0 font-mono h-auto"
               />
             </div>
           </FormRow>
@@ -616,7 +614,7 @@ export function SelectionAssistantPage() {
   return (
     <div className="relative flex h-full min-h-0">
       {/* Left nav */}
-      <div className={`w-[160px] flex-shrink-0 flex flex-col border-r border-border/30 min-h-0 transition-opacity duration-200 ${showFormPanel ? 'opacity-40 pointer-events-none' : ''}`}>
+      <div className={`w-[160px] flex-shrink-0 flex flex-col border-r border-section-border min-h-0 transition-opacity duration-200 ${showFormPanel ? 'opacity-40 pointer-events-none' : ''}`}>
         <div className="px-3.5 pt-4 pb-2 flex items-center justify-between flex-shrink-0">
           <p className="text-xs text-muted-foreground/60 font-medium">划词助手</p>
           <Switch size="sm" checked={masterEnabled} onCheckedChange={setMasterEnabled} />

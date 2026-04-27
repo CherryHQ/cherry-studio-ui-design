@@ -240,13 +240,13 @@ function WebDAVPanel() {
       />
 
       {/* Connection Status */}
-      <div className="flex items-center gap-2.5 px-3.5 py-2.5 bg-cherry-active-bg border border-cherry-ring rounded-xl">
-        <CheckCircle2 size={13} className="text-cherry-primary flex-shrink-0" />
+      <div className="flex items-center gap-2.5 px-3.5 py-2.5 bg-success/[0.08] border border-success/20 rounded-xl">
+        <CheckCircle2 size={13} className="text-success flex-shrink-0" />
         <div className="flex-1 min-w-0">
-          <p className="text-xs text-cherry-primary-dark font-medium">服务已连接</p>
-          <p className="text-xs text-cherry-text-muted mt-0.5">上次成功备份：今天 14:30 · 大小 4.2MB</p>
+          <p className="text-xs text-success font-medium">服务已连接</p>
+          <p className="text-xs text-success/60 mt-0.5">上次成功备份：今天 14:30 · 大小 4.2MB</p>
         </div>
-        <Button variant="outline" size="xs" className="border-cherry-ring text-cherry-text-muted hover:bg-cherry-active-bg">
+        <Button variant="outline" size="xs" className="border-success/30 text-success/80 hover:bg-success/10">
           查看日志
         </Button>
       </div>
@@ -263,7 +263,7 @@ function WebDAVPanel() {
           </div>
           <div>
             <label className="text-sm text-muted-foreground mb-1 block">密码 / 应用令牌</label>
-            <div className="flex items-center px-2.5 py-[5px] bg-muted/30 rounded-lg border border-border/30">
+            <div className="flex items-center px-2.5 py-[5px] bg-muted/30 rounded-lg border border-section-border">
               <Input
                 type={showPwd ? 'text' : 'password'}
                 value={pwd}
@@ -336,7 +336,7 @@ function JianguoyunPanel() {
           </div>
           <div>
             <label className="text-sm text-muted-foreground mb-1 block">应用密码</label>
-            <div className="flex items-center px-2.5 py-[5px] bg-muted/30 rounded-lg border border-border/30">
+            <div className="flex items-center px-2.5 py-[5px] bg-muted/30 rounded-lg border border-section-border">
               <Input
                 type={showPwd ? 'text' : 'password'}
                 value={appPwd}
@@ -395,7 +395,7 @@ function S3Panel() {
         desc={'与 AWS S3 API 兼容的对象存储服务。例如 AWS S3, Cloudflare R2, 阿里云 OSS, 腾讯云 COS 等。'}
       />
 
-      <div className="bg-muted/30 border border-border/50 rounded-xl px-3.5 py-3 space-y-0">
+      <div className="border border-section-border rounded-xl px-3.5 py-3 space-y-0">
         <FormRow label="API 地址">
           <div className="w-[240px]">
             <TextInput value={apiUrl} onChange={setApiUrl} placeholder="https://s3.example.com" mono />
@@ -418,7 +418,7 @@ function S3Panel() {
         </FormRow>
         <FormRow label="Secret Access Key">
           <div className="w-[240px]">
-            <div className="flex items-center px-2.5 py-[5px] bg-muted/30 rounded-lg border border-border/30">
+            <div className="flex items-center px-2.5 py-[5px] bg-muted/30 rounded-lg border border-section-border">
               <Input
                 type={showSecret ? 'text' : 'password'}
                 value={secretKey}
@@ -508,10 +508,10 @@ function ImportPanel() {
         </div>
       </ConfigSection>
 
-      <div className="bg-muted/30 border border-border/50 rounded-xl px-3.5 py-3">
+      <div className="bg-warning/[0.06] border border-warning/20 rounded-xl px-3.5 py-3">
         <div className="flex items-start gap-2">
-          <AlertTriangle size={11} className="text-muted-foreground/40 flex-shrink-0 mt-0.5" />
-          <p className="text-xs text-muted-foreground/40 leading-relaxed">
+          <AlertTriangle size={11} className="text-warning flex-shrink-0 mt-0.5" />
+          <p className="text-xs text-warning/80 leading-relaxed">
             导入数据会与当前数据合并，不会覆盖已有内容。建议在导入前先备份当前数据。
           </p>
         </div>
@@ -628,9 +628,9 @@ function NotionPanel() {
       />
 
       {/* Connection Status */}
-      <div className="flex items-center gap-2.5 px-3.5 py-2.5 bg-primary/[0.06] border border-primary/15 rounded-xl">
-        <CheckCircle2 size={13} className="text-primary flex-shrink-0" />
-        <p className="text-xs text-primary flex-1 font-medium">Notion 已连接</p>
+      <div className="flex items-center gap-2.5 px-3.5 py-2.5 bg-success/[0.08] border border-success/20 rounded-xl">
+        <CheckCircle2 size={13} className="text-success flex-shrink-0" />
+        <p className="text-xs text-success flex-1 font-medium">Notion 已连接</p>
       </div>
 
       <ConfigSection title="授权配置">
@@ -686,12 +686,12 @@ function ThirdPartyPanel({ icon, name, desc, fields }: {
       <PanelHeader icon={icon} title={`${name} 配置`} desc={desc} />
 
       {connected ? (
-        <div className="flex items-center gap-2.5 px-3.5 py-2.5 bg-primary/[0.06] border border-primary/15 rounded-xl">
-          <CheckCircle2 size={13} className="text-primary flex-shrink-0" />
-          <p className="text-xs text-primary flex-1 font-medium">{name} 已连接</p>
+        <div className="flex items-center gap-2.5 px-3.5 py-2.5 bg-success/[0.08] border border-success/20 rounded-xl">
+          <CheckCircle2 size={13} className="text-success flex-shrink-0" />
+          <p className="text-xs text-success flex-1 font-medium">{name} 已连接</p>
         </div>
       ) : (
-        <div className="flex items-center gap-2.5 px-3.5 py-2.5 bg-muted/30 border border-border/50 rounded-xl">
+        <div className="flex items-center gap-2.5 px-3.5 py-2.5 bg-transparent border border-section-border rounded-xl">
           <div className="w-2 h-2 rounded-full bg-foreground/15 flex-shrink-0" />
           <p className="text-xs text-muted-foreground/60 flex-1">未连接</p>
         </div>
@@ -779,7 +779,7 @@ export function DataSettingsPage() {
   return (
     <div className="flex h-full min-h-0">
       {/* Middle Column: Navigation */}
-      <div className="w-[160px] flex-shrink-0 flex flex-col border-r border-border/30 min-h-0">
+      <div className="w-[160px] flex-shrink-0 flex flex-col border-r border-section-border min-h-0">
         <div className="px-3.5 pt-4 pb-2 flex-shrink-0">
           <p className="text-xs text-muted-foreground/60 font-medium">数据与存储</p>
         </div>

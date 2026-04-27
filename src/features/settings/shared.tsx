@@ -23,7 +23,7 @@ export {
 export function SectionCard({ children, className }: { children: React.ReactNode; className?: string }) {
   return (
     <div className={cn(
-      'bg-muted/50 border border-border rounded-[var(--radius-button)] px-3.5 py-1 tracking-[-0.14px]',
+      'border border-section-border rounded-[var(--radius-button)] px-3.5 py-1 tracking-[-0.14px]',
       className
     )}>
       {children}

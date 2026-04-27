@@ -279,7 +279,7 @@ function ServerListPanel({ servers, onSelectServer }: {
               onClick={() => setActiveFilter(f.id)}
               className={`px-2 py-[3px] rounded-md text-xs ${
                 activeFilter === f.id
-                  ? (f.id === 'enabled' ? 'bg-primary/10 text-primary border border-primary/15 font-medium' : 'bg-muted/50 text-foreground border border-border/50 font-medium')
+                  ? (f.id === 'enabled' ? 'bg-primary/10 text-primary border border-primary/15 font-medium' : 'bg-muted/50 text-foreground border border-section-border font-medium')
                   : 'text-muted-foreground/40 hover:text-foreground hover:bg-accent/50 border border-transparent'
               }`}
             >
@@ -427,7 +427,7 @@ function BuiltinServersPanel() {
               onClick={() => setFilterMode(f.id)}
               className={`px-2 py-[3px] rounded-md text-xs ${
                 filterMode === f.id
-                  ? 'bg-muted/50 text-foreground border border-border/50 font-medium'
+                  ? 'bg-muted/50 text-foreground border border-section-border font-medium'
                   : 'text-muted-foreground/40 hover:text-foreground hover:bg-accent/50 border border-transparent'
               }`}
             >
@@ -577,7 +577,7 @@ function ProviderPanel({ provider }: { provider: Provider }) {
           <Typography variant="subtitle">{provider.name}</Typography>
           <ExternalLink size={10} className="text-muted-foreground/40" />
         </div>
-        <Button variant="outline" size="xs" className="px-2.5 border-border/30 text-xs text-muted-foreground/60 hover:text-foreground hover:bg-accent">
+        <Button variant="outline" size="xs" className="px-2.5 border-section-border text-xs text-muted-foreground/60 hover:text-foreground hover:bg-accent">
           <span>{'\u83b7\u53d6\u670d\u52a1\u5668'}</span>
         </Button>
       </div>
@@ -585,7 +585,7 @@ function ProviderPanel({ provider }: { provider: Provider }) {
         <div className="max-w-[560px]">
           <p className="text-sm text-foreground mb-2 font-semibold">API {'\u5bc6\u94a5'}</p>
           <div className="flex items-center gap-2">
-            <div className="flex-1 flex items-center px-3 py-[7px] bg-muted/30 rounded-lg border border-border/50">
+            <div className="flex-1 flex items-center px-3 py-[7px] bg-muted/30 rounded-lg border border-section-border">
               <Input
                 type={showKey ? 'text' : 'password'}
                 value={apiKey}
@@ -665,7 +665,7 @@ function ServerDetailPanel({ server, onBack }: { server: MCPServer; onBack: () =
           </div>
           <div className="flex items-center gap-3">
             <Switch size="sm" checked={enabled} onCheckedChange={setEnabled} />
-            <Button variant="outline" size="xs" className="border-border/30 text-muted-foreground/60 hover:text-foreground hover:bg-accent">
+            <Button variant="outline" size="xs" className="border-section-border text-muted-foreground/60 hover:text-foreground hover:bg-accent">
               <Save size={10} />
               <span>{'\u4fdd\u5b58'}</span>
             </Button>
@@ -676,7 +676,7 @@ function ServerDetailPanel({ server, onBack }: { server: MCPServer; onBack: () =
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as ServerTab)} className="flex-1 flex flex-col min-h-0 gap-0">
-        <TabsList variant="line" className="border-b border-border/30 h-auto px-5 flex-shrink-0">
+        <TabsList variant="line" className="border-b border-section-border h-auto px-5 flex-shrink-0">
           {tabs.map(tab => (
             <TabsTrigger
               key={tab.id}
@@ -739,7 +739,7 @@ function GeneralTab({ name, setName, desc, setDesc, serverType, setServerType, t
         <Input
           value={name}
           onChange={e => setName(e.target.value)}
-          className="w-full px-3 py-[8px] bg-muted/30 rounded-lg border border-border/30 text-sm text-foreground focus:border-border/50 transition-colors h-auto"
+          className="w-full px-3 py-[8px] bg-muted/30 rounded-lg border border-section-border text-sm text-foreground focus:border-section-border transition-colors h-auto"
         />
       </div>
 
@@ -750,7 +750,7 @@ function GeneralTab({ name, setName, desc, setDesc, serverType, setServerType, t
           value={desc}
           onChange={e => setDesc(e.target.value)}
           placeholder={'\u63cf\u8ff0'}
-          className="w-full px-3 py-[8px] bg-muted/30 rounded-lg border border-border/30 text-sm text-foreground placeholder:text-muted-foreground/60 focus:border-border/50 transition-colors h-auto"
+          className="w-full px-3 py-[8px] bg-muted/30 rounded-lg border border-section-border text-sm text-foreground placeholder:text-muted-foreground/60 focus:border-section-border transition-colors h-auto"
         />
       </div>
 
@@ -763,7 +763,7 @@ function GeneralTab({ name, setName, desc, setDesc, serverType, setServerType, t
           <PopoverTrigger asChild>
             <Button size="inline"
               variant="outline"
-              className="w-full flex items-center justify-between px-3 py-[8px] bg-muted/30 rounded-lg border-border/30 text-sm text-muted-foreground hover:border-border/50"
+              className="w-full flex items-center justify-between px-3 py-[8px] bg-muted/30 rounded-lg border-section-border text-sm text-muted-foreground hover:border-section-border"
             >
               <span>{serverType === 'stdio' ? '\u6807\u51c6\u8f93\u5165 / \u8f93\u51fa (stdio)' : 'Server-Sent Events (SSE)'}</span>
               <ChevronDown size={10} className={`transition-transform ${typeOpen ? 'rotate-180' : ''}`} />
@@ -795,7 +795,7 @@ function GeneralTab({ name, setName, desc, setDesc, serverType, setServerType, t
         <Input
           value={command}
           onChange={e => setCommand(e.target.value)}
-          className="w-full px-3 py-[8px] bg-muted/30 rounded-lg border border-border/30 text-sm text-foreground font-mono focus:border-border/50 transition-colors h-auto"
+          className="w-full px-3 py-[8px] bg-muted/30 rounded-lg border border-section-border text-sm text-foreground font-mono focus:border-section-border transition-colors h-auto"
         />
       </div>
 
@@ -824,7 +824,7 @@ function GeneralTab({ name, setName, desc, setDesc, serverType, setServerType, t
         <Input
           value={args}
           onChange={e => setArgs(e.target.value)}
-          className="w-full px-3 py-[8px] bg-muted/30 rounded-lg border border-border/30 text-sm text-foreground font-mono focus:border-border/50 transition-colors h-auto"
+          className="w-full px-3 py-[8px] bg-muted/30 rounded-lg border border-section-border text-sm text-foreground font-mono focus:border-section-border transition-colors h-auto"
         />
       </div>
 
@@ -839,7 +839,7 @@ function GeneralTab({ name, setName, desc, setDesc, serverType, setServerType, t
           onChange={e => setEnvVars(e.target.value)}
           placeholder={'KEY1=value1\nKEY2=value2'}
           rows={3}
-          className="w-full px-3 py-2.5 bg-muted/30 rounded-lg border border-border/30 text-sm text-foreground outline-none font-mono placeholder:text-muted-foreground/60 resize-y focus:border-border/50 transition-colors scrollbar-thin-xs"
+          className="w-full px-3 py-2.5 bg-muted/30 rounded-lg border border-section-border text-sm text-foreground outline-none font-mono placeholder:text-muted-foreground/60 resize-y focus:border-section-border transition-colors scrollbar-thin-xs"
         />
       </div>
 
@@ -878,7 +878,7 @@ function ToolsTab({ tools, setTools }: { tools: MCPTool[]; setTools: (t: MCPTool
   return (
     <div>
       {/* Header row */}
-      <div className="flex items-center justify-between pb-3 border-b border-border/30">
+      <div className="flex items-center justify-between pb-3 border-b border-section-border">
         <div className="flex items-center gap-2">
           <p className="text-sm text-foreground font-semibold">{'\u53ef\u7528\u5de5\u5177'}</p>
           <Button variant="ghost" size="icon-xs" className="text-muted-foreground/50 hover:text-foreground">
@@ -927,7 +927,7 @@ function ToolsTab({ tools, setTools }: { tools: MCPTool[]; setTools: (t: MCPTool
             {expandedTool === tool.name && tool.params && tool.params.length > 0 && (
               <div className="ml-6 mb-3">
                 {tool.params.map(param => (
-                  <div key={param.name} className="flex items-center gap-3 px-3 py-2 bg-muted/30 rounded-lg border border-border/50 mb-1">
+                  <div key={param.name} className="flex items-center gap-3 px-3 py-2 bg-muted/30 rounded-lg border border-section-border mb-1">
                     <span className="text-xs text-muted-foreground font-mono flex-1">{param.name}</span>
                     <span className="flex items-center gap-1 text-xs text-muted-foreground">
                       <span className="w-1 h-1 rounded-full bg-muted0" />
@@ -956,7 +956,7 @@ function PromptsTab({ prompts }: { prompts: MCPPrompt[] }) {
 
   return (
     <div>
-      <p className="text-sm text-foreground pb-3 border-b border-border/30 mb-1 font-semibold">{'\u53ef\u7528\u63d0\u793a'}</p>
+      <p className="text-sm text-foreground pb-3 border-b border-section-border mb-1 font-semibold">{'\u53ef\u7528\u63d0\u793a'}</p>
       {prompts.map(p => (
         <div key={p.name} className="py-3 last:border-b-0">
           <p className="text-sm text-foreground font-medium">{p.name}</p>
@@ -981,7 +981,7 @@ function ResourcesTab({ resources }: { resources: MCPResource[] }) {
 
   return (
     <div>
-      <p className="text-sm text-foreground pb-3 border-b border-border/30 mb-1 font-semibold">{'\u53ef\u7528\u8d44\u6e90'}</p>
+      <p className="text-sm text-foreground pb-3 border-b border-section-border mb-1 font-semibold">{'\u53ef\u7528\u8d44\u6e90'}</p>
       {resources.map(r => (
         <div key={r.name} className="last:border-b-0">
           <Button size="inline"
@@ -998,7 +998,7 @@ function ResourcesTab({ resources }: { resources: MCPResource[] }) {
             </div>
           </Button>
           {expanded === r.name && (
-            <div className="ml-6 mb-3 flex items-center gap-4 px-3 py-2.5 bg-muted/30 rounded-lg border border-border/50">
+            <div className="ml-6 mb-3 flex items-center gap-4 px-3 py-2.5 bg-muted/30 rounded-lg border border-section-border">
               <span className="text-xs text-muted-foreground/60 flex-1">MIME {'\u7c7b\u578b'}</span>
               <span className="px-2 py-[2px] rounded-md bg-info/10 text-info text-xs border border-info/15 font-medium">{r.mimeType}</span>
             </div>
@@ -1052,7 +1052,7 @@ export function MCPServicePage() {
   return (
     <div className="flex h-full min-h-0">
       {/* Middle Column: Navigation */}
-      <div className="w-[160px] flex-shrink-0 flex flex-col border-r border-border/30 min-h-0">
+      <div className="w-[160px] flex-shrink-0 flex flex-col border-r border-section-border min-h-0">
         <div className="px-3.5 pt-4 pb-2 flex-shrink-0">
           <p className="text-xs text-muted-foreground/60 font-medium">MCP {'\u670d\u52a1'}</p>
         </div>

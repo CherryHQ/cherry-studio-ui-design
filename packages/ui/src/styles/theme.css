@@ -31,6 +31,10 @@
   --surface-03: var(--muted);
   --stroke-01: var(--border);
   --stroke-02: #E2E2E2;
+  --section-border: #F0F0EF;
+  --content-bg: #FFFFFF;
+  --content-border: #E2E2E2;
+  --app-bg: #F2F2F2;
   --shade-7: #323232;
   --shade-8: #222222;
   /* Button gradient tokens — Secondary (derives from --secondary) */
@@ -245,6 +249,10 @@
   --surface-03: var(--muted);
   --stroke-01: var(--border);
   --stroke-02: oklch(0.3 0 0);
+  --section-border: #1F201D;
+  --content-bg: #151514;
+  --content-border: #1F201D;
+  --app-bg: #0E0E0D;
   --shade-7: #c0c0c0;
   --shade-8: #a0a0a0;
   --switch-background: oklch(0.355 0 0);
@@ -388,6 +396,10 @@
   --color-destructive-foreground: var(--destructive-foreground);
   --color-destructive-border: var(--destructive-border);
   --color-destructive-ring: var(--destructive-ring);
+  --color-section-border: var(--section-border);
+  --color-content-bg: var(--content-bg);
+  --color-content-border: var(--content-border);
+  --color-app-bg: var(--app-bg);
   --color-border: var(--border);
   --color-input: var(--input);
   --color-input-background: var(--input-background);

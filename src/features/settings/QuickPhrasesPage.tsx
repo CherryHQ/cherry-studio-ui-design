@@ -259,7 +259,7 @@ function RichPromptEditor({ value, onChange, onSlashCommand, placeholder }: {
         onKeyDown={handleKeyDown}
         onCompositionStart={() => { isComposing.current = true; }}
         onCompositionEnd={() => { isComposing.current = false; handleInput(); }}
-        className="w-full bg-muted/50 border border-border/50 rounded-xl px-3 py-[9px] text-xs text-foreground outline-none focus:border-border/50 transition-colors leading-relaxed whitespace-pre-wrap break-words"
+        className="w-full bg-muted/50 border border-section-border rounded-xl px-3 py-[9px] text-xs text-foreground outline-none focus:border-section-border transition-colors leading-relaxed whitespace-pre-wrap break-words"
         style={{ minHeight: '140px' }}
       />
       <style>{`
@@ -323,7 +323,7 @@ function EditFormPanel({ open, onClose, item, onSave }: {
         transition={{ type: 'spring', damping: 28, stiffness: 320 }}
         className="pointer-events-auto settings-panel w-[300px]"
       >
-        <div className="flex items-center justify-between px-5 py-3.5 border-b border-border/30 flex-shrink-0">
+        <div className="flex items-center justify-between px-5 py-3.5 border-b border-section-border flex-shrink-0">
           <div className="flex items-center gap-2">
             {isAdd ? <Plus size={14} className="text-muted-foreground" /> : <Pencil size={14} className="text-muted-foreground/60" />}
             <Typography variant="subtitle">{isAdd ? '添加短语' : '编辑短语'}</Typography>
@@ -336,7 +336,7 @@ function EditFormPanel({ open, onClose, item, onSave }: {
         <div className="flex-1 overflow-y-auto px-5 py-4 space-y-4 scrollbar-thin">
           <div>
             <p className="text-xs text-muted-foreground/60 mb-2 font-medium">标题</p>
-            <Input value={title} onChange={e => setTitle(e.target.value)} className="w-full bg-muted/50 border border-border/50 px-3 py-[8px] text-xs text-foreground focus:border-border/50" placeholder="请输入短语标题" autoFocus onKeyDown={e => { if (e.key === 'Escape') onClose(); }} />
+            <Input value={title} onChange={e => setTitle(e.target.value)} className="w-full bg-muted/50 border border-section-border px-3 py-[8px] text-xs text-foreground focus:border-section-border" placeholder="请输入短语标题" autoFocus onKeyDown={e => { if (e.key === 'Escape') onClose(); }} />
           </div>
           <div>
             <div className="flex items-center justify-between mb-2">
@@ -360,7 +360,7 @@ function EditFormPanel({ open, onClose, item, onSave }: {
           )}
         </div>
 
-        <div className="flex items-center justify-end gap-2 px-5 py-3.5 border-t border-border/30 flex-shrink-0">
+        <div className="flex items-center justify-end gap-2 px-5 py-3.5 border-t border-section-border flex-shrink-0">
           <Button variant="ghost" size="xs" onClick={onClose} className="text-muted-foreground/60 hover:text-foreground">取消</Button>
           <Button variant="ghost" onClick={handleSave} disabled={!canSave} size="xs" className="text-cherry-primary-dark bg-cherry-active-bg hover:bg-cherry-active-border">
             {isAdd ? '添加' : '保存'}
@@ -417,7 +417,7 @@ export function QuickPhrasesPage() {
           <p className="text-xs text-muted-foreground/40 mt-1">{'预设常用的 Prompt 模板，在对话中快速插入使用。支持变量占位符。'}</p>
         </div>
 
-        <div className="bg-muted/30 border border-border/50 rounded-2xl px-3 py-2">
+        <div className="bg-muted/30 border border-section-border rounded-2xl px-3 py-2">
           <div className="flex items-center justify-between gap-2 px-2 py-2">
             <div className="flex items-center gap-1.5 flex-shrink-0">
               <h4 className="text-sm text-foreground font-medium">短语列表</h4>
@@ -431,7 +431,7 @@ export function QuickPhrasesPage() {
                 value={searchQuery}
                 onChange={setSearchQuery}
                 placeholder="搜索标题、内容或变量..."
-                wrapperClassName="max-w-[200px] flex-1 flex items-center gap-1.5 px-2.5 py-[5px] rounded-lg bg-muted/50 border border-transparent focus-within:border-border/50"
+                wrapperClassName="max-w-[200px] flex-1 flex items-center gap-1.5 px-2.5 py-[5px] rounded-lg bg-muted/50 border border-transparent focus-within:border-section-border"
               />
               <Button variant="ghost" size="icon-xs" onClick={openAdd} className="text-primary hover:bg-primary/10 flex-shrink-0" title="添加短语">
                 <Plus size={13} />
@@ -500,7 +500,7 @@ export function QuickPhrasesPage() {
             )}
           </div>
 
-          <div className="flex items-start gap-1.5 px-3 py-2.5 border-t border-border/30">
+          <div className="flex items-start gap-1.5 px-3 py-2.5 border-t border-section-border">
             <CircleHelp size={9} className="text-muted-foreground/40 mt-[1px] flex-shrink-0" />
             <p className="text-xs text-muted-foreground/50 leading-relaxed">
               {'在对话输入框中使用 / 命令快速插入短语。使用 ${变量名} 定义可编辑的占位符。'}

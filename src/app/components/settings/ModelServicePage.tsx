@@ -730,7 +730,7 @@ const PromptTextarea = forwardRef<PromptTextareaHandle, {
           onCompositionEnd={() => { isComposing.current = false; handleInput(); }}
           onBlur={saveSelection}
           style={{ minHeight, resize: 'vertical' }}
-          className="w-full px-3 py-2.5 bg-muted/50 border border-border/50 rounded-xl text-sm text-foreground outline-none focus:border-cherry-primary/25 transition-colors scrollbar-thin-xs overflow-y-auto"
+          className="w-full px-3 py-2.5 bg-muted/50 border border-section-border rounded-xl text-sm text-foreground outline-none focus:border-cherry-primary/25 transition-colors scrollbar-thin-xs overflow-y-auto"
         />
         {editorEmpty && (
           <div className="absolute top-2.5 left-3 text-sm text-muted-foreground/40 pointer-events-none select-none">
@@ -754,7 +754,7 @@ const PromptTextarea = forwardRef<PromptTextareaHandle, {
         {showSlash && filteredVars.length > 0 && (
           <div
             ref={slashMenuRef}
-            className="absolute z-[var(--z-modal)] bg-popover border border-border/50 rounded-lg shadow-xl p-0.5 min-w-[180px] max-h-[180px] overflow-y-auto scrollbar-thin-xs"
+            className="absolute z-[var(--z-modal)] bg-popover border border-section-border rounded-lg shadow-xl p-0.5 min-w-[180px] max-h-[180px] overflow-y-auto scrollbar-thin-xs"
             style={{ top: slashPos.top, left: slashPos.left }}
           >
             <p className="text-xs text-muted-foreground/60 px-2 py-1">插入变量</p>
@@ -887,7 +887,7 @@ function DefaultConfigPanel({ entry, onClose }: {
       animate={{ opacity: 1, scale: 1, y: 0 }}
       exit={{ opacity: 0, scale: 0.95, y: 8 }}
       transition={{ type: 'spring', damping: 28, stiffness: 350 }}
-      className="absolute right-4 top-4 bottom-4 w-[320px] bg-background border border-border/30 rounded-2xl shadow-2xl flex flex-col z-[var(--z-sticky)]"
+      className="absolute right-4 top-4 bottom-4 w-[320px] bg-background border border-section-border rounded-2xl shadow-2xl flex flex-col z-[var(--z-sticky)]"
       onClick={e => e.stopPropagation()}
     >
       {/* Header */}
@@ -969,7 +969,7 @@ function DefaultConfigPanel({ entry, onClose }: {
                     <Slider min={0} max={2} step={0.01} value={[temperature]} onValueChange={([v]) => setTemperature(v)} className="flex-1" />
                     <Input value={temperature.toFixed(2)}
                       onChange={e => { const v = parseFloat(e.target.value); if (!isNaN(v) && v >= 0 && v <= 2) setTemperature(v); }}
-                      className="w-[46px] px-1.5 py-[3px] bg-muted/50 border border-border/50 rounded-md text-xs text-foreground text-center focus:border-border/50 h-auto shadow-none"
+                      className="w-[46px] px-1.5 py-[3px] bg-muted/50 border border-section-border rounded-md text-xs text-foreground text-center focus:border-section-border h-auto shadow-none"
                     />
                   </div>
                   <div className="flex justify-between pr-[58px] mt-1">
@@ -998,7 +998,7 @@ function DefaultConfigPanel({ entry, onClose }: {
                     <Slider min={0} max={1} step={0.01} value={[topP]} onValueChange={([v]) => setTopP(v)} className="flex-1" />
                     <Input value={topP.toFixed(2)}
                       onChange={e => { const v = parseFloat(e.target.value); if (!isNaN(v) && v >= 0 && v <= 1) setTopP(v); }}
-                      className="w-[46px] px-1.5 py-[3px] bg-muted/50 border border-border/50 rounded-md text-xs text-foreground text-center focus:border-border/50 h-auto shadow-none"
+                      className="w-[46px] px-1.5 py-[3px] bg-muted/50 border border-section-border rounded-md text-xs text-foreground text-center focus:border-section-border h-auto shadow-none"
                     />
                   </div>
                   <div className="flex justify-between pr-[58px] mt-1">
@@ -1026,7 +1026,7 @@ function DefaultConfigPanel({ entry, onClose }: {
                   <Input
                     value={contextCount === Infinity ? '\u221E' : contextCount}
                     onChange={e => { const raw = e.target.value.trim(); if (raw === '\u221E' || raw.toLowerCase() === 'inf') { setContextCount(Infinity); return; } const v = parseInt(raw); if (!isNaN(v) && v >= 0) setContextCount(v); }}
-                    className="w-[46px] px-1.5 py-[3px] bg-muted/50 border border-border/50 rounded-md text-xs text-foreground text-center focus:border-border/50 h-auto shadow-none"
+                    className="w-[46px] px-1.5 py-[3px] bg-muted/50 border border-section-border rounded-md text-xs text-foreground text-center focus:border-section-border h-auto shadow-none"
                   />
                 </div>
                 <div className="flex justify-between pr-[58px] mt-1">
@@ -1052,7 +1052,7 @@ function DefaultConfigPanel({ entry, onClose }: {
               {maxTokensEnabled && (
                 <Input value={maxTokens}
                   onChange={e => { const v = parseInt(e.target.value); if (!isNaN(v) && v >= 0) setMaxTokens(v); }}
-                  className="w-full px-2.5 py-[5px] bg-muted/50 border border-border/50 rounded-lg text-xs text-foreground focus:border-border/50 h-auto shadow-none"
+                  className="w-full px-2.5 py-[5px] bg-muted/50 border border-section-border rounded-lg text-xs text-foreground focus:border-section-border h-auto shadow-none"
                   placeholder="0"
                 />
               )}
@@ -1139,7 +1139,7 @@ function DefaultModelConfig() {
   const renderEntryCard = (entry: DefaultConfigEntry) => (
     <div
       key={entry.key}
-      className="flex items-center gap-3.5 px-4 py-3.5 bg-muted/50 border border-border/50 rounded-xl hover:bg-accent/50 transition-colors group"
+      className="flex items-center gap-3.5 px-4 py-3.5 bg-muted/50 border border-section-border rounded-xl hover:bg-accent/50 transition-colors group"
     >
       <div className="w-9 h-9 rounded-lg bg-muted/50 flex items-center justify-center flex-shrink-0">
         {entry.icon}
@@ -1237,11 +1237,11 @@ function KeyManagementPanel({ provider, onClose }: { provider: Provider; onClose
       animate={{ x: 0 }}
       exit={{ x: '100%' }}
       transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-      className="absolute inset-y-2 right-2 w-[320px] bg-background border border-border/30 shadow-2xl flex flex-col z-[var(--z-sticky)] rounded-2xl"
+      className="absolute inset-y-2 right-2 w-[320px] bg-background border border-section-border shadow-2xl flex flex-col z-[var(--z-sticky)] rounded-2xl"
       onClick={e => e.stopPropagation()}
     >
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-border/30 flex-shrink-0">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-section-border flex-shrink-0">
         <div className="flex items-center gap-2">
           <Key size={12} className="text-muted-foreground" />
           <span className="text-sm text-foreground font-semibold">多 Key 管理</span>
@@ -1253,7 +1253,7 @@ function KeyManagementPanel({ provider, onClose }: { provider: Provider; onClose
 
       <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3 scrollbar-thin-xs">
         {/* Rotation Strategy */}
-        <div className="bg-muted/50 border border-border/50 rounded-xl p-3">
+        <div className="bg-muted/50 border border-section-border rounded-xl p-3">
           <div className="flex items-center justify-between mb-2.5">
             <div className="flex items-center gap-2">
               <Shuffle size={10} className="text-muted-foreground/60" />
@@ -1289,7 +1289,7 @@ function KeyManagementPanel({ provider, onClose }: { provider: Provider; onClose
           <div className="space-y-1.5">
             {keys.map(k => (
               <div key={k.id} className={`rounded-xl border p-2.5 transition-all ${
-                k.enabled ? 'border-cherry-primary/15 bg-cherry-active-bg' : 'border-border/50 bg-muted/30'
+                k.enabled ? 'border-cherry-primary/15 bg-cherry-active-bg' : 'border-section-border bg-muted/30'
               }`}>
                 <div className="flex items-center justify-between mb-1.5">
                   <span className="text-sm text-foreground font-medium">{k.name}</span>
@@ -1309,7 +1309,7 @@ function KeyManagementPanel({ provider, onClose }: { provider: Provider; onClose
         </div>
 
         {/* Add Key */}
-        <Button variant="ghost" size="inline" className="w-full flex items-center justify-center gap-1.5 py-2 rounded-xl border border-dashed border-border/50 text-xs text-muted-foreground/60 hover:text-foreground hover:border-border">
+        <Button variant="ghost" size="inline" className="w-full flex items-center justify-center gap-1.5 py-2 rounded-xl border border-dashed border-section-border text-xs text-muted-foreground/60 hover:text-foreground hover:border-border">
           <Plus size={10} />
           <span>添加 API Key</span>
         </Button>
@@ -1431,11 +1431,11 @@ function ModelEditPanel({ model, onClose, onSave }: {
       animate={{ x: 0 }}
       exit={{ x: '100%' }}
       transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-      className="absolute inset-y-2 right-2 w-[340px] bg-background border border-border/30 shadow-2xl flex flex-col z-[var(--z-sticky)] rounded-2xl"
+      className="absolute inset-y-2 right-2 w-[340px] bg-background border border-section-border shadow-2xl flex flex-col z-[var(--z-sticky)] rounded-2xl"
       onClick={e => e.stopPropagation()}
     >
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-border/30 flex-shrink-0">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-section-border flex-shrink-0">
         <span className="text-sm text-foreground font-semibold">编辑模型</span>
         <Button variant="ghost" size="icon-xs" onClick={onClose} className="text-muted-foreground/60 hover:text-foreground hover:bg-accent">
           <X size={12} />
@@ -1448,10 +1448,10 @@ function ModelEditPanel({ model, onClose, onSave }: {
         <div>
           <FieldLabel label="模型 ID" required hint="模型的唯一标识符" />
           <div className="flex items-center gap-1.5">
-            <div className="flex-1 px-2.5 py-[6px] bg-muted/50 rounded-lg border border-border/25 text-xs text-muted-foreground/60 truncate font-mono">
+            <div className="flex-1 px-2.5 py-[6px] bg-muted/50 rounded-lg border border-section-border text-xs text-muted-foreground/60 truncate font-mono">
               {model.id}
             </div>
-            <Button variant="ghost" size="icon-sm" onClick={handleCopy} className="text-muted-foreground/60 hover:text-foreground hover:bg-accent border border-border/25 flex-shrink-0">
+            <Button variant="ghost" size="icon-sm" onClick={handleCopy} className="text-muted-foreground/60 hover:text-foreground hover:bg-accent border border-section-border flex-shrink-0">
               {copied ? <Check size={11} className="text-cherry-primary" /> : <Copy size={11} />}
             </Button>
           </div>
@@ -1463,7 +1463,7 @@ function ModelEditPanel({ model, onClose, onSave }: {
           <Input
             value={name}
             onChange={e => setName(e.target.value)}
-            className="w-full px-2.5 py-[6px] bg-muted/50 rounded-lg border border-border/25 text-sm text-foreground focus:border-cherry-primary/30 h-auto shadow-none"
+            className="w-full px-2.5 py-[6px] bg-muted/50 rounded-lg border border-section-border text-sm text-foreground focus:border-cherry-primary/30 h-auto shadow-none"
           />
         </div>
 
@@ -1474,7 +1474,7 @@ function ModelEditPanel({ model, onClose, onSave }: {
             value={group}
             onChange={e => setGroup(e.target.value)}
             placeholder="例如: agent"
-            className="w-full px-2.5 py-[6px] bg-muted/50 rounded-lg border border-border/25 text-sm text-foreground placeholder:text-muted-foreground/60 focus:border-cherry-primary/30 h-auto shadow-none"
+            className="w-full px-2.5 py-[6px] bg-muted/50 rounded-lg border border-section-border text-sm text-foreground placeholder:text-muted-foreground/60 focus:border-cherry-primary/30 h-auto shadow-none"
           />
         </div>
 
@@ -1525,7 +1525,7 @@ function ModelEditPanel({ model, onClose, onSave }: {
         {/* More Settings toggle */}
         <Button variant="ghost" size="inline"
           onClick={() => setShowMore(!showMore)}
-          className="flex items-center gap-1.5 px-2.5 py-[5px] bg-muted/50 text-xs text-muted-foreground hover:text-foreground hover:bg-accent/50 border border-border/20"
+          className="flex items-center gap-1.5 px-2.5 py-[5px] bg-muted/50 text-xs text-muted-foreground hover:text-foreground hover:bg-accent/50 border border-section-border"
         >
           {showMore ? <ChevronUp size={10} /> : <ChevronDown size={10} />}
           <span>更多设置</span>
@@ -1554,7 +1554,7 @@ function ModelEditPanel({ model, onClose, onSave }: {
                       className={`flex items-center gap-1 px-2.5 py-[4px] rounded-full text-xs border ${
                         active
                           ? cfg.color + ' border-current/20 font-medium'
-                          : 'text-muted-foreground border-border/50 hover:border-border hover:text-foreground'
+                          : 'text-muted-foreground border-section-border hover:border-border hover:text-foreground'
                       }`}
                     >
                       <Icon size={10} />
@@ -1632,9 +1632,9 @@ function ModelEditPanel({ model, onClose, onSave }: {
                 <Input
                   value={inputPrice}
                   onChange={e => setInputPrice(e.target.value)}
-                  className="w-[80px] px-2.5 py-[5px] bg-muted/50 rounded-l-lg rounded-r-none border border-r-0 border-border/25 text-sm text-foreground focus:border-cherry-primary/30 text-right h-auto shadow-none font-mono"
+                  className="w-[80px] px-2.5 py-[5px] bg-muted/50 rounded-l-lg rounded-r-none border border-r-0 border-section-border text-sm text-foreground focus:border-cherry-primary/30 text-right h-auto shadow-none font-mono"
                 />
-                <div className="px-2.5 py-[5px] bg-muted/50 border border-border/25 rounded-r-lg text-xs text-muted-foreground/60 whitespace-nowrap">
+                <div className="px-2.5 py-[5px] bg-muted/50 border border-section-border rounded-r-lg text-xs text-muted-foreground/60 whitespace-nowrap">
                   {currency} / 百万 Token
                 </div>
               </div>
@@ -1647,9 +1647,9 @@ function ModelEditPanel({ model, onClose, onSave }: {
                 <Input
                   value={outputPrice}
                   onChange={e => setOutputPrice(e.target.value)}
-                  className="w-[80px] px-2.5 py-[5px] bg-muted/50 rounded-l-lg rounded-r-none border border-r-0 border-border/25 text-sm text-foreground focus:border-cherry-primary/30 text-right h-auto shadow-none font-mono"
+                  className="w-[80px] px-2.5 py-[5px] bg-muted/50 rounded-l-lg rounded-r-none border border-r-0 border-section-border text-sm text-foreground focus:border-cherry-primary/30 text-right h-auto shadow-none font-mono"
                 />
-                <div className="px-2.5 py-[5px] bg-muted/50 border border-border/25 rounded-r-lg text-xs text-muted-foreground/60 whitespace-nowrap">
+                <div className="px-2.5 py-[5px] bg-muted/50 border border-section-border rounded-r-lg text-xs text-muted-foreground/60 whitespace-nowrap">
                   {currency} / 百万 Token
                 </div>
               </div>
@@ -1659,7 +1659,7 @@ function ModelEditPanel({ model, onClose, onSave }: {
       </div>
 
       {/* Footer */}
-      <div className="px-4 py-3 border-t border-border/30 flex items-center justify-end gap-2 flex-shrink-0">
+      <div className="px-4 py-3 border-t border-section-border flex items-center justify-end gap-2 flex-shrink-0">
         <Button variant="outline" size="inline"
           onClick={onClose}
           className="px-3 py-[5px] text-xs text-muted-foreground hover:text-foreground hover:bg-accent"
@@ -1789,11 +1789,11 @@ function HealthCheckPanel({ provider, models, onClose }: {
       animate={{ x: 0 }}
       exit={{ x: '100%' }}
       transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-      className="absolute inset-y-2 right-2 w-[360px] bg-background border border-border/30 shadow-2xl flex flex-col z-[var(--z-sticky)] rounded-2xl"
+      className="absolute inset-y-2 right-2 w-[360px] bg-background border border-section-border shadow-2xl flex flex-col z-[var(--z-sticky)] rounded-2xl"
       onClick={e => e.stopPropagation()}
     >
       {/* Header */}
-      <div className="flex items-center justify-between px-5 py-3.5 border-b border-border/15 flex-shrink-0">
+      <div className="flex items-center justify-between px-5 py-3.5 border-b border-section-border flex-shrink-0">
         <div className="flex items-center gap-2">
           <div className="w-[22px] h-[22px] rounded-lg bg-muted/50 flex items-center justify-center">
             <HeartPulse size={11} className="text-muted-foreground" />
@@ -1846,16 +1846,16 @@ function HealthCheckPanel({ provider, models, onClose }: {
                   type="number"
                   value={timeout}
                   onChange={e => setTimeoutVal(Math.max(1, parseInt(e.target.value) || 15))}
-                  className="w-[52px] px-2 py-[4px] bg-muted/50 border border-border/20 rounded-l-lg text-xs text-foreground focus:border-border/50 transition-colors text-center h-auto shadow-none"
+                  className="w-[52px] px-2 py-[4px] bg-muted/50 border border-section-border rounded-l-lg text-xs text-foreground focus:border-section-border transition-colors text-center h-auto shadow-none"
                 />
-                <div className="px-2 py-[4px] bg-muted/50 border border-l-0 border-border/20 rounded-r-lg text-xs text-muted-foreground/60">
+                <div className="px-2 py-[4px] bg-muted/50 border border-l-0 border-section-border rounded-r-lg text-xs text-muted-foreground/60">
                   s
                 </div>
               </div>
             </div>
 
             {/* Enabled models info */}
-            <div className="pt-3 mt-2 border-t border-border/30">
+            <div className="pt-3 mt-2 border-t border-section-border">
               <div className="flex items-center gap-1.5 px-1">
                 <Info size={10} className="text-muted-foreground/40" />
                 <span className="text-xs text-muted-foreground/60">
@@ -1889,7 +1889,7 @@ function HealthCheckPanel({ provider, models, onClose }: {
 
             {/* Summary (when done) */}
             {!running && hasResults && (
-              <div className="flex items-center gap-4 mb-4 px-3.5 py-2.5 rounded-xl bg-muted/50 border border-border/50">
+              <div className="flex items-center gap-4 mb-4 px-3.5 py-2.5 rounded-xl bg-muted/50 border border-section-border">
                 <div className="flex items-center gap-1.5">
                   <div className="w-[14px] h-[14px] rounded-full bg-muted flex items-center justify-center">
                     <CheckCircle2 size={9} className="text-muted-foreground" />
@@ -1960,7 +1960,7 @@ function HealthCheckPanel({ provider, models, onClose }: {
       </div>
 
       {/* Footer */}
-      <div className="px-5 py-3.5 border-t border-border/15 flex items-center justify-end gap-2.5 flex-shrink-0">
+      <div className="px-5 py-3.5 border-t border-section-border flex items-center justify-end gap-2.5 flex-shrink-0">
         <Button size="inline"
           variant="ghost"
           onClick={() => { handleCancel(); onClose(); }}
@@ -2051,11 +2051,11 @@ function ModelManagementPanel({ provider, onClose }: { provider: Provider; onClo
       animate={{ x: 0 }}
       exit={{ x: '100%' }}
       transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-      className="absolute inset-y-2 right-2 w-[340px] bg-background border border-border/30 shadow-2xl flex flex-col z-[var(--z-sticky)] rounded-2xl"
+      className="absolute inset-y-2 right-2 w-[340px] bg-background border border-section-border shadow-2xl flex flex-col z-[var(--z-sticky)] rounded-2xl"
       onClick={e => e.stopPropagation()}
     >
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-border/30 flex-shrink-0">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-section-border flex-shrink-0">
         <div className="flex items-center gap-2">
           <span className="text-sm text-foreground font-semibold">模型管理</span>
           <span className="text-xs text-muted-foreground/60 px-1.5 py-[1px] rounded-full bg-muted/50">{enabledCount} / {models.length}</span>
@@ -2076,7 +2076,7 @@ function ModelManagementPanel({ provider, onClose }: { provider: Provider; onClo
           onChange={setSearch}
           placeholder="搜索模型..."
           iconSize={10}
-          wrapperClassName="flex items-center gap-2 px-2.5 py-[5px] bg-muted/50 rounded-lg border border-border/30"
+          wrapperClassName="flex items-center gap-2 px-2.5 py-[5px] bg-muted/50 rounded-lg border border-section-border"
         />
       </div>
 
@@ -2176,7 +2176,7 @@ function ModelManagementPanel({ provider, onClose }: { provider: Provider; onClo
             <Button size="inline"
               variant="ghost"
               onClick={() => setAddingCustom(true)}
-              className="w-full flex items-center justify-center gap-1.5 py-2 rounded-xl border border-dashed border-border/50 text-xs text-muted-foreground/60 hover:text-foreground hover:border-border transition-colors"
+              className="w-full flex items-center justify-center gap-1.5 py-2 rounded-xl border border-dashed border-section-border text-xs text-muted-foreground/60 hover:text-foreground hover:border-border transition-colors"
             >
               <Plus size={10} />
               <span>添加自定义模型</span>
@@ -2186,7 +2186,7 @@ function ModelManagementPanel({ provider, onClose }: { provider: Provider; onClo
       </div>
 
       {/* Footer actions */}
-      <div className="px-4 py-2.5 border-t border-border/30 flex items-center gap-2 flex-shrink-0">
+      <div className="px-4 py-2.5 border-t border-section-border flex items-center gap-2 flex-shrink-0">
         <Button variant="outline" size="xs" className="flex items-center gap-1.5 px-2.5 text-xs text-muted-foreground hover:text-foreground hover:bg-accent transition-colors">
           <RefreshCw size={9} />
           <span>刷新列表</span>
@@ -2257,11 +2257,11 @@ function FetchResultPanel({ result, onClose, onConfirm }: {
       animate={{ x: 0 }}
       exit={{ x: '100%' }}
       transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-      className="absolute inset-y-2 right-2 w-[320px] bg-background border border-border/30 shadow-2xl flex flex-col z-[var(--z-sticky)] rounded-2xl"
+      className="absolute inset-y-2 right-2 w-[320px] bg-background border border-section-border shadow-2xl flex flex-col z-[var(--z-sticky)] rounded-2xl"
       onClick={e => e.stopPropagation()}
     >
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-border/30 flex-shrink-0">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-section-border flex-shrink-0">
         <div className="flex items-center gap-2">
           <div className="w-5 h-5 rounded-full bg-cherry-active-bg flex items-center justify-center">
             <Download size={10} className="text-cherry-primary" />
@@ -2394,7 +2394,7 @@ function FetchResultPanel({ result, onClose, onConfirm }: {
 
       {/* Summary & Actions */}
       {hasChanges && (
-        <div className="px-4 py-3 border-t border-border/30 flex-shrink-0 space-y-2.5">
+        <div className="px-4 py-3 border-t border-section-border flex-shrink-0 space-y-2.5">
           <div className="flex items-center gap-3 text-xs text-muted-foreground/60">
             {hasNewModels && (
               <span className="flex items-center gap-1">
@@ -2430,7 +2430,7 @@ function FetchResultPanel({ result, onClose, onConfirm }: {
       )}
 
       {!hasChanges && (
-        <div className="px-4 py-3 border-t border-border/30 flex-shrink-0">
+        <div className="px-4 py-3 border-t border-section-border flex-shrink-0">
           <Button size="inline"
             variant="default"
             onClick={onClose}
@@ -2453,7 +2453,7 @@ function CherryINAccountSection() {
 
   if (!loggedIn) {
     return (
-      <div className="bg-gradient-to-br from-muted/50 to-muted/30 border border-border/50 rounded-2xl p-4">
+      <div className="bg-gradient-to-br from-muted/50 to-muted/30 border border-section-border rounded-2xl p-4">
         <div className="flex items-center gap-3 mb-3">
           <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-foreground/50 to-foreground/55 flex items-center justify-center text-white text-sm shadow-lg shadow-foreground/[0.1]">
             🍒
@@ -2481,7 +2481,7 @@ function CherryINAccountSection() {
   }
 
   return (
-    <div className="bg-gradient-to-br from-muted/50 to-muted/30 border border-border/50 rounded-2xl p-4">
+    <div className="bg-gradient-to-br from-muted/50 to-muted/30 border border-section-border rounded-2xl p-4">
       <div className="flex items-center gap-3 mb-3">
         <div className="relative">
           <div className="w-9 h-9 rounded-full bg-gradient-to-br from-foreground/45 to-foreground/50 flex items-center justify-center text-white text-sm shadow-lg shadow-foreground/[0.1] font-semibold">
@@ -2507,7 +2507,7 @@ function CherryINAccountSection() {
 
       {/* Balance & Usage */}
       <div className="grid grid-cols-3 gap-2">
-        <div className="bg-background/60 rounded-xl px-3 py-2.5 border border-border/50">
+        <div className="bg-background/60 rounded-xl px-3 py-2.5 border border-section-border">
           <p className="text-xs text-muted-foreground/40 tracking-wide">账户余额</p>
           <div className="flex items-baseline gap-0.5 mt-1">
             <span className="text-xs text-muted-foreground/40">$</span>
@@ -2515,7 +2515,7 @@ function CherryINAccountSection() {
           </div>
           <Button variant="ghost" size="inline" className="mt-1.5 text-xs text-cherry-primary/70 hover:text-cherry-primary transition-colors p-0">充值</Button>
         </div>
-        <div className="bg-background/60 rounded-xl px-3 py-2.5 border border-border/50">
+        <div className="bg-background/60 rounded-xl px-3 py-2.5 border border-section-border">
           <p className="text-xs text-muted-foreground/40 tracking-wide">本月用量</p>
           <div className="flex items-baseline gap-0.5 mt-1">
             <span className="text-base text-muted-foreground font-bold">2.4</span>
@@ -2523,7 +2523,7 @@ function CherryINAccountSection() {
           </div>
           <p className="mt-1.5 text-xs text-muted-foreground/40">Tokens</p>
         </div>
-        <div className="bg-background/60 rounded-xl px-3 py-2.5 border border-border/50">
+        <div className="bg-background/60 rounded-xl px-3 py-2.5 border border-section-border">
           <p className="text-xs text-muted-foreground/40 tracking-wide">本月消费</p>
           <div className="flex items-baseline gap-0.5 mt-1">
             <span className="text-xs text-muted-foreground/40">$</span>
@@ -2691,7 +2691,7 @@ function ProviderDetail({ provider }: { provider: Provider }) {
               <div>
                 <label className="text-sm text-muted-foreground mb-1 block">API Key</label>
                 <div className="flex items-center gap-1.5">
-                  <div className="flex-1 flex items-center px-2.5 py-[5px] bg-muted/50 rounded-lg border border-border/30">
+                  <div className="flex-1 flex items-center px-2.5 py-[5px] bg-muted/50 rounded-lg border border-section-border">
                     <Input
                       type={showKey ? 'text' : 'password'}
                       value={endpoint.apiKey}
@@ -2703,7 +2703,7 @@ function ProviderDetail({ provider }: { provider: Provider }) {
                       {showKey ? <EyeOff size={10} /> : <Eye size={10} />}
                     </Button>
                   </div>
-                  <Button variant="outline" size="icon-xs" className="border border-border/30 text-muted-foreground/60 hover:text-foreground hover:bg-accent transition-colors">
+                  <Button variant="outline" size="icon-xs" className="border border-section-border text-muted-foreground/60 hover:text-foreground hover:bg-accent transition-colors">
                     <Copy size={9} />
                   </Button>
                   <Tooltip content="测试连接" side="bottom">
@@ -2718,7 +2718,7 @@ function ProviderDetail({ provider }: { provider: Provider }) {
             <div>
               <label className="text-sm text-muted-foreground mb-1 block">API 地址 (Endpoint URL)</label>
               <div className="flex items-center gap-1.5">
-                <div className="flex-1 flex items-center px-2.5 py-[5px] bg-muted/50 rounded-lg border border-border/30">
+                <div className="flex-1 flex items-center px-2.5 py-[5px] bg-muted/50 rounded-lg border border-section-border">
                   <Input
                     type="text"
                     value={endpoint?.baseUrl || ''}
@@ -2734,7 +2734,7 @@ function ProviderDetail({ provider }: { provider: Provider }) {
                     variant="outline"
                     size="icon-xs"
                     onClick={() => setShowHeadersPanel(true)}
-                    className="w-6 h-6 border border-border/30 text-muted-foreground/60 hover:text-foreground hover:bg-accent transition-colors"
+                    className="w-6 h-6 border border-section-border text-muted-foreground/60 hover:text-foreground hover:bg-accent transition-colors"
                   >
                     <Settings size={9} />
                   </Button>
@@ -2745,7 +2745,7 @@ function ProviderDetail({ provider }: { provider: Provider }) {
             {endpoint?.projectId && (
               <div>
                 <label className="text-sm text-muted-foreground mb-1 block">项目 ID (Project ID)</label>
-                <div className="flex items-center px-2.5 py-[5px] bg-muted/50 rounded-lg border border-border/30">
+                <div className="flex items-center px-2.5 py-[5px] bg-muted/50 rounded-lg border border-section-border">
                   <Input
                     type="text"
                     value={endpoint.projectId}
@@ -2772,7 +2772,7 @@ function ProviderDetail({ provider }: { provider: Provider }) {
                 </RadioGroup>
 
                 {endpoint.authType === 'service-account' && (
-                  <div className="mt-2.5 border-2 border-dashed border-border/50 rounded-xl p-4 flex flex-col items-center justify-center bg-muted/30 cursor-pointer hover:border-border/50 transition-colors">
+                  <div className="mt-2.5 border-2 border-dashed border-section-border rounded-xl p-4 flex flex-col items-center justify-center bg-muted/30 cursor-pointer hover:border-section-border transition-colors">
                     <Upload size={16} className="text-muted-foreground/60 mb-1.5" />
                     <p className="text-xs text-muted-foreground">拖拽 JSON 密钥文件到此处，或点击上传</p>
                   </div>
@@ -2833,7 +2833,7 @@ function ProviderDetail({ provider }: { provider: Provider }) {
               onChange={setModelSearch}
               placeholder="搜索模型..."
               iconSize={10}
-              wrapperClassName="flex-1 flex items-center gap-1.5 px-2.5 py-[5px] rounded-lg bg-muted/50 border border-border/50"
+              wrapperClassName="flex-1 flex items-center gap-1.5 px-2.5 py-[5px] rounded-lg bg-muted/50 border border-section-border"
             />
             <Tooltip content={showCapFilter ? '隐藏筛选' : '按能力筛选'} side="bottom">
               <Button
@@ -2842,8 +2842,8 @@ function ProviderDetail({ provider }: { provider: Provider }) {
                 onClick={() => { setShowCapFilter(v => !v); if (showCapFilter) { setCapFilter('all'); } }}
                 className={`flex items-center gap-[4px] px-2 py-[5px] rounded-lg text-xs transition-all border ${
                   showCapFilter || capFilter !== 'all'
-                    ? 'bg-accent border-border text-foreground'
-                    : 'bg-transparent border-border/50 text-muted-foreground hover:text-foreground hover:border-border hover:bg-accent/50'
+                    ? 'bg-cherry-active-bg border-cherry-active-border text-foreground'
+                    : 'bg-transparent border-section-border text-muted-foreground hover:text-foreground hover:border-border hover:bg-accent/50'
                 }`}
               >
                 <Filter size={10} />
@@ -2856,7 +2856,7 @@ function ProviderDetail({ provider }: { provider: Provider }) {
               variant="outline"
               onClick={handleFetchModels}
               disabled={fetching}
-              className="flex items-center gap-1.5 px-3 py-[5px] text-xs text-foreground hover:text-foreground hover:bg-accent/50 transition-colors border border-border/50 disabled:opacity-30 flex-shrink-0"
+              className="flex items-center gap-1.5 px-3 py-[5px] text-xs text-foreground hover:text-foreground hover:bg-accent/50 transition-colors border border-section-border disabled:opacity-30 flex-shrink-0"
             >
               {fetching ? <Loader2 size={10} className="animate-spin" /> : <Download size={10} />}
               <span>拉取模型</span>
@@ -2865,7 +2865,7 @@ function ProviderDetail({ provider }: { provider: Provider }) {
               variant="outline"
               size="icon-xs"
               onClick={() => setShowModelPanel(true)}
-              className="w-[28px] h-[28px] text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-colors border border-border/50 flex-shrink-0"
+              className="w-[28px] h-[28px] text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-colors border border-section-border flex-shrink-0"
             >
               <Plus size={11} />
             </Button>
@@ -2890,7 +2890,7 @@ function ProviderDetail({ provider }: { provider: Provider }) {
                   className={`flex items-center gap-[4px] px-2 py-[3px] rounded-full text-xs transition-all border ${
                     isActive
                       ? tab.key === 'all'
-                        ? 'bg-accent border-border text-foreground font-medium'
+                        ? 'bg-cherry-active-bg border-cherry-active-border text-foreground font-medium'
                         : `${capCfg.color} border-current/20 font-medium`
                       : 'bg-transparent border-border text-muted-foreground hover:text-foreground hover:border-border hover:bg-accent/50'
                   }`}
@@ -3037,11 +3037,11 @@ function ProviderDetail({ provider }: { provider: Provider }) {
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
               transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-              className="absolute inset-y-2 right-2 w-[280px] bg-background border border-border/30 shadow-2xl flex flex-col z-[var(--z-sticky)] rounded-2xl"
+              className="absolute inset-y-2 right-2 w-[280px] bg-background border border-section-border shadow-2xl flex flex-col z-[var(--z-sticky)] rounded-2xl"
               onClick={e => e.stopPropagation()}
             >
               {/* Header */}
-              <div className="flex items-center justify-between px-4 py-3 border-b border-border/30 flex-shrink-0">
+              <div className="flex items-center justify-between px-4 py-3 border-b border-section-border flex-shrink-0">
                 <span className="text-sm text-foreground font-semibold">自定义请求头</span>
                 <Button variant="ghost" size="icon-xs" onClick={() => setShowHeadersPanel(false)} className="text-muted-foreground/40 hover:text-foreground hover:bg-accent transition-colors">
                   <X size={11} />
@@ -3051,7 +3051,7 @@ function ProviderDetail({ provider }: { provider: Provider }) {
               {/* Header entries */}
               <div className="flex-1 overflow-y-auto px-4 py-3 space-y-2.5 scrollbar-thin-xs">
                 {customHeaders.map((h, i) => (
-                  <div key={i} className="space-y-1.5 p-2.5 rounded-xl bg-muted/50 border border-border/20">
+                  <div key={i} className="space-y-1.5 p-2.5 rounded-xl bg-muted/50 border border-section-border">
                     <div className="flex items-center gap-1.5">
                       <label className="text-xs text-muted-foreground/40 w-10 flex-shrink-0">Header</label>
                       <Input
@@ -3062,7 +3062,7 @@ function ProviderDetail({ provider }: { provider: Provider }) {
                           next[i] = { ...next[i], key: e.target.value };
                           setCustomHeaders(next);
                         }}
-                        className="flex-1 bg-transparent text-sm text-muted-foreground border-b border-border/30 pb-0.5 min-w-0 h-auto shadow-none border-t-0 border-l-0 border-r-0 rounded-none p-0"
+                        className="flex-1 bg-transparent text-sm text-muted-foreground border-b border-section-border pb-0.5 min-w-0 h-auto shadow-none border-t-0 border-l-0 border-r-0 rounded-none p-0"
                         placeholder="Header Name"
                       />
                     </div>
@@ -3076,7 +3076,7 @@ function ProviderDetail({ provider }: { provider: Provider }) {
                           next[i] = { ...next[i], value: e.target.value };
                           setCustomHeaders(next);
                         }}
-                        className="flex-1 bg-transparent text-sm text-muted-foreground border-b border-border/30 pb-0.5 min-w-0 h-auto shadow-none border-t-0 border-l-0 border-r-0 rounded-none p-0"
+                        className="flex-1 bg-transparent text-sm text-muted-foreground border-b border-section-border pb-0.5 min-w-0 h-auto shadow-none border-t-0 border-l-0 border-r-0 rounded-none p-0"
                         placeholder="Header Value"
                       />
                     </div>
@@ -3095,7 +3095,7 @@ function ProviderDetail({ provider }: { provider: Provider }) {
                 <Button size="inline"
                   variant="ghost"
                   onClick={() => setCustomHeaders(prev => [...prev, { key: '', value: '' }])}
-                  className="w-full flex items-center justify-center gap-1.5 py-2 rounded-xl border border-dashed border-border/50 text-xs text-muted-foreground/40 hover:text-foreground hover:border-border/50 transition-colors"
+                  className="w-full flex items-center justify-center gap-1.5 py-2 rounded-xl border border-dashed border-section-border text-xs text-muted-foreground/40 hover:text-foreground hover:border-section-border transition-colors"
                 >
                   <Plus size={10} />
                   <span>添加请求头</span>
@@ -3103,7 +3103,7 @@ function ProviderDetail({ provider }: { provider: Provider }) {
               </div>
 
               {/* Footer */}
-              <div className="px-4 py-2.5 border-t border-border/30 flex items-center justify-end gap-2 flex-shrink-0">
+              <div className="px-4 py-2.5 border-t border-section-border flex items-center justify-end gap-2 flex-shrink-0">
                 <Button variant="outline" size="inline" onClick={() => setShowHeadersPanel(false)} className="px-2.5 py-[4px] text-xs text-muted-foreground/60 hover:text-foreground hover:bg-accent transition-colors">
                   取消
                 </Button>
@@ -3211,7 +3211,7 @@ function AddProviderPanel({ onClose, onAdd }: { onClose: () => void; onAdd: (nam
       <div className="flex-1 overflow-y-auto px-5 py-4 space-y-4 scrollbar-thin">
         {/* Avatar preview */}
         <div className="flex justify-center pt-2 pb-1">
-          <div className="w-16 h-16 rounded-2xl bg-muted/50 border border-border/50 flex items-center justify-center text-2xl text-muted-foreground/60 transition-all font-semibold">
+          <div className="w-16 h-16 rounded-2xl bg-muted/50 border border-section-border flex items-center justify-center text-2xl text-muted-foreground/60 transition-all font-semibold">
             {initial}
           </div>
         </div>
@@ -3224,7 +3224,7 @@ function AddProviderPanel({ onClose, onAdd }: { onClose: () => void; onAdd: (nam
             value={name}
             onChange={e => setName(e.target.value)}
             placeholder="例如 My Provider"
-            className="w-full px-3 py-[6px] bg-muted/50 border border-border/50 rounded-lg text-sm text-foreground focus:border-cherry-primary/30 transition-colors placeholder:text-muted-foreground/60 h-auto shadow-none"
+            className="w-full px-3 py-[6px] bg-muted/50 border border-section-border rounded-lg text-sm text-foreground focus:border-cherry-primary/30 transition-colors placeholder:text-muted-foreground/60 h-auto shadow-none"
           />
         </div>
 
@@ -3279,7 +3279,7 @@ function AddProviderPanel({ onClose, onAdd }: { onClose: () => void; onAdd: (nam
             onChange={e => setApiKey(e.target.value)}
             type="password"
             placeholder="sk-..."
-            className="w-full px-3 py-[6px] bg-muted/50 border border-border/50 rounded-lg text-sm text-foreground focus:border-cherry-primary/30 transition-colors placeholder:text-muted-foreground/60 h-auto shadow-none"
+            className="w-full px-3 py-[6px] bg-muted/50 border border-section-border rounded-lg text-sm text-foreground focus:border-cherry-primary/30 transition-colors placeholder:text-muted-foreground/60 h-auto shadow-none"
           />
         </div>
 
@@ -3290,13 +3290,13 @@ function AddProviderPanel({ onClose, onAdd }: { onClose: () => void; onAdd: (nam
             value={baseUrl}
             onChange={e => setBaseUrl(e.target.value)}
             placeholder="https://api.example.com/v1"
-            className="w-full px-3 py-[6px] bg-muted/50 border border-border/50 rounded-lg text-sm text-foreground focus:border-cherry-primary/30 transition-colors placeholder:text-muted-foreground/60 h-auto shadow-none"
+            className="w-full px-3 py-[6px] bg-muted/50 border border-section-border rounded-lg text-sm text-foreground focus:border-cherry-primary/30 transition-colors placeholder:text-muted-foreground/60 h-auto shadow-none"
           />
         </div>
       </div>
 
       {/* Footer */}
-      <div className="px-5 py-3 border-t border-border/30 flex items-center gap-2 flex-shrink-0">
+      <div className="px-5 py-3 border-t border-section-border flex items-center gap-2 flex-shrink-0">
         <Button size="inline"
           variant="outline"
           onClick={onClose}
@@ -3440,7 +3440,7 @@ export function ModelServicePage() {
   return (
     <div className="flex h-full min-h-0">
       {/* Middle Column: Provider List */}
-      <div className="w-[170px] flex-shrink-0 flex flex-col border-r border-border/30 min-h-0">
+      <div className="w-[170px] flex-shrink-0 flex flex-col border-r border-section-border min-h-0">
         <div className="px-3 pt-3.5 pb-1.5 flex-shrink-0">
           <p className="text-sm text-foreground mb-2 font-medium">模型服务</p>
           {/* Search */}
@@ -3449,7 +3449,7 @@ export function ModelServicePage() {
             onChange={setSearch}
             placeholder="搜索服务商..."
             iconSize={9}
-            wrapperClassName="flex items-center gap-1.5 px-2 py-[4px] bg-muted/50 rounded-lg border border-border/20"
+            wrapperClassName="flex items-center gap-1.5 px-2 py-[4px] bg-muted/50 rounded-lg border border-section-border"
           />
         </div>
 
@@ -3481,11 +3481,11 @@ export function ModelServicePage() {
         </div>
 
         {/* Add Provider */}
-        <div className="px-2.5 py-2 flex-shrink-0 border-t border-border/30">
+        <div className="px-2.5 py-2 flex-shrink-0 border-t border-section-border">
           <Button size="inline"
             variant="ghost"
             onClick={() => setShowAddPanel(true)}
-            className="w-full flex items-center justify-center gap-1.5 py-[5px] text-xs text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-colors border border-dashed border-border/50 hover:border-border"
+            className="w-full flex items-center justify-center gap-1.5 py-[5px] text-xs text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-colors border border-dashed border-section-border hover:border-border"
           >
             <Plus size={9} />
             <span>添加服务商</span>

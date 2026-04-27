@@ -98,7 +98,7 @@ function Keycaps({ keys, isRecording, hasConflict }: {
 
   if (keys.length === 0) {
     return (
-      <span className="inline-flex items-center h-[20px] px-2 rounded-md border border-dashed border-border/50 cursor-pointer hover:border-border/50 transition-colors">
+      <span className="inline-flex items-center h-[20px] px-2 rounded-md border border-dashed border-section-border cursor-pointer hover:border-section-border transition-colors">
         <span className="text-xs text-muted-foreground/50">未设置</span>
       </span>
     );
@@ -112,7 +112,7 @@ function Keycaps({ keys, isRecording, hasConflict }: {
             className={`inline-flex items-center justify-center min-w-[20px] h-[20px] px-[5px] rounded-[var(--radius-dot)] text-xs font-mono leading-none font-medium border ${
               hasConflict
                 ? 'bg-destructive/5 border-destructive/20 text-destructive/70 shadow-[0_1px_0_0] shadow-destructive/10'
-                : 'bg-muted/30 border-border/50 text-muted-foreground/60 shadow-[0_1px_0_0] shadow-foreground/[0.04]'
+                : 'bg-muted/30 border-section-border text-muted-foreground/60 shadow-[0_1px_0_0] shadow-foreground/[0.04]'
             }`}
           >
             {key}
@@ -212,9 +212,9 @@ export function ShortcutsPage() {
   return (
     <div className="flex h-full min-h-0">
       {/* Left nav */}
-      <div className="w-[140px] flex-shrink-0 flex flex-col border-r border-border/30 min-h-0">
+      <div className="w-[140px] flex-shrink-0 flex flex-col border-r border-section-border min-h-0">
         <div className="px-3 pt-4 pb-2 flex-shrink-0">
-          <p className="text-xs text-muted-foreground/40 font-medium">快捷键分组</p>
+          <p className="text-xs text-muted-foreground/60 font-medium">快捷键分组</p>
         </div>
         <div className="flex-1 overflow-y-auto px-2 pb-3 scrollbar-thin-xs">
           <div className="space-y-[1px]">
@@ -234,7 +234,7 @@ export function ShortcutsPage() {
                   )}
                   <div className="flex items-center gap-1.5 min-w-0 flex-1">
                     <span className={`flex-shrink-0 ${sel ? 'text-muted-foreground/60' : 'text-muted-foreground/40'}`}>{cat.icon}</span>
-                    <span className={`text-sm truncate ${sel ? 'text-foreground font-medium' : 'text-muted-foreground/60'}`}>
+                    <span className={`text-sm truncate ${sel ? 'text-foreground font-medium' : 'text-muted-foreground'}`}>
                       {cat.label}
                     </span>
                   </div>
@@ -268,7 +268,7 @@ export function ShortcutsPage() {
             onChange={setSearchQuery}
             placeholder="搜索..."
             iconSize={10}
-            wrapperClassName="flex items-center gap-2 px-3 py-[5px] bg-muted/30 border border-border/50 rounded-lg"
+            wrapperClassName="flex items-center gap-2 px-3 py-[5px] bg-muted/30 border border-section-border rounded-lg"
           />
         </div>
 
@@ -292,7 +292,7 @@ export function ShortcutsPage() {
           )}
 
           {recordingId && (
-            <div className="mt-2 flex items-center gap-2 px-3 py-[6px] bg-muted/30 border border-border/50 rounded-lg">
+            <div className="mt-2 flex items-center gap-2 px-3 py-[6px] bg-muted/30 border border-section-border rounded-lg">
               <div className="w-1 h-1 rounded-full bg-muted0 animate-pulse flex-shrink-0" />
               <p className="text-xs text-muted-foreground/60 flex-1">请按下组合键。Esc 取消。</p>
               <Button

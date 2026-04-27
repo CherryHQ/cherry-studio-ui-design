@@ -65,6 +65,7 @@ function AppearancePanel() {
     <div>
       <Typography variant="subtitle" className="mb-3">{'外观与显示'}</Typography>
 
+      <div className="border border-section-border rounded-[var(--radius-button)] px-3.5 py-1">
       <FormRow label={'语言 (Language)'} desc={'设置应用程序显示的语言。'}>
         <UIInlineSelect
           value={settings.language}
@@ -159,6 +160,7 @@ function AppearancePanel() {
           ]}
         />
       </FormRow>
+      </div>
     </div>
   );
 }
@@ -170,48 +172,50 @@ function SystemPanel() {
   const { settings, updateSetting } = useSettings();
 
   return (
-    <div>
+    <div className="space-y-3">
       {/* Startup & Tray */}
-      <SectionHeader title="启动与托盘" />
-      <FormRow label="开机自动启动">
-        <Switch size="sm" checked={settings.launchAtLogin} onCheckedChange={v => updateSetting('launchAtLogin', v)} />
-      </FormRow>
-      <FormRow label="启动时最小化到托盘">
-        <Switch size="sm" checked={settings.minimizeToTray} onCheckedChange={v => updateSetting('minimizeToTray', v)} />
-      </FormRow>
-      <FormRow label="关闭主面板时最小化" desc="点击关闭按钮不会退出程序">
-        <Switch size="sm" checked={settings.closeToTray} onCheckedChange={v => updateSetting('closeToTray', v)} />
-      </FormRow>
-      <FormRow label="显示托盘图标" noBorder>
-        <Switch size="sm" checked={settings.showTrayIcon} onCheckedChange={v => updateSetting('showTrayIcon', v)} />
-      </FormRow>
-
-      <div className="mt-3" />
+      <div className="border border-section-border rounded-[var(--radius-button)] px-3.5 py-1">
+        <SectionHeader title="启动与托盘" />
+        <FormRow label="开机自动启动">
+          <Switch size="sm" checked={settings.launchAtLogin} onCheckedChange={v => updateSetting('launchAtLogin', v)} />
+        </FormRow>
+        <FormRow label="启动时最小化到托盘">
+          <Switch size="sm" checked={settings.minimizeToTray} onCheckedChange={v => updateSetting('minimizeToTray', v)} />
+        </FormRow>
+        <FormRow label="关闭主面板时最小化" desc="点击关闭按钮不会退出程序">
+          <Switch size="sm" checked={settings.closeToTray} onCheckedChange={v => updateSetting('closeToTray', v)} />
+        </FormRow>
+        <FormRow label="显示托盘图标" noBorder>
+          <Switch size="sm" checked={settings.showTrayIcon} onCheckedChange={v => updateSetting('showTrayIcon', v)} />
+        </FormRow>
+      </div>
 
       {/* Network & Performance */}
-      <SectionHeader title="网络与性能" />
-      <FormRow label="代理模式" desc="配置应用的网络连接方式">
-        <UIInlineSelect
-          value={settings.proxyMode}
-          onChange={v => updateSetting('proxyMode', v)}
-          options={[
-            { value: 'system', label: '系统代理' },
-            { value: 'none', label: '无代理' },
-            { value: 'custom', label: '自定义' },
-          ]}
-        />
-      </FormRow>
-      <FormRow label="禁用硬件加速" desc="如果遇到显示问题，尝试开启此项">
-        <Switch size="sm" checked={settings.hwAccel} onCheckedChange={v => updateSetting('hwAccel', v)} />
-      </FormRow>
-
-      <div className="mt-3" />
+      <div className="border border-section-border rounded-[var(--radius-button)] px-3.5 py-1">
+        <SectionHeader title="网络与性能" />
+        <FormRow label="代理模式" desc="配置应用的网络连接方式">
+          <UIInlineSelect
+            value={settings.proxyMode}
+            onChange={v => updateSetting('proxyMode', v)}
+            options={[
+              { value: 'system', label: '系统代理' },
+              { value: 'none', label: '无代理' },
+              { value: 'custom', label: '自定义' },
+            ]}
+          />
+        </FormRow>
+        <FormRow label="禁用硬件加速" desc="如果遇到显示问题，尝试开启此项">
+          <Switch size="sm" checked={settings.hwAccel} onCheckedChange={v => updateSetting('hwAccel', v)} />
+        </FormRow>
+      </div>
 
       {/* Spell check */}
-      <SectionHeader title="拼写检查" />
-      <FormRow label="启用拼写检查" noBorder>
-        <Switch size="sm" checked={settings.spellCheck} onCheckedChange={v => updateSetting('spellCheck', v)} />
-      </FormRow>
+      <div className="border border-section-border rounded-[var(--radius-button)] px-3.5 py-1">
+        <SectionHeader title="拼写检查" />
+        <FormRow label="启用拼写检查" noBorder>
+          <Switch size="sm" checked={settings.spellCheck} onCheckedChange={v => updateSetting('spellCheck', v)} />
+        </FormRow>
+      </div>
     </div>
   );
 }
@@ -223,20 +227,22 @@ function PrivacyPanel() {
   const { settings, updateSetting } = useSettings();
 
   return (
-    <div>
+    <div className="space-y-3">
       {/* Privacy */}
-      <SectionHeader title="隐私设置" />
-      <FormRow label="匿名发送错误报告和数据统计" desc="帮助我们改进软件稳定性" noBorder>
-        <Switch size="sm" checked={settings.anonymousData} onCheckedChange={v => updateSetting('anonymousData', v)} />
-      </FormRow>
-
-      <div className="mt-4" />
+      <div className="border border-section-border rounded-[var(--radius-button)] px-3.5 py-1">
+        <SectionHeader title="隐私设置" />
+        <FormRow label="匿名发送错误报告和数据统计" desc="帮助我们改进软件稳定性" noBorder>
+          <Switch size="sm" checked={settings.anonymousData} onCheckedChange={v => updateSetting('anonymousData', v)} />
+        </FormRow>
+      </div>
 
       {/* Developer mode */}
-      <SectionHeader title="开发者模式" />
-      <FormRow label="启用开发者模式" desc="开启后将显示调试工具和高级日志" noBorder>
-        <Switch size="sm" checked={settings.devMode} onCheckedChange={v => updateSetting('devMode', v)} />
-      </FormRow>
+      <div className="border border-section-border rounded-[var(--radius-button)] px-3.5 py-1">
+        <SectionHeader title="开发者模式" />
+        <FormRow label="启用开发者模式" desc="开启后将显示调试工具和高级日志" noBorder>
+          <Switch size="sm" checked={settings.devMode} onCheckedChange={v => updateSetting('devMode', v)} />
+        </FormRow>
+      </div>
     </div>
   );
 }
@@ -257,14 +263,16 @@ function CustomCSSPanel() {
         </Button>
       </div>
 
-      <p className="text-xs text-muted-foreground/60 mb-3">{'在此处输入 CSS 代码可覆盖默认界面样式。'}</p>
+      <div className="border border-section-border rounded-[var(--radius-button)] px-3.5 py-3">
+        <p className="text-xs text-muted-foreground/60 mb-3">{'在此处输入 CSS 代码可覆盖默认界面样式。'}</p>
 
-      <Textarea
-        value={settings.customCSS}
-        onChange={e => updateSetting('customCSS', e.target.value)}
-        spellCheck={false}
-        className="w-full h-[260px] px-4 py-3 bg-muted/30 border border-border/50 rounded-xl text-xs text-muted-foreground outline-none resize-y font-mono leading-relaxed placeholder:text-muted-foreground/60 scrollbar-thin focus:border-border transition-colors"
-      />
+        <Textarea
+          value={settings.customCSS}
+          onChange={e => updateSetting('customCSS', e.target.value)}
+          spellCheck={false}
+          className="w-full h-[260px] px-4 py-3 bg-muted/30 border border-section-border rounded-xl text-xs text-muted-foreground outline-none resize-y font-mono leading-relaxed placeholder:text-muted-foreground/60 scrollbar-thin focus:border-border transition-colors"
+        />
+      </div>
     </div>
   );
 }
@@ -288,7 +296,7 @@ export function GeneralSettingsPage() {
   return (
     <div className="flex h-full min-h-0">
       {/* Middle Column: Navigation */}
-      <div className="w-[160px] flex-shrink-0 flex flex-col border-r border-border/30 min-h-0">
+      <div className="w-[160px] flex-shrink-0 flex flex-col border-r border-section-border min-h-0">
         <div className="px-3.5 pt-4 pb-2 flex-shrink-0">
           <p className="text-xs text-muted-foreground/60 font-medium">通用配置</p>
         </div>

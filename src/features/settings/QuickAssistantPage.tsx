@@ -249,7 +249,7 @@ function ActionsManagePanel({ open, onClose, actions, setActions, onAdd, onEdit 
             className="settings-panel w-[300px]"
           >
             {/* Header */}
-            <div className="flex items-center justify-between px-5 py-3.5 border-b border-border/30 flex-shrink-0">
+            <div className="flex items-center justify-between px-5 py-3.5 border-b border-section-border flex-shrink-0">
               <div className="flex items-center gap-2">
                 <Layers size={14} className="text-muted-foreground/60" />
                 <Typography variant="subtitle">功能管理</Typography>
@@ -320,7 +320,7 @@ function ActionsManagePanel({ open, onClose, actions, setActions, onAdd, onEdit 
             </div>
 
             {/* Footer */}
-            <div className="flex items-start gap-2 px-5 py-3 border-t border-border/30 flex-shrink-0">
+            <div className="flex items-start gap-2 px-5 py-3 border-t border-section-border flex-shrink-0">
               <CircleHelp size={10} className="text-muted-foreground/40 mt-[1px] flex-shrink-0" />
               <p className="text-xs text-muted-foreground/40 leading-relaxed">
                 功能项将按列表顺序显示在快捷助手弹窗中。第一项默认被高亮选中，按回车即可执行。
@@ -388,7 +388,7 @@ function ActionFormPanel({ open, onClose, action, onSave }: {
             className="settings-panel w-[300px]"
           >
             {/* Header */}
-            <div className="flex items-center justify-between px-5 py-3.5 border-b border-border/30 flex-shrink-0">
+            <div className="flex items-center justify-between px-5 py-3.5 border-b border-section-border flex-shrink-0">
               <div className="flex items-center gap-2">
                 {isAdd ? <Plus size={14} className="text-cherry-primary" /> : <Pencil size={14} className="text-muted-foreground/60" />}
                 <Typography variant="subtitle">
@@ -410,7 +410,7 @@ function ActionFormPanel({ open, onClose, action, onSave }: {
                   <Input
                     value={label}
                     onChange={e => setLabel(e.target.value)}
-                    className="flex-1 bg-muted/50 border border-border/50 rounded-xl px-3 py-[8px] text-xs text-foreground focus:border-cherry-primary/30"
+                    className="flex-1 bg-muted/50 border border-section-border rounded-xl px-3 py-[8px] text-xs text-foreground focus:border-cherry-primary/30"
                     placeholder="功能名称，例如：代码审查"
                     autoFocus
                     onKeyDown={e => { if (e.key === 'Enter' && canSave) handleSave(); if (e.key === 'Escape') onClose(); }}
@@ -424,7 +424,7 @@ function ActionFormPanel({ open, onClose, action, onSave }: {
                 <Textarea
                   value={prompt}
                   onChange={e => setPrompt(e.target.value)}
-                  className="w-full bg-muted/50 border border-border/50 rounded-xl px-3 py-[8px] text-xs text-muted-foreground/60 outline-none focus:border-cherry-primary/30 resize-none transition-colors"
+                  className="w-full bg-muted/50 border border-section-border rounded-xl px-3 py-[8px] text-xs text-muted-foreground/60 outline-none focus:border-cherry-primary/30 resize-none transition-colors"
                   placeholder="可选，例如：请审查以下代码并给出改进建议："
                   rows={3}
                 />
@@ -432,7 +432,7 @@ function ActionFormPanel({ open, onClose, action, onSave }: {
             </div>
 
             {/* Footer */}
-            <div className="flex items-center justify-end gap-2 px-5 py-3.5 border-t border-border/30 flex-shrink-0">
+            <div className="flex items-center justify-end gap-2 px-5 py-3.5 border-t border-section-border flex-shrink-0">
               <Button variant="ghost" size="xs" onClick={onClose} className="text-muted-foreground/60 hover:text-foreground">
                 取消
               </Button>
@@ -543,7 +543,7 @@ function ModelPanel({ disabled, actions, onOpenManagePanel }: {
         </div>
 
         {/* Preview card */}
-        <div className="bg-muted/30 border border-border/50 rounded-2xl overflow-hidden p-2">
+        <div className="bg-muted/30 border border-section-border rounded-2xl overflow-hidden p-2">
           {/* Input bar */}
           <div className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl bg-muted/30">
             <Sparkles size={14} className="text-cherry-primary/40 flex-shrink-0" />
@@ -581,7 +581,7 @@ function ModelPanel({ disabled, actions, onOpenManagePanel }: {
           )}
 
           {/* Footer */}
-          <div className="flex items-center justify-between px-3 py-2 mt-1 border-t border-border/30">
+          <div className="flex items-center justify-between px-3 py-2 mt-1 border-t border-section-border">
             <div className="flex items-center gap-1.5 text-muted-foreground/50">
               <AtSign size={9} />
               <span className="text-xs">按 ESC 关闭</span>
@@ -698,7 +698,7 @@ export function QuickAssistantPage() {
   return (
     <div className="flex h-full min-h-0">
       {/* Left nav */}
-      <div className="w-[160px] flex-shrink-0 flex flex-col border-r border-border/30 min-h-0">
+      <div className="w-[160px] flex-shrink-0 flex flex-col border-r border-section-border min-h-0">
         <div className="px-3.5 pt-4 pb-2 flex items-center justify-between flex-shrink-0">
           <p className="text-xs text-muted-foreground/60 font-medium">快捷助手</p>
           <Switch size="sm" checked={masterEnabled} onCheckedChange={setMasterEnabled} />
