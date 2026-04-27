@@ -5,7 +5,7 @@ import {
 } from "@cherry-studio/ui"
 import {
   Settings2, Cloud, Sparkles, Server, Plug, Globe2, FileScan,
-  BrainCircuit, Database, MousePointer, Command, MessageSquareText,
+  Database, MousePointer, Command,
   BarChart3, Info, Home, ChevronRight,
 } from "lucide-react"
 import { Section, type PropDef } from "../components/Section"
@@ -43,7 +43,6 @@ const NAV_GROUPS: NavGroup[] = [
       { id: "mcp", label: "MCP 服务", icon: Plug },
       { id: "search", label: "网络搜索", icon: Globe2 },
       { id: "documents", label: "文档解析", icon: FileScan },
-      { id: "memories", label: "记忆功能", icon: BrainCircuit },
     ],
   },
   {
@@ -59,7 +58,6 @@ const NAV_GROUPS: NavGroup[] = [
       { id: "selection-assistant", label: "划词助手", icon: MousePointer },
       { id: "shortcuts", label: "快捷键", icon: Command },
       { id: "quick-assistant", label: "快捷助手", icon: Sparkles },
-      { id: "quick-phrases", label: "快捷短语", icon: MessageSquareText },
     ],
   },
   {

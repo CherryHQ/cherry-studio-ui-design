@@ -36,8 +36,8 @@ import { Button, Dialog, DialogContent, Typography, Switch, Card, CardContent, T
 type SettingsSection =
   | 'home'
   | 'general' | 'data-settings' | 'archive' | 'api-gateway' | 'shortcuts' | 'about' | 'dashboard'
-  | 'models' | 'default-model' | 'mcp' | 'search' | 'documents' | 'memories'
-  | 'quick-assistant' | 'selection-assistant' | 'quick-phrases';
+  | 'models' | 'default-model' | 'mcp' | 'search' | 'documents'
+  | 'quick-assistant' | 'selection-assistant';
 
 interface NavGroup {
   label: string;
@@ -65,48 +65,46 @@ const NAV_GROUPS: NavGroup[] = [
   {
     label: '',
     items: [
-      { id: 'home', label: '\u9996\u9875', icon: Home },
+      { id: 'home', label: '首页', icon: Home },
     ],
   },
   {
-    label: '\u96c6\u6210',
+    label: '模型',
     items: [
-      { id: 'models', label: '\u6a21\u578b\u670d\u52a1', icon: Cloud },
-      { id: 'default-model', label: '\u9ed8\u8ba4\u6a21\u578b', icon: Sparkles },
-      { id: 'api-gateway', label: 'API \u7f51\u5173', icon: Server },
+      { id: 'models', label: '模型服务', icon: Cloud },
+      { id: 'default-model', label: '默认模型', icon: Sparkles },
+      { id: 'api-gateway', label: 'API 网关', icon: Server },
     ],
   },
   {
-    label: '\u670d\u52a1',
+    label: '插件',
     items: [
-      { id: 'mcp', label: 'MCP \u670d\u52a1', icon: Plug },
-      { id: 'search', label: '\u7f51\u7edc\u641c\u7d22', icon: Globe2 },
-      { id: 'documents', label: '\u6587\u6863\u89e3\u6790', icon: FileScan },
-      { id: 'memories', label: '\u8bb0\u5fc6\u529f\u80fd', icon: BrainCircuit },
+      { id: 'mcp', label: 'MCP 服务', icon: Plug },
+      { id: 'search', label: '网络搜索', icon: Globe2 },
+      { id: 'documents', label: '文档解析', icon: FileScan },
     ],
   },
   {
-    label: '\u5e94\u7528\u8bbe\u7f6e',
+    label: '应用设置',
     items: [
-      { id: 'general', label: '\u901a\u7528\u8bbe\u7f6e', icon: Settings2 },
-      { id: 'data-settings', label: '\u6570\u636e\u8bbe\u7f6e', icon: Database },
-      { id: 'archive', label: '\u5f52\u6863\u7ba1\u7406', icon: Archive },
+      { id: 'general', label: '通用设置', icon: Settings2 },
+      { id: 'data-settings', label: '数据设置', icon: Database },
+      { id: 'archive', label: '归档管理', icon: Archive },
     ],
   },
   {
-    label: '\u6548\u7387\u5de5\u5177',
+    label: '效率',
     items: [
-      { id: 'selection-assistant', label: '\u5212\u8bcd\u52a9\u624b', icon: MousePointer },
-      { id: 'shortcuts', label: '\u5feb\u6377\u952e', icon: Command },
-      { id: 'quick-assistant', label: '\u5feb\u6377\u52a9\u624b', icon: Sparkles },
-      { id: 'quick-phrases', label: '\u5feb\u6377\u77ed\u8bed', icon: MessageSquareText },
+      { id: 'selection-assistant', label: '划词助手', icon: MousePointer },
+      { id: 'shortcuts', label: '快捷键', icon: Command },
+      { id: 'quick-assistant', label: '快捷助手', icon: Sparkles },
     ],
   },
   {
-    label: '\u7cfb\u7edf',
+    label: '系统',
     items: [
-      { id: 'dashboard', label: '\u6570\u636e\u7edf\u8ba1', icon: BarChart3 },
-      { id: 'about', label: '\u5173\u4e8e\u6211\u4eec', icon: Info },
+      { id: 'dashboard', label: '数据统计', icon: BarChart3 },
+      { id: 'about', label: '关于我们', icon: Info },
     ],
   },
 ];
@@ -918,21 +916,7 @@ export function SettingsPage({ open, onClose, initialSection }: { open: boolean;
   const renderContent = () => {
     switch (activeSection) {
       case 'home': return <HomeSettings onNavigate={setActiveSection} />;
-      case 'general': return null; // handled separately
-      case 'shortcuts': return null; // handled separately
       case 'about': return <AboutPage />;
-      case 'models': return null; // handled separately
-      case 'default-model': return null; // handled separately
-      case 'mcp': return null; // handled separately
-      case 'data-settings': return null; // handled separately
-      case 'archive': return null; // handled separately
-      case 'api-gateway': return null; // handled separately
-      case 'search': return null; // handled separately
-      case 'documents': return null; // handled separately
-      case 'memories': return null; // handled separately
-      case 'quick-assistant': return null; // handled separately
-      case 'selection-assistant': return null; // handled separately
-      case 'quick-phrases': return null; // handled separately
       default: return null;
     }
   };
@@ -946,19 +930,17 @@ export function SettingsPage({ open, onClose, initialSection }: { open: boolean;
 
           {/* Content Area */}
           <div className="flex-1 flex flex-col min-w-0 overflow-hidden mr-2 mb-2 mt-2 ml-0 bg-muted/30 border border-border/50 rounded-2xl">
-            {activeSection === 'models' || activeSection === 'default-model' || activeSection === 'search' || activeSection === 'documents' || activeSection === 'memories' || activeSection === 'data-settings' || activeSection === 'archive' || activeSection === 'api-gateway' || activeSection === 'shortcuts' || activeSection === 'selection-assistant' || activeSection === 'quick-assistant' || activeSection === 'quick-phrases' || activeSection === 'general' || activeSection === 'mcp' || activeSection === 'dashboard' ? (
+            {activeSection === 'models' || activeSection === 'default-model' || activeSection === 'search' || activeSection === 'documents' || activeSection === 'data-settings' || activeSection === 'archive' || activeSection === 'api-gateway' || activeSection === 'shortcuts' || activeSection === 'selection-assistant' || activeSection === 'quick-assistant' || activeSection === 'general' || activeSection === 'mcp' || activeSection === 'dashboard' ? (
               activeSection === 'models' ? <ModelServicePage />
                 : activeSection === 'default-model' ? <DefaultModelSettingsPage />
                 : activeSection === 'search' ? <WebSearchPage />
                 : activeSection === 'documents' ? <DocumentServicePage />
-                : activeSection === 'memories' ? <MemoriesPage />
                 : activeSection === 'data-settings' ? <DataSettingsPage />
                 : activeSection === 'archive' ? <ArchiveManagePage />
                 : activeSection === 'api-gateway' ? <ApiGatewayPage />
                 : activeSection === 'shortcuts' ? <ShortcutsPage />
                 : activeSection === 'selection-assistant' ? <SelectionAssistantPage />
                 : activeSection === 'quick-assistant' ? <QuickAssistantPage />
-                : activeSection === 'quick-phrases' ? <QuickPhrasesPage />
                 : activeSection === 'general' ? <GeneralSettingsPage />
                 : activeSection === 'dashboard' ? <DashboardPage />
                 : <MCPServicePage />

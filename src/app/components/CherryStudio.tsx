@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Puzzle } from 'lucide-react';
 import { Sidebar } from './layout/Sidebar';
 import { TabBar } from './layout/TabBar';
-import { TabContextMenu, FloatingWindow, NewTabDialog, SearchDialog, DragGhost } from '@cherry-studio/ui';
+import { TabContextMenu, FloatingWindow, NewTabDialog, SearchDialog, DragGhost, AnnotationProvider, AnnotationOverlay, AnnotationToggle, AnnotationList } from '@cherry-studio/ui';
 import { MainContent } from './MainContent';
 import {
   menuItems, getLayout,
@@ -36,9 +36,11 @@ function CherryStudioInner() {
   const [hoverVisible, setHoverVisible] = useState(false);
   const [newTabDialogOpen, setNewTabDialogOpen] = useState(false);
   const [newTabSearch, setNewTabSearch] = useState('');
+  const [newTabManageMode, setNewTabManageMode] = useState(false);
   const [searchDialogOpen, setSearchDialogOpen] = useState(false);
   const [hiddenApps, setHiddenApps] = useState<Set<string>>(new Set(['explore', 'library', 'knowledge', 'file', 'code', 'note', 'extensions']));
   const [appOrder, setAppOrder] = useState<string[]>(() => dialogAppIcons.map(a => a.id));
+  const [annotationListOpen, setAnnotationListOpen] = useState(false);
 
   const [libraryEditResourceId, setLibraryEditResourceId] = useState<string | null>(null);
   const [libraryCreateType, setLibraryCreateType] = useState<'agent' | 'assistant' | null>(null);
@@ -213,6 +215,7 @@ function CherryStudioInner() {
   // ===========================
   return (
     <GlobalActionProvider value={globalActions}>
+      <AnnotationProvider page={settingsOpen ? 'settings' : activeItem} boundarySelector="body" appName="cherry-studio">
       <div className="flex items-center justify-center h-screen w-full bg-muted dark:bg-background p-6">
         <div id="cherry-app-root" className="flex flex-col w-full h-full max-w-[1440px] max-h-[900px] bg-sidebar text-foreground rounded-2xl border border-border overflow-hidden shadow-2xl relative">
           <TabBar
@@ -224,7 +227,8 @@ function CherryStudioInner() {
               e.preventDefault();
               setContextMenu({ open: true, x: e.clientX, y: e.clientY, tabId });
             }}
-            onNewTab={() => { setNewTabSearch(''); setNewTabDialogOpen(true); }}
+            onNewTab={() => { setNewTabSearch(''); setNewTabManageMode(false); setNewTabDialogOpen(true); }}
+            onManageShortcuts={() => { setNewTabSearch(''); setNewTabManageMode(true); setNewTabDialogOpen(true); }}
             startTabDrag={onStartTabDrag}
           />
 
@@ -320,7 +324,7 @@ function CherryStudioInner() {
           search={newTabSearch}
           onSearchChange={setNewTabSearch}
           onSelect={handleDialogCreateTab}
-          onClose={() => setNewTabDialogOpen(false)}
+          onClose={() => { setNewTabDialogOpen(false); setNewTabManageMode(false); }}
           hiddenApps={hiddenApps}
           setHiddenApps={setHiddenApps}
           appOrder={appOrder}
@@ -330,6 +334,7 @@ function CherryStudioInner() {
           newTabHistoryItems={newTabHistoryItems}
           newTabFileItems={newTabFileItems}
           dialogQuickActions={dialogQuickActions}
+          initialManageMode={newTabManageMode}
         />
 
         <SearchDialog
@@ -346,7 +351,15 @@ function CherryStudioInner() {
           onClose={() => { setSettingsOpen(false); setSettingsInitialSection(undefined); }}
           initialSection={settingsInitialSection}
         />
+
+        <AnnotationOverlay />
+        <AnnotationToggle
+          onToggleList={() => setAnnotationListOpen(v => !v)}
+          listOpen={annotationListOpen}
+        />
+        <AnnotationList open={annotationListOpen} onClose={() => setAnnotationListOpen(false)} />
       </div>
+      </AnnotationProvider>
     </GlobalActionProvider>
   );
 }

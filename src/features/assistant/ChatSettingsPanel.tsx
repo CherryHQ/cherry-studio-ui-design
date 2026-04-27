@@ -14,12 +14,12 @@ function Section({ title, defaultOpen = true, children }: { title: string; defau
         variant="ghost"
         size="sm"
         onClick={() => setOpen(v => !v)}
-        className="justify-start gap-1.5 py-1.5 w-full text-left text-xs text-muted-foreground hover:text-foreground font-normal"
+        className="justify-start gap-1.5 px-1.5 py-1.5 w-full text-left text-xs text-muted-foreground hover:text-foreground font-normal"
       >
-        {open ? <ChevronDown size={11} /> : <ChevronRight size={11} />}
+        {open ? <ChevronDown size={10} /> : <ChevronRight size={10} />}
         <span className="font-medium">{title}</span>
       </Button>
-      {open && <div className="pb-1 space-y-0">{children}</div>}
+      {open && <div className="pb-1.5 px-1 space-y-0">{children}</div>}
     </div>
   );
 }
@@ -27,7 +27,7 @@ function Section({ title, defaultOpen = true, children }: { title: string; defau
 // ===========================
 // ChatSettingsPanel
 // ===========================
-export function ChatSettingsPanel({ onClose }: { onClose: () => void }) {
+export function ChatSettingsPanel({ onClose, minimalInput, onMinimalInputChange }: { onClose: () => void; minimalInput?: boolean; onMinimalInputChange?: (v: boolean) => void }) {
   // OpenAI Settings
   const [serviceLevel, setServiceLevel] = useState('忽略');
   const [summaryMode, setSummaryMode] = useState('关闭');
@@ -35,7 +35,7 @@ export function ChatSettingsPanel({ onClose }: { onClose: () => void }) {
   const [includeUsage, setIncludeUsage] = useState('忽略');
 
   // Message Settings
-  const [showPrompt, setShowPrompt] = useState(true);
+  const [showPrompt, setShowPrompt] = useState(false);
   const [useSerif, setUseSerif] = useState(true);
   const [autoFoldThinking, setAutoFoldThinking] = useState(true);
   const [showOutline, setShowOutline] = useState(true);
@@ -64,6 +64,9 @@ export function ChatSettingsPanel({ onClose }: { onClose: () => void }) {
   const [previewTool, setPreviewTool] = useState(true);
 
   // Input Settings
+  const [localMinimalInput, setLocalMinimalInput] = useState(minimalInput ?? false);
+  const isMinimalInput = minimalInput ?? localMinimalInput;
+  const setMinimalInput = (v: boolean) => { setLocalMinimalInput(v); onMinimalInputChange?.(v); };
   const [showTokenCount, setShowTokenCount] = useState(true);
   const [longTextAsFile, setLongTextAsFile] = useState(false);
   const [mdInput, setMdInput] = useState(true);
@@ -101,7 +104,7 @@ export function ChatSettingsPanel({ onClose }: { onClose: () => void }) {
       </div>
 
       {/* Content — compact spacing via CSS variable override */}
-      <div className="flex-1 overflow-y-auto px-3 py-1 scrollbar-thin [&_[data-slot=form-row]]:py-[3px] [&_[data-slot=form-row]]:gap-3">
+      <div className="flex-1 overflow-y-auto px-3 py-1.5 scrollbar-thin [&_[data-slot=form-row]]:py-[4px] [&_[data-slot=form-row]]:gap-3">
         {/* OpenAI Settings */}
         <Section title="OpenAI 设置">
           <FormRow label="服务层级" desc=" ">
@@ -187,6 +190,7 @@ export function ChatSettingsPanel({ onClose }: { onClose: () => void }) {
 
         {/* Input Settings */}
         <Section title="输入设置" defaultOpen={false}>
+          <FormRow label="极简输入框" desc="开启后仅显示加号按钮，关闭后展示一排功能图标"><Switch size="sm" checked={isMinimalInput} onCheckedChange={setMinimalInput} /></FormRow>
           <FormRow label="显示预估 Token 数"><Switch size="sm" checked={showTokenCount} onCheckedChange={setShowTokenCount} /></FormRow>
           <FormRow label="长文本粘贴为文件"><Switch size="sm" checked={longTextAsFile} onCheckedChange={setLongTextAsFile} /></FormRow>
           <FormRow label="Markdown 渲染输入消息"><Switch size="sm" checked={mdInput} onCheckedChange={setMdInput} /></FormRow>

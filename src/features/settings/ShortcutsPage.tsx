@@ -127,7 +127,7 @@ function Keycaps({ keys, isRecording, hasConflict }: {
 // Shortcut Row — compact
 // ===========================
 function ShortcutRow({
-  item, isRecording, onStartRecording, onReset, on}: {
+  item, isRecording, onStartRecording, onReset, onToggle}: {
   item: ShortcutKey;
   isRecording: boolean;
   onStartRecording: () => void;

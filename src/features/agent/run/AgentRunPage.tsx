@@ -12,7 +12,7 @@ import {
   Edit3, Clock,
   Workflow, Cable, Layers,
   Compass, Wrench, PenTool, Bolt, Filter, Pin, ArrowDown,
-  Paperclip, Globe, Brain, Pencil,
+  Paperclip, Globe, Brain, Pencil, PanelLeftOpen, PanelLeftClose,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Tooltip } from '@/app/components/Tooltip';
@@ -341,7 +341,7 @@ function NewSessionEmpty({ onSendMessage, agentName }: { onSendMessage: (text: s
             placeholder="在这里输入消息，按 Enter 发送"
             rows={1}
             autoFocus
-            className="w-full bg-transparent text-sm text-foreground placeholder:text-muted-foreground/60 outline-none resize-none min-h-[36px] max-h-[140px] leading-[1.6] px-3.5 pt-[10px] pb-[36px]"
+            className="w-full bg-transparent text-sm text-foreground placeholder:text-muted-foreground/60 outline-none resize-none min-h-[36px] max-h-[140px] leading-[1.6] px-3.5 pt-[10px] pb-[36px] border-transparent focus-visible:border-transparent focus-visible:ring-0 shadow-none"
           />
           <div className="absolute bottom-[7px] left-2.5 right-2.5 flex items-center justify-between">
             <div className="flex items-center gap-0.5">
@@ -1136,7 +1136,7 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
             <Tooltip content={historySidebar.isCompact ? '收起会话列表' : '展开会话列表'} side="bottom">
               <Button variant="ghost" size="icon-xs" onClick={() => historySidebar.toggle()}
                 className={`p-1.5 w-auto h-auto mr-0.5 ${historySidebar.isCompact ? 'text-muted-foreground hover:text-foreground hover:bg-accent/15' : 'text-muted-foreground/40 hover:text-foreground hover:bg-accent/15'}`}>
-                <History size={13} />
+                {historySidebar.isCompact ? <PanelLeftClose size={13} /> : <PanelLeftOpen size={13} />}
               </Button>
             </Tooltip>
 

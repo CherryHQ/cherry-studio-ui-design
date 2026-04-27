@@ -718,16 +718,30 @@ function PromptBar({ params, onChange, onGenerate, isGenerating }: {
           onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); onGenerate(); } }}
           className="w-full bg-transparent px-4 pt-3 pb-1.5 text-xs text-foreground placeholder:text-muted-foreground/60 resize-none outline-none"
         />
-        <div className="flex items-center justify-between px-3 pb-2.5">
+        <div className="flex items-center justify-between px-3.5 pb-3 pt-2.5">
           <div className="flex items-center gap-1">
             <Button variant="ghost" size="icon-xs" className="p-1.5 text-muted-foreground/40 hover:text-foreground hover:bg-muted/40">
               <Plus size={13} />
             </Button>
-            <Button variant="ghost" size="xs" className="gap-1 px-2 text-xs text-cherry-text-muted hover:text-cherry-primary-dark hover:bg-cherry-active-bg">
-              <Sparkles size={10} />
-              <span>{'\u7075\u611f'}</span>
-              <ChevronDown size={8} />
-            </Button>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="ghost" size="xs" className="gap-1 px-2 text-xs text-cherry-text-muted hover:text-cherry-primary-dark hover:bg-cherry-active-bg">
+                  <Sparkles size={10} />
+                  <span>{'\u7075\u611f'}</span>
+                  <ChevronDown size={8} />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent align="start" side="top" className="p-1.5 w-[220px]">
+                <p className="text-xs text-muted-foreground/50 px-2 py-1 mb-0.5">灵感提示</p>
+                {['赛博朋克风格的未来城市夜景', '水彩风格的山间小屋', '极简主义日式庭院', '梦幻星空下的灯塔', '蒸汽朋克风格的飞行器'].map(p => (
+                  <Button variant="ghost" size="xs" key={p}
+                    onClick={() => { const el = document.querySelector<HTMLTextAreaElement>('.prompt-input-painting'); if (el) { const nativeSet = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, 'value')?.set; nativeSet?.call(el, p); el.dispatchEvent(new Event('input', { bubbles: true })); } }}
+                    className="w-full justify-start px-2 py-[5px] text-xs text-muted-foreground hover:text-foreground rounded-md">
+                    {p}
+                  </Button>
+                ))}
+              </PopoverContent>
+            </Popover>
           </div>
           <div className="flex items-center gap-2">
             <Popover open={modelDropdownOpen} onOpenChange={setModelDropdownOpen}>

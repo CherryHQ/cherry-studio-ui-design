@@ -11,7 +11,8 @@ import {
   Quote, Type, Brain, RotateCcw,
   LayoutGrid, Rows3, Columns3,
   Search, Paperclip, Hammer, Link, Zap,
-  SlidersHorizontal,
+  Settings2, NotebookPen, PenTool, Lightbulb, ScanLine, Eraser,
+  PanelLeftOpen, PanelLeftClose,
   MessageCircle, Image as ImageIcon,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
@@ -42,6 +43,29 @@ import {
 
 // Backward-compatible alias
 type AssistantMessage = Message;
+
+// Infer provider ID from model name for BrandLogo
+function inferProviderId(model?: string, provider?: string): string {
+  if (provider) return provider.toLowerCase();
+  if (!model) return '';
+  const m = model.toLowerCase();
+  if (m.includes('gpt') || m.includes('dall-e') || m.includes('o1') || m.includes('o3') || m.includes('o4') || m.includes('codex')) return 'openai';
+  if (m.includes('claude')) return 'anthropic';
+  if (m.includes('gemini')) return 'google';
+  if (m.includes('deepseek')) return 'deepseek';
+  if (m.includes('qwen')) return 'qwen';
+  if (m.includes('llama') || m.includes('mixtral')) return 'meta';
+  if (m.includes('mistral') || m.includes('codestral')) return 'mistral';
+  if (m.includes('glm')) return 'zhipu';
+  return '';
+}
+function inferProviderLetter(model?: string, provider?: string): string {
+  if (provider) return provider[0]?.toUpperCase() || '?';
+  if (!model) return '?';
+  const id = inferProviderId(model, provider);
+  const letterMap: Record<string, string> = { openai: 'O', anthropic: 'A', google: 'G', deepseek: 'D', qwen: 'Q', meta: 'M', mistral: 'M', zhipu: '智' };
+  return letterMap[id] || model[0]?.toUpperCase() || '?';
+}
 import { ASSISTANT_MODELS } from '@/app/config/models';
 import { TopicHistoryPage } from '@/features/assistant/TopicHistoryPage';
 import { BranchTreePanel } from '@/features/assistant/BranchTreePanel';
@@ -695,7 +719,7 @@ function AssistantInfoPanel({ assistant, topics, onSelectTopic, onClose, onEdit,
         <div className="flex items-center gap-2 text-xs">
           <span className="text-muted-foreground">默认模型</span>
           <div className="flex items-center gap-1.5 px-2 py-[3px] rounded-md bg-accent/25">
-            <BrandLogo id={assistant.provider?.toLowerCase() || ''} fallbackLetter="?" size={14} className="shrink-0" />
+            <BrandLogo id={inferProviderId(assistant.model, assistant.provider)} fallbackLetter={inferProviderLetter(assistant.model, assistant.provider)} size={14} className="shrink-0" />
             <span className="text-foreground">{assistant.model}</span>
           </div>
         </div>
@@ -810,7 +834,7 @@ function ChatDetailPanel({ metadata, onClose }: {
           </div>
           <div className="flex items-center justify-between text-xs">
             <span className="text-muted-foreground/60">模型</span>
-            <div className="flex items-center gap-1.5"><BrandLogo id={metadata.provider?.toLowerCase() || ''} fallbackLetter="?" size={14} className="shrink-0" /><span className="text-foreground">{metadata.model}</span></div>
+            <div className="flex items-center gap-1.5"><BrandLogo id={inferProviderId(metadata.model, metadata.provider)} fallbackLetter={inferProviderLetter(metadata.model, metadata.provider)} size={14} className="shrink-0" /><span className="text-foreground">{metadata.model}</span></div>
           </div>
           <div className="flex items-center justify-between text-xs">
             <span className="text-muted-foreground/60">状态</span>
@@ -862,7 +886,7 @@ function ChatDetailPanel({ metadata, onClose }: {
             </div>
           </div>
           <div className="rounded-lg bg-muted/15 overflow-auto scrollbar-thin-xs">
-            <pre className="px-3 py-2.5 text-xs leading-[1.7] font-mono whitespace-pre">
+            <pre className="px-3 py-2.5 text-xs leading-[1.7] font-mono whitespace-pre select-text">
               {jsonContent.split('\n').map((line, i) => <div key={i}>{highlightLine(line)}</div>)}
             </pre>
           </div>
@@ -908,6 +932,7 @@ function ChatDetailPanel({ metadata, onClose }: {
 function RAGPanel({ ragInfo, onClose }: { ragInfo: RAGInfo; onClose: () => void }) {
   const [subTab, setSubTab] = useState<'chunks' | 'process'>('chunks');
   const [expandedChunk, setExpandedChunk] = useState<number | null>(null);
+  const [logCopied, setLogCopied] = useState(false);
 
   return (
     <FloatingPanel title="知识库" icon={<Database size={12} className="text-info/70" />} onClose={onClose}>
@@ -919,7 +944,7 @@ function RAGPanel({ ragInfo, onClose }: { ragInfo: RAGInfo; onClose: () => void 
           {ragInfo.rerankModel && (
             <div className="flex items-center justify-between text-xs">
               <span className="text-muted-foreground/60">重排</span>
-              <div className="flex items-center gap-1.5"><BrandLogo id="" fallbackLetter="R" size={14} className="shrink-0" /><span className="text-foreground">{ragInfo.rerankModel}</span></div>
+              <div className="flex items-center gap-1.5"><BrandLogo id={inferProviderId(ragInfo.rerankModel)} fallbackLetter={inferProviderLetter(ragInfo.rerankModel)} size={14} className="shrink-0" /><span className="text-foreground">{ragInfo.rerankModel}</span></div>
             </div>
           )}
           <div className="flex items-center justify-between text-xs"><span className="text-muted-foreground/60">检索方式</span><span className="text-foreground">{ragInfo.retrievalMethod}</span></div>
@@ -964,10 +989,19 @@ function RAGPanel({ ragInfo, onClose }: { ragInfo: RAGInfo; onClose: () => void 
           </div>
         )}
         {subTab === 'process' && (
-          <div className="rounded-lg bg-muted/15 overflow-auto scrollbar-thin-xs">
-            <pre className="px-3 py-2.5 text-xs leading-[1.7] font-mono">
-              {ragInfo.processLog.map((log, i) => <div key={i}>{highlightLine(log)}</div>)}
-            </pre>
+          <div>
+            <div className="flex items-center justify-end mb-1.5">
+              <Tooltip content="复制" side="bottom"><Button variant="ghost" size="icon-xs"
+                onClick={() => { copyToClipboard(ragInfo.processLog.join('\n')); setLogCopied(true); setTimeout(() => setLogCopied(false), 1500); }}
+                className="p-1 w-auto h-auto text-muted-foreground/40 hover:text-foreground hover:bg-accent/15">
+                {logCopied ? <Check size={9} className="text-cherry-primary" /> : <Copy size={9} />}
+              </Button></Tooltip>
+            </div>
+            <div className="rounded-lg bg-muted/15 overflow-auto scrollbar-thin-xs">
+              <pre className="px-3 py-2.5 text-xs leading-[1.7] font-mono select-text">
+                {ragInfo.processLog.map((log, i) => <div key={i}>{highlightLine(log)}</div>)}
+              </pre>
+            </div>
           </div>
         )}
       </div>
@@ -1155,7 +1189,7 @@ const EXPORT_ITEMS = [
   '导出到 Notion', '导出到 Obsidian', '导出到语雀', '导出到 Joplin', '导出到思源笔记',
 ];
 
-function MessageActionBar({ onCopy, onQuote, onDelete, onBookmark, onShare, onInfo, onRetry, ctxMenuOpen, onOpenChange, alignRight, retryCount, activeRetryIndex, onRetryNav }: {
+function MessageActionBar({ onCopy, onQuote, onDelete, onBookmark, onShare, onInfo, onRetry, ctxMenuOpen, onOpenChange, alignRight, retryCount, activeRetryIndex, onRetryNav, isUser }: {
   onCopy: () => void;
   onQuote: () => void;
   onDelete: () => void;
@@ -1166,56 +1200,62 @@ function MessageActionBar({ onCopy, onQuote, onDelete, onBookmark, onShare, onIn
   ctxMenuOpen: boolean;
   onOpenChange: (open: boolean) => void;
   alignRight?: boolean;
-  /** Total number of versions (original + retries). 1 = no retries yet */
   retryCount?: number;
-  /** Currently active version index (0-based) */
   activeRetryIndex?: number;
-  /** Navigate to a specific retry version */
   onRetryNav?: (index: number) => void;
+  isUser?: boolean;
 }) {
   const totalVersions = retryCount ?? 1;
   const currentVersion = (activeRetryIndex ?? 0) + 1;
+  const btnCls = "p-[4px] w-auto h-auto text-muted-foreground/40 hover:text-foreground hover:bg-accent/15";
 
+  if (isUser) {
+    // User message: retry, 复制, 删除
+    return (
+      <div className="flex items-center gap-0.5 mt-1 -ml-1">
+        {onRetry && <Tooltip content="重试" side="bottom"><Button variant="ghost" size="icon-xs" onClick={onRetry} className={btnCls}><RotateCcw size={12} /></Button></Tooltip>}
+        <Tooltip content="复制" side="bottom"><Button variant="ghost" size="icon-xs" onClick={onCopy} className={btnCls}><Copy size={12} /></Button></Tooltip>
+        <Tooltip content="删除" side="bottom"><Button variant="ghost" size="icon-xs" onClick={onDelete} className={btnCls}><Trash2 size={12} /></Button></Tooltip>
+      </div>
+    );
+  }
+
+  // Assistant message: 复制, retry, @, 翻译, 笔记, 信息, 删除, 分支 + dropdown(编辑, 多选, 保存, 导出)
   return (
     <div className="flex items-center gap-0.5 mt-1 -ml-1">
-      {/* Retry pagination: < 2/3 > */}
+      {/* Retry pagination */}
       {totalVersions > 1 && onRetryNav && (
         <div className="flex items-center gap-0 mr-0.5">
-          <Button variant="ghost" size="icon-xs"
+          <Tooltip content="上一个版本" side="bottom"><Button variant="ghost" size="icon-xs"
             onClick={() => onRetryNav(Math.max(0, (activeRetryIndex ?? 0) - 1))}
             disabled={currentVersion <= 1}
             className="p-[3px] w-auto h-auto text-muted-foreground/40 hover:text-foreground hover:bg-accent/15 disabled:opacity-20"
-          >
-            <ChevronLeft size={11} />
-          </Button>
+          ><ChevronLeft size={11} /></Button></Tooltip>
           <span className="text-xs text-muted-foreground/50 tabular-nums min-w-[28px] text-center">{currentVersion}/{totalVersions}</span>
-          <Button variant="ghost" size="icon-xs"
+          <Tooltip content="下一个版本" side="bottom"><Button variant="ghost" size="icon-xs"
             onClick={() => onRetryNav(Math.min(totalVersions - 1, (activeRetryIndex ?? 0) + 1))}
             disabled={currentVersion >= totalVersions}
             className="p-[3px] w-auto h-auto text-muted-foreground/40 hover:text-foreground hover:bg-accent/15 disabled:opacity-20"
-          >
-            <ChevronRight size={11} />
-          </Button>
+          ><ChevronRight size={11} /></Button></Tooltip>
         </div>
       )}
-      <Tooltip content="复制" side="bottom"><Button variant="ghost" size="icon-xs" onClick={onCopy} className="p-[4px] w-auto h-auto text-muted-foreground/40 hover:text-foreground hover:bg-accent/15"><Copy size={12} /></Button></Tooltip>
-      {onRetry && <Tooltip content="重试" side="bottom"><Button variant="ghost" size="icon-xs" onClick={onRetry} className="p-[4px] w-auto h-auto text-muted-foreground/40 hover:text-foreground hover:bg-accent/15"><RotateCcw size={12} /></Button></Tooltip>}
-      <Tooltip content="字体" side="bottom"><Button variant="ghost" size="icon-xs" className="p-[4px] w-auto h-auto text-muted-foreground/40 hover:text-foreground hover:bg-accent/15"><Type size={12} /></Button></Tooltip>
-      <Tooltip content="@提及" side="bottom"><Button variant="ghost" size="icon-xs" className="p-[4px] w-auto h-auto text-muted-foreground/40 hover:text-foreground hover:bg-accent/15"><AtSign size={12} /></Button></Tooltip>
-      <Tooltip content="引用" side="bottom"><Button variant="ghost" size="icon-xs" onClick={onQuote} className="p-[4px] w-auto h-auto text-muted-foreground/40 hover:text-foreground hover:bg-accent/15"><Quote size={12} /></Button></Tooltip>
-      <Tooltip content="删除" side="bottom"><Button variant="ghost" size="icon-xs" onClick={onDelete} className="p-[4px] w-auto h-auto text-muted-foreground/40 hover:text-foreground hover:bg-accent/15"><Trash2 size={12} /></Button></Tooltip>
-      <Tooltip content="收藏" side="bottom"><Button variant="ghost" size="icon-xs" onClick={onBookmark} className="p-[4px] w-auto h-auto text-muted-foreground/40 hover:text-foreground hover:bg-accent/15"><Bookmark size={12} /></Button></Tooltip>
-      <Tooltip content="分享" side="bottom"><Button variant="ghost" size="icon-xs" onClick={onShare} className="p-[4px] w-auto h-auto text-muted-foreground/40 hover:text-foreground hover:bg-accent/15"><Share2 size={12} /></Button></Tooltip>
-      {onInfo && <Tooltip content="聊天详情" side="bottom"><Button variant="ghost" size="icon-xs" onClick={onInfo} className="p-[4px] w-auto h-auto text-muted-foreground/40 hover:text-foreground hover:bg-accent/15"><Info size={12} /></Button></Tooltip>}
+      <Tooltip content="复制" side="bottom"><Button variant="ghost" size="icon-xs" onClick={onCopy} className={btnCls}><Copy size={12} /></Button></Tooltip>
+      {onRetry && <Tooltip content="重试" side="bottom"><Button variant="ghost" size="icon-xs" onClick={onRetry} className={btnCls}><RotateCcw size={12} /></Button></Tooltip>}
+      <Tooltip content="@提及" side="bottom"><Button variant="ghost" size="icon-xs" className={btnCls}><AtSign size={12} /></Button></Tooltip>
+      <Tooltip content="翻译" side="bottom"><Button variant="ghost" size="icon-xs" className={btnCls}><Languages size={12} /></Button></Tooltip>
+      <Tooltip content="笔记" side="bottom"><Button variant="ghost" size="icon-xs" className={btnCls}><NotebookPen size={12} /></Button></Tooltip>
+      {onInfo && <Tooltip content="信息" side="bottom"><Button variant="ghost" size="icon-xs" onClick={onInfo} className={btnCls}><Info size={12} /></Button></Tooltip>}
+      <Tooltip content="删除" side="bottom"><Button variant="ghost" size="icon-xs" onClick={onDelete} className={btnCls}><Trash2 size={12} /></Button></Tooltip>
+      <Tooltip content="分支" side="bottom"><Button variant="ghost" size="icon-xs" className={btnCls}><GitBranch size={12} /></Button></Tooltip>
       <DropdownMenu open={ctxMenuOpen} onOpenChange={onOpenChange}>
-        <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="icon-xs" className="p-[4px] w-auto h-auto text-muted-foreground/40 hover:text-foreground hover:bg-accent/15"><MoreHorizontal size={12} /></Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align={alignRight ? 'end' : 'start'} side="top" className="min-w-[160px]">
-          <DropdownMenuItem onClick={() => {}} className="gap-2.5 text-xs"><Edit3 size={11} className="text-muted-foreground" />编辑</DropdownMenuItem>
-          <DropdownMenuItem onClick={() => {}} className="gap-2.5 text-xs"><GitBranch size={11} className="text-muted-foreground" />分支</DropdownMenuItem>
+        <Tooltip content="更多" side="bottom">
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="icon-xs" className={btnCls}><MoreHorizontal size={12} /></Button>
+          </DropdownMenuTrigger>
+        </Tooltip>
+        <DropdownMenuContent align={alignRight ? 'end' : 'start'} side="top" className="min-w-[140px]">
           <DropdownMenuItem onClick={() => {}} className="gap-2.5 text-xs"><ListChecks size={11} className="text-muted-foreground" />多选</DropdownMenuItem>
-          <DropdownMenuItem onClick={() => {}} className="gap-2.5 text-xs"><Bookmark size={11} className="text-muted-foreground" />保存</DropdownMenuItem>
+          <DropdownMenuItem onClick={onBookmark} className="gap-2.5 text-xs"><Bookmark size={11} className="text-muted-foreground" />保存</DropdownMenuItem>
           <DropdownMenuSub>
             <DropdownMenuSubTrigger className="gap-2.5 text-xs"><Share2 size={11} className="text-muted-foreground" />导出</DropdownMenuSubTrigger>
             <DropdownMenuSubContent className="min-w-[220px]">
@@ -1275,7 +1315,7 @@ function MessageBubble({ msg, onOpenPanel, onAvatarClick, onOpenArtifact, assist
           <MessageActionBar
             onCopy={handleCopy} onQuote={() => {}} onDelete={() => {}} onBookmark={() => {}} onShare={() => {}}
             ctxMenuOpen={ctxMenu} onOpenChange={setCtxMenu}
-            alignRight
+            alignRight isUser
           />
         </div>
       </motion.div>
@@ -1661,6 +1701,25 @@ export function AssistantRunPage() {
   const historySidebar = useHistorySidebar('compact');
   const [showBranchTree, setShowBranchTree] = useState(false);
   const [showChatSettings, setShowChatSettings] = useState(false);
+  const [minimalInput, setMinimalInput] = useState(true);
+  const [toolbarExpanded, setToolbarExpanded] = useState(true);
+  const [reasoningLevel, setReasoningLevel] = useState<string | null>(null);
+
+  // Toolbar tool definitions — secondary tools are reorderable
+  const defaultSecondaryTools = [
+    { id: 'mcp', label: 'MCP', icon: Hammer },
+    { id: 'scan', label: '截图', icon: ScanLine },
+    { id: 'pen', label: '画笔', icon: PenTool },
+    { id: 'genimg', label: '生成图片', icon: ImageIcon },
+    { id: 'reasoning', label: '思考', icon: Lightbulb },
+    { id: 'quickphrase', label: '快捷短语', icon: Zap },
+    { id: 'code', label: '代码', icon: Code2 },
+    { id: 'webctx', label: '网页上下文', icon: Link },
+    { id: 'clearctx', label: '清除上下文', icon: Eraser },
+  ];
+  const [secondaryToolOrder, setSecondaryToolOrder] = useState(defaultSecondaryTools.map(t => t.id));
+  const toolDragRef = useRef<{ dragging: string | null; over: string | null }>({ dragging: null, over: null });
+  const orderedSecondaryTools = secondaryToolOrder.map(id => defaultSecondaryTools.find(t => t.id === id)!).filter(Boolean);
   const [activeBranchId, setActiveBranchId] = useState('main');
 
   type RightPanel = null | 'assistantInfo' | 'chatDetail' | 'rag' | 'search';
@@ -1776,6 +1835,8 @@ export function AssistantRunPage() {
   const [showPlusMenu, setShowPlusMenu] = useState(false);
   const [showPlusMore, setShowPlusMore] = useState(false);
   const [showAtMenu, setShowAtMenu] = useState(false);
+  const [showSlashMenu, setShowSlashMenu] = useState(false);
+  const [translateLang, setTranslateLang] = useState<'en' | 'zh' | 'ja'>('en');
   const plusBtnRef = useRef<HTMLButtonElement>(null);
   const plusMenuRef = useRef<HTMLDivElement>(null);
 
@@ -1922,8 +1983,19 @@ export function AssistantRunPage() {
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Escape' && showAtMenu) { e.preventDefault(); setShowAtMenu(false); return; }
+    if (e.key === 'Escape' && showSlashMenu) { e.preventDefault(); setShowSlashMenu(false); return; }
     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); }
   };
+
+  // Slash command prompt templates
+  const SLASH_PROMPTS = [
+    { id: 'translate', label: '翻译', desc: '将内容翻译成目标语言', prompt: '请将以下内容翻译成英文：\n' },
+    { id: 'summarize', label: '总结', desc: '总结核心要点', prompt: '请总结以下内容的核心要点：\n' },
+    { id: 'explain', label: '解释', desc: '用简单语言解释', prompt: '请用简单易懂的语言解释以下内容：\n' },
+    { id: 'rewrite', label: '改写', desc: '优化文字表达', prompt: '请改写以下内容，使其更加专业流畅：\n' },
+    { id: 'code-review', label: '代码审查', desc: '审查代码质量', prompt: '请审查以下代码，指出潜在问题并给出优化建议：\n' },
+    { id: 'brainstorm', label: '头脑风暴', desc: '生成创意想法', prompt: '请围绕以下主题进行头脑风暴，给出5个创意方向：\n' },
+  ];
 
   const handleInput = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const val = e.target.value;
@@ -1935,10 +2007,19 @@ export function AssistantRunPage() {
         if (charBefore === ' ' || charBefore === '\n' || val.length === 1) {
           setShowAtMenu(true);
           setShowPlusMenu(false);
+          setShowSlashMenu(false);
           // Remove the @ from input
           setInput(val.slice(0, -1));
           return;
         }
+      }
+      // Detect / typed at start of input
+      if (lastChar === '/' && val.length === 1) {
+        setShowSlashMenu(true);
+        setShowAtMenu(false);
+        setShowPlusMenu(false);
+        setInput('');
+        return;
       }
     }
     setInput(val);
@@ -1993,6 +2074,9 @@ export function AssistantRunPage() {
               onExpand={() => { setHistoryInitialAssistant(null); historySidebar.expand(); }}
               onClose={historySidebar.hide}
               entityLabel="话题"
+              onRenameGroup={(oldName, newName) => {
+                setTopics(prev => prev.map(t => t.group === oldName ? { ...t, group: newName } : t));
+              }}
             />
           </motion.div>
         )}
@@ -2006,7 +2090,7 @@ export function AssistantRunPage() {
           <Tooltip content={historySidebar.isCompact ? '收起话题列表' : '展开话题列表'} side="bottom">
             <Button variant="ghost" size="icon-xs" onClick={() => historySidebar.toggle()}
               className={`p-1.5 w-auto h-auto mr-1 ${historySidebar.isCompact ? 'text-muted-foreground hover:text-foreground hover:bg-accent/15' : 'text-muted-foreground/40 hover:text-foreground hover:bg-accent/15'}`}>
-              <History size={13} />
+              {historySidebar.isCompact ? <PanelLeftClose size={13} /> : <PanelLeftOpen size={13} />}
             </Button>
           </Tooltip>
           <MultiSelectPicker
@@ -2050,14 +2134,14 @@ export function AssistantRunPage() {
               </div>
               <Tooltip content="分支管理" side="bottom"><Button variant="ghost" size="icon-xs" onClick={() => setShowBranchTree(!showBranchTree)}
                 className={`p-1.5 w-auto h-auto ${showBranchTree ? 'text-foreground bg-accent/25' : 'text-muted-foreground hover:text-foreground hover:bg-accent/15'}`}>
-                <GitFork size={12} />
+                <GitBranch size={12} />
               </Button></Tooltip>
               <div className="w-px h-3.5 bg-border/30 mx-0.5" />
             </>
           )}
           <Tooltip content="参数设置" side="bottom"><Button variant="ghost" size="icon-xs" onClick={() => setShowChatSettings(v => !v)}
             className={`p-1.5 w-auto h-auto ${showChatSettings ? 'text-foreground bg-accent/25' : 'text-muted-foreground hover:text-foreground hover:bg-accent/15'}`}>
-            <SlidersHorizontal size={12} />
+            <Settings2 size={12} />
           </Button></Tooltip>
         </div>
       </header>
@@ -2098,13 +2182,42 @@ export function AssistantRunPage() {
             }
             customComposer={
               <div className="flex-shrink-0 px-4 pb-3">
-                <div className="relative rounded-xl border border-border/50 bg-background shadow-sm focus-within:border-border/80 transition-all duration-150">
+                <div className="relative rounded-xl border border-border/50 bg-background shadow-sm focus-within:border-border/60 transition-all duration-150">
                   <Textarea
                     ref={textareaRef} value={input} onChange={handleInput} onKeyDown={handleKeyDown}
-                    placeholder="在这里输入消息，按 Enter 发送 - @ 选择助手/模型"
+                    placeholder={minimalInput ? "在这里输入消息，按 Enter 发送 - @ 选择助手/模型 - / 插入 Prompt" : "在这里输入消息，按 Enter 发送"}
                     rows={1}
-                    className="w-full bg-transparent text-sm text-foreground placeholder:text-muted-foreground/60 outline-none resize-none min-h-[36px] max-h-[140px] leading-[1.6] px-3.5 pt-[10px] pb-[36px]"
+                    className="w-full bg-transparent text-sm text-foreground placeholder:text-muted-foreground/60 outline-none resize-none min-h-[36px] max-h-[140px] leading-[1.6] px-3.5 pt-[10px] pb-[36px] border-transparent focus-visible:border-transparent focus-visible:ring-0 shadow-none"
                   />
+                  {/* / Slash Prompt Picker */}
+                  {showSlashMenu && (
+                    <div className="absolute bottom-full left-0 right-0 mb-1 z-10">
+                      <div className="mx-2 rounded-xl border border-border/50 bg-background shadow-lg overflow-hidden">
+                        <div className="px-3 py-2 border-b border-border/30 flex items-center justify-between">
+                          <span className="text-xs text-muted-foreground/60">插入 Prompt</span>
+                          <button onClick={() => setShowSlashMenu(false)} className="text-muted-foreground/40 hover:text-foreground transition-colors">
+                            <X size={12} />
+                          </button>
+                        </div>
+                        <div className="max-h-[200px] overflow-y-auto py-1 scrollbar-thin-xs">
+                          {SLASH_PROMPTS.map(item => (
+                            <button
+                              key={item.id}
+                              onClick={() => {
+                                setInput(item.prompt);
+                                setShowSlashMenu(false);
+                                textareaRef.current?.focus();
+                              }}
+                              className="w-full flex items-start gap-2.5 px-3 py-2 text-left hover:bg-accent/50 transition-colors"
+                            >
+                              <span className="text-xs text-foreground font-medium whitespace-nowrap mt-[1px]">{item.label}</span>
+                              <span className="text-xs text-muted-foreground/60 truncate">{item.desc}</span>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  )}
                   {/* @ Mention Picker */}
                   {showAtMenu && (
                     <AtMentionPicker
@@ -2122,60 +2235,191 @@ export function AssistantRunPage() {
                   )}
                   <div className="absolute bottom-[7px] left-2.5 right-2.5 flex items-center justify-between">
                     <div className="flex items-center gap-0.5">
-                      <DropdownMenu open={showPlusMenu} onOpenChange={(v) => { setShowPlusMenu(v); if (v) setShowAtMenu(false); }}>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon-sm" ref={plusBtnRef}
-                            className={`p-[5px] w-auto h-auto transition-colors ${
-                              showPlusMenu ? 'bg-accent text-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
-                            }`}><Plus size={14} /></Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent side="top" align="start" className="w-44">
-                          {plusMenuItems.map((item, idx) => {
-                            const Icon = item.icon;
-                            return (
-                              <div key={item.id}>
-                                <DropdownMenuItem className="gap-2 px-2 py-[5px] text-xs">
-                                  <Icon size={13} strokeWidth={1.5} className="text-muted-foreground flex-shrink-0" />
-                                  <span className="flex-1 text-left">{item.label}</span>
-                                </DropdownMenuItem>
-                                {(item as { separator?: boolean }).separator && idx < plusMenuItems.length - 1 && (
-                                  <DropdownMenuSeparator />
+                      {minimalInput ? (
+                        /* Minimal mode: plus dropdown only */
+                        <DropdownMenu open={showPlusMenu} onOpenChange={(v) => { setShowPlusMenu(v); if (v) setShowAtMenu(false); }}>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon-sm" ref={plusBtnRef}
+                              className={`p-[5px] w-auto h-auto transition-colors ${
+                                showPlusMenu ? 'bg-accent text-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
+                              }`}><Plus size={14} /></Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent side="top" align="start" className="w-44">
+                            {plusMenuItems.map((item, idx) => {
+                              const Icon = item.icon;
+                              return (
+                                <div key={item.id}>
+                                  <DropdownMenuItem className="gap-2 px-2 py-[5px] text-xs">
+                                    <Icon size={13} strokeWidth={1.5} className="text-muted-foreground flex-shrink-0" />
+                                    <span className="flex-1 text-left">{item.label}</span>
+                                  </DropdownMenuItem>
+                                  {(item as { separator?: boolean }).separator && idx < plusMenuItems.length - 1 && (
+                                    <DropdownMenuSeparator />
+                                  )}
+                                </div>
+                              );
+                            })}
+                            <DropdownMenuSeparator />
+                            <DropdownMenuSub>
+                              <DropdownMenuSubTrigger className="gap-2 px-2 py-[5px] text-xs text-muted-foreground">
+                                <MoreHorizontal size={13} strokeWidth={1.5} className="flex-shrink-0" />
+                                <span className="flex-1 text-left">更多</span>
+                              </DropdownMenuSubTrigger>
+                              <DropdownMenuSubContent>
+                                {plusMenuSecondary.map(item => {
+                                  const Icon = item.icon;
+                                  return (
+                                    <DropdownMenuItem key={item.id} className="gap-2 px-2 py-[5px] text-xs">
+                                      <Icon size={13} strokeWidth={1.5} className="text-muted-foreground flex-shrink-0" />
+                                      <span className="flex-1 text-left">{item.label}</span>
+                                      {item.shortcut && <span className="text-xs text-muted-foreground/60 tracking-wider">{item.shortcut}</span>}
+                                    </DropdownMenuItem>
+                                  );
+                                })}
+                              </DropdownMenuSubContent>
+                            </DropdownMenuSub>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      ) : (
+                        /* Full toolbar mode */
+                        <>
+                          {/* Primary tools — always visible */}
+                          <Tooltip content="添加附件" side="top">
+                            <Button variant="ghost" size="icon-sm" className="p-[5px] w-auto h-auto text-muted-foreground hover:text-foreground hover:bg-accent/50"><Paperclip size={14} strokeWidth={1.5} /></Button>
+                          </Tooltip>
+                          <Tooltip content="网络搜索" side="top">
+                            <Button variant="ghost" size="icon-sm" className="p-[5px] w-auto h-auto text-muted-foreground hover:text-foreground hover:bg-accent/50"><Globe size={14} strokeWidth={1.5} /></Button>
+                          </Tooltip>
+                          <Tooltip content="@提及" side="top">
+                            <Button variant="ghost" size="icon-sm" onClick={() => setShowAtMenu(v => !v)} className="p-[5px] w-auto h-auto text-muted-foreground hover:text-foreground hover:bg-accent/50"><AtSign size={14} strokeWidth={1.5} /></Button>
+                          </Tooltip>
+                          <Tooltip content="知识库" side="top">
+                            <Button variant="ghost" size="icon-sm" className="p-[5px] w-auto h-auto text-muted-foreground hover:text-foreground hover:bg-accent/50"><BookOpen size={14} strokeWidth={1.5} /></Button>
+                          </Tooltip>
+                          {/* Separator */}
+                          <div className="w-px h-3.5 bg-border/40 mx-0.5" />
+                          {/* Secondary tools — collapsible + draggable reorder */}
+                          {toolbarExpanded && orderedSecondaryTools.map(tool => {
+                            const Icon = tool.icon;
+                            const isReasoning = tool.id === 'reasoning';
+                            const isReasoningActive = isReasoning && reasoningLevel !== null;
+                            const btnCls = `p-[5px] w-auto h-auto hover:text-foreground hover:bg-accent/50 cursor-grab active:cursor-grabbing ${
+                              isReasoningActive ? 'text-success/70' : 'text-muted-foreground'
+                            }`;
+                            const btn = (
+                              <div
+                                key={tool.id}
+                                draggable
+                                onDragStart={() => { toolDragRef.current.dragging = tool.id; }}
+                                onDragOver={(e) => { e.preventDefault(); toolDragRef.current.over = tool.id; }}
+                                onDrop={(e) => {
+                                  e.preventDefault();
+                                  const from = toolDragRef.current.dragging;
+                                  const to = toolDragRef.current.over;
+                                  if (from && to && from !== to) {
+                                    setSecondaryToolOrder(prev => {
+                                      const next = [...prev];
+                                      const fi = next.indexOf(from);
+                                      const ti = next.indexOf(to);
+                                      if (fi === -1 || ti === -1) return prev;
+                                      next.splice(fi, 1);
+                                      next.splice(ti, 0, from);
+                                      return next;
+                                    });
+                                  }
+                                  toolDragRef.current = { dragging: null, over: null };
+                                }}
+                                onDragEnd={() => { toolDragRef.current = { dragging: null, over: null }; }}
+                                className="inline-flex"
+                              >
+                                {isReasoning ? (
+                                  <Popover>
+                                    <PopoverTrigger asChild>
+                                      <Button variant="ghost" size="icon-sm" className={btnCls}>
+                                        <Icon size={14} strokeWidth={1.5} />
+                                      </Button>
+                                    </PopoverTrigger>
+                                    <PopoverContent side="top" align="start" className="w-[140px] p-1">
+                                      <div className="text-xs text-muted-foreground/60 px-2 py-1">思考等级</div>
+                                      {[
+                                        { key: null, label: '关闭' },
+                                        { key: 'low', label: '低' },
+                                        { key: 'medium', label: '中' },
+                                        { key: 'high', label: '高' },
+                                      ].map(opt => (
+                                        <Button key={opt.key ?? 'off'} variant="ghost" size="xs"
+                                          onClick={() => setReasoningLevel(opt.key)}
+                                          className={`w-full justify-start gap-2 px-2 ${reasoningLevel === opt.key ? 'text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+                                        >
+                                          <span className="flex-1 text-left">{opt.label}</span>
+                                          {reasoningLevel === opt.key && <Check size={10} className="text-primary flex-shrink-0" />}
+                                        </Button>
+                                      ))}
+                                    </PopoverContent>
+                                  </Popover>
+                                ) : (
+                                  <Tooltip content={tool.label} side="top">
+                                    <Button variant="ghost" size="icon-sm" className={btnCls}>
+                                      <Icon size={14} strokeWidth={1.5} />
+                                    </Button>
+                                  </Tooltip>
                                 )}
                               </div>
                             );
+                            return btn;
                           })}
-                          <DropdownMenuSeparator />
-                          <DropdownMenuSub>
-                            <DropdownMenuSubTrigger className="gap-2 px-2 py-[5px] text-xs text-muted-foreground">
-                              <MoreHorizontal size={13} strokeWidth={1.5} className="flex-shrink-0" />
-                              <span className="flex-1 text-left">更多</span>
-                            </DropdownMenuSubTrigger>
-                            <DropdownMenuSubContent>
-                              {plusMenuSecondary.map(item => {
-                                const Icon = item.icon;
-                                return (
-                                  <DropdownMenuItem key={item.id} className="gap-2 px-2 py-[5px] text-xs">
-                                    <Icon size={13} strokeWidth={1.5} className="text-muted-foreground flex-shrink-0" />
-                                    <span className="flex-1 text-left">{item.label}</span>
-                                    {item.shortcut && <span className="text-xs text-muted-foreground/60 tracking-wider">{item.shortcut}</span>}
-                                  </DropdownMenuItem>
-                                );
-                              })}
-                            </DropdownMenuSubContent>
-                          </DropdownMenuSub>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                          {/* Collapse/Expand toggle */}
+                          <Tooltip content={toolbarExpanded ? '收起工具' : '展开工具'} side="top">
+                            <Button variant="ghost" size="icon-sm" onClick={() => setToolbarExpanded(v => !v)}
+                              className="p-[5px] w-auto h-auto text-muted-foreground/40 hover:text-foreground hover:bg-accent/50">
+                              <ChevronRight size={14} strokeWidth={1.5} className={`transition-transform duration-150 ${toolbarExpanded ? '' : 'rotate-180'}`} />
+                            </Button>
+                          </Tooltip>
+                        </>
+                      )}
                     </div>
                     <div className="flex items-center gap-2">
                       <div className="flex items-center gap-2.5 text-xs text-muted-foreground">
-                        <Tooltip content="预估 Token 数" side="top">
-                          <span className="flex items-center gap-1 cursor-default"><Layers size={10} />{Math.ceil(input.length * 1.3) || 0}</span>
+                        <Tooltip content="消息行数" side="top">
+                          <span className="flex items-center gap-0.5 cursor-default"><Layers size={10} /> 4/5</span>
                         </Tooltip>
-                        <Tooltip content="翻译 (中↔英)" side="top">
-                          <button className="flex items-center gap-1 hover:text-foreground transition-colors cursor-pointer">
-                            <Languages size={12} />
-                          </button>
-                        </Tooltip>
+                        <span className="flex items-center gap-0.5 cursor-default">↑ 0/0</span>
+                        {input.length > 0 && (
+                          <Tooltip content="预估 Token 数" side="top">
+                            <span className="flex items-center gap-1 cursor-default"><Layers size={10} />{Math.ceil(input.length * 1.3)}</span>
+                          </Tooltip>
+                        )}
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <Tooltip content="翻译输入内容" side="top">
+                              <button className="flex items-center gap-1 hover:text-foreground transition-colors cursor-pointer">
+                                <Languages size={12} />
+                              </button>
+                            </Tooltip>
+                          </PopoverTrigger>
+                          <PopoverContent side="top" align="end" className="w-[160px] p-1">
+                            <div className="text-xs text-muted-foreground/60 px-2 py-1">翻译为</div>
+                            {([
+                              { key: 'en' as const, label: 'English' },
+                              { key: 'zh' as const, label: '简体中文' },
+                              { key: 'ja' as const, label: '日本語' },
+                            ]).map(lang => (
+                              <Button key={lang.key} variant="ghost" size="xs"
+                                onClick={() => {
+                                  if (input.trim()) {
+                                    const prefix = lang.key === 'en' ? '[Translated to English]\n' : lang.key === 'zh' ? '[已翻译为中文]\n' : '[日本語に翻訳]\n';
+                                    setInput(prev => prefix + prev);
+                                  }
+                                  setTranslateLang(lang.key);
+                                }}
+                                className={`w-full justify-start gap-2 px-2 ${translateLang === lang.key ? 'text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+                              >
+                                <span className="flex-1 text-left">{lang.label}</span>
+                                {translateLang === lang.key && <Check size={10} className="text-primary flex-shrink-0" />}
+                              </Button>
+                            ))}
+                          </PopoverContent>
+                        </Popover>
                       </div>
                       <Button variant="default" size="icon" onClick={handleSend} disabled={!input.trim()}
                         className="w-7 h-7 rounded-full">
@@ -2221,7 +2465,7 @@ export function AssistantRunPage() {
         {/* Right: Chat Settings Panel */}
         <AnimatePresence>
           {showChatSettings && (
-            <ChatSettingsPanel onClose={() => setShowChatSettings(false)} />
+            <ChatSettingsPanel onClose={() => setShowChatSettings(false)} minimalInput={minimalInput} onMinimalInputChange={setMinimalInput} />
           )}
         </AnimatePresence>
 

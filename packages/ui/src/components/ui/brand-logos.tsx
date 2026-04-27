@@ -7,6 +7,39 @@ import { cn } from "../../lib/utils"
 // @lobehub/icons — ProviderIcon renders colored avatar/icon for any known AI provider
 import LobeProviderIcon from "@lobehub/icons/es/features/ProviderIcon"
 
+// Direct Avatar imports — bypass ProviderIcon routing, use iconMultiple override
+import OpenAIAvatar from "@lobehub/icons/es/OpenAI/components/Avatar"
+import AnthropicAvatar from "@lobehub/icons/es/Anthropic/components/Avatar"
+import GoogleAvatar from "@lobehub/icons/es/Google/components/Avatar"
+import GeminiAvatar from "@lobehub/icons/es/Gemini/components/Avatar"
+import DeepSeekAvatar from "@lobehub/icons/es/DeepSeek/components/Avatar"
+import MistralAvatar from "@lobehub/icons/es/Mistral/components/Avatar"
+import GroqAvatar from "@lobehub/icons/es/Groq/components/Avatar"
+import QwenAvatar from "@lobehub/icons/es/Qwen/components/Avatar"
+import PerplexityAvatar from "@lobehub/icons/es/Perplexity/components/Avatar"
+import GithubAvatar from "@lobehub/icons/es/Github/components/Avatar"
+import HuggingFaceAvatar from "@lobehub/icons/es/HuggingFace/components/Avatar"
+import MoonshotAvatar from "@lobehub/icons/es/Moonshot/components/Avatar"
+import ZhipuAvatar from "@lobehub/icons/es/Zhipu/components/Avatar"
+import BaiduAvatar from "@lobehub/icons/es/Baidu/components/Avatar"
+import BaichuanAvatar from "@lobehub/icons/es/Baichuan/components/Avatar"
+import DoubaoAvatar from "@lobehub/icons/es/Doubao/components/Avatar"
+import TencentAvatar from "@lobehub/icons/es/Tencent/components/Avatar"
+import SparkAvatar from "@lobehub/icons/es/Spark/components/Avatar"
+import TiangongAvatar from "@lobehub/icons/es/Tiangong/components/Avatar"
+import FlowithAvatar from "@lobehub/icons/es/Flowith/components/Avatar"
+import MonicaAvatar from "@lobehub/icons/es/Monica/components/Avatar"
+import LongcatAvatar from "@lobehub/icons/es/Longcat/components/Avatar"
+import LambdaAvatar from "@lobehub/icons/es/Lambda/components/Avatar"
+import StepfunAvatar from "@lobehub/icons/es/Stepfun/components/Avatar"
+import HunyuanAvatar from "@lobehub/icons/es/Hunyuan/components/Avatar"
+import WenxinAvatar from "@lobehub/icons/es/Wenxin/components/Avatar"
+import ByteDanceAvatar from "@lobehub/icons/es/ByteDance/components/Avatar"
+import HuaweiAvatar from "@lobehub/icons/es/Huawei/components/Avatar"
+import MinimaxAvatar from "@lobehub/icons/es/Minimax/components/Avatar"
+import YuanbaoAvatar from "@lobehub/icons/es/Yuanbao/components/Avatar"
+import IFlyTekAvatar from "@lobehub/icons/es/IFlyTekCloud/components/Avatar"
+
 interface LogoProps {
   size?: number
   className?: string
@@ -467,31 +500,57 @@ function PoeLogo({ size = 16, className }: LogoProps) {
 
 // Lookup map: string id to React component
 const BRAND_LOGO_MAP: Record<string, (props: LogoProps) => React.JSX.Element> = {
-  // Major AI brands
-  openai: OpenAILogo,
-  chatgpt: OpenAILogo,
-  anthropic: AnthropicLogo,
-  claude: AnthropicLogo,
-  google: GoogleLogo,
-  "vertex-ai": GoogleLogo,
-  aistudio: GoogleLogo,
-  gemini: GeminiLogo,
+  // Major AI brands (Avatar with iconMultiple override for full-size icons)
+  openai: (props: LogoProps) => <OpenAIAvatar size={props.size} shape="square" iconMultiple={0.85} />,
+  chatgpt: (props: LogoProps) => <OpenAIAvatar size={props.size} shape="square" iconMultiple={0.85} />,
+  anthropic: (props: LogoProps) => <AnthropicAvatar size={props.size} shape="square" iconMultiple={0.85} />,
+  claude: (props: LogoProps) => <AnthropicAvatar size={props.size} shape="square" iconMultiple={0.85} />,
+  google: (props: LogoProps) => <GoogleAvatar size={props.size} shape="square" iconMultiple={0.85} />,
+  "vertex-ai": (props: LogoProps) => <GoogleAvatar size={props.size} shape="square" iconMultiple={0.85} />,
+  aistudio: (props: LogoProps) => <GoogleAvatar size={props.size} shape="square" iconMultiple={0.85} />,
+  gemini: (props: LogoProps) => <GeminiAvatar size={props.size} shape="square" iconMultiple={0.85} />,
   microsoft: MicrosoftLogo,
   bing: MicrosoftLogo,
-  github: GitHubLogo,
-  copilot: GitHubLogo,
-  ghcopilot: GitHubLogo,
+  github: (props: LogoProps) => <GithubAvatar size={props.size} shape="square" iconMultiple={0.85} />,
+  copilot: (props: LogoProps) => <GithubAvatar size={props.size} shape="square" iconMultiple={0.85} />,
+  ghcopilot: (props: LogoProps) => <GithubAvatar size={props.size} shape="square" iconMultiple={0.85} />,
   ollama: OllamaLogo,
-  mistral: MistralLogo,
-  lechat: MistralLogo,
-  deepseek: DeepSeekLogo,
-  perplexity: PerplexityLogo,
-  huggingchat: HuggingFaceLogo,
-  qwen: QwenLogo,
-  qwenchat: QwenLogo,
+  mistral: (props: LogoProps) => <MistralAvatar size={props.size} shape="square" iconMultiple={0.85} />,
+  lechat: (props: LogoProps) => <MistralAvatar size={props.size} shape="square" iconMultiple={0.85} />,
+  deepseek: (props: LogoProps) => <DeepSeekAvatar size={props.size} shape="square" iconMultiple={0.85} />,
+  perplexity: (props: LogoProps) => <PerplexityAvatar size={props.size} shape="square" iconMultiple={0.85} />,
+  huggingchat: (props: LogoProps) => <HuggingFaceAvatar size={props.size} shape="square" iconMultiple={0.85} />,
+  qwen: (props: LogoProps) => <QwenAvatar size={props.size} shape="square" iconMultiple={0.85} />,
+  qwenchat: (props: LogoProps) => <QwenAvatar size={props.size} shape="square" iconMultiple={0.85} />,
   iflow: IFlowLogo,
-  kimi: KimiLogo,
+  kimi: (props: LogoProps) => <MoonshotAvatar size={props.size} shape="square" iconMultiple={0.85} />,
   siliconflow: SiliconFlowLogo,
+  zhipu: (props: LogoProps) => <ZhipuAvatar size={props.size} shape="square" iconMultiple={0.85} />,
+  baidu_search: (props: LogoProps) => <BaiduAvatar size={props.size} shape="square" iconMultiple={0.85} />,
+
+  // Chinese AI services (direct Avatar imports with iconMultiple override for larger icons)
+  baichuan: (props: LogoProps) => <BaichuanAvatar size={props.size} shape="square" iconMultiple={0.85} />,
+  doubao: (props: LogoProps) => <DoubaoAvatar size={props.size} shape="square" iconMultiple={0.85} />,
+  tencent: (props: LogoProps) => <TencentAvatar size={props.size} shape="square" iconMultiple={0.85} />,
+  yuanbao: (props: LogoProps) => <YuanbaoAvatar size={props.size} shape="square" iconMultiple={0.85} />,
+  spark: (props: LogoProps) => <SparkAvatar size={props.size} shape="square" iconMultiple={0.85} />,
+  sparkdesk: (props: LogoProps) => <SparkAvatar size={props.size} shape="square" iconMultiple={0.85} />,
+  tiangong: (props: LogoProps) => <TiangongAvatar size={props.size} shape="square" iconMultiple={0.85} />,
+  flowith: (props: LogoProps) => <FlowithAvatar size={props.size} shape="square" iconMultiple={0.85} />,
+  monica: (props: LogoProps) => <MonicaAvatar size={props.size} shape="square" iconMultiple={0.85} />,
+  longcat: (props: LogoProps) => <LongcatAvatar size={props.size} shape="square" iconMultiple={0.85} />,
+  lambda: (props: LogoProps) => <LambdaAvatar size={props.size} shape="square" iconMultiple={0.85} />,
+  lambdachat: (props: LogoProps) => <LambdaAvatar size={props.size} shape="square" iconMultiple={0.85} />,
+  stepfun: (props: LogoProps) => <StepfunAvatar size={props.size} shape="square" iconMultiple={0.85} />,
+  hunyuan: (props: LogoProps) => <HunyuanAvatar size={props.size} shape="square" iconMultiple={0.85} />,
+  wenxin: (props: LogoProps) => <WenxinAvatar size={props.size} shape="square" iconMultiple={0.85} />,
+  bytedance: (props: LogoProps) => <ByteDanceAvatar size={props.size} shape="square" iconMultiple={0.85} />,
+  jianying: (props: LogoProps) => <ByteDanceAvatar size={props.size} shape="square" iconMultiple={0.85} />,
+  huawei: (props: LogoProps) => <HuaweiAvatar size={props.size} shape="square" iconMultiple={0.85} />,
+  xiaoyi: (props: LogoProps) => <HuaweiAvatar size={props.size} shape="square" iconMultiple={0.85} />,
+  hailuoai: (props: LogoProps) => <MinimaxAvatar size={props.size} shape="square" iconMultiple={0.85} />,
+  tongyi: QwenLogo,
+  iflytek: (props: LogoProps) => <IFlyTekAvatar size={props.size} shape="square" iconMultiple={0.85} />,
 
   // Note-taking & productivity
   notion: NotionLogo,
@@ -628,11 +687,7 @@ function BrandLogo({
 }) {
   const key = id.toLowerCase()
 
-  // 1. Try @lobehub/icons ProviderIcon (colored avatar)
-  if (LOBE_PROVIDER_IDS.has(key)) {
-    const provider = LOBE_ID_ALIAS[key] || key
-    return <LobeProviderIcon provider={provider} size={size} type="avatar" className={className} />
-  }
+  // 1. ProviderIcon path disabled — all brands now use BRAND_LOGO_MAP with direct Avatar imports
 
   // 2. Try built-in BRAND_LOGO_MAP
   const Logo = BRAND_LOGO_MAP[key]

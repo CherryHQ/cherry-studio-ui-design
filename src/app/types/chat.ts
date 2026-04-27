@@ -96,6 +96,7 @@ export interface RAGInfo {
 export interface MessageMetadata {
   sessionId: string;
   model: string;
+  provider?: string;
   status: 'success' | 'error';
   startTime: string;
   duration: string;

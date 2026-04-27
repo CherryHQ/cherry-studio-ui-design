@@ -7,13 +7,14 @@ import {
   Activity, Key, Shuffle, Trash2, Upload,
   MessageCircle, Zap,
   Pin, MoreHorizontal, Edit3,
-  ChevronRight, GripVertical, RotateCcw, Info, SlidersHorizontal, Languages,
+  ChevronRight, GripVertical, RotateCcw, Info, SlidersHorizontal, Filter, Languages,
   Variable, Calendar, Clock, Bot, Fingerprint, Globe, Hash, Braces,
   Settings, Brain, Image as ImageIcon, Database, Wrench, Headphones, Gift, Code2, MessageSquare,
   Save, AlertTriangle, ChevronUp, HelpCircle,
   HeartPulse, Loader2, CheckCircle2, XCircle,
   Download,
 } from 'lucide-react';
+import { Tooltip } from '@/app/components/Tooltip';
 import {
   Button, Input, Switch, Textarea, Slider, SearchInput, EmptyState, Typography, Checkbox,
   BrandLogo, VarManagerPanel, SYSTEM_VARIABLES, SYSTEM_VAR_ICONS, RadioGroup, RadioGroupItem,
@@ -158,10 +159,6 @@ function ModelRow({ model, onToggle, onEdit }: {
   onEdit: (model: ModelItem) => void;
 }) {
   const isEnabled = model.enabled;
-  const infoParts: string[] = [];
-  if (model.releaseDate) infoParts.push(`Released at ${model.releaseDate}`);
-  if (model.inputPrice !== undefined) infoParts.push(`Input ${formatPrice(model.inputPrice)}/M`);
-  if (model.outputPrice !== undefined) infoParts.push(`Output ${formatPrice(model.outputPrice)}/M`);
 
   return (
     <div
@@ -176,29 +173,51 @@ function ModelRow({ model, onToggle, onEdit }: {
       {/* Info */}
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
-          <span className="text-sm text-foreground truncate font-medium">
-            {model.displayName || model.name}
-          </span>
-          <span className="text-xs text-muted-foreground px-1.5 py-[1px] rounded bg-muted/50 flex-shrink-0 truncate max-w-[140px] font-mono">
-            {model.name}
-          </span>
+          <Tooltip content={`点击复制 ID: ${model.name}`} side="top">
+            <span
+              className="text-sm text-foreground truncate font-medium cursor-pointer hover:text-cherry-primary transition-colors"
+              onClick={(e) => {
+                e.stopPropagation();
+                navigator.clipboard.writeText(model.name);
+              }}
+            >
+              {model.displayName || model.name}
+            </span>
+          </Tooltip>
         </div>
-        {infoParts.length > 0 && (
-          <p className="text-xs text-muted-foreground mt-[3px] truncate">
-            {infoParts.join(' \u00B7 ')}
-          </p>
-        )}
       </div>
 
-      {/* Capability icons */}
-      <div className="flex items-center gap-[5px] flex-shrink-0">
-        {(model.capabilities || []).filter(c => c !== 'free').slice(0, 5).map(cap => (
-          <CapIcon key={cap} cap={cap} size={12} />
-        ))}
-        {(model.capabilities || []).includes('free') && (
-          <span className="text-xs text-accent-emerald/80 bg-accent-emerald/10 px-1 py-[1px] rounded font-medium">Free</span>
-        )}
-      </div>
+      {/* Capability icons — only show: vision, web-search, function, embedding, reasoning, free */}
+      {(() => {
+        const VISIBLE_CAPS: ModelCapability[] = ['vision', 'web-search', 'function', 'embedding', 'reasoning', 'free'];
+        const visibleCaps = (model.capabilities || []).filter(c => VISIBLE_CAPS.includes(c));
+        const nonFree = visibleCaps.filter(c => c !== 'free');
+        return (
+          <>
+            {nonFree.length > 0 && (
+              <Tooltip
+                content={nonFree.map(cap => CAPABILITY_CONFIG[cap]?.label).filter(Boolean).join(' · ')}
+                side="top"
+              >
+                <div className="flex items-center gap-[5px] flex-shrink-0">
+                  {nonFree.map(cap => {
+                    const Icon = CAPABILITY_ICONS[cap];
+                    const cfg = CAPABILITY_CONFIG[cap];
+                    return Icon ? <Icon key={cap} size={12} className={`${cfg.iconColor} transition-colors`} /> : null;
+                  })}
+                </div>
+              </Tooltip>
+            )}
+            {visibleCaps.includes('free') && (
+              <Tooltip content="免费" side="top">
+                <span className="text-accent-emerald/80 bg-accent-emerald/10 px-1 py-[1px] rounded flex items-center justify-center">
+                  <Gift size={10} />
+                </span>
+              </Tooltip>
+            )}
+          </>
+        );
+      })()}
 
       {/* Context window */}
       {model.contextWindow && model.contextWindow !== '-' && (
@@ -2517,39 +2536,6 @@ function CherryINAccountSection() {
         </div>
       </div>
 
-      {/* Usage breakdown */}
-      <div className="mt-2.5 bg-background/60 rounded-xl px-3 py-2.5 border border-border/50">
-        <div className="flex items-center justify-between mb-2">
-          <p className="text-xs text-muted-foreground/40 tracking-wide">模型消费分布</p>
-          <Button
-            variant="ghost"
-            size="icon-xs"
-            onClick={() => setShowBalance(v => !v)}
-            className="text-muted-foreground/40 hover:text-foreground transition-colors"
-          >
-            {showBalance ? <Eye size={9} /> : <EyeOff size={9} />}
-          </Button>
-        </div>
-        {showBalance && (
-          <div className="space-y-1.5">
-            {[
-              { name: 'Claude 4 Sonnet', pct: 42, amount: '$2.86', color: '#d97706' },
-              { name: 'GPT-4o', pct: 28, amount: '$1.91', color: '#10a37f' },
-              { name: 'Gemini 2.5 Pro', pct: 18, amount: '$1.23', color: '#4285f4' },
-              { name: 'DeepSeek V3', pct: 12, amount: '$0.00', color: '#4f6ef7' },
-            ].map(item => (
-              <div key={item.name} className="flex items-center gap-2">
-                <div className="w-1 h-1 rounded-full flex-shrink-0" style={{ backgroundColor: item.color }} />
-                <span className="text-xs text-muted-foreground/60 flex-1 truncate">{item.name}</span>
-                <span className="text-xs text-muted-foreground/40 flex-shrink-0">{item.amount}</span>
-                <div className="w-10 h-[2px] rounded-full bg-muted/50 overflow-hidden flex-shrink-0">
-                  <div className="h-full rounded-full" style={{ width: `${item.pct}%`, backgroundColor: item.color, opacity: 0.5 }} />
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
     </div>
   );
 }
@@ -2572,6 +2558,7 @@ function ProviderDetail({ provider }: { provider: Provider }) {
   ]);
   const [modelSearch, setModelSearch] = useState('');
   const [capFilter, setCapFilter] = useState<string>('all');
+  const [showCapFilter, setShowCapFilter] = useState(false);
   const [localModels, setLocalModels] = useState<ModelItem[]>(provider.models);
   const [fetching, setFetching] = useState(false);
   const [fetchResult, setFetchResult] = useState<FetchResult | null>(null);
@@ -2687,30 +2674,6 @@ function ProviderDetail({ provider }: { provider: Provider }) {
         <Switch size="sm" checked={enabled} onCheckedChange={setEnabled} />
       </div>
 
-      {/* Endpoint Tabs */}
-      <div className="flex items-center gap-0.5 px-5 flex-shrink-0 border-b border-border/30">
-        {provider.endpoints.map(ep => (
-          <Button size="inline"
-            variant="ghost"
-            key={ep.id}
-            onClick={() => setActiveEndpoint(ep.id)}
-            className={`px-2.5 py-[6px] text-sm transition-colors relative ${
-              activeEndpoint === ep.id
-                ? 'text-cherry-primary font-medium'
-                : 'text-muted-foreground hover:text-foreground'
-            }`}
-          >
-            {ep.name}
-            {activeEndpoint === ep.id && (
-              <div className="absolute bottom-0 left-1 right-1 h-[1.5px] bg-cherry-primary rounded-full" />
-            )}
-          </Button>
-        ))}
-        <Button variant="ghost" size="inline" className="flex items-center gap-1 px-2 py-[6px] text-sm text-cherry-primary/70 hover:text-cherry-primary transition-colors ml-auto">
-          <Plus size={9} />
-          <span>新建端点</span>
-        </Button>
-      </div>
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto px-5 py-4 space-y-4 scrollbar-thin">
@@ -2743,6 +2706,11 @@ function ProviderDetail({ provider }: { provider: Provider }) {
                   <Button variant="outline" size="icon-xs" className="border border-border/30 text-muted-foreground/60 hover:text-foreground hover:bg-accent transition-colors">
                     <Copy size={9} />
                   </Button>
+                  <Tooltip content="测试连接" side="bottom">
+                    <Button variant="ghost" size="icon-xs" className="w-6 h-6 bg-cherry-active-bg text-cherry-primary hover:bg-cherry-primary/15 transition-colors">
+                      <Activity size={10} />
+                    </Button>
+                  </Tooltip>
                 </div>
               </div>
             )}
@@ -2761,15 +2729,16 @@ function ProviderDetail({ provider }: { provider: Provider }) {
                     <ExternalLink size={9} />
                   </Button>
                 </div>
-                <Button
-                  variant="outline"
-                  size="icon-xs"
-                  onClick={() => setShowHeadersPanel(true)}
-                  className="w-6 h-6 border border-border/30 text-muted-foreground/60 hover:text-foreground hover:bg-accent transition-colors"
-                  title="自定义请求头"
-                >
-                  <SlidersHorizontal size={9} />
-                </Button>
+                <Tooltip content="自定义请求头" side="bottom">
+                  <Button
+                    variant="outline"
+                    size="icon-xs"
+                    onClick={() => setShowHeadersPanel(true)}
+                    className="w-6 h-6 border border-border/30 text-muted-foreground/60 hover:text-foreground hover:bg-accent transition-colors"
+                  >
+                    <Settings size={9} />
+                  </Button>
+                </Tooltip>
               </div>
             </div>
 
@@ -2811,23 +2780,6 @@ function ProviderDetail({ provider }: { provider: Provider }) {
               </div>
             )}
 
-            {/* Test & Action buttons */}
-            <div className="flex items-center gap-2 pt-1">
-              <Button variant="ghost" size="inline" className="flex items-center gap-1.5 px-2.5 py-[4px] bg-cherry-active-bg text-cherry-primary text-xs hover:bg-cherry-primary/15 transition-colors">
-                <Activity size={9} />
-                <span>测试连接</span>
-              </Button>
-              {provider.rotationKeys.length > 0 && (
-                <Button size="inline"
-                  variant="outline"
-                  onClick={() => setShowKeyPanel(true)}
-                  className="flex items-center gap-1.5 px-2.5 py-[4px] text-xs text-foreground hover:text-foreground hover:bg-accent transition-colors"
-                >
-                  <Key size={9} />
-                  <span>多 Key 管理</span>
-                </Button>
-              )}
-            </div>
           </div>
         </div>
 
@@ -2840,34 +2792,37 @@ function ProviderDetail({ provider }: { provider: Provider }) {
               <span className="text-xs text-foreground">{enabledCount}/{localModels.length} 已启用</span>
             </div>
             <div className="flex items-center gap-1">
-              <Button size="inline"
-                variant="ghost"
-                onClick={allEnabled ? disableAllModels : enableAllModels}
-                className={`flex items-center gap-1 px-2 py-[3px] text-xs text-foreground transition-colors ${
-                  allEnabled
-                    ? 'hover:text-destructive/80 hover:bg-destructive/[0.06]'
-                    : 'hover:text-cherry-primary/80 hover:bg-cherry-active-bg'
-                }`}
-              >
-                {allEnabled ? <EyeOff size={9} /> : <Eye size={9} />}
-                <span>{allEnabled ? '全部关闭' : '全部打开'}</span>
-              </Button>
-              <Button size="inline"
-                variant="ghost"
-                onClick={() => setShowHealthCheck(true)}
-                className="flex items-center gap-1 px-2 py-[3px] text-xs text-foreground hover:text-foreground hover:bg-accent/50 transition-colors"
-              >
-                <HeartPulse size={9} />
-                <span>检测</span>
-              </Button>
-              <Button size="inline"
-                variant="ghost"
-                onClick={() => setShowModelPanel(true)}
-                className="flex items-center gap-1 px-2 py-[3px] text-xs text-foreground hover:text-foreground hover:bg-accent/50 transition-colors"
-              >
-                <Edit3 size={9} />
-                <span>管理</span>
-              </Button>
+              <Tooltip content={allEnabled ? '全部关闭' : '全部打开'} side="bottom">
+                <Button size="inline"
+                  variant="ghost"
+                  onClick={allEnabled ? disableAllModels : enableAllModels}
+                  className={`flex items-center px-1.5 py-[3px] text-xs text-foreground transition-colors ${
+                    allEnabled
+                      ? 'hover:text-destructive/80 hover:bg-destructive/[0.06]'
+                      : 'hover:text-cherry-primary/80 hover:bg-cherry-active-bg'
+                  }`}
+                >
+                  {allEnabled ? <EyeOff size={11} /> : <Eye size={11} />}
+                </Button>
+              </Tooltip>
+              <Tooltip content="检测" side="bottom">
+                <Button size="inline"
+                  variant="ghost"
+                  onClick={() => setShowHealthCheck(true)}
+                  className="flex items-center px-1.5 py-[3px] text-xs text-foreground hover:text-foreground hover:bg-accent/50 transition-colors"
+                >
+                  <HeartPulse size={11} />
+                </Button>
+              </Tooltip>
+              <Tooltip content="管理" side="bottom">
+                <Button size="inline"
+                  variant="ghost"
+                  onClick={() => setShowModelPanel(true)}
+                  className="flex items-center px-1.5 py-[3px] text-xs text-foreground hover:text-foreground hover:bg-accent/50 transition-colors"
+                >
+                  <Edit3 size={11} />
+                </Button>
+              </Tooltip>
             </div>
           </div>
 
@@ -2880,6 +2835,23 @@ function ProviderDetail({ provider }: { provider: Provider }) {
               iconSize={10}
               wrapperClassName="flex-1 flex items-center gap-1.5 px-2.5 py-[5px] rounded-lg bg-muted/50 border border-border/50"
             />
+            <Tooltip content={showCapFilter ? '隐藏筛选' : '按能力筛选'} side="bottom">
+              <Button
+                size="inline"
+                variant="ghost"
+                onClick={() => { setShowCapFilter(v => !v); if (showCapFilter) { setCapFilter('all'); } }}
+                className={`flex items-center gap-[4px] px-2 py-[5px] rounded-lg text-xs transition-all border ${
+                  showCapFilter || capFilter !== 'all'
+                    ? 'bg-accent border-border text-foreground'
+                    : 'bg-transparent border-border/50 text-muted-foreground hover:text-foreground hover:border-border hover:bg-accent/50'
+                }`}
+              >
+                <Filter size={10} />
+                {!showCapFilter && capFilter !== 'all' && (
+                  <span className="w-1 h-1 rounded-full bg-cherry-primary" />
+                )}
+              </Button>
+            </Tooltip>
             <Button size="inline"
               variant="outline"
               onClick={handleFetchModels}
@@ -2899,9 +2871,9 @@ function ProviderDetail({ provider }: { provider: Provider }) {
             </Button>
           </div>
 
-          {/* Category Tags */}
-          <div className="flex items-center gap-[5px] flex-wrap mb-2.5">
-            {CATEGORY_TABS.filter(tab => {
+          {/* Category Filter Tags (expandable) */}
+          {showCapFilter && <div className="flex items-center gap-[5px] flex-wrap mb-2.5">
+            {showCapFilter && CATEGORY_TABS.filter(tab => {
               if (tab.key === 'all') return true;
               return localModels.some(tab.filter);
             }).map(tab => {
@@ -2931,7 +2903,7 @@ function ProviderDetail({ provider }: { provider: Provider }) {
                 </Button>
               );
             })}
-          </div>
+          </div>}
 
           {/* Model List Content */}
           <div className="max-h-[380px] overflow-y-auto -mx-1 scrollbar-thin-xs">
@@ -2945,7 +2917,7 @@ function ProviderDetail({ provider }: { provider: Provider }) {
                     <div className="flex items-center gap-2 px-3 py-[4px]">
                       <span className="text-sm text-foreground font-medium">已启用</span>
                       <div className="flex-1 h-px bg-muted" />
-                      <span className="text-xs text-muted-foreground">{enabledFiltered.length}</span>
+                      <span className="text-xs text-muted-foreground ml-auto">{enabledFiltered.length}</span>
                     </div>
                     {enabledGrouped.order.map(group => {
                       const isCollapsed = collapsedGroups.has(`enabled-${group}`);
@@ -3484,27 +3456,6 @@ export function ModelServicePage() {
         {/* Provider List */}
         <div className="flex-1 overflow-y-auto px-2.5 pb-2 scrollbar-thin-xs">
           <div className="space-y-[1px]">
-            {/* Default Model - Pinned */}
-            <Button size="inline"
-              variant="ghost"
-              onClick={() => { setSelectedId('default-model'); setShowAddPanel(false); }}
-              className={`w-full flex items-center justify-between px-2 py-[7px] rounded-xl transition-all text-left relative ${
-                selectedId === 'default-model' && !showAddPanel
-                  ? 'bg-cherry-active-bg'
-                  : 'border border-transparent hover:bg-accent/50'
-              }`}
-            >
-              {selectedId === 'default-model' && !showAddPanel && (
-                <div className="absolute inset-0 rounded-xl border border-cherry-active-border pointer-events-none" />
-              )}
-              <div className="flex items-center gap-2 min-w-0 flex-1">
-                <span className="w-[9px] flex-shrink-0" />
-                <span className={`flex-shrink-0 ${selectedId === 'default-model' && !showAddPanel ? 'text-warning' : 'text-muted-foreground'}`}><Star size={13} /></span>
-                <span className={`text-sm truncate ${selectedId === 'default-model' && !showAddPanel ? 'text-foreground font-medium' : 'text-foreground'}`}>默认模型</span>
-              </div>
-              <ChevronRight size={9} className={`flex-shrink-0 ${selectedId === 'default-model' && !showAddPanel ? 'text-muted-foreground/60' : 'text-muted-foreground/40'}`} />
-            </Button>
-
             {/* Enabled Providers */}
             {enabledProviders.length > 0 && (
               <div className="pt-1.5 pb-0.5">

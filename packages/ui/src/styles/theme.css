@@ -83,6 +83,10 @@
   --z-popover: 600;
   --z-tooltip: 700;
   --z-drag: 900;
+  --z-annotation-overlay: 950;
+  --z-annotation-marker: 960;
+  --z-annotation-bubble: 970;
+  --z-annotation-toggle: 980;
   /* Figma Typography Size System */
   --fs-xs: 11px;     /* micro: labels, badges, captions, metadata */
   --fs-sm: 13px;     /* body-sm: menu items, descriptions, form text */

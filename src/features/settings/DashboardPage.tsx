@@ -168,7 +168,7 @@ export function DashboardPage() {
 
       {/* Row 2: 每日对话趋势 + 时段分布 */}
       <div className="grid grid-cols-2 gap-2 mb-2">
-        <div className={card}>
+        <div className={cardCls}>
           <div className="flex items-center justify-between mb-3">
             <p className={cardLabel}>每日对话趋势</p>
             <span className="text-xs text-muted-foreground/50">最近 7 天</span>
@@ -186,7 +186,7 @@ export function DashboardPage() {
           </div>
         </div>
 
-        <div className={card}>
+        <div className={cardCls}>
           <div className="flex items-center justify-between mb-3">
             <p className={cardLabel}>活跃时段分布</p>
             <span className="text-xs text-muted-foreground/50">24 小时</span>
@@ -280,7 +280,7 @@ export function DashboardPage() {
 
       {/* Row 4: 最近对话 + 服务商分布 */}
       <div className="grid grid-cols-2 gap-2">
-        <div className={card}>
+        <div className={cardCls}>
           <div className="flex items-center justify-between mb-2.5">
             <p className={cardLabel}>最近对话</p>
             <Clock size={10} className="text-muted-foreground/40" />
@@ -302,7 +302,7 @@ export function DashboardPage() {
           </div>
         </div>
 
-        <div className={card}>
+        <div className={cardCls}>
           <p className={`${cardLabel} mb-2.5`}>服务商费用占比</p>
           {/* Donut-like visualization using stacked bar */}
           <div className="flex items-center gap-3">

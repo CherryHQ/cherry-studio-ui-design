@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react"
-import { Toaster } from "@cherry-studio/ui"
+import { Toaster, AnnotationProvider, AnnotationOverlay, AnnotationToggle, AnnotationList } from "@cherry-studio/ui"
 import { Sidebar } from "./components/Sidebar"
 import { ThemePanel } from "./components/ThemePanel"
 import { demos } from "./demos"
@@ -10,6 +10,7 @@ export function App() {
     return hash && demos.find((d) => d.id === hash) ? hash : demos[0].id
   })
   const [dark, setDark] = useState(false)
+  const [annotationListOpen, setAnnotationListOpen] = useState(false)
   const activeDemo = demos.find((d) => d.id === active)
 
   // URL hash routing
@@ -55,6 +56,7 @@ export function App() {
   }, [])
 
   return (
+    <AnnotationProvider page={active} boundarySelector="#root" storageKey="playground-annotations" appName="playground">
     <div className="flex h-screen bg-background text-foreground">
       {/* Left: Sidebar */}
       <Sidebar
@@ -82,5 +84,12 @@ export function App() {
       <ThemePanel dark={dark} onToggleDark={toggleDark} />
       <Toaster />
     </div>
+    <AnnotationOverlay />
+    <AnnotationToggle
+      onToggleList={() => setAnnotationListOpen(v => !v)}
+      listOpen={annotationListOpen}
+    />
+    <AnnotationList open={annotationListOpen} onClose={() => setAnnotationListOpen(false)} />
+    </AnnotationProvider>
   )
 }

@@ -78,7 +78,7 @@ export interface DetachedWindow {
 // Library — Resource Types
 // ===========================
 
-export type ResourceType = 'agent' | 'assistant' | 'skill' | 'plugin';
+export type ResourceType = 'agent' | 'assistant' | 'skill' | 'plugin' | 'prompt';
 
 export interface ResourceItem {
   id: string;
@@ -94,6 +94,8 @@ export interface ResourceItem {
   updatedAt: string;
   enabled: boolean;
   hasUpdate?: boolean;
+  // Prompt-specific
+  content?: string;
   // File-based resources (skill / plugin)
   fileName?: string;
   fileSize?: string;
@@ -126,13 +128,15 @@ export type LibrarySidebarFilter =
   | { type: 'all' }
   | { type: 'resource'; resourceType: ResourceType }
   | { type: 'folder'; folderId: string }
-  | { type: 'tag'; tagName: string };
+  | { type: 'tag'; tagName: string }
+  | { type: 'discover'; discoverType: 'skill' | 'assistant' };
 
 export type LibraryConfigView =
   | { type: 'list' }
   | { type: 'assistant-config'; resource: ResourceItem }
   | { type: 'agent-config'; resource: ResourceItem }
-  | { type: 'skill-plugin-detail'; resource: ResourceItem };
+  | { type: 'skill-plugin-detail'; resource: ResourceItem }
+  | { type: 'prompt-edit'; resource: ResourceItem };
 
 // ===========================
 // Library — Resource Type UI Config

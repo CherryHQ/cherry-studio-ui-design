@@ -5,7 +5,7 @@ import {
   Pencil, Copy, FolderInput, Download, Trash2,
   Clock, Layers, ChevronDown, Upload, Tag, Plus as PlusIcon,
   Check,
-  Filter,
+  Filter, Sparkles,
 } from 'lucide-react';
 import { Button, Input, Popover, PopoverTrigger, PopoverContent, SearchInput, EmptyState, Badge, Switch } from '@cherry-studio/ui';
 import { motion, AnimatePresence } from 'motion/react';
@@ -39,6 +39,8 @@ interface Props {
   activeType: ResourceType | null;
   onTypeFilter: (type: ResourceType | null) => void;
   typeCounts: Record<string, number>;
+  templateBanner?: React.ReactNode;
+  onBrowseTemplates?: () => void;
 }
 
 // ===========================
@@ -76,15 +78,21 @@ export function ResourceGrid({
   folders, onMoveToFolder,
   tags, activeTag, onTagFilter, onAddTag, onDeleteTag, onUpdateResourceTags, allTagNames,
   activeType, onTypeFilter, typeCounts,
+  templateBanner, onBrowseTemplates,
 }: Props) {
   const [showSort, setShowSort] = useState(false);
   const [showCreate, setShowCreate] = useState(false);
   const [showTypeFilter, setShowTypeFilter] = useState(false);
+  const [statusFilter, setStatusFilter] = useState<'all' | 'enabled' | 'disabled'>('all');
   const [menuState, setMenuState] = useState<{ id: string; x: number; y: number } | null>(null);
   const [moveMenuId, setMoveMenuId] = useState<string | null>(null);
   const [showAddTag, setShowAddTag] = useState(false);
   const [newTagName, setNewTagName] = useState('');
   const [tagCtx, setTagCtx] = useState<{ name: string; x: number; y: number } | null>(null);
+
+  const displayResources = statusFilter === 'all' ? resources
+    : statusFilter === 'enabled' ? resources.filter(r => r.enabled)
+    : resources.filter(r => !r.enabled);
 
   const openMenu = useCallback((id: string, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -143,36 +151,28 @@ export function ResourceGrid({
             </PopoverContent>
           </Popover>
 
-          {/* Type filter dropdown */}
+          {/* Status filter dropdown */}
           <Popover open={showTypeFilter} onOpenChange={(v) => { setShowTypeFilter(v); if (v) { setShowSort(false); setShowCreate(false); } }}>
             <PopoverTrigger asChild>
               <Button variant="ghost" size="xs"
                 className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs border transition-all ${showTypeFilter ? 'border-primary/30 bg-accent/50 text-foreground' : 'border-border/40 text-muted-foreground/60 hover:text-foreground hover:border-border/60'}`}>
                 <Filter size={10} />
-                <span>{activeType ? RESOURCE_TYPE_CONFIG[activeType].label : '全部分类'}</span>
+                <span>{statusFilter === 'all' ? '全部状态' : statusFilter === 'enabled' ? '已启用' : '已禁用'}</span>
                 <ChevronDown size={9} className={`transition-transform ${showTypeFilter ? 'rotate-180' : ''}`} />
               </Button>
             </PopoverTrigger>
-            <PopoverContent align="start" className="p-1 min-w-[120px] w-auto">
-              <Button variant="ghost" size="xs" onClick={() => { onTypeFilter(null); setShowTypeFilter(false); }}
-                className={`flex items-center gap-2 w-full px-2.5 py-[5px] rounded-md text-xs transition-colors ${activeType === null ? 'bg-accent text-foreground' : 'text-muted-foreground/60 hover:bg-accent/50 hover:text-foreground'}`}>
-                <Layers size={10} />
-                <span>全部</span>
-                <span className="ml-auto text-xs text-muted-foreground/40 tabular-nums">{Object.values(typeCounts).reduce((a, b) => a + b, 0)}</span>
-              </Button>
-              <div className="h-px bg-border/30 my-0.5 mx-1" />
-              {RESOURCE_TYPES_LIST.map(rt => {
-                const Icon = rt.icon;
-                const count = typeCounts[rt.id] || 0;
-                return (
-                  <Button variant="ghost" size="xs" key={rt.id} onClick={() => { onTypeFilter(activeType === rt.id ? null : rt.id); setShowTypeFilter(false); }}
-                    className={`flex items-center gap-2 w-full px-2.5 py-[5px] rounded-md text-xs transition-colors ${activeType === rt.id ? 'bg-accent text-foreground' : 'text-muted-foreground/60 hover:bg-accent/50 hover:text-foreground'}`}>
-                    <Icon size={10} />
-                    <span>{rt.label}</span>
-                    <span className="ml-auto text-xs text-muted-foreground/40 tabular-nums">{count}</span>
-                  </Button>
-                );
-              })}
+            <PopoverContent align="start" className="p-1 min-w-[110px] w-auto">
+              {([
+                { key: 'all' as const, label: '全部状态' },
+                { key: 'enabled' as const, label: '已启用' },
+                { key: 'disabled' as const, label: '已禁用' },
+              ]).map(opt => (
+                <Button variant="ghost" size="xs" key={opt.key}
+                  onClick={() => { setStatusFilter(opt.key); setShowTypeFilter(false); }}
+                  className={`w-full text-left px-2.5 py-[5px] rounded-md text-xs transition-colors ${statusFilter === opt.key ? 'bg-accent text-foreground' : 'text-muted-foreground/60 hover:bg-accent/50 hover:text-foreground'}`}>
+                  {opt.label}
+                </Button>
+              ))}
             </PopoverContent>
           </Popover>
 
@@ -183,6 +183,16 @@ export function ResourceGrid({
           </div>
 
           <div className="flex-1" />
+
+          {/* Browse templates (only for assistant / skill) */}
+          {onBrowseTemplates && (
+            <Button variant="outline" size="xs"
+              onClick={onBrowseTemplates}
+              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs text-muted-foreground hover:text-foreground border-border/40 transition-colors">
+              <Sparkles size={10} />
+              <span>浏览模板</span>
+            </Button>
+          )}
 
           {/* Separator */}
           <div className="w-px h-4 bg-border/30 flex-shrink-0" />
@@ -196,24 +206,28 @@ export function ResourceGrid({
                 <ChevronDown size={9} className={`transition-transform ${showCreate ? 'rotate-180' : ''}`} />
               </Button>
             </PopoverTrigger>
-            <PopoverContent align="end" className="p-1 min-w-[140px] w-auto">
-              {(['agent', 'assistant', 'skill', 'plugin'] as const).map(t => {
+            <PopoverContent align="end" className="p-1 min-w-[150px] w-auto">
+              {(['prompt', 'assistant', 'agent'] as const).map(t => {
                 const cfg = RESOURCE_TYPE_CONFIG[t];
                 const Icon = cfg.icon;
-                const isFileType = t === 'skill' || t === 'plugin';
                 return (
-                  <div key={t}>
-                    {t === 'skill' && <div className="h-px bg-border/30 my-0.5 mx-1" />}
-                    <Button variant="ghost" size="xs" onClick={() => { onCreate(t); setShowCreate(false); }}
-                      className="flex items-center gap-2 w-full px-2.5 py-[6px] rounded-md text-xs text-muted-foreground/60 hover:text-foreground hover:bg-accent/50 transition-colors">
-                      <div className={`w-5 h-5 rounded-md flex items-center justify-center ${cfg.color}`}>
-                        {isFileType ? <Upload size={10} /> : <Icon size={10} />}
-                      </div>
-                      <span>{isFileType ? `导入${cfg.label}` : `新建${cfg.label}`}</span>
-                    </Button>
-                  </div>
+                  <Button variant="ghost" size="xs" key={t} onClick={() => { onCreate(t); setShowCreate(false); }}
+                    className="flex items-center justify-start gap-2.5 w-full px-2.5 py-[6px] rounded-lg text-xs text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-colors">
+                    <div className={`w-5 h-5 rounded-md flex items-center justify-center flex-shrink-0 ${cfg.color}`}>
+                      <Icon size={10} />
+                    </div>
+                    <span className="text-left">新建{cfg.label}</span>
+                  </Button>
                 );
               })}
+              <div className="h-px bg-border/30 my-0.5 mx-1" />
+              <Button variant="ghost" size="xs" onClick={() => { onCreate('skill'); setShowCreate(false); }}
+                className="flex items-center justify-start gap-2.5 w-full px-2.5 py-[6px] rounded-lg text-xs text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-colors">
+                <div className={`w-5 h-5 rounded-md flex items-center justify-center flex-shrink-0 ${RESOURCE_TYPE_CONFIG.skill.color}`}>
+                  <Upload size={10} />
+                </div>
+                <span className="text-left">导入Skill</span>
+              </Button>
             </PopoverContent>
           </Popover>
         </div>
@@ -259,28 +273,31 @@ export function ResourceGrid({
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto px-5 py-4 scrollbar-thin">
-        {resources.length === 0 ? (
-          search ? (
+        {/* Template banner (only for assistant / skill) */}
+        {templateBanner}
+
+        {displayResources.length === 0 ? (
+          search || statusFilter !== 'all' ? (
             <EmptyState preset="no-result" />
           ) : (
             <EmptyState
               preset="no-resource"
-              actionLabel="新建智能体"
-              onAction={() => onCreate('agent')}
+              actionLabel="新建 Prompt"
+              onAction={() => onCreate('prompt')}
               secondaryLabel="新建助手"
               onSecondary={() => onCreate('assistant')}
             />
           )
         ) : viewMode === 'grid' ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {resources.map((r, i) => (
+            {displayResources.map((r, i) => (
               <GridCard key={r.id} resource={r} index={i} onEdit={onEdit} onToggle={onToggle}
                 onOpenMenu={openMenu} />
             ))}
           </div>
         ) : (
           <div className="space-y-1">
-            {resources.map((r, i) => (
+            {displayResources.map((r, i) => (
               <ListRow key={r.id} resource={r} index={i} onEdit={onEdit} onToggle={onToggle}
                 onOpenMenu={openMenu} />
             ))}
@@ -342,7 +359,9 @@ interface CardItemProps {
 
 function GridCard({ resource: r, index, onEdit, onToggle, onOpenMenu }: CardItemProps) {
   const cfg = RESOURCE_TYPE_CONFIG[r.type];
-  const isToolType = r.type === 'skill' || r.type === 'plugin';
+  const isToolType = r.type === 'skill';
+  const isPrompt = r.type === 'prompt';
+  const Icon = cfg.icon;
 
   return (
     <motion.div
@@ -352,7 +371,13 @@ function GridCard({ resource: r, index, onEdit, onToggle, onOpenMenu }: CardItem
       onClick={() => onEdit(r)}>
       <div className="p-4">
         <div className="flex items-start gap-3 mb-3">
-          <div className={`w-9 h-9 rounded-xl flex items-center justify-center text-base flex-shrink-0 ${!isToolType ? 'bg-accent/50' : cfg.color}`}>{r.avatar}</div>
+          {isPrompt ? (
+            <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${cfg.color}`}>
+              <Icon size={16} />
+            </div>
+          ) : (
+            <div className={`w-9 h-9 rounded-xl flex items-center justify-center text-base flex-shrink-0 ${!isToolType ? 'bg-accent/50' : cfg.color}`}>{r.avatar}</div>
+          )}
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-1.5">
               <h4 className="text-sm text-foreground truncate">{r.name}</h4>
@@ -391,12 +416,18 @@ function GridCard({ resource: r, index, onEdit, onToggle, onOpenMenu }: CardItem
 
 function ListRow({ resource: r, index, onEdit, onToggle, onOpenMenu }: CardItemProps) {
   const cfg = RESOURCE_TYPE_CONFIG[r.type];
-  const isToolType = r.type === 'skill' || r.type === 'plugin';
+  const isToolType = r.type === 'skill';
+  const isPrompt = r.type === 'prompt';
+  const Icon = cfg.icon;
 
   return (
     <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.15, delay: index * 0.015 }}
       className="group flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-accent/50 transition-colors cursor-pointer" onClick={() => onEdit(r)}>
-      <div className="w-8 h-8 rounded-lg bg-accent/50 flex items-center justify-center text-sm flex-shrink-0">{r.avatar}</div>
+      {isPrompt ? (
+        <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${cfg.color}`}><Icon size={14} /></div>
+      ) : (
+        <div className="w-8 h-8 rounded-lg bg-accent/50 flex items-center justify-center text-sm flex-shrink-0">{r.avatar}</div>
+      )}
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-1.5">
           <span className="text-sm text-foreground truncate">{r.name}</span>

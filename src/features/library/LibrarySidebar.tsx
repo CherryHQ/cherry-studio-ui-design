@@ -30,6 +30,7 @@ export function LibrarySidebar({
     if (filter.type === 'resource' && f.type === 'resource') return filter.resourceType === f.resourceType;
     if (filter.type === 'folder' && f.type === 'folder') return filter.folderId === f.folderId;
     if (filter.type === 'tag' && f.type === 'tag') return filter.tagName === f.tagName;
+    if (filter.type === 'discover' && f.type === 'discover') return filter.discoverType === f.discoverType;
     return false;
   };
 
@@ -70,21 +71,14 @@ export function LibrarySidebar({
       {/* Header */}
       <div className="px-4 pt-5 pb-3">
         <h2 className="text-sm text-foreground tracking-tight">资源库</h2>
-        <p className="text-xs text-muted-foreground/50 mt-0.5">管理你的 AI 资源</p>
+        <p className="text-xs text-muted-foreground/50 mt-0.5">管理和发现 AI 资源</p>
       </div>
 
       {/* Scrollable */}
       <div className="flex-1 overflow-y-auto px-2.5 pb-2 scrollbar-thin">
-        {/* All */}
-        <div className="mb-1">
-          <Button variant="ghost" onClick={() => onFilterChange({ type: 'all' })} className={itemCls({ type: 'all' })}>
-            <Layers size={12} strokeWidth={1.6} />
-            <span className="flex-1 text-left">所有资源</span>
-          </Button>
-        </div>
-
-        {/* Resource Types */}
+        {/* My Resources Section */}
         <div className="mb-3">
+          <p className="px-2.5 pb-1 pt-1 text-xs text-muted-foreground/40">我的资源</p>
           {RESOURCE_TYPES_LIST.map(rt => (
             <Button variant="ghost" key={rt.id} onClick={() => onFilterChange({ type: 'resource', resourceType: rt.id })} className={itemCls({ type: 'resource', resourceType: rt.id })}>
               <rt.icon size={12} strokeWidth={1.6} />
@@ -95,6 +89,7 @@ export function LibrarySidebar({
             </Button>
           ))}
         </div>
+
 
       </div>
 

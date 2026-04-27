@@ -2,7 +2,7 @@ import {
   MessageCircle, Bot, Palette, Languages, Compass,
   Library, BookOpen, FileText, Code2, Puzzle, NotebookPen,
   Sparkles, MousePointerClick, Blocks,
-  Zap, Cloud,
+  Zap, Cloud, MessageSquareText,
   Shield, ShieldCheck, ShieldAlert,
 } from 'lucide-react';
 import type {
@@ -117,16 +117,18 @@ export const searchQuickActions = [
 // ===========================
 
 export const RESOURCE_TYPE_CONFIG: Record<ResourceType, ResourceTypeUIConfig> = {
-  agent:     { label: '智能体', icon: Bot,            color: 'text-violet-500 bg-violet-500/10' },
-  assistant: { label: '助手',   icon: MessageCircle,   color: 'text-sky-500 bg-sky-500/10' },
-  skill:     { label: '技能',   icon: Zap,             color: 'text-warning bg-warning-muted' },
-  plugin:    { label: '插件',   icon: Puzzle,          color: 'text-info bg-info-muted' },
+  agent:     { label: '智能体', icon: Bot,              color: 'text-violet-500 bg-violet-500/10' },
+  assistant: { label: '助手',   icon: MessageCircle,     color: 'text-sky-500 bg-sky-500/10' },
+  skill:     { label: '技能',   icon: Zap,               color: 'text-warning bg-warning-muted' },
+  plugin:    { label: '插件',   icon: Puzzle,            color: 'text-info bg-info-muted' },
+  prompt:    { label: 'Prompt', icon: MessageSquareText, color: 'text-accent-orange bg-accent-orange/10' },
 };
 
 export const RESOURCE_TYPES_LIST: { id: ResourceType; label: string; icon: typeof Bot }[] = [
-  { id: 'agent',     label: '智能体', icon: Bot },
+  { id: 'skill',     label: 'Skill',  icon: Zap },
+  { id: 'prompt',    label: 'Prompt', icon: MessageSquareText },
   { id: 'assistant', label: '助手',   icon: MessageCircle },
-  { id: 'skill',     label: '技能',   icon: Zap },
+  { id: 'agent',     label: 'Agent',  icon: Bot },
 ];
 
 export const SORT_LABELS: Record<string, string> = {

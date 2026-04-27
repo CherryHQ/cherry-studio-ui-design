@@ -47,7 +47,7 @@ function SimpleTooltip({
     <TooltipProvider delayDuration={delayDuration}>
       <Tooltip>
         <TooltipTrigger asChild data-slot="simple-tooltip">
-          <span className="contents">{children}</span>
+          <span className="inline-flex">{children}</span>
         </TooltipTrigger>
         <TooltipContent
           side={side}

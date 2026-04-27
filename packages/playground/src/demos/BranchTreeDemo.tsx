@@ -226,9 +226,6 @@ function TreeNodeView({ layout, collapsed, onToggle, onSwitch }: {
                   <span className="text-xs text-muted-foreground/60">{node.children.length}</span>
                 </div>
               )}
-              {active && (
-                <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[2px] h-3 rounded-full bg-primary animate-pulse" />
-              )}
             </div>
           </ContextMenuTrigger>
           <ContextMenuContent className="rounded-[12px]">

@@ -356,7 +356,7 @@ export function TranslatePage() {
 
         <div className="flex-1 min-h-0 flex flex-col p-4">
           {/* Translation card - fills available height */}
-          <div className="flex-1 flex flex-col bg-card border border-border/50 rounded-2xl overflow-hidden shadow-sm min-h-0">
+          <div className="flex-1 flex flex-col bg-card border border-border/30 rounded-2xl overflow-hidden min-h-0">
             {/* Language selector row */}
             <div className="flex items-center h-10 px-2 flex-shrink-0">
               <Popover open={showLangDropdownSrc} onOpenChange={(v) => { setShowLangDropdownSrc(v); if (v) setShowLangDropdownTgt(false); }}>
@@ -369,7 +369,7 @@ export function TranslatePage() {
                     <ChevronDown size={11} className="text-muted-foreground/50" />
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent align="start" className="w-40 p-0 py-1 rounded-xl max-h-[240px] overflow-y-auto">
+                <PopoverContent align="center" sideOffset={4} className="w-40 p-0 py-1 rounded-xl max-h-[240px] overflow-y-auto">
                   {languages.map(l => (
                     <Button variant="ghost" size="sm" key={l} onClick={() => { setSourceLang(l); setShowLangDropdownSrc(false); }}
                       className={`w-full text-left text-xs justify-start ${l === sourceLang ? 'text-foreground' : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground'}`}>
@@ -394,7 +394,7 @@ export function TranslatePage() {
                     <ChevronDown size={11} className="text-muted-foreground/50" />
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent align="end" className="w-40 p-0 py-1 rounded-xl max-h-[240px] overflow-y-auto">
+                <PopoverContent align="center" sideOffset={4} className="w-40 p-0 py-1 rounded-xl max-h-[240px] overflow-y-auto">
                   {targetLanguages.map(l => (
                     <Button variant="ghost" size="sm" key={l} onClick={() => { setTargetLang(l); setShowLangDropdownTgt(false); }}
                       className={`w-full text-left text-xs justify-start ${l === targetLang ? 'text-foreground' : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground'}`}>
@@ -415,7 +415,7 @@ export function TranslatePage() {
                     onChange={e => setSourceText(e.target.value)}
                     onKeyDown={e => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) handleTranslate(); }}
                     placeholder="输入需要翻译的文本..."
-                    className="w-full h-full resize-none bg-transparent px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground/60 outline-none"
+                    className="w-full h-full resize-none bg-transparent px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground/60 outline-none border-transparent focus-visible:border-transparent focus-visible:ring-0 shadow-none"
                   />
                   {sourceText && (
                     <Button variant="ghost" size="icon-xs" onClick={() => { setSourceText(''); setTranslatedText(''); }}
@@ -471,14 +471,10 @@ export function TranslatePage() {
                   <div className="flex items-center gap-2">
                     {translatedText && <span className="text-xs text-muted-foreground/50">{translatedText.length}</span>}
                     <Button
-                      variant="default" size="sm"
+                      variant="default" size="xs"
                       onClick={handleTranslate}
                       disabled={!sourceText.trim() || isTranslating}
-                      className={`px-3 py-1 text-xs flex items-center gap-1.5 ${
-                        !sourceText.trim() || isTranslating
-                          ? 'bg-muted text-muted-foreground/40 cursor-not-allowed'
-                          : ''
-                      }`}>
+                      className="px-3 py-1.5 text-xs flex items-center gap-1.5 rounded-lg">
                       <Languages size={12} />
                       <span>翻译</span>
                     </Button>
@@ -652,7 +648,7 @@ export function TranslatePage() {
               </Button>
             </div>
             <div className="flex-1 min-h-0 overflow-y-auto" onClick={() => { setShowBiDropA(false); setShowBiDropB(false); }}>
-              <div className="p-4 space-y-5">
+              <div className="p-3 space-y-3.5">
                 {[
                   { label: 'Markdown 预览', value: markdownPreview, set: setMarkdownPreview },
                   { label: '翻译完成后自动复制', value: autoCopy, set: setAutoCopy },

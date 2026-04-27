@@ -513,6 +513,7 @@ export const MOCK_MESSAGES: AssistantMessage[] = [
     metadata: {
       sessionId: 'a1b2c3d4e5f60001',
       model: 'google/gemini-3-pro-preview',
+      provider: 'google',
       status: 'success',
       startTime: '2025-10-03 14:21',
       duration: '18.3s',
@@ -575,6 +576,7 @@ export const MOCK_MESSAGES: AssistantMessage[] = [
     metadata: {
       sessionId: 'a1b2c3d4e5f60002',
       model: 'google/gemini-3-pro-preview',
+      provider: 'google',
       status: 'success',
       startTime: '2025-10-03 14:26',
       duration: '6.4s',
@@ -649,6 +651,7 @@ function StatsRow() {
     metadata: {
       sessionId: 'a1b2c3d4e5f60003',
       model: 'google/gemini-3-pro-preview',
+      provider: 'google',
       status: 'success',
       startTime: '2025-10-03 14:29',
       duration: '7.8s',
@@ -681,6 +684,7 @@ function StatsRow() {
     metadata: {
       sessionId: 'a1b2c3d4e5f60004',
       model: 'dall-e-3',
+      provider: 'openai',
       status: 'success',
       startTime: '2025-10-03 14:32',
       duration: '22.1s',
@@ -717,6 +721,7 @@ function StatsRow() {
     metadata: {
       sessionId: 'a1b2c3d4e5f60005',
       model: 'google/gemini-3-pro-preview',
+      provider: 'google',
       status: 'success',
       startTime: '2025-10-03 14:36',
       duration: '12.5s',
@@ -800,6 +805,7 @@ function StatsRow() {
     metadata: {
       sessionId: 'a1b2c3d4e5f60006',
       model: 'dall-e-3',
+      provider: 'openai',
       status: 'success',
       startTime: '2025-10-03 14:46',
       duration: '28.4s',

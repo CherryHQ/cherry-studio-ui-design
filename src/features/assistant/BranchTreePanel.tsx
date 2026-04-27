@@ -585,14 +585,6 @@ function TreeNode({
                 </div>
               )}
 
-              {/* Active pulse line */}
-              {isActive && (
-                <motion.div
-                  className="absolute left-0 top-1/2 -translate-y-1/2 w-[2px] h-3 rounded-full bg-cherry-primary"
-                  animate={{ opacity: [1, 0.3, 1] }}
-                  transition={{ duration: 2.5, repeat: Infinity }}
-                />
-              )}
             </div>
       </div>
 

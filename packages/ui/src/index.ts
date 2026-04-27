@@ -162,6 +162,9 @@ export * from "./components/ui/note-editor"
 export * from "./components/ui/kb-manager"
 export * from "./components/ui/settings-sections"
 
+// Annotation plugin
+export * from "./components/ui/annotations"
+
 // Hooks
 export * from "./hooks/use-mobile"
 export * from "./hooks/use-chat-stream"
@@ -169,3 +172,4 @@ export * from "./hooks/use-tab-drag"
 export * from "./hooks/use-floating-windows"
 export * from "./hooks/use-tabs"
 export * from "./hooks/use-keyboard"
+export * from "./hooks/use-annotations"

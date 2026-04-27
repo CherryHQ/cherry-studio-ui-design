@@ -780,7 +780,6 @@ export function TopicHistoryPage({ topics, activeTopicId, onSelectTopic, onDelet
               <div className="flex items-center gap-[2px] bg-accent/15 rounded-md p-[2px]">
                 {([
                   { key: 'none' as GroupMode, label: '\u5e73\u94fa' },
-                  { key: 'assistant' as GroupMode, label: '\u6309\u52a9\u624b' },
                   { key: 'tag' as GroupMode, label: '\u6309\u6807\u7b7e' },
                 ] as const).map(g => (
                   <Button variant="ghost" size="inline"

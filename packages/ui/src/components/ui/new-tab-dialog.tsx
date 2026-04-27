@@ -6,7 +6,6 @@ import {
   MessageCircle, Eye, EyeOff, RotateCcw, GripVertical, Settings,
 } from 'lucide-react';
 import { cn } from "../../lib/utils"
-import { Avatar, AvatarFallback } from "./avatar"
 import { Button } from "./button"
 import { Dialog, DialogContent } from "./dialog"
 import { Input } from "./input"
@@ -61,13 +60,11 @@ export interface NewTabDialogLabels {
   clearFilter?: string
   helpSelect?: string
   helpOpen?: string
-  helpNewTab?: string
-  helpCopyLink?: string
   helpClose?: string
   manageApps?: string
 }
 
-export function NewTabDialog({ open, search, onSearchChange, onSelect, onClose, hiddenApps, setHiddenApps, appOrder, setAppOrder, dialogAppIcons, dialogFilterTabs, newTabHistoryItems, newTabFileItems, dialogQuickActions, labels: labelsProp }: {
+export function NewTabDialog({ open, search, onSearchChange, onSelect, onClose, hiddenApps, setHiddenApps, appOrder, setAppOrder, dialogAppIcons, dialogFilterTabs, newTabHistoryItems, newTabFileItems, dialogQuickActions, labels: labelsProp, initialManageMode }: {
   open: boolean; search: string; onSearchChange: (s: string) => void;
   onSelect: (menuItemId: string) => void; onClose: () => void;
   hiddenApps: Set<string>; setHiddenApps: React.Dispatch<React.SetStateAction<Set<string>>>;
@@ -78,6 +75,7 @@ export function NewTabDialog({ open, search, onSearchChange, onSelect, onClose, 
   newTabFileItems: FileItem[];
   dialogQuickActions: QuickActionItem[];
   labels?: NewTabDialogLabels;
+  initialManageMode?: boolean;
 }) {
   const l = {
     searchPlaceholder: "开始输入搜索...",
@@ -94,8 +92,6 @@ export function NewTabDialog({ open, search, onSearchChange, onSelect, onClose, 
     clearFilter: "清除筛选",
     helpSelect: "选择",
     helpOpen: "打开",
-    helpNewTab: "在新标签打开",
-    helpCopyLink: "复制链接",
     helpClose: "关闭",
     manageApps: "管理快捷应用",
     ...labelsProp,
@@ -107,7 +103,16 @@ export function NewTabDialog({ open, search, onSearchChange, onSelect, onClose, 
   const [dateRange, setDateRange] = useState('全部时间');
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const [showFilters, setShowFilters] = useState(false);
-  const [manageMode, setManageMode] = useState(false);
+  const [manageMode, setManageMode] = useState(initialManageMode ?? false);
+  const [prevOpen, setPrevOpen] = useState(open);
+  if (open !== prevOpen) {
+    setPrevOpen(open);
+    if (open) {
+      setManageMode(initialManageMode ?? false);
+    } else {
+      setManageMode(false);
+    }
+  }
   const [dragIdx, setDragIdx] = useState<number | null>(null);
   const [dragOverIdx, setDragOverIdx] = useState<number | null>(null);
 
@@ -154,13 +159,6 @@ export function NewTabDialog({ open, search, onSearchChange, onSelect, onClose, 
   const filteredActions = activeFilter === l.allFilter ? dialogQuickActions.filter(i => matchSearch(i.label)) : [];
   const hasResults = filteredRecent.length > 0 || filteredFiles.length > 0 || filteredActions.length > 0;
 
-  // Flat list for highlight + preview
-  type ResultItem = { id: string; label: string; desc: string; icon: React.ElementType; section: string; category?: string; meta?: string; count?: number };
-  const allResults: ResultItem[] = [
-    ...filteredRecent.map(item => ({ id: item.id, label: item.label, desc: item.desc, icon: item.icon, section: 'recent', category: item.category, count: item.count })),
-    ...filteredFiles.map(item => ({ id: item.id, label: item.label, desc: item.desc, icon: item.icon, section: 'file', category: item.category, meta: item.meta })),
-  ];
-  const previewItem = allResults[highlightedIndex] || null;
   let globalIdx = -1;
 
   return (
@@ -205,6 +203,17 @@ export function NewTabDialog({ open, search, onSearchChange, onSelect, onClose, 
                 </Button>
               );
             })}
+            {/* Manage shortcut apps */}
+            <Button
+              variant="ghost"
+              onClick={() => setManageMode(!manageMode)}
+              className="flex flex-col items-center gap-1.5 w-[52px] h-auto py-1 px-0 group hover:bg-accent/30"
+            >
+              <div className="w-9 h-9 rounded-[var(--radius-button)] flex items-center justify-center transition-all bg-border/30 text-muted-foreground/40 group-hover:scale-105 group-active:scale-95">
+                <Settings size={15} strokeWidth={1.8} />
+              </div>
+              <span className="text-xs text-muted-foreground/40 group-hover:text-foreground leading-none">管理</span>
+            </Button>
           </div>
         </div>
         )}
@@ -257,7 +266,7 @@ export function NewTabDialog({ open, search, onSearchChange, onSelect, onClose, 
 
         {/* Content: left list + right preview */}
         <div className="flex flex-1 min-h-0">
-          <ScrollArea className={cn("flex-1 max-h-[380px]", !manageMode && "border-r border-border/50")} role="list" aria-live="polite">
+          <ScrollArea className="flex-1 max-h-[380px]" role="list" aria-live="polite">
             {manageMode ? (
               <div className="px-3 pt-3 pb-2">
                 <div className="flex items-center justify-between mb-3 px-1">
@@ -373,27 +382,6 @@ export function NewTabDialog({ open, search, onSearchChange, onSelect, onClose, 
                   </div>
                 )}
 
-                {filteredActions.length > 0 && (
-                  <div className="px-2 pt-2 pb-2">
-                    <p className="text-xs text-muted-foreground/60 px-2 mb-1.5">{l.quickActionsSection}</p>
-                    {filteredActions.map((item, i) => {
-                      const Icon = item.icon;
-                      return (
-                        <div
-                          key={`a-${i}`}
-                          onClick={() => onSelect(item.id)}
-                          className="flex items-center gap-3 px-2 py-2 rounded-xl hover:bg-accent/40 transition-colors cursor-pointer"
-                        >
-                          <div className="w-8 h-8 rounded-xl bg-accent/80 flex items-center justify-center flex-shrink-0">
-                            <Icon size={14} className="text-muted-foreground" />
-                          </div>
-                          <span className="text-sm text-foreground flex-1">{item.label}</span>
-                          <Kbd>{item.shortcut}</Kbd>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
               </div>
             ) : (
               <div className="flex flex-col items-center justify-center py-14 px-4">
@@ -407,41 +395,13 @@ export function NewTabDialog({ open, search, onSearchChange, onSelect, onClose, 
             )}
           </ScrollArea>
 
-          {/* Right: preview panel (hidden in manage mode) */}
-          {!manageMode && <div className="w-[280px] flex-shrink-0 flex flex-col items-center justify-center px-6 py-8 max-h-[380px]">
-            {previewItem ? (
-              <div className="flex flex-col items-center text-center gap-3">
-                <div className="w-10 h-10 rounded-2xl bg-accent/80 flex items-center justify-center mb-2">
-                  <previewItem.icon size={20} className="text-muted-foreground" />
-                </div>
-                <div className="space-y-1">
-                  <p className="text-xs text-muted-foreground/50">{previewItem.category || (previewItem.section === 'recent' ? '对话' : '文件')}</p>
-                  <p className="text-sm text-foreground font-medium">{previewItem.label}</p>
-                  <p className="text-xs text-muted-foreground/60">{previewItem.desc}</p>
-                </div>
-              </div>
-            ) : (
-              <div className="text-xs text-muted-foreground/30">无预览</div>
-            )}
-          </div>}
         </div>
 
         {/* Bottom bar */}
         <div className="flex items-center gap-3 px-4 py-2 border-t border-border/50 text-xs text-muted-foreground/50">
           <span className="flex items-center gap-1"><Kbd>↑↓</Kbd> {l.helpSelect}</span>
           <span className="flex items-center gap-1"><Kbd>↵</Kbd> {l.helpOpen}</span>
-          <span className="flex items-center gap-1"><Kbd>⌘R</Kbd> {l.helpNewTab}</span>
-          <span className="flex items-center gap-1"><Kbd>⌘L</Kbd> {l.helpCopyLink}</span>
           <span className="flex items-center gap-1"><Kbd>ESC</Kbd> {l.helpClose}</span>
-          <Button
-            variant="ghost"
-            size="icon-xs"
-            onClick={() => setManageMode(!manageMode)}
-            className={`ml-auto ${manageMode ? 'text-foreground bg-accent' : 'hover:text-muted-foreground'}`}
-            title={l.manageApps}
-          >
-            <Settings size={12} />
-          </Button>
         </div>
       </DialogContent>
     </Dialog>

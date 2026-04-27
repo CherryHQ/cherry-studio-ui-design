@@ -45,8 +45,6 @@ export interface SearchDialogLabels {
   clearFilter?: string
   helpSelect?: string
   helpOpen?: string
-  helpNewTab?: string
-  helpCopyLink?: string
   helpClose?: string
   allFilter?: string
 }
@@ -76,8 +74,6 @@ export function SearchDialog({
     clearFilter: "清除筛选",
     helpSelect: "选择",
     helpOpen: "打开",
-    helpNewTab: "在新标签打开",
-    helpCopyLink: "复制链接",
     helpClose: "关闭",
     allFilter: "全部",
     ...labelsProp,
@@ -138,7 +134,6 @@ export function SearchDialog({
     setHighlightedIndex(0);
   }, [query, activeFilter]);
 
-  const previewItem = allResults[highlightedIndex] || null;
   let globalIdx = -1;
 
   return (
@@ -262,7 +257,7 @@ export function SearchDialog({
         {/* Main: left list + right preview */}
         <div className="flex flex-1 min-h-0">
           {/* Left: results */}
-          <ScrollArea className="flex-1 max-h-[420px] border-r border-border/50">
+          <ScrollArea className="flex-1 max-h-[420px]">
             {filteredRecent.length > 0 && (
               <div className="px-2 pt-3 pb-1">
                 <p className="text-xs text-muted-foreground/60 px-2 mb-1.5">{l.recentSection} · {filteredRecent.length}</p>
@@ -347,33 +342,13 @@ export function SearchDialog({
             )}
           </ScrollArea>
 
-          {/* Right: preview */}
-          <div className="w-[280px] flex-shrink-0 flex flex-col items-center justify-center px-6 py-8 max-h-[420px]">
-            {previewItem ? (
-              <div className="flex flex-col items-center text-center gap-3">
-                <div className="w-10 h-10 rounded-2xl bg-accent/80 flex items-center justify-center mb-2">
-                  <previewItem.icon size={20} className="text-muted-foreground" />
-                </div>
-                <div className="space-y-1">
-                  <p className="text-xs text-muted-foreground/50">{previewItem.type || (previewItem.section === 'recent' ? '对话' : '文件')}</p>
-                  <p className="text-sm text-foreground font-medium">{previewItem.label}</p>
-                  <p className="text-xs text-muted-foreground/60">{previewItem.desc}</p>
-                </div>
-              </div>
-            ) : (
-              <div className="text-xs text-muted-foreground/30">无预览</div>
-            )}
-          </div>
         </div>
 
         {/* Bottom bar */}
         <div className="flex items-center gap-3 px-4 py-2 border-t border-border/50 text-xs text-muted-foreground/50">
           <span className="flex items-center gap-1"><Kbd>↑↓</Kbd> {l.helpSelect}</span>
           <span className="flex items-center gap-1"><Kbd>↵</Kbd> {l.helpOpen}</span>
-          <span className="flex items-center gap-1"><Kbd>⌘R</Kbd> {l.helpNewTab}</span>
-          <span className="flex items-center gap-1"><Kbd>⌘L</Kbd> {l.helpCopyLink}</span>
           <span className="flex items-center gap-1"><Kbd>ESC</Kbd> {l.helpClose}</span>
-          <span className="ml-auto"><Settings size={12} /></span>
         </div>
       </DialogContent>
     </Dialog>

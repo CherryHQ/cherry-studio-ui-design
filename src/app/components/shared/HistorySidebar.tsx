@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import {
-  Trash2, Pin, Plus, Pencil, Sparkles, Archive,
+  Trash2, Pin, Plus, Pencil, Sparkles, Archive, Tag,
   Clock, Maximize2, ListFilter, ChevronDown, ChevronRight, ChevronsDown, Check, FolderOpen,
 } from 'lucide-react';
 import { Button, SearchInput, EmptyState, Popover, PopoverTrigger, PopoverContent } from '@cherry-studio/ui';
@@ -74,8 +74,17 @@ interface HistorySidebarProps<T extends HistoryItem> {
 // Context Menu
 // ===========================
 
-function ItemContextMenu({ x, y, onClose, onDelete, onPin, onEdit, onGenerate, onArchive, isPinned }: {
-  x: number; y: number; onClose: () => void; onDelete: () => void; onPin: () => void; onEdit: () => void; onGenerate: () => void; onArchive: () => void; isPinned?: boolean;
+const PRESET_TAGS = ['重要', '待办', '参考', '创意', '归档'];
+const TAG_COLORS: Record<string, string> = {
+  '重要': 'bg-destructive/15 text-destructive',
+  '待办': 'bg-warning/15 text-warning',
+  '参考': 'bg-accent-blue/15 text-accent-blue',
+  '创意': 'bg-accent-purple/15 text-accent-purple',
+  '归档': 'bg-muted-foreground/15 text-muted-foreground',
+};
+
+function ItemContextMenu({ x, y, onClose, onDelete, onPin, onEdit, onGenerate, onArchive, onTag, isPinned, currentTags }: {
+  x: number; y: number; onClose: () => void; onDelete: () => void; onPin: () => void; onEdit: () => void; onGenerate: () => void; onArchive: () => void; onTag: (tag: string) => void; isPinned?: boolean; currentTags?: string[];
 }) {
   const clampedX = Math.min(x, window.innerWidth - 160);
   const clampedY = Math.min(y, window.innerHeight - 160);
@@ -88,7 +97,7 @@ function ItemContextMenu({ x, y, onClose, onDelete, onPin, onEdit, onGenerate, o
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.95 }}
         transition={{ duration: 0.08 }}
-        className="fixed z-[var(--z-overlay)] bg-popover border border-border/40 rounded-lg shadow-xl shadow-black/10 p-0.5 min-w-0"
+        className="fixed z-[var(--z-overlay)] bg-popover border border-border/40 rounded-lg shadow-xl shadow-black/10 p-0.5 min-w-0 w-[130px]"
         style={{ left: clampedX, top: clampedY }}
       >
         <Button
@@ -109,6 +118,37 @@ function ItemContextMenu({ x, y, onClose, onDelete, onPin, onEdit, onGenerate, o
           <Sparkles size={10} />
           <span>生成话题名</span>
         </Button>
+        <div className="relative group/tag">
+          <Button
+            variant="ghost"
+            size="inline"
+            className="w-full justify-start gap-1.5 px-2 py-[3px] text-foreground hover:bg-accent/15"
+          >
+            <Tag size={10} />
+            <span>标签</span>
+            <ChevronRight size={8} className="ml-auto text-muted-foreground/40" />
+          </Button>
+          <div className="absolute left-full top-0 ml-1 hidden group-hover/tag:block">
+            <div className="bg-popover border border-border/40 rounded-lg shadow-xl shadow-black/10 p-0.5 min-w-0 w-[100px]">
+              {PRESET_TAGS.map(tag => {
+                const isSelected = currentTags?.includes(tag);
+                return (
+                  <Button
+                    key={tag}
+                    variant="ghost"
+                    size="inline"
+                    onClick={() => onTag(tag)}
+                    className={`w-full justify-start gap-1.5 px-2 py-[3px] text-foreground hover:bg-accent/15 ${isSelected ? 'bg-accent/20' : ''}`}
+                  >
+                    <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${TAG_COLORS[tag]?.split(' ')[0] || 'bg-muted-foreground/30'}`} />
+                    <span className="text-xs">{tag}</span>
+                    {isSelected && <Check size={8} className="ml-auto text-primary" />}
+                  </Button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
         <Button
           variant="ghost"
           size="inline"
@@ -747,6 +787,7 @@ export function HistorySidebar<T extends HistoryItem>({
             y={contextMenu.y}
             onClose={() => setContextMenu(null)}
             isPinned={items.find(s => s.id === contextMenu.itemId)?.pinned}
+            currentTags={items.find(s => s.id === contextMenu.itemId)?.tags}
             onEdit={() => {
               setEditingItemId(contextMenu.itemId);
               setContextMenu(null);
@@ -758,6 +799,14 @@ export function HistorySidebar<T extends HistoryItem>({
                 onUpdateItem(item.id, { title: generated } as Partial<T>);
               }
               setContextMenu(null);
+            }}
+            onTag={(tag: string) => {
+              const item = items.find(s => s.id === contextMenu.itemId);
+              if (item) {
+                const current = item.tags || [];
+                const updated = current.includes(tag) ? current.filter(t => t !== tag) : [...current, tag];
+                onUpdateItem(item.id, { tags: updated } as Partial<T>);
+              }
             }}
             onPin={() => {
               const item = items.find(s => s.id === contextMenu.itemId);
