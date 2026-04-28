@@ -7,12 +7,12 @@ import {
   Activity, Key, Shuffle, Trash2, Upload,
   MessageCircle, Zap,
   Pin, MoreHorizontal, Edit3,
-  ChevronRight, GripVertical, RotateCcw, Info, SlidersHorizontal, Filter, Languages,
+  GripVertical, RotateCcw, Info, SlidersHorizontal, Filter,
   Variable, Calendar, Clock, Bot, Fingerprint, Globe, Hash, Braces,
   Settings, Brain, Image as ImageIcon, Database, Wrench, Headphones, Gift, Code2, MessageSquare,
   Save, AlertTriangle, ChevronUp, HelpCircle,
   HeartPulse, Loader2, CheckCircle2, XCircle,
-  Download, Search,
+  Download, Search, LogOut,
 } from 'lucide-react';
 import { Tooltip } from '@/app/components/Tooltip';
 import {
@@ -100,7 +100,7 @@ function getModelLogo(modelName: string): { emoji: string; bg: string } {
   if (n.includes('llama')) return { emoji: '🦙', bg: 'bg-info/8 text-info' };
   if (n.includes('qwen')) return { emoji: '★', bg: 'bg-accent-indigo-muted text-accent-indigo' };
   if (n.includes('deepseek')) return { emoji: '◈', bg: 'bg-accent-blue-muted text-accent-blue' };
-  if (n.includes('cherry')) return { emoji: '🍒', bg: 'bg-muted/50 text-muted-foreground' };
+  if (n.includes('cherry')) return { emoji: '🍒', bg: 'bg-cherry-active-bg text-cherry-primary' };
   if (n.includes('whisper') || n.includes('tts')) return { emoji: '♪', bg: 'bg-accent-indigo/8 text-accent-indigo' };
   if (n.includes('embed')) return { emoji: '⊡', bg: 'bg-accent-cyan-muted text-accent-cyan' };
   if (n.includes('imagen') || n.includes('stable-diffusion')) return { emoji: '◑', bg: 'bg-accent-pink/8 text-accent-pink' };
@@ -126,6 +126,8 @@ function ModelLogo({ name, size = 16 }: { name: string; size?: number }) {
     brandId = 'qwen'; fallbackLetter = 'Q'; fallbackColor = '#6366f1';
   } else if (n.includes('deepseek')) {
     brandId = 'deepseek'; fallbackLetter = 'D'; fallbackColor = '#4F6EF7';
+  } else if (n.includes('cherry')) {
+    brandId = 'cherry'; fallbackLetter = '🍒'; fallbackColor = '#e74c8b';
   } else if (n.includes('embed') || n.includes('nomic')) {
     brandId = ''; fallbackLetter = 'E'; fallbackColor = '#06b6d4';
   }
@@ -187,7 +189,7 @@ function ModelRow({ model, onToggle, onEdit }: {
         <div className="flex items-center gap-2">
           <Tooltip content={`点击复制 ID: ${model.name}`} side="top">
             <span
-              className="text-sm text-foreground truncate font-medium cursor-pointer hover:text-cherry-primary transition-colors"
+              className="text-xs text-foreground truncate font-medium cursor-pointer hover:text-cherry-primary transition-colors"
               onClick={(e) => {
                 e.stopPropagation();
                 navigator.clipboard.writeText(model.name);
@@ -1354,7 +1356,7 @@ function ModelEditPanel({ model, onClose, onSave }: {
 }) {
   const [name, setName] = useState(model.name);
   const [group, setGroup] = useState(model.group || '');
-  const [endpointType, setEndpointType] = useState(model.endpointType || 'OpenAI');
+  const [endpointTypes, setEndpointTypes] = useState<string[]>(model.endpointType ? [model.endpointType] : ['OpenAI']);
   const [caps, setCaps] = useState<ModelCapability[]>(model.capabilities || []);
   const [streaming, setStreaming] = useState(model.streaming !== false);
   const [currency, setCurrency] = useState(model.currency || '$');
@@ -1490,47 +1492,33 @@ function ModelEditPanel({ model, onClose, onSave }: {
           />
         </div>
 
-        {/* Endpoint Type */}
+        {/* Endpoint Types (multi-select tags) */}
         <div>
-          <FieldLabel label="端点类型" required hint="模型的 API 端点兼容类型" />
-          <div className="relative">
-            <Button variant="ghost" size="inline"
-              ref={endpointRef}
-              onClick={() => setShowEndpointDrop(!showEndpointDrop)}
-              className={`w-full flex items-center justify-between px-3.5 py-[6px] rounded-full bg-muted/50 text-sm ${
-                showEndpointDrop ? 'bg-accent text-foreground' : 'text-foreground hover:bg-accent/50'
-              }`}
-            >
-              <span>{endpointType}</span>
-              <ChevronDown size={10} className={`text-muted-foreground/60 transition-transform ${showEndpointDrop ? 'rotate-180' : ''}`} />
-            </Button>
-            {showEndpointDrop && endpointRef.current && createPortal(
-              <div
-                data-drop-id="endpoint"
-                className="popover-panel"
-                style={{
-                  top: endpointRef.current.getBoundingClientRect().bottom + 4,
-                  left: endpointRef.current.getBoundingClientRect().left,
-                  minWidth: endpointRef.current.getBoundingClientRect().width,
-                }}
-              >
-                {ENDPOINT_TYPES.map(t => (
-                  <Button variant="ghost" size="inline"
-                    key={t}
-                    onClick={() => { setEndpointType(t); setShowEndpointDrop(false); }}
-                    className={`w-full text-left px-3 py-[6px] rounded-xl text-sm flex items-center justify-between gap-3 ${
-                      endpointType === t
-                        ? 'bg-muted/50 text-foreground'
-                        : 'text-muted-foreground hover:bg-accent/50'
-                    }`}
-                  >
-                    <span>{t}</span>
-                    {endpointType === t && <Check size={10} className="text-cherry-primary flex-shrink-0" />}
-                  </Button>
-                ))}
-              </div>,
-              document.body
-            )}
+          <FieldLabel label="端点类型" required hint="模型支持的 API 端点兼容类型（可多选）" />
+          <div className="flex flex-wrap gap-1.5 mt-1">
+            {ENDPOINT_TYPES.map(t => {
+              const active = endpointTypes.includes(t);
+              return (
+                <Button variant="ghost" size="inline"
+                  key={t}
+                  onClick={() => {
+                    setEndpointTypes(prev =>
+                      active
+                        ? prev.length > 1 ? prev.filter(x => x !== t) : prev
+                        : [...prev, t]
+                    );
+                  }}
+                  className={`px-2.5 py-[3px] rounded-full text-xs transition-all ${
+                    active
+                      ? 'bg-cherry-active-bg text-cherry-primary border border-cherry-ring'
+                      : 'bg-muted/50 text-muted-foreground border border-transparent hover:bg-accent/50'
+                  }`}
+                >
+                  {active && <Check size={8} className="mr-1" />}
+                  {t}
+                </Button>
+              );
+            })}
           </div>
         </div>
 
@@ -2331,19 +2319,6 @@ function FetchResultPanel({ result, onClose, onConfirm }: {
                       <p className="text-sm text-foreground truncate font-medium">
                         {model.displayName || model.name}
                       </p>
-                      <p className="text-xs text-muted-foreground/60 mt-[1px] truncate font-mono">
-                        {model.name}
-                      </p>
-                    </div>
-                    {model.contextWindow && (
-                      <span className="text-xs text-muted-foreground/60 flex-shrink-0">{model.contextWindow}</span>
-                    )}
-                    <div className="flex items-center gap-[3px] flex-shrink-0">
-                      {(model.capabilities || []).filter(c => c !== 'free').slice(0, 3).map(cap => {
-                        const Icon = CAPABILITY_ICONS[cap];
-                        const cfg = CAPABILITY_CONFIG[cap];
-                        return <Icon key={cap} size={9} className={cfg.iconColor} />;
-                      })}
                     </div>
                   </div>
                 );
@@ -2496,14 +2471,20 @@ function CherryINAccountSection() {
     <div className="border border-section-border rounded-2xl p-3.5">
       <div className="flex items-center gap-3">
         {/* Avatar */}
-        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-foreground/40 to-foreground/55 flex items-center justify-center text-white text-xs font-semibold flex-shrink-0">
-          S
+        <div className="flex-shrink-0">
+          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-foreground/40 to-foreground/55 flex items-center justify-center text-white text-xs font-semibold">
+            S
+          </div>
         </div>
-        {/* Info */}
+        {/* Info + Logout inline */}
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1.5">
             <span className="text-xs text-foreground font-medium truncate">Siin</span>
-            <span className="px-1 py-[0.5px] rounded bg-warning/10 text-[10px] text-warning font-medium leading-tight">Pro</span>
+            <Tooltip content="退出登录" side="right">
+              <button onClick={() => setLoggedIn(false)} className="text-muted-foreground/30 hover:text-foreground transition-colors flex-shrink-0">
+                <LogOut size={9} />
+              </button>
+            </Tooltip>
           </div>
           <p className="text-xs text-muted-foreground/40 mt-0.5 truncate">siin@gmail.com</p>
         </div>
@@ -2514,10 +2495,8 @@ function CherryINAccountSection() {
             <p className="text-sm text-foreground font-semibold leading-tight">$128.50</p>
           </div>
           <Button variant="outline" size="inline" className="text-xs px-2.5 py-[3px] border-section-border text-muted-foreground hover:text-foreground transition-colors">充值</Button>
-          <Button size="inline" variant="ghost" onClick={() => setLoggedIn(false)} className="text-xs text-muted-foreground/30 hover:text-foreground transition-colors px-1.5 py-[3px]">退出</Button>
         </div>
       </div>
-      <p className="text-xs text-muted-foreground/25 mt-2.5 pt-2.5 border-t border-section-border">本服务由 <a href="https://open.cherryin.ai" className="text-muted-foreground/40 hover:text-foreground transition-colors">open.cherryin.ai</a> 提供</p>
     </div>
   );
 }
@@ -2535,6 +2514,11 @@ function ProviderDetail({ provider }: { provider: Provider }) {
   const [editingModel, setEditingModel] = useState<ModelItem | null>(null);
   const [showHealthCheck, setShowHealthCheck] = useState(false);
   const [showApiSettings, setShowApiSettings] = useState(false);
+  const [editingConnection, setEditingConnection] = useState(false);
+  const [showAddModelPanel, setShowAddModelPanel] = useState(false);
+  const [addModelId, setAddModelId] = useState('');
+  const [addModelName, setAddModelName] = useState('');
+  const [addModelGroup, setAddModelGroup] = useState('');
   const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set());
   const [customHeaders, setCustomHeaders] = useState<{key: string; value: string}[]>([
     { key: 'X-Custom-Header', value: 'example-value' },
@@ -2546,6 +2530,8 @@ function ProviderDetail({ provider }: { provider: Provider }) {
   const [localModels, setLocalModels] = useState<ModelItem[]>(provider.models);
   const [fetching, setFetching] = useState(false);
   const [fetchResult, setFetchResult] = useState<FetchResult | null>(null);
+  const [addingModelId, setAddingModelId] = useState(false);
+  const [newModelId, setNewModelId] = useState('');
 
   // Sync localModels when provider changes
   useEffect(() => { setLocalModels(provider.models); setModelSearch(''); setCapFilter('all'); }, [provider.id]);
@@ -2601,6 +2587,22 @@ function ProviderDetail({ provider }: { provider: Provider }) {
     setLocalModels(prev => prev.map(m => ({ ...m, enabled: false, status: 'inactive' as const })));
   };
   const allEnabled = localModels.length > 0 && localModels.every(m => m.enabled);
+
+  const addCustomModelById = () => {
+    if (!newModelId.trim()) return;
+    const id = `custom-${Date.now()}`;
+    setLocalModels(prev => [...prev, {
+      id,
+      name: newModelId.trim(),
+      enabled: true,
+      contextWindow: '—',
+      status: 'active' as const,
+      capabilities: ['chat'] as ModelCapability[],
+      group: '自定义',
+    }]);
+    setNewModelId('');
+    setAddingModelId(false);
+  };
 
   // Category tabs
   const CATEGORY_TABS: { key: string; label: string; filter: (m: ModelItem) => boolean }[] = [
@@ -2661,7 +2663,6 @@ function ProviderDetail({ provider }: { provider: Provider }) {
               <Settings size={12} />
             </button>
           </div>
-          <p className="text-xs text-muted-foreground mt-0.5">{provider.subtitle}</p>
         </div>
         <Switch size="sm" checked={enabled} onCheckedChange={setEnabled} />
       </div>
@@ -2676,26 +2677,31 @@ function ProviderDetail({ provider }: { provider: Provider }) {
 
         {/* Connection Config */}
         <div className="border border-section-border rounded-[var(--radius-button)] px-3.5 py-3">
-          <p className="text-xs text-foreground/70 font-medium mb-2.5">连接认证</p>
+          {provider.id === 'cherry-in' && (
+            <div className="flex items-center justify-between mb-2.5">
+              <span className="text-xs text-primary bg-primary/10 px-1.5 py-0.5 rounded-md">OAuth 已登录</span>
+            </div>
+          )}
           <div className="space-y-2.5">
             {/* API Key / Base URL */}
-            <div>
-                <label className="text-sm text-muted-foreground mb-1 block">API Key</label>
+            <div className={provider.id === 'cherry-in' ? 'opacity-50 pointer-events-none' : ''}>
+                <label className="text-sm text-muted-foreground mb-1 block">API Key {provider.id === 'cherry-in' && <span className="text-xs text-muted-foreground/40 ml-1">(OAuth 托管)</span>}</label>
                 <div className="flex items-center gap-1.5">
                   <div className="flex-1 flex items-center px-2.5 py-[5px] bg-muted/50 rounded-lg border border-section-border">
-                    <Input
-                      type={showKey ? 'text' : 'password'}
-                      defaultValue={endpoint?.apiKey || ''}
-                      placeholder="输入 API Key"
-                      className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground/60 min-w-0 h-auto shadow-none border-none p-0"
-                    />
+                    {editingConnection ? (
+                      <Input
+                        type={showKey ? 'text' : 'password'}
+                        defaultValue={endpoint?.apiKey || ''}
+                        placeholder="输入 API Key"
+                        className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground/60 min-w-0 h-auto shadow-none border-none p-0"
+                      />
+                    ) : (
+                      <span className="flex-1 text-sm text-muted-foreground/60 font-mono truncate">{endpoint?.apiKey ? (showKey ? endpoint.apiKey : '••••••••••••••••') : '未配置'}</span>
+                    )}
                     <Button variant="ghost" size="icon-xs" onClick={() => setShowKey(v => !v)} className="text-muted-foreground/60 hover:text-foreground transition-colors ml-1.5">
                       {showKey ? <EyeOff size={10} /> : <Eye size={10} />}
                     </Button>
                   </div>
-                  <Button variant="outline" size="icon-xs" className="border border-section-border text-muted-foreground/60 hover:text-foreground hover:bg-accent transition-colors">
-                    <Copy size={9} />
-                  </Button>
                   <Tooltip content="测试连接" side="bottom">
                     <Button variant="ghost" size="icon-xs" className="w-6 h-6 bg-cherry-active-bg text-cherry-primary hover:bg-cherry-primary/15 transition-colors">
                       <Activity size={10} />
@@ -2705,26 +2711,40 @@ function ProviderDetail({ provider }: { provider: Provider }) {
               </div>
 
             <div>
-              <label className="text-sm text-muted-foreground mb-1 block">API 地址</label>
+              <div className="flex items-center justify-between mb-1">
+                <label className="text-sm text-muted-foreground">API Host</label>
+                {!editingConnection && (
+                  <Button variant="ghost" size="icon-xs" onClick={() => setEditingConnection(true)} className="text-muted-foreground/40 hover:text-foreground transition-colors">
+                    <Settings size={10} />
+                  </Button>
+                )}
+                {editingConnection && (
+                  <Button variant="ghost" size="inline" onClick={() => setEditingConnection(false)} className="px-1.5 py-[1px] text-xs text-cherry-primary hover:text-cherry-primary-dark transition-colors">
+                    完成
+                  </Button>
+                )}
+              </div>
               <div className="flex items-center gap-1.5">
                 <div className="flex-1 flex items-center px-2.5 py-[5px] bg-muted/50 rounded-lg border border-section-border">
-                  <Input
-                    type="text"
-                    defaultValue={endpoint?.baseUrl || ''}
-                    className="flex-1 bg-transparent text-sm text-foreground min-w-0 h-auto shadow-none border-none p-0"
-                  />
-                  <Button variant="ghost" size="icon-xs" className="text-muted-foreground/60 hover:text-foreground transition-colors ml-1.5">
-                    <ExternalLink size={9} />
-                  </Button>
+                  {editingConnection ? (
+                    <Input
+                      type="text"
+                      defaultValue={endpoint?.baseUrl || ''}
+                      placeholder="https://api.example.com/v1"
+                      className="flex-1 bg-transparent text-sm text-foreground min-w-0 h-auto shadow-none border-none p-0"
+                    />
+                  ) : (
+                    <span className="flex-1 text-sm text-muted-foreground/60 font-mono truncate">{endpoint?.baseUrl || '未配置'}</span>
+                  )}
                 </div>
-                <Tooltip content="自定义请求头" side="bottom">
+                <Tooltip content="请求配置" side="bottom">
                   <Button
-                    variant="outline"
+                    variant="ghost"
                     size="icon-xs"
                     onClick={() => setShowHeadersPanel(true)}
-                    className="w-6 h-6 border border-section-border text-muted-foreground/60 hover:text-foreground hover:bg-accent transition-colors"
+                    className="w-6 h-6 bg-cherry-active-bg text-cherry-primary hover:bg-cherry-primary/15 transition-colors"
                   >
-                    <Settings size={9} />
+                    <Settings size={10} />
                   </Button>
                 </Tooltip>
               </div>
@@ -2753,7 +2773,7 @@ function ProviderDetail({ provider }: { provider: Provider }) {
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-1">
               <p className="text-sm text-foreground font-semibold">模型列表</p>
-              <span className="text-xs text-muted-foreground/50 ml-1">{enabledCount}/{localModels.length} 已启用</span>
+              <span className="text-xs text-muted-foreground/50 ml-1">{localModels.length}</span>
             </div>
             <div className="flex items-center gap-0.5">
               <Tooltip content="搜索" side="bottom">
@@ -2793,7 +2813,7 @@ function ProviderDetail({ provider }: { provider: Provider }) {
                   onClick={() => setShowHealthCheck(true)}
                   className="flex items-center px-1 py-[2px] text-xs text-muted-foreground/40 hover:text-foreground hover:bg-accent/50 transition-colors"
                 >
-                  <HeartPulse size={11} />
+                  <Activity size={11} />
                 </Button>
               </Tooltip>
               <Button size="inline" variant="outline"
@@ -2805,7 +2825,7 @@ function ProviderDetail({ provider }: { provider: Provider }) {
                 <span>拉取</span>
               </Button>
               <Button size="inline" variant="outline"
-                onClick={() => setShowModelPanel(true)}
+                onClick={() => { setShowAddModelPanel(true); setAddModelId(''); setAddModelName(''); setAddModelGroup('自定义'); }}
                 className="flex items-center gap-1 px-2 py-[3px] text-xs text-muted-foreground hover:text-foreground border-section-border transition-colors"
               >
                 <Plus size={9} />
@@ -2826,6 +2846,7 @@ function ProviderDetail({ provider }: { provider: Provider }) {
               />
             </div>
           )}
+
 
           {/* Category Filter Tags (expandable) */}
           {showCapFilter && <div className="flex items-center gap-[5px] flex-wrap mb-2.5">
@@ -2870,11 +2891,6 @@ function ProviderDetail({ provider }: { provider: Provider }) {
                 {/* Enabled Section */}
                 {enabledFiltered.length > 0 && (
                   <div className="mb-2">
-                    <div className="flex items-center gap-2 px-3 py-[4px]">
-                      <span className="text-xs text-muted-foreground/60 font-medium">已启用</span>
-                      <div className="flex-1 h-px bg-muted" />
-                      <span className="text-xs text-muted-foreground/40 ml-auto">{enabledFiltered.length}</span>
-                    </div>
                     {enabledGrouped.order.map(group => {
                       const isCollapsed = collapsedGroups.has(`enabled-${group}`);
                       const toggleCollapse = () => {
@@ -2888,16 +2904,13 @@ function ProviderDetail({ provider }: { provider: Provider }) {
                       return (
                         <div key={group}>
                           {enabledGrouped.order.length > 1 && (
-                            <Button size="inline"
-                              variant="ghost"
+                            <button
                               onClick={toggleCollapse}
-                              className="w-full px-3 py-[3px] flex items-center gap-1.5 hover:bg-accent/50 transition-colors text-left"
+                              className="w-full px-3 py-[3px] flex items-center gap-1 hover:bg-accent/50 transition-colors text-left rounded-md"
                             >
-                              <ChevronDown size={9} className={`text-muted-foreground transition-transform flex-shrink-0 ${isCollapsed ? '-rotate-90' : ''}`} />
-                              <span className="text-sm text-foreground font-medium">{group}</span>
-                              <div className="flex-1 h-px bg-muted/50" />
-                              <span className="text-xs text-muted-foreground">{enabledGrouped.groups[group].length}</span>
-                            </Button>
+                              <span className="text-xs text-muted-foreground/60">{group}</span>
+                              <span className={`text-[6px] text-muted-foreground/40 transition-transform flex-shrink-0 leading-none ${isCollapsed ? '-rotate-90' : ''}`}>▼</span>
+                            </button>
                           )}
                           {!isCollapsed && enabledGrouped.groups[group].map(model => (
                             <ModelRow key={model.id} model={model} onToggle={toggleModel} onEdit={setEditingModel} />
@@ -2911,11 +2924,6 @@ function ProviderDetail({ provider }: { provider: Provider }) {
                 {/* Disabled Section */}
                 {disabledFiltered.length > 0 && (
                   <div className="mt-1">
-                    <div className="flex items-center gap-2 px-3 py-[4px]">
-                      <span className="text-xs text-muted-foreground/60 font-medium">未启用</span>
-                      <div className="flex-1 h-px bg-muted" />
-                      <span className="text-xs text-muted-foreground/40">{disabledFiltered.length}</span>
-                    </div>
                     {disabledGrouped.order.map(group => {
                       const isCollapsed = collapsedGroups.has(`disabled-${group}`);
                       const toggleCollapse = () => {
@@ -2929,16 +2937,13 @@ function ProviderDetail({ provider }: { provider: Provider }) {
                       return (
                         <div key={group}>
                           {disabledGrouped.order.length > 1 && (
-                            <Button size="inline"
-                              variant="ghost"
+                            <button
                               onClick={toggleCollapse}
-                              className="w-full px-3 py-[3px] flex items-center gap-1.5 hover:bg-accent/50 transition-colors text-left"
+                              className="w-full px-3 py-[3px] flex items-center gap-1 hover:bg-accent/50 transition-colors text-left rounded-md"
                             >
-                              <ChevronDown size={9} className={`text-muted-foreground/60 transition-transform flex-shrink-0 ${isCollapsed ? '-rotate-90' : ''}`} />
-                              <span className="text-sm text-foreground font-medium">{group}</span>
-                              <div className="flex-1 h-px bg-muted/50" />
-                              <span className="text-xs text-muted-foreground">{disabledGrouped.groups[group].length}</span>
-                            </Button>
+                              <span className="text-xs text-muted-foreground/60">{group}</span>
+                              <span className={`text-[6px] text-muted-foreground/40 transition-transform flex-shrink-0 leading-none ${isCollapsed ? '-rotate-90' : ''}`}>▼</span>
+                            </button>
                           )}
                           {!isCollapsed && disabledGrouped.groups[group].map(model => (
                             <ModelRow key={model.id} model={model} onToggle={toggleModel} onEdit={setEditingModel} />
@@ -2998,64 +3003,36 @@ function ProviderDetail({ provider }: { provider: Provider }) {
             >
               {/* Header */}
               <div className="flex items-center justify-between px-4 py-3 border-b border-section-border flex-shrink-0">
-                <span className="text-sm text-foreground font-semibold">自定义请求头</span>
+                <span className="text-sm text-foreground font-semibold">请求配置</span>
                 <Button variant="ghost" size="icon-xs" onClick={() => setShowHeadersPanel(false)} className="text-muted-foreground/40 hover:text-foreground hover:bg-accent transition-colors">
                   <X size={11} />
                 </Button>
               </div>
 
-              {/* Header entries */}
-              <div className="flex-1 overflow-y-auto px-4 py-3 space-y-2.5 scrollbar-thin-xs">
-                {customHeaders.map((h, i) => (
-                  <div key={i} className="space-y-1.5 p-2.5 rounded-xl bg-muted/50 border border-section-border">
-                    <div className="flex items-center gap-1.5">
-                      <label className="text-xs text-muted-foreground/40 w-10 flex-shrink-0">Header</label>
-                      <Input
-                        type="text"
-                        value={h.key}
-                        onChange={e => {
-                          const next = [...customHeaders];
-                          next[i] = { ...next[i], key: e.target.value };
-                          setCustomHeaders(next);
-                        }}
-                        className="flex-1 bg-transparent text-sm text-muted-foreground border-b border-section-border pb-0.5 min-w-0 h-auto shadow-none border-t-0 border-l-0 border-r-0 rounded-none p-0"
-                        placeholder="Header Name"
-                      />
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      <label className="text-xs text-muted-foreground/40 w-10 flex-shrink-0">Value</label>
-                      <Input
-                        type="text"
-                        value={h.value}
-                        onChange={e => {
-                          const next = [...customHeaders];
-                          next[i] = { ...next[i], value: e.target.value };
-                          setCustomHeaders(next);
-                        }}
-                        className="flex-1 bg-transparent text-sm text-muted-foreground border-b border-section-border pb-0.5 min-w-0 h-auto shadow-none border-t-0 border-l-0 border-r-0 rounded-none p-0"
-                        placeholder="Header Value"
-                      />
-                    </div>
-                    <div className="flex justify-end">
-                      <Button
-                        variant="ghost"
-                        size="icon-xs"
-                        onClick={() => setCustomHeaders(prev => prev.filter((_, j) => j !== i))}
-                        className="text-xs text-destructive/50 hover:text-destructive transition-colors"
-                      >
-                        <Trash2 size={9} />
-                      </Button>
-                    </div>
-                  </div>
-                ))}
-                <Button size="inline"
-                  variant="ghost"
-                  onClick={() => setCustomHeaders(prev => [...prev, { key: '', value: '' }])}
-                  className="w-full flex items-center justify-center gap-1.5 py-2 rounded-xl border border-dashed border-section-border text-xs text-muted-foreground/40 hover:text-foreground hover:border-section-border transition-colors"
-                >
-                  <Plus size={10} />
-                  <span>添加请求头</span>
-                </Button>
+              {/* Config content */}
+              <div className="flex-1 overflow-y-auto px-4 py-3 space-y-4 scrollbar-thin-xs">
+                {/* API Host */}
+                <div>
+                  <label className="text-xs text-muted-foreground/60 mb-1.5 block font-medium">API Host</label>
+                  <Input
+                    type="text"
+                    defaultValue={endpoint?.baseUrl || ''}
+                    placeholder="https://api.example.com/v1"
+                    className="w-full px-2.5 py-[6px] bg-muted/30 rounded-lg border border-section-border text-sm text-foreground h-auto"
+                  />
+                  <p className="text-xs text-muted-foreground/40 mt-1">自定义 API 请求地址，留空使用默认。</p>
+                </div>
+
+                {/* Custom Headers (JSON) */}
+                <div>
+                  <label className="text-xs text-muted-foreground/60 mb-1.5 block font-medium">自定义请求头</label>
+                  <Textarea
+                    defaultValue={JSON.stringify(Object.fromEntries(customHeaders.map(h => [h.key, h.value])), null, 2)}
+                    placeholder={'{\n  "X-Custom-Header": "value"\n}'}
+                    className="w-full px-3 py-2.5 bg-muted/30 rounded-lg border border-section-border text-xs text-foreground font-mono min-h-[120px] resize-y h-auto"
+                  />
+                  <p className="text-xs text-muted-foreground/40 mt-1">以 JSON 格式添加自定义请求头。</p>
+                </div>
               </div>
 
               {/* Footer */}
@@ -3105,6 +3082,96 @@ function ProviderDetail({ provider }: { provider: Provider }) {
           </div>
         )}
       </AnimatePresence>
+      <AnimatePresence>
+        {showAddModelPanel && (
+          <div className="absolute -left-[170px] top-0 right-0 bottom-0 z-[var(--z-overlay)]" onClick={() => setShowAddModelPanel(false)}>
+            <div className="fixed inset-0 bg-foreground/10 backdrop-blur-[1px] z-[-1]" />
+            <motion.div
+              initial={{ x: '100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '100%' }}
+              transition={{ type: 'spring', damping: 30, stiffness: 300 }}
+              className="absolute inset-y-2 right-2 w-[280px] bg-background border border-section-border shadow-2xl flex flex-col z-[var(--z-sticky)] rounded-2xl"
+              onClick={e => e.stopPropagation()}
+            >
+              {/* Header */}
+              <div className="flex items-center justify-between px-4 py-3 border-b border-section-border flex-shrink-0">
+                <span className="text-sm text-foreground font-semibold">添加模型</span>
+                <Button variant="ghost" size="icon-xs" onClick={() => setShowAddModelPanel(false)} className="text-muted-foreground/40 hover:text-foreground hover:bg-accent transition-colors">
+                  <X size={11} />
+                </Button>
+              </div>
+
+              {/* Form */}
+              <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3 scrollbar-thin-xs">
+                <div>
+                  <label className="text-xs text-muted-foreground/60 mb-1 block font-medium">模型 ID</label>
+                  <Input
+                    autoFocus
+                    value={addModelId}
+                    onChange={e => {
+                      const id = e.target.value;
+                      setAddModelId(id);
+                      if (id && !addModelName) {
+                        const parts = id.split(/[/:-]/);
+                        setAddModelName(parts[parts.length - 1] || id);
+                      }
+                    }}
+                    placeholder="例如: gpt-4o-mini"
+                    className="w-full px-2.5 py-[6px] bg-muted/30 rounded-lg border border-section-border text-sm text-foreground h-auto"
+                  />
+                  <p className="text-xs text-muted-foreground/40 mt-1">输入模型 ID，名称将自动填入。</p>
+                </div>
+                <div>
+                  <label className="text-xs text-muted-foreground/60 mb-1 block font-medium">显示名称</label>
+                  <Input
+                    value={addModelName}
+                    onChange={e => setAddModelName(e.target.value)}
+                    placeholder="模型显示名称"
+                    className="w-full px-2.5 py-[6px] bg-muted/30 rounded-lg border border-section-border text-sm text-foreground h-auto"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs text-muted-foreground/60 mb-1 block font-medium">分组</label>
+                  <Input
+                    value={addModelGroup}
+                    onChange={e => setAddModelGroup(e.target.value)}
+                    placeholder="模型分组"
+                    className="w-full px-2.5 py-[6px] bg-muted/30 rounded-lg border border-section-border text-sm text-foreground h-auto"
+                  />
+                </div>
+              </div>
+
+              {/* Footer */}
+              <div className="px-4 py-2.5 border-t border-section-border flex items-center justify-end gap-2 flex-shrink-0">
+                <Button variant="outline" size="inline" onClick={() => setShowAddModelPanel(false)} className="px-2.5 py-[4px] text-xs text-muted-foreground/60 hover:text-foreground hover:bg-accent transition-colors">
+                  取消
+                </Button>
+                <Button variant="default" size="inline" className="px-3 py-[4px] text-xs" onClick={() => {
+                  if (!addModelId.trim()) return;
+                  const id = `custom-${Date.now()}`;
+                  setLocalModels((prev: ModelItem[]) => [...prev, {
+                    id,
+                    name: addModelId.trim(),
+                    displayName: addModelName.trim() || undefined,
+                    enabled: true,
+                    contextWindow: '—',
+                    status: 'active' as const,
+                    capabilities: ['chat'] as ModelCapability[],
+                    group: addModelGroup.trim() || '自定义',
+                  }]);
+                  setShowAddModelPanel(false);
+                  setAddModelId('');
+                  setAddModelName('');
+                  setAddModelGroup('');
+                }}>
+                  添加
+                </Button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
@@ -3150,7 +3217,7 @@ function ApiSettingsPanel({ provider, onClose }: { provider: Provider; onClose: 
       {/* Content */}
       <div className="flex-1 overflow-y-auto px-4 py-3 space-y-1 scrollbar-thin-xs">
         {toggleItems.map((item, i) => (
-          <div key={i} className="flex items-center justify-between py-2.5 border-b border-section-border last:border-b-0">
+          <div key={i} className="flex items-center justify-between py-2.5">
             <div className="flex items-center gap-1.5 min-w-0 flex-1 mr-3">
               <span className="text-xs text-foreground">{item.label}</span>
               <Tooltip content={item.desc} side="left">
@@ -3505,7 +3572,7 @@ export function ModelServicePage() {
         <Button size="inline"
           variant="ghost"
           onClick={() => { setSelectedId(provider.id); setShowAddPanel(false); }}
-          className={`w-full flex items-center justify-between px-2 py-[7px] rounded-xl transition-all text-left relative ${
+          className={`w-full flex items-center px-2 py-[7px] rounded-xl transition-all text-left relative ${
             isSelected && !showAddPanel
               ? 'bg-cherry-active-bg'
               : 'border border-transparent hover:bg-accent/50'
@@ -3521,7 +3588,6 @@ export function ModelServicePage() {
             <span className="flex-shrink-0"><BrandLogo id={provider.id} fallbackLetter={provider.logo} fallbackColor={provider.color} size={14} /></span>
             <span className={`text-sm truncate ${isSelected ? 'text-foreground font-medium' : 'text-foreground'}`}>{provider.name}</span>
           </div>
-          <ChevronRight size={9} className={`flex-shrink-0 ${isSelected ? 'text-muted-foreground/60' : 'text-muted-foreground/40'}`} />
         </Button>
       </motion.div>
     );
@@ -3532,7 +3598,14 @@ export function ModelServicePage() {
       {/* Middle Column: Provider List */}
       <div className="w-[170px] flex-shrink-0 flex flex-col border-r border-section-border min-h-0">
         <div className="px-3 pt-3.5 pb-1.5 flex-shrink-0">
-          <p className="text-sm text-foreground mb-2 font-medium">模型服务</p>
+          <div className="flex items-center justify-between mb-2">
+            <p className="text-sm text-foreground font-medium">模型服务</p>
+            <Tooltip content="添加服务商" side="right">
+              <Button variant="ghost" size="icon-xs" onClick={() => setShowAddPanel(true)} className="text-muted-foreground/40 hover:text-foreground hover:bg-accent/50 transition-colors">
+                <Plus size={11} />
+              </Button>
+            </Tooltip>
+          </div>
           {/* Search */}
           <SearchInput
             value={search}
@@ -3570,17 +3643,6 @@ export function ModelServicePage() {
           </div>
         </div>
 
-        {/* Add Provider */}
-        <div className="px-2.5 py-2 flex-shrink-0 border-t border-section-border">
-          <Button size="inline"
-            variant="ghost"
-            onClick={() => setShowAddPanel(true)}
-            className="w-full flex items-center justify-center gap-1.5 py-[5px] text-xs text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-colors border border-dashed border-section-border hover:border-border"
-          >
-            <Plus size={9} />
-            <span>添加服务商</span>
-          </Button>
-        </div>
       </div>
 
       {/* Right Column: Detail */}

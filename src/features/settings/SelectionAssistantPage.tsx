@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Tooltip } from '@/app/components/Tooltip';
-import { FormRow, SectionHeader, SectionCard, InlineSelect, Tabs, TabsList, TabsTrigger } from './shared';
+import { FormRow, SectionHeader, SectionCard, InlineSelect } from './shared';
 import { Button, Input, Popover, PopoverTrigger, PopoverContent, Typography, Switch, EmptyState } from '@cherry-studio/ui';
 import {
   Zap, Scissors, ShieldAlert, Languages, Search, FileText,
@@ -497,13 +497,11 @@ function RulesPanel({ disabled }: { disabled: boolean }) {
         <div className="px-1">
           <SectionHeader title="应用筛选" />
           <FormRow label="模式选择" desc="决定划词助手生效的应用范围。">
-            <Tabs value={filterMode} onValueChange={setFilterMode}>
-              <TabsList>
-                <TabsTrigger value="all">全部应用</TabsTrigger>
-                <TabsTrigger value="blacklist">黑名单</TabsTrigger>
-                <TabsTrigger value="whitelist">白名单</TabsTrigger>
-              </TabsList>
-            </Tabs>
+            <InlineSelect value={filterMode} onChange={setFilterMode} options={[
+              { value: 'all', label: '全部应用' },
+              { value: 'blacklist', label: '黑名单' },
+              { value: 'whitelist', label: '白名单' },
+            ]} />
           </FormRow>
         </div>
 

@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
 import {
   Plus, X, Copy, Pencil, Trash2, ChevronDown, ExternalLink, Eye, EyeOff,
-  MessageSquare,
+  MessageSquare, Check, Info,
 } from 'lucide-react';
 import {
   Button, Input, Switch, BrandLogo, EmptyState, Typography,
-  Dialog, DialogContent,
+  Popover, PopoverTrigger, PopoverContent,
 } from '@cherry-studio/ui';
 import { Tooltip } from '@/app/components/Tooltip';
 
@@ -102,12 +103,9 @@ const CHANNEL_TYPES: ChannelType[] = [
   },
 ];
 
-// ===========================
-// Mock Data
-// ===========================
-const MOCK_INSTANCES: ChannelInstance[] = [
-  { id: 'i1', typeId: 'feishu', name: 'Feishu', agentName: undefined, enabled: true, status: 'online', region: 'Feishu (China)', config: {} },
-  { id: 'i2', typeId: 'feishu', name: 'Feishu 2', agentName: undefined, enabled: true, status: 'offline', region: 'Feishu (China)', config: {} },
+const INITIAL_INSTANCES: ChannelInstance[] = [
+  { id: 'i1', typeId: 'feishu', name: 'Feishu', agentName: undefined, enabled: true, status: 'online', region: 'Feishu (China)', config: { region: 'cn' } },
+  { id: 'i2', typeId: 'feishu', name: 'Feishu 2', agentName: undefined, enabled: true, status: 'offline', region: 'Feishu (China)', config: { region: 'cn' } },
   { id: 'i3', typeId: 'telegram', name: 'Telegram', agentName: undefined, enabled: true, status: 'online', config: {} },
   { id: 'i4', typeId: 'qq', name: 'QQ', agentName: 'Cherry Assistant', enabled: false, status: 'offline', config: {} },
   { id: 'i5', typeId: 'wechat', name: 'WeChat 3', agentName: 'Cherry Assistant', enabled: true, status: 'error', config: {} },
@@ -116,7 +114,8 @@ const MOCK_INSTANCES: ChannelInstance[] = [
   { id: 'i8', typeId: 'slack', name: 'Slack', agentName: undefined, enabled: false, status: 'offline', config: {} },
 ];
 
-// Log data for WeChat
+const MOCK_AGENTS = ['Cherry Assistant', 'AI 助手', '客服机器人', '新闻推送'];
+
 const MOCK_LOGS = [
   { time: '10:37:49 PM', level: 'ERROR' as const, message: 'WeChat bot error: The operation was aborted due to timeout' },
   { time: '10:38:00 PM', level: 'ERROR' as const, message: 'WeChat bot error: net::ERR_CONNECTION_CLOSED' },
@@ -132,17 +131,20 @@ const MOCK_LOGS = [
   { time: '10:41:54 PM', level: 'ERROR' as const, message: 'WeChat bot error: net::ERR_CONNECTION_CLOSED' },
 ];
 
+const PERMISSION_OPTIONS = [
+  { value: 'inherit', label: '继承智能体设置' },
+  { value: 'all', label: '允许所有权限' },
+  { value: 'readonly', label: '只读模式' },
+  { value: 'restricted', label: '受限模式' },
+];
+
 // ===========================
 // Channel Type Icon
 // ===========================
 function ChannelIcon({ typeId, size = 18 }: { typeId: string; size?: number }) {
   const brandMap: Record<string, string> = {
-    feishu: 'feishu',
-    telegram: 'telegram',
-    qq: 'qq',
-    wechat: 'wechat',
-    discord: 'discord',
-    slack: 'slack',
+    feishu: 'feishu', telegram: 'telegram', qq: 'qq',
+    wechat: 'wechat', discord: 'discord', slack: 'slack',
   };
   const bid = brandMap[typeId];
   if (bid) return <BrandLogo id={bid} fallbackLetter={typeId[0].toUpperCase()} fallbackColor="#6b7280" size={size} />;
@@ -158,167 +160,246 @@ function StatusDot({ status }: { status: ChannelInstance['status'] }) {
 }
 
 // ===========================
-// Edit Channel Dialog
+// Dropdown Select (reusable)
 // ===========================
-function EditChannelDialog({
-  open, onClose, channelType, instance,
+function DropdownSelect({ value, onChange, options, placeholder }: {
+  value: string;
+  onChange: (v: string) => void;
+  options: { value: string; label: string }[];
+  placeholder?: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const selected = options.find(o => o.value === value);
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <button
+          className="flex items-center w-full px-2.5 py-[5px] bg-muted/30 rounded-lg border border-section-border text-left hover:bg-muted/50 transition-colors"
+          type="button"
+        >
+          <span className={`flex-1 text-sm truncate ${selected ? 'text-foreground' : 'text-muted-foreground/50'}`}>
+            {selected?.label || placeholder || '请选择'}
+          </span>
+          <ChevronDown size={12} className={`text-muted-foreground/40 transition-transform flex-shrink-0 ${open ? 'rotate-180' : ''}`} />
+        </button>
+      </PopoverTrigger>
+      <PopoverContent align="start" className="p-1 w-[var(--radix-popover-trigger-width)]">
+        {options.map(opt => (
+          <button
+            key={opt.value}
+            type="button"
+            onClick={() => { onChange(opt.value); setOpen(false); }}
+            className={`w-full flex items-center gap-2 px-2.5 py-1.5 rounded-md text-sm text-left transition-colors ${
+              opt.value === value ? 'bg-accent text-foreground' : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground'
+            }`}
+          >
+            {opt.value === value && <Check size={10} className="flex-shrink-0" />}
+            <span className={opt.value === value ? '' : 'pl-[18px]'}>{opt.label}</span>
+          </button>
+        ))}
+      </PopoverContent>
+    </Popover>
+  );
+}
+
+// ===========================
+// Edit Channel Side Panel
+// ===========================
+function EditChannelPanel({
+  onClose, channelType, instance,
 }: {
-  open: boolean;
   onClose: () => void;
   channelType: ChannelType;
   instance?: ChannelInstance | null;
 }) {
   const [showPasswords, setShowPasswords] = useState<Record<string, boolean>>({});
+  const [agentName, setAgentName] = useState(instance?.agentName || '');
+  const [permission, setPermission] = useState('inherit');
+  const [fieldValues, setFieldValues] = useState<Record<string, string>>(instance?.config || {});
   const title = instance?.name || channelType.name;
-
   const isWechat = channelType.id === 'wechat';
 
+  const updateField = (key: string, val: string) => {
+    setFieldValues((prev: Record<string, string>) => ({ ...prev, [key]: val }));
+  };
+
   return (
-    <Dialog open={open} onOpenChange={(o) => { if (!o) onClose(); }}>
-      <DialogContent className="w-[420px] max-w-[90vw] p-0" showCloseButton={false}>
-        <div className="px-5 py-4">
-          {/* Header */}
-          <div className="flex items-center justify-between mb-4">
-            <Typography variant="subtitle">{title}</Typography>
-            <Button variant="ghost" size="icon-xs" onClick={onClose} className="w-6 h-6 text-muted-foreground/40 hover:text-foreground">
-              <X size={14} />
-            </Button>
+    <motion.div
+      initial={{ x: '100%' }}
+      animate={{ x: 0 }}
+      exit={{ x: '100%' }}
+      transition={{ type: 'spring', damping: 30, stiffness: 300 }}
+      className="absolute inset-y-2 right-2 w-[320px] bg-background border border-section-border shadow-2xl flex flex-col z-[var(--z-sticky)] rounded-2xl"
+      onClick={e => e.stopPropagation()}
+    >
+      {/* Header */}
+      <div className="flex items-center justify-between px-4 py-3 border-b border-section-border flex-shrink-0">
+        <span className="text-sm text-foreground font-semibold">{title}</span>
+        <Button variant="ghost" size="icon-xs" onClick={onClose} className="text-muted-foreground/40 hover:text-foreground hover:bg-accent transition-colors">
+          <X size={11} />
+        </Button>
+      </div>
+
+      {/* Fields */}
+      <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3 scrollbar-thin-xs">
+        <div>
+          <label className="text-xs text-muted-foreground font-medium mb-1 block">名称</label>
+          <Input defaultValue={title} className="h-8 text-sm" />
+        </div>
+        <div>
+          <label className="text-xs text-muted-foreground font-medium mb-1 block">绑定 Agent</label>
+          <DropdownSelect
+            value={agentName}
+            onChange={setAgentName}
+            options={MOCK_AGENTS.map(a => ({ value: a, label: a }))}
+            placeholder="选择要绑定的 Agent"
+          />
+        </div>
+
+        {isWechat ? (
+          <div className="flex items-center gap-1">
+            <Tooltip content="首次登录需要扫描二维码，启用频道后将自动弹出二维码。" side="left">
+              <span className="text-accent-blue cursor-help"><Info size={12} /></span>
+            </Tooltip>
+            <span className="text-xs text-accent-blue">扫码登录</span>
           </div>
-
-          {/* Fields */}
-          <div className="space-y-3">
-            <div>
-              <label className="text-xs text-muted-foreground font-medium mb-1 block">名称</label>
-              <Input defaultValue={title} className="h-8 text-sm" />
-            </div>
-            <div>
-              <label className="text-xs text-muted-foreground font-medium mb-1 block">绑定 Agent</label>
-              <div className="flex items-center px-2.5 py-[5px] bg-muted/30 rounded-lg border border-section-border">
-                <span className="flex-1 text-sm text-muted-foreground/50">{instance?.agentName || '选择要绑定的 Agent'}</span>
-                <ChevronDown size={12} className="text-muted-foreground/40" />
-              </div>
+        ) : (
+          <>
+            <div className="flex items-center gap-1">
+              <Tooltip content="未配置凭证，启用频道后将自动开始扫码注册，也可手动输入 App ID 和 App Secret。" side="left">
+                <span className="text-accent-blue cursor-help"><Info size={12} /></span>
+              </Tooltip>
+              <span className="text-xs text-accent-blue">凭证配置</span>
             </div>
 
-            {isWechat ? (
-              <p className="text-xs text-accent-blue">首次登录需要扫描二维码，启用频道后将自动弹出二维码。</p>
-            ) : (
-              <>
-                {channelType.id !== 'wechat' && (
-                  <p className="text-xs text-accent-blue">
-                    未配置凭证，启用频道后将自动开始扫码注册，也可手动输入 App ID 和 App Secret。
-                  </p>
-                )}
+            {/* Dynamic fields */}
+            <div className={channelType.fields.some(f => f.halfWidth) ? 'grid grid-cols-2 gap-3' : 'space-y-3'}>
+              {channelType.fields.map(field => {
+                const isPassword = field.type === 'password';
+                const showPw = showPasswords[field.key] ?? false;
 
-                {/* Dynamic fields */}
-                <div className={channelType.fields.some(f => f.halfWidth) ? 'grid grid-cols-2 gap-3' : 'space-y-3'}>
-                  {channelType.fields.map(field => {
-                    const isPassword = field.type === 'password';
-                    const showPw = showPasswords[field.key] ?? false;
-
-                    const fieldContent = (
-                      <div key={field.key}>
-                        <label className="text-xs text-muted-foreground font-medium mb-1 block">{field.label}</label>
-                        {field.type === 'select' ? (
-                          <div className="flex items-center px-2.5 py-[5px] bg-muted/30 rounded-lg border border-section-border">
-                            <span className="flex-1 text-sm text-foreground">{field.options?.[0]?.label}</span>
-                            <ChevronDown size={12} className="text-muted-foreground/40" />
-                          </div>
-                        ) : (
-                          <div className="relative">
-                            <Input
-                              type={isPassword && !showPw ? 'password' : 'text'}
-                              placeholder={field.placeholder}
-                              className="h-8 text-sm pr-8"
-                            />
-                            {isPassword && (
-                              <Button
-                                variant="ghost"
-                                size="icon-xs"
-                                onClick={() => setShowPasswords((p: Record<string, boolean>) => ({ ...p, [field.key]: !showPw }))}
-                                className="absolute right-1 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground/40 hover:text-foreground"
-                              >
-                                {showPw ? <EyeOff size={10} /> : <Eye size={10} />}
-                              </Button>
-                            )}
-                          </div>
-                        )}
-                        {field.hint && (
-                          <p className={`text-xs mt-1 ${field.hintType === 'warning' ? 'text-warning' : 'text-muted-foreground/50'}`}>
-                            {field.hint}
-                          </p>
+                const fieldContent = (
+                  <div key={field.key}>
+                    <label className="text-xs text-muted-foreground font-medium mb-1 block">{field.label}</label>
+                    {field.type === 'select' ? (
+                      <DropdownSelect
+                        value={fieldValues[field.key] || field.options?.[0]?.value || ''}
+                        onChange={(v) => updateField(field.key, v)}
+                        options={field.options || []}
+                      />
+                    ) : (
+                      <div className="relative">
+                        <Input
+                          type={isPassword && !showPw ? 'password' : 'text'}
+                          placeholder={field.placeholder}
+                          value={fieldValues[field.key] || ''}
+                          onChange={(e) => updateField(field.key, e.target.value)}
+                          className="h-8 text-sm pr-8"
+                        />
+                        {isPassword && (
+                          <Button
+                            variant="ghost"
+                            size="icon-xs"
+                            onClick={() => setShowPasswords((p: Record<string, boolean>) => ({ ...p, [field.key]: !showPw }))}
+                            className="absolute right-1 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground/40 hover:text-foreground"
+                          >
+                            {showPw ? <EyeOff size={10} /> : <Eye size={10} />}
+                          </Button>
                         )}
                       </div>
-                    );
+                    )}
+                    {field.hint && (
+                      <Tooltip content={field.hint} side="left">
+                        <span className={`inline-block mt-1 cursor-help ${field.hintType === 'warning' ? 'text-warning' : 'text-muted-foreground/30'}`}>
+                          <Info size={10} />
+                        </span>
+                      </Tooltip>
+                    )}
+                  </div>
+                );
 
-                    // For non-halfWidth fields in a grid, span full width
-                    if (!field.halfWidth && channelType.fields.some(f => f.halfWidth)) {
-                      return <div key={field.key} className="col-span-2">{fieldContent}</div>;
-                    }
-
-                    return fieldContent;
-                  })}
-                </div>
-
-                {/* Common hints */}
-                {channelType.fields.some(f => f.key === 'chatIds' || f.key === 'channelIds') && (
-                  <p className="text-xs text-warning">
-                    留空时系统将自动监听。首先先在对应平台上主动给 Bot 发送一条消息，系统才会记录 Chat ID 用于后续通知。
-                  </p>
-                )}
-                {channelType.id === 'qq' && (
-                  <p className="text-xs text-accent-blue">
-                    💡 提示：发送 /whoami 给机器人即可获取正确格式的会话 ID。
-                  </p>
-                )}
-              </>
-            )}
-
-            <div>
-              <label className="text-xs text-muted-foreground font-medium mb-1 block">频道权限模式</label>
-              <div className="flex items-center px-2.5 py-[5px] bg-muted/30 rounded-lg border border-section-border">
-                <span className="flex-1 text-sm text-foreground">继承智能体设置</span>
-                <ChevronDown size={12} className="text-muted-foreground/40" />
-              </div>
+                if (!field.halfWidth && channelType.fields.some(f => f.halfWidth)) {
+                  return <div key={field.key} className="col-span-2">{fieldContent}</div>;
+                }
+                return fieldContent;
+              })}
             </div>
-          </div>
+
+            {channelType.fields.some(f => f.key === 'chatIds' || f.key === 'channelIds') && (
+              <div className="flex items-center gap-1">
+                <Tooltip content="留空时系统将自动监听。首先在对应平台上主动给 Bot 发送一条消息，系统才会记录 Chat ID 用于后续通知。" side="left">
+                  <span className="text-warning cursor-help"><Info size={12} /></span>
+                </Tooltip>
+                <span className="text-xs text-warning">自动监听说明</span>
+              </div>
+            )}
+            {channelType.id === 'qq' && (
+              <div className="flex items-center gap-1">
+                <Tooltip content="发送 /whoami 给机器人即可获取正确格式的会话 ID。" side="left">
+                  <span className="text-accent-blue cursor-help"><Info size={12} /></span>
+                </Tooltip>
+                <span className="text-xs text-accent-blue">获取会话 ID</span>
+              </div>
+            )}
+          </>
+        )}
+
+        <div>
+          <label className="text-xs text-muted-foreground font-medium mb-1 block">频道权限模式</label>
+          <DropdownSelect
+            value={permission}
+            onChange={setPermission}
+            options={PERMISSION_OPTIONS}
+          />
         </div>
-      </DialogContent>
-    </Dialog>
+      </div>
+
+      {/* Footer */}
+      <div className="flex items-center justify-end gap-2 px-4 py-3 border-t border-section-border flex-shrink-0">
+        <Button variant="outline" size="sm" onClick={onClose} className="text-xs">取消</Button>
+        <Button variant="default" size="sm" onClick={onClose} className="text-xs">确定</Button>
+      </div>
+    </motion.div>
   );
 }
 
 // ===========================
-// Log Dialog
+// Log Side Panel
 // ===========================
-function LogDialog({ open, onClose, instance }: { open: boolean; onClose: () => void; instance: ChannelInstance | null }) {
-  if (!instance) return null;
+function LogPanel({ onClose, instance }: { onClose: () => void; instance: ChannelInstance }) {
   return (
-    <Dialog open={open} onOpenChange={(o) => { if (!o) onClose(); }}>
-      <DialogContent className="w-[560px] max-w-[90vw] max-h-[70vh] flex flex-col p-0" showCloseButton={false}>
-        <div className="flex items-center justify-between px-5 py-3 border-b border-section-border flex-shrink-0">
-          <div className="flex items-center gap-2">
-            <Typography variant="subtitle">{instance.name} — 日志</Typography>
-            <Tooltip content="复制日志" side="right">
-              <Button variant="ghost" size="icon-xs" className="w-5 h-5 text-muted-foreground/40 hover:text-foreground">
-                <Copy size={10} />
-              </Button>
-            </Tooltip>
+    <motion.div
+      initial={{ x: '100%' }}
+      animate={{ x: 0 }}
+      exit={{ x: '100%' }}
+      transition={{ type: 'spring', damping: 30, stiffness: 300 }}
+      className="absolute inset-y-2 right-2 w-[400px] bg-background border border-section-border shadow-2xl flex flex-col z-[var(--z-sticky)] rounded-2xl"
+      onClick={e => e.stopPropagation()}
+    >
+      <div className="flex items-center justify-between px-4 py-3 border-b border-section-border flex-shrink-0">
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-foreground font-semibold">{instance.name} — 日志</span>
+          <Tooltip content="复制日志" side="right">
+            <Button variant="ghost" size="icon-xs" className="w-5 h-5 text-muted-foreground/40 hover:text-foreground">
+              <Copy size={10} />
+            </Button>
+          </Tooltip>
+        </div>
+        <Button variant="ghost" size="icon-xs" onClick={onClose} className="text-muted-foreground/40 hover:text-foreground hover:bg-accent transition-colors">
+          <X size={11} />
+        </Button>
+      </div>
+      <div className="flex-1 overflow-y-auto px-4 py-3 scrollbar-thin font-mono text-xs space-y-[2px]">
+        {MOCK_LOGS.map((log, i) => (
+          <div key={i} className="flex items-start gap-2">
+            <span className="text-muted-foreground/50 flex-shrink-0 w-[90px]">{log.time}</span>
+            <span className={`flex-shrink-0 font-semibold ${log.level === 'ERROR' ? 'text-destructive' : 'text-muted-foreground'}`}>[{log.level}]</span>
+            <span className="text-muted-foreground">{log.message}</span>
           </div>
-          <Button variant="ghost" size="icon-xs" onClick={onClose} className="w-6 h-6 text-muted-foreground/40 hover:text-foreground">
-            <X size={14} />
-          </Button>
-        </div>
-        <div className="flex-1 overflow-y-auto px-5 py-3 scrollbar-thin font-mono text-xs space-y-[2px]">
-          {MOCK_LOGS.map((log, i) => (
-            <div key={i} className="flex items-start gap-2">
-              <span className="text-muted-foreground/50 flex-shrink-0 w-[90px]">{log.time}</span>
-              <span className={`flex-shrink-0 font-semibold ${log.level === 'ERROR' ? 'text-destructive' : 'text-muted-foreground'}`}>[{log.level}]</span>
-              <span className="text-muted-foreground">{log.message}</span>
-            </div>
-          ))}
-        </div>
-      </DialogContent>
-    </Dialog>
+        ))}
+      </div>
+    </motion.div>
   );
 }
 
@@ -327,15 +408,37 @@ function LogDialog({ open, onClose, instance }: { open: boolean; onClose: () => 
 // ===========================
 export function ChannelsPage() {
   const [selectedTypeId, setSelectedTypeId] = useState('feishu');
+  const [instances, setInstances] = useState<ChannelInstance[]>(INITIAL_INSTANCES);
   const [editInstance, setEditInstance] = useState<ChannelInstance | null>(null);
-  const [showAddDialog, setShowAddDialog] = useState(false);
+  const [showAddPanel, setShowAddPanel] = useState(false);
   const [logInstance, setLogInstance] = useState<ChannelInstance | null>(null);
 
   const selectedType = CHANNEL_TYPES.find(t => t.id === selectedTypeId)!;
-  const instances = MOCK_INSTANCES.filter(i => i.typeId === selectedTypeId);
+  const filteredInstances = instances.filter((i: ChannelInstance) => i.typeId === selectedTypeId);
+
+  const showPanel = !!editInstance || showAddPanel;
+  const showLogPanel = !!logInstance;
+
+  const closeAllPanels = () => {
+    setEditInstance(null);
+    setShowAddPanel(false);
+    setLogInstance(null);
+  };
+
+  const toggleInstance = (id: string) => {
+    setInstances((prev: ChannelInstance[]) => prev.map((inst: ChannelInstance) =>
+      inst.id === id ? { ...inst, enabled: !inst.enabled } : inst
+    ));
+  };
+
+  const deleteInstance = (id: string) => {
+    setInstances((prev: ChannelInstance[]) => prev.filter((inst: ChannelInstance) => inst.id !== id));
+    if (editInstance?.id === id) setEditInstance(null);
+    if (logInstance?.id === id) setLogInstance(null);
+  };
 
   return (
-    <div className="flex h-full min-h-0">
+    <div className="relative flex h-full min-h-0">
       {/* Left: Channel Type Sidebar */}
       <div className="w-[170px] flex-shrink-0 flex flex-col border-r border-section-border min-h-0">
         <div className="px-3.5 pt-4 pb-2 flex-shrink-0">
@@ -373,7 +476,6 @@ export function ChannelsPage() {
 
       {/* Right: Instances List */}
       <div className="flex-1 flex flex-col min-w-0 min-h-0">
-        {/* Header */}
         <div className="px-5 pt-4 pb-3 border-b border-section-border flex-shrink-0">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -386,7 +488,7 @@ export function ChannelsPage() {
             <Button
               variant="default"
               size="sm"
-              onClick={() => setShowAddDialog(true)}
+              onClick={() => { closeAllPanels(); setShowAddPanel(true); }}
               className="gap-1 text-xs"
             >
               <Plus size={12} />
@@ -395,15 +497,14 @@ export function ChannelsPage() {
           </div>
         </div>
 
-        {/* Instances */}
         <div className="flex-1 overflow-y-auto px-5 py-3 scrollbar-thin">
-          {instances.length === 0 ? (
+          {filteredInstances.length === 0 ? (
             <div className="py-12">
               <EmptyState icon={<MessageSquare size={24} />} title={`暂无 ${selectedType.name} 频道`} description="点击右上角添加按钮创建一个" />
             </div>
           ) : (
             <div className="space-y-[1px]">
-              {instances.map(inst => (
+              {filteredInstances.map((inst: ChannelInstance) => (
                 <div
                   key={inst.id}
                   className="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-muted/30 transition-colors group"
@@ -430,7 +531,7 @@ export function ChannelsPage() {
                       <Tooltip content="查看日志" side="bottom">
                         <Button
                           variant="ghost" size="icon-xs"
-                          onClick={() => setLogInstance(inst)}
+                          onClick={() => { closeAllPanels(); setLogInstance(inst); }}
                           className="w-6 h-6 text-muted-foreground/40 hover:text-foreground"
                         >
                           <ExternalLink size={10} />
@@ -445,18 +546,22 @@ export function ChannelsPage() {
                     <Tooltip content="编辑" side="bottom">
                       <Button
                         variant="ghost" size="icon-xs"
-                        onClick={() => setEditInstance(inst)}
+                        onClick={() => { closeAllPanels(); setEditInstance(inst); }}
                         className="w-6 h-6 text-muted-foreground/40 hover:text-foreground"
                       >
                         <Pencil size={10} />
                       </Button>
                     </Tooltip>
                     <Tooltip content="删除" side="bottom">
-                      <Button variant="ghost" size="icon-xs" className="w-6 h-6 text-muted-foreground/40 hover:text-destructive">
+                      <Button
+                        variant="ghost" size="icon-xs"
+                        onClick={() => deleteInstance(inst.id)}
+                        className="w-6 h-6 text-muted-foreground/40 hover:text-destructive"
+                      >
                         <Trash2 size={10} />
                       </Button>
                     </Tooltip>
-                    <Switch size="sm" checked={inst.enabled} />
+                    <Switch size="sm" checked={inst.enabled} onCheckedChange={() => toggleInstance(inst.id)} />
                   </div>
                 </div>
               ))}
@@ -465,28 +570,37 @@ export function ChannelsPage() {
         </div>
       </div>
 
-      {/* Edit Dialog */}
-      <EditChannelDialog
-        open={!!editInstance}
-        onClose={() => setEditInstance(null)}
-        channelType={editInstance ? CHANNEL_TYPES.find(t => t.id === editInstance.typeId)! : selectedType}
-        instance={editInstance}
-      />
+      {/* Edit / Add Side Panel */}
+      <AnimatePresence>
+        {showPanel && (
+          <div className="absolute -left-[170px] top-0 right-0 bottom-0 z-[var(--z-overlay)]" onClick={closeAllPanels}>
+            <div className="fixed inset-0 bg-foreground/10 backdrop-blur-[1px] z-[-1]" />
+            {showAddPanel ? (
+              <EditChannelPanel
+                onClose={closeAllPanels}
+                channelType={selectedType}
+                instance={null}
+              />
+            ) : (
+              <EditChannelPanel
+                onClose={closeAllPanels}
+                channelType={CHANNEL_TYPES.find(t => t.id === editInstance!.typeId)!}
+                instance={editInstance}
+              />
+            )}
+          </div>
+        )}
+      </AnimatePresence>
 
-      {/* Add Dialog */}
-      <EditChannelDialog
-        open={showAddDialog}
-        onClose={() => setShowAddDialog(false)}
-        channelType={selectedType}
-        instance={null}
-      />
-
-      {/* Log Dialog */}
-      <LogDialog
-        open={!!logInstance}
-        onClose={() => setLogInstance(null)}
-        instance={logInstance}
-      />
+      {/* Log Side Panel */}
+      <AnimatePresence>
+        {showLogPanel && logInstance && (
+          <div className="absolute -left-[170px] top-0 right-0 bottom-0 z-[var(--z-overlay)]" onClick={() => setLogInstance(null)}>
+            <div className="fixed inset-0 bg-foreground/10 backdrop-blur-[1px] z-[-1]" />
+            <LogPanel onClose={() => setLogInstance(null)} instance={logInstance} />
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

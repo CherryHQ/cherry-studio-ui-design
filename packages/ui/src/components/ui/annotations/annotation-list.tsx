@@ -52,8 +52,9 @@ export function AnnotationList({ open, onClose }: AnnotationListProps) {
   const filtered = filterCategory === "all"
     ? annotations
     : annotations.filter((a) => a.category === filterCategory)
-  const active = filtered.filter((a) => !a.resolved)
-  const resolved = filtered.filter((a) => a.resolved)
+  const visible = filtered.filter((a) => !a.orphaned)
+  const active = visible.filter((a) => !a.resolved)
+  const resolved = visible.filter((a) => a.resolved)
 
   const scrollToElement = (selector: string) => {
     try {
@@ -85,7 +86,7 @@ export function AnnotationList({ open, onClose }: AnnotationListProps) {
         <div className="flex items-center gap-2">
           <span className="text-[length:var(--fs-sm)] font-medium">Annotations</span>
           <Badge variant="secondary">{page}</Badge>
-          <Badge variant="outline" className="text-[length:var(--fs-xs)]">{filtered.length}</Badge>
+          <Badge variant="outline" className="text-[length:var(--fs-xs)]">{visible.length}</Badge>
         </div>
         <div className="flex items-center gap-0.5">
           <Button
@@ -106,9 +107,10 @@ export function AnnotationList({ open, onClose }: AnnotationListProps) {
       {showFilters && (
         <div className="flex flex-wrap gap-1 px-3 py-2 border-b border-border/50 bg-muted/30">
           {FILTER_CATEGORIES.map((cat) => {
+            const nonOrphaned = annotations.filter((a) => !a.orphaned)
             const count = cat.value === "all"
-              ? annotations.length
-              : annotations.filter((a) => a.category === cat.value).length
+              ? nonOrphaned.length
+              : nonOrphaned.filter((a) => a.category === cat.value).length
             return (
               <Button
                 key={cat.value}
@@ -127,7 +129,7 @@ export function AnnotationList({ open, onClose }: AnnotationListProps) {
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto min-h-0">
-        {filtered.length === 0 ? (
+        {visible.length === 0 ? (
           <div className="p-4 text-center text-[length:var(--fs-sm)] text-muted-foreground">
             {filterCategory !== "all" ? (
               <>No {filterCategory} annotations on this page.</>

@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import {
   Monitor, MessageCircle, Zap,
-  RotateCcw, ChevronRight, AlertTriangle, MessagesSquare,
+  RotateCcw, AlertTriangle, MessagesSquare,
 } from 'lucide-react';
-import { Button, SearchInput, EmptyState, Typography, Switch } from '@cherry-studio/ui';
+import { Button, EmptyState, Typography, Switch } from '@cherry-studio/ui';
 
 // ===========================
 // Types
@@ -173,8 +173,6 @@ export function ShortcutsPage() {
   const [categories, setCategories] = useState<ShortcutCategory[]>(INITIAL_CATEGORIES);
   const [selectedId, setSelectedId] = useState<ShortcutCategoryId>('window');
   const [recordingId, setRecordingId] = useState<string | null>(null);
-  const [searchQuery, setSearchQuery] = useState('');
-
   const selectedCategory = categories.find(c => c.id === selectedId)!;
 
   const updateItem = (catId: ShortcutCategoryId, itemId: string, update: Partial<ShortcutKey>) => {
@@ -197,17 +195,7 @@ export function ShortcutsPage() {
     if (orig) setCategories(prev => prev.map(cat => cat.id === selectedId ? { ...orig } : cat));
   };
 
-  const batchToggle = (val: boolean) => {
-    setCategories(prev => prev.map(cat =>
-      cat.id === selectedId ? { ...cat, items: cat.items.map(item => ({ ...item, enabled: val })) } : cat
-    ));
-  };
-
-  const filteredItems = searchQuery.trim()
-    ? selectedCategory.items.filter(item =>
-        item.label.includes(searchQuery) || item.keys.join('').includes(searchQuery)
-      )
-    : selectedCategory.items;
+  const filteredItems = selectedCategory.items;
 
   return (
     <div className="flex h-full min-h-0">
@@ -225,7 +213,7 @@ export function ShortcutsPage() {
                   variant="ghost"
                   key={cat.id}
                   onClick={() => { setSelectedId(cat.id); setRecordingId(null); }}
-                  className={`w-full flex items-center justify-between px-2.5 py-[7px] transition-all text-left relative ${
+                  className={`w-full flex items-center px-2.5 py-[7px] transition-all text-left relative ${
                     sel ? 'bg-cherry-active-bg' : 'border border-transparent hover:bg-accent/50'
                   }`}
                 >
@@ -238,7 +226,6 @@ export function ShortcutsPage() {
                       {cat.label}
                     </span>
                   </div>
-                  <ChevronRight size={8} className={`flex-shrink-0 ${sel ? 'text-muted-foreground/50' : 'text-muted-foreground/50'}`} />
                 </Button>
               );
             })}
@@ -252,8 +239,6 @@ export function ShortcutsPage() {
         <div className="flex items-center justify-between px-5 pt-4 pb-2 flex-shrink-0">
           <Typography variant="subtitle">{selectedCategory.label}</Typography>
           <div className="flex items-center gap-1">
-            <Button variant="ghost" size="xs" onClick={() => batchToggle(true)} className="px-2 text-muted-foreground/40 hover:text-foreground transition-colors">全部启用</Button>
-            <Button variant="ghost" size="xs" onClick={() => batchToggle(false)} className="px-2 text-muted-foreground/40 hover:text-foreground transition-colors">全部禁用</Button>
             <Button variant="ghost" size="xs" onClick={handleResetGroup} className="flex items-center gap-0.5 px-2 text-muted-foreground/60 hover:text-foreground transition-colors">
               <RotateCcw size={7} />
               <span>重置</span>
@@ -261,16 +246,6 @@ export function ShortcutsPage() {
           </div>
         </div>
 
-        {/* Search */}
-        <div className="px-5 pb-1 flex-shrink-0">
-          <SearchInput
-            value={searchQuery}
-            onChange={setSearchQuery}
-            placeholder="搜索..."
-            iconSize={10}
-            wrapperClassName="flex items-center gap-2 px-3 py-[5px] bg-muted/30 border border-section-border rounded-lg"
-          />
-        </div>
 
         {/* List */}
         <div className="flex-1 overflow-y-auto px-5 pt-1 pb-4 scrollbar-thin">

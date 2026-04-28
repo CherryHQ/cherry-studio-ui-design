@@ -5,7 +5,7 @@ import {
   Plug, RefreshCw,
   X,
   Globe2, Command,
-  Cloud, FileScan, BrainCircuit, Database, Server, Sparkles, Info, MousePointer, Archive,
+  Cloud, FileScan, BrainCircuit, Database, Server, Sparkles, Info, MousePointer, Archive, HardDrive, Link2,
   Home, Zap, MessageSquareText, Radio, CalendarClock,
   HelpCircle, Rss, MessageSquare, Building2, Mail, Users, Bug, Github,
   Loader2, CheckCircle2, Calendar, ArrowUpRight,
@@ -28,6 +28,7 @@ import { ArchiveManagePage } from './ArchiveManagePage';
 import { DefaultModelSettingsPage } from './DefaultModelSettingsPage';
 import { ChannelsPage } from './ChannelsPage';
 import { ScheduledTasksPage } from './ScheduledTasksPage';
+import { DependenciesPage } from './DependenciesPage';
 import { InlineSelect, SectionCard } from './shared';
 import { Tooltip } from '@/app/components/Tooltip';
 import { Button, Dialog, DialogContent, Typography, Switch, Card, CardContent, ToggleGroup, ToggleGroupItem } from '@cherry-studio/ui';
@@ -40,7 +41,8 @@ type SettingsSection =
   | 'general' | 'data-settings' | 'archive' | 'api-gateway' | 'shortcuts' | 'about' | 'dashboard'
   | 'models' | 'default-model' | 'mcp' | 'search' | 'documents'
   | 'quick-assistant' | 'selection-assistant'
-  | 'channels' | 'scheduled-tasks';
+  | 'channels' | 'scheduled-tasks'
+  | 'dependencies';
 
 interface NavGroup {
   label: string;
@@ -85,13 +87,14 @@ const NAV_GROUPS: NavGroup[] = [
       { id: 'mcp', label: 'MCP 服务', icon: Plug },
       { id: 'search', label: '网络搜索', icon: Globe2 },
       { id: 'documents', label: '文档解析', icon: FileScan },
+      { id: 'data-settings', label: '集成', icon: Link2 },
+      { id: 'dependencies', label: '环境依赖', icon: HardDrive },
     ],
   },
   {
     label: '应用设置',
     items: [
       { id: 'general', label: '通用设置', icon: Settings2 },
-      { id: 'data-settings', label: '数据设置', icon: Database },
       { id: 'archive', label: '归档管理', icon: Archive },
     ],
   },
@@ -663,8 +666,8 @@ function AboutPage() {
     { icon: HelpCircle, label: '\u5e2e\u52a9\u6587\u6863', action: '\u67e5\u770b' },
     { icon: Rss, label: '\u66f4\u65b0\u65e5\u5fd7', action: '\u67e5\u770b' },
     { icon: Globe2, label: '\u5b98\u65b9\u7f51\u7ad9', action: '\u67e5\u770b' },
-    { icon: MessageSquare, label: '\u610f\u89c1\u53cd\u9988', action: '\u53cd\u9988' },
     { icon: Building2, label: '\u4f01\u4e1a\u7248', action: '\u67e5\u770b' },
+    { icon: MessageSquare, label: '\u610f\u89c1\u53cd\u9988', action: '\u53cd\u9988' },
     { icon: Mail, label: '\u90ae\u4ef6\u8054\u7cfb', action: '\u90ae\u4ef6' },
     { icon: Users, label: '\u52a0\u5165\u6211\u4eec', action: '\u67e5\u770b' },
     { icon: Bug, label: '\u8c03\u8bd5\u9762\u677f', action: '\u6253\u5f00' },
@@ -806,7 +809,7 @@ function AboutPage() {
       <SectionCard>
         <div className="px-2">
           <AboutRow icon={FileText} label={'\u5f00\u6e90\u534f\u8bae'}>
-            <span className="text-xs text-muted-foreground/60">Apache-2.0</span>
+            <span className="text-xs text-muted-foreground/60">MIT License</span>
           </AboutRow>
           <AboutRow icon={Zap} label="Electron">
             <span className="text-xs text-muted-foreground/60">v33.2.0</span>
@@ -935,7 +938,7 @@ export function SettingsPage({ open, onClose, initialSection }: { open: boolean;
 
           {/* Content Area */}
           <div className="flex-1 flex flex-col min-w-0 overflow-hidden mr-2 mb-2 mt-2 ml-0 bg-content-bg border border-content-border rounded-2xl">
-            {activeSection === 'models' || activeSection === 'default-model' || activeSection === 'search' || activeSection === 'documents' || activeSection === 'data-settings' || activeSection === 'archive' || activeSection === 'api-gateway' || activeSection === 'shortcuts' || activeSection === 'selection-assistant' || activeSection === 'quick-assistant' || activeSection === 'general' || activeSection === 'mcp' || activeSection === 'dashboard' || activeSection === 'channels' || activeSection === 'scheduled-tasks' ? (
+            {activeSection === 'models' || activeSection === 'default-model' || activeSection === 'search' || activeSection === 'documents' || activeSection === 'data-settings' || activeSection === 'archive' || activeSection === 'api-gateway' || activeSection === 'shortcuts' || activeSection === 'selection-assistant' || activeSection === 'quick-assistant' || activeSection === 'general' || activeSection === 'mcp' || activeSection === 'dashboard' || activeSection === 'channels' || activeSection === 'scheduled-tasks' || activeSection === 'dependencies' ? (
               activeSection === 'models' ? <ModelServicePage />
                 : activeSection === 'default-model' ? <DefaultModelSettingsPage />
                 : activeSection === 'search' ? <WebSearchPage />
@@ -950,6 +953,7 @@ export function SettingsPage({ open, onClose, initialSection }: { open: boolean;
                 : activeSection === 'dashboard' ? <DashboardPage />
                 : activeSection === 'channels' ? <ChannelsPage />
                 : activeSection === 'scheduled-tasks' ? <ScheduledTasksPage />
+                : activeSection === 'dependencies' ? <DependenciesPage />
                 : <MCPServicePage />
             ) : (
               <div className="flex-1 overflow-y-auto px-6 py-5 scrollbar-thin">

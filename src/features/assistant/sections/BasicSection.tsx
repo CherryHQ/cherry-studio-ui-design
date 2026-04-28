@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { X, Tag, Check, ChevronDown } from 'lucide-react';
+import { X, Tag, Check, ChevronDown, Upload, Link2 } from 'lucide-react';
 import type { ResourceItem } from '@/app/types';
 import { AVATAR_OPTIONS } from '@/app/config/constants';
 import { Button, Input, Slider, Textarea, Typography, Badge, Popover, PopoverTrigger, PopoverContent } from '@cherry-studio/ui';
@@ -47,6 +47,10 @@ export function BasicSection({ resource }: Props) {
   const [name, setName] = useState(resource.name);
   const [description, setDescription] = useState(resource.description);
   const [avatar, setAvatar] = useState(resource.avatar);
+  const [avatarType, setAvatarType] = useState<'emoji' | 'image'>('emoji');
+  const [avatarUrl, setAvatarUrl] = useState('');
+  const [avatarTab, setAvatarTab] = useState<'emoji' | 'upload' | 'link'>('emoji');
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [model, setModel] = useState(resource.model || 'claude-4-opus');
   const [modelPickerOpen, setModelPickerOpen] = useState(false);
   const [temperature, setTemperature] = useState(0.7);
@@ -84,13 +88,70 @@ export function BasicSection({ resource }: Props) {
       </div>
 
       <FieldGroup label="头像">
-        <div className="flex items-center gap-2">
-          <div className="w-12 h-12 rounded-xl bg-accent/50 flex items-center justify-center text-xl">{avatar}</div>
-          <div className="flex flex-wrap gap-1">
-            {AVATAR_OPTIONS.map(a => (
-              <Button key={a} variant="ghost" size="icon-xs" onClick={() => setAvatar(a)}
-                className={`w-7 h-7 rounded-lg flex items-center justify-center text-sm transition-all ${avatar === a ? 'bg-accent ring-1 ring-primary/20' : 'hover:bg-accent/50'}`}>{a}</Button>
-            ))}
+        <div className="flex items-start gap-3">
+          <div className="w-14 h-14 rounded-xl bg-accent/50 flex items-center justify-center text-2xl flex-shrink-0 border border-border/20 overflow-hidden">
+            {avatarType === 'image' && avatarUrl ? (
+              <img src={avatarUrl} alt="avatar" className="w-full h-full object-cover" />
+            ) : (
+              avatar
+            )}
+          </div>
+          <div className="flex-1 min-w-0">
+            {/* Tabs */}
+            <div className="flex items-center gap-1 mb-2">
+              {([
+                { key: 'emoji' as const, label: 'Emoji' },
+                { key: 'upload' as const, label: '上传图片' },
+                { key: 'link' as const, label: '链接' },
+              ]).map(tab => (
+                <button key={tab.key} onClick={() => setAvatarTab(tab.key)}
+                  className={`px-2 py-1 rounded-md text-xs transition-all ${avatarTab === tab.key ? 'bg-accent text-foreground' : 'text-muted-foreground/50 hover:text-foreground hover:bg-accent/50'}`}>
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+            {/* Emoji grid */}
+            {avatarTab === 'emoji' && (
+              <div className="flex flex-wrap gap-1">
+                {AVATAR_OPTIONS.map(a => (
+                  <Button key={a} variant="ghost" size="icon-xs" onClick={() => { setAvatar(a); setAvatarType('emoji'); }}
+                    className={`w-8 h-8 rounded-lg flex items-center justify-center text-base transition-all ${avatar === a && avatarType === 'emoji' ? 'bg-accent ring-1 ring-primary/20' : 'hover:bg-accent/50'}`}>{a}</Button>
+                ))}
+              </div>
+            )}
+            {/* Upload */}
+            {avatarTab === 'upload' && (
+              <div>
+                <input ref={fileInputRef} type="file" accept="image/*" className="hidden"
+                  onChange={e => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      const url = URL.createObjectURL(file);
+                      setAvatarUrl(url);
+                      setAvatarType('image');
+                    }
+                  }}
+                />
+                <button onClick={() => fileInputRef.current?.click()}
+                  className="flex items-center gap-2 px-3 py-2.5 rounded-lg border border-dashed border-border/30 text-xs text-muted-foreground/50 hover:text-foreground hover:border-border/50 transition-all w-full">
+                  <Upload size={12} />
+                  <span>点击选择图片</span>
+                </button>
+              </div>
+            )}
+            {/* Link */}
+            {avatarTab === 'link' && (
+              <div className="flex items-center gap-2">
+                <div className="flex-1 relative">
+                  <Link2 size={11} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground/30" />
+                  <Input value={avatarUrl} onChange={e => setAvatarUrl(e.target.value)} placeholder="输入图片链接..."
+                    className="w-full pl-7 h-8 text-xs rounded-lg border-border/20 bg-accent/15" />
+                </div>
+                <Button variant="outline" size="xs" onClick={() => { if (avatarUrl.trim()) setAvatarType('image'); }}>
+                  确定
+                </Button>
+              </div>
+            )}
           </div>
         </div>
       </FieldGroup>

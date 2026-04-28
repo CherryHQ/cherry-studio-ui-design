@@ -199,56 +199,52 @@ function FullBottomSection({ onSettingsClick, isDark, onToggleTheme }: {
         </DialogContent>
       </Dialog>
 
-      {/* Bottom bar: avatar + name */}
-      <div className="flex items-center gap-2.5">
-        <Popover open={userMenuOpen} onOpenChange={setUserMenuOpen}>
-          <PopoverTrigger asChild>
+      {/* Bottom bar: avatar + name — entire row is clickable */}
+      <Popover open={userMenuOpen} onOpenChange={setUserMenuOpen}>
+        <PopoverTrigger asChild>
+          <button className="flex items-center gap-2.5 w-full rounded-lg px-1 py-1 -mx-1 hover:bg-accent/30 transition-colors cursor-pointer">
+            <div className="w-7 h-7 rounded-full overflow-hidden ring-1 ring-border flex-shrink-0">
+              <div className="w-full h-full bg-gradient-to-br from-accent-blue to-accent-indigo flex items-center justify-center text-white text-xs">{profileName[0]?.toUpperCase() || 'S'}</div>
+            </div>
+            <span className="text-xs text-sidebar-foreground truncate">{profileName}</span>
+          </button>
+        </PopoverTrigger>
+        <PopoverContent side="top" align="start" className="p-1.5 min-w-[200px] w-auto">
+          <div
+            className="flex items-center gap-2.5 px-2.5 py-2 mb-1 cursor-pointer rounded-md hover:bg-accent/15 transition-colors"
+            onClick={() => { setUserMenuOpen(false); setProfileDialogOpen(true); }}
+          >
+            <div className="w-8 h-8 rounded-full overflow-hidden ring-1 ring-border flex-shrink-0">
+              <div className="w-full h-full bg-gradient-to-br from-accent-blue to-accent-indigo flex items-center justify-center text-white text-xs">{profileName[0]?.toUpperCase() || 'S'}</div>
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="text-sm text-popover-foreground truncate">{profileName}</div>
+              <div className="text-xs text-muted-foreground truncate">{profileEmail}</div>
+            </div>
+            <Pencil size={10} className="text-muted-foreground/40 flex-shrink-0" />
+          </div>
+          <div className="border-t border-border/30 pt-1 space-y-0.5">
             <Button
               variant="ghost"
-              size="icon-xs"
-              className="w-7 h-7 rounded-full overflow-hidden ring-1 ring-border flex-shrink-0 hover:ring-2 hover:ring-primary/30"
+              size="sm"
+              onClick={() => { onSettingsClick?.(); setUserMenuOpen(false); }}
+              className="w-full justify-start gap-2.5 px-2.5 py-[7px] text-sm text-popover-foreground"
             >
-              <div className="w-full h-full bg-gradient-to-br from-accent-blue to-accent-indigo flex items-center justify-center text-white text-xs">{profileName[0]?.toUpperCase() || 'S'}</div>
+              <Settings size={14} strokeWidth={1.6} className="text-muted-foreground" />
+              <span>设置</span>
             </Button>
-          </PopoverTrigger>
-          <PopoverContent side="top" align="start" className="p-1.5 min-w-[200px] w-auto">
-            <div
-              className="flex items-center gap-2.5 px-2.5 py-2 mb-1 cursor-pointer rounded-md hover:bg-accent/15 transition-colors"
-              onClick={() => { setUserMenuOpen(false); setProfileDialogOpen(true); }}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => { onToggleTheme?.(); }}
+              className="w-full justify-start gap-2.5 px-2.5 py-[7px] text-sm text-popover-foreground"
             >
-              <div className="w-8 h-8 rounded-full overflow-hidden ring-1 ring-border flex-shrink-0">
-                <div className="w-full h-full bg-gradient-to-br from-accent-blue to-accent-indigo flex items-center justify-center text-white text-xs">{profileName[0]?.toUpperCase() || 'S'}</div>
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="text-sm text-popover-foreground truncate">{profileName}</div>
-                <div className="text-xs text-muted-foreground truncate">{profileEmail}</div>
-              </div>
-              <Pencil size={10} className="text-muted-foreground/40 flex-shrink-0" />
-            </div>
-            <div className="border-t border-border/30 pt-1 space-y-0.5">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => { onSettingsClick?.(); setUserMenuOpen(false); }}
-                className="w-full justify-start gap-2.5 px-2.5 py-[7px] text-sm text-popover-foreground"
-              >
-                <Settings size={14} strokeWidth={1.6} className="text-muted-foreground" />
-                <span>设置</span>
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => { onToggleTheme?.(); }}
-                className="w-full justify-start gap-2.5 px-2.5 py-[7px] text-sm text-popover-foreground"
-              >
-                {isDark ? <Sun size={14} strokeWidth={1.6} className="text-muted-foreground" /> : <Moon size={14} strokeWidth={1.6} className="text-muted-foreground" />}
-                <span>{isDark ? '浅色模式' : '深色模式'}</span>
-              </Button>
-            </div>
-          </PopoverContent>
-        </Popover>
-        <span className="text-xs text-sidebar-foreground truncate">Siin</span>
-      </div>
+              {isDark ? <Sun size={14} strokeWidth={1.6} className="text-muted-foreground" /> : <Moon size={14} strokeWidth={1.6} className="text-muted-foreground" />}
+              <span>{isDark ? '浅色模式' : '深色模式'}</span>
+            </Button>
+          </div>
+        </PopoverContent>
+      </Popover>
     </div>
   );
 }

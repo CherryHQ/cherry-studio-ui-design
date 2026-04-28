@@ -56,8 +56,8 @@ export function AnnotationToggle({ onToggleList, listOpen }: AnnotationTogglePro
     return () => { obs.disconnect(); delete (el as any).inert }
   }, [])
 
-  const count = annotations.length
-  const totalCount = allAnnotations.length
+  const count = annotations.filter((a) => !a.orphaned).length
+  const totalCount = allAnnotations.filter((a) => !a.orphaned).length
 
   const handleExport = () => {
     const json = exportAnnotations()

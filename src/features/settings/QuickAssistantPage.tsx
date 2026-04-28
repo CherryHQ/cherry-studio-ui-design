@@ -10,7 +10,7 @@ import {
 } from 'lucide-react';
 import { Tooltip } from '@/app/components/Tooltip';
 import { Button, Input, Textarea, Popover, PopoverTrigger, PopoverContent, Typography, Switch, EmptyState } from '@cherry-studio/ui';
-import { FormRow, SectionHeader, SectionCard, Tabs, TabsList, TabsTrigger } from './shared';
+import { FormRow, SectionHeader, SectionCard, InlineSelect } from './shared';
 
 // ===========================
 // Types
@@ -612,13 +612,11 @@ function ContextPanel({ disabled }: { disabled: boolean }) {
         <div className="px-1">
           <SectionHeader title="上下文长度" />
           <FormRow label="上下文窗口" desc="控制发送给模型的历史对话轮数，更长的上下文会增加 Token 消耗。">
-            <Tabs value={contextLength} onValueChange={setContextLength}>
-              <TabsList>
-                <TabsTrigger value="short">短</TabsTrigger>
-                <TabsTrigger value="medium">中</TabsTrigger>
-                <TabsTrigger value="long">长</TabsTrigger>
-              </TabsList>
-            </Tabs>
+            <InlineSelect value={contextLength} onChange={setContextLength} options={[
+              { value: 'short', label: '短' },
+              { value: 'medium', label: '中' },
+              { value: 'long', label: '长' },
+            ]} />
           </FormRow>
         </div>
       </SectionCard>

@@ -26,7 +26,6 @@ import {
 const tabs: { id: ExtensionTab; label: string; count?: number }[] = [
   { id: 'installed', label: '已安装', count: INSTALLED.length },
   { id: 'marketplace', label: '市场' },
-  { id: 'dependencies', label: '依赖管理' },
 ];
 
 const categoryFilters: { id: ExtensionCategory; label: string }[] = [

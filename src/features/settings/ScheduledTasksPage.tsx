@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import {
-  Plus, Play, Trash2, Square,
+  Plus, Play, Trash2, Square, Check,
   Clock, ExternalLink, ChevronDown,
   Calendar,
 } from 'lucide-react';
 import {
   Button, Input, Textarea, SearchInput, EmptyState,
+  Popover, PopoverTrigger, PopoverContent,
 } from '@cherry-studio/ui';
 import { Tooltip } from '@/app/components/Tooltip';
 
@@ -42,7 +43,7 @@ interface TaskRun {
 // ===========================
 // Mock Data
 // ===========================
-const MOCK_TASKS: ScheduledTask[] = [
+const INITIAL_TASKS: ScheduledTask[] = [
   {
     id: 't1', name: '看手机提醒', agentName: 'Cherry Assistant', prompt: '提醒：该看手机了！休息一下眼睛吧～', scheduleType: 'once', scheduleValue: '2026-04-15 08:00:00', timeoutMinutes: 2,
     enabled: true, status: 'completed', lastRunAt: '4/15, 08:00', runs: [
@@ -95,6 +96,53 @@ const SCHEDULE_TYPE_OPTIONS = [
   { value: 'once', label: '一次性' },
 ];
 
+const MOCK_AGENTS = ['Cherry Assistant', 'AI 助手', '客服机器人', '新闻推送'];
+const MOCK_CHANNELS = ['WeChat 3', 'Telegram', 'Feishu', 'Discord', 'Slack'];
+
+// ===========================
+// Dropdown Select (reusable)
+// ===========================
+function DropdownSelect({ value, onChange, options, placeholder }: {
+  value: string;
+  onChange: (v: string) => void;
+  options: { value: string; label: string }[];
+  placeholder?: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const selected = options.find(o => o.value === value);
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <button
+          className="flex items-center w-full px-2.5 py-[5px] bg-muted/30 rounded-lg border border-section-border text-left hover:bg-muted/50 transition-colors"
+          type="button"
+        >
+          <span className={`flex-1 text-sm truncate ${selected ? 'text-foreground' : 'text-muted-foreground/50'}`}>
+            {selected?.label || placeholder || '请选择'}
+          </span>
+          <ChevronDown size={12} className={`text-muted-foreground/40 transition-transform flex-shrink-0 ${open ? 'rotate-180' : ''}`} />
+        </button>
+      </PopoverTrigger>
+      <PopoverContent align="start" className="p-1 w-[var(--radix-popover-trigger-width)]">
+        {options.map(opt => (
+          <button
+            key={opt.value}
+            type="button"
+            onClick={() => { onChange(opt.value); setOpen(false); }}
+            className={`w-full flex items-center gap-2 px-2.5 py-1.5 rounded-md text-sm text-left transition-colors ${
+              opt.value === value ? 'bg-accent text-foreground' : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground'
+            }`}
+          >
+            {opt.value === value && <Check size={10} className="flex-shrink-0" />}
+            <span className={opt.value === value ? '' : 'pl-[18px]'}>{opt.label}</span>
+          </button>
+        ))}
+      </PopoverContent>
+    </Popover>
+  );
+}
+
 // ===========================
 // Status Badge
 // ===========================
@@ -102,7 +150,7 @@ function StatusBadge({ status }: { status: ScheduledTask['status'] }) {
   const map = {
     idle: { label: '空闲', cls: 'bg-muted/50 text-muted-foreground' },
     running: { label: '进行中', cls: 'bg-accent-blue/10 text-accent-blue' },
-    completed: { label: '已完成', cls: 'bg-primary/10 text-primary' },
+    completed: { label: '已完成', cls: 'bg-success/10 text-success' },
     error: { label: '错误', cls: 'bg-destructive/10 text-destructive' },
   };
   const s = map[status];
@@ -147,7 +195,11 @@ function ScheduleTypeBadge({ type }: { type: ScheduleType }) {
 // ===========================
 // Task Detail Panel
 // ===========================
-function TaskDetail({ task }: { task: ScheduledTask }) {
+function TaskDetail({ task, onDelete, onUpdate }: {
+  task: ScheduledTask;
+  onDelete: (id: string) => void;
+  onUpdate: (id: string, updates: Partial<ScheduledTask>) => void;
+}) {
   const [runSearch, setRunSearch] = useState('');
 
   const filteredRuns = task.runs.filter(r =>
@@ -166,19 +218,19 @@ function TaskDetail({ task }: { task: ScheduledTask }) {
           <div className="flex items-center gap-1">
             {task.status === 'running' ? (
               <Tooltip content="停止" side="bottom">
-                <Button variant="ghost" size="icon-xs" className="w-6 h-6 text-muted-foreground/60 hover:text-foreground">
+                <Button variant="ghost" size="icon-xs" onClick={() => onUpdate(task.id, { status: 'idle' })} className="w-6 h-6 text-destructive/60 hover:text-destructive hover:bg-destructive/10">
                   <Square size={11} />
                 </Button>
               </Tooltip>
             ) : (
               <Tooltip content="运行" side="bottom">
-                <Button variant="ghost" size="icon-xs" className="w-6 h-6 text-muted-foreground/60 hover:text-foreground">
+                <Button variant="ghost" size="icon-xs" onClick={() => onUpdate(task.id, { status: 'running' })} className="w-6 h-6 text-success/60 hover:text-success hover:bg-success/10">
                   <Play size={11} />
                 </Button>
               </Tooltip>
             )}
             <Tooltip content="删除" side="bottom">
-              <Button variant="ghost" size="icon-xs" className="w-6 h-6 text-muted-foreground/60 hover:text-destructive">
+              <Button variant="ghost" size="icon-xs" onClick={() => onDelete(task.id)} className="w-6 h-6 text-muted-foreground/40 hover:text-destructive hover:bg-destructive/10">
                 <Trash2 size={11} />
               </Button>
             </Tooltip>
@@ -208,22 +260,25 @@ function TaskDetail({ task }: { task: ScheduledTask }) {
           </div>
           <div>
             <label className="text-xs text-muted-foreground mb-1 block">绑定 Agent</label>
-            <div className="flex items-center px-2.5 py-[5px] bg-muted/30 rounded-lg border border-section-border">
-              <span className="flex-1 text-sm text-foreground">{task.agentName}</span>
-              <ChevronDown size={12} className="text-muted-foreground/40" />
-            </div>
+            <DropdownSelect
+              value={task.agentName}
+              onChange={(v) => onUpdate(task.id, { agentName: v })}
+              options={MOCK_AGENTS.map(a => ({ value: a, label: a }))}
+              placeholder="选择要绑定的 Agent"
+            />
           </div>
           <div>
             <label className="text-xs text-muted-foreground mb-1 block">提示词</label>
-            <Textarea defaultValue={task.prompt} placeholder="当任务运行时 Agent 应该做什么？" className="min-h-[80px] text-sm resize-none" />
+            <Textarea defaultValue={task.prompt} placeholder="当任务运行时 Agent 应该做什么？" className="min-h-[80px] text-sm resize-y" />
           </div>
-          <div className="grid grid-cols-[1fr_1fr_auto_auto] gap-2 items-end">
+          <div className="grid grid-cols-[1fr_1fr_auto] gap-2 items-end">
             <div>
               <label className="text-xs text-muted-foreground mb-1 block">调度类型</label>
-              <div className="flex items-center px-2.5 py-[5px] bg-muted/30 rounded-lg border border-section-border">
-                <span className="flex-1 text-sm text-foreground">{SCHEDULE_TYPE_OPTIONS.find(o => o.value === task.scheduleType)?.label}</span>
-                <ChevronDown size={12} className="text-muted-foreground/40" />
-              </div>
+              <DropdownSelect
+                value={task.scheduleType}
+                onChange={(v) => onUpdate(task.id, { scheduleType: v as ScheduleType })}
+                options={SCHEDULE_TYPE_OPTIONS}
+              />
             </div>
             <div>
               <label className="text-xs text-muted-foreground mb-1 block">调度值</label>
@@ -235,25 +290,23 @@ function TaskDetail({ task }: { task: ScheduledTask }) {
             </div>
             <div>
               <label className="text-xs text-muted-foreground mb-1 block">超时时间</label>
-              <div className="flex items-center gap-1">
-                <Input defaultValue={String(task.timeoutMinutes)} className="h-8 text-sm w-16" />
-                <span className="text-xs text-muted-foreground/50">分钟</span>
+              <div className="relative">
+                <Input defaultValue={String(task.timeoutMinutes)} className="h-8 text-sm w-full pr-10" />
+                <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-xs text-muted-foreground/40 pointer-events-none">分钟</span>
               </div>
             </div>
           </div>
           <div>
             <label className="text-xs text-muted-foreground mb-1 block">发送到频道</label>
-            <div className="flex items-center px-2.5 py-[5px] bg-muted/30 rounded-lg border border-section-border">
-              {task.channelName ? (
-                <span className="flex-1 text-sm text-foreground flex items-center gap-1.5">
-                  <div className="w-1.5 h-1.5 rounded-full bg-primary" />
-                  {task.channelName}
-                </span>
-              ) : (
-                <span className="flex-1 text-sm text-muted-foreground/50">选择接收结果的频道</span>
-              )}
-              <ChevronDown size={12} className="text-muted-foreground/40" />
-            </div>
+            <DropdownSelect
+              value={task.channelName || ''}
+              onChange={(v) => onUpdate(task.id, { channelName: v || undefined })}
+              options={[
+                { value: '', label: '不发送' },
+                ...MOCK_CHANNELS.map(c => ({ value: c, label: c })),
+              ]}
+              placeholder="选择接收结果的频道"
+            />
           </div>
         </div>
       </div>
@@ -273,7 +326,6 @@ function TaskDetail({ task }: { task: ScheduledTask }) {
           <div className="py-8 text-center text-xs text-muted-foreground/40">暂无运行记录</div>
         ) : (
           <div className="border border-section-border rounded-lg overflow-hidden">
-            {/* Table header */}
             <div className="grid grid-cols-[100px_60px_60px_1fr_28px] gap-2 px-3 py-2 bg-muted/30 border-b border-section-border text-xs text-muted-foreground/60 font-medium">
               <span>运行时间</span>
               <span>耗时</span>
@@ -281,7 +333,6 @@ function TaskDetail({ task }: { task: ScheduledTask }) {
               <span>结果</span>
               <span />
             </div>
-            {/* Table body */}
             {filteredRuns.map(run => (
               <div key={run.id} className="grid grid-cols-[100px_60px_60px_1fr_28px] gap-2 px-3 py-2 border-b border-section-border last:border-b-0 items-start text-xs hover:bg-muted/20 transition-colors">
                 <span className="text-muted-foreground">{run.runTime}</span>
@@ -305,8 +356,26 @@ function TaskDetail({ task }: { task: ScheduledTask }) {
 // ===========================
 // Add Task Form
 // ===========================
-function AddTaskForm({ onCancel }: { onCancel: () => void }) {
-  const [scheduleType] = useState<ScheduleType>('interval');
+function AddTaskForm({ onCancel, onSave }: { onCancel: () => void; onSave: (task: Partial<ScheduledTask>) => void }) {
+  const [name, setName] = useState('');
+  const [agentName, setAgentName] = useState('');
+  const [prompt, setPrompt] = useState('');
+  const [scheduleType, setScheduleType] = useState<ScheduleType>('interval');
+  const [scheduleValue, setScheduleValue] = useState('');
+  const [timeoutMinutes, setTimeoutMinutes] = useState('');
+  const [channelName, setChannelName] = useState('');
+
+  const handleSave = () => {
+    onSave({
+      name: name || '新任务',
+      agentName: agentName || 'Cherry Assistant',
+      prompt,
+      scheduleType,
+      scheduleValue,
+      timeoutMinutes: Number(timeoutMinutes) || 2,
+      channelName: channelName || undefined,
+    });
+  };
 
   return (
     <div className="flex-1 overflow-y-auto px-5 py-4 scrollbar-thin">
@@ -314,49 +383,62 @@ function AddTaskForm({ onCancel }: { onCancel: () => void }) {
       <div className="space-y-3">
         <div>
           <label className="text-xs text-muted-foreground mb-1 block">绑定 Agent</label>
-          <div className="flex items-center px-2.5 py-[5px] bg-muted/30 rounded-lg border border-section-border">
-            <span className="flex-1 text-sm text-muted-foreground/50">选择要绑定的 Agent</span>
-            <ChevronDown size={12} className="text-muted-foreground/40" />
-          </div>
+          <DropdownSelect
+            value={agentName}
+            onChange={setAgentName}
+            options={MOCK_AGENTS.map(a => ({ value: a, label: a }))}
+            placeholder="选择要绑定的 Agent"
+          />
         </div>
         <div>
           <label className="text-xs text-muted-foreground mb-1 block">名称</label>
-          <Input placeholder="例如：每日代码审查" className="h-8 text-sm" />
+          <Input value={name} onChange={e => setName(e.target.value)} placeholder="例如：每日代码审查" className="h-8 text-sm" />
         </div>
         <div>
           <label className="text-xs text-muted-foreground mb-1 block">提示词</label>
-          <Textarea placeholder="当任务运行时 Agent 应该做什么？" className="min-h-[80px] text-sm resize-none" />
+          <Textarea value={prompt} onChange={e => setPrompt(e.target.value)} placeholder="当任务运行时 Agent 应该做什么？" className="min-h-[80px] text-sm resize-y" />
         </div>
-        <div className="grid grid-cols-[1fr_1fr_auto_auto] gap-2 items-end">
+        <div className="grid grid-cols-[1fr_1fr_auto] gap-2 items-end">
           <div>
             <label className="text-xs text-muted-foreground mb-1 block">调度类型</label>
-            <div className="flex items-center px-2.5 py-[5px] bg-muted/30 rounded-lg border border-section-border">
-              <span className="flex-1 text-sm text-foreground">{SCHEDULE_TYPE_OPTIONS.find(o => o.value === scheduleType)?.label}</span>
-              <ChevronDown size={12} className="text-muted-foreground/40" />
-            </div>
+            <DropdownSelect
+              value={scheduleType}
+              onChange={(v) => setScheduleType(v as ScheduleType)}
+              options={SCHEDULE_TYPE_OPTIONS}
+            />
           </div>
           <div>
             <label className="text-xs text-muted-foreground mb-1 block">调度值</label>
-            <Input placeholder={scheduleType === 'interval' ? '间隔（分钟）' : ''} className="h-8 text-sm" />
+            <Input
+              value={scheduleValue}
+              onChange={e => setScheduleValue(e.target.value)}
+              placeholder={scheduleType === 'cron' ? '0 10 * * *' : scheduleType === 'interval' ? '间隔（分钟）' : '2026-04-15 06:33:30'}
+              className="h-8 text-sm"
+            />
           </div>
           <div>
             <label className="text-xs text-muted-foreground mb-1 block">超时时间</label>
-            <div className="flex items-center gap-1">
-              <Input placeholder="无限制" className="h-8 text-sm w-16" />
-              <span className="text-xs text-muted-foreground/50">min</span>
+            <div className="relative">
+              <Input value={timeoutMinutes} onChange={e => setTimeoutMinutes(e.target.value)} placeholder="无限制" className="h-8 text-sm w-full pr-10" />
+              <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-xs text-muted-foreground/40 pointer-events-none">分钟</span>
             </div>
           </div>
         </div>
         <div>
           <label className="text-xs text-muted-foreground mb-1 block">发送到频道</label>
-          <div className="flex items-center px-2.5 py-[5px] bg-muted/30 rounded-lg border border-section-border">
-            <span className="flex-1 text-sm text-muted-foreground/50">选择接收结果的频道</span>
-            <ChevronDown size={12} className="text-muted-foreground/40" />
-          </div>
+          <DropdownSelect
+            value={channelName}
+            onChange={setChannelName}
+            options={[
+              { value: '', label: '不发送' },
+              ...MOCK_CHANNELS.map(c => ({ value: c, label: c })),
+            ]}
+            placeholder="选择接收结果的频道"
+          />
         </div>
         <div className="flex items-center gap-2 pt-2">
           <Button variant="outline" size="sm" onClick={onCancel}>取消</Button>
-          <Button variant="outline" size="sm">保存</Button>
+          <Button variant="default" size="sm" onClick={handleSave}>保存</Button>
         </div>
       </div>
     </div>
@@ -367,10 +449,43 @@ function AddTaskForm({ onCancel }: { onCancel: () => void }) {
 // Main Page
 // ===========================
 export function ScheduledTasksPage() {
+  const [tasks, setTasks] = useState<ScheduledTask[]>(INITIAL_TASKS);
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>('t7');
   const [showAddForm, setShowAddForm] = useState(false);
 
-  const selectedTask = MOCK_TASKS.find(t => t.id === selectedTaskId) ?? null;
+  const selectedTask = tasks.find((t: ScheduledTask) => t.id === selectedTaskId) ?? null;
+
+  const deleteTask = (id: string) => {
+    setTasks((prev: ScheduledTask[]) => prev.filter((t: ScheduledTask) => t.id !== id));
+    if (selectedTaskId === id) {
+      const remaining = tasks.filter((t: ScheduledTask) => t.id !== id);
+      setSelectedTaskId(remaining.length > 0 ? remaining[0].id : null);
+    }
+  };
+
+  const updateTask = (id: string, updates: Partial<ScheduledTask>) => {
+    setTasks((prev: ScheduledTask[]) => prev.map((t: ScheduledTask) => t.id === id ? { ...t, ...updates } : t));
+  };
+
+  const addTask = (partial: Partial<ScheduledTask>) => {
+    const newId = `t${Date.now()}`;
+    const newTask: ScheduledTask = {
+      id: newId,
+      name: partial.name || '新任务',
+      agentName: partial.agentName || 'Cherry Assistant',
+      prompt: partial.prompt || '',
+      scheduleType: partial.scheduleType || 'once',
+      scheduleValue: partial.scheduleValue || '',
+      timeoutMinutes: partial.timeoutMinutes || 2,
+      channelName: partial.channelName,
+      enabled: true,
+      status: 'idle',
+      runs: [],
+    };
+    setTasks((prev: ScheduledTask[]) => [...prev, newTask]);
+    setShowAddForm(false);
+    setSelectedTaskId(newId);
+  };
 
   return (
     <div className="flex h-full min-h-0">
@@ -392,7 +507,7 @@ export function ScheduledTasksPage() {
 
         <div className="flex-1 overflow-y-auto px-2.5 pb-3 scrollbar-thin-xs">
           <div className="space-y-[2px]">
-            {MOCK_TASKS.map(task => {
+            {tasks.map((task: ScheduledTask) => {
               const isSelected = selectedTaskId === task.id && !showAddForm;
               return (
                 <Button size="inline"
@@ -423,9 +538,12 @@ export function ScheduledTasksPage() {
       {/* Right Panel: Detail / Add Form */}
       <div className="flex-1 flex flex-col min-w-0 min-h-0">
         {showAddForm ? (
-          <AddTaskForm onCancel={() => { setShowAddForm(false); if (MOCK_TASKS.length > 0) setSelectedTaskId(MOCK_TASKS[0].id); }} />
+          <AddTaskForm
+            onCancel={() => { setShowAddForm(false); if (tasks.length > 0) setSelectedTaskId(tasks[0].id); }}
+            onSave={addTask}
+          />
         ) : selectedTask ? (
-          <TaskDetail task={selectedTask} />
+          <TaskDetail task={selectedTask} onDelete={deleteTask} onUpdate={updateTask} />
         ) : (
           <div className="flex-1 flex items-center justify-center">
             <EmptyState icon={<Clock size={24} />} title="选择一个任务" description="从左侧选择一个定时任务查看详情" />

@@ -60,13 +60,13 @@ const NAV_GROUPS: NavGroup[] = [
     ],
   },
   {
-    label: '第三方连接 (CONNECT)',
+    label: '集成',
     items: [
-      { id: 'notion', label: 'Notion 设置', iconType: 'brand', icon: 'notion', connected: true },
-      { id: 'yuque', label: '语雀配置', iconType: 'brand', icon: 'yuque' },
-      { id: 'joplin', label: 'Joplin 配置', iconType: 'brand', icon: 'joplin' },
-      { id: 'obsidian', label: 'Obsidian 配置', iconType: 'brand', icon: 'obsidian' },
-      { id: 'siyuan', label: '思源笔记配置', iconType: 'brand', icon: 'siyuan' },
+      { id: 'notion', label: 'Notion', iconType: 'brand', icon: 'notion', connected: true },
+      { id: 'yuque', label: '语雀', iconType: 'brand', icon: 'yuque' },
+      { id: 'joplin', label: 'Joplin', iconType: 'brand', icon: 'joplin' },
+      { id: 'obsidian', label: 'Obsidian', iconType: 'brand', icon: 'obsidian' },
+      { id: 'siyuan', label: '思源笔记', iconType: 'brand', icon: 'siyuan' },
     ],
   },
 ];

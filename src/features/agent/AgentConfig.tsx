@@ -10,6 +10,7 @@ import {
   Mail, Calendar, Cpu, HardDrive, Clipboard, Eye,
   Download, MessageSquare, Zap, Bug,
   Layers, Sparkles, BookOpen, FolderOpen,
+  Upload, Link2,
 } from 'lucide-react';
 import { Button, Input, Slider, Textarea, Popover, PopoverTrigger, PopoverContent, EmptyState, SearchInput, Typography, Switch, Checkbox, Badge } from '@cherry-studio/ui';
 import { motion, AnimatePresence } from 'motion/react';
@@ -21,12 +22,12 @@ import { ASSISTANT_MODELS } from '@/app/config/models';
 
 interface Props { resource: ResourceItem; onBack: () => void }
 type Section = 'basic' | 'prompt' | 'knowledge' | 'toolchain' | 'advanced';
-const sections: { id: Section; label: string; desc: string; icon: React.ElementType }[] = [
-  { id: 'basic', label: '基础设置', desc: '名称、头像、模型参数', icon: Settings },
-  { id: 'prompt', label: '提示词', desc: '系统提示词、变量、样本', icon: FileText },
-  { id: 'knowledge', label: '知识库', desc: '关联知识库、检索策略', icon: BookOpen },
-  { id: 'toolchain', label: '工具', desc: 'MCP 服务与工具配置', icon: Wrench },
-  { id: 'advanced', label: '高级设置', desc: '执行限制、运行参数', icon: SlidersHorizontal },
+const sections: { id: Section; label: string; icon: React.ElementType }[] = [
+  { id: 'basic', label: '基础设置', icon: Settings },
+  { id: 'prompt', label: '提示词', icon: FileText },
+  { id: 'knowledge', label: '知识库', icon: BookOpen },
+  { id: 'toolchain', label: '工具', icon: Wrench },
+  { id: 'advanced', label: '高级设置', icon: SlidersHorizontal },
 ];
 
 
@@ -74,10 +75,7 @@ export function AgentConfig({ resource, onBack }: Props) {
               <Button variant="ghost" key={s.id} onClick={() => setActiveSection(s.id)}
                 className={`w-full justify-start gap-2.5 px-3 py-2.5 font-normal mb-0.5 ${active ? 'bg-accent/50 text-foreground' : 'text-muted-foreground/60 hover:text-foreground hover:bg-accent/50'}`}>
                 <Icon size={14} strokeWidth={1.5} className={`flex-shrink-0 ${active ? 'text-muted-foreground' : 'text-muted-foreground/40'}`} />
-                <div className="flex-1 min-w-0 text-left">
-                  <div className="text-sm">{s.label}</div>
-                  <div className={`text-xs truncate ${active ? 'text-muted-foreground/50' : 'text-muted-foreground/60'}`}>{s.desc}</div>
-                </div>
+                <span className="text-sm">{s.label}</span>
               </Button>
             );
           })}
@@ -138,6 +136,10 @@ function AgentBasicSection({ resource }: { resource: ResourceItem }) {
   const [name, setName] = useState(resource.name);
   const [description, setDescription] = useState(resource.description);
   const [avatar, setAvatar] = useState(resource.avatar);
+  const [avatarType, setAvatarType] = useState<'emoji' | 'image'>('emoji');
+  const [avatarUrl, setAvatarUrl] = useState('');
+  const [avatarTab, setAvatarTab] = useState<'emoji' | 'upload' | 'link'>('emoji');
+  const fileInputRef2 = useRef<HTMLInputElement>(null);
   const [tags, setTags] = useState<string[]>(resource.tags || ['工具']);
   const [tagInput, setTagInput] = useState('');
   const tagInputRef = useRef<HTMLInputElement>(null);
@@ -150,7 +152,59 @@ function AgentBasicSection({ resource }: { resource: ResourceItem }) {
   return (
     <div className="max-w-lg space-y-5">
       <div><Typography variant="subtitle" className="mb-1">{"基础设置"}</Typography><p className="text-xs text-muted-foreground/60">{"配置智能体的身份信息和模型"}</p></div>
-      <FieldGroup label="头像"><div className="flex items-center gap-2"><div className="w-12 h-12 rounded-xl bg-accent/50 flex items-center justify-center text-xl">{avatar}</div><div className="flex flex-wrap gap-1">{AVATAR_OPTIONS.map(a => (<Button variant="ghost" size="icon-xs" key={a} onClick={() => setAvatar(a)} className={`text-sm ${avatar === a ? 'bg-accent ring-1 ring-primary/20' : ''}`}>{a}</Button>))}</div></div></FieldGroup>
+      <FieldGroup label="头像">
+        <div className="flex items-start gap-3">
+          <div className="w-14 h-14 rounded-xl bg-accent/50 flex items-center justify-center text-2xl flex-shrink-0 border border-border/20 overflow-hidden">
+            {avatarType === 'image' && avatarUrl ? (
+              <img src={avatarUrl} alt="avatar" className="w-full h-full object-cover" />
+            ) : (
+              avatar
+            )}
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-1 mb-2">
+              {([
+                { key: 'emoji' as const, label: 'Emoji' },
+                { key: 'upload' as const, label: '上传图片' },
+                { key: 'link' as const, label: '链接' },
+              ]).map(tab => (
+                <button key={tab.key} onClick={() => setAvatarTab(tab.key)}
+                  className={`px-2 py-1 rounded-md text-xs transition-all ${avatarTab === tab.key ? 'bg-accent text-foreground' : 'text-muted-foreground/50 hover:text-foreground hover:bg-accent/50'}`}>
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+            {avatarTab === 'emoji' && (
+              <div className="flex flex-wrap gap-1">
+                {AVATAR_OPTIONS.map(a => (
+                  <Button variant="ghost" size="icon-xs" key={a} onClick={() => { setAvatar(a); setAvatarType('emoji'); }}
+                    className={`w-8 h-8 rounded-lg text-base ${avatar === a && avatarType === 'emoji' ? 'bg-accent ring-1 ring-primary/20' : 'hover:bg-accent/50'}`}>{a}</Button>
+                ))}
+              </div>
+            )}
+            {avatarTab === 'upload' && (
+              <div>
+                <input ref={fileInputRef2} type="file" accept="image/*" className="hidden"
+                  onChange={e => { const file = e.target.files?.[0]; if (file) { setAvatarUrl(URL.createObjectURL(file)); setAvatarType('image'); } }} />
+                <button onClick={() => fileInputRef2.current?.click()}
+                  className="flex items-center gap-2 px-3 py-2.5 rounded-lg border border-dashed border-border/30 text-xs text-muted-foreground/50 hover:text-foreground hover:border-border/50 transition-all w-full">
+                  <Upload size={12} /><span>点击选择图片</span>
+                </button>
+              </div>
+            )}
+            {avatarTab === 'link' && (
+              <div className="flex items-center gap-2">
+                <div className="flex-1 relative">
+                  <Link2 size={11} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground/30" />
+                  <Input value={avatarUrl} onChange={e => setAvatarUrl(e.target.value)} placeholder="输入图片链接..."
+                    className="w-full pl-7 h-8 text-xs rounded-lg border-border/20 bg-accent/15" />
+                </div>
+                <Button variant="outline" size="xs" onClick={() => { if (avatarUrl.trim()) setAvatarType('image'); }}>确定</Button>
+              </div>
+            )}
+          </div>
+        </div>
+      </FieldGroup>
       <FieldGroup label="名称"><Input value={name} onChange={e => setName(e.target.value)} className="w-full px-3 py-2 border-border/20 bg-accent/15 text-sm text-foreground focus-visible:border-border/40 focus-visible:ring-0 shadow-none" /></FieldGroup>
       <div className="space-y-3"><div className="flex items-center gap-2 mb-1"><span className="text-sm text-muted-foreground/60">{"模型配置"}</span><div className="flex-1 h-px bg-border/30" /></div><ModelSelector label="规划模型" value={planningModel} onChange={setPlanningModel} hint="负责任务拆解和决策" /><ModelSelector label="常规模型" value={regularModel} onChange={setRegularModel} hint="负责主要推理和执行" /><ModelSelector label="快速模型" value={fastModel} onChange={setFastModel} hint="负责简单判断和格式化" /></div>
       <FieldGroup label="简介"><Textarea value={description} onChange={e => setDescription(e.target.value)} rows={2} className="input-accent resize-none" /></FieldGroup>

@@ -144,6 +144,65 @@ type EmptyStatePreset =
   | "no-search-engine"
   | "no-favorite"
 
+/**
+ * Map preset → illustration SVG filename (under /images/empty-state/).
+ * Each preset uses a UNIQUE illustration matched by visual semantics.
+ *
+ * Visual reference:
+ * - Unbreakable AI Security: lock icon on grid — locked/unconfigured system
+ * - GPT-4o Assistants: central orb with radiating nodes — AI assistant
+ * - ai-content-mod-container: processor with 3 control spheres — agent/automation
+ * - AI in Education: tall learning figure with book — knowledge/learning
+ * - AI-Powered Data Transfer: horizontal data flow — file transfer
+ * - AI Design Assist: monitor with A/B panels + checkmark — content creation
+ * - Smart Home Automation: cross-shaped modular controls — app modules
+ * - AI Commands Center: horizontal control panel — terminal/code
+ * - AI Content Curator: AI card with checkmark + side cards — content library
+ * - AI-Driven Communication: device with signal waves — language/comms
+ * - component-ai-powered-search: card with magnifying glass — search
+ * - AI Sentiment Analyzer: monitor with dual panels + status — analysis/topics
+ * - AI Central Command: hexagonal hub with connectors — command center
+ * - AI Upscale Image: 4x zoom tool with arrows — image processing
+ * - Financial Analysis: bar chart monitor with cursor — historical data
+ * - Automated Customer Support: AI card + chat bubble — conversation
+ * - AI-Enhanced Analytics: chart with connected data points — statistics
+ * - AI Data Consolidation: spheres converging into network — data aggregation
+ * - AI-Integrated Search: search UI with AI label — search/categorization
+ * - AI-Driven Security: shield/lock with security lines — security/keys
+ * - AI Action Hub: 4 action buttons in 2×2 grid — quick actions
+ * - AI Sound Designer: keyboard + waveform — sound/phrases
+ * - AI Video Creator: camera/recorder device — media/upload
+ * - ai-website-designer: browser with sparkle icon — web/engine
+ * - Automated Financial Planning: wallet device with button — saving/bookmarking
+ */
+const ILLUSTRATION_MAP: Partial<Record<EmptyStatePreset, string>> = {
+  "no-model":          "Unbreakable AI Security",       // lock icon — system not configured
+  "no-assistant":      "GPT-4o Assistants",              // AI orb — no assistant available
+  "no-agent":          "ai-content-mod-container",       // processor + spheres — no agent
+  "no-knowledge":      "AI in Education",                // learning figure — no knowledge base
+  "no-file":           "AI-Powered Data Transfer",       // data flow — no files
+  "no-note":           "AI Design Assist",               // A/B creation — no notes
+  "no-miniapp":        "Smart Home Automation",          // modular controls — no mini apps
+  "no-code-tool":      "AI Commands Center",             // command panel — no code tools
+  "no-resource":       "AI Content Curator",             // content cards — no resources
+  "no-translate":      "AI-Driven Communication",        // signal waves — no translations
+  "no-result":         "component-ai-powered-search",    // magnifier card — no search results
+  "no-topic":          "AI Sentiment Analyzer",          // dual-panel monitor — no topics
+  "no-session":        "AI Central Command",             // hex hub — no sessions
+  "no-image":          "AI Upscale Image",               // 4x zoom — no images
+  "no-history":        "Financial Analysis",             // bar chart — no history
+  "no-chat":           "Automated Customer Support",     // AI + chat bubble — no chat
+  "no-stats":          "AI-Enhanced Analytics",           // analytics chart — no stats
+  "no-folder":         "AI Data Consolidation",          // converging data — no folders
+  "no-tag":            "AI-Integrated Search",           // search + label — no tags
+  "no-api-key":        "AI-Driven Security",             // shield/lock — no API keys
+  "no-action":         "AI Action Hub",                  // 4 buttons grid — no actions
+  "no-phrase":         "AI Sound Designer",              // keyboard + waveform — no phrases
+  "no-datasource":     "AI Video Creator",               // recorder — no data sources
+  "no-search-engine":  "ai-website-designer",            // browser window — no search engines
+  "no-favorite":       "Automated Financial Planning",   // wallet/save — no favorites
+}
+
 interface PresetConfig {
   icon: IconComponent
   title: Record<Locale, string>
@@ -497,31 +556,6 @@ const PRESET_MAP: Record<EmptyStatePreset, PresetConfig> = {
   },
 }
 
-/** Skeleton row used in the empty state illustration */
-function SkeletonRow({ top, iconSize, barWidth }: { top: number; iconSize: number; barWidth: number }) {
-  return (
-    <>
-      {/* Star icon placeholder */}
-      <div
-        className="absolute left-[23px] flex items-center justify-center"
-        style={{ top, width: iconSize, height: iconSize }}
-      >
-        <Star size={12} className="text-border/60" />
-      </div>
-      {/* Row content */}
-      <div className="absolute flex items-center gap-[7px]" style={{ left: 73, top: top - 4 }}>
-        <div className="w-7 h-7 rounded-full bg-border/60 shrink-0" />
-        <div className="h-1.5 rounded bg-border/60 shrink-0" style={{ width: barWidth }} />
-        <div className="w-6 h-1.5 rounded bg-border/60 shrink-0" />
-      </div>
-      {/* Action pill */}
-      <div className="absolute right-[15px] flex items-center gap-1 px-1.5 py-1.5 rounded-full bg-muted/40 border border-border/40" style={{ top: top + 2 }}>
-        <div className="w-8 h-1.5 rounded bg-border/60" />
-      </div>
-    </>
-  )
-}
-
 interface EmptyStateProps extends React.HTMLAttributes<HTMLDivElement> {
   preset?: EmptyStatePreset
   icon?: IconComponent
@@ -601,23 +635,21 @@ function EmptyState({
       )}
       {...props}
     >
-      {/* Skeleton illustration */}
-      <div className="w-full max-w-[350px] h-[200px] rounded-2xl bg-gradient-to-b from-muted/40 to-transparent border border-border/50 overflow-hidden relative">
-        {/* Skeleton toolbar */}
-        <div className="absolute top-[15px] left-[15px] right-[15px] h-[36px] rounded-lg bg-gradient-to-b from-muted/30 to-muted/60 border border-border/40 overflow-hidden">
-          <div className="absolute top-[13px] left-[13px] w-2 h-2 rounded bg-border/60" />
-          <div className="absolute top-[13px] left-[57px] w-24 h-2 rounded bg-border/60" />
-          <div className="absolute top-[13px] right-[17px] w-16 h-2 rounded bg-border/60" />
-        </div>
-        {/* Skeleton row 1 */}
-        <SkeletonRow top={71} iconSize={20} barWidth={64} />
-        {/* Skeleton row 2 */}
-        <SkeletonRow top={113} iconSize={20} barWidth={88} />
-        {/* Skeleton row 3 */}
-        <SkeletonRow top={155} iconSize={20} barWidth={64} />
-        {/* Fade out */}
-        <div className="absolute bottom-0 left-0 right-0 h-14 bg-gradient-to-b from-transparent to-content-bg" />
-      </div>
+      {/* Illustration from Figma (Bento Cards v2 AI) */}
+      {(() => {
+        const illustrationName = preset ? ILLUSTRATION_MAP[preset] : null
+        if (!illustrationName) return null
+        return (
+          <div className="w-full max-w-[350px] h-[200px] overflow-hidden relative flex items-center justify-center">
+            <img
+              src={`/images/empty-state/${encodeURIComponent(illustrationName)}.svg`}
+              alt=""
+              className="w-full h-full object-contain invert dark:invert-0 opacity-80"
+              draggable={false}
+            />
+          </div>
+        )
+      })()}
       {/* Text */}
       <div className="flex flex-col items-center gap-1 text-center w-full">
         <h3 className="text-lg font-semibold text-foreground tracking-[-0.27px]">{title}</h3>

@@ -1,7 +1,6 @@
-import React, { useState, useMemo } from 'react';
-import { Archive, ArchiveRestore, Folder, Trash2, MessageSquare } from 'lucide-react';
+import React, { useState } from 'react';
+import { Archive, ArchiveRestore, Trash2 } from 'lucide-react';
 import { Button, SearchInput, EmptyState, Typography } from '@cherry-studio/ui';
-import { InlineSelect } from './shared';
 
 // ===========================
 // Mock archived sessions
@@ -40,17 +39,8 @@ const MOCK_ARCHIVED: ArchivedSession[] = [
 export function ArchiveManagePage() {
   const [sessions, setSessions] = useState(MOCK_ARCHIVED);
   const [searchQuery, setSearchQuery] = useState('');
-  const [typeFilter, setTypeFilter] = useState<'all' | 'chat' | 'agent'>('all');
-  const [groupFilter, setGroupFilter] = useState('all');
-
-  const groups = useMemo(() => {
-    const set = new Set(sessions.filter(s => s.group).map(s => s.group!));
-    return Array.from(set).sort();
-  }, [sessions]);
 
   const filtered = sessions.filter(s => {
-    if (typeFilter !== 'all' && s.type !== typeFilter) return false;
-    if (groupFilter !== 'all' && (s.group || '') !== groupFilter) return false;
     if (searchQuery) {
       const q = searchQuery.toLowerCase();
       return s.title.toLowerCase().includes(q) || s.agentName.toLowerCase().includes(q);
@@ -85,23 +75,6 @@ export function ArchiveManagePage() {
               clearable
             />
           </div>
-          <InlineSelect
-            value={typeFilter}
-            onChange={v => setTypeFilter(v as 'all' | 'chat' | 'agent')}
-            options={[
-              { value: 'all', label: '全部类型' },
-              { value: 'chat', label: '对话' },
-              { value: 'agent', label: '智能体' },
-            ]}
-          />
-          <InlineSelect
-            value={groupFilter}
-            onChange={setGroupFilter}
-            options={[
-              { value: 'all', label: '全部分组' },
-              ...groups.map(g => ({ value: g, label: g })),
-            ]}
-          />
         </div>
       </div>
 
@@ -120,10 +93,6 @@ export function ArchiveManagePage() {
                 key={session.id}
                 className="group flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-accent/15 transition-colors"
               >
-                {session.type === 'chat'
-                  ? <MessageSquare size={14} className="text-muted-foreground flex-shrink-0" />
-                  : <Folder size={14} className="text-muted-foreground flex-shrink-0" />
-                }
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
                     <span className="text-sm text-foreground truncate">{session.title}</span>
@@ -131,12 +100,6 @@ export function ArchiveManagePage() {
                   <div className="flex items-center gap-2 mt-0.5">
                     <span className="text-xs flex-shrink-0">{session.agentIcon}</span>
                     <span className="text-xs text-muted-foreground">{session.agentName}</span>
-                    {session.group && (
-                      <>
-                        <span className="text-xs text-muted-foreground/40">·</span>
-                        <span className="text-xs text-muted-foreground">{session.group}</span>
-                      </>
-                    )}
                   </div>
                 </div>
                 <span className="text-xs text-muted-foreground flex-shrink-0 group-hover:hidden">{session.timestamp}</span>

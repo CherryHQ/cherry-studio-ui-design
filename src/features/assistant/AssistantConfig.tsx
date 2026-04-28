@@ -15,11 +15,11 @@ interface Props {
 
 type Section = 'basic' | 'prompt' | 'knowledge' | 'tools';
 
-const sections: { id: Section; label: string; icon: React.ElementType; desc: string }[] = [
-  { id: 'basic', label: '基础设置', icon: Settings, desc: '名称、头像、模型参数' },
-  { id: 'prompt', label: '提示词', icon: FileText, desc: '系统提示词、变量、样本' },
-  { id: 'knowledge', label: '知识库', icon: BookOpen, desc: '关联知识库、检索策略' },
-  { id: 'tools', label: '工具', icon: Wrench, desc: 'MCP 服务与工具配置' },
+const sections: { id: Section; label: string; icon: React.ElementType }[] = [
+  { id: 'basic', label: '基础设置', icon: Settings },
+  { id: 'prompt', label: '提示词', icon: FileText },
+  { id: 'knowledge', label: '知识库', icon: BookOpen },
+  { id: 'tools', label: '工具', icon: Wrench },
 ];
 
 export function AssistantConfig({ resource, onBack }: Props) {
@@ -51,12 +51,9 @@ export function AssistantConfig({ resource, onBack }: Props) {
             return (
               <Button key={s.id} variant="ghost" size="inline"
                 onClick={() => setActiveSection(s.id)}
-                className={`flex items-start gap-2.5 w-full px-3 py-2.5 rounded-xl text-left mb-1 ${active ? 'bg-accent/50 text-foreground' : 'text-muted-foreground/60'}`}>
-                <Icon size={13} strokeWidth={1.6} className="mt-0.5 flex-shrink-0" />
-                <div className="min-w-0">
-                  <div className="text-sm">{s.label}</div>
-                  <div className={`text-xs mt-px ${active ? 'text-muted-foreground/50' : 'text-muted-foreground/60'}`}>{s.desc}</div>
-                </div>
+                className={`flex items-center gap-2.5 w-full px-3 py-2.5 rounded-xl text-left mb-1 ${active ? 'bg-accent/50 text-foreground' : 'text-muted-foreground/60'}`}>
+                <Icon size={13} strokeWidth={1.6} className="flex-shrink-0" />
+                <span className="text-sm">{s.label}</span>
               </Button>
             );
           })}

@@ -167,9 +167,18 @@ export function AnnotationOverlay() {
 
   // ─── Update marker positions ──────────────────────────────────────────
 
+  // Use a ref for annotations to avoid re-creating the callback on every change
+  const annotationsRef = useRef(annotations)
+  annotationsRef.current = annotations
+  const updateAnnotationRef = useRef(updateAnnotation)
+  updateAnnotationRef.current = updateAnnotation
+
   const updateMarkerPositions = useCallback(() => {
+    const anns = annotationsRef.current
     const newPositions = new Map<string, MarkerPosition>()
-    for (const ann of annotations) {
+    const orphanUpdates: { id: string; orphaned: boolean }[] = []
+
+    for (const ann of anns) {
       try {
         const el = document.querySelector(ann.selector) as HTMLElement | null
         if (el) {
@@ -179,20 +188,28 @@ export function AnnotationOverlay() {
             left: rect.left + rect.width * ann.position.x,
             visible: true,
           })
-          // Clear orphaned if element is found again
-          if (ann.orphaned) updateAnnotation(ann.id, { orphaned: false })
+          if (ann.orphaned) orphanUpdates.push({ id: ann.id, orphaned: false })
         } else {
           newPositions.set(ann.id, { top: 0, left: 0, visible: false })
-          // Mark orphaned after element is missing
-          if (!ann.orphaned) updateAnnotation(ann.id, { orphaned: true })
+          if (!ann.orphaned) orphanUpdates.push({ id: ann.id, orphaned: true })
         }
       } catch {
         newPositions.set(ann.id, { top: 0, left: 0, visible: false })
-        if (!ann.orphaned) updateAnnotation(ann.id, { orphaned: true })
+        if (!ann.orphaned) orphanUpdates.push({ id: ann.id, orphaned: true })
       }
     }
+
     setMarkerPositions(newPositions)
-  }, [annotations, updateAnnotation])
+
+    // Batch orphaned updates outside the position update to avoid re-render loop
+    if (orphanUpdates.length > 0) {
+      requestAnimationFrame(() => {
+        for (const u of orphanUpdates) {
+          updateAnnotationRef.current(u.id, { orphaned: u.orphaned })
+        }
+      })
+    }
+  }, []) // no deps — reads from refs
 
   useEffect(() => {
     updateMarkerPositions()
@@ -420,13 +437,17 @@ export function AnnotationOverlay() {
         </div>
       )}
 
-      {/* Annotation markers */}
-      {annotations.map((ann, index) => {
-        const pos = markerPositions.get(ann.id)
-        if (!pos?.visible) return null
-        return (
-          <div
-            key={ann.id}
+      {/* Annotation markers — sequential numbering among visible only */}
+      {(() => {
+        let visibleIndex = 0
+        return annotations.map((ann) => {
+          const pos = markerPositions.get(ann.id)
+          if (!pos?.visible) return null
+          visibleIndex++
+          const displayNum = visibleIndex
+          return (
+            <div
+              key={ann.id}
             data-annotation-ui
             className="fixed cursor-pointer"
             onClick={(e) => {
@@ -448,11 +469,12 @@ export function AnnotationOverlay() {
                   : "",
               )}
             >
-              {index + 1}
+              {displayNum}
             </Badge>
           </div>
-        )
-      })}
+          )
+        })
+      })()}
 
       {/* Create bubble */}
       {pending && (
