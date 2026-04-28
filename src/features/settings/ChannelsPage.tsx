@@ -259,18 +259,18 @@ function EditChannelPanel({
 
         {isWechat ? (
           <div className="flex items-center gap-1">
-            <Tooltip content="首次登录需要扫描二维码，启用频道后将自动弹出二维码。" side="left">
-              <span className="text-accent-blue cursor-help"><Info size={12} /></span>
-            </Tooltip>
             <span className="text-xs text-accent-blue">扫码登录</span>
+            <Tooltip content="首次登录需要扫描二维码，启用频道后将自动弹出二维码。" side="right">
+              <span className="text-accent-blue cursor-help"><Info size={10} /></span>
+            </Tooltip>
           </div>
         ) : (
           <>
             <div className="flex items-center gap-1">
-              <Tooltip content="未配置凭证，启用频道后将自动开始扫码注册，也可手动输入 App ID 和 App Secret。" side="left">
-                <span className="text-accent-blue cursor-help"><Info size={12} /></span>
+              <span className="text-xs text-muted-foreground font-medium">凭证配置</span>
+              <Tooltip content="未配置凭证，启用频道后将自动开始扫码注册，也可手动输入 App ID 和 App Secret。" side="right">
+                <span className="text-muted-foreground/40 cursor-help"><Info size={10} /></span>
               </Tooltip>
-              <span className="text-xs text-accent-blue">凭证配置</span>
             </div>
 
             {/* Dynamic fields */}
@@ -281,7 +281,16 @@ function EditChannelPanel({
 
                 const fieldContent = (
                   <div key={field.key}>
-                    <label className="text-xs text-muted-foreground font-medium mb-1 block">{field.label}</label>
+                    <div className="flex items-center gap-1 mb-1">
+                      <label className="text-xs text-muted-foreground font-medium">{field.label}</label>
+                      {field.hint && (
+                        <Tooltip content={field.hint} side="right">
+                          <span className={`cursor-help ${field.hintType === 'warning' ? 'text-warning/50' : 'text-muted-foreground/30'}`}>
+                            <Info size={10} />
+                          </span>
+                        </Tooltip>
+                      )}
+                    </div>
                     {field.type === 'select' ? (
                       <DropdownSelect
                         value={fieldValues[field.key] || field.options?.[0]?.value || ''}
@@ -309,13 +318,6 @@ function EditChannelPanel({
                         )}
                       </div>
                     )}
-                    {field.hint && (
-                      <Tooltip content={field.hint} side="left">
-                        <span className={`inline-block mt-1 cursor-help ${field.hintType === 'warning' ? 'text-warning' : 'text-muted-foreground/30'}`}>
-                          <Info size={10} />
-                        </span>
-                      </Tooltip>
-                    )}
                   </div>
                 );
 
@@ -327,19 +329,16 @@ function EditChannelPanel({
             </div>
 
             {channelType.fields.some(f => f.key === 'chatIds' || f.key === 'channelIds') && (
-              <div className="flex items-center gap-1">
-                <Tooltip content="留空时系统将自动监听。首先在对应平台上主动给 Bot 发送一条消息，系统才会记录 Chat ID 用于后续通知。" side="left">
-                  <span className="text-warning cursor-help"><Info size={12} /></span>
-                </Tooltip>
-                <span className="text-xs text-warning">自动监听说明</span>
+              <div className="rounded-lg bg-warning/5 border border-warning/15 px-3 py-2">
+                <p className="text-xs text-warning/80 leading-relaxed">留空时系统将自动监听。首先在对应平台上主动给 Bot 发送一条消息，系统才会记录 Chat ID 用于后续通知。</p>
               </div>
             )}
             {channelType.id === 'qq' && (
               <div className="flex items-center gap-1">
-                <Tooltip content="发送 /whoami 给机器人即可获取正确格式的会话 ID。" side="left">
-                  <span className="text-accent-blue cursor-help"><Info size={12} /></span>
-                </Tooltip>
                 <span className="text-xs text-accent-blue">获取会话 ID</span>
+                <Tooltip content="发送 /whoami 给机器人即可获取正确格式的会话 ID。" side="right">
+                  <span className="text-accent-blue cursor-help"><Info size={10} /></span>
+                </Tooltip>
               </div>
             )}
           </>
@@ -479,7 +478,7 @@ export function ChannelsPage() {
         <div className="px-5 pt-4 pb-3 border-b border-section-border flex-shrink-0">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <ChannelIcon typeId={selectedTypeId} size={18} />
+              <ChannelIcon typeId={selectedTypeId} size={14} />
               <div>
                 <Typography variant="subtitle">{selectedType.name}</Typography>
                 <p className="text-xs text-muted-foreground/50 mt-0.5">{selectedType.description}</p>

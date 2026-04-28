@@ -58,7 +58,7 @@ function ToolCallRow({ msg }: { msg: ChatMessage }) {
         {tc.status === 'done' && (
           <>
             {tc.duration && <span className="text-text-tertiary tabular-nums flex-shrink-0">{tc.duration}</span>}
-            <Check size={9} className="text-cherry-primary-dark flex-shrink-0" />
+            <Check size={9} className="text-primary flex-shrink-0" />
           </>
         )}
         {tc.status === 'error' && (
@@ -251,7 +251,7 @@ export function UserMessage({ msg }: { msg: ChatMessage }) {
       transition={{ duration: 0.15 }}
       className="flex justify-end"
     >
-      <div className="max-w-[85%] px-3.5 py-2.5 rounded-[var(--radius-button)] rounded-br-[var(--radius-dot)] bg-foreground text-background text-xs leading-[1.65]">
+      <div className="max-w-[85%] px-3.5 py-2.5 rounded-[var(--radius-button)] rounded-br-[var(--radius-dot)] bg-[#F8F8F9] dark:bg-foreground/15 text-foreground text-xs leading-[1.65]">
         {msg.content}
       </div>
     </motion.div>
@@ -294,9 +294,9 @@ export function AgentMessageGroup({ msgs, onResolve, onAvatarClick, isRunning = 
         variant="ghost"
         size="icon-xs"
         onClick={onAvatarClick}
-        className="w-5 h-5 rounded-[var(--radius-kbd)] bg-accent/50 flex-shrink-0 mt-[1px] active:scale-[0.97]"
+        className="w-5 h-5 rounded-full bg-gradient-to-br from-accent-violet/60 to-accent-blue/60 flex-shrink-0 mt-[1px] active:scale-[0.97] overflow-hidden"
       >
-        <Bot size={10} className="text-muted-foreground" />
+        <span className="text-[8px] leading-none">🤖</span>
       </Button>
       <div className="flex-1 min-w-0 flex flex-col gap-0.5">
         {/* Process steps — collapsible when run completes */}

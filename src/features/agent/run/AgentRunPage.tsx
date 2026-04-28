@@ -13,6 +13,7 @@ import {
   Workflow, Cable, Layers,
   Compass, Wrench, PenTool, Bolt, Filter, Pin, ArrowDown,
   Paperclip, Globe, Brain, Pencil, PanelLeftOpen, PanelLeftClose,
+  SquarePlus, RefreshCw, TerminalSquare, Lightbulb, Scan, Languages,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Tooltip } from '@/app/components/Tooltip';
@@ -332,7 +333,7 @@ function NewSessionEmpty({ onSendMessage, agentName }: { onSendMessage: (text: s
 
       {/* Input bar at bottom */}
       <div className="flex-shrink-0 px-4 pb-3 pt-2">
-        <div className="relative rounded-xl border border-border/50 bg-background shadow-sm focus-within:border-border/80 transition-all duration-150">
+        <div className="rounded-2xl border border-border/40 bg-muted/30 shadow-sm focus-within:border-border/60 transition-all duration-150">
           <Textarea
             ref={textareaRef}
             value={input}
@@ -341,14 +342,14 @@ function NewSessionEmpty({ onSendMessage, agentName }: { onSendMessage: (text: s
             placeholder="在这里输入消息，按 Enter 发送"
             rows={1}
             autoFocus
-            className="w-full bg-transparent text-sm text-foreground placeholder:text-muted-foreground/60 outline-none resize-none min-h-[36px] max-h-[140px] leading-[1.6] px-3.5 pt-[10px] pb-[36px] border-transparent focus-visible:border-transparent focus-visible:ring-0 shadow-none"
+            className="w-full bg-transparent text-sm text-foreground placeholder:text-muted-foreground/50 outline-none resize-none min-h-[36px] max-h-[140px] leading-[1.6] px-3.5 pt-[10px] pb-2 border-transparent focus-visible:border-transparent focus-visible:ring-0 shadow-none"
           />
-          <div className="absolute bottom-[7px] left-2.5 right-2.5 flex items-center justify-between">
+          <div className="px-2.5 pb-2 flex items-center justify-between">
             <div className="flex items-center gap-0.5">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon-sm" className="p-[5px] w-auto h-auto text-muted-foreground hover:text-foreground hover:bg-accent/50">
-                    <Plus size={14} />
+                  <Button variant="ghost" size="icon-sm" className="p-[5px] w-auto h-auto text-muted-foreground/60 hover:text-foreground hover:bg-accent/50">
+                    <SquarePlus size={15} strokeWidth={1.5} />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent side="top" align="start" className="w-44">
@@ -360,16 +361,58 @@ function NewSessionEmpty({ onSendMessage, agentName }: { onSendMessage: (text: s
                   <DropdownMenuItem className="gap-2 px-2 py-[5px] text-xs"><Brain size={13} strokeWidth={1.5} className="text-muted-foreground flex-shrink-0" /><span className="flex-1 text-left">推理</span></DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
+              <Tooltip content="权限模式" side="top">
+                <Button variant="ghost" size="icon-sm" className="p-[5px] w-auto h-auto text-purple-500 hover:bg-accent/50 transition-colors">
+                  <RefreshCw size={15} strokeWidth={1.5} />
+                </Button>
+              </Tooltip>
+              <Tooltip content="斜杠命令" side="top">
+                <Button variant="ghost" size="icon-sm" className="p-[5px] w-auto h-auto text-muted-foreground/60 hover:text-foreground hover:bg-accent/50 transition-colors">
+                  <TerminalSquare size={15} strokeWidth={1.5} />
+                </Button>
+              </Tooltip>
+              <Tooltip content="添加附件" side="top">
+                <Button variant="ghost" size="icon-sm" className="p-[5px] w-auto h-auto text-muted-foreground/60 hover:text-foreground hover:bg-accent/50 transition-colors">
+                  <Paperclip size={15} strokeWidth={1.5} />
+                </Button>
+              </Tooltip>
+              <Tooltip content="快捷短语" side="top">
+                <Button variant="ghost" size="icon-sm" className="p-[5px] w-auto h-auto text-muted-foreground/60 hover:text-foreground hover:bg-accent/50 transition-colors">
+                  <Zap size={15} strokeWidth={1.5} />
+                </Button>
+              </Tooltip>
+              <Tooltip content="思维链长度" side="top">
+                <Button variant="ghost" size="icon-sm" className="p-[5px] w-auto h-auto text-success hover:bg-accent/50 transition-colors">
+                  <Lightbulb size={15} strokeWidth={1.5} />
+                </Button>
+              </Tooltip>
+              <Tooltip content="展开输入框" side="top">
+                <Button variant="ghost" size="icon-sm" className="p-[5px] w-auto h-auto text-muted-foreground/60 hover:text-foreground hover:bg-accent/50 transition-colors">
+                  <Scan size={15} strokeWidth={1.5} />
+                </Button>
+              </Tooltip>
+              <Tooltip content="从文件中选择" side="top">
+                <Button variant="ghost" size="icon-sm" className="p-[5px] w-auto h-auto text-muted-foreground/60 hover:text-foreground hover:bg-accent/50 transition-colors">
+                  <FolderOpen size={15} strokeWidth={1.5} />
+                </Button>
+              </Tooltip>
             </div>
-            <Button
-              variant="default"
-              size="icon-sm"
-              onClick={handleSend}
-              disabled={!input.trim()}
-              className="rounded-lg p-1.5 w-auto h-auto disabled:opacity-30"
-            >
-              <ArrowUp size={13} strokeWidth={2} />
-            </Button>
+            <div className="flex items-center gap-1">
+              <Tooltip content="翻译" side="top">
+                <Button variant="ghost" size="icon-sm" className="p-[5px] w-auto h-auto text-muted-foreground/60 hover:text-foreground hover:bg-accent/50 transition-colors">
+                  <Languages size={15} strokeWidth={1.5} />
+                </Button>
+              </Tooltip>
+              <Button
+                variant="default"
+                size="icon-sm"
+                onClick={handleSend}
+                disabled={!input.trim()}
+                className="rounded-full w-7 h-7 p-0 disabled:opacity-30"
+              >
+                <ArrowUp size={14} strokeWidth={2} />
+              </Button>
+            </div>
           </div>
         </div>
       </div>

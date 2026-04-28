@@ -919,7 +919,9 @@ const SESSION_4_MESSAGES: ChatMessage[] = [
   { id: 'a-m15', role: 'agent', toolCall: { name: 'npm install resend', status: 'done', duration: '2.1s' }, timestamp: '16:07' },
   { id: 'a-m16', role: 'agent', toolCall: { name: 'write src/auth/email.ts', status: 'done', duration: '0.9s' }, timestamp: '16:07' },
   { id: 'a-m17', role: 'agent', content: '邮箱验证和密码重置功能已添加。新增 endpoints：\n\n• POST /auth/verify-email\n• POST /auth/forgot-password\n• POST /auth/reset-password', timestamp: '16:08' },
-  { id: 'a-m18', role: 'agent', generativeUI: { type: 'buttons', prompt: '还需要什么？', options: [{ label: '添加 Rate Limiting' }, { label: '添加 2FA 双因子' }, { label: '编写单元测试' }, { label: '这样就够了' }], resolved: false }, timestamp: '16:08' },
+  { id: 'a-m18', role: 'agent', generativeUI: { type: 'selection', prompt: '选择日志记录方案：', items: [{ label: 'Winston', description: '功能全面，生态成熟' }, { label: 'Pino', description: '高性能，JSON 原生' }, { label: 'Bunyan', description: '结构化日志' }], resolved: false }, timestamp: '16:08' },
+  { id: 'a-m19', role: 'agent', generativeUI: { type: 'buttons', prompt: '还需要什么？', options: [{ label: '添加 Rate Limiting' }, { label: '添加 2FA 双因子' }, { label: '编写单元测试' }, { label: '这样就够了' }], resolved: false }, timestamp: '16:09' },
+  { id: 'a-m20', role: 'agent', generativeUI: { type: 'confirmation', prompt: '是否立即部署到 staging 环境进行集成测试？', confirmLabel: '部署', cancelLabel: '稍后', confirmVariant: 'primary', resolved: false }, timestamp: '16:09' },
 ];
 
 // ===========================
