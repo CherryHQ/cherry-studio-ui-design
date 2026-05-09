@@ -287,6 +287,64 @@ function AgentPicker({
 }
 
 // ===========================
+// Compact Input Bar — used when artifact is fullscreen-maximized
+// ===========================
+
+function CompactInputBar({ onSendMessage, agentName }: { onSendMessage: (text: string) => void; agentName?: string }) {
+  const [input, setInput] = useState('');
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  const handleSend = () => {
+    if (input.trim()) {
+      onSendMessage(input.trim());
+      setInput('');
+      if (textareaRef.current) textareaRef.current.style.height = 'auto';
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSend();
+    }
+  };
+
+  const handleInput = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setInput(e.target.value);
+    const el = e.target;
+    el.style.height = 'auto';
+    el.style.height = Math.min(el.scrollHeight, 100) + 'px';
+  };
+
+  return (
+    <div className="flex-shrink-0 px-3 pb-3 pt-1.5">
+      <div className="relative rounded-2xl border border-border/40 bg-card/70 shadow-sm shadow-black/5 backdrop-blur-sm">
+        <Textarea
+          ref={textareaRef}
+          value={input}
+          onChange={handleInput}
+          onKeyDown={handleKeyDown}
+          placeholder={`继续与 ${agentName || '智能体'} 对话...`}
+          rows={1}
+          className="w-full bg-transparent text-sm text-foreground placeholder:text-muted-foreground/50 outline-none resize-none min-h-[36px] max-h-[100px] leading-[1.6] px-3.5 pt-[10px] pb-[36px] border-transparent focus-visible:border-transparent focus-visible:ring-0 shadow-none"
+        />
+        <div className="absolute bottom-[7px] right-2.5 flex items-center gap-1.5">
+          <Button
+            variant="default"
+            size="icon"
+            onClick={handleSend}
+            disabled={!input.trim()}
+            className="w-7 h-7 rounded-full"
+          >
+            <ArrowUp size={14} strokeWidth={2} />
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ===========================
 // New Session Empty State
 // ===========================
 
@@ -1131,6 +1189,173 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
     );
   }
 
+  // Extract header into reusable JSX so it can render in both normal and maximized layouts
+  const headerJSX = (
+    <header className="flex items-center justify-between px-3 border-b border-transparent flex-shrink-0 h-[40px]">
+      <div className="flex items-center gap-1.5">
+        {onBack && (
+          <Button variant="ghost" size="icon-xs" onClick={onBack}
+            className="p-1.5 w-auto h-auto text-muted-foreground hover:text-foreground hover:bg-accent/50">
+            <ArrowLeft size={13} />
+          </Button>
+        )}
+
+        {/* History sidebar toggle */}
+        <Tooltip content={historySidebar.isCompact ? '收起会话列表' : '展开会话列表'} side="bottom">
+          <Button variant="ghost" size="icon-xs" onClick={() => historySidebar.toggle()}
+            className={`p-1.5 w-auto h-auto mr-0.5 ${historySidebar.isCompact ? 'text-muted-foreground hover:text-foreground hover:bg-accent/15' : 'text-muted-foreground/40 hover:text-foreground hover:bg-accent/15'}`}>
+            {historySidebar.isCompact ? <PanelLeftClose size={13} /> : <PanelLeftOpen size={13} />}
+          </Button>
+        </Tooltip>
+
+        {/* Agent picker */}
+        <AgentPicker
+          selectedAgent={selectedAgent}
+          onSelectAgent={setSelectedAgent}
+          onCreateNew={() => onNavigateToLibrary?.()}
+          onAvatarClick={() => setShowAgentInfo(true)}
+          onConfigureAgent={(agent) => editAssistantInLibrary(agent.name)}
+          pinnedIds={pinnedAgentIds}
+          onTogglePin={togglePinAgent}
+        />
+
+        {/* Model picker */}
+        <div className="w-px h-3.5 bg-border/30" />
+        <Popover open={showModelPicker} onOpenChange={setShowModelPicker}>
+          <PopoverTrigger asChild>
+            <Button variant="ghost" size="inline"
+              className={`gap-1 px-1.5 py-[3px] text-xs ${
+              showModelPicker
+                ? 'bg-accent/25 text-foreground'
+                : 'text-muted-foreground hover:text-foreground hover:bg-accent/15'
+            }`}>
+              <BrandLogo id={selectedModel.provider.toLowerCase()} fallbackLetter={selectedModel.provider[0]} size={14} className="shrink-0" />
+              <span>{selectedModel.name}</span>
+              <ChevronDown size={7} className={`text-muted-foreground/50 transition-transform duration-100 ${showModelPicker ? 'rotate-180' : ''}`} />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent align="start" className="p-0 w-[480px]">
+            <ModelPickerPanel
+              models={MODELS}
+              selectedModels={[selectedModel.id]}
+              onSelectModel={(id) => { const m = MODELS.find(m => m.id === id); if (m) setSelectedModel(m); }}
+              multiModel={false}
+              onToggleMultiModel={() => {}}
+              showMultiModelToggle={false}
+              providerColors={AGENT_PROVIDER_COLORS}
+              onClose={() => setShowModelPicker(false)}
+            />
+          </PopoverContent>
+        </Popover>
+
+        {/* Session-specific status — only when working */}
+        {hasMessages && sessionData.workDir && (
+          <div className="flex items-center gap-1.5">
+            <div className="w-px h-3.5 bg-border/30" />
+            <div className={`flex items-center gap-1 text-xs ${
+              activeSession?.status === 'active' ? 'text-warning' :
+              activeSession?.status === 'error' ? 'text-destructive' :
+              'text-cherry-primary-dark'
+            }`}>
+              <span className={`w-[5px] h-[5px] rounded-full flex-shrink-0 ${
+                activeSession?.status === 'active' ? 'bg-warning animate-pulse' :
+                activeSession?.status === 'error' ? 'bg-destructive' :
+                'bg-success'
+              }`} />
+              {activeSession?.status === 'active' ? '运行中' : activeSession?.status === 'error' ? '失败' : '已完成'}
+            </div>
+          </div>
+        )}
+      </div>
+
+      <div className="flex items-center gap-0.5">
+        {hasMessages && (
+          <Tooltip content={"新建会话"} side="bottom"><Button variant="ghost" size="icon-xs" onClick={handleNewSession}
+            className="p-1.5 w-auto h-auto text-muted-foreground hover:text-foreground hover:bg-accent/15">
+            <MessageCirclePlus size={13} />
+          </Button></Tooltip>
+        )}
+
+        {/* Show preview toggle — only when artifact is closed, to bring it back */}
+        {!showPreview && (
+          <div className="flex items-center gap-0.5">
+            <div className="w-px h-3.5 bg-border/30 mx-0.5" />
+            <Tooltip content={"显示预览面板"} side="bottom"><Button variant="ghost" size="icon-xs" onClick={() => setShowPreview(true)}
+              className="p-1.5 w-auto h-auto text-muted-foreground hover:text-foreground hover:bg-accent/15">
+              <Columns2 size={12} />
+            </Button></Tooltip>
+          </div>
+        )}
+      </div>
+    </header>
+  );
+
+  // Maximized layout: header on top, artifact full width, compact input at bottom
+  if (previewMaximized && showPreview) {
+    return (
+      <div className="flex flex-col h-full bg-background select-none relative">
+        {headerJSX}
+
+        {/* Artifact panel — full width */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.15 }}
+          className="flex flex-1 min-h-0 min-w-0 mx-2 mb-1 rounded-2xl border border-border/40 bg-card/50 shadow-sm shadow-black/5 overflow-hidden"
+        >
+          <AnimatePresence initial={false}>
+            {showExplorer && (
+              <motion.div
+                initial={{ width: 0, opacity: 0 }}
+                animate={{ width: 200, opacity: 1 }}
+                exit={{ width: 0, opacity: 0 }}
+                transition={{ duration: 0.15, ease: [0.4, 0, 0.2, 1] }}
+                className="border-r border-border/30 flex-shrink-0 overflow-hidden"
+              >
+                <FileExplorer
+                  files={sessionData.files.length > 0 ? sessionData.files : DEFAULT_INITIAL_FILES}
+                  outputFiles={sessionData.outputFiles}
+                  selectedFile={selectedFile}
+                  onSelectFile={handleSelectFile}
+                />
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          <div className="flex-1 min-w-0 overflow-hidden">
+            <ArtifactViewer
+              fileContent={fileContent}
+              fileName={selectedFile}
+              previewUrl={null}
+              hasArtifact={!!sessionData.previewHtml || !!fileContent}
+              previewHtml={sessionData.previewHtml}
+              showExplorer={showExplorer}
+              onToggleExplorer={() => setShowExplorer(!showExplorer)}
+              showPreview={showPreview}
+              onTogglePreview={() => { setShowPreview(false); setPreviewMaximized(false); }}
+              maximized={previewMaximized}
+              onToggleMaximize={() => setPreviewMaximized(!previewMaximized)}
+            />
+          </div>
+        </motion.div>
+
+        {/* Compact input bar at the bottom */}
+        <CompactInputBar onSendMessage={handleSendMessage} agentName={selectedAgent.name} />
+
+        {/* Agent Info Overlay */}
+        <AnimatePresence>
+          {showAgentInfo && (
+            <AgentInfoPanel
+              agent={selectedAgent}
+              onClose={() => setShowAgentInfo(false)}
+              onEdit={() => onNavigateToLibrary?.()}
+            />
+          )}
+        </AnimatePresence>
+      </div>
+    );
+  }
+
   return (
     <div className="flex h-full bg-background select-none relative">
       {/* ===== Left: History Sidebar (compact) — auto-hides when artifact maximized ===== */}
@@ -1171,111 +1396,11 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
         className="flex flex-col min-w-0 min-h-0 relative flex-shrink-0"
         style={
           showPreview
-            ? { width: previewMaximized ? 330 : 480, flex: '0 0 auto' }
+            ? { width: 480, flex: '0 0 auto' }
             : { flex: '1 1 0%' }
         }
       >
-        {/* ===== Header ===== */}
-        <header className="flex items-center justify-between px-3 border-b border-transparent flex-shrink-0 h-[40px]">
-          <div className="flex items-center gap-1.5">
-            {onBack && (
-              <Button variant="ghost" size="icon-xs" onClick={onBack}
-                className="p-1.5 w-auto h-auto text-muted-foreground hover:text-foreground hover:bg-accent/50">
-                <ArrowLeft size={13} />
-              </Button>
-            )}
-
-            {/* History sidebar toggle */}
-            <Tooltip content={historySidebar.isCompact ? '收起会话列表' : '展开会话列表'} side="bottom">
-              <Button variant="ghost" size="icon-xs" onClick={() => historySidebar.toggle()}
-                className={`p-1.5 w-auto h-auto mr-0.5 ${historySidebar.isCompact ? 'text-muted-foreground hover:text-foreground hover:bg-accent/15' : 'text-muted-foreground/40 hover:text-foreground hover:bg-accent/15'}`}>
-                {historySidebar.isCompact ? <PanelLeftClose size={13} /> : <PanelLeftOpen size={13} />}
-              </Button>
-            </Tooltip>
-
-            {/* Agent picker — always visible */}
-            <AgentPicker
-              selectedAgent={selectedAgent}
-              onSelectAgent={setSelectedAgent}
-              onCreateNew={() => onNavigateToLibrary?.()}
-              onAvatarClick={() => setShowAgentInfo(true)}
-              onConfigureAgent={(agent) => editAssistantInLibrary(agent.name)}
-              pinnedIds={pinnedAgentIds}
-              onTogglePin={togglePinAgent}
-            />
-
-            {/* Model picker — always visible */}
-            <div className="w-px h-3.5 bg-border/30" />
-            <Popover open={showModelPicker} onOpenChange={setShowModelPicker}>
-              <PopoverTrigger asChild>
-                <Button variant="ghost" size="inline"
-                  className={`gap-1 px-1.5 py-[3px] text-xs ${
-                  showModelPicker
-                    ? 'bg-accent/25 text-foreground'
-                    : 'text-muted-foreground hover:text-foreground hover:bg-accent/15'
-                }`}>
-                <BrandLogo id={selectedModel.provider.toLowerCase()} fallbackLetter={selectedModel.provider[0]} size={14} className="shrink-0" />
-                <span>{selectedModel.name}</span>
-                <ChevronDown size={7} className={`text-muted-foreground/50 transition-transform duration-100 ${showModelPicker ? 'rotate-180' : ''}`} />
-              </Button>
-              </PopoverTrigger>
-              <PopoverContent align="start" className="p-0 w-[480px]">
-                <ModelPickerPanel
-                  models={MODELS}
-                  selectedModels={[selectedModel.id]}
-                  onSelectModel={(id) => { const m = MODELS.find(m => m.id === id); if (m) setSelectedModel(m); }}
-                  multiModel={false}
-                  onToggleMultiModel={() => {}}
-                  showMultiModelToggle={false}
-                  providerColors={AGENT_PROVIDER_COLORS}
-                  onClose={() => setShowModelPicker(false)}
-                />
-              </PopoverContent>
-            </Popover>
-
-          {/* Session-specific controls — only when working */}
-          {hasMessages && (
-            <div className="flex items-center gap-1.5">
-              {sessionData.workDir && (
-                <div className="flex items-center gap-1.5">
-                  <div className="w-px h-3.5 bg-border/30" />
-                  <div className={`flex items-center gap-1 text-xs ${
-                    activeSession?.status === 'active' ? 'text-warning' :
-                    activeSession?.status === 'error' ? 'text-destructive' :
-                    'text-cherry-primary-dark'
-                  }`}>
-                    <span className={`w-[5px] h-[5px] rounded-full flex-shrink-0 ${
-                      activeSession?.status === 'active' ? 'bg-warning animate-pulse' :
-                      activeSession?.status === 'error' ? 'bg-destructive' :
-                      'bg-success'
-                    }`} />
-                    {activeSession?.status === 'active' ? '运行中' : activeSession?.status === 'error' ? '失败' : '已完成'}
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-
-        <div className="flex items-center gap-0.5">
-          {hasMessages && (
-            <Tooltip content={"\u65b0\u5efa\u4f1a\u8bdd"} side="bottom"><Button variant="ghost" size="icon-xs" onClick={handleNewSession}
-              className="p-1.5 w-auto h-auto text-muted-foreground hover:text-foreground hover:bg-accent/15">
-              <MessageCirclePlus size={13} />
-            </Button></Tooltip>
-          )}
-
-
-          {hasMessages && (
-            <div className="flex items-center gap-0.5">
-              <div className="w-px h-3.5 bg-border/30 mx-0.5" />
-              <Tooltip content={"\u5bfc\u51fa"} side="bottom"><Button variant="ghost" size="icon-xs" className="text-muted-foreground hover:text-foreground hover:bg-accent/15">
-                <Download size={11} />
-              </Button></Tooltip>
-            </div>
-          )}
-        </div>
-      </header>
+        {headerJSX}
 
       {/* ===== Main Content (chat panel only — artifact moved out) ===== */}
       <div className="flex flex-1 min-h-0 pl-2 min-w-0">
@@ -1334,7 +1459,7 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
                 showExplorer={showExplorer}
                 onToggleExplorer={() => setShowExplorer(!showExplorer)}
                 showPreview={showPreview}
-                onTogglePreview={() => setPreviewMaximized(false)}
+                onTogglePreview={() => { setShowPreview(false); setPreviewMaximized(false); }}
                 maximized={previewMaximized}
                 onToggleMaximize={() => setPreviewMaximized(!previewMaximized)}
               />
