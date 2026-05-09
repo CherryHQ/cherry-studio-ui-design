@@ -1,15 +1,16 @@
 import React, { useState, useMemo, useRef } from 'react';
 import {
-  Plus, Paperclip, Code2, FolderOpen,
+  Plus, Paperclip, Code2, FolderOpen, Folder, FolderPlus, FolderX,
   Globe, Hammer, Brain, MoreHorizontal,
-  Maximize2, RotateCcw,
-  SquarePlus, RefreshCw, TerminalSquare, Zap, Lightbulb, Scan,
-  ArrowUp, Languages, Check, Circle,
+  Maximize2, RotateCcw, ChevronDown,
+  TerminalSquare, Zap, Lightbulb,
+  ArrowUp, Languages, Check, Hand, ShieldAlert, Eye,
 } from 'lucide-react';
 import {
   Button, Textarea,
   DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator,
   DropdownMenuSub, DropdownMenuSubTrigger, DropdownMenuSubContent,
+  Popover, PopoverTrigger, PopoverContent, BrandLogo, SearchInput,
 } from '@cherry-studio/ui';
 import { MessageList } from '@cherry-studio/ui';
 import { Tooltip } from '@/app/components/Tooltip';
@@ -38,13 +39,20 @@ const PLUS_MENU_SECONDARY = [
 ];
 
 // ===========================
-// Run Mode Config
+// Permission Mode Config — CodeX-style
 // ===========================
-const RUN_MODES: { id: string; label: string; desc: string; color: string; icon?: typeof RefreshCw }[] = [
-  { id: 'normal', label: '普通模式', desc: '可自由读取文件，编辑或执行命令前会询问。', color: 'fill-blue-500 text-blue-500' },
-  { id: 'plan', label: '计划模式', desc: '只能读取文件和制定计划，不能编辑文件或执行命令。', color: 'fill-orange-400 text-orange-400' },
-  { id: 'auto-edit', label: '自动编辑模式', desc: '可自由读取和编辑文件，执行命令前会询问。', color: 'fill-green-500 text-green-500' },
-  { id: 'full-auto', label: '全自动模式', desc: '可执行任何操作，无需询问。请谨慎使用。', color: 'fill-green-500 text-green-500', icon: RefreshCw },
+const PERMISSION_MODES: { id: string; label: string; desc: string; icon: React.ComponentType<{ size?: number; className?: string; strokeWidth?: number }> }[] = [
+  { id: 'default', label: '默认权限', desc: '编辑或执行命令前会询问', icon: Hand },
+  { id: 'auto-review', label: '自动审查', desc: '自动读取和编辑文件，命令前询问', icon: Eye },
+  { id: 'full-access', label: '完全访问权限', desc: '可执行任何操作，请谨慎使用', icon: ShieldAlert },
+];
+
+// ===========================
+// Project / WorkDir Config
+// ===========================
+const PROJECTS: { id: string; label: string }[] = [
+  { id: 'work', label: 'Work' },
+  { id: 'new', label: 'New project' },
 ];
 
 // ===========================
@@ -137,10 +145,19 @@ export function ChatPanel({
 }: ChatPanelProps) {
   const [input, setInput] = useState('');
   const [showPlusMenu, setShowPlusMenu] = useState(false);
-  const [activeMode, setActiveMode] = useState('full-auto');
+  const [activeMode, setActiveMode] = useState('default');
   const [activePopup, setActivePopup] = useState<string | null>(null);
   const [activeThinking, setActiveThinking] = useState('default');
+  const [activeProject, setActiveProject] = useState<string | null>('work');
+  const [showPermissionMenu, setShowPermissionMenu] = useState(false);
+  const [showProjectMenu, setShowProjectMenu] = useState(false);
+  const [showModelMenu, setShowModelMenu] = useState(false);
+  const [projectQuery, setProjectQuery] = useState('');
   const containerRef = useRef<HTMLDivElement>(null);
+
+  const currentPermission = PERMISSION_MODES.find(m => m.id === activeMode) ?? PERMISSION_MODES[0];
+  const currentProject = PROJECTS.find(p => p.id === activeProject) ?? null;
+  const filteredProjects = PROJECTS.filter(p => !projectQuery || p.label.toLowerCase().includes(projectQuery.toLowerCase()));
   const grouped = useGroupedMessages(messages);
 
   const togglePopup = (id: string) => setActivePopup(prev => prev === id ? null : id);
@@ -206,36 +223,10 @@ export function ChatPanel({
               />
             </div>
           ) : (
-        <div key="input" ref={containerRef} className="relative rounded-2xl border border-border/40 bg-muted/30 shadow-sm focus-within:border-border/60 transition-all duration-150">
+        <div key="input" className="flex flex-col gap-1.5">
+        <div ref={containerRef} className="relative rounded-2xl border border-border/40 bg-muted/30 shadow-sm focus-within:border-border/60 transition-all duration-150">
           {/* Popup Cards */}
           <AnimatePresence>
-            {/* Mode Selector */}
-            <PopupCard open={activePopup === 'mode'} title="权限模式">
-              {RUN_MODES.map(mode => (
-                <button
-                  key={mode.id}
-                  type="button"
-                  onClick={() => { setActiveMode(mode.id); closePopup(); }}
-                  className={`w-full flex items-center justify-between gap-3 px-3 py-2.5 rounded-xl text-left transition-colors ${
-                    activeMode === mode.id ? 'bg-success/8' : 'hover:bg-accent/50'
-                  }`}
-                >
-                  <div className="flex items-center gap-2.5 min-w-0">
-                    {mode.icon ? (
-                      <RefreshCw size={14} strokeWidth={2} className="text-green-500 flex-shrink-0" />
-                    ) : (
-                      <Circle size={14} className={`flex-shrink-0 ${mode.color}`} />
-                    )}
-                    <span className="text-sm font-medium text-foreground">{mode.label}</span>
-                  </div>
-                  <div className="flex items-center gap-2 min-w-0">
-                    <span className={`text-xs truncate ${activeMode === mode.id ? 'text-success' : 'text-muted-foreground/50'}`}>{mode.desc}</span>
-                    {activeMode === mode.id && <Check size={14} className="text-success flex-shrink-0" />}
-                  </div>
-                </button>
-              ))}
-            </PopupCard>
-
             {/* Slash Commands */}
             <PopupCard open={activePopup === 'slash'} title="斜杠命令">
               {SLASH_COMMANDS.map(cmd => (
@@ -308,19 +299,20 @@ export function ChatPanel({
 
           <Textarea
             className="w-full bg-transparent text-sm text-foreground placeholder:text-muted-foreground/50 outline-none resize-none min-h-[36px] max-h-[140px] leading-[1.6] px-3.5 pt-[10px] pb-2 border-transparent focus-visible:border-transparent focus-visible:ring-0 shadow-none"
-            placeholder="在这里输入消息，按 Enter 发送"
+            placeholder="可向智能体询问任何事。输入 @ 使用插件或提及文件"
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
             rows={1}
           />
-          <div className="px-2.5 pb-2 flex items-center justify-between">
-            <div className="flex items-center gap-0.5">
+          <div className="px-2 pb-2 flex items-center justify-between gap-2">
+            {/* Left: + menu and permission selector */}
+            <div className="flex items-center gap-0.5 min-w-0">
               {/* Plus / Insert */}
               <DropdownMenu open={showPlusMenu} onOpenChange={setShowPlusMenu}>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="icon-sm" className={showPlusMenu ? toolbarBtnActiveClass : toolbarBtnClass}>
-                    <SquarePlus size={16} strokeWidth={1.5} />
+                    <Plus size={16} strokeWidth={1.5} />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent side="top" align="start" className="w-44">
@@ -337,6 +329,18 @@ export function ChatPanel({
                     );
                   })}
                   <DropdownMenuSeparator />
+                  <DropdownMenuItem className="gap-2 px-2 py-[5px] text-xs" onClick={() => togglePopup('slash')}>
+                    <TerminalSquare size={13} strokeWidth={1.5} className="text-muted-foreground flex-shrink-0" />
+                    <span className="flex-1 text-left">斜杠命令</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem className="gap-2 px-2 py-[5px] text-xs" onClick={() => togglePopup('phrases')}>
+                    <Zap size={13} strokeWidth={1.5} className="text-muted-foreground flex-shrink-0" />
+                    <span className="flex-1 text-left">快捷短语</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem className="gap-2 px-2 py-[5px] text-xs" onClick={() => togglePopup('thinking')}>
+                    <Lightbulb size={13} strokeWidth={1.5} className="text-muted-foreground flex-shrink-0" />
+                    <span className="flex-1 text-left">思维链长度</span>
+                  </DropdownMenuItem>
                   <DropdownMenuSub>
                     <DropdownMenuSubTrigger className="gap-2 px-2 py-[5px] text-xs text-muted-foreground">
                       <MoreHorizontal size={13} strokeWidth={1.5} className="flex-shrink-0" />
@@ -358,69 +362,91 @@ export function ChatPanel({
                 </DropdownMenuContent>
               </DropdownMenu>
 
-              {/* Mode Selector */}
-              <Tooltip content="权限模式" side="top">
-                <Button variant="ghost" size="icon-sm"
-                  onClick={() => togglePopup('mode')}
-                  className={activePopup === 'mode' ? 'p-[5px] w-auto h-auto text-purple-500 bg-accent/60 transition-colors' : 'p-[5px] w-auto h-auto text-purple-500 hover:bg-accent/50 transition-colors'}
-                >
-                  <RefreshCw size={16} strokeWidth={1.5} />
-                </Button>
-              </Tooltip>
-
-              {/* Terminal / Slash Commands */}
-              <Tooltip content="斜杠命令" side="top">
-                <Button variant="ghost" size="icon-sm"
-                  onClick={() => togglePopup('slash')}
-                  className={activePopup === 'slash' ? toolbarBtnActiveClass : toolbarBtnClass}
-                >
-                  <TerminalSquare size={16} strokeWidth={1.5} />
-                </Button>
-              </Tooltip>
-
-              {/* Attach */}
-              <Tooltip content="添加附件" side="top">
-                <Button variant="ghost" size="icon-sm" className={toolbarBtnClass}>
-                  <Paperclip size={16} strokeWidth={1.5} />
-                </Button>
-              </Tooltip>
-
-              {/* Quick Phrases */}
-              <Tooltip content="快捷短语" side="top">
-                <Button variant="ghost" size="icon-sm"
-                  onClick={() => togglePopup('phrases')}
-                  className={activePopup === 'phrases' ? toolbarBtnActiveClass : toolbarBtnClass}
-                >
-                  <Zap size={16} strokeWidth={1.5} />
-                </Button>
-              </Tooltip>
-
-              {/* Thinking Chain */}
-              <Tooltip content="思维链长度" side="top">
-                <Button variant="ghost" size="icon-sm"
-                  onClick={() => togglePopup('thinking')}
-                  className={activePopup === 'thinking' ? 'p-[5px] w-auto h-auto text-success bg-accent/60 transition-colors' : 'p-[5px] w-auto h-auto text-success hover:bg-accent/50 transition-colors'}
-                >
-                  <Lightbulb size={16} strokeWidth={1.5} />
-                </Button>
-              </Tooltip>
-
-              {/* Expand / Screenshot */}
-              <Tooltip content="展开输入框" side="top">
-                <Button variant="ghost" size="icon-sm" className={toolbarBtnClass}>
-                  <Scan size={16} strokeWidth={1.5} />
-                </Button>
-              </Tooltip>
-
-              {/* File / Agent Picker */}
-              <Tooltip content="从文件中选择" side="top">
-                <Button variant="ghost" size="icon-sm" className={toolbarBtnClass}>
-                  <FolderOpen size={16} strokeWidth={1.5} />
-                </Button>
-              </Tooltip>
+              {/* Permission Selector */}
+              {(() => {
+                const PermIcon = currentPermission.icon;
+                return (
+              <Popover open={showPermissionMenu} onOpenChange={setShowPermissionMenu}>
+                <PopoverTrigger asChild>
+                  <Button variant="ghost" size="inline"
+                    className={`flex items-center gap-1 px-1.5 py-[4px] rounded-md text-xs transition-colors ${
+                      showPermissionMenu
+                        ? 'bg-accent/60 text-foreground'
+                        : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
+                    }`}
+                  >
+                    <PermIcon size={13} className="text-muted-foreground/70" strokeWidth={1.5} />
+                    <span className="truncate">{currentPermission.label}</span>
+                    <ChevronDown size={9} className={`transition-transform duration-100 ${showPermissionMenu ? 'rotate-180' : ''}`} />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent side="top" align="start" className="w-[180px] p-1">
+                  {PERMISSION_MODES.map(mode => {
+                    const Icon = mode.icon;
+                    const isActive = activeMode === mode.id;
+                    return (
+                      <button
+                        key={mode.id}
+                        type="button"
+                        onClick={() => { setActiveMode(mode.id); setShowPermissionMenu(false); }}
+                        className={`w-full flex items-center gap-2 px-2 py-[6px] rounded-md text-left text-xs transition-colors ${
+                          isActive ? 'bg-accent/40 text-foreground' : 'text-foreground/80 hover:bg-accent/25'
+                        }`}
+                      >
+                        <Icon size={12} className="text-muted-foreground/70 flex-shrink-0" strokeWidth={1.5} />
+                        <span className="flex-1">{mode.label}</span>
+                        {isActive && <Check size={11} className="text-foreground flex-shrink-0" />}
+                      </button>
+                    );
+                  })}
+                </PopoverContent>
+              </Popover>
+              );
+              })()}
             </div>
 
+            {/* Right: provider, model, translate, send */}
             <div className="flex items-center gap-1">
+              {/* Provider/Model badge + thinking strength */}
+              <Popover open={showModelMenu} onOpenChange={setShowModelMenu}>
+                <PopoverTrigger asChild>
+                  <Button variant="ghost" size="inline"
+                    className={`flex items-center gap-1.5 px-2 py-[3px] rounded-md text-xs transition-colors ${
+                      showModelMenu
+                        ? 'bg-accent/60 text-foreground'
+                        : 'text-muted-foreground hover:text-foreground hover:bg-accent/40'
+                    }`}
+                  >
+                    <BrandLogo id="cherry" size={12} className="shrink-0" fallbackLetter="C" />
+                    <Lightbulb size={11} className="text-warning" strokeWidth={1.5} />
+                    <span className="text-foreground/80">5.5</span>
+                    <span className="text-muted-foreground/60">中</span>
+                    <ChevronDown size={9} className={`transition-transform duration-100 ${showModelMenu ? 'rotate-180' : ''}`} />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent side="top" align="end" className="w-[200px] p-1">
+                  <div className="px-2 py-1 text-xs text-muted-foreground/60">思维链长度</div>
+                  {THINKING_MODES.map(mode => {
+                    const Icon = mode.icon;
+                    const isActive = activeThinking === mode.id;
+                    return (
+                      <button
+                        key={mode.id}
+                        type="button"
+                        onClick={() => { setActiveThinking(mode.id); setShowModelMenu(false); }}
+                        className={`w-full flex items-center gap-2 px-2 py-[6px] rounded-md text-left text-xs transition-colors ${
+                          isActive ? 'bg-accent/40 text-foreground' : 'text-foreground/80 hover:bg-accent/25'
+                        }`}
+                      >
+                        <Icon size={12} strokeWidth={1.5} className={`flex-shrink-0 ${isActive ? 'text-success' : 'text-muted-foreground/70'}`} />
+                        <span className="flex-1">{mode.label}</span>
+                        {isActive && <Check size={11} className="text-success flex-shrink-0" />}
+                      </button>
+                    );
+                  })}
+                </PopoverContent>
+              </Popover>
+
               {/* Translate */}
               <Tooltip content="翻译" side="top">
                 <Button variant="ghost" size="icon-sm" className={toolbarBtnClass}>
@@ -441,6 +467,86 @@ export function ChatPanel({
               </Button>
             </div>
           </div>
+        </div>
+
+        {/* Project / WorkDir selector — below input */}
+        <div className="flex items-center px-1">
+          <Popover open={showProjectMenu} onOpenChange={(open) => { setShowProjectMenu(open); if (!open) setProjectQuery(''); }}>
+            <PopoverTrigger asChild>
+              <Button variant="ghost" size="inline"
+                className={`flex items-center gap-1.5 px-2 py-[3px] rounded-md text-xs transition-colors ${
+                  showProjectMenu
+                    ? 'bg-accent/60 text-foreground'
+                    : 'text-muted-foreground/80 hover:text-foreground hover:bg-accent/40'
+                }`}
+              >
+                {currentProject ? (
+                  <Folder size={12} className="text-muted-foreground/70" strokeWidth={1.5} />
+                ) : (
+                  <FolderX size={12} className="text-muted-foreground/70" strokeWidth={1.5} />
+                )}
+                <span>{currentProject ? currentProject.label : '不使用项目'}</span>
+                <ChevronDown size={9} className={`transition-transform duration-100 ${showProjectMenu ? 'rotate-180' : ''}`} />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent side="top" align="start" className="w-[240px] p-1">
+              {/* Search */}
+              <div className="px-1 py-1">
+                <SearchInput
+                  value={projectQuery}
+                  onChange={setProjectQuery}
+                  placeholder="搜索项目"
+                  iconSize={11}
+                  wrapperClassName="px-2 py-[4px] rounded-md bg-accent/15 border border-border/25"
+                />
+              </div>
+              {/* Project list */}
+              <div className="py-0.5">
+                {filteredProjects.length === 0 && (
+                  <div className="px-2 py-2 text-xs text-muted-foreground/50 text-center">无匹配项目</div>
+                )}
+                {filteredProjects.map(p => {
+                  const isActive = activeProject === p.id;
+                  return (
+                    <button
+                      key={p.id}
+                      type="button"
+                      onClick={() => { setActiveProject(p.id); setShowProjectMenu(false); }}
+                      className={`w-full flex items-center gap-2 px-2 py-[6px] rounded-md text-left text-xs transition-colors ${
+                        isActive ? 'bg-accent/40 text-foreground' : 'text-foreground/80 hover:bg-accent/25'
+                      }`}
+                    >
+                      <Folder size={12} className="text-muted-foreground/70 flex-shrink-0" strokeWidth={1.5} />
+                      <span className="flex-1 truncate">{p.label}</span>
+                      {isActive && <Check size={11} className="text-foreground flex-shrink-0" />}
+                    </button>
+                  );
+                })}
+              </div>
+              <div className="h-px bg-border/30 my-0.5" />
+              {/* Add new project */}
+              <button
+                type="button"
+                className="w-full flex items-center gap-2 px-2 py-[6px] rounded-md text-left text-xs text-foreground/80 hover:bg-accent/25 transition-colors"
+              >
+                <FolderPlus size={12} className="text-muted-foreground/70 flex-shrink-0" strokeWidth={1.5} />
+                <span>添加新项目</span>
+              </button>
+              {/* No project */}
+              <button
+                type="button"
+                onClick={() => { setActiveProject(null); setShowProjectMenu(false); }}
+                className={`w-full flex items-center gap-2 px-2 py-[6px] rounded-md text-left text-xs transition-colors ${
+                  activeProject === null ? 'bg-accent/40 text-foreground' : 'text-foreground/80 hover:bg-accent/25'
+                }`}
+              >
+                <FolderX size={12} className="text-muted-foreground/70 flex-shrink-0" strokeWidth={1.5} />
+                <span className="flex-1">不使用项目</span>
+                {activeProject === null && <Check size={11} className="text-foreground flex-shrink-0" />}
+              </button>
+            </PopoverContent>
+          </Popover>
+        </div>
         </div>
           )}
         </AnimatePresence>
