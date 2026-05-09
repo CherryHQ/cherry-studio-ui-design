@@ -6,7 +6,7 @@ import {
   Sparkles, Plus, ArrowUp,
   FileText, Zap, Search as SearchIcon, BookOpen, History,
   MessageCirclePlus,
-  Code2, Folder, Tag,
+  Code2, Folder, FolderPlus, FolderX, Tag,
   X,
   Check,
   Edit3, Clock,
@@ -14,6 +14,7 @@ import {
   Compass, Wrench, PenTool, Bolt, Filter, Pin, ArrowDown,
   Paperclip, Globe, Brain, Pencil, PanelLeftOpen, PanelLeftClose,
   SquarePlus, RefreshCw, TerminalSquare, Lightbulb, Scan, Languages,
+  Hand, ShieldAlert, Eye, MoreHorizontal,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Tooltip } from '@/app/components/Tooltip';
@@ -291,8 +292,50 @@ function AgentPicker({
 // ===========================
 
 function CompactInputBar({ onSendMessage, agentName }: { onSendMessage: (text: string) => void; agentName?: string }) {
+  return (
+    <div className="flex-shrink-0 px-3 pb-3 pt-1.5">
+      <CodexStyleInput onSendMessage={onSendMessage} placeholder={`继续与 ${agentName || '智能体'} 对话...`} />
+    </div>
+  );
+}
+
+// ===========================
+// New Session Empty State
+// ===========================
+
+// ===========================
+// CodeX-style Input (shared between empty state and maximized)
+// ===========================
+
+const NEW_PERMISSION_MODES: { id: string; label: string; icon: React.ComponentType<{ size?: number; className?: string; strokeWidth?: number }> }[] = [
+  { id: 'default', label: '默认权限', icon: Hand },
+  { id: 'auto-review', label: '自动审查', icon: Eye },
+  { id: 'full-access', label: '完全访问权限', icon: ShieldAlert },
+];
+
+const NEW_PROJECTS: { id: string; label: string }[] = [
+  { id: 'work', label: 'Work' },
+  { id: 'new', label: 'New project' },
+];
+
+function CodexStyleInput({ onSendMessage, autoFocus = false, placeholder }: {
+  onSendMessage: (text: string) => void;
+  autoFocus?: boolean;
+  placeholder?: string;
+}) {
   const [input, setInput] = useState('');
+  const [activeMode, setActiveMode] = useState('default');
+  const [activeProject, setActiveProject] = useState<string | null>('work');
+  const [showPermissionMenu, setShowPermissionMenu] = useState(false);
+  const [showModelMenu, setShowModelMenu] = useState(false);
+  const [showProjectMenu, setShowProjectMenu] = useState(false);
+  const [projectQuery, setProjectQuery] = useState('');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  const currentPermission = NEW_PERMISSION_MODES.find(m => m.id === activeMode) ?? NEW_PERMISSION_MODES[0];
+  const currentProject = NEW_PROJECTS.find(p => p.id === activeProject) ?? null;
+  const filteredProjects = NEW_PROJECTS.filter(p => !projectQuery || p.label.toLowerCase().includes(projectQuery.toLowerCase()));
+  const PermIcon = currentPermission.icon;
 
   const handleSend = () => {
     if (input.trim()) {
@@ -313,66 +356,210 @@ function CompactInputBar({ onSendMessage, agentName }: { onSendMessage: (text: s
     setInput(e.target.value);
     const el = e.target;
     el.style.height = 'auto';
-    el.style.height = Math.min(el.scrollHeight, 100) + 'px';
+    el.style.height = Math.min(el.scrollHeight, 140) + 'px';
   };
 
   return (
-    <div className="flex-shrink-0 px-3 pb-3 pt-1.5">
-      <div className="relative rounded-2xl border border-border/40 bg-card/70 shadow-sm shadow-black/5 backdrop-blur-sm">
+    <div className="flex flex-col gap-1.5">
+      <div className="rounded-2xl border border-border/40 bg-muted/30 shadow-sm focus-within:border-border/60 transition-all duration-150">
         <Textarea
           ref={textareaRef}
           value={input}
           onChange={handleInput}
           onKeyDown={handleKeyDown}
-          placeholder={`继续与 ${agentName || '智能体'} 对话...`}
+          placeholder={placeholder || '可向智能体询问任何事。输入 @ 使用插件或提及文件'}
           rows={1}
-          className="w-full bg-transparent text-sm text-foreground placeholder:text-muted-foreground/50 outline-none resize-none min-h-[36px] max-h-[100px] leading-[1.6] px-3.5 pt-[10px] pb-[36px] border-transparent focus-visible:border-transparent focus-visible:ring-0 shadow-none"
+          autoFocus={autoFocus}
+          className="w-full bg-transparent text-sm text-foreground placeholder:text-muted-foreground/50 outline-none resize-none min-h-[36px] max-h-[140px] leading-[1.6] px-3.5 pt-[10px] pb-2 border-transparent focus-visible:border-transparent focus-visible:ring-0 shadow-none"
         />
-        <div className="absolute bottom-[7px] right-2.5 flex items-center gap-1.5">
-          <Button
-            variant="default"
-            size="icon"
-            onClick={handleSend}
-            disabled={!input.trim()}
-            className="w-7 h-7 rounded-full"
-          >
-            <ArrowUp size={14} strokeWidth={2} />
-          </Button>
+        <div className="px-2 pb-2 flex items-center justify-between gap-2">
+          {/* Left */}
+          <div className="flex items-center gap-0.5 min-w-0">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon-sm" className="p-[5px] w-auto h-auto text-muted-foreground/70 hover:text-foreground hover:bg-accent/50">
+                  <Plus size={16} strokeWidth={1.5} />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent side="top" align="start" className="w-44">
+                <DropdownMenuItem className="gap-2 px-2 py-[5px] text-xs"><Paperclip size={13} strokeWidth={1.5} className="text-muted-foreground flex-shrink-0" /><span className="flex-1 text-left">添加图片或附件</span></DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem className="gap-2 px-2 py-[5px] text-xs"><Code2 size={13} strokeWidth={1.5} className="text-muted-foreground flex-shrink-0" /><span className="flex-1 text-left">代码</span></DropdownMenuItem>
+                <DropdownMenuItem className="gap-2 px-2 py-[5px] text-xs"><Folder size={13} strokeWidth={1.5} className="text-muted-foreground flex-shrink-0" /><span className="flex-1 text-left">添加文件夹</span></DropdownMenuItem>
+                <DropdownMenuItem className="gap-2 px-2 py-[5px] text-xs"><Globe size={13} strokeWidth={1.5} className="text-muted-foreground flex-shrink-0" /><span className="flex-1 text-left">网络搜索</span></DropdownMenuItem>
+                <DropdownMenuItem className="gap-2 px-2 py-[5px] text-xs"><Brain size={13} strokeWidth={1.5} className="text-muted-foreground flex-shrink-0" /><span className="flex-1 text-left">推理</span></DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem className="gap-2 px-2 py-[5px] text-xs"><TerminalSquare size={13} strokeWidth={1.5} className="text-muted-foreground flex-shrink-0" /><span className="flex-1 text-left">斜杠命令</span></DropdownMenuItem>
+                <DropdownMenuItem className="gap-2 px-2 py-[5px] text-xs"><Zap size={13} strokeWidth={1.5} className="text-muted-foreground flex-shrink-0" /><span className="flex-1 text-left">快捷短语</span></DropdownMenuItem>
+                <DropdownMenuItem className="gap-2 px-2 py-[5px] text-xs"><Lightbulb size={13} strokeWidth={1.5} className="text-muted-foreground flex-shrink-0" /><span className="flex-1 text-left">思维链长度</span></DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            {/* Permission selector */}
+            <Popover open={showPermissionMenu} onOpenChange={setShowPermissionMenu}>
+              <PopoverTrigger asChild>
+                <Button variant="ghost" size="inline"
+                  className={`flex items-center gap-1 px-1.5 py-[4px] rounded-md text-xs transition-colors ${
+                    showPermissionMenu
+                      ? 'bg-accent/60 text-foreground'
+                      : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
+                  }`}
+                >
+                  <PermIcon size={13} className="text-muted-foreground/70" strokeWidth={1.5} />
+                  <span className="truncate">{currentPermission.label}</span>
+                  <ChevronDown size={9} className={`transition-transform duration-100 ${showPermissionMenu ? 'rotate-180' : ''}`} />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent side="top" align="start" className="w-[180px] p-1">
+                {NEW_PERMISSION_MODES.map(mode => {
+                  const Icon = mode.icon;
+                  const isActive = activeMode === mode.id;
+                  return (
+                    <button key={mode.id} type="button"
+                      onClick={() => { setActiveMode(mode.id); setShowPermissionMenu(false); }}
+                      className={`w-full flex items-center gap-2 px-2 py-[6px] rounded-md text-left text-xs transition-colors ${
+                        isActive ? 'bg-accent/40 text-foreground' : 'text-foreground/80 hover:bg-accent/25'
+                      }`}
+                    >
+                      <Icon size={12} className="text-muted-foreground/70 flex-shrink-0" strokeWidth={1.5} />
+                      <span className="flex-1">{mode.label}</span>
+                      {isActive && <Check size={11} className="text-foreground flex-shrink-0" />}
+                    </button>
+                  );
+                })}
+              </PopoverContent>
+            </Popover>
+          </div>
+
+          {/* Right */}
+          <div className="flex items-center gap-1">
+            <Popover open={showModelMenu} onOpenChange={setShowModelMenu}>
+              <PopoverTrigger asChild>
+                <Button variant="ghost" size="inline"
+                  className={`flex items-center gap-1.5 px-2 py-[3px] rounded-md text-xs transition-colors ${
+                    showModelMenu
+                      ? 'bg-accent/60 text-foreground'
+                      : 'text-muted-foreground hover:text-foreground hover:bg-accent/40'
+                  }`}
+                >
+                  <BrandLogo id="cherry" size={12} className="shrink-0" fallbackLetter="C" />
+                  <Lightbulb size={11} className="text-warning" strokeWidth={1.5} />
+                  <span className="text-foreground/80">5.5</span>
+                  <span className="text-muted-foreground/60">中</span>
+                  <ChevronDown size={9} className={`transition-transform duration-100 ${showModelMenu ? 'rotate-180' : ''}`} />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent side="top" align="end" className="w-[200px] p-1">
+                <div className="px-2 py-1 text-xs text-muted-foreground/60">思维链长度</div>
+                {[
+                  { id: 'low', label: '简略' },
+                  { id: 'default', label: '中等' },
+                  { id: 'high', label: '深度' },
+                ].map(t => (
+                  <button key={t.id} type="button"
+                    onClick={() => setShowModelMenu(false)}
+                    className="w-full flex items-center gap-2 px-2 py-[6px] rounded-md text-left text-xs text-foreground/80 hover:bg-accent/25 transition-colors"
+                  >
+                    <span className="flex-1">{t.label}</span>
+                  </button>
+                ))}
+              </PopoverContent>
+            </Popover>
+
+            <Tooltip content="翻译" side="top">
+              <Button variant="ghost" size="icon-sm" className="p-[5px] w-auto h-auto text-muted-foreground/60 hover:text-foreground hover:bg-accent/50 transition-colors">
+                <Languages size={16} strokeWidth={1.5} />
+              </Button>
+            </Tooltip>
+
+            <Button
+              variant="default"
+              size="icon-sm"
+              onClick={handleSend}
+              disabled={!input.trim()}
+              className="rounded-full w-7 h-7 p-0 disabled:opacity-30"
+            >
+              <ArrowUp size={14} strokeWidth={2} />
+            </Button>
+          </div>
         </div>
+      </div>
+
+      {/* Project / WorkDir selector */}
+      <div className="flex items-center px-1">
+        <Popover open={showProjectMenu} onOpenChange={(open) => { setShowProjectMenu(open); if (!open) setProjectQuery(''); }}>
+          <PopoverTrigger asChild>
+            <Button variant="ghost" size="inline"
+              className={`flex items-center gap-1.5 px-2 py-[3px] rounded-md text-xs transition-colors ${
+                showProjectMenu
+                  ? 'bg-accent/60 text-foreground'
+                  : 'text-muted-foreground/80 hover:text-foreground hover:bg-accent/40'
+              }`}
+            >
+              {currentProject ? (
+                <Folder size={12} className="text-muted-foreground/70" strokeWidth={1.5} />
+              ) : (
+                <FolderX size={12} className="text-muted-foreground/70" strokeWidth={1.5} />
+              )}
+              <span>{currentProject ? currentProject.label : '不使用项目'}</span>
+              <ChevronDown size={9} className={`transition-transform duration-100 ${showProjectMenu ? 'rotate-180' : ''}`} />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent side="top" align="start" className="w-[240px] p-1">
+            <div className="px-1 py-1">
+              <SearchInput
+                value={projectQuery}
+                onChange={setProjectQuery}
+                placeholder="搜索项目"
+                iconSize={11}
+                wrapperClassName="px-2 py-[4px] rounded-md bg-accent/15 border border-border/25"
+              />
+            </div>
+            <div className="py-0.5">
+              {filteredProjects.length === 0 && (
+                <div className="px-2 py-2 text-xs text-muted-foreground/50 text-center">无匹配项目</div>
+              )}
+              {filteredProjects.map(p => {
+                const isActive = activeProject === p.id;
+                return (
+                  <button key={p.id} type="button"
+                    onClick={() => { setActiveProject(p.id); setShowProjectMenu(false); }}
+                    className={`w-full flex items-center gap-2 px-2 py-[6px] rounded-md text-left text-xs transition-colors ${
+                      isActive ? 'bg-accent/40 text-foreground' : 'text-foreground/80 hover:bg-accent/25'
+                    }`}
+                  >
+                    <Folder size={12} className="text-muted-foreground/70 flex-shrink-0" strokeWidth={1.5} />
+                    <span className="flex-1 truncate">{p.label}</span>
+                    {isActive && <Check size={11} className="text-foreground flex-shrink-0" />}
+                  </button>
+                );
+              })}
+            </div>
+            <div className="h-px bg-border/30 my-0.5" />
+            <button type="button"
+              className="w-full flex items-center gap-2 px-2 py-[6px] rounded-md text-left text-xs text-foreground/80 hover:bg-accent/25 transition-colors"
+            >
+              <FolderPlus size={12} className="text-muted-foreground/70 flex-shrink-0" strokeWidth={1.5} />
+              <span>添加新项目</span>
+            </button>
+            <button type="button"
+              onClick={() => { setActiveProject(null); setShowProjectMenu(false); }}
+              className={`w-full flex items-center gap-2 px-2 py-[6px] rounded-md text-left text-xs transition-colors ${
+                activeProject === null ? 'bg-accent/40 text-foreground' : 'text-foreground/80 hover:bg-accent/25'
+              }`}
+            >
+              <FolderX size={12} className="text-muted-foreground/70 flex-shrink-0" strokeWidth={1.5} />
+              <span className="flex-1">不使用项目</span>
+              {activeProject === null && <Check size={11} className="text-foreground flex-shrink-0" />}
+            </button>
+          </PopoverContent>
+        </Popover>
       </div>
     </div>
   );
 }
 
-// ===========================
-// New Session Empty State
-// ===========================
-
 function NewSessionEmpty({ onSendMessage, agentName }: { onSendMessage: (text: string) => void; agentName?: string }) {
-  const [input, setInput] = useState('');
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
-
-  const handleSend = () => {
-    if (input.trim()) {
-      onSendMessage(input.trim());
-      setInput('');
-    }
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSend();
-    }
-  };
-
-  const handleInput = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setInput(e.target.value);
-    const el = e.target;
-    el.style.height = 'auto';
-    el.style.height = Math.min(el.scrollHeight, 140) + 'px';
-  };
-
   return (
     <div className="flex flex-col h-full w-full">
       {/* Centered empty state */}
@@ -382,7 +569,7 @@ function NewSessionEmpty({ onSendMessage, agentName }: { onSendMessage: (text: s
           <div className="w-14 h-14 rounded-2xl bg-gradient-to-b from-accent/60 to-accent/30 border border-border/30 flex items-center justify-center mb-5">
             <Sparkles size={22} strokeWidth={1.3} className="text-muted-foreground/60" />
           </div>
-          <h2 className="text-sm text-foreground tracking-[-0.01em]">你好，有什么需要帮助的？</h2>
+          <h2 className="text-sm text-foreground tracking-[-0.01em]">我们该在 {agentName || 'Work'} 中做什么？</h2>
           <p className="text-xs text-muted-foreground/60 text-center leading-[1.6] mt-1.5">
             向 {agentName || '智能体'} 提问，支持生成文章、代码和可视化内容
           </p>
@@ -391,88 +578,7 @@ function NewSessionEmpty({ onSendMessage, agentName }: { onSendMessage: (text: s
 
       {/* Input bar at bottom */}
       <div className="flex-shrink-0 px-4 pb-3 pt-2">
-        <div className="rounded-2xl border border-border/40 bg-muted/30 shadow-sm focus-within:border-border/60 transition-all duration-150">
-          <Textarea
-            ref={textareaRef}
-            value={input}
-            onChange={handleInput}
-            onKeyDown={handleKeyDown}
-            placeholder="在这里输入消息，按 Enter 发送"
-            rows={1}
-            autoFocus
-            className="w-full bg-transparent text-sm text-foreground placeholder:text-muted-foreground/50 outline-none resize-none min-h-[36px] max-h-[140px] leading-[1.6] px-3.5 pt-[10px] pb-2 border-transparent focus-visible:border-transparent focus-visible:ring-0 shadow-none"
-          />
-          <div className="px-2.5 pb-2 flex items-center justify-between">
-            <div className="flex items-center gap-0.5">
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon-sm" className="p-[5px] w-auto h-auto text-muted-foreground/60 hover:text-foreground hover:bg-accent/50">
-                    <SquarePlus size={15} strokeWidth={1.5} />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent side="top" align="start" className="w-44">
-                  <DropdownMenuItem className="gap-2 px-2 py-[5px] text-xs"><Paperclip size={13} strokeWidth={1.5} className="text-muted-foreground flex-shrink-0" /><span className="flex-1 text-left">添加图片或附件</span></DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem className="gap-2 px-2 py-[5px] text-xs"><Code2 size={13} strokeWidth={1.5} className="text-muted-foreground flex-shrink-0" /><span className="flex-1 text-left">代码</span></DropdownMenuItem>
-                  <DropdownMenuItem className="gap-2 px-2 py-[5px] text-xs"><Folder size={13} strokeWidth={1.5} className="text-muted-foreground flex-shrink-0" /><span className="flex-1 text-left">添加文件夹</span></DropdownMenuItem>
-                  <DropdownMenuItem className="gap-2 px-2 py-[5px] text-xs"><Globe size={13} strokeWidth={1.5} className="text-muted-foreground flex-shrink-0" /><span className="flex-1 text-left">网络搜索</span></DropdownMenuItem>
-                  <DropdownMenuItem className="gap-2 px-2 py-[5px] text-xs"><Brain size={13} strokeWidth={1.5} className="text-muted-foreground flex-shrink-0" /><span className="flex-1 text-left">推理</span></DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-              <Tooltip content="权限模式" side="top">
-                <Button variant="ghost" size="icon-sm" className="p-[5px] w-auto h-auto text-purple-500 hover:bg-accent/50 transition-colors">
-                  <RefreshCw size={15} strokeWidth={1.5} />
-                </Button>
-              </Tooltip>
-              <Tooltip content="斜杠命令" side="top">
-                <Button variant="ghost" size="icon-sm" className="p-[5px] w-auto h-auto text-muted-foreground/60 hover:text-foreground hover:bg-accent/50 transition-colors">
-                  <TerminalSquare size={15} strokeWidth={1.5} />
-                </Button>
-              </Tooltip>
-              <Tooltip content="添加附件" side="top">
-                <Button variant="ghost" size="icon-sm" className="p-[5px] w-auto h-auto text-muted-foreground/60 hover:text-foreground hover:bg-accent/50 transition-colors">
-                  <Paperclip size={15} strokeWidth={1.5} />
-                </Button>
-              </Tooltip>
-              <Tooltip content="快捷短语" side="top">
-                <Button variant="ghost" size="icon-sm" className="p-[5px] w-auto h-auto text-muted-foreground/60 hover:text-foreground hover:bg-accent/50 transition-colors">
-                  <Zap size={15} strokeWidth={1.5} />
-                </Button>
-              </Tooltip>
-              <Tooltip content="思维链长度" side="top">
-                <Button variant="ghost" size="icon-sm" className="p-[5px] w-auto h-auto text-success hover:bg-accent/50 transition-colors">
-                  <Lightbulb size={15} strokeWidth={1.5} />
-                </Button>
-              </Tooltip>
-              <Tooltip content="展开输入框" side="top">
-                <Button variant="ghost" size="icon-sm" className="p-[5px] w-auto h-auto text-muted-foreground/60 hover:text-foreground hover:bg-accent/50 transition-colors">
-                  <Scan size={15} strokeWidth={1.5} />
-                </Button>
-              </Tooltip>
-              <Tooltip content="从文件中选择" side="top">
-                <Button variant="ghost" size="icon-sm" className="p-[5px] w-auto h-auto text-muted-foreground/60 hover:text-foreground hover:bg-accent/50 transition-colors">
-                  <FolderOpen size={15} strokeWidth={1.5} />
-                </Button>
-              </Tooltip>
-            </div>
-            <div className="flex items-center gap-1">
-              <Tooltip content="翻译" side="top">
-                <Button variant="ghost" size="icon-sm" className="p-[5px] w-auto h-auto text-muted-foreground/60 hover:text-foreground hover:bg-accent/50 transition-colors">
-                  <Languages size={15} strokeWidth={1.5} />
-                </Button>
-              </Tooltip>
-              <Button
-                variant="default"
-                size="icon-sm"
-                onClick={handleSend}
-                disabled={!input.trim()}
-                className="rounded-full w-7 h-7 p-0 disabled:opacity-30"
-              >
-                <ArrowUp size={14} strokeWidth={2} />
-              </Button>
-            </div>
-          </div>
-        </div>
+        <CodexStyleInput onSendMessage={onSendMessage} autoFocus />
       </div>
     </div>
   );
