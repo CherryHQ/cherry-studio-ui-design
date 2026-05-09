@@ -603,6 +603,7 @@ const SESSION_1_MESSAGES: ChatMessage[] = [
   { id: 'm4', role: 'agent', content: '已选择 Tailwind CSS。正在安装依赖...', toolCall: { name: 'npm install -D tailwindcss postcss autoprefixer', status: 'done', duration: '5.8s' }, timestamp: '14:24' },
   { id: 'm5', role: 'agent', toolCall: { name: 'npx tailwindcss init -p', status: 'done', duration: '0.4s' }, content: 'Created Tailwind CSS config file: tailwind.config.js\nCreated PostCSS config file: postcss.config.js', timestamp: '14:24' },
   { id: 'm6', role: 'agent', generativeUI: { type: 'confirmation', prompt: '检测到端口 3000 已被占用，是否切换到 3001？', confirmLabel: 'Yes, switch to 3001', cancelLabel: 'Kill process on 3000', confirmVariant: 'primary', resolved: true, resolvedValue: 'confirm' }, timestamp: '14:24' },
+  { id: 'm6a', role: 'agent', permissionRequest: { id: 'perm-m6a', toolName: 'shell.execute', toolDescription: '需要在工作目录中执行命令以启动开发服务器。', params: [{ label: '命令', value: 'vite dev --port 3001' }, { label: '工作目录', value: '~/projects/my-react-app' }], risk: 'medium', status: 'pending', allowAutoApprove: true }, timestamp: '14:24' },
   { id: 'm7', role: 'agent', content: '项目已初始化，开发服务器启动中。', toolCall: { name: 'vite dev --port 3001', status: 'running' }, timestamp: '14:25' },
   { id: 'm8', role: 'user', content: '加一个 Header 和 Footer 组件，首页用卡片展示统计数据。', timestamp: '14:26' },
   { id: 'm9', role: 'agent', thinking: 'Creating Header, Footer, and Card components. Header with nav bar, Footer with copyright, Card for stat display.', content: '正在创建组件...', timestamp: '14:26' },

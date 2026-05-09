@@ -6,6 +6,7 @@ import {
   Search, Globe, Package, Code2,
   Settings, Rocket,
   Brain, Pencil, Eye, Play, Trash2, FolderOpen,
+  ShieldCheck, ShieldAlert, ShieldQuestion,
 } from 'lucide-react';
 import { Button } from '@cherry-studio/ui';
 import { motion, AnimatePresence } from 'motion/react';
@@ -240,6 +241,165 @@ function collectTypeIcons(msgs: ChatMessage[]): React.ReactNode[] {
 }
 
 // ===========================
+// Permission Approval Card — shown when agent needs user consent for a tool
+// ===========================
+
+const RISK_CONFIG: Record<NonNullable<import('@/app/types/agent').PermissionRequest['risk']>, {
+  icon: React.ComponentType<{ size?: number; className?: string }>;
+  label: string;
+  ringClass: string;
+  iconClass: string;
+  badgeClass: string;
+}> = {
+  low: {
+    icon: ShieldCheck,
+    label: '低风险',
+    ringClass: 'border-border/40',
+    iconClass: 'text-success',
+    badgeClass: 'bg-success/10 text-success border-success/20',
+  },
+  medium: {
+    icon: ShieldQuestion,
+    label: '需注意',
+    ringClass: 'border-warning/30',
+    iconClass: 'text-warning',
+    badgeClass: 'bg-warning/10 text-warning border-warning/20',
+  },
+  high: {
+    icon: ShieldAlert,
+    label: '高风险',
+    ringClass: 'border-destructive/30',
+    iconClass: 'text-destructive',
+    badgeClass: 'bg-destructive/10 text-destructive border-destructive/20',
+  },
+};
+
+export function PermissionApprovalCard({
+  request,
+  onResolve,
+}: {
+  request: NonNullable<ChatMessage['permissionRequest']>;
+  onResolve: (action: 'allow' | 'allow-always' | 'deny') => void;
+}) {
+  const [expanded, setExpanded] = useState(false);
+  const cfg = RISK_CONFIG[request.risk || 'low'];
+  const Icon = cfg.icon;
+  const isPending = request.status === 'pending';
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 4 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.15 }}
+      className={`my-1.5 rounded-lg border ${cfg.ringClass} bg-card/40 overflow-hidden`}
+    >
+      {/* Header */}
+      <div className="flex items-center gap-2 px-3 py-2">
+        <Icon size={13} className={`flex-shrink-0 ${cfg.iconClass}`} />
+        <div className="flex-1 min-w-0 flex items-center gap-1.5">
+          <span className="text-xs text-foreground">权限请求</span>
+          <span className="text-muted-foreground/40">·</span>
+          <span className="text-xs text-foreground/80 font-mono truncate">{request.toolName}</span>
+        </div>
+        <span className={`text-xs px-1.5 py-[1px] rounded border ${cfg.badgeClass} flex-shrink-0`}>
+          {cfg.label}
+        </span>
+      </div>
+
+      {/* Description */}
+      {request.toolDescription && (
+        <div className="px-3 pb-1 text-xs text-muted-foreground leading-[1.65]">
+          {request.toolDescription}
+        </div>
+      )}
+
+      {/* Params toggle */}
+      {request.params && request.params.length > 0 && (
+        <>
+          <button
+            onClick={() => setExpanded(v => !v)}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-muted-foreground/70 hover:text-foreground transition-colors"
+          >
+            <ChevronRight size={9} className={`transition-transform duration-100 ${expanded ? 'rotate-90' : ''}`} />
+            <span>{expanded ? '收起参数' : '查看参数'}</span>
+            <span className="text-muted-foreground/40">({request.params.length})</span>
+          </button>
+          <AnimatePresence initial={false}>
+            {expanded && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: 'auto', opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.12 }}
+                className="overflow-hidden"
+              >
+                <div className="px-3 pb-2 space-y-1">
+                  {request.params.map(p => (
+                    <div key={p.label} className="flex gap-2 text-xs">
+                      <span className="text-muted-foreground/60 flex-shrink-0">{p.label}</span>
+                      <span className="text-foreground font-mono break-all">{p.value}</span>
+                    </div>
+                  ))}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </>
+      )}
+
+      {/* Actions */}
+      <div className="flex items-center gap-1 px-2 pb-2 pt-1 border-t border-border/30">
+        {isPending ? (
+          <>
+            <Button
+              variant="ghost"
+              size="xs"
+              onClick={() => onResolve('deny')}
+              className="px-2.5 text-xs text-muted-foreground hover:text-destructive hover:bg-destructive/8"
+            >
+              拒绝
+            </Button>
+            <span className="flex-1" />
+            {request.allowAutoApprove && (
+              <Button
+                variant="ghost"
+                size="xs"
+                onClick={() => onResolve('allow-always')}
+                className="px-2.5 text-xs text-muted-foreground hover:text-foreground hover:bg-accent/15"
+              >
+                始终允许
+              </Button>
+            )}
+            <Button
+              variant="default"
+              size="xs"
+              onClick={() => onResolve('allow')}
+              className="px-3 text-xs"
+            >
+              允许
+            </Button>
+          </>
+        ) : (
+          <div className="flex items-center gap-1.5 px-1 py-0.5 text-xs">
+            {request.status === 'approved' ? (
+              <>
+                <Check size={11} className="text-success" />
+                <span className="text-muted-foreground">已允许执行</span>
+              </>
+            ) : (
+              <>
+                <X size={11} className="text-destructive" />
+                <span className="text-muted-foreground">已拒绝</span>
+              </>
+            )}
+          </div>
+        )}
+      </div>
+    </motion.div>
+  );
+}
+
+// ===========================
 // User Message
 // ===========================
 
@@ -271,9 +431,11 @@ export function AgentMessageGroup({ msgs, onResolve, onAvatarClick, isRunning = 
   const [processExpanded, setProcessExpanded] = useState(false);
 
   // Split messages into: process steps (everything up to the last tool/thinking/genUI)
-  // and trailing final content (content-only messages after all process steps)
-  const { processMessages, finalMessages } = useMemo(() => {
-    // Find the last index that is a process message
+  // and trailing final content (content-only messages after all process steps).
+  // Permission requests are always-visible regardless of status.
+  const { processMessages, finalMessages, permissionMsgs } = useMemo(() => {
+    const permissions = msgs.filter(m => m.permissionRequest);
+    // Find the last index that is a process message (excluding permission-only msgs)
     let lastProcessIdx = -1;
     for (let i = msgs.length - 1; i >= 0; i--) {
       if (msgs[i].toolCall || msgs[i].thinking || msgs[i].generativeUI) {
@@ -281,11 +443,13 @@ export function AgentMessageGroup({ msgs, onResolve, onAvatarClick, isRunning = 
         break;
       }
     }
-    // Everything up to and including lastProcessIdx goes into process
-    // Everything after goes into final (always visible)
-    const process = lastProcessIdx >= 0 ? msgs.slice(0, lastProcessIdx + 1) : [];
+    const process = lastProcessIdx >= 0 ? msgs.slice(0, lastProcessIdx + 1).filter(m => !m.permissionRequest) : [];
     const final_ = lastProcessIdx >= 0 ? msgs.slice(lastProcessIdx + 1) : msgs;
-    return { processMessages: process, finalMessages: final_.filter(m => m.content) };
+    return {
+      processMessages: process,
+      finalMessages: final_.filter(m => m.content && !m.permissionRequest),
+      permissionMsgs: permissions,
+    };
   }, [msgs]);
 
   return (
@@ -307,6 +471,15 @@ export function AgentMessageGroup({ msgs, onResolve, onAvatarClick, isRunning = 
             onResolve={onResolve}
           />
         )}
+
+        {/* Permission requests — always visible (require user action) */}
+        {permissionMsgs.map((msg) => (
+          <PermissionApprovalCard
+            key={msg.id}
+            request={msg.permissionRequest!}
+            onResolve={(action) => onResolve(msg.id, action)}
+          />
+        ))}
 
         {/* Final content — always visible */}
         {finalMessages.map((msg) => (

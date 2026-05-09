@@ -1054,7 +1054,7 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
 
   const handleNewSession = useCallback(() => {
     setActiveSessionId(null);
-    setShowPreview(true);
+    setShowPreview(false);
     setPreviewMaximized(false);
     setShowExplorer(false);
     setSelectedFile(null);
@@ -1077,7 +1077,7 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
     };
     setSessions(prev => [newSession, ...prev]);
     setActiveSessionId(newId);
-    setShowPreview(true);
+    setShowPreview(false);
     setPreviewMaximized(false);
     setShowExplorer(false);
     setSelectedFile(null);
@@ -1087,7 +1087,7 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
     setSessions(prev => prev.filter(s => s.id !== id));
     if (activeSessionId === id) {
       setActiveSessionId(null);
-      setShowPreview(true);
+      setShowPreview(false);
       setPreviewMaximized(false);
       setShowExplorer(false);
     }
@@ -1167,8 +1167,13 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
       return {
         ...prev,
         [key]: msgs.map(m => {
-          if (m.id === msgId && m.generativeUI) {
+          if (m.id !== msgId) return m;
+          if (m.generativeUI) {
             return { ...m, generativeUI: { ...m.generativeUI, resolved: true, resolvedValue: value } };
+          }
+          if (m.permissionRequest) {
+            const status = value === 'deny' ? 'denied' : 'approved';
+            return { ...m, permissionRequest: { ...m.permissionRequest, status } };
           }
           return m;
         }),

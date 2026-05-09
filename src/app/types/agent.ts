@@ -9,6 +9,22 @@ import type { ToolCallData, GenerativeUIData, WorkflowStep } from './chat';
 // --- Agent Message Role (narrowed from unified MessageRole) ---
 export type AgentMessageRole = 'user' | 'agent';
 
+// --- Permission Approval Request ---
+export type PermissionStatus = 'pending' | 'approved' | 'denied';
+
+export interface PermissionRequest {
+  id: string;
+  toolName: string;
+  toolDescription?: string;
+  /** key/value pairs of tool input parameters to display */
+  params?: { label: string; value: string }[];
+  /** risk level affects visual treatment */
+  risk?: 'low' | 'medium' | 'high';
+  status: PermissionStatus;
+  /** whether to show "always allow this tool" option */
+  allowAutoApprove?: boolean;
+}
+
 // --- Agent Chat Message ---
 export interface AgentChatMessage {
   id: string;
@@ -17,6 +33,7 @@ export interface AgentChatMessage {
   thinking?: string;
   toolCall?: ToolCallData;
   generativeUI?: GenerativeUIData;
+  permissionRequest?: PermissionRequest;
   timestamp: string;
 }
 
