@@ -461,23 +461,28 @@ export function HistorySidebar<T extends HistoryItem>({
   const dragRef = useRef<{ dragging: string | null }>({ dragging: null });
 
   // Detect if items have assistant/tag metadata (topic-style data)
-  const hasItemMetadata = useMemo(() => {
-    return items.some(item => item.assistantName || (item.tags && item.tags.length > 0));
-  }, [items]);
+  const hasAssistantField = useMemo(() => items.some(item => !!item.assistantName), [items]);
+  const hasTagsField = useMemo(() => items.some(item => item.tags && item.tags.length > 0), [items]);
+  const hasItemMetadata = hasAssistantField || hasTagsField;
 
   // Default groupBy depends on data type
   const [groupBy, setGroupBy] = useState<GroupByMode>(() => hasItemMetadata ? 'time' : 'group');
 
   const groupOptions = useMemo(() => {
     if (hasItemMetadata) {
-      const base = [...TOPIC_GROUP_BY_OPTIONS];
+      // Filter out options that don't apply to current data
+      const base = TOPIC_GROUP_BY_OPTIONS.filter(opt => {
+        if (opt.key === 'assistant' && !hasAssistantField) return false;
+        if (opt.key === 'tag' && !hasTagsField) return false;
+        return true;
+      });
       if (customGroupBy) base.push({ key: 'custom', label: customGroupBy.label });
       return base;
     }
     const base = [...GROUP_BY_OPTIONS];
     if (customGroupBy) base.push({ key: 'custom', label: customGroupBy.label });
     return base;
-  }, [customGroupBy, hasItemMetadata]);
+  }, [customGroupBy, hasItemMetadata, hasAssistantField, hasTagsField]);
 
   const [showArchived, setShowArchived] = useState(false);
   const activeItems = items.filter(s => !s.archived);

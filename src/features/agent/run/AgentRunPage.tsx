@@ -1558,7 +1558,7 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
             style={{ width: 220 }}
           >
             <HistorySidebar
-              items={sessions.map(s => ({ ...s, assistantName: s.agentName }))}
+              items={sessions}
               activeItemId={activeSessionId}
               onSelectItem={handleSelectSession}
               onDeleteItem={handleDeleteSession}
@@ -1568,6 +1568,10 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
               onClose={historySidebar.hide}
               entityLabel="会话"
               showStatusDot
+              customGroupBy={{
+                label: '智能体',
+                getGroupKey: (item) => item.agentName,
+              }}
               onNewItemForGroup={handleNewSessionForAgent}
               onRenameGroup={handleRenameGroup}
             />
