@@ -309,13 +309,30 @@ function CompactInputBar({ onSendMessage, agentName }: { onSendMessage: (text: s
 
 const NEW_PERMISSION_MODES: { id: string; label: string; icon: React.ComponentType<{ size?: number; className?: string; strokeWidth?: number }> }[] = [
   { id: 'default', label: '默认权限', icon: Hand },
-  { id: 'auto-review', label: '自动审查', icon: Eye },
-  { id: 'full-access', label: '完全访问权限', icon: ShieldAlert },
+  { id: 'plan', label: '计划模式', icon: Compass },
+  { id: 'auto-edit', label: '自动编辑', icon: Eye },
+  { id: 'bypass', label: '完全访问', icon: ShieldAlert },
 ];
 
 const NEW_PROJECTS: { id: string; label: string }[] = [
   { id: 'work', label: 'Work' },
   { id: 'new', label: 'New project' },
+];
+
+// Slash & mention items shared across CodexStyleInput instances
+const CSI_SLASH_COMMANDS = [
+  { id: 'clear', label: '/clear', desc: '清除会话历史' },
+  { id: 'compact', label: '/compact', desc: '压缩会话上下文' },
+  { id: 'context', label: '/context', desc: '可视化上下文使用情况' },
+  { id: 'cost', label: '/cost', desc: '查看 Token 用量' },
+  { id: 'todos', label: '/todos', desc: '列出当前 TODO' },
+];
+const CSI_MENTIONS: { id: string; label: string; desc: string; icon: React.ComponentType<{ size?: number; className?: string }> }[] = [
+  { id: 'file-app', label: 'src/App.tsx', desc: '文件', icon: FileText },
+  { id: 'file-readme', label: 'README.md', desc: '文件', icon: FileText },
+  { id: 'folder-comp', label: 'src/components/', desc: '文件夹', icon: Folder },
+  { id: 'mcp-fs', label: 'filesystem', desc: 'MCP', icon: Wrench },
+  { id: 'mcp-search', label: 'web-search', desc: 'MCP', icon: Globe },
 ];
 
 function CodexStyleInput({ onSendMessage, autoFocus = false, placeholder }: {
@@ -329,6 +346,8 @@ function CodexStyleInput({ onSendMessage, autoFocus = false, placeholder }: {
   const [showPermissionMenu, setShowPermissionMenu] = useState(false);
   const [showModelMenu, setShowModelMenu] = useState(false);
   const [showProjectMenu, setShowProjectMenu] = useState(false);
+  const [showSlash, setShowSlash] = useState(false);
+  const [showMention, setShowMention] = useState(false);
   const [projectQuery, setProjectQuery] = useState('');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -353,7 +372,14 @@ function CodexStyleInput({ onSendMessage, autoFocus = false, placeholder }: {
   };
 
   const handleInput = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setInput(e.target.value);
+    const val = e.target.value;
+    setInput(val);
+    // Slash commands: input starts with `/`
+    if (val === '/') setShowSlash(true);
+    else if (showSlash && !val.startsWith('/')) setShowSlash(false);
+    // @ mentions: ends with `@` (latest typed char is @)
+    if (val.endsWith('@')) setShowMention(true);
+    else if (showMention && !val.includes('@')) setShowMention(false);
     const el = e.target;
     el.style.height = 'auto';
     el.style.height = Math.min(el.scrollHeight, 140) + 'px';
@@ -361,13 +387,64 @@ function CodexStyleInput({ onSendMessage, autoFocus = false, placeholder }: {
 
   return (
     <div className="flex flex-col gap-1.5">
-      <div className="rounded-2xl border border-border/40 bg-muted/30 shadow-sm focus-within:border-border/60 transition-all duration-150">
+      <div className="relative rounded-2xl border border-border/40 bg-muted/30 shadow-sm focus-within:border-border/60 transition-all duration-150">
+        {/* Slash command popup */}
+        {showSlash && (
+          <div className="absolute bottom-full left-0 right-0 pb-2 z-10">
+            <div className="rounded-xl border border-border/40 bg-card shadow-lg overflow-hidden p-1">
+              <div className="px-2 py-1 text-xs text-muted-foreground/60">斜杠命令</div>
+              {CSI_SLASH_COMMANDS.map(cmd => (
+                <button key={cmd.id} type="button"
+                  onClick={() => { setInput(cmd.label + ' '); setShowSlash(false); textareaRef.current?.focus(); }}
+                  className="w-full flex items-center justify-between gap-3 px-2 py-[5px] rounded-md text-left transition-colors hover:bg-accent/50"
+                >
+                  <div className="flex items-center gap-2">
+                    <TerminalSquare size={12} strokeWidth={1.5} className="text-muted-foreground/50 flex-shrink-0" />
+                    <span className="text-xs text-foreground">{cmd.label}</span>
+                  </div>
+                  <span className="text-xs text-muted-foreground/50 truncate max-w-[55%]">{cmd.desc}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* @ mention popup */}
+        {showMention && (
+          <div className="absolute bottom-full left-0 right-0 pb-2 z-10">
+            <div className="rounded-xl border border-border/40 bg-card shadow-lg overflow-hidden p-1">
+              <div className="px-2 py-1 text-xs text-muted-foreground/60">提及</div>
+              {CSI_MENTIONS.map(item => {
+                const Icon = item.icon;
+                return (
+                  <button key={item.id} type="button"
+                    onClick={() => {
+                      const idx = input.lastIndexOf('@');
+                      const before = idx >= 0 ? input.slice(0, idx) : input;
+                      setInput(`${before}@${item.label} `);
+                      setShowMention(false);
+                      textareaRef.current?.focus();
+                    }}
+                    className="w-full flex items-center justify-between gap-3 px-2 py-[5px] rounded-md text-left transition-colors hover:bg-accent/50"
+                  >
+                    <div className="flex items-center gap-2">
+                      <Icon size={12} className="text-muted-foreground/50 flex-shrink-0" />
+                      <span className="text-xs text-foreground">{item.label}</span>
+                    </div>
+                    <span className="text-xs text-muted-foreground/50">{item.desc}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
         <Textarea
           ref={textareaRef}
           value={input}
           onChange={handleInput}
           onKeyDown={handleKeyDown}
-          placeholder={placeholder || '可向智能体询问任何事。输入 @ 使用插件或提及文件'}
+          placeholder={placeholder || '可向智能体询问任何事。输入 / 使用斜杠命令，输入 @ 提及文件'}
           rows={1}
           autoFocus={autoFocus}
           className="w-full bg-transparent text-sm text-foreground placeholder:text-muted-foreground/50 outline-none resize-none min-h-[36px] max-h-[140px] leading-[1.6] px-3.5 pt-[10px] pb-2 border-transparent focus-visible:border-transparent focus-visible:ring-0 shadow-none"
