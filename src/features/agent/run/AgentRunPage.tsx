@@ -953,7 +953,7 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
   const [showModelPicker, setShowModelPicker] = useState(false);
   const [selectedModel, setSelectedModel] = useState(MODELS[0]);
   const [showExplorer, setShowExplorer] = useState(false);
-  const [showPreview, setShowPreview] = useState(false);
+  const [showPreview, setShowPreview] = useState(true);
   const historySidebar = useHistorySidebar('compact');
   const [historyDisplayMode, setHistoryDisplayMode] = useState<SessionDisplayMode>('floating');
   const [selectedAgent, setSelectedAgent] = useState(AVAILABLE_AGENTS[0]);
@@ -996,7 +996,8 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
 
   const handleNewSession = useCallback(() => {
     setActiveSessionId(null);
-    setShowPreview(false);
+    setShowPreview(true);
+    setPreviewMaximized(false);
     setShowExplorer(false);
     setSelectedFile(null);
   }, []);
@@ -1018,7 +1019,8 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
     };
     setSessions(prev => [newSession, ...prev]);
     setActiveSessionId(newId);
-    setShowPreview(false);
+    setShowPreview(true);
+    setPreviewMaximized(false);
     setShowExplorer(false);
     setSelectedFile(null);
   }, []);
@@ -1027,7 +1029,8 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
     setSessions(prev => prev.filter(s => s.id !== id));
     if (activeSessionId === id) {
       setActiveSessionId(null);
-      setShowPreview(false);
+      setShowPreview(true);
+      setPreviewMaximized(false);
       setShowExplorer(false);
     }
   }, [activeSessionId]);
@@ -1130,9 +1133,9 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
 
   return (
     <div className="flex h-full bg-background select-none relative">
-      {/* ===== Left: History Sidebar (compact) ===== */}
+      {/* ===== Left: History Sidebar (compact) — auto-hides when artifact maximized ===== */}
       <AnimatePresence initial={false}>
-        {historySidebar.isCompact && (
+        {historySidebar.isCompact && !previewMaximized && (
           <motion.div
             initial={{ width: 0, opacity: 0 }}
             animate={{ width: 220, opacity: 1 }}
@@ -1164,7 +1167,14 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
       </AnimatePresence>
 
       {/* ===== Right: Header + Content ===== */}
-      <div className="flex flex-col flex-1 min-w-0 min-h-0 relative">
+      <div
+        className="flex flex-col min-w-0 min-h-0 relative flex-shrink-0"
+        style={
+          showPreview
+            ? { width: previewMaximized ? 330 : 480, flex: '0 0 auto' }
+            : { flex: '1 1 0%' }
+        }
+      >
         {/* ===== Header ===== */}
         <header className="flex items-center justify-between px-3 border-b border-transparent flex-shrink-0 h-[40px]">
           <div className="flex items-center gap-1.5">
@@ -1223,13 +1233,6 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
               </PopoverContent>
             </Popover>
 
-          {/* WorkDir — always visible */}
-          <div className="w-px h-3.5 bg-border/30" />
-          <Button variant="ghost" size="xs" className="gap-1.5 px-1.5 text-xs text-muted-foreground hover:text-foreground hover:bg-accent/15 font-mono">
-            <FolderOpen size={9} />
-            {sessionData.workDir || '~/projects'}
-          </Button>
-
           {/* Session-specific controls — only when working */}
           {hasMessages && (
             <div className="flex items-center gap-1.5">
@@ -1263,17 +1266,6 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
           )}
 
 
-          {/* Show preview panel — when preview is hidden */}
-          {!showPreview && (
-            <div className="flex items-center gap-0.5">
-              <div className="w-px h-3.5 bg-border/30 mx-0.5" />
-              <Tooltip content={"\u663e\u793a\u9884\u89c8\u9762\u677f"} side="bottom"><Button variant="ghost" size="icon-xs" onClick={() => { setShowPreview(true); }}
-                className="p-1.5 w-auto h-auto text-muted-foreground hover:text-foreground hover:bg-accent/15">
-                <Columns2 size={12} />
-              </Button></Tooltip>
-            </div>
-          )}
-
           {hasMessages && (
             <div className="flex items-center gap-0.5">
               <div className="w-px h-3.5 bg-border/30 mx-0.5" />
@@ -1285,104 +1277,95 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
         </div>
       </header>
 
-      {/* ===== Main Content ===== */}
-      <div className="flex flex-1 min-h-0 pl-2">
-
-        {!previewMaximized && (
-          !hasMessages ? (
-            <div
-              className={`min-h-0 h-full ${showPreview ? 'flex-shrink-0' : 'flex-1'}`}
-              style={showPreview ? { width: 330 } : undefined}
-            >
-              <NewSessionEmpty onSendMessage={handleSendMessage} agentName={selectedAgent.name} />
-            </div>
+      {/* ===== Main Content (chat panel only — artifact moved out) ===== */}
+      <div className="flex flex-1 min-h-0 pl-2 min-w-0">
+        <div className="min-h-0 h-full flex-1 min-w-0">
+          {!hasMessages ? (
+            <NewSessionEmpty onSendMessage={handleSendMessage} agentName={selectedAgent.name} />
           ) : (
-            <div
-              className={`min-h-0 h-full ${showPreview ? 'flex-shrink-0' : 'flex-1'}`}
-              style={showPreview ? { width: 330 } : undefined}
-            >
-              <ChatPanel
-                messages={messages}
-                steps={sessionData.steps}
-                onSendMessage={handleSendMessage}
-                onResolveUI={handleResolveUI}
-                onAvatarClick={() => setShowAgentInfo(true)}
+            <ChatPanel
+              messages={messages}
+              steps={sessionData.steps}
+              onSendMessage={handleSendMessage}
+              onResolveUI={handleResolveUI}
+              onAvatarClick={() => setShowAgentInfo(true)}
+            />
+          )}
+        </div>
+      </div>
+      </div>
+
+      {/* ===== Artifact Panel — moved to outer level, side-by-side with title section ===== */}
+      <AnimatePresence initial={false}>
+        {showPreview && (
+          <motion.div
+            initial={{ opacity: 0, marginLeft: -8 }}
+            animate={{ opacity: 1, marginLeft: 0 }}
+            exit={{ opacity: 0, marginLeft: -8 }}
+            transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
+            className="flex flex-1 min-w-0 my-1.5 mr-1 rounded-2xl border border-border/40 bg-card/50 shadow-sm shadow-black/5 overflow-hidden"
+          >
+            <AnimatePresence initial={false}>
+              {showExplorer && (
+                <motion.div
+                  initial={{ width: 0, opacity: 0 }}
+                  animate={{ width: 200, opacity: 1 }}
+                  exit={{ width: 0, opacity: 0 }}
+                  transition={{ duration: 0.15, ease: [0.4, 0, 0.2, 1] }}
+                  className="border-r border-border/30 flex-shrink-0 overflow-hidden"
+                >
+                  <FileExplorer
+                    files={sessionData.files.length > 0 ? sessionData.files : DEFAULT_INITIAL_FILES}
+                    outputFiles={sessionData.outputFiles}
+                    selectedFile={selectedFile}
+                    onSelectFile={handleSelectFile}
+                  />
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            <div className="flex-1 min-w-0 overflow-hidden">
+              <ArtifactViewer
+                fileContent={fileContent}
+                fileName={selectedFile}
+                previewUrl={null}
+                hasArtifact={!!sessionData.previewHtml || !!fileContent}
+                previewHtml={sessionData.previewHtml}
+                showExplorer={showExplorer}
+                onToggleExplorer={() => setShowExplorer(!showExplorer)}
+                showPreview={showPreview}
+                onTogglePreview={() => setPreviewMaximized(false)}
+                maximized={previewMaximized}
+                onToggleMaximize={() => setPreviewMaximized(!previewMaximized)}
               />
             </div>
-          )
+          </motion.div>
         )}
+      </AnimatePresence>
 
-        <AnimatePresence initial={false}>
-          {showPreview && (
-            <motion.div
-              initial={{ opacity: 0, marginLeft: -8 }}
-              animate={{ opacity: 1, marginLeft: 0 }}
-              exit={{ opacity: 0, marginLeft: -8 }}
-              transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
-              className="flex flex-1 min-w-0 my-1.5 mr-1 rounded-2xl border border-border/40 bg-card/50 shadow-sm shadow-black/5 overflow-hidden"
-            >
-              <AnimatePresence initial={false}>
-                {showExplorer && (
-                  <motion.div
-                    initial={{ width: 0, opacity: 0 }}
-                    animate={{ width: 200, opacity: 1 }}
-                    exit={{ width: 0, opacity: 0 }}
-                    transition={{ duration: 0.15, ease: [0.4, 0, 0.2, 1] }}
-                    className="border-r border-border/30 flex-shrink-0 overflow-hidden"
-                  >
-                    <FileExplorer
-                      files={sessionData.files.length > 0 ? sessionData.files : DEFAULT_INITIAL_FILES}
-                      outputFiles={sessionData.outputFiles}
-                      selectedFile={selectedFile}
-                      onSelectFile={handleSelectFile}
-                    />
-                  </motion.div>
-                )}
-              </AnimatePresence>
-
-              <div className="flex-1 min-w-0 overflow-hidden">
-                <ArtifactViewer
-                  fileContent={fileContent}
-                  fileName={selectedFile}
-                  previewUrl={null}
-                  hasArtifact={!!sessionData.previewHtml || !!fileContent}
-                  previewHtml={sessionData.previewHtml}
-                  showExplorer={showExplorer}
-                  onToggleExplorer={() => setShowExplorer(!showExplorer)}
-                  showPreview={showPreview}
-                  onTogglePreview={() => setShowPreview(!showPreview)}
-                  maximized={previewMaximized}
-                  onToggleMaximize={() => setPreviewMaximized(!previewMaximized)}
-                />
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* Docked History */}
-        <AnimatePresence initial={false}>
-          {historySidebar.isExpanded && historyDisplayMode === 'docked' && (
-            <motion.div
-              initial={{ width: 0, opacity: 0 }}
-              animate={{ width: 480, opacity: 1 }}
-              exit={{ width: 0, opacity: 0 }}
-              transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
-              className="flex-shrink-0 min-w-0 border-l border-border/30 overflow-hidden"
-            >
-              <SessionHistoryPage
-                sessions={sessions}
-                activeSessionId={activeSessionId}
-                onSelectSession={handleSelectSession}
-                onDeleteSession={handleDeleteSession}
-                onUpdateSession={handleUpdateSession}
-                onClose={() => historySidebar.collapse()}
-                displayMode={historyDisplayMode}
-                onDisplayModeChange={setHistoryDisplayMode}
-              />
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
+      {/* Docked History */}
+      <AnimatePresence initial={false}>
+        {historySidebar.isExpanded && historyDisplayMode === 'docked' && (
+          <motion.div
+            initial={{ width: 0, opacity: 0 }}
+            animate={{ width: 480, opacity: 1 }}
+            exit={{ width: 0, opacity: 0 }}
+            transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
+            className="flex-shrink-0 min-w-0 border-l border-border/30 overflow-hidden"
+          >
+            <SessionHistoryPage
+              sessions={sessions}
+              activeSessionId={activeSessionId}
+              onSelectSession={handleSelectSession}
+              onDeleteSession={handleDeleteSession}
+              onUpdateSession={handleUpdateSession}
+              onClose={() => historySidebar.collapse()}
+              displayMode={historyDisplayMode}
+              onDisplayModeChange={setHistoryDisplayMode}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* ===== History Floating Overlay ===== */}
       <AnimatePresence>
@@ -1410,7 +1393,6 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
           />
         )}
       </AnimatePresence>
-      </div>
     </div>
   );
 }

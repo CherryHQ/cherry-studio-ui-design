@@ -212,11 +212,11 @@ export function ArtifactViewer({ fileContent, fileName, previewUrl, hasArtifact,
             </div>
           )}
 
-          {/* Close preview panel */}
-          {onTogglePreview && (
+          {/* Close button — only shown when maximized; restores normal layout */}
+          {onTogglePreview && maximized && (
             <div className="flex items-center">
               <div className="w-px h-3 bg-border/30 mx-1" />
-              <Tooltip content="关闭预览" side="bottom"><Button variant="ghost" size="icon-xs" onClick={onTogglePreview}
+              <Tooltip content="退出全屏" side="bottom"><Button variant="ghost" size="icon-xs" onClick={onTogglePreview}
                 className="text-muted-foreground hover:text-foreground hover:bg-accent/15">
                 <X size={11} />
               </Button></Tooltip>

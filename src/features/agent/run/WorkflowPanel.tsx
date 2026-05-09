@@ -154,7 +154,7 @@ function ProcessDetail({ step }: { step: WorkflowStep }) {
 // ===========================
 
 export function WorkflowPanel({ steps }: { steps: WorkflowStep[] }) {
-  const [panelExpanded, setPanelExpanded] = useState(true);
+  const [panelExpanded, setPanelExpanded] = useState(false);
   const [processExpanded, setProcessExpanded] = useState(false);
   const doneCount = steps.filter(s => s.status === 'done').length;
   const hasAnyProcess = steps.some(s => s.description || (s.details && s.details.length > 0));
