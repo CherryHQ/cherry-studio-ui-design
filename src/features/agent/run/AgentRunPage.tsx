@@ -1011,7 +1011,7 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
   const [showModelPicker, setShowModelPicker] = useState(false);
   const [selectedModel, setSelectedModel] = useState(MODELS[0]);
   const [showExplorer, setShowExplorer] = useState(false);
-  const [showPreview, setShowPreview] = useState(true);
+  const [showPreview, setShowPreview] = useState(false);
   const historySidebar = useHistorySidebar('compact');
   const [historyDisplayMode, setHistoryDisplayMode] = useState<SessionDisplayMode>('floating');
   const [selectedAgent, setSelectedAgent] = useState(AVAILABLE_AGENTS[0]);
