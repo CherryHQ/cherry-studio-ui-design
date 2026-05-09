@@ -14,7 +14,7 @@ import {
   Compass, Wrench, PenTool, Bolt, Filter, Pin, ArrowDown,
   Paperclip, Globe, Brain, Pencil, PanelLeftOpen, PanelLeftClose,
   SquarePlus, RefreshCw, TerminalSquare, Lightbulb, Scan, Languages,
-  Hand, ShieldAlert, Eye, MoreHorizontal,
+  Hand, ShieldAlert, Unlock, MoreHorizontal,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Tooltip } from '@/app/components/Tooltip';
@@ -310,8 +310,8 @@ function CompactInputBar({ onSendMessage, agentName }: { onSendMessage: (text: s
 const NEW_PERMISSION_MODES: { id: string; label: string; icon: React.ComponentType<{ size?: number; className?: string; strokeWidth?: number }> }[] = [
   { id: 'default', label: '默认权限', icon: Hand },
   { id: 'plan', label: '计划模式', icon: Compass },
-  { id: 'auto-edit', label: '自动编辑', icon: Eye },
-  { id: 'bypass', label: '完全访问', icon: ShieldAlert },
+  { id: 'auto-edit', label: '自动编辑', icon: Pencil },
+  { id: 'bypass', label: '完全访问', icon: Unlock },
 ];
 
 const NEW_PROJECTS: { id: string; label: string }[] = [

@@ -4,7 +4,7 @@ import {
   Globe, Hammer, Brain, MoreHorizontal,
   Maximize2, RotateCcw, ChevronDown,
   TerminalSquare, Zap, Lightbulb,
-  ArrowUp, Languages, Check, Hand, ShieldAlert, Eye, Compass,
+  ArrowUp, Languages, Check, Hand, ShieldAlert, Pencil, Compass, Unlock,
 } from 'lucide-react';
 import {
   Button, Textarea,
@@ -44,8 +44,8 @@ const PLUS_MENU_SECONDARY = [
 const PERMISSION_MODES: { id: string; label: string; desc: string; icon: React.ComponentType<{ size?: number; className?: string; strokeWidth?: number }> }[] = [
   { id: 'default', label: '默认权限', desc: '编辑或执行命令前会询问', icon: Hand },
   { id: 'plan', label: '计划模式', desc: '只读规划，不编辑文件、不执行命令', icon: Compass },
-  { id: 'auto-edit', label: '自动编辑', desc: '自动读写文件，执行命令前询问', icon: Eye },
-  { id: 'bypass', label: '完全访问', desc: '可执行任何操作，请谨慎使用', icon: ShieldAlert },
+  { id: 'auto-edit', label: '自动编辑', desc: '自动读写文件，执行命令前询问', icon: Pencil },
+  { id: 'bypass', label: '完全访问', desc: '可执行任何操作，请谨慎使用', icon: Unlock },
 ];
 
 // ===========================

@@ -29,7 +29,7 @@ export interface HistoryItem {
 type GroupByMode = 'none' | 'status' | 'group' | 'time' | 'custom' | 'assistant' | 'tag';
 
 const GROUP_BY_OPTIONS: { key: GroupByMode; label: string }[] = [
-  { key: 'group', label: '工作目录' },
+  { key: 'group', label: '项目文件' },
   { key: 'status', label: '状态' },
   { key: 'time', label: '时间' },
 ];
@@ -38,6 +38,7 @@ const TOPIC_GROUP_BY_OPTIONS: { key: GroupByMode; label: string }[] = [
   { key: 'time', label: '时间' },
   { key: 'assistant', label: '助手' },
   { key: 'tag', label: '标签' },
+  { key: 'group', label: '项目文件' },
 ];
 
 const STATUS_LABELS: Record<string, string> = {
