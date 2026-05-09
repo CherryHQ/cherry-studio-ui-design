@@ -286,76 +286,73 @@ export function PermissionApprovalCard({
   const Icon = cfg.icon;
   const isPending = request.status === 'pending';
 
+  const hasParams = request.params && request.params.length > 0;
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 4 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.15 }}
-      className={`my-1.5 rounded-lg border ${cfg.ringClass} bg-card/40 overflow-hidden`}
+      className={`my-1 max-w-[440px] rounded-md border ${cfg.ringClass} bg-card/40 overflow-hidden`}
     >
-      {/* Header */}
-      <div className="flex items-center gap-2 px-3 py-2">
-        <Icon size={13} className={`flex-shrink-0 ${cfg.iconClass}`} />
-        <div className="flex-1 min-w-0 flex items-center gap-1.5">
-          <span className="text-xs text-foreground">权限请求</span>
-          <span className="text-muted-foreground/40">·</span>
-          <span className="text-xs text-foreground/80 font-mono truncate">{request.toolName}</span>
-        </div>
-        <span className={`text-xs px-1.5 py-[1px] rounded border ${cfg.badgeClass} flex-shrink-0`}>
+      {/* Compact single-row header with inline actions */}
+      <div className="flex items-center gap-1.5 px-2 py-1">
+        <Icon size={11} className={`flex-shrink-0 ${cfg.iconClass}`} />
+        <span className="text-xs text-foreground/80 font-mono truncate flex-1 min-w-0">{request.toolName}</span>
+        <span className={`text-[10px] leading-[14px] px-1 rounded border ${cfg.badgeClass} flex-shrink-0`}>
           {cfg.label}
         </span>
-      </div>
-
-      {/* Description */}
-      {request.toolDescription && (
-        <div className="px-3 pb-1 text-xs text-muted-foreground leading-[1.65]">
-          {request.toolDescription}
-        </div>
-      )}
-
-      {/* Params toggle */}
-      {request.params && request.params.length > 0 && (
-        <>
+        {hasParams && (
           <button
             onClick={() => setExpanded(v => !v)}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-muted-foreground/70 hover:text-foreground transition-colors"
+            className="p-0.5 rounded text-muted-foreground/60 hover:text-foreground hover:bg-accent/15 transition-colors flex-shrink-0"
+            title={expanded ? '收起' : '展开'}
           >
-            <ChevronRight size={9} className={`transition-transform duration-100 ${expanded ? 'rotate-90' : ''}`} />
-            <span>{expanded ? '收起参数' : '查看参数'}</span>
-            <span className="text-muted-foreground/40">({request.params.length})</span>
+            <ChevronRight size={10} className={`transition-transform duration-100 ${expanded ? 'rotate-90' : ''}`} />
           </button>
-          <AnimatePresence initial={false}>
-            {expanded && (
-              <motion.div
-                initial={{ height: 0, opacity: 0 }}
-                animate={{ height: 'auto', opacity: 1 }}
-                exit={{ height: 0, opacity: 0 }}
-                transition={{ duration: 0.12 }}
-                className="overflow-hidden"
-              >
-                <div className="px-3 pb-2 space-y-1">
-                  {request.params.map(p => (
-                    <div key={p.label} className="flex gap-2 text-xs">
+        )}
+      </div>
+
+      {/* Expandable details (description + params) */}
+      <AnimatePresence initial={false}>
+        {expanded && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.12 }}
+            className="overflow-hidden"
+          >
+            <div className="px-2 pb-1.5 space-y-1 border-t border-border/30 pt-1.5">
+              {request.toolDescription && (
+                <div className="text-[11px] text-muted-foreground leading-[1.55]">
+                  {request.toolDescription}
+                </div>
+              )}
+              {hasParams && (
+                <div className="space-y-0.5">
+                  {request.params!.map(p => (
+                    <div key={p.label} className="flex gap-1.5 text-[11px]">
                       <span className="text-muted-foreground/60 flex-shrink-0">{p.label}</span>
                       <span className="text-foreground font-mono break-all">{p.value}</span>
                     </div>
                   ))}
                 </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </>
-      )}
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-      {/* Actions */}
-      <div className="flex items-center gap-1 px-2 pb-2 pt-1 border-t border-border/30">
+      {/* Actions row — compact inline */}
+      <div className="flex items-center gap-0.5 px-1 pb-1 pt-0.5">
         {isPending ? (
           <>
             <Button
               variant="ghost"
-              size="xs"
+              size="inline"
               onClick={() => onResolve('deny')}
-              className="px-2.5 text-xs text-muted-foreground hover:text-destructive hover:bg-destructive/8"
+              className="px-2 py-[2px] text-[11px] text-muted-foreground hover:text-destructive hover:bg-destructive/8 rounded"
             >
               拒绝
             </Button>
@@ -363,32 +360,32 @@ export function PermissionApprovalCard({
             {request.allowAutoApprove && (
               <Button
                 variant="ghost"
-                size="xs"
+                size="inline"
                 onClick={() => onResolve('allow-always')}
-                className="px-2.5 text-xs text-muted-foreground hover:text-foreground hover:bg-accent/15"
+                className="px-2 py-[2px] text-[11px] text-muted-foreground hover:text-foreground hover:bg-accent/15 rounded"
               >
                 始终允许
               </Button>
             )}
             <Button
               variant="default"
-              size="xs"
+              size="inline"
               onClick={() => onResolve('allow')}
-              className="px-3 text-xs"
+              className="px-2.5 py-[2px] text-[11px] rounded"
             >
               允许
             </Button>
           </>
         ) : (
-          <div className="flex items-center gap-1.5 px-1 py-0.5 text-xs">
+          <div className="flex items-center gap-1 px-1.5 py-[2px] text-[11px]">
             {request.status === 'approved' ? (
               <>
-                <Check size={11} className="text-success" />
-                <span className="text-muted-foreground">已允许执行</span>
+                <Check size={9} className="text-success" />
+                <span className="text-muted-foreground">已允许</span>
               </>
             ) : (
               <>
-                <X size={11} className="text-destructive" />
+                <X size={9} className="text-destructive" />
                 <span className="text-muted-foreground">已拒绝</span>
               </>
             )}
