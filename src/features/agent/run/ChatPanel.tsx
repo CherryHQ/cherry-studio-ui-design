@@ -2,9 +2,9 @@ import React, { useState, useMemo, useRef } from 'react';
 import {
   Plus, Paperclip, Code2, FolderOpen, Folder, FolderPlus, FolderX, FileText, AtSign,
   Globe, Hammer, Brain, MoreHorizontal,
-  Maximize2, RotateCcw, ChevronDown,
+  Maximize2, RotateCcw, RefreshCw, ChevronDown,
   TerminalSquare, Zap, Lightbulb,
-  ArrowUp, Languages, Check, Hand, ShieldAlert, Pencil, Compass, Unlock,
+  ArrowUp, Languages, Check, Hand, ShieldAlert, Pencil, Compass,
 } from 'lucide-react';
 import {
   Button, Textarea,
@@ -45,7 +45,7 @@ const PERMISSION_MODES: { id: string; label: string; desc: string; icon: React.C
   { id: 'default', label: '默认权限', desc: '编辑或执行命令前会询问', icon: Hand },
   { id: 'plan', label: '计划模式', desc: '只读规划，不编辑文件、不执行命令', icon: Compass },
   { id: 'auto-edit', label: '自动编辑', desc: '自动读写文件，执行命令前询问', icon: Pencil },
-  { id: 'bypass', label: '完全访问', desc: '可执行任何操作，请谨慎使用', icon: Unlock },
+  { id: 'bypass', label: '完全访问', desc: '可执行任何操作，请谨慎使用', icon: RefreshCw },
 ];
 
 // ===========================

@@ -14,7 +14,7 @@ import {
   Compass, Wrench, PenTool, Bolt, Filter, Pin, ArrowDown,
   Paperclip, Globe, Brain, Pencil, PanelLeftOpen, PanelLeftClose,
   SquarePlus, RefreshCw, TerminalSquare, Lightbulb, Scan, Languages,
-  Hand, ShieldAlert, Unlock, MoreHorizontal,
+  Hand, ShieldAlert, MoreHorizontal,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Tooltip } from '@/app/components/Tooltip';
@@ -311,7 +311,7 @@ const NEW_PERMISSION_MODES: { id: string; label: string; icon: React.ComponentTy
   { id: 'default', label: '默认权限', icon: Hand },
   { id: 'plan', label: '计划模式', icon: Compass },
   { id: 'auto-edit', label: '自动编辑', icon: Pencil },
-  { id: 'bypass', label: '完全访问', icon: Unlock },
+  { id: 'bypass', label: '完全访问', icon: RefreshCw },
 ];
 
 const NEW_PROJECTS: { id: string; label: string }[] = [
