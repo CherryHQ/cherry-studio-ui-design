@@ -24,11 +24,15 @@ export type AgentMcpService = {
   status: 'connected' | 'disconnected';
 };
 
+export type AgentSkillSource = 'builtin' | 'custom' | 'market';
+
 export type AgentSkillItem = {
   id: string;
   name: string;
   desc: string;
   enabled: boolean;
+  /** Where this skill comes from — affects the badge shown next to the name */
+  source?: AgentSkillSource;
 };
 
 import type { ModelCapability } from '@/app/types/chat';
@@ -125,18 +129,18 @@ export const MCP_CATALOG: AgentMcpService[] = [
 ];
 
 export const SKILLS_CATALOG: AgentSkillItem[] = [
-  { id: 'sk-1', name: '代码生成', desc: '根据需求生成高质量代码', enabled: true },
-  { id: 'sk-2', name: '代码审查', desc: '自动审查代码质量与安全', enabled: false },
-  { id: 'sk-3', name: '文档生成', desc: '自动生成项目文档', enabled: true },
-  { id: 'sk-4', name: '数据分析', desc: '统计分析与数据洞察', enabled: false },
-  { id: 'sk-5', name: '网页搜索', desc: '实时搜索互联网信息', enabled: true },
-  { id: 'sk-6', name: '图表生成', desc: '可视化数据图表', enabled: true },
-  { id: 'sk-7', name: '数据清洗', desc: '数据预处理与转换', enabled: false },
-  { id: 'sk-8', name: 'API 测试', desc: '接口自动化测试', enabled: false },
-  { id: 'sk-9', name: 'SQL 查询', desc: '数据库查询与优化', enabled: true },
-  { id: 'sk-10', name: '翻译', desc: '多语言文本翻译', enabled: false },
-  { id: 'sk-11', name: '摘要提取', desc: '长文本智能摘要', enabled: false },
-  { id: 'sk-12', name: '图片识别', desc: '图像内容分析', enabled: false },
+  { id: 'sk-1', name: '代码生成', desc: '根据需求生成高质量代码', enabled: true, source: 'builtin' },
+  { id: 'sk-2', name: '代码审查', desc: '自动审查代码质量与安全', enabled: false, source: 'builtin' },
+  { id: 'sk-3', name: '文档生成', desc: '自动生成项目文档', enabled: true, source: 'builtin' },
+  { id: 'sk-4', name: '数据分析', desc: '统计分析与数据洞察', enabled: false, source: 'builtin' },
+  { id: 'sk-5', name: '网页搜索', desc: '实时搜索互联网信息', enabled: true, source: 'builtin' },
+  { id: 'sk-6', name: '图表生成', desc: '可视化数据图表', enabled: true, source: 'custom' },
+  { id: 'sk-7', name: '数据清洗', desc: '数据预处理与转换', enabled: false, source: 'custom' },
+  { id: 'sk-8', name: 'API 测试', desc: '接口自动化测试', enabled: false, source: 'custom' },
+  { id: 'sk-9', name: 'SQL 查询', desc: '数据库查询与优化', enabled: true, source: 'market' },
+  { id: 'sk-10', name: '翻译', desc: '多语言文本翻译', enabled: false, source: 'market' },
+  { id: 'sk-11', name: '摘要提取', desc: '长文本智能摘要', enabled: false, source: 'market' },
+  { id: 'sk-12', name: '图片识别', desc: '图像内容分析', enabled: false, source: 'market' },
 ];
 
 export const BUILTIN_TOOL_CATEGORIES = ['执行环境', '计算资源', '文件操作', '网络与数据', '开发工具'];

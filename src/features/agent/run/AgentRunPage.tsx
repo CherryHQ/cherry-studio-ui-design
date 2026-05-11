@@ -873,6 +873,8 @@ function AgentInfoPanel({ agent, onClose, onEdit }: {
   const [promptExpanded, setPromptExpanded] = useState(false);
   const [capTab, setCapTab] = useState<CapTab>('tools');
   const [showAddPanel, setShowAddPanel] = useState(false);
+  const [collapsedToolCats, setCollapsedToolCats] = useState<Set<string>>(new Set());
+  const [skillSourceFilter, setSkillSourceFilter] = useState<'all' | 'builtin' | 'custom' | 'market'>('all');
   const modeInfo = RUN_MODE_LABELS[agent.runMode] || RUN_MODE_LABELS.auto;
   const builtinTools = agent.builtinTools || [];
   const mcpServices = agent.mcpServices || [];
@@ -1081,27 +1083,51 @@ function AgentInfoPanel({ agent, onClose, onEdit }: {
                     className="py-5"
                   />
                 ) : (
-                  <div className="space-y-3">
+                  <div className="space-y-1">
                     {Array.from(toolsByCategory.entries()).map(([cat, items]) => {
                       const catEnabled = items.filter(t => t.enabled).length;
+                      const isCollapsed = collapsedToolCats.has(cat);
                       return (
                         <div key={cat}>
-                          <div className="flex items-center justify-between mb-1 px-0.5">
-                            <span className="text-xs text-muted-foreground/40">{cat}</span>
-                            <span className="text-xs text-muted-foreground/50">{catEnabled}/{items.length}</span>
-                          </div>
-                          <div className="grid grid-cols-2 gap-x-2 gap-y-0.5">
-                            {items.map(tool => (
-                              <div key={tool.id} className="flex items-center gap-2 px-2 py-[6px] rounded-md hover:bg-accent/15 transition-colors group">
-                                <Wrench size={10} className={`flex-shrink-0 ${tool.enabled ? 'text-muted-foreground/60' : 'text-muted-foreground/50'}`} />
-                                <div className="flex-1 min-w-0">
-                                  <div className={`text-sm truncate ${tool.enabled ? 'text-foreground' : 'text-muted-foreground/50'}`}>{tool.name}</div>
-                                  <div className="text-xs text-muted-foreground/50 truncate">{tool.desc}</div>
+                          <button
+                            type="button"
+                            onClick={() => setCollapsedToolCats(prev => {
+                              const next = new Set(prev);
+                              if (next.has(cat)) next.delete(cat); else next.add(cat);
+                              return next;
+                            })}
+                            className="flex items-center justify-between w-full mb-1 px-0.5 py-1 rounded hover:bg-accent/15 transition-colors"
+                          >
+                            <div className="flex items-center gap-1">
+                              <ChevronRight size={9} className={`text-muted-foreground/50 transition-transform duration-100 ${isCollapsed ? '' : 'rotate-90'}`} />
+                              <span className="text-xs text-muted-foreground/60">{cat}</span>
+                            </div>
+                            <span className="text-xs text-muted-foreground/50 tabular-nums">{catEnabled}/{items.length}</span>
+                          </button>
+                          <AnimatePresence initial={false}>
+                            {!isCollapsed && (
+                              <motion.div
+                                initial={{ height: 0, opacity: 0 }}
+                                animate={{ height: 'auto', opacity: 1 }}
+                                exit={{ height: 0, opacity: 0 }}
+                                transition={{ duration: 0.12 }}
+                                className="overflow-hidden"
+                              >
+                                <div className="space-y-0.5">
+                                  {items.map(tool => (
+                                    <div key={tool.id} className="flex items-center gap-2 px-2 py-[6px] rounded-md hover:bg-accent/15 transition-colors group">
+                                      <Wrench size={10} className={`flex-shrink-0 ${tool.enabled ? 'text-muted-foreground/60' : 'text-muted-foreground/50'}`} />
+                                      <div className="flex-1 min-w-0">
+                                        <div className={`text-sm truncate ${tool.enabled ? 'text-foreground' : 'text-muted-foreground/50'}`}>{tool.name}</div>
+                                        <div className="text-xs text-muted-foreground/50 truncate">{tool.desc}</div>
+                                      </div>
+                                      <Switch size="sm" checked={tool.enabled} onCheckedChange={() => {}} />
+                                    </div>
+                                  ))}
                                 </div>
-                                <Switch size="sm" checked={tool.enabled} onCheckedChange={() => {}} />
-                              </div>
-                            ))}
-                          </div>
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
                         </div>
                       );
                     })}
@@ -1128,12 +1154,15 @@ function AgentInfoPanel({ agent, onClose, onEdit }: {
                           <Cable size={11} className="text-info/60" />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <div className="text-sm text-foreground truncate">{svc.name}</div>
+                          <div className="flex items-center gap-1.5">
+                            <div className="text-sm text-foreground truncate">{svc.name}</div>
+                            <span className={`w-[5px] h-[5px] rounded-full flex-shrink-0 ${
+                              svc.status === 'connected' ? 'bg-success' : 'bg-muted-foreground/30'
+                            }`} />
+                          </div>
                           <div className="text-xs text-muted-foreground/50 truncate">{svc.desc}</div>
                         </div>
-                        <span className={`w-[6px] h-[6px] rounded-full flex-shrink-0 ${
-                          svc.status === 'connected' ? 'bg-cherry-primary' : 'bg-muted-foreground/30'
-                        }`} />
+                        <Switch size="sm" checked={svc.status === 'connected'} onCheckedChange={() => {}} />
                       </div>
                     ))}
                   </div>
@@ -1152,17 +1181,63 @@ function AgentInfoPanel({ agent, onClose, onEdit }: {
                     className="py-5"
                   />
                 ) : (
-                  <div className="space-y-0.5">
-                    {skills.map(skill => (
-                      <div key={skill.id} className="flex items-center gap-2.5 px-2.5 py-[7px] rounded-lg hover:bg-accent/15 transition-colors">
-                        <Zap size={10} className={`flex-shrink-0 ${skill.enabled ? 'text-warning/60' : 'text-muted-foreground/50'}`} />
-                        <div className="flex-1 min-w-0">
-                          <div className={`text-sm truncate ${skill.enabled ? 'text-foreground' : 'text-muted-foreground/40'}`}>{skill.name}</div>
-                          <div className="text-xs text-muted-foreground/50 truncate">{skill.desc}</div>
-                        </div>
-                        <Switch size="sm" checked={skill.enabled} onCheckedChange={() => {}} />
-                      </div>
-                    ))}
+                  <div className="space-y-1.5">
+                    {/* Source filter tabs */}
+                    <div className="flex items-center gap-0.5 px-0.5">
+                      {([
+                        { id: 'all', label: '全部' },
+                        { id: 'builtin', label: '内置' },
+                        { id: 'custom', label: '自定义' },
+                        { id: 'market', label: '市场' },
+                      ] as const).map(t => {
+                        const count = t.id === 'all'
+                          ? skills.length
+                          : skills.filter(s => (s.source ?? 'builtin') === t.id).length;
+                        const isActive = skillSourceFilter === t.id;
+                        return (
+                          <button
+                            key={t.id}
+                            type="button"
+                            onClick={() => setSkillSourceFilter(t.id)}
+                            className={`flex items-center gap-1 px-2 py-[3px] rounded-md text-xs transition-colors ${
+                              isActive
+                                ? 'bg-accent/40 text-foreground'
+                                : 'text-muted-foreground/60 hover:text-foreground hover:bg-accent/15'
+                            }`}
+                          >
+                            <span>{t.label}</span>
+                            <span className={`text-[10px] tabular-nums ${isActive ? 'text-muted-foreground/70' : 'text-muted-foreground/40'}`}>{count}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                    <div className="space-y-0.5">
+                      {skills
+                        .filter(s => skillSourceFilter === 'all' || (s.source ?? 'builtin') === skillSourceFilter)
+                        .map(skill => {
+                          const source = skill.source ?? 'builtin';
+                          const sourceCfg = {
+                            builtin: { label: '内置', cls: 'bg-foreground/8 text-muted-foreground' },
+                            custom: { label: '自定义', cls: 'bg-accent-blue-muted text-accent-blue' },
+                            market: { label: '市场', cls: 'bg-accent-violet-muted text-accent-violet' },
+                          }[source];
+                          return (
+                            <div key={skill.id} className="flex items-center gap-2.5 px-2.5 py-[7px] rounded-lg hover:bg-accent/15 transition-colors">
+                              <Zap size={10} className={`flex-shrink-0 ${skill.enabled ? 'text-warning/60' : 'text-muted-foreground/50'}`} />
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-1.5">
+                                  <div className={`text-sm truncate ${skill.enabled ? 'text-foreground' : 'text-muted-foreground/40'}`}>{skill.name}</div>
+                                  <span className={`text-[10px] leading-[14px] px-1 rounded ${sourceCfg.cls} flex-shrink-0`}>
+                                    {sourceCfg.label}
+                                  </span>
+                                </div>
+                                <div className="text-xs text-muted-foreground/50 truncate">{skill.desc}</div>
+                              </div>
+                              <Switch size="sm" checked={skill.enabled} onCheckedChange={() => {}} />
+                            </div>
+                          );
+                        })}
+                    </div>
                   </div>
                 )
               )}
