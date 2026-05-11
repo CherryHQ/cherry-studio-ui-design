@@ -520,22 +520,36 @@ export function ChatPanel({
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent side="top" align="start" className="w-48">
-                  {/* Permission modes — folded into + */}
-                  {PERMISSION_MODES.map(mode => {
-                    const Icon = mode.icon;
-                    const isActive = activeMode === mode.id;
+                  {/* Permission modes — cascaded submenu */}
+                  {(() => {
+                    const active = PERMISSION_MODES.find(m => m.id === activeMode) ?? PERMISSION_MODES[0];
+                    const ActiveIcon = active.icon;
                     return (
-                      <DropdownMenuItem
-                        key={mode.id}
-                        onClick={() => setActiveMode(mode.id)}
-                        className={`gap-2 px-2 py-[5px] text-xs ${isActive ? 'bg-accent/40' : ''}`}
-                      >
-                        <Icon size={13} strokeWidth={1.5} className={`flex-shrink-0 ${mode.color}`} />
-                        <span className="flex-1 text-left">{mode.label}</span>
-                        {isActive && <Check size={11} className="text-foreground flex-shrink-0" />}
-                      </DropdownMenuItem>
+                      <DropdownMenuSub>
+                        <DropdownMenuSubTrigger className="gap-2 px-2 py-[5px] text-xs">
+                          <ActiveIcon size={13} strokeWidth={1.5} className={`flex-shrink-0 ${active.color}`} />
+                          <span className="flex-1 text-left">{active.label}</span>
+                        </DropdownMenuSubTrigger>
+                        <DropdownMenuSubContent>
+                          {PERMISSION_MODES.map(mode => {
+                            const Icon = mode.icon;
+                            const isActive = activeMode === mode.id;
+                            return (
+                              <DropdownMenuItem
+                                key={mode.id}
+                                onClick={() => setActiveMode(mode.id)}
+                                className={`gap-2 px-2 py-[5px] text-xs ${isActive ? 'bg-accent/40' : ''}`}
+                              >
+                                <Icon size={13} strokeWidth={1.5} className={`flex-shrink-0 ${mode.color}`} />
+                                <span className="flex-1 text-left">{mode.label}</span>
+                                {isActive && <Check size={11} className="text-foreground flex-shrink-0" />}
+                              </DropdownMenuItem>
+                            );
+                          })}
+                        </DropdownMenuSubContent>
+                      </DropdownMenuSub>
                     );
-                  })}
+                  })()}
                   <DropdownMenuSeparator />
                   {PLUS_MENU_ITEMS
                     .filter(item => !['code', 'reasoning'].includes(item.id))

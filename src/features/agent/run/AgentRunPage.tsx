@@ -19,7 +19,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Tooltip } from '@/app/components/Tooltip';
-import { Button, Switch, Textarea, EmptyState, Popover, PopoverTrigger, PopoverContent, SearchInput, Typography, BrandLogo, Separator, ScrollArea, DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from '@cherry-studio/ui';
+import { Button, Switch, Textarea, EmptyState, Popover, PopoverTrigger, PopoverContent, SearchInput, Typography, BrandLogo, Separator, ScrollArea, DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuSub, DropdownMenuSubTrigger, DropdownMenuSubContent } from '@cherry-studio/ui';
 import { ModelPickerPanel } from '@/app/components/shared/ModelPickerPanel';
 import { usePinnedAgents } from '@/app/hooks/usePinnedAgents';
 import { FileExplorer } from './FileExplorer';
@@ -458,22 +458,36 @@ function CodexStyleInput({ onSendMessage, autoFocus = false, placeholder }: {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent side="top" align="start" className="w-48">
-                {/* Permission modes — folded into + */}
-                {NEW_PERMISSION_MODES.map(mode => {
-                  const Icon = mode.icon;
-                  const isActive = activeMode === mode.id;
+                {/* Permission modes — cascaded submenu */}
+                {(() => {
+                  const active = NEW_PERMISSION_MODES.find(m => m.id === activeMode) ?? NEW_PERMISSION_MODES[0];
+                  const ActiveIcon = active.icon;
                   return (
-                    <DropdownMenuItem
-                      key={mode.id}
-                      onClick={() => setActiveMode(mode.id)}
-                      className={`gap-2 px-2 py-[5px] text-xs ${isActive ? 'bg-accent/40' : ''}`}
-                    >
-                      <Icon size={13} strokeWidth={1.5} className={`flex-shrink-0 ${mode.color}`} />
-                      <span className="flex-1 text-left">{mode.label}</span>
-                      {isActive && <Check size={11} className="text-foreground flex-shrink-0" />}
-                    </DropdownMenuItem>
+                    <DropdownMenuSub>
+                      <DropdownMenuSubTrigger className="gap-2 px-2 py-[5px] text-xs">
+                        <ActiveIcon size={13} strokeWidth={1.5} className={`flex-shrink-0 ${active.color}`} />
+                        <span className="flex-1 text-left">{active.label}</span>
+                      </DropdownMenuSubTrigger>
+                      <DropdownMenuSubContent>
+                        {NEW_PERMISSION_MODES.map(mode => {
+                          const Icon = mode.icon;
+                          const isActive = activeMode === mode.id;
+                          return (
+                            <DropdownMenuItem
+                              key={mode.id}
+                              onClick={() => setActiveMode(mode.id)}
+                              className={`gap-2 px-2 py-[5px] text-xs ${isActive ? 'bg-accent/40' : ''}`}
+                            >
+                              <Icon size={13} strokeWidth={1.5} className={`flex-shrink-0 ${mode.color}`} />
+                              <span className="flex-1 text-left">{mode.label}</span>
+                              {isActive && <Check size={11} className="text-foreground flex-shrink-0" />}
+                            </DropdownMenuItem>
+                          );
+                        })}
+                      </DropdownMenuSubContent>
+                    </DropdownMenuSub>
                   );
-                })}
+                })()}
                 <DropdownMenuSeparator />
                 <DropdownMenuItem className="gap-2 px-2 py-[5px] text-xs"><Paperclip size={13} strokeWidth={1.5} className="text-muted-foreground flex-shrink-0" /><span className="flex-1 text-left">添加图片或附件</span></DropdownMenuItem>
                 <DropdownMenuItem className="gap-2 px-2 py-[5px] text-xs"><Folder size={13} strokeWidth={1.5} className="text-muted-foreground flex-shrink-0" /><span className="flex-1 text-left">添加文件夹</span></DropdownMenuItem>
