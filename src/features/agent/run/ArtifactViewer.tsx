@@ -4,8 +4,12 @@ import {
   Copy, Check, ChevronDown, ChevronRight, Eye,
   FolderOpen, X,
   Maximize2, Minimize2,
+  MousePointer2, TerminalSquare, FileText, Globe,
 } from 'lucide-react';
-import { Button, EmptyState } from '@cherry-studio/ui';
+import {
+  Button, EmptyState,
+  DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator,
+} from '@cherry-studio/ui';
 import { motion, AnimatePresence } from 'motion/react';
 import { copyToClipboard } from '@/app/utils/clipboard';
 import { Tooltip } from '@/app/components/Tooltip';
@@ -195,6 +199,57 @@ export function ArtifactViewer({ fileContent, fileName, previewUrl, hasArtifact,
               {copied ? '已复制' : '复制'}
             </Button>
           )}
+
+          {/* Open with — split button: Finder + dropdown of local tools */}
+          <div className="flex items-center">
+            <div className="w-px h-3 bg-border/30 mx-1" />
+            <Tooltip content="在 Finder 中显示" side="bottom"><Button variant="ghost" size="icon-xs"
+              className="text-muted-foreground hover:text-foreground">
+              <FolderOpen size={10} className="text-blue-500" />
+            </Button></Tooltip>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon-xs"
+                  className="text-muted-foreground hover:text-foreground -ml-0.5"
+                  title="选择应用打开">
+                  <ChevronDown size={9} />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" side="bottom" className="w-[170px]">
+                <div className="px-2 py-1 text-xs text-muted-foreground/60">使用应用打开</div>
+                <DropdownMenuItem className="gap-2 px-2 py-[5px] text-xs">
+                  <Eye size={12} className="text-muted-foreground/70 flex-shrink-0" />
+                  <span className="flex-1">预览</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem className="gap-2 px-2 py-[5px] text-xs">
+                  <FileText size={12} className="text-info flex-shrink-0" />
+                  <span className="flex-1">WPS Office</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem className="gap-2 px-2 py-[5px] text-xs">
+                  <FileText size={12} className="text-accent-orange flex-shrink-0" />
+                  <span className="flex-1">Microsoft Word</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem className="gap-2 px-2 py-[5px] text-xs">
+                  <Globe size={12} className="text-accent-violet flex-shrink-0" />
+                  <span className="flex-1">浏览器</span>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem className="gap-2 px-2 py-[5px] text-xs">
+                  <MousePointer2 size={12} className="text-foreground flex-shrink-0" />
+                  <span className="flex-1">Cursor</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem className="gap-2 px-2 py-[5px] text-xs">
+                  <TerminalSquare size={12} className="text-muted-foreground/70 flex-shrink-0" />
+                  <span className="flex-1">Terminal</span>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem className="gap-2 px-2 py-[5px] text-xs">
+                  <ExternalLink size={12} className="text-muted-foreground/70 flex-shrink-0" />
+                  <span className="flex-1">其他应用…</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
 
           {/* Maximize toggle */}
           {onToggleMaximize && (
