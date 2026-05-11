@@ -1466,18 +1466,33 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
           </Button></Tooltip>
         )}
 
-        {/* Plan toggle — only when there are workflow steps */}
+        {/* Plan toggle — only when there are workflow steps. Opens floating card. */}
         {sessionData.steps.length > 0 && (
-          <Tooltip content={showPlan ? "隐藏计划" : "查看计划"} side="bottom">
-            <Button variant="ghost" size="icon-xs" onClick={() => setShowPlan(v => !v)}
-              className={`relative p-1.5 w-auto h-auto ${showPlan ? 'text-foreground bg-accent/25' : 'text-muted-foreground hover:text-foreground hover:bg-accent/15'}`}>
-              <ListChecks size={13} />
-              {/* Status dot: warning while any step is running, otherwise muted */}
-              {sessionData.steps.some(s => s.status === 'running') && (
-                <span className="absolute top-[2px] right-[2px] w-[5px] h-[5px] rounded-full bg-warning animate-pulse" />
-              )}
-            </Button>
-          </Tooltip>
+          <Popover open={showPlan} onOpenChange={setShowPlan}>
+            <PopoverTrigger asChild>
+              <Button variant="ghost" size="icon-xs"
+                className={`relative p-1.5 w-auto h-auto ${showPlan ? 'text-foreground bg-accent/25' : 'text-muted-foreground hover:text-foreground hover:bg-accent/15'}`}>
+                <ListChecks size={13} />
+                {sessionData.steps.some(s => s.status === 'running') && (
+                  <span className="absolute top-[2px] right-[2px] w-[5px] h-[5px] rounded-full bg-warning animate-pulse" />
+                )}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent align="end" side="bottom" sideOffset={8} className="p-0 w-[340px] max-h-[460px] overflow-hidden flex flex-col">
+              <div className="flex items-center justify-between px-3 py-2 border-b border-border/30 flex-shrink-0">
+                <div className="flex items-center gap-1.5">
+                  <ListChecks size={12} className="text-muted-foreground" />
+                  <span className="text-xs text-foreground">计划</span>
+                  <span className="text-xs text-muted-foreground/60 tabular-nums">
+                    {sessionData.steps.filter(s => s.status === 'done').length}/{sessionData.steps.length}
+                  </span>
+                </div>
+              </div>
+              <div className="flex-1 min-h-0 overflow-y-auto py-1">
+                <WorkflowPanel steps={sessionData.steps} inline />
+              </div>
+            </PopoverContent>
+          </Popover>
         )}
 
         {/* Show preview toggle — only when artifact is closed, to bring it back */}
@@ -1672,36 +1687,6 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
         )}
       </AnimatePresence>
 
-      {/* ===== Plan Panel — right side, toggled by header button ===== */}
-      <AnimatePresence initial={false}>
-        {showPlan && sessionData.steps.length > 0 && (
-          <motion.div
-            initial={{ width: 0, opacity: 0, marginLeft: -8 }}
-            animate={{ width: 320, opacity: 1, marginLeft: 0 }}
-            exit={{ width: 0, opacity: 0, marginLeft: -8 }}
-            transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
-            className="flex flex-col flex-shrink-0 min-w-0 my-1.5 mr-1 rounded-2xl border border-border/40 bg-card/50 shadow-sm shadow-black/5 overflow-hidden"
-            style={{ width: 320 }}
-          >
-            <div className="flex items-center justify-between px-3 py-2 border-b border-border/30 flex-shrink-0">
-              <div className="flex items-center gap-1.5">
-                <ListChecks size={12} className="text-muted-foreground" />
-                <span className="text-xs text-foreground">计划</span>
-                <span className="text-xs text-muted-foreground/60 tabular-nums">
-                  {sessionData.steps.filter(s => s.status === 'done').length}/{sessionData.steps.length}
-                </span>
-              </div>
-              <Button variant="ghost" size="icon-xs" onClick={() => setShowPlan(false)}
-                className="p-1 w-auto h-auto text-muted-foreground hover:text-foreground hover:bg-accent/15">
-                <X size={11} />
-              </Button>
-            </div>
-            <div className="flex-1 min-h-0 overflow-y-auto">
-              <WorkflowPanel steps={sessionData.steps} inline />
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
 
       {/* Docked History */}
       <AnimatePresence initial={false}>
