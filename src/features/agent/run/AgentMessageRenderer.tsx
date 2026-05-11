@@ -37,31 +37,11 @@ function ToolCallRow({ msg }: { msg: ChatMessage }) {
 
   // Show "Open with" dropdown when the tool produced a file (write/edit/create) and finished
   const fileExt = filePath ? (filePath.split('.').pop() || '').toLowerCase() : '';
-  const fileName = filePath ? filePath.split('/').pop() || filePath : '';
   const isWriteOp = filePath && /^(write|edit|create|update|modify)/i.test(tc.name);
   const showOpenWith = isWriteOp && tc.status === 'done';
   const previewable = ['pdf', 'md', 'html', 'docx', 'png', 'jpg', 'jpeg', 'svg', 'pptx'].includes(fileExt);
   const browserable = ['html', 'pdf', 'png', 'jpg', 'jpeg', 'svg', 'md'].includes(fileExt);
   const editable = ['ts', 'tsx', 'js', 'jsx', 'md', 'json', 'css', 'html', 'csv', 'py', 'go', 'rs', 'java', 'sh', 'yml', 'yaml', 'toml'].includes(fileExt);
-  // "Deliverable" = something users would want to view/share, not just code
-  const isDeliverable = ['pdf', 'md', 'html', 'docx', 'pptx', 'xlsx', 'csv', 'zip', 'png', 'jpg', 'jpeg', 'svg', 'gif', 'mp4', 'mov'].includes(fileExt);
-  const showArtifactCard = isWriteOp && tc.status === 'done' && isDeliverable;
-
-  // File-type styling for the artifact card
-  const fileTypeStyle: Record<string, { Icon: typeof FileText; iconCls: string; tileCls: string }> = {
-    pdf:  { Icon: FileText, iconCls: 'text-destructive', tileCls: 'bg-destructive/10' },
-    md:   { Icon: FileText, iconCls: 'text-info', tileCls: 'bg-info/10' },
-    html: { Icon: Globe, iconCls: 'text-accent-violet', tileCls: 'bg-accent-violet/10' },
-    docx: { Icon: FileText, iconCls: 'text-info', tileCls: 'bg-info/10' },
-    pptx: { Icon: FileText, iconCls: 'text-warning', tileCls: 'bg-warning/10' },
-    xlsx: { Icon: FileText, iconCls: 'text-success', tileCls: 'bg-success/10' },
-    csv:  { Icon: FileText, iconCls: 'text-success', tileCls: 'bg-success/10' },
-    zip:  { Icon: Package, iconCls: 'text-muted-foreground', tileCls: 'bg-muted-foreground/10' },
-    png:  { Icon: FileText, iconCls: 'text-accent-pink', tileCls: 'bg-accent-pink/10' },
-    jpg:  { Icon: FileText, iconCls: 'text-accent-pink', tileCls: 'bg-accent-pink/10' },
-  };
-  const fts = fileTypeStyle[fileExt] || { Icon: FileText, iconCls: 'text-muted-foreground', tileCls: 'bg-muted/40' };
-  const FileIcon = fts.Icon;
 
   return (
     <div>
@@ -143,77 +123,6 @@ function ToolCallRow({ msg }: { msg: ChatMessage }) {
           <ChevronRight size={9} className={`text-muted-foreground flex-shrink-0 transition-transform duration-100 ${expanded ? 'rotate-90' : ''}`} />
         )}
       </div>
-
-      {/* Prominent artifact card — appears below the tool row when a deliverable was produced */}
-      {showArtifactCard && (
-        <motion.div
-          initial={{ opacity: 0, y: 4 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.15 }}
-          className="group/art mt-1 flex items-center gap-2 px-2 py-1.5 rounded-lg border border-border/40 bg-card/60 hover:bg-accent/15 hover:border-border/60 transition-all max-w-[420px]"
-        >
-          <div className={`w-6 h-6 rounded-md flex items-center justify-center flex-shrink-0 ${fts.tileCls}`}>
-            <FileIcon size={11} className={fts.iconCls} />
-          </div>
-          <div className="flex-1 min-w-0 flex items-center gap-1.5">
-            <span className="text-xs text-foreground truncate" title={fileName}>{fileName}</span>
-            <span className="text-[10px] text-muted-foreground/40 flex-shrink-0">·</span>
-            <span className="text-[10px] uppercase text-muted-foreground/60 tracking-wide flex-shrink-0">{fileExt}</span>
-          </div>
-          {/* Action buttons — subtle, shown on hover but smaller */}
-          <div className="flex items-center gap-0 flex-shrink-0 opacity-0 group-hover/art:opacity-100 transition-opacity">
-            {previewable && (
-              <button
-                type="button"
-                title="预览"
-                className="p-1 rounded text-muted-foreground/70 hover:text-foreground hover:bg-accent/30 transition-colors"
-              >
-                <EyeIcon size={11} />
-              </button>
-            )}
-            {browserable && (
-              <button
-                type="button"
-                title="浏览器"
-                className="p-1 rounded text-muted-foreground/70 hover:text-accent-violet hover:bg-accent/30 transition-colors"
-              >
-                <Globe size={11} />
-              </button>
-            )}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button
-                  type="button"
-                  title="更多"
-                  className="p-1 rounded text-muted-foreground/70 hover:text-foreground hover:bg-accent/30 transition-colors"
-                >
-                  <ChevronDown size={11} />
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" side="bottom" className="w-[150px]">
-                {editable && (
-                  <DropdownMenuItem className="gap-2 px-2 py-[5px] text-xs">
-                    <MousePointer2 size={11} className="text-foreground flex-shrink-0" />
-                    <span className="flex-1">Cursor</span>
-                  </DropdownMenuItem>
-                )}
-                <DropdownMenuItem className="gap-2 px-2 py-[5px] text-xs">
-                  <FolderOpenIcon size={11} className="text-blue-500 flex-shrink-0" />
-                  <span className="flex-1">Finder</span>
-                </DropdownMenuItem>
-                <DropdownMenuItem className="gap-2 px-2 py-[5px] text-xs">
-                  <TerminalSquare size={11} className="text-muted-foreground/70 flex-shrink-0" />
-                  <span className="flex-1">Terminal</span>
-                </DropdownMenuItem>
-                <DropdownMenuItem className="gap-2 px-2 py-[5px] text-xs">
-                  <ExternalLink size={11} className="text-muted-foreground/70 flex-shrink-0" />
-                  <span className="flex-1">复制路径</span>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        </motion.div>
-      )}
 
       <AnimatePresence initial={false}>
         {expanded && (
@@ -695,6 +604,92 @@ export function UserMessage({ msg }: { msg: ChatMessage }) {
 }
 
 // ===========================
+// Artifact Card — slim row for produced deliverables
+// ===========================
+
+const DELIVERABLE_EXTS = ['pdf', 'md', 'html', 'docx', 'pptx', 'xlsx', 'csv', 'zip', 'png', 'jpg', 'jpeg', 'svg', 'gif', 'mp4', 'mov'];
+
+const ARTIFACT_TYPE_STYLE: Record<string, { iconCls: string; tileCls: string }> = {
+  pdf:  { iconCls: 'text-destructive', tileCls: 'bg-destructive/10' },
+  md:   { iconCls: 'text-info', tileCls: 'bg-info/10' },
+  html: { iconCls: 'text-accent-violet', tileCls: 'bg-accent-violet/10' },
+  docx: { iconCls: 'text-info', tileCls: 'bg-info/10' },
+  pptx: { iconCls: 'text-warning', tileCls: 'bg-warning/10' },
+  xlsx: { iconCls: 'text-success', tileCls: 'bg-success/10' },
+  csv:  { iconCls: 'text-success', tileCls: 'bg-success/10' },
+  zip:  { iconCls: 'text-muted-foreground', tileCls: 'bg-muted-foreground/10' },
+  png:  { iconCls: 'text-accent-pink', tileCls: 'bg-accent-pink/10' },
+  jpg:  { iconCls: 'text-accent-pink', tileCls: 'bg-accent-pink/10' },
+};
+
+function ArtifactCard({ filePath }: { filePath: string }) {
+  const fileExt = (filePath.split('.').pop() || '').toLowerCase();
+  const fileName = filePath.split('/').pop() || filePath;
+  const fts = ARTIFACT_TYPE_STYLE[fileExt] || { iconCls: 'text-muted-foreground', tileCls: 'bg-muted/40' };
+  const previewable = ['pdf', 'md', 'html', 'docx', 'png', 'jpg', 'jpeg', 'svg', 'pptx'].includes(fileExt);
+  const browserable = ['html', 'pdf', 'png', 'jpg', 'jpeg', 'svg', 'md'].includes(fileExt);
+  const editable = ['ts', 'tsx', 'js', 'jsx', 'md', 'json', 'css', 'html', 'csv', 'py', 'go', 'rs', 'java', 'sh', 'yml', 'yaml', 'toml'].includes(fileExt);
+  const FileIcon = fileExt === 'html' ? Globe : (fileExt === 'zip' ? Package : FileText);
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 4 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.15 }}
+      className="group/art flex items-center gap-2 px-2 py-1.5 rounded-lg border border-border/40 bg-card/60 hover:bg-accent/15 hover:border-border/60 transition-all max-w-[420px]"
+    >
+      <div className={`w-6 h-6 rounded-md flex items-center justify-center flex-shrink-0 ${fts.tileCls}`}>
+        <FileIcon size={11} className={fts.iconCls} />
+      </div>
+      <div className="flex-1 min-w-0 flex items-center gap-1.5">
+        <span className="text-xs text-foreground truncate" title={fileName}>{fileName}</span>
+        <span className="text-[10px] text-muted-foreground/40 flex-shrink-0">·</span>
+        <span className="text-[10px] uppercase text-muted-foreground/60 tracking-wide flex-shrink-0">{fileExt}</span>
+      </div>
+      <div className="flex items-center gap-0 flex-shrink-0 opacity-0 group-hover/art:opacity-100 transition-opacity">
+        {previewable && (
+          <button type="button" title="预览" className="p-1 rounded text-muted-foreground/70 hover:text-foreground hover:bg-accent/30 transition-colors">
+            <EyeIcon size={11} />
+          </button>
+        )}
+        {browserable && (
+          <button type="button" title="浏览器" className="p-1 rounded text-muted-foreground/70 hover:text-accent-violet hover:bg-accent/30 transition-colors">
+            <Globe size={11} />
+          </button>
+        )}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button type="button" title="更多" className="p-1 rounded text-muted-foreground/70 hover:text-foreground hover:bg-accent/30 transition-colors">
+              <ChevronDown size={11} />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" side="bottom" className="w-[150px]">
+            {editable && (
+              <DropdownMenuItem className="gap-2 px-2 py-[5px] text-xs">
+                <MousePointer2 size={11} className="text-foreground flex-shrink-0" />
+                <span className="flex-1">Cursor</span>
+              </DropdownMenuItem>
+            )}
+            <DropdownMenuItem className="gap-2 px-2 py-[5px] text-xs">
+              <FolderOpenIcon size={11} className="text-blue-500 flex-shrink-0" />
+              <span className="flex-1">Finder</span>
+            </DropdownMenuItem>
+            <DropdownMenuItem className="gap-2 px-2 py-[5px] text-xs">
+              <TerminalSquare size={11} className="text-muted-foreground/70 flex-shrink-0" />
+              <span className="flex-1">Terminal</span>
+            </DropdownMenuItem>
+            <DropdownMenuItem className="gap-2 px-2 py-[5px] text-xs">
+              <ExternalLink size={11} className="text-muted-foreground/70 flex-shrink-0" />
+              <span className="flex-1">复制路径</span>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+    </motion.div>
+  );
+}
+
+// ===========================
 // Agent Message Group
 // ===========================
 
@@ -709,8 +704,24 @@ export function AgentMessageGroup({ msgs, onResolve, onAvatarClick, isRunning = 
   // Split messages into: process steps (everything up to the last tool/thinking/genUI)
   // and trailing final content (content-only messages after all process steps).
   // Permission requests are always-visible regardless of status.
-  const { processMessages, finalMessages, permissionMsgs } = useMemo(() => {
+  // Artifacts are extracted from any write tool calls and shown prominently at the end.
+  const { processMessages, finalMessages, permissionMsgs, artifacts } = useMemo(() => {
     const permissions = msgs.filter(m => m.permissionRequest);
+    // Collect produced "deliverable" artifacts from write/edit/create tool calls
+    const collectedArtifacts: { id: string; filePath: string }[] = [];
+    for (const m of msgs) {
+      const tc = m.toolCall;
+      if (!tc || tc.status !== 'done') continue;
+      const isWriteOp = /^(write|edit|create|update|modify)/i.test(tc.name);
+      if (!isWriteOp) continue;
+      const match = tc.name.match(/(?:write|edit|create|update|modify)\s+(.+)/i);
+      const filePath = match ? match[1].trim() : '';
+      if (!filePath) continue;
+      const fileExt = (filePath.split('.').pop() || '').toLowerCase();
+      if (DELIVERABLE_EXTS.includes(fileExt)) {
+        collectedArtifacts.push({ id: m.id, filePath });
+      }
+    }
     // Find the last index that is a process message (excluding permission-only msgs)
     let lastProcessIdx = -1;
     for (let i = msgs.length - 1; i >= 0; i--) {
@@ -725,6 +736,7 @@ export function AgentMessageGroup({ msgs, onResolve, onAvatarClick, isRunning = 
       processMessages: process,
       finalMessages: final_.filter(m => m.content && !m.permissionRequest),
       permissionMsgs: permissions,
+      artifacts: collectedArtifacts,
     };
   }, [msgs]);
 
@@ -769,6 +781,15 @@ export function AgentMessageGroup({ msgs, onResolve, onAvatarClick, isRunning = 
             {msg.content}
           </motion.div>
         ))}
+
+        {/* Artifact cards — produced deliverables, always visible at the end */}
+        {artifacts.length > 0 && (
+          <div className="flex flex-col gap-1.5 mt-1.5">
+            {artifacts.map(a => (
+              <ArtifactCard key={a.id} filePath={a.filePath} />
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
