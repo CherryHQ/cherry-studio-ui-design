@@ -3,8 +3,12 @@ import {
   ChevronRight, ChevronDown, File, Folder, FolderOpen,
   FileJson, FileCode, FileText, Image as ImageIcon, Settings,
   FileSpreadsheet, Presentation, FileType, Download, CheckCircle2, Loader2,
+  Eye, Globe, MousePointer2, TerminalSquare, ExternalLink, FolderOpen as FolderOpenIcon,
 } from 'lucide-react';
-import { Button, EmptyState } from '@cherry-studio/ui';
+import {
+  Button, EmptyState,
+  ContextMenu, ContextMenuTrigger, ContextMenuContent, ContextMenuItem, ContextMenuSeparator,
+} from '@cherry-studio/ui';
 import { motion, AnimatePresence } from 'motion/react';
 import type { FileNode, OutputFile } from '@/app/types/agent';
 
@@ -48,6 +52,53 @@ function getOutputIcon(format: string, size = 14) {
     case 'md': return <FileText size={size} className={`text-muted-foreground ${cls}`} />;
     default: return <File size={size} className={`text-muted-foreground ${cls}`} />;
   }
+}
+
+// ===========================
+// "Open with" context menu — used by both tree files and output files
+// ===========================
+
+function FileOpenWithMenu({ name }: { name: string }) {
+  const ext = (name.split('.').pop() || '').toLowerCase();
+  const previewable = ['pdf', 'md', 'html', 'docx', 'png', 'jpg', 'jpeg', 'svg', 'pptx'].includes(ext);
+  const browserable = ['html', 'pdf', 'png', 'jpg', 'jpeg', 'svg', 'md'].includes(ext);
+  const editable = ['ts', 'tsx', 'js', 'jsx', 'md', 'json', 'css', 'html', 'csv', 'py', 'go', 'rs', 'java', 'sh', 'yml', 'yaml', 'toml', 'txt'].includes(ext);
+
+  return (
+    <ContextMenuContent className="w-[160px]">
+      {previewable && (
+        <ContextMenuItem className="gap-2 px-2 py-[5px] text-xs">
+          <Eye size={12} className="text-muted-foreground/70 flex-shrink-0" />
+          <span className="flex-1">预览</span>
+        </ContextMenuItem>
+      )}
+      {browserable && (
+        <ContextMenuItem className="gap-2 px-2 py-[5px] text-xs">
+          <Globe size={12} className="text-accent-violet flex-shrink-0" />
+          <span className="flex-1">浏览器</span>
+        </ContextMenuItem>
+      )}
+      {editable && (
+        <ContextMenuItem className="gap-2 px-2 py-[5px] text-xs">
+          <MousePointer2 size={12} className="text-foreground flex-shrink-0" />
+          <span className="flex-1">Cursor</span>
+        </ContextMenuItem>
+      )}
+      <ContextMenuSeparator />
+      <ContextMenuItem className="gap-2 px-2 py-[5px] text-xs">
+        <FolderOpenIcon size={12} className="text-blue-500 flex-shrink-0" />
+        <span className="flex-1">Finder</span>
+      </ContextMenuItem>
+      <ContextMenuItem className="gap-2 px-2 py-[5px] text-xs">
+        <TerminalSquare size={12} className="text-muted-foreground/70 flex-shrink-0" />
+        <span className="flex-1">Terminal</span>
+      </ContextMenuItem>
+      <ContextMenuItem className="gap-2 px-2 py-[5px] text-xs">
+        <ExternalLink size={12} className="text-muted-foreground/70 flex-shrink-0" />
+        <span className="flex-1">复制路径</span>
+      </ContextMenuItem>
+    </ContextMenuContent>
+  );
 }
 
 // ===========================
@@ -109,19 +160,24 @@ function TreeNode({ node, depth, path, selectedFile, onSelectFile, defaultOpen }
   }
 
   return (
-    <Button size="inline"
-      variant="ghost"
-      onClick={() => onSelectFile(fullPath)}
-      className={`w-full justify-start gap-[5px] py-[3px] font-normal rounded text-xs ${
-        isSelected
-          ? 'bg-cherry-active-bg text-cherry-text'
-          : 'text-foreground hover:bg-accent/50 hover:text-foreground'
-      }`}
-      style={{ paddingLeft: indent + 16, paddingRight: 8 }}
-    >
-      {getFileIcon(node.name)}
-      <span className="truncate flex-1 text-left">{node.name}</span>
-    </Button>
+    <ContextMenu>
+      <ContextMenuTrigger asChild>
+        <Button size="inline"
+          variant="ghost"
+          onClick={() => onSelectFile(fullPath)}
+          className={`w-full justify-start gap-[5px] py-[3px] font-normal rounded text-xs ${
+            isSelected
+              ? 'bg-cherry-active-bg text-cherry-text'
+              : 'text-foreground hover:bg-accent/50 hover:text-foreground'
+          }`}
+          style={{ paddingLeft: indent + 16, paddingRight: 8 }}
+        >
+          {getFileIcon(node.name)}
+          <span className="truncate flex-1 text-left">{node.name}</span>
+        </Button>
+      </ContextMenuTrigger>
+      <FileOpenWithMenu name={node.name} />
+    </ContextMenu>
   );
 }
 
@@ -135,7 +191,7 @@ function OutputFileItem({ file, isSelected, onSelect }: {
   onSelect: () => void;
 }) {
   const isGenerating = file.status === 'generating';
-  return (
+  const row = (
     <div
       role="button"
       tabIndex={0}
@@ -181,6 +237,13 @@ function OutputFileItem({ file, isSelected, onSelect }: {
         )}
       </div>
     </div>
+  );
+
+  return (
+    <ContextMenu>
+      <ContextMenuTrigger asChild>{row}</ContextMenuTrigger>
+      <FileOpenWithMenu name={file.name} />
+    </ContextMenu>
   );
 }
 
