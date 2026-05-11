@@ -1303,10 +1303,27 @@ function MessageBubble({ msg, onOpenPanel, onAvatarClick, onOpenArtifact, assist
     return (
       <motion.div initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.15 }} className="flex justify-end">
         <div className="max-w-[85%]">
-          {/* Attachments above bubble */}
+          {/* Attachments above bubble — clickable to open in artifact viewer */}
           {msg.attachments && msg.attachments.length > 0 && (
             <div className="flex justify-end mb-1">
-              <AttachmentList attachments={msg.attachments} />
+              <AttachmentList
+                attachments={msg.attachments}
+                onOpen={onOpenArtifact ? (att) => {
+                  const ext = (att.name.split('.').pop() || '').toLowerCase();
+                  const artifactType: ArtifactData['type'] =
+                    ['html', 'htm'].includes(ext) ? 'html' :
+                    ['svg'].includes(ext) ? 'svg' :
+                    ['md', 'txt', 'pdf', 'docx', 'doc', 'rtf'].includes(ext) ? 'document' : 'code';
+                  onOpenArtifact({
+                    type: artifactType,
+                    title: att.name,
+                    content: att.previewUrl
+                      ? `<!-- ${att.name} (${att.size}) -->\n[图片附件: ${att.name}]`
+                      : `# ${att.name}\n\n大小: ${att.size}\n类型: ${att.type || ext.toUpperCase()}\n\n（这是一个用户上传的文件，点击下载或在外部应用中打开查看完整内容。）`,
+                    language: ext || undefined,
+                  });
+                } : undefined}
+              />
             </div>
           )}
           <div className="px-3.5 py-2.5 rounded-[var(--radius-button)] rounded-br-[var(--radius-dot)] bg-[#F8F8F9] dark:bg-foreground/15 text-foreground text-xs leading-[1.65]">
