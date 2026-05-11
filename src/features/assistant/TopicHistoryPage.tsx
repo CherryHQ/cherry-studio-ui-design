@@ -760,22 +760,6 @@ export function TopicHistoryPage({ topics, activeTopicId, onSelectTopic, onDelet
                 wrapperClassName="px-2 py-[3px] rounded-md bg-accent/15 border border-border/25 w-[160px]"
               />
               <div className="w-px h-4 bg-border/30" />
-              {/* View mode */}
-              <div className="flex items-center gap-[1px] bg-accent/15 rounded-md p-[2px]">
-                <Tooltip content={'\u5217\u8868\u89c6\u56fe'} side="bottom"><Button variant="ghost" size="icon-xs"
-                  onClick={() => setViewMode('list')}
-                  className={`p-[4px] rounded transition-all duration-100 h-auto w-auto ${viewMode === 'list' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
-                >
-                  <List size={12} />
-                </Button></Tooltip>
-                <Tooltip content={'\u5361\u7247\u89c6\u56fe'} side="bottom"><Button variant="ghost" size="icon-xs"
-                  onClick={() => setViewMode('card')}
-                  className={`p-[4px] rounded transition-all duration-100 h-auto w-auto ${viewMode === 'card' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
-                >
-                  <LayoutGrid size={12} />
-                </Button></Tooltip>
-              </div>
-              <div className="w-px h-4 bg-border/30" />
               {/* Group */}
               <div className="flex items-center gap-[2px] bg-accent/15 rounded-md p-[2px]">
                 {([
