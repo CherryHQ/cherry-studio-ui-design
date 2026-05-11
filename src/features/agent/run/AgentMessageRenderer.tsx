@@ -277,32 +277,42 @@ const RISK_CONFIG: Record<NonNullable<import('@/app/types/agent').PermissionRequ
 export function PermissionApprovalCard({
   request,
   onResolve,
+  variant = 'inline',
 }: {
   request: NonNullable<ChatMessage['permissionRequest']>;
   onResolve: (action: 'allow' | 'allow-always' | 'deny') => void;
+  /** "inline" = compact card in chat; "composer" = wider card replacing the input box */
+  variant?: 'inline' | 'composer';
 }) {
-  const [expanded, setExpanded] = useState(false);
+  const [expanded, setExpanded] = useState(variant === 'composer');
   const cfg = RISK_CONFIG[request.risk || 'low'];
   const Icon = cfg.icon;
   const isPending = request.status === 'pending';
 
   const hasParams = request.params && request.params.length > 0;
+  const composer = variant === 'composer';
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 4 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.15 }}
-      className={`my-1.5 max-w-[520px] rounded-lg border ${cfg.ringClass} bg-card/40 overflow-hidden`}
+      className={
+        composer
+          ? `relative rounded-2xl border ${cfg.ringClass} bg-muted/30 shadow-sm overflow-hidden`
+          : `my-1.5 max-w-[520px] rounded-lg border ${cfg.ringClass} bg-card/40 overflow-hidden`
+      }
     >
       {/* Header row */}
-      <div className="flex items-center gap-2 px-3 py-2">
-        <Icon size={12} className={`flex-shrink-0 ${cfg.iconClass}`} />
-        <span className="text-xs text-foreground/80 font-mono truncate flex-1 min-w-0">{request.toolName}</span>
-        <span className={`text-[10px] leading-[14px] px-1.5 rounded border ${cfg.badgeClass} flex-shrink-0`}>
+      <div className={composer ? 'flex items-center gap-2 px-3.5 pt-3 pb-1.5' : 'flex items-center gap-2 px-3 py-2'}>
+        <Icon size={composer ? 14 : 12} className={`flex-shrink-0 ${cfg.iconClass}`} />
+        {composer && <span className="text-xs text-foreground">权限请求</span>}
+        {composer && <span className="text-muted-foreground/40">·</span>}
+        <span className={`${composer ? 'text-sm' : 'text-xs'} text-foreground/80 font-mono truncate flex-1 min-w-0`}>{request.toolName}</span>
+        <span className={`${composer ? 'text-[11px] leading-[16px] px-1.5 py-[1px]' : 'text-[10px] leading-[14px] px-1.5'} rounded border ${cfg.badgeClass} flex-shrink-0`}>
           {cfg.label}
         </span>
-        {hasParams && (
+        {hasParams && !composer && (
           <button
             onClick={() => setExpanded(v => !v)}
             className="p-0.5 rounded text-muted-foreground/60 hover:text-foreground hover:bg-accent/15 transition-colors flex-shrink-0"
@@ -323,16 +333,16 @@ export function PermissionApprovalCard({
             transition={{ duration: 0.12 }}
             className="overflow-hidden"
           >
-            <div className="px-3 pb-2 pt-2 space-y-1.5 border-t border-border/30">
+            <div className={composer ? 'px-3.5 pb-2.5 pt-0 space-y-1.5' : 'px-3 pb-2 pt-2 space-y-1.5 border-t border-border/30'}>
               {request.toolDescription && (
-                <div className="text-[11px] text-muted-foreground leading-[1.6]">
+                <div className={`${composer ? 'text-xs leading-[1.6]' : 'text-[11px] leading-[1.6]'} text-muted-foreground`}>
                   {request.toolDescription}
                 </div>
               )}
               {hasParams && (
                 <div className="space-y-1">
                   {request.params!.map(p => (
-                    <div key={p.label} className="flex gap-2 text-[11px]">
+                    <div key={p.label} className={`flex gap-2 ${composer ? 'text-xs' : 'text-[11px]'}`}>
                       <span className="text-muted-foreground/60 flex-shrink-0">{p.label}</span>
                       <span className="text-foreground font-mono break-all">{p.value}</span>
                     </div>
@@ -345,14 +355,18 @@ export function PermissionApprovalCard({
       </AnimatePresence>
 
       {/* Actions row */}
-      <div className="flex items-center gap-1 px-2 pb-1.5 pt-0.5">
+      <div className={composer ? 'flex items-center gap-1 px-2.5 pb-2 pt-1' : 'flex items-center gap-1 px-2 pb-1.5 pt-0.5'}>
         {isPending ? (
           <>
             <Button
               variant="ghost"
-              size="inline"
+              size={composer ? 'xs' : 'inline'}
               onClick={() => onResolve('deny')}
-              className="px-2.5 py-[3px] text-[11px] text-muted-foreground hover:text-destructive hover:bg-destructive/8 rounded-md"
+              className={
+                composer
+                  ? 'px-3 py-1 text-xs text-muted-foreground hover:text-destructive hover:bg-destructive/8 rounded-md'
+                  : 'px-2.5 py-[3px] text-[11px] text-muted-foreground hover:text-destructive hover:bg-destructive/8 rounded-md'
+              }
             >
               拒绝
             </Button>
@@ -360,32 +374,36 @@ export function PermissionApprovalCard({
             {request.allowAutoApprove && (
               <Button
                 variant="ghost"
-                size="inline"
+                size={composer ? 'xs' : 'inline'}
                 onClick={() => onResolve('allow-always')}
-                className="px-2.5 py-[3px] text-[11px] text-muted-foreground hover:text-foreground hover:bg-accent/15 rounded-md"
+                className={
+                  composer
+                    ? 'px-3 py-1 text-xs text-muted-foreground hover:text-foreground hover:bg-accent/15 rounded-md'
+                    : 'px-2.5 py-[3px] text-[11px] text-muted-foreground hover:text-foreground hover:bg-accent/15 rounded-md'
+                }
               >
                 始终允许
               </Button>
             )}
             <Button
               variant="default"
-              size="inline"
+              size={composer ? 'xs' : 'inline'}
               onClick={() => onResolve('allow')}
-              className="px-3 py-[3px] text-[11px] rounded-md"
+              className={composer ? 'px-4 py-1 text-xs rounded-md' : 'px-3 py-[3px] text-[11px] rounded-md'}
             >
               允许
             </Button>
           </>
         ) : (
-          <div className="flex items-center gap-1.5 px-2 py-[3px] text-[11px]">
+          <div className={`flex items-center gap-1.5 px-2 ${composer ? 'py-1 text-xs' : 'py-[3px] text-[11px]'}`}>
             {request.status === 'approved' ? (
               <>
-                <Check size={10} className="text-success" />
+                <Check size={composer ? 12 : 10} className="text-success" />
                 <span className="text-muted-foreground">已允许</span>
               </>
             ) : (
               <>
-                <X size={10} className="text-destructive" />
+                <X size={composer ? 12 : 10} className="text-destructive" />
                 <span className="text-muted-foreground">已拒绝</span>
               </>
             )}

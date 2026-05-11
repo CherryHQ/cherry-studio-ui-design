@@ -259,6 +259,7 @@ export function ChatPanel({
               <PermissionApprovalCard
                 request={pendingPermission.data}
                 onResolve={(action) => onResolveUI(pendingPermission.msgId, action)}
+                variant="composer"
               />
             </motion.div>
           ) : pendingUIs.length > 0 && onResolveUI ? (
