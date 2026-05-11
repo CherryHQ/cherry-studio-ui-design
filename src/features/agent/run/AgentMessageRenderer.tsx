@@ -150,72 +150,63 @@ function ToolCallRow({ msg }: { msg: ChatMessage }) {
           initial={{ opacity: 0, y: 4 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.15 }}
-          className="mt-1.5 flex items-center gap-3 p-2.5 rounded-xl border border-border/50 bg-card hover:bg-accent/15 hover:border-border/70 transition-all shadow-sm shadow-black/[0.02] max-w-[480px]"
+          className="group/art mt-1 flex items-center gap-2 px-2 py-1.5 rounded-lg border border-border/40 bg-card/60 hover:bg-accent/15 hover:border-border/60 transition-all max-w-[420px]"
         >
-          <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${fts.tileCls}`}>
-            <FileIcon size={18} className={fts.iconCls} />
+          <div className={`w-6 h-6 rounded-md flex items-center justify-center flex-shrink-0 ${fts.tileCls}`}>
+            <FileIcon size={11} className={fts.iconCls} />
           </div>
-          <div className="flex-1 min-w-0">
-            <div className="text-sm text-foreground truncate" title={fileName}>{fileName}</div>
-            <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground/60 mt-[2px]">
-              <span className="uppercase tracking-wide font-medium">{fileExt}</span>
-              {tc.duration && (
-                <>
-                  <span className="text-muted-foreground/30">·</span>
-                  <span>用时 {tc.duration}</span>
-                </>
-              )}
-              <span className="text-muted-foreground/30">·</span>
-              <span className="text-success">已生成</span>
-            </div>
+          <div className="flex-1 min-w-0 flex items-center gap-1.5">
+            <span className="text-xs text-foreground truncate" title={fileName}>{fileName}</span>
+            <span className="text-[10px] text-muted-foreground/40 flex-shrink-0">·</span>
+            <span className="text-[10px] uppercase text-muted-foreground/60 tracking-wide flex-shrink-0">{fileExt}</span>
           </div>
-          {/* Action buttons — always visible (prominent) */}
-          <div className="flex items-center gap-0.5 flex-shrink-0">
+          {/* Action buttons — subtle, shown on hover but smaller */}
+          <div className="flex items-center gap-0 flex-shrink-0 opacity-0 group-hover/art:opacity-100 transition-opacity">
             {previewable && (
               <button
                 type="button"
                 title="预览"
-                className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-accent/40 transition-colors"
+                className="p-1 rounded text-muted-foreground/70 hover:text-foreground hover:bg-accent/30 transition-colors"
               >
-                <EyeIcon size={14} />
+                <EyeIcon size={11} />
               </button>
             )}
             {browserable && (
               <button
                 type="button"
                 title="浏览器"
-                className="p-1.5 rounded-md text-muted-foreground hover:text-accent-violet hover:bg-accent/40 transition-colors"
+                className="p-1 rounded text-muted-foreground/70 hover:text-accent-violet hover:bg-accent/30 transition-colors"
               >
-                <Globe size={14} />
+                <Globe size={11} />
               </button>
             )}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button
                   type="button"
-                  title="更多打开方式"
-                  className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-accent/40 transition-colors"
+                  title="更多"
+                  className="p-1 rounded text-muted-foreground/70 hover:text-foreground hover:bg-accent/30 transition-colors"
                 >
-                  <ChevronDown size={14} />
+                  <ChevronDown size={11} />
                 </button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" side="bottom" className="w-[160px]">
+              <DropdownMenuContent align="end" side="bottom" className="w-[150px]">
                 {editable && (
                   <DropdownMenuItem className="gap-2 px-2 py-[5px] text-xs">
-                    <MousePointer2 size={12} className="text-foreground flex-shrink-0" />
+                    <MousePointer2 size={11} className="text-foreground flex-shrink-0" />
                     <span className="flex-1">Cursor</span>
                   </DropdownMenuItem>
                 )}
                 <DropdownMenuItem className="gap-2 px-2 py-[5px] text-xs">
-                  <FolderOpenIcon size={12} className="text-blue-500 flex-shrink-0" />
+                  <FolderOpenIcon size={11} className="text-blue-500 flex-shrink-0" />
                   <span className="flex-1">Finder</span>
                 </DropdownMenuItem>
                 <DropdownMenuItem className="gap-2 px-2 py-[5px] text-xs">
-                  <TerminalSquare size={12} className="text-muted-foreground/70 flex-shrink-0" />
+                  <TerminalSquare size={11} className="text-muted-foreground/70 flex-shrink-0" />
                   <span className="flex-1">Terminal</span>
                 </DropdownMenuItem>
                 <DropdownMenuItem className="gap-2 px-2 py-[5px] text-xs">
-                  <ExternalLink size={12} className="text-muted-foreground/70 flex-shrink-0" />
+                  <ExternalLink size={11} className="text-muted-foreground/70 flex-shrink-0" />
                   <span className="flex-1">复制路径</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
