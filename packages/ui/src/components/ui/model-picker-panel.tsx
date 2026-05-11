@@ -107,7 +107,7 @@ export function ModelPickerPanel({
 }: ModelPickerPanelProps) {
   const uiLabels = {
     searchPlaceholder: "搜索模型...",
-    multiModelLabel: "多模型并行（与多助手互斥）",
+    multiModelLabel: "多模型同时回答",
     noResults: "无匹配结果",
     filterLabel: "按标签筛选",
     pinnedLabel: "已固定",

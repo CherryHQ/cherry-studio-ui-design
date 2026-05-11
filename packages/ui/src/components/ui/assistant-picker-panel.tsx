@@ -255,7 +255,7 @@ export function AssistantPickerPanel({
 
       {/* Multi-assistant switch */}
       <div className="px-3 pb-1.5 flex items-center justify-between">
-        <span className="text-xs text-muted-foreground/50">多助手并行（与多模型互斥）</span>
+        <span className="text-xs text-muted-foreground/50">多助手同时回答</span>
         <Switch checked={multiAssistant} onCheckedChange={() => onToggleMultiAssistant()} className="scale-75" />
       </div>
 
