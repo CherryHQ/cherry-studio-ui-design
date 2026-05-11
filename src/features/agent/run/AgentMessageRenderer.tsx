@@ -9,7 +9,8 @@ import {
   ShieldCheck, ShieldAlert, ShieldQuestion,
   ArrowRight, AlertTriangle,
 } from 'lucide-react';
-import { Button } from '@cherry-studio/ui';
+import { Button, DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@cherry-studio/ui';
+import { ExternalLink, Eye as EyeIcon, FolderOpen as FolderOpenIcon, MousePointer2, TerminalSquare } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { shakeAnimation } from '@/app/config/animations';
 import type { AgentChatMessage } from '@/app/types/agent';
@@ -34,11 +35,19 @@ function ToolCallRow({ msg }: { msg: ChatMessage }) {
   // All completed/errored tool calls are expandable
   const isExpandable = tc.status === 'done' || tc.status === 'error' || !!msg.content;
 
+  // Show "Open with" dropdown when the tool produced a file (write/edit/create) and finished
+  const fileExt = filePath ? (filePath.split('.').pop() || '').toLowerCase() : '';
+  const isWriteOp = filePath && /^(write|edit|create|update|modify)/i.test(tc.name);
+  const showOpenWith = isWriteOp && tc.status === 'done';
+  const previewable = ['pdf', 'md', 'html', 'docx', 'png', 'jpg', 'jpeg', 'svg', 'pptx'].includes(fileExt);
+  const browserable = ['html', 'pdf', 'png', 'jpg', 'jpeg', 'svg', 'md'].includes(fileExt);
+  const editable = ['ts', 'tsx', 'js', 'jsx', 'md', 'json', 'css', 'html', 'csv', 'py', 'go', 'rs', 'java', 'sh', 'yml', 'yaml', 'toml'].includes(fileExt);
+
   return (
     <div>
-      <button
+      <div
         onClick={() => isExpandable && setExpanded(v => !v)}
-        className={`flex items-center gap-2 py-[3px] px-1 text-xs w-fit max-w-full ${
+        className={`flex items-center gap-2 py-[3px] px-1 text-xs w-fit max-w-full group/tc ${
           isExpandable ? 'hover:bg-accent/40 rounded-md cursor-pointer' : 'cursor-default'
         }`}
       >
@@ -66,10 +75,54 @@ function ToolCallRow({ msg }: { msg: ChatMessage }) {
         {tc.status === 'error' && (
           <X size={9} className="text-destructive flex-shrink-0" />
         )}
+        {/* Open with dropdown — appears on hover when a file was produced */}
+        {showOpenWith && (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                type="button"
+                onClick={(e) => e.stopPropagation()}
+                className="flex items-center gap-1 px-1.5 py-[1px] rounded text-[11px] text-muted-foreground/70 hover:text-foreground hover:bg-accent/40 transition-colors flex-shrink-0 opacity-0 group-hover/tc:opacity-100"
+              >
+                <ExternalLink size={9} />
+                <span>打开</span>
+                <ChevronDown size={8} />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" side="bottom" className="w-[160px]" onClick={(e) => e.stopPropagation()}>
+              {previewable && (
+                <DropdownMenuItem className="gap-2 px-2 py-[5px] text-xs">
+                  <EyeIcon size={12} className="text-muted-foreground/70 flex-shrink-0" />
+                  <span className="flex-1">预览</span>
+                </DropdownMenuItem>
+              )}
+              {browserable && (
+                <DropdownMenuItem className="gap-2 px-2 py-[5px] text-xs">
+                  <Globe size={12} className="text-accent-violet flex-shrink-0" />
+                  <span className="flex-1">浏览器</span>
+                </DropdownMenuItem>
+              )}
+              {editable && (
+                <DropdownMenuItem className="gap-2 px-2 py-[5px] text-xs">
+                  <MousePointer2 size={12} className="text-foreground flex-shrink-0" />
+                  <span className="flex-1">Cursor</span>
+                </DropdownMenuItem>
+              )}
+              <DropdownMenuItem className="gap-2 px-2 py-[5px] text-xs">
+                <FolderOpenIcon size={12} className="text-blue-500 flex-shrink-0" />
+                <span className="flex-1">Finder</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem className="gap-2 px-2 py-[5px] text-xs">
+                <TerminalSquare size={12} className="text-muted-foreground/70 flex-shrink-0" />
+                <span className="flex-1">Terminal</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
         {isExpandable && (
           <ChevronRight size={9} className={`text-muted-foreground flex-shrink-0 transition-transform duration-100 ${expanded ? 'rotate-90' : ''}`} />
         )}
-      </button>
+      </div>
       <AnimatePresence initial={false}>
         {expanded && (
           <motion.div
