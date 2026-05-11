@@ -462,15 +462,11 @@ function CodexStyleInput({ onSendMessage, autoFocus = false, placeholder }: {
               </DropdownMenuTrigger>
               <DropdownMenuContent side="top" align="start" className="w-44">
                 <DropdownMenuItem className="gap-2 px-2 py-[5px] text-xs"><Paperclip size={13} strokeWidth={1.5} className="text-muted-foreground flex-shrink-0" /><span className="flex-1 text-left">添加图片或附件</span></DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem className="gap-2 px-2 py-[5px] text-xs"><Code2 size={13} strokeWidth={1.5} className="text-muted-foreground flex-shrink-0" /><span className="flex-1 text-left">代码</span></DropdownMenuItem>
                 <DropdownMenuItem className="gap-2 px-2 py-[5px] text-xs"><Folder size={13} strokeWidth={1.5} className="text-muted-foreground flex-shrink-0" /><span className="flex-1 text-left">添加文件夹</span></DropdownMenuItem>
                 <DropdownMenuItem className="gap-2 px-2 py-[5px] text-xs"><Globe size={13} strokeWidth={1.5} className="text-muted-foreground flex-shrink-0" /><span className="flex-1 text-left">网络搜索</span></DropdownMenuItem>
-                <DropdownMenuItem className="gap-2 px-2 py-[5px] text-xs"><Brain size={13} strokeWidth={1.5} className="text-muted-foreground flex-shrink-0" /><span className="flex-1 text-left">推理</span></DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem className="gap-2 px-2 py-[5px] text-xs"><TerminalSquare size={13} strokeWidth={1.5} className="text-muted-foreground flex-shrink-0" /><span className="flex-1 text-left">斜杠命令</span></DropdownMenuItem>
                 <DropdownMenuItem className="gap-2 px-2 py-[5px] text-xs"><Zap size={13} strokeWidth={1.5} className="text-muted-foreground flex-shrink-0" /><span className="flex-1 text-left">快捷短语</span></DropdownMenuItem>
-                <DropdownMenuItem className="gap-2 px-2 py-[5px] text-xs"><Lightbulb size={13} strokeWidth={1.5} className="text-muted-foreground flex-shrink-0" /><span className="flex-1 text-left">思维链长度</span></DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
 
@@ -508,49 +504,46 @@ function CodexStyleInput({ onSendMessage, autoFocus = false, placeholder }: {
                 })}
               </PopoverContent>
             </Popover>
-          </div>
 
-          {/* Right */}
-          <div className="flex items-center gap-1">
+            {/* Thinking effort selector */}
             <Popover open={showModelMenu} onOpenChange={setShowModelMenu}>
               <PopoverTrigger asChild>
                 <Button variant="ghost" size="inline"
-                  className={`flex items-center gap-1.5 px-2 py-[3px] rounded-md text-xs transition-colors ${
+                  className={`flex items-center gap-1 px-1.5 py-[4px] rounded-md text-xs transition-colors ${
                     showModelMenu
                       ? 'bg-accent/60 text-foreground'
-                      : 'text-muted-foreground hover:text-foreground hover:bg-accent/40'
+                      : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
                   }`}
                 >
-                  <BrandLogo id="cherry" size={12} className="shrink-0" fallbackLetter="C" />
-                  <Lightbulb size={11} className="text-warning" strokeWidth={1.5} />
-                  <span className="text-foreground/80">5.5</span>
-                  <span className="text-muted-foreground/60">中</span>
+                  <Lightbulb size={13} className="text-muted-foreground/70" strokeWidth={1.5} />
+                  <span className="truncate">默认</span>
                   <ChevronDown size={9} className={`transition-transform duration-100 ${showModelMenu ? 'rotate-180' : ''}`} />
                 </Button>
               </PopoverTrigger>
-              <PopoverContent side="top" align="end" className="w-[200px] p-1">
-                <div className="px-2 py-1 text-xs text-muted-foreground/60">思维链长度</div>
+              <PopoverContent side="top" align="start" className="w-[200px] p-1">
+                <div className="px-2 py-1 text-xs text-muted-foreground/60">思考强度</div>
                 {[
-                  { id: 'low', label: '简略' },
-                  { id: 'default', label: '中等' },
-                  { id: 'high', label: '深度' },
+                  { id: 'off',     label: '关闭', desc: '不推理' },
+                  { id: 'low',     label: '低',   desc: '快速' },
+                  { id: 'default', label: '默认', desc: '均衡' },
+                  { id: 'high',    label: '高',   desc: '深入' },
+                  { id: 'extreme', label: '极高', desc: '最深' },
                 ].map(t => (
                   <button key={t.id} type="button"
                     onClick={() => setShowModelMenu(false)}
                     className="w-full flex items-center gap-2 px-2 py-[6px] rounded-md text-left text-xs text-foreground/80 hover:bg-accent/25 transition-colors"
                   >
+                    <Lightbulb size={12} strokeWidth={1.5} className="flex-shrink-0 text-muted-foreground/70" />
                     <span className="flex-1">{t.label}</span>
+                    <span className="text-[10px] text-muted-foreground/50">{t.desc}</span>
                   </button>
                 ))}
               </PopoverContent>
             </Popover>
+          </div>
 
-            <Tooltip content="翻译" side="top">
-              <Button variant="ghost" size="icon-sm" className="p-[5px] w-auto h-auto text-muted-foreground/60 hover:text-foreground hover:bg-accent/50 transition-colors">
-                <Languages size={16} strokeWidth={1.5} />
-              </Button>
-            </Tooltip>
-
+          {/* Right: send */}
+          <div className="flex items-center gap-1">
             <Button
               variant="default"
               size="icon-sm"
@@ -1278,7 +1271,6 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
   const [previewMaximized, setPreviewMaximized] = useState(false);
   const [showAgentInfo, setShowAgentInfo] = useState(false);
   const [showPlan, setShowPlan] = useState(false);
-  const [showOpenWith, setShowOpenWith] = useState(false);
 
   const sessionData: SessionData = useMemo(() => {
     if (!activeSessionId) return EMPTY_SESSION_DATA;
@@ -1515,24 +1507,6 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
           </PopoverContent>
         </Popover>
 
-        {/* Session-specific status — only when working */}
-        {hasMessages && sessionData.workDir && (
-          <div className="flex items-center gap-1.5">
-            <div className="w-px h-3.5 bg-border/30" />
-            <div className={`flex items-center gap-1 text-xs ${
-              activeSession?.status === 'active' ? 'text-warning' :
-              activeSession?.status === 'error' ? 'text-destructive' :
-              'text-cherry-primary-dark'
-            }`}>
-              <span className={`w-[5px] h-[5px] rounded-full flex-shrink-0 ${
-                activeSession?.status === 'active' ? 'bg-warning animate-pulse' :
-                activeSession?.status === 'error' ? 'bg-destructive' :
-                'bg-success'
-              }`} />
-              {activeSession?.status === 'active' ? '运行中' : activeSession?.status === 'error' ? '失败' : '已完成'}
-            </div>
-          </div>
-        )}
       </div>
 
       <div className="flex items-center gap-0.5">
@@ -1542,48 +1516,6 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
             <MessageCirclePlus size={13} />
           </Button></Tooltip>
         )}
-
-        {/* Open with — choose external tool to open the project */}
-        <Popover open={showOpenWith} onOpenChange={setShowOpenWith}>
-          <PopoverTrigger asChild>
-            <Button variant="ghost" size="inline"
-              className={`flex items-center gap-1 px-1.5 py-1 rounded-md text-xs transition-colors ${
-                showOpenWith
-                  ? 'bg-accent/25 text-foreground'
-                  : 'text-muted-foreground hover:text-foreground hover:bg-accent/15'
-              }`}
-              title="用工具打开"
-            >
-              <FolderOpen size={13} className="text-blue-500" />
-              <ChevronDown size={9} className={`transition-transform duration-100 ${showOpenWith ? 'rotate-180' : ''}`} />
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent align="end" side="bottom" sideOffset={6} className="w-[180px] p-1">
-            <div className="px-2 py-1 text-xs text-muted-foreground/60">用工具打开</div>
-            {[
-              { id: 'cursor', label: 'Cursor', Icon: MousePointer2, color: 'text-foreground' },
-              { id: 'antigravity', label: 'Antigravity', Icon: Mountain, color: 'text-orange-500' },
-              { id: 'finder', label: 'Finder', Icon: FolderOpen, color: 'text-blue-500' },
-              { id: 'terminal', label: 'Terminal', Icon: TerminalSquare, color: 'text-foreground' },
-              { id: 'warp', label: 'Warp', Icon: Zap, color: 'text-cyan-500' },
-            ].map(item => {
-              const Icon = item.Icon;
-              return (
-                <button
-                  key={item.id}
-                  type="button"
-                  onClick={() => setShowOpenWith(false)}
-                  className="w-full flex items-center gap-2.5 px-2 py-[6px] rounded-md text-left text-xs text-foreground/80 hover:bg-accent/25 transition-colors"
-                >
-                  <div className="w-5 h-5 rounded-md bg-foreground/5 border border-border/30 flex items-center justify-center flex-shrink-0">
-                    <Icon size={11} strokeWidth={1.5} className={item.color} />
-                  </div>
-                  <span className="flex-1">{item.label}</span>
-                </button>
-              );
-            })}
-          </PopoverContent>
-        </Popover>
 
         {/* Plan toggle — only when there are workflow steps. Opens floating card. */}
         {sessionData.steps.length > 0 && (

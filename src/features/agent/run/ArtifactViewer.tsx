@@ -182,15 +182,10 @@ export function ArtifactViewer({ fileContent, fileName, previewUrl, hasArtifact,
         {/* Right controls */}
         <div className="flex items-center gap-0.5">
           {activeTab === 'preview' && (
-            <div className="contents">
-              <Tooltip content="刷新" side="bottom"><Button variant="ghost" size="icon-xs" onClick={() => setPreviewKey(k => k + 1)}
-                className="text-muted-foreground hover:text-foreground">
-                <RotateCw size={10} />
-              </Button></Tooltip>
-              <Tooltip content="新窗口打开" side="bottom"><Button variant="ghost" size="icon-xs" className="text-muted-foreground hover:text-foreground">
-                <ExternalLink size={10} />
-              </Button></Tooltip>
-            </div>
+            <Tooltip content="刷新" side="bottom"><Button variant="ghost" size="icon-xs" onClick={() => setPreviewKey(k => k + 1)}
+              className="text-muted-foreground hover:text-foreground">
+              <RotateCw size={10} />
+            </Button></Tooltip>
           )}
 
           {activeTab === 'code' && fileContent && (

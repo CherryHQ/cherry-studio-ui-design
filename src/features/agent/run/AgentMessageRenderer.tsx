@@ -626,17 +626,16 @@ function ArtifactCard({ filePath }: { filePath: string }) {
   const fileExt = (filePath.split('.').pop() || '').toLowerCase();
   const fileName = filePath.split('/').pop() || filePath;
   const fts = ARTIFACT_TYPE_STYLE[fileExt] || { iconCls: 'text-muted-foreground', tileCls: 'bg-muted/40' };
-  const previewable = ['pdf', 'md', 'html', 'docx', 'png', 'jpg', 'jpeg', 'svg', 'pptx'].includes(fileExt);
-  const browserable = ['html', 'pdf', 'png', 'jpg', 'jpeg', 'svg', 'md'].includes(fileExt);
-  const editable = ['ts', 'tsx', 'js', 'jsx', 'md', 'json', 'css', 'html', 'csv', 'py', 'go', 'rs', 'java', 'sh', 'yml', 'yaml', 'toml'].includes(fileExt);
   const FileIcon = fileExt === 'html' ? Globe : (fileExt === 'zip' ? Package : FileText);
 
   return (
-    <motion.div
+    <motion.button
+      type="button"
       initial={{ opacity: 0, y: 4 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.15 }}
-      className="group/art flex items-center gap-2 px-2 py-1.5 rounded-lg border border-border/40 bg-card/60 hover:bg-accent/15 hover:border-border/60 transition-all max-w-[420px]"
+      className="group/art flex items-center gap-2 px-2 py-1.5 rounded-lg border border-border/40 bg-card/60 hover:bg-accent/20 hover:border-border/70 active:scale-[0.99] transition-all max-w-[420px] text-left cursor-pointer"
+      title={`打开 ${fileName}`}
     >
       <div className={`w-6 h-6 rounded-md flex items-center justify-center flex-shrink-0 ${fts.tileCls}`}>
         <FileIcon size={11} className={fts.iconCls} />
@@ -646,46 +645,8 @@ function ArtifactCard({ filePath }: { filePath: string }) {
         <span className="text-[10px] text-muted-foreground/40 flex-shrink-0">·</span>
         <span className="text-[10px] uppercase text-muted-foreground/60 tracking-wide flex-shrink-0">{fileExt}</span>
       </div>
-      <div className="flex items-center gap-0 flex-shrink-0 opacity-0 group-hover/art:opacity-100 transition-opacity">
-        {previewable && (
-          <button type="button" title="预览" className="p-1 rounded text-muted-foreground/70 hover:text-foreground hover:bg-accent/30 transition-colors">
-            <EyeIcon size={11} />
-          </button>
-        )}
-        {browserable && (
-          <button type="button" title="浏览器" className="p-1 rounded text-muted-foreground/70 hover:text-accent-violet hover:bg-accent/30 transition-colors">
-            <Globe size={11} />
-          </button>
-        )}
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <button type="button" title="更多" className="p-1 rounded text-muted-foreground/70 hover:text-foreground hover:bg-accent/30 transition-colors">
-              <ChevronDown size={11} />
-            </button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" side="bottom" className="w-[150px]">
-            {editable && (
-              <DropdownMenuItem className="gap-2 px-2 py-[5px] text-xs">
-                <MousePointer2 size={11} className="text-foreground flex-shrink-0" />
-                <span className="flex-1">Cursor</span>
-              </DropdownMenuItem>
-            )}
-            <DropdownMenuItem className="gap-2 px-2 py-[5px] text-xs">
-              <FolderOpenIcon size={11} className="text-blue-500 flex-shrink-0" />
-              <span className="flex-1">Finder</span>
-            </DropdownMenuItem>
-            <DropdownMenuItem className="gap-2 px-2 py-[5px] text-xs">
-              <TerminalSquare size={11} className="text-muted-foreground/70 flex-shrink-0" />
-              <span className="flex-1">Terminal</span>
-            </DropdownMenuItem>
-            <DropdownMenuItem className="gap-2 px-2 py-[5px] text-xs">
-              <ExternalLink size={11} className="text-muted-foreground/70 flex-shrink-0" />
-              <span className="flex-1">复制路径</span>
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
-    </motion.div>
+      <ExternalLink size={11} className="text-muted-foreground/50 flex-shrink-0 opacity-0 group-hover/art:opacity-100 transition-opacity" />
+    </motion.button>
   );
 }
 

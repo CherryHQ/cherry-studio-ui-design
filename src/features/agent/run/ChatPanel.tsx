@@ -94,6 +94,15 @@ const THINKING_MODES: { id: string; label: string; desc: string; icon: typeof Li
   { id: 'auto', label: '自动', desc: '灵活决定推理力度', icon: Lightbulb },
 ];
 
+// Cascading effort levels for the thinking selector
+const THINKING_EFFORTS: { id: string; label: string; desc: string }[] = [
+  { id: 'off',     label: '关闭',  desc: '不推理' },
+  { id: 'low',     label: '低',    desc: '快速' },
+  { id: 'default', label: '默认',  desc: '均衡' },
+  { id: 'high',    label: '高',    desc: '深入' },
+  { id: 'extreme', label: '极高',  desc: '最深' },
+];
+
 // ===========================
 // Popup Card (shared component for all toolbar popovers)
 // ===========================
@@ -511,18 +520,20 @@ export function ChatPanel({
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent side="top" align="start" className="w-44">
-                  {PLUS_MENU_ITEMS.map((item, idx) => {
-                    const Icon = item.icon;
-                    return (
-                      <div key={item.id}>
-                        <DropdownMenuItem className="gap-2 px-2 py-[5px] text-xs">
-                          <Icon size={13} strokeWidth={1.5} className="text-muted-foreground flex-shrink-0" />
-                          <span className="flex-1 text-left">{item.label}</span>
-                        </DropdownMenuItem>
-                        {item.separator && idx < PLUS_MENU_ITEMS.length - 1 && <DropdownMenuSeparator />}
-                      </div>
-                    );
-                  })}
+                  {PLUS_MENU_ITEMS
+                    .filter(item => !['code', 'reasoning'].includes(item.id))
+                    .map((item, idx, arr) => {
+                      const Icon = item.icon;
+                      return (
+                        <div key={item.id}>
+                          <DropdownMenuItem className="gap-2 px-2 py-[5px] text-xs">
+                            <Icon size={13} strokeWidth={1.5} className="text-muted-foreground flex-shrink-0" />
+                            <span className="flex-1 text-left">{item.label}</span>
+                          </DropdownMenuItem>
+                          {item.separator && idx < arr.length - 1 && <DropdownMenuSeparator />}
+                        </div>
+                      );
+                    })}
                   <DropdownMenuSeparator />
                   <DropdownMenuItem className="gap-2 px-2 py-[5px] text-xs" onClick={() => togglePopup('slash')}>
                     <TerminalSquare size={13} strokeWidth={1.5} className="text-muted-foreground flex-shrink-0" />
@@ -531,10 +542,6 @@ export function ChatPanel({
                   <DropdownMenuItem className="gap-2 px-2 py-[5px] text-xs" onClick={() => togglePopup('phrases')}>
                     <Zap size={13} strokeWidth={1.5} className="text-muted-foreground flex-shrink-0" />
                     <span className="flex-1 text-left">快捷短语</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem className="gap-2 px-2 py-[5px] text-xs" onClick={() => togglePopup('thinking')}>
-                    <Lightbulb size={13} strokeWidth={1.5} className="text-muted-foreground flex-shrink-0" />
-                    <span className="flex-1 text-left">思维链长度</span>
                   </DropdownMenuItem>
                   <DropdownMenuSub>
                     <DropdownMenuSubTrigger className="gap-2 px-2 py-[5px] text-xs text-muted-foreground">
@@ -598,31 +605,27 @@ export function ChatPanel({
               </Popover>
               );
               })()}
-            </div>
 
-            {/* Right: provider, model, translate, send */}
-            <div className="flex items-center gap-1">
-              {/* Provider/Model badge + thinking strength */}
+              {/* Thinking effort selector */}
               <Popover open={showModelMenu} onOpenChange={setShowModelMenu}>
                 <PopoverTrigger asChild>
                   <Button variant="ghost" size="inline"
-                    className={`flex items-center gap-1.5 px-2 py-[3px] rounded-md text-xs transition-colors ${
+                    className={`flex items-center gap-1 px-1.5 py-[4px] rounded-md text-xs transition-colors ${
                       showModelMenu
                         ? 'bg-accent/60 text-foreground'
-                        : 'text-muted-foreground hover:text-foreground hover:bg-accent/40'
+                        : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
                     }`}
                   >
-                    <BrandLogo id="cherry" size={12} className="shrink-0" fallbackLetter="C" />
-                    <Lightbulb size={11} className="text-warning" strokeWidth={1.5} />
-                    <span className="text-foreground/80">5.5</span>
-                    <span className="text-muted-foreground/60">中</span>
+                    <Lightbulb size={13} className="text-muted-foreground/70" strokeWidth={1.5} />
+                    <span className="truncate">
+                      {THINKING_EFFORTS.find(e => e.id === activeThinking)?.label ?? '默认'}
+                    </span>
                     <ChevronDown size={9} className={`transition-transform duration-100 ${showModelMenu ? 'rotate-180' : ''}`} />
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent side="top" align="end" className="w-[200px] p-1">
-                  <div className="px-2 py-1 text-xs text-muted-foreground/60">思维链长度</div>
-                  {THINKING_MODES.map(mode => {
-                    const Icon = mode.icon;
+                <PopoverContent side="top" align="start" className="w-[200px] p-1">
+                  <div className="px-2 py-1 text-xs text-muted-foreground/60">思考强度</div>
+                  {THINKING_EFFORTS.map(mode => {
                     const isActive = activeThinking === mode.id;
                     return (
                       <button
@@ -633,22 +636,19 @@ export function ChatPanel({
                           isActive ? 'bg-accent/40 text-foreground' : 'text-foreground/80 hover:bg-accent/25'
                         }`}
                       >
-                        <Icon size={12} strokeWidth={1.5} className={`flex-shrink-0 ${isActive ? 'text-success' : 'text-muted-foreground/70'}`} />
+                        <Lightbulb size={12} strokeWidth={1.5} className={`flex-shrink-0 ${isActive ? 'text-warning' : 'text-muted-foreground/70'}`} />
                         <span className="flex-1">{mode.label}</span>
-                        {isActive && <Check size={11} className="text-success flex-shrink-0" />}
+                        <span className="text-[10px] text-muted-foreground/50">{mode.desc}</span>
+                        {isActive && <Check size={11} className="text-foreground flex-shrink-0" />}
                       </button>
                     );
                   })}
                 </PopoverContent>
               </Popover>
+            </div>
 
-              {/* Translate */}
-              <Tooltip content="翻译" side="top">
-                <Button variant="ghost" size="icon-sm" className={toolbarBtnClass}>
-                  <Languages size={16} strokeWidth={1.5} />
-                </Button>
-              </Tooltip>
-
+            {/* Right: send */}
+            <div className="flex items-center gap-1">
               {/* Send */}
               <Button
                 variant="default"
