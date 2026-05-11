@@ -206,7 +206,7 @@ export function ChatPanel({
     <div className="flex flex-col h-full min-h-0">
       <MessageList
         scrollDeps={[messages.length]}
-        header={steps.length > 0 ? <WorkflowPanel steps={steps} /> : undefined}
+        header={undefined}
       >
         {grouped.map((group, i) => {
           if (group.type === 'user') {

@@ -153,8 +153,8 @@ function ProcessDetail({ step }: { step: WorkflowStep }) {
 // Workflow Panel (collapsible)
 // ===========================
 
-export function WorkflowPanel({ steps }: { steps: WorkflowStep[] }) {
-  const [panelExpanded, setPanelExpanded] = useState(false);
+export function WorkflowPanel({ steps, inline = false }: { steps: WorkflowStep[]; inline?: boolean }) {
+  const [panelExpanded, setPanelExpanded] = useState(inline ? true : false);
   const [processExpanded, setProcessExpanded] = useState(false);
   const doneCount = steps.filter(s => s.status === 'done').length;
   const hasAnyProcess = steps.some(s => s.description || (s.details && s.details.length > 0));
@@ -162,34 +162,39 @@ export function WorkflowPanel({ steps }: { steps: WorkflowStep[] }) {
   const currentStep = steps.find(s => s.status === 'running') || steps.filter(s => s.status === 'done').pop();
 
   return (
-    <div className="mx-3 mt-3 mb-1 rounded-xl border border-border/60 shadow-[0_1px_4px_var(--color-border)] bg-card overflow-hidden flex-shrink-0">
-      {/* Collapsible header */}
-      <Button size="inline"
-        variant="ghost"
-        onClick={() => setPanelExpanded(!panelExpanded)}
-        className="w-full justify-start gap-2 px-3.5 py-2.5 font-normal hover:bg-muted/50 rounded-none"
-      >
-        <motion.div
-          animate={{ rotate: panelExpanded ? 0 : -90 }}
-          transition={{ duration: 0.12 }}
-          className="flex-shrink-0"
+    <div className={inline
+      ? 'overflow-hidden'
+      : 'mx-3 mt-3 mb-1 rounded-xl border border-border/60 shadow-[0_1px_4px_var(--color-border)] bg-card overflow-hidden flex-shrink-0'
+    }>
+      {/* Collapsible header — hidden in inline mode (parent supplies its own header) */}
+      {!inline && (
+        <Button size="inline"
+          variant="ghost"
+          onClick={() => setPanelExpanded(!panelExpanded)}
+          className="w-full justify-start gap-2 px-3.5 py-2.5 font-normal hover:bg-muted/50 rounded-none"
         >
-          <ChevronDown size={10} className="text-muted-foreground" />
-        </motion.div>
-        <span className={`text-xs text-foreground text-left ${panelExpanded ? 'flex-1' : 'flex-shrink-0'}`}>{"任务"}</span>
-        {/* Collapsed: show current task inline */}
-        {!panelExpanded && currentStep && (
-          <span className="flex items-center gap-1.5 flex-1 min-w-0">
-            <StatusDot status={currentStep.status} size={8} />
-            <span className={`text-xs truncate ${
-              currentStep.status === 'running' ? 'text-foreground' : 'text-foreground'
-            }`}>
-              {currentStep.label}
+          <motion.div
+            animate={{ rotate: panelExpanded ? 0 : -90 }}
+            transition={{ duration: 0.12 }}
+            className="flex-shrink-0"
+          >
+            <ChevronDown size={10} className="text-muted-foreground" />
+          </motion.div>
+          <span className={`text-xs text-foreground text-left ${panelExpanded ? 'flex-1' : 'flex-shrink-0'}`}>{"任务"}</span>
+          {/* Collapsed: show current task inline */}
+          {!panelExpanded && currentStep && (
+            <span className="flex items-center gap-1.5 flex-1 min-w-0">
+              <StatusDot status={currentStep.status} size={8} />
+              <span className={`text-xs truncate ${
+                currentStep.status === 'running' ? 'text-foreground' : 'text-foreground'
+              }`}>
+                {currentStep.label}
+              </span>
             </span>
-          </span>
-        )}
-        <span className="text-xs text-muted-foreground tabular-nums flex-shrink-0">{doneCount}/{steps.length}</span>
-      </Button>
+          )}
+          <span className="text-xs text-muted-foreground tabular-nums flex-shrink-0">{doneCount}/{steps.length}</span>
+        </Button>
+      )}
 
       <AnimatePresence initial={false}>
         {panelExpanded && (

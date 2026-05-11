@@ -6,7 +6,7 @@ import {
   Sparkles, Plus, ArrowUp,
   FileText, Zap, Search as SearchIcon, BookOpen, History,
   MessageCirclePlus,
-  Code2, Folder, FolderPlus, FolderX, Tag,
+  Code2, Folder, FolderPlus, FolderX, Tag, ListChecks,
   X,
   Check,
   Edit3, Clock,
@@ -24,6 +24,7 @@ import { usePinnedAgents } from '@/app/hooks/usePinnedAgents';
 import { FileExplorer } from './FileExplorer';
 import { ArtifactViewer } from './ArtifactViewer';
 import { ChatPanel } from './ChatPanel';
+import { WorkflowPanel } from './WorkflowPanel';
 import type { AgentChatMessage, AgentSession, AgentSessionData } from '@/app/types/agent';
 import { SessionHistoryPage, type SessionDisplayMode } from './SessionHistoryPage';
 import { HistorySidebar } from '@/app/components/shared/HistorySidebar';
@@ -1200,6 +1201,7 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
   const [selectedAgent, setSelectedAgent] = useState(AVAILABLE_AGENTS[0]);
   const [previewMaximized, setPreviewMaximized] = useState(false);
   const [showAgentInfo, setShowAgentInfo] = useState(false);
+  const [showPlan, setShowPlan] = useState(false);
 
   const sessionData: SessionData = useMemo(() => {
     if (!activeSessionId) return EMPTY_SESSION_DATA;
@@ -1464,6 +1466,20 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
           </Button></Tooltip>
         )}
 
+        {/* Plan toggle — only when there are workflow steps */}
+        {sessionData.steps.length > 0 && (
+          <Tooltip content={showPlan ? "隐藏计划" : "查看计划"} side="bottom">
+            <Button variant="ghost" size="icon-xs" onClick={() => setShowPlan(v => !v)}
+              className={`relative p-1.5 w-auto h-auto ${showPlan ? 'text-foreground bg-accent/25' : 'text-muted-foreground hover:text-foreground hover:bg-accent/15'}`}>
+              <ListChecks size={13} />
+              {/* Status dot: warning while any step is running, otherwise muted */}
+              {sessionData.steps.some(s => s.status === 'running') && (
+                <span className="absolute top-[2px] right-[2px] w-[5px] h-[5px] rounded-full bg-warning animate-pulse" />
+              )}
+            </Button>
+          </Tooltip>
+        )}
+
         {/* Show preview toggle — only when artifact is closed, to bring it back */}
         {!showPreview && (
           <div className="flex items-center gap-0.5">
@@ -1651,6 +1667,37 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
                 maximized={previewMaximized}
                 onToggleMaximize={() => setPreviewMaximized(!previewMaximized)}
               />
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ===== Plan Panel — right side, toggled by header button ===== */}
+      <AnimatePresence initial={false}>
+        {showPlan && sessionData.steps.length > 0 && (
+          <motion.div
+            initial={{ width: 0, opacity: 0, marginLeft: -8 }}
+            animate={{ width: 320, opacity: 1, marginLeft: 0 }}
+            exit={{ width: 0, opacity: 0, marginLeft: -8 }}
+            transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
+            className="flex flex-col flex-shrink-0 min-w-0 my-1.5 mr-1 rounded-2xl border border-border/40 bg-card/50 shadow-sm shadow-black/5 overflow-hidden"
+            style={{ width: 320 }}
+          >
+            <div className="flex items-center justify-between px-3 py-2 border-b border-border/30 flex-shrink-0">
+              <div className="flex items-center gap-1.5">
+                <ListChecks size={12} className="text-muted-foreground" />
+                <span className="text-xs text-foreground">计划</span>
+                <span className="text-xs text-muted-foreground/60 tabular-nums">
+                  {sessionData.steps.filter(s => s.status === 'done').length}/{sessionData.steps.length}
+                </span>
+              </div>
+              <Button variant="ghost" size="icon-xs" onClick={() => setShowPlan(false)}
+                className="p-1 w-auto h-auto text-muted-foreground hover:text-foreground hover:bg-accent/15">
+                <X size={11} />
+              </Button>
+            </div>
+            <div className="flex-1 min-h-0 overflow-y-auto">
+              <WorkflowPanel steps={sessionData.steps} inline />
             </div>
           </motion.div>
         )}
