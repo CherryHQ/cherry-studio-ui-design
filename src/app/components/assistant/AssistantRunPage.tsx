@@ -1309,7 +1309,7 @@ function MessageBubble({ msg, onOpenPanel, onAvatarClick, onOpenArtifact, assist
               <AttachmentList attachments={msg.attachments} />
             </div>
           )}
-          <div className="px-3.5 py-2.5 rounded-[var(--radius-button)] rounded-br-[var(--radius-dot)] bg-foreground text-background text-xs leading-[1.65]">
+          <div className="px-3.5 py-2.5 rounded-[var(--radius-button)] rounded-br-[var(--radius-dot)] bg-[#F8F8F9] dark:bg-foreground/15 text-foreground text-xs leading-[1.65]">
             {msg.content}
           </div>
           <MessageActionBar
