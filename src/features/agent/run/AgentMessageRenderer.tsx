@@ -37,11 +37,31 @@ function ToolCallRow({ msg }: { msg: ChatMessage }) {
 
   // Show "Open with" dropdown when the tool produced a file (write/edit/create) and finished
   const fileExt = filePath ? (filePath.split('.').pop() || '').toLowerCase() : '';
+  const fileName = filePath ? filePath.split('/').pop() || filePath : '';
   const isWriteOp = filePath && /^(write|edit|create|update|modify)/i.test(tc.name);
   const showOpenWith = isWriteOp && tc.status === 'done';
   const previewable = ['pdf', 'md', 'html', 'docx', 'png', 'jpg', 'jpeg', 'svg', 'pptx'].includes(fileExt);
   const browserable = ['html', 'pdf', 'png', 'jpg', 'jpeg', 'svg', 'md'].includes(fileExt);
   const editable = ['ts', 'tsx', 'js', 'jsx', 'md', 'json', 'css', 'html', 'csv', 'py', 'go', 'rs', 'java', 'sh', 'yml', 'yaml', 'toml'].includes(fileExt);
+  // "Deliverable" = something users would want to view/share, not just code
+  const isDeliverable = ['pdf', 'md', 'html', 'docx', 'pptx', 'xlsx', 'csv', 'zip', 'png', 'jpg', 'jpeg', 'svg', 'gif', 'mp4', 'mov'].includes(fileExt);
+  const showArtifactCard = isWriteOp && tc.status === 'done' && isDeliverable;
+
+  // File-type styling for the artifact card
+  const fileTypeStyle: Record<string, { Icon: typeof FileText; iconCls: string; tileCls: string }> = {
+    pdf:  { Icon: FileText, iconCls: 'text-destructive', tileCls: 'bg-destructive/10' },
+    md:   { Icon: FileText, iconCls: 'text-info', tileCls: 'bg-info/10' },
+    html: { Icon: Globe, iconCls: 'text-accent-violet', tileCls: 'bg-accent-violet/10' },
+    docx: { Icon: FileText, iconCls: 'text-info', tileCls: 'bg-info/10' },
+    pptx: { Icon: FileText, iconCls: 'text-warning', tileCls: 'bg-warning/10' },
+    xlsx: { Icon: FileText, iconCls: 'text-success', tileCls: 'bg-success/10' },
+    csv:  { Icon: FileText, iconCls: 'text-success', tileCls: 'bg-success/10' },
+    zip:  { Icon: Package, iconCls: 'text-muted-foreground', tileCls: 'bg-muted-foreground/10' },
+    png:  { Icon: FileText, iconCls: 'text-accent-pink', tileCls: 'bg-accent-pink/10' },
+    jpg:  { Icon: FileText, iconCls: 'text-accent-pink', tileCls: 'bg-accent-pink/10' },
+  };
+  const fts = fileTypeStyle[fileExt] || { Icon: FileText, iconCls: 'text-muted-foreground', tileCls: 'bg-muted/40' };
+  const FileIcon = fts.Icon;
 
   return (
     <div>
@@ -123,6 +143,87 @@ function ToolCallRow({ msg }: { msg: ChatMessage }) {
           <ChevronRight size={9} className={`text-muted-foreground flex-shrink-0 transition-transform duration-100 ${expanded ? 'rotate-90' : ''}`} />
         )}
       </div>
+
+      {/* Prominent artifact card — appears below the tool row when a deliverable was produced */}
+      {showArtifactCard && (
+        <motion.div
+          initial={{ opacity: 0, y: 4 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.15 }}
+          className="mt-1.5 flex items-center gap-3 p-2.5 rounded-xl border border-border/50 bg-card hover:bg-accent/15 hover:border-border/70 transition-all shadow-sm shadow-black/[0.02] max-w-[480px]"
+        >
+          <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${fts.tileCls}`}>
+            <FileIcon size={18} className={fts.iconCls} />
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="text-sm text-foreground truncate" title={fileName}>{fileName}</div>
+            <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground/60 mt-[2px]">
+              <span className="uppercase tracking-wide font-medium">{fileExt}</span>
+              {tc.duration && (
+                <>
+                  <span className="text-muted-foreground/30">·</span>
+                  <span>用时 {tc.duration}</span>
+                </>
+              )}
+              <span className="text-muted-foreground/30">·</span>
+              <span className="text-success">已生成</span>
+            </div>
+          </div>
+          {/* Action buttons — always visible (prominent) */}
+          <div className="flex items-center gap-0.5 flex-shrink-0">
+            {previewable && (
+              <button
+                type="button"
+                title="预览"
+                className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-accent/40 transition-colors"
+              >
+                <EyeIcon size={14} />
+              </button>
+            )}
+            {browserable && (
+              <button
+                type="button"
+                title="浏览器"
+                className="p-1.5 rounded-md text-muted-foreground hover:text-accent-violet hover:bg-accent/40 transition-colors"
+              >
+                <Globe size={14} />
+              </button>
+            )}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  type="button"
+                  title="更多打开方式"
+                  className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-accent/40 transition-colors"
+                >
+                  <ChevronDown size={14} />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" side="bottom" className="w-[160px]">
+                {editable && (
+                  <DropdownMenuItem className="gap-2 px-2 py-[5px] text-xs">
+                    <MousePointer2 size={12} className="text-foreground flex-shrink-0" />
+                    <span className="flex-1">Cursor</span>
+                  </DropdownMenuItem>
+                )}
+                <DropdownMenuItem className="gap-2 px-2 py-[5px] text-xs">
+                  <FolderOpenIcon size={12} className="text-blue-500 flex-shrink-0" />
+                  <span className="flex-1">Finder</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem className="gap-2 px-2 py-[5px] text-xs">
+                  <TerminalSquare size={12} className="text-muted-foreground/70 flex-shrink-0" />
+                  <span className="flex-1">Terminal</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem className="gap-2 px-2 py-[5px] text-xs">
+                  <ExternalLink size={12} className="text-muted-foreground/70 flex-shrink-0" />
+                  <span className="flex-1">复制路径</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        </motion.div>
+      )}
+
       <AnimatePresence initial={false}>
         {expanded && (
           <motion.div
