@@ -193,35 +193,37 @@ export function FileExplorer({ files, outputFiles = [], selectedFile, onSelectFi
 
   return (
     <div className="flex flex-col h-full select-none">
-      {/* Tab bar */}
-      <div className="px-3 pt-2.5 pb-1 flex-shrink-0 flex items-center gap-3 border-b border-border/15">
-        <Button
-          variant="ghost"
-          size="xs"
-          onClick={() => setTab('output')}
-          className={`pb-1.5 rounded-none border-b-[1.5px] font-normal ${
-            tab === 'output'
-              ? 'text-foreground border-border'
-              : 'text-muted-foreground/50 border-transparent hover:text-foreground hover:bg-transparent'
-          }`}
-        >
-          {"结果"}
-          {outputFiles.length > 0 && (
-            <span className="text-xs text-muted-foreground/50 ml-1">{outputFiles.length}</span>
-          )}
-        </Button>
-        <Button
-          variant="ghost"
-          size="xs"
-          onClick={() => setTab('all')}
-          className={`pb-1.5 rounded-none border-b-[1.5px] font-normal ${
-            tab === 'all'
-              ? 'text-foreground border-border'
-              : 'text-muted-foreground/50 border-transparent hover:text-foreground hover:bg-transparent'
-          }`}
-        >
-          {"全部文件"}
-        </Button>
+      {/* Tab bar — pill segmented control */}
+      <div className="px-2.5 pt-2.5 pb-2 flex-shrink-0">
+        <div className="inline-flex items-center gap-0.5 p-[2px] rounded-md bg-accent/25">
+          <button
+            type="button"
+            onClick={() => setTab('output')}
+            className={`flex items-center gap-1 px-2.5 py-[3px] rounded text-xs transition-colors ${
+              tab === 'output'
+                ? 'bg-background text-foreground shadow-sm'
+                : 'text-muted-foreground/70 hover:text-foreground'
+            }`}
+          >
+            <span>结果</span>
+            {outputFiles.length > 0 && (
+              <span className={`text-[10px] tabular-nums ${tab === 'output' ? 'text-muted-foreground/70' : 'text-muted-foreground/50'}`}>
+                {outputFiles.length}
+              </span>
+            )}
+          </button>
+          <button
+            type="button"
+            onClick={() => setTab('all')}
+            className={`px-2.5 py-[3px] rounded text-xs transition-colors ${
+              tab === 'all'
+                ? 'bg-background text-foreground shadow-sm'
+                : 'text-muted-foreground/70 hover:text-foreground'
+            }`}
+          >
+            全部文件
+          </button>
+        </div>
       </div>
 
       {/* Content */}
