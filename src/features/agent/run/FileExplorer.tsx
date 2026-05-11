@@ -197,45 +197,19 @@ function OutputFileItem({ file, isSelected, onSelect }: {
       tabIndex={0}
       onClick={onSelect}
       onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSelect(); } }}
-      className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg transition-all duration-75 group cursor-pointer ${
+      className={`w-full flex items-center gap-2 px-2 py-1.5 rounded-md transition-all duration-75 group cursor-pointer ${
         isSelected
           ? 'bg-cherry-active-bg'
           : 'hover:bg-accent/50'
       }`}
     >
-      {getOutputIcon(file.format)}
-      <div className="flex-1 min-w-0 text-left">
-        <div className={`text-xs truncate ${isSelected ? 'text-cherry-text' : 'text-foreground'}`}>
-          {file.name}
-        </div>
-        <div className="flex items-center gap-2 mt-[1px]">
-          <span className="text-xs text-muted-foreground/50 uppercase">{file.format}</span>
-          <span className="text-xs text-muted-foreground/40">{file.size}</span>
-        </div>
-      </div>
-      <div className="flex items-center gap-1.5 flex-shrink-0">
-        {isGenerating ? (
-          <span className="flex items-center gap-1 text-xs text-warning">
-            <Loader2 size={10} className="animate-spin" />
-            <span>{"生成中"}</span>
-          </span>
-        ) : (
-          <span className="flex items-center gap-1">
-            <CheckCircle2 size={10} className="text-cherry-primary" />
-            <span className="text-xs text-muted-foreground/50">{file.timestamp}</span>
-          </span>
-        )}
-        {!isGenerating && (
-          <Button
-            variant="ghost"
-            size="icon-xs"
-            onClick={e => { e.stopPropagation(); }}
-            className="p-0.5 opacity-0 group-hover:opacity-100 text-muted-foreground/40 hover:text-foreground"
-          >
-            <Download size={10} />
-          </Button>
-        )}
-      </div>
+      {getOutputIcon(file.format, 12)}
+      <span className={`text-xs truncate flex-1 text-left ${isSelected ? 'text-cherry-text' : 'text-foreground'}`}>
+        {file.name}
+      </span>
+      {isGenerating && (
+        <Loader2 size={10} className="text-warning animate-spin flex-shrink-0" />
+      )}
     </div>
   );
 
