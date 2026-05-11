@@ -245,20 +245,23 @@ export function ChatPanel({
         })}
       </MessageList>
 
-      {/* Pending permission banner — sits above the input, blocks until resolved */}
-      {pendingPermission && (
-        <div className="flex-shrink-0 px-4 pt-2 pb-1">
-          <PermissionApprovalCard
-            request={pendingPermission.data}
-            onResolve={(action) => onResolveUI?.(pendingPermission.msgId, action)}
-          />
-        </div>
-      )}
-
-      {/* Input Bar or Interactive Overlay */}
+      {/* Input Bar or Interactive Overlay (permission > gen-ui > input) */}
       <div className="flex-shrink-0 px-4 pb-3 pt-2">
         <AnimatePresence mode="wait">
-          {pendingUIs.length > 0 && onResolveUI ? (
+          {pendingPermission && onResolveUI ? (
+            <motion.div
+              key="permission"
+              initial={{ opacity: 0, y: 4 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 4 }}
+              transition={{ duration: 0.15 }}
+            >
+              <PermissionApprovalCard
+                request={pendingPermission.data}
+                onResolve={(action) => onResolveUI(pendingPermission.msgId, action)}
+              />
+            </motion.div>
+          ) : pendingUIs.length > 0 && onResolveUI ? (
             <div key="overlay">
               <GenUIOverlay
                 items={pendingUIs}
