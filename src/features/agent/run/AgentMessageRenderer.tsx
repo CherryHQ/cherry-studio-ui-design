@@ -7,6 +7,7 @@ import {
   Settings, Rocket,
   Brain, Pencil, Eye, Play, Trash2, FolderOpen,
   ShieldCheck, ShieldAlert, ShieldQuestion,
+  ArrowRight, AlertTriangle,
 } from 'lucide-react';
 import { Button } from '@cherry-studio/ui';
 import { motion, AnimatePresence } from 'motion/react';
@@ -313,6 +314,76 @@ export function PermissionApprovalCard({
         <span className="text-muted-foreground/60">
           {request.status === 'approved' ? '已允许' : '已拒绝'}
         </span>
+      </motion.div>
+    );
+  }
+
+  // Composer variant — CodeX-style question card with numbered options
+  if (composer) {
+    const question = request.toolDescription
+      ? request.toolDescription
+      : `要执行 ${request.toolName}，是否允许？`;
+
+    type Opt = { id: 'allow' | 'allow-always' | 'deny'; label: string; desc?: string; danger?: boolean };
+    const opts: Opt[] = [
+      { id: 'allow', label: '允许' },
+      ...(request.allowAutoApprove
+        ? [{ id: 'allow-always' as const, label: '始终允许', desc: `不再询问 ${request.toolName} 相关命令` }]
+        : []),
+      { id: 'deny', label: '拒绝', desc: '让我告诉智能体应该怎么做', danger: true },
+    ];
+
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 4 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.15 }}
+        className="border border-border/50 rounded-2xl bg-background shadow-lg overflow-hidden"
+      >
+        {/* Header: question + risk badge */}
+        <div className="flex items-start gap-2 px-4 pt-3.5 pb-2">
+          <AlertTriangle size={14} className={`flex-shrink-0 mt-[2px] ${cfg.iconClass}`} />
+          <p className="text-sm text-foreground flex-1 min-w-0 leading-[1.55]">{question}</p>
+          <span className={`text-[11px] leading-[16px] px-1.5 py-[1px] rounded border ${cfg.badgeClass} flex-shrink-0 mt-[1px]`}>
+            {cfg.label}
+          </span>
+        </div>
+
+        {/* Command/params preview */}
+        {hasParams && (
+          <div className="px-4 pb-2.5">
+            <div className="rounded-lg bg-muted/40 px-3 py-2 space-y-0.5">
+              {request.params!.map(p => (
+                <div key={p.label} className="flex gap-2 text-xs">
+                  <span className="text-muted-foreground/60 flex-shrink-0">{p.label}</span>
+                  <span className="text-foreground font-mono break-all">{p.value}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Numbered options */}
+        <div className="px-3 pb-3">
+          {opts.map((opt, i) => (
+            <button
+              key={opt.id}
+              onClick={() => onResolve(opt.id)}
+              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all hover:bg-accent/60 active:scale-[0.99] group border-b border-border/10 last:border-b-0 ${
+                opt.danger ? 'hover:bg-destructive/8' : ''
+              }`}
+            >
+              <span className="w-6 h-6 rounded-lg bg-muted flex items-center justify-center text-xs text-muted-foreground font-medium flex-shrink-0 group-hover:bg-foreground group-hover:text-background transition-colors">
+                {i + 1}
+              </span>
+              <div className="flex-1 min-w-0">
+                <span className={`text-sm ${opt.danger ? 'text-destructive' : 'text-foreground'}`}>{opt.label}</span>
+                {opt.desc && <span className="text-xs text-muted-foreground/60 ml-2">{opt.desc}</span>}
+              </div>
+              <ArrowRight size={12} className="text-muted-foreground/30 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" />
+            </button>
+          ))}
+        </div>
       </motion.div>
     );
   }
