@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import {
-  Plus, Paperclip, Code2, FolderOpen, Folder, FolderPlus, FolderX, FileText, AtSign,
+  Plus, Paperclip, Code2, FolderOpen, Folder, FolderPlus, FolderX, FileText, AtSign, LayoutGrid, Table2, Presentation, Monitor,
   Globe, Hammer, Brain, MoreHorizontal,
   Maximize2, RotateCcw, RefreshCw, ChevronDown, Clock, X, Trash2, Workflow, FolderPen,
   TerminalSquare, Zap, Lightbulb,
@@ -565,6 +565,37 @@ export function ChatPanel({
                         </div>
                       );
                     })}
+                  <DropdownMenuSeparator />
+                  {/* Skills/Plugins — cascaded submenu */}
+                  <DropdownMenuSub>
+                    <DropdownMenuSubTrigger className="gap-2 px-2 py-[5px] text-xs">
+                      <LayoutGrid size={13} strokeWidth={1.5} className="text-muted-foreground flex-shrink-0" />
+                      <span className="flex-1 text-left">插件</span>
+                    </DropdownMenuSubTrigger>
+                    <DropdownMenuSubContent className="w-[200px]">
+                      <div className="px-2 py-1 text-xs text-muted-foreground/60">5 个已安装插件</div>
+                      <DropdownMenuItem className="gap-2 px-2 py-[5px] text-xs">
+                        <FileText size={13} strokeWidth={1.5} className="text-info flex-shrink-0" />
+                        <span className="flex-1 text-left">Documents</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem className="gap-2 px-2 py-[5px] text-xs">
+                        <Table2 size={13} strokeWidth={1.5} className="text-success flex-shrink-0" />
+                        <span className="flex-1 text-left">Spreadsheets</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem className="gap-2 px-2 py-[5px] text-xs">
+                        <Presentation size={13} strokeWidth={1.5} className="text-warning flex-shrink-0" />
+                        <span className="flex-1 text-left">Presentations</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem className="gap-2 px-2 py-[5px] text-xs">
+                        <Compass size={13} strokeWidth={1.5} className="text-info flex-shrink-0" />
+                        <span className="flex-1 text-left">浏览器</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem className="gap-2 px-2 py-[5px] text-xs">
+                        <Monitor size={13} strokeWidth={1.5} className="text-accent-violet flex-shrink-0" />
+                        <span className="flex-1 text-left">电脑</span>
+                      </DropdownMenuItem>
+                    </DropdownMenuSubContent>
+                  </DropdownMenuSub>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem className="gap-2 px-2 py-[5px] text-xs" onClick={() => togglePopup('slash')}>
                     <TerminalSquare size={13} strokeWidth={1.5} className="text-muted-foreground flex-shrink-0" />

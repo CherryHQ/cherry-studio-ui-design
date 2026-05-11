@@ -15,7 +15,7 @@ import {
   Paperclip, Globe, Brain, Pencil, PanelLeftOpen, PanelLeftClose,
   SquarePlus, RefreshCw, TerminalSquare, Lightbulb, Scan, Languages,
   Hand, ShieldAlert, MoreHorizontal, MousePointer2, Mountain, ExternalLink,
-  Package, Eye as EyeIcon, FileImage, Table2,
+  Package, Eye as EyeIcon, FileImage, Table2, LayoutGrid, Presentation, Monitor,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Tooltip } from '@/app/components/Tooltip';
@@ -492,6 +492,37 @@ function CodexStyleInput({ onSendMessage, autoFocus = false, placeholder }: {
                 <DropdownMenuItem className="gap-2 px-2 py-[5px] text-xs"><Paperclip size={13} strokeWidth={1.5} className="text-muted-foreground flex-shrink-0" /><span className="flex-1 text-left">添加图片或附件</span></DropdownMenuItem>
                 <DropdownMenuItem className="gap-2 px-2 py-[5px] text-xs"><Folder size={13} strokeWidth={1.5} className="text-muted-foreground flex-shrink-0" /><span className="flex-1 text-left">添加文件夹</span></DropdownMenuItem>
                 <DropdownMenuItem className="gap-2 px-2 py-[5px] text-xs"><Globe size={13} strokeWidth={1.5} className="text-muted-foreground flex-shrink-0" /><span className="flex-1 text-left">网络搜索</span></DropdownMenuItem>
+                <DropdownMenuSeparator />
+                {/* Skills/Plugins — cascaded submenu */}
+                <DropdownMenuSub>
+                  <DropdownMenuSubTrigger className="gap-2 px-2 py-[5px] text-xs">
+                    <LayoutGrid size={13} strokeWidth={1.5} className="text-muted-foreground flex-shrink-0" />
+                    <span className="flex-1 text-left">插件</span>
+                  </DropdownMenuSubTrigger>
+                  <DropdownMenuSubContent className="w-[200px]">
+                    <div className="px-2 py-1 text-xs text-muted-foreground/60">5 个已安装插件</div>
+                    <DropdownMenuItem className="gap-2 px-2 py-[5px] text-xs">
+                      <FileText size={13} strokeWidth={1.5} className="text-info flex-shrink-0" />
+                      <span className="flex-1 text-left">Documents</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem className="gap-2 px-2 py-[5px] text-xs">
+                      <Table2 size={13} strokeWidth={1.5} className="text-success flex-shrink-0" />
+                      <span className="flex-1 text-left">Spreadsheets</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem className="gap-2 px-2 py-[5px] text-xs">
+                      <Presentation size={13} strokeWidth={1.5} className="text-warning flex-shrink-0" />
+                      <span className="flex-1 text-left">Presentations</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem className="gap-2 px-2 py-[5px] text-xs">
+                      <Compass size={13} strokeWidth={1.5} className="text-info flex-shrink-0" />
+                      <span className="flex-1 text-left">浏览器</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem className="gap-2 px-2 py-[5px] text-xs">
+                      <Monitor size={13} strokeWidth={1.5} className="text-accent-violet flex-shrink-0" />
+                      <span className="flex-1 text-left">电脑</span>
+                    </DropdownMenuItem>
+                  </DropdownMenuSubContent>
+                </DropdownMenuSub>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem className="gap-2 px-2 py-[5px] text-xs"><TerminalSquare size={13} strokeWidth={1.5} className="text-muted-foreground flex-shrink-0" /><span className="flex-1 text-left">斜杠命令</span></DropdownMenuItem>
                 <DropdownMenuItem className="gap-2 px-2 py-[5px] text-xs"><Zap size={13} strokeWidth={1.5} className="text-muted-foreground flex-shrink-0" /><span className="flex-1 text-left">快捷短语</span></DropdownMenuItem>
