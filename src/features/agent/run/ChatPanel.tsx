@@ -14,7 +14,7 @@ import {
 } from '@cherry-studio/ui';
 import { MessageList } from '@cherry-studio/ui';
 import { Tooltip } from '@/app/components/Tooltip';
-import { UserMessage, AgentMessageGroup, useGroupedMessages } from './AgentMessageRenderer';
+import { UserMessage, AgentMessageGroup, useGroupedMessages, PermissionApprovalCard } from './AgentMessageRenderer';
 import { WorkflowPanel } from './WorkflowPanel';
 import { GenUIOverlay } from './GenerativeUI';
 import { AnimatePresence, motion } from 'motion/react';
@@ -170,10 +170,6 @@ export function ChatPanel({
   const currentPermission = PERMISSION_MODES.find(m => m.id === activeMode) ?? PERMISSION_MODES[0];
   const currentProject = PROJECTS.find(p => p.id === activeProject) ?? null;
   const filteredProjects = PROJECTS.filter(p => !projectQuery || p.label.toLowerCase().includes(projectQuery.toLowerCase()));
-  const grouped = useGroupedMessages(messages);
-
-  const togglePopup = (id: string) => setActivePopup(prev => prev === id ? null : id);
-  const closePopup = () => setActivePopup(null);
 
   // Collect ALL unresolved generativeUI messages for pagination
   const pendingUIs = useMemo(() => {
@@ -181,6 +177,31 @@ export function ChatPanel({
       .filter(msg => msg.generativeUI && !msg.generativeUI.resolved)
       .map(msg => ({ msgId: msg.id, data: msg.generativeUI! }));
   }, [messages]);
+
+  // Pending permission request — surfaced as a banner above the input,
+  // not inline in the message history. Only the latest pending one is shown.
+  const pendingPermission = useMemo(() => {
+    for (let i = messages.length - 1; i >= 0; i--) {
+      const m = messages[i];
+      if (m.permissionRequest && m.permissionRequest.status === 'pending') {
+        return { msgId: m.id, data: m.permissionRequest };
+      }
+    }
+    return null;
+  }, [messages]);
+
+  // Messages to render in the message list — exclude pending permission requests
+  // (they're shown as a banner above the input).
+  const renderableMessages = useMemo(() => {
+    return messages.filter(m =>
+      !(m.permissionRequest && m.permissionRequest.status === 'pending')
+    );
+  }, [messages]);
+
+  const grouped = useGroupedMessages(renderableMessages);
+
+  const togglePopup = (id: string) => setActivePopup(prev => prev === id ? null : id);
+  const closePopup = () => setActivePopup(null);
 
   const handleSend = () => {
     const trimmed = input.trim();
@@ -223,6 +244,16 @@ export function ChatPanel({
           );
         })}
       </MessageList>
+
+      {/* Pending permission banner — sits above the input, blocks until resolved */}
+      {pendingPermission && (
+        <div className="flex-shrink-0 px-4 pt-2 pb-1">
+          <PermissionApprovalCard
+            request={pendingPermission.data}
+            onResolve={(action) => onResolveUI?.(pendingPermission.msgId, action)}
+          />
+        </div>
+      )}
 
       {/* Input Bar or Interactive Overlay */}
       <div className="flex-shrink-0 px-4 pb-3 pt-2">
