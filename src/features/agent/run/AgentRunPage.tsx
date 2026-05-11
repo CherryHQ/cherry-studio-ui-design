@@ -6,7 +6,7 @@ import {
   Sparkles, Plus, ArrowUp,
   FileText, Zap, Search as SearchIcon, BookOpen, History,
   MessageCirclePlus,
-  Code2, Folder, FolderPlus, FolderX, Tag, ListChecks,
+  Code2, Folder, FolderPlus, FolderX, FolderPen, Tag, ListChecks,
   X,
   Check,
   Edit3, Clock,
@@ -309,11 +309,11 @@ function CompactInputBar({ onSendMessage, agentName }: { onSendMessage: (text: s
 // CodeX-style Input (shared between empty state and maximized)
 // ===========================
 
-const NEW_PERMISSION_MODES: { id: string; label: string; icon: React.ComponentType<{ size?: number; className?: string; strokeWidth?: number }> }[] = [
-  { id: 'default', label: '默认权限', icon: Hand },
-  { id: 'plan', label: '计划模式', icon: Compass },
-  { id: 'auto-edit', label: '自动编辑', icon: Pencil },
-  { id: 'bypass', label: '完全访问', icon: RefreshCw },
+const NEW_PERMISSION_MODES: { id: string; label: string; icon: React.ComponentType<{ size?: number; className?: string; strokeWidth?: number }>; color: string }[] = [
+  { id: 'normal',    label: '普通模式',     icon: Hand,      color: 'text-emerald-500' },
+  { id: 'plan',      label: '计划模式',     icon: Workflow,  color: 'text-amber-500' },
+  { id: 'auto-edit', label: '自动编辑模式', icon: FolderPen, color: 'text-emerald-500' },
+  { id: 'full-auto', label: '全自动模式',   icon: RefreshCw, color: 'text-violet-500' },
 ];
 
 const NEW_PROJECTS: { id: string; label: string }[] = [
@@ -343,9 +343,8 @@ function CodexStyleInput({ onSendMessage, autoFocus = false, placeholder }: {
   placeholder?: string;
 }) {
   const [input, setInput] = useState('');
-  const [activeMode, setActiveMode] = useState('default');
+  const [activeMode, setActiveMode] = useState('normal');
   const [activeProject, setActiveProject] = useState<string | null>('work');
-  const [showPermissionMenu, setShowPermissionMenu] = useState(false);
   const [showModelMenu, setShowModelMenu] = useState(false);
   const [showProjectMenu, setShowProjectMenu] = useState(false);
   const [showSlash, setShowSlash] = useState(false);
@@ -353,10 +352,8 @@ function CodexStyleInput({ onSendMessage, autoFocus = false, placeholder }: {
   const [projectQuery, setProjectQuery] = useState('');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  const currentPermission = NEW_PERMISSION_MODES.find(m => m.id === activeMode) ?? NEW_PERMISSION_MODES[0];
   const currentProject = NEW_PROJECTS.find(p => p.id === activeProject) ?? null;
   const filteredProjects = NEW_PROJECTS.filter(p => !projectQuery || p.label.toLowerCase().includes(projectQuery.toLowerCase()));
-  const PermIcon = currentPermission.icon;
 
   const handleSend = () => {
     if (input.trim()) {
@@ -460,7 +457,24 @@ function CodexStyleInput({ onSendMessage, autoFocus = false, placeholder }: {
                   <Plus size={16} strokeWidth={1.5} />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent side="top" align="start" className="w-44">
+              <DropdownMenuContent side="top" align="start" className="w-48">
+                {/* Permission modes — folded into + */}
+                {NEW_PERMISSION_MODES.map(mode => {
+                  const Icon = mode.icon;
+                  const isActive = activeMode === mode.id;
+                  return (
+                    <DropdownMenuItem
+                      key={mode.id}
+                      onClick={() => setActiveMode(mode.id)}
+                      className={`gap-2 px-2 py-[5px] text-xs ${isActive ? 'bg-accent/40' : ''}`}
+                    >
+                      <Icon size={13} strokeWidth={1.5} className={`flex-shrink-0 ${mode.color}`} />
+                      <span className="flex-1 text-left">{mode.label}</span>
+                      {isActive && <Check size={11} className="text-foreground flex-shrink-0" />}
+                    </DropdownMenuItem>
+                  );
+                })}
+                <DropdownMenuSeparator />
                 <DropdownMenuItem className="gap-2 px-2 py-[5px] text-xs"><Paperclip size={13} strokeWidth={1.5} className="text-muted-foreground flex-shrink-0" /><span className="flex-1 text-left">添加图片或附件</span></DropdownMenuItem>
                 <DropdownMenuItem className="gap-2 px-2 py-[5px] text-xs"><Folder size={13} strokeWidth={1.5} className="text-muted-foreground flex-shrink-0" /><span className="flex-1 text-left">添加文件夹</span></DropdownMenuItem>
                 <DropdownMenuItem className="gap-2 px-2 py-[5px] text-xs"><Globe size={13} strokeWidth={1.5} className="text-muted-foreground flex-shrink-0" /><span className="flex-1 text-left">网络搜索</span></DropdownMenuItem>
@@ -469,41 +483,6 @@ function CodexStyleInput({ onSendMessage, autoFocus = false, placeholder }: {
                 <DropdownMenuItem className="gap-2 px-2 py-[5px] text-xs"><Zap size={13} strokeWidth={1.5} className="text-muted-foreground flex-shrink-0" /><span className="flex-1 text-left">快捷短语</span></DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-
-            {/* Permission selector */}
-            <Popover open={showPermissionMenu} onOpenChange={setShowPermissionMenu}>
-              <PopoverTrigger asChild>
-                <Button variant="ghost" size="inline"
-                  className={`flex items-center gap-1 px-1.5 py-[4px] rounded-md text-xs transition-colors ${
-                    showPermissionMenu
-                      ? 'bg-accent/60 text-foreground'
-                      : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
-                  }`}
-                >
-                  <PermIcon size={13} className="text-muted-foreground/70" strokeWidth={1.5} />
-                  <span className="truncate">{currentPermission.label}</span>
-                  <ChevronDown size={9} className={`transition-transform duration-100 ${showPermissionMenu ? 'rotate-180' : ''}`} />
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent side="top" align="start" className="w-[180px] p-1">
-                {NEW_PERMISSION_MODES.map(mode => {
-                  const Icon = mode.icon;
-                  const isActive = activeMode === mode.id;
-                  return (
-                    <button key={mode.id} type="button"
-                      onClick={() => { setActiveMode(mode.id); setShowPermissionMenu(false); }}
-                      className={`w-full flex items-center gap-2 px-2 py-[6px] rounded-md text-left text-xs transition-colors ${
-                        isActive ? 'bg-accent/40 text-foreground' : 'text-foreground/80 hover:bg-accent/25'
-                      }`}
-                    >
-                      <Icon size={12} className="text-muted-foreground/70 flex-shrink-0" strokeWidth={1.5} />
-                      <span className="flex-1">{mode.label}</span>
-                      {isActive && <Check size={11} className="text-foreground flex-shrink-0" />}
-                    </button>
-                  );
-                })}
-              </PopoverContent>
-            </Popover>
 
             {/* Thinking effort selector */}
             <Popover open={showModelMenu} onOpenChange={setShowModelMenu}>

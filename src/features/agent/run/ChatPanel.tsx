@@ -2,7 +2,7 @@ import React, { useState, useMemo, useRef, useEffect } from 'react';
 import {
   Plus, Paperclip, Code2, FolderOpen, Folder, FolderPlus, FolderX, FileText, AtSign,
   Globe, Hammer, Brain, MoreHorizontal,
-  Maximize2, RotateCcw, RefreshCw, ChevronDown, Clock, X, Trash2,
+  Maximize2, RotateCcw, RefreshCw, ChevronDown, Clock, X, Trash2, Workflow, FolderPen,
   TerminalSquare, Zap, Lightbulb,
   ArrowUp, Languages, Check, Hand, ShieldAlert, Pencil, Compass,
 } from 'lucide-react';
@@ -41,11 +41,11 @@ const PLUS_MENU_SECONDARY = [
 // ===========================
 // Permission Mode Config — Cherry Studio Agent (4 modes)
 // ===========================
-const PERMISSION_MODES: { id: string; label: string; desc: string; icon: React.ComponentType<{ size?: number; className?: string; strokeWidth?: number }> }[] = [
-  { id: 'default', label: '默认权限', desc: '编辑或执行命令前会询问', icon: Hand },
-  { id: 'plan', label: '计划模式', desc: '只读规划，不编辑文件、不执行命令', icon: Compass },
-  { id: 'auto-edit', label: '自动编辑', desc: '自动读写文件，执行命令前询问', icon: Pencil },
-  { id: 'bypass', label: '完全访问', desc: '可执行任何操作，请谨慎使用', icon: RefreshCw },
+const PERMISSION_MODES: { id: string; label: string; desc: string; icon: React.ComponentType<{ size?: number; className?: string; strokeWidth?: number }>; color: string }[] = [
+  { id: 'normal',    label: '普通模式',     desc: '编辑或执行命令前会询问',           icon: Hand,      color: 'text-emerald-500' },
+  { id: 'plan',      label: '计划模式',     desc: '只读规划，不编辑文件、不执行命令', icon: Workflow,  color: 'text-amber-500' },
+  { id: 'auto-edit', label: '自动编辑模式', desc: '自动读写文件，执行命令前询问',     icon: FolderPen, color: 'text-emerald-500' },
+  { id: 'full-auto', label: '全自动模式',   desc: '可执行任何操作，请谨慎使用',       icon: RefreshCw, color: 'text-violet-500' },
 ];
 
 // ===========================
@@ -168,11 +168,10 @@ export function ChatPanel({
 }: ChatPanelProps) {
   const [input, setInput] = useState('');
   const [showPlusMenu, setShowPlusMenu] = useState(false);
-  const [activeMode, setActiveMode] = useState('default');
+  const [activeMode, setActiveMode] = useState('normal');
   const [activePopup, setActivePopup] = useState<string | null>(null);
   const [activeThinking, setActiveThinking] = useState('default');
   const [activeProject, setActiveProject] = useState<string | null>('work');
-  const [showPermissionMenu, setShowPermissionMenu] = useState(false);
   const [showProjectMenu, setShowProjectMenu] = useState(false);
   const [showModelMenu, setShowModelMenu] = useState(false);
   const [projectQuery, setProjectQuery] = useState('');
@@ -187,7 +186,6 @@ export function ChatPanel({
     );
   }, [messages]);
 
-  const currentPermission = PERMISSION_MODES.find(m => m.id === activeMode) ?? PERMISSION_MODES[0];
   const currentProject = PROJECTS.find(p => p.id === activeProject) ?? null;
   const filteredProjects = PROJECTS.filter(p => !projectQuery || p.label.toLowerCase().includes(projectQuery.toLowerCase()));
 
@@ -522,7 +520,24 @@ export function ChatPanel({
                     <Plus size={16} strokeWidth={1.5} />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent side="top" align="start" className="w-44">
+                <DropdownMenuContent side="top" align="start" className="w-48">
+                  {/* Permission modes — folded into + */}
+                  {PERMISSION_MODES.map(mode => {
+                    const Icon = mode.icon;
+                    const isActive = activeMode === mode.id;
+                    return (
+                      <DropdownMenuItem
+                        key={mode.id}
+                        onClick={() => setActiveMode(mode.id)}
+                        className={`gap-2 px-2 py-[5px] text-xs ${isActive ? 'bg-accent/40' : ''}`}
+                      >
+                        <Icon size={13} strokeWidth={1.5} className={`flex-shrink-0 ${mode.color}`} />
+                        <span className="flex-1 text-left">{mode.label}</span>
+                        {isActive && <Check size={11} className="text-foreground flex-shrink-0" />}
+                      </DropdownMenuItem>
+                    );
+                  })}
+                  <DropdownMenuSeparator />
                   {PLUS_MENU_ITEMS
                     .filter(item => !['code', 'reasoning'].includes(item.id))
                     .map((item, idx, arr) => {
@@ -566,48 +581,6 @@ export function ChatPanel({
                   </DropdownMenuSub>
                 </DropdownMenuContent>
               </DropdownMenu>
-
-              {/* Permission Selector */}
-              {(() => {
-                const PermIcon = currentPermission.icon;
-                return (
-              <Popover open={showPermissionMenu} onOpenChange={setShowPermissionMenu}>
-                <PopoverTrigger asChild>
-                  <Button variant="ghost" size="inline"
-                    className={`flex items-center gap-1 px-1.5 py-[4px] rounded-md text-xs transition-colors ${
-                      showPermissionMenu
-                        ? 'bg-accent/60 text-foreground'
-                        : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
-                    }`}
-                  >
-                    <PermIcon size={13} className="text-muted-foreground/70" strokeWidth={1.5} />
-                    <span className="truncate">{currentPermission.label}</span>
-                    <ChevronDown size={9} className={`transition-transform duration-100 ${showPermissionMenu ? 'rotate-180' : ''}`} />
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent side="top" align="start" className="w-[180px] p-1">
-                  {PERMISSION_MODES.map(mode => {
-                    const Icon = mode.icon;
-                    const isActive = activeMode === mode.id;
-                    return (
-                      <button
-                        key={mode.id}
-                        type="button"
-                        onClick={() => { setActiveMode(mode.id); setShowPermissionMenu(false); }}
-                        className={`w-full flex items-center gap-2 px-2 py-[6px] rounded-md text-left text-xs transition-colors ${
-                          isActive ? 'bg-accent/40 text-foreground' : 'text-foreground/80 hover:bg-accent/25'
-                        }`}
-                      >
-                        <Icon size={12} className="text-muted-foreground/70 flex-shrink-0" strokeWidth={1.5} />
-                        <span className="flex-1">{mode.label}</span>
-                        {isActive && <Check size={11} className="text-foreground flex-shrink-0" />}
-                      </button>
-                    );
-                  })}
-                </PopoverContent>
-              </Popover>
-              );
-              })()}
 
               {/* Thinking effort selector */}
               <Popover open={showModelMenu} onOpenChange={setShowModelMenu}>
