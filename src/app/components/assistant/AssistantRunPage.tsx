@@ -1867,12 +1867,11 @@ export function AssistantRunPage() {
     { id: 'mcp', label: 'MCP', icon: Hammer },
   ];
   // Thinking effort cascade — submenu under 思考
-  const thinkingEfforts: { id: string; label: string; desc: string }[] = [
-    { id: 'off',     label: '关闭', desc: '不推理' },
-    { id: 'low',     label: '低',   desc: '快速' },
-    { id: 'default', label: '默认', desc: '均衡' },
-    { id: 'high',    label: '高',   desc: '深入' },
-    { id: 'extreme', label: '极高', desc: '最深' },
+  const thinkingEfforts: { id: string; label: string }[] = [
+    { id: 'default', label: '默认' },
+    { id: 'low',     label: '浮想' },
+    { id: 'mid',     label: '斟酌' },
+    { id: 'high',    label: '沉思' },
   ];
   const plusMenuSecondary = [
     { id: 'quickphrase', label: '快捷短语', icon: Zap, shortcut: null as string | null },
@@ -2395,9 +2394,8 @@ export function AssistantRunPage() {
                               <DropdownMenuSubContent>
                                 {thinkingEfforts.map(t => (
                                   <DropdownMenuItem key={t.id} className="gap-2 px-2 py-[5px] text-xs">
-                                    <Brain size={13} strokeWidth={1.5} className="text-muted-foreground flex-shrink-0" />
+                                    <Lightbulb size={13} strokeWidth={1.5} className="text-muted-foreground flex-shrink-0" />
                                     <span className="flex-1 text-left">{t.label}</span>
-                                    <span className="text-[10px] text-muted-foreground/50">{t.desc}</span>
                                   </DropdownMenuItem>
                                 ))}
                               </DropdownMenuSubContent>

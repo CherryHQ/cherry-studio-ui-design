@@ -95,12 +95,11 @@ const THINKING_MODES: { id: string; label: string; desc: string; icon: typeof Li
 ];
 
 // Cascading effort levels for the thinking selector
-const THINKING_EFFORTS: { id: string; label: string; desc: string }[] = [
-  { id: 'off',     label: '关闭',  desc: '不推理' },
-  { id: 'low',     label: '低',    desc: '快速' },
-  { id: 'default', label: '默认',  desc: '均衡' },
-  { id: 'high',    label: '高',    desc: '深入' },
-  { id: 'extreme', label: '极高',  desc: '最深' },
+const THINKING_EFFORTS: { id: string; label: string }[] = [
+  { id: 'default', label: '默认' },
+  { id: 'low',     label: '浮想' },
+  { id: 'mid',     label: '斟酌' },
+  { id: 'high',    label: '沉思' },
 ];
 
 // ===========================
@@ -600,7 +599,7 @@ export function ChatPanel({
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent side="top" align="start" className="w-[200px] p-1">
-                  <div className="px-2 py-1 text-xs text-muted-foreground/60">思考强度</div>
+                  <div className="px-2 py-1 text-xs text-muted-foreground/60">思维链长度</div>
                   {THINKING_EFFORTS.map(mode => {
                     const isActive = activeThinking === mode.id;
                     return (
@@ -614,7 +613,6 @@ export function ChatPanel({
                       >
                         <Lightbulb size={12} strokeWidth={1.5} className={`flex-shrink-0 ${isActive ? 'text-warning' : 'text-muted-foreground/70'}`} />
                         <span className="flex-1">{mode.label}</span>
-                        <span className="text-[10px] text-muted-foreground/50">{mode.desc}</span>
                         {isActive && <Check size={11} className="text-foreground flex-shrink-0" />}
                       </button>
                     );
