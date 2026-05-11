@@ -22,6 +22,45 @@ export const MODELS = AGENT_MODELS;
 
 export const MOCK_SESSIONS: AgentSession[] = [
   {
+    id: 'session-pdf',
+    title: 'Q4 用户行为分析报告',
+    agentName: '数据分析师',
+    agentIcon: '📊',
+    lastMessage: 'Q4 用户行为分析报告已生成，含 18 页 PDF。',
+    timestamp: '15:14',
+    messageCount: 7,
+    status: 'completed',
+    unread: true,
+    pinned: true,
+    tags: ['数据', 'PDF'],
+    group: '成果展示',
+  },
+  {
+    id: 'session-md',
+    title: 'Cherry SDK API 文档',
+    agentName: '技术文档专家',
+    agentIcon: '📝',
+    lastMessage: 'API 文档已生成，共 28 页 Markdown。',
+    timestamp: '13:10',
+    messageCount: 6,
+    status: 'completed',
+    pinned: true,
+    tags: ['文档', 'Markdown'],
+    group: '成果展示',
+  },
+  {
+    id: 'session-slides',
+    title: '2026 AI 产品趋势演示稿',
+    agentName: '内容创作者',
+    agentIcon: '🎯',
+    lastMessage: '6 页演示稿已生成，深色现代风。',
+    timestamp: '16:47',
+    messageCount: 5,
+    status: 'completed',
+    tags: ['演示', 'HTML'],
+    group: '成果展示',
+  },
+  {
     id: 'session-1',
     title: 'React + Vite + Tailwind 项目',
     agentName: '全栈工程师',
@@ -1093,7 +1132,455 @@ const SESSION_6_PREVIEW = '<!DOCTYPE html>\n<html><head><meta charset="utf-8"><s
 // Session Data Map
 // ===========================
 
+// ===========================
+// Showcase Sessions — rich artifact types (PDF / Markdown / Slides)
+// ===========================
+
+const SESSION_PDF_MESSAGES: ChatMessage[] = [
+  { id: 'pdf-m1', role: 'user', content: '帮我整理 Q4 用户行为分析报告，要 PDF 格式，包含数据图表和关键洞察。', timestamp: '15:10' },
+  { id: 'pdf-m2', role: 'agent', thinking: '需要从分析数据中提炼关键指标，按照标准报告格式生成 PDF：执行摘要、数据图表、关键发现、建议方案。', content: '我会生成一份结构化的 Q4 用户行为分析报告（PDF 格式），包含执行摘要、数据图表、关键发现和行动建议四个部分。', timestamp: '15:10' },
+  { id: 'pdf-m3', role: 'agent', toolCall: { name: 'query analytics: Q4 user behavior data', status: 'done', duration: '3.4s' }, content: '数据已提取：\n• 月活跃用户 (MAU): 124,800\n• 用户留存率：D1 68%, D7 42%, D30 28%\n• 平均会话时长：4分32秒\n• 转化漏斗：访问 → 注册 → 付费 = 100% → 18% → 3.2%\n• 内容偏好 TOP3: 教程类(42%), 案例分析(28%), 行业动态(18%)', timestamp: '15:11' },
+  { id: 'pdf-m4', role: 'agent', toolCall: { name: 'analyze trends: cohort retention', status: 'done', duration: '2.8s' }, content: 'Cohort 分析显示：\n• 新用户首日跳出率从 Q3 的 38% 降至 32% (改善 6pp)\n• D30 留存提升 4pp，主要来自付费用户群\n• 流失高峰在第 8-14 天，建议设计 D7 唤醒机制', timestamp: '15:12' },
+  { id: 'pdf-m5', role: 'agent', toolCall: { name: 'generate charts: 8 figures', status: 'done', duration: '4.5s' }, content: '已生成 8 个数据可视化图表：MAU 趋势、留存漏斗、Cohort 热力图、用户路径桑基图、行为偏好雷达图、转化率对比、流失曲线、收入构成。', timestamp: '15:13' },
+  { id: 'pdf-m6', role: 'agent', toolCall: { name: 'write reports/Q4-user-behavior-report.pdf', status: 'done', duration: '6.2s' }, content: 'PDF 报告已生成：18 页，包含 8 张图表、3 个数据表格、24 个关键指标。文件大小 2.4 MB。', timestamp: '15:14' },
+  { id: 'pdf-m7', role: 'agent', content: 'Q4 用户行为分析报告已完成。核心结论：\n\n**1. 用户规模稳健增长** — MAU 同比 +24%，环比 +8%\n**2. 留存改善显著** — D30 留存达 28%，超过行业均值 6pp\n**3. 付费转化是机会点** — 当前 3.2% 远低于头部水平 8%\n\n关键建议已在报告"行动方案"章节展开，包含 7 项可执行优化。', timestamp: '15:14' },
+];
+
+const SESSION_PDF_STEPS: WorkflowStep[] = [
+  { id: 'pdf-s1', label: '提取 Q4 用户行为数据', status: 'done' },
+  { id: 'pdf-s2', label: 'Cohort 留存分析', status: 'done' },
+  { id: 'pdf-s3', label: '生成数据可视化图表', status: 'done' },
+  { id: 'pdf-s4', label: '撰写报告正文与建议', status: 'done' },
+  { id: 'pdf-s5', label: '导出 PDF', status: 'done' },
+];
+
+const SESSION_PDF_PREVIEW = `<!DOCTYPE html>
+<html lang="zh"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, 'PingFang SC', system-ui, sans-serif; background: #e5e7eb; padding: 28px 0; color: #111827; }
+  .toolbar { position: sticky; top: 0; z-index: 10; max-width: 800px; margin: 0 auto 18px; background: rgba(255,255,255,0.85); backdrop-filter: blur(8px); border: 1px solid #e5e7eb; border-radius: 10px; padding: 8px 16px; display: flex; align-items: center; justify-content: space-between; font-size: 12px; color: #6b7280; }
+  .toolbar-title { display: flex; align-items: center; gap: 8px; color: #111827; font-weight: 500; }
+  .doc-pill { background: #fee2e2; color: #dc2626; font-size: 10px; padding: 2px 8px; border-radius: 4px; font-weight: 600; }
+  .page-num { font-variant-numeric: tabular-nums; }
+  .page { background: white; max-width: 800px; margin: 0 auto 24px; box-shadow: 0 4px 16px rgba(0,0,0,0.08); padding: 64px 72px; min-height: 1040px; position: relative; }
+  .doc-header { border-bottom: 3px solid #0f172a; padding-bottom: 20px; margin-bottom: 32px; }
+  .doc-meta { font-size: 11px; color: #94a3b8; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 6px; }
+  .doc-title { font-size: 28px; font-weight: 700; letter-spacing: -0.02em; color: #0f172a; line-height: 1.2; }
+  .doc-sub { font-size: 13px; color: #475569; margin-top: 8px; }
+  h2 { font-size: 18px; font-weight: 600; color: #0f172a; margin: 28px 0 14px; padding-left: 12px; border-left: 4px solid #2563eb; }
+  h3 { font-size: 14px; font-weight: 600; color: #1e293b; margin: 18px 0 8px; }
+  p { font-size: 13px; line-height: 1.85; color: #334155; margin-bottom: 12px; }
+  .summary-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin: 16px 0 20px; }
+  .summary-card { border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px; }
+  .summary-label { font-size: 10px; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.06em; }
+  .summary-value { font-size: 22px; font-weight: 700; color: #0f172a; margin-top: 4px; }
+  .summary-delta { font-size: 11px; margin-top: 2px; }
+  .up { color: #059669; } .down { color: #dc2626; }
+  .chart-box { border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; margin: 12px 0 20px; }
+  .chart-title { font-size: 12px; color: #475569; margin-bottom: 12px; font-weight: 500; }
+  .funnel { display: flex; align-items: flex-end; gap: 6px; height: 160px; }
+  .funnel-bar { flex: 1; background: linear-gradient(180deg, #2563eb, #60a5fa); border-radius: 4px 4px 0 0; position: relative; }
+  .funnel-bar span { position: absolute; top: -18px; left: 0; right: 0; text-align: center; font-size: 10px; color: #475569; }
+  .funnel-bar small { position: absolute; bottom: -22px; left: 0; right: 0; text-align: center; font-size: 10px; color: #94a3b8; }
+  table { width: 100%; border-collapse: collapse; font-size: 12px; margin: 8px 0 16px; }
+  th { text-align: left; padding: 8px 10px; background: #f8fafc; color: #475569; font-weight: 500; border-bottom: 1px solid #e2e8f0; }
+  td { padding: 8px 10px; border-bottom: 1px solid #f1f5f9; color: #334155; }
+  td.num { text-align: right; font-variant-numeric: tabular-nums; }
+  .insight { background: #eff6ff; border-left: 3px solid #2563eb; padding: 12px 16px; border-radius: 0 6px 6px 0; margin: 14px 0; }
+  .insight-title { font-size: 12px; font-weight: 600; color: #1e40af; margin-bottom: 4px; }
+  .insight-body { font-size: 12px; color: #1e3a8a; line-height: 1.7; }
+  .page-footer { position: absolute; bottom: 32px; left: 72px; right: 72px; padding-top: 14px; border-top: 1px solid #f1f5f9; display: flex; justify-content: space-between; font-size: 10px; color: #94a3b8; }
+  ul.kpi-list { margin: 8px 0 16px; padding-left: 0; list-style: none; }
+  ul.kpi-list li { font-size: 13px; padding: 8px 0; border-bottom: 1px dashed #e2e8f0; color: #334155; display: flex; justify-content: space-between; }
+  ul.kpi-list strong { color: #0f172a; font-weight: 600; }
+</style></head><body>
+
+<div class="toolbar">
+  <div class="toolbar-title"><span class="doc-pill">PDF</span><span>Q4-user-behavior-report.pdf</span></div>
+  <div class="page-num">第 1 页 / 共 18 页</div>
+</div>
+
+<div class="page">
+  <div class="doc-header">
+    <div class="doc-meta">CHERRY · 数据分析报告 · 2026-Q4</div>
+    <div class="doc-title">Q4 用户行为分析报告</div>
+    <div class="doc-sub">报告周期：2025-10-01 至 2025-12-31 · 数据源：18 个埋点事件 · 样本量 124,800</div>
+  </div>
+
+  <h2>执行摘要</h2>
+  <p>本季度月活跃用户达 <strong>124,800</strong>，同比增长 24%，环比增长 8%。整体留存改善显著，D30 留存达 28%（高于行业均值 6pp）。付费转化是当前最大机会点，3.2% 的转化率与头部产品 8% 仍有较大差距。</p>
+
+  <div class="summary-grid">
+    <div class="summary-card"><div class="summary-label">MAU</div><div class="summary-value">124.8k</div><div class="summary-delta up">+24.0% YoY</div></div>
+    <div class="summary-card"><div class="summary-label">D30 留存</div><div class="summary-value">28%</div><div class="summary-delta up">+4pp QoQ</div></div>
+    <div class="summary-card"><div class="summary-label">付费转化</div><div class="summary-value">3.2%</div><div class="summary-delta down">−0.4pp QoQ</div></div>
+    <div class="summary-card"><div class="summary-label">平均会话</div><div class="summary-value">4m32s</div><div class="summary-delta up">+18s QoQ</div></div>
+  </div>
+
+  <h2>关键指标变化</h2>
+  <ul class="kpi-list">
+    <li><span>新用户首日跳出率</span><strong>32% (↓ 6pp)</strong></li>
+    <li><span>核心功能采用率</span><strong>71% (↑ 9pp)</strong></li>
+    <li><span>付费用户 ARPU</span><strong>¥248 (↑ ¥12)</strong></li>
+    <li><span>NPS 净推荐值</span><strong>+42 (↑ 7)</strong></li>
+  </ul>
+
+  <h2>用户转化漏斗</h2>
+  <div class="chart-box">
+    <div class="chart-title">访问 → 注册 → 激活 → 付费 (Q4 全季度)</div>
+    <div class="funnel">
+      <div class="funnel-bar" style="height:100%"><span>100%</span><small>访问</small></div>
+      <div class="funnel-bar" style="height:62%"><span>62%</span><small>注册</small></div>
+      <div class="funnel-bar" style="height:18%"><span>18%</span><small>激活</small></div>
+      <div class="funnel-bar" style="height:3.2%"><span>3.2%</span><small>付费</small></div>
+    </div>
+  </div>
+
+  <div class="insight">
+    <div class="insight-title">💡 关键洞察</div>
+    <div class="insight-body">注册→激活段落漏出率高达 71%。建议优化"首次使用引导"，将 7 步精简至 3 步，并加入即时反馈，预计可将激活率提升至 28%（+10pp）。</div>
+  </div>
+
+  <div class="page-footer"><span>Q4 用户行为分析报告</span><span>Cherry Analytics · 1 / 18</span></div>
+</div>
+
+<div class="page">
+  <h2>Cohort 留存分析</h2>
+  <p>按用户首次访问月份切分，观察各 Cohort 在 D1/D7/D14/D30 的留存表现。Q4 的三个月用户群整体表现优于 Q3，10 月 Cohort 的 D30 留存达 30%，为年内最高水平。</p>
+
+  <div class="chart-box">
+    <div class="chart-title">月度 Cohort 留存矩阵（数字越大颜色越深）</div>
+    <table>
+      <tr><th>Cohort</th><th class="num">D1</th><th class="num">D7</th><th class="num">D14</th><th class="num">D30</th></tr>
+      <tr><td>10月</td><td class="num">71%</td><td class="num">46%</td><td class="num">37%</td><td class="num">30%</td></tr>
+      <tr><td>11月</td><td class="num">68%</td><td class="num">42%</td><td class="num">34%</td><td class="num">28%</td></tr>
+      <tr><td>12月</td><td class="num">66%</td><td class="num">40%</td><td class="num">32%</td><td class="num">26%</td></tr>
+      <tr><td>Q3 平均</td><td class="num">63%</td><td class="num">35%</td><td class="num">28%</td><td class="num">24%</td></tr>
+    </table>
+  </div>
+
+  <h3>流失高峰区间</h3>
+  <p>D8-D14 是用户流失的高峰，平均流失率达 14%。这段时间用户已完成初次体验，但还未形成使用习惯。建议在此区间通过推送、邮件等手段触达。</p>
+
+  <div class="insight">
+    <div class="insight-title">📌 行动建议</div>
+    <div class="insight-body">在 D7、D10、D13 三个时间点设置阶梯式 push（功能介绍 → 案例分享 → 优惠激活）。基于 A/B 测试预估可降低流失率 4-6pp。</div>
+  </div>
+
+  <h2>内容偏好分析</h2>
+  <table>
+    <tr><th>内容类型</th><th class="num">阅读占比</th><th class="num">平均时长</th><th class="num">分享率</th><th class="num">转化贡献</th></tr>
+    <tr><td>教程指南</td><td class="num">42%</td><td class="num">5m12s</td><td class="num">8.2%</td><td class="num">38%</td></tr>
+    <tr><td>案例分析</td><td class="num">28%</td><td class="num">6m44s</td><td class="num">12.4%</td><td class="num">31%</td></tr>
+    <tr><td>行业动态</td><td class="num">18%</td><td class="num">2m18s</td><td class="num">15.6%</td><td class="num">12%</td></tr>
+    <tr><td>视频内容</td><td class="num">8%</td><td class="num">3m08s</td><td class="num">22.1%</td><td class="num">14%</td></tr>
+    <tr><td>其他</td><td class="num">4%</td><td class="num">1m45s</td><td class="num">3.2%</td><td class="num">5%</td></tr>
+  </table>
+
+  <div class="page-footer"><span>Q4 用户行为分析报告</span><span>Cherry Analytics · 2 / 18</span></div>
+</div>
+
+</body></html>`;
+
+const SESSION_MD_MESSAGES: ChatMessage[] = [
+  { id: 'md-m1', role: 'user', content: '为我们的内部 SDK 生成一份完整的 API 文档，要支持自动目录、代码示例。', timestamp: '13:08' },
+  { id: 'md-m2', role: 'agent', thinking: '需要扫描 SDK 源码、提取注释、生成结构化的 Markdown 文档。', content: '我会先扫描 SDK 的导出 API，然后基于 JSDoc / 类型注释生成包含目录、代码示例和参数表的 Markdown 文档。', timestamp: '13:09' },
+  { id: 'md-m3', role: 'agent', toolCall: { name: 'scan src/**/*.ts for exports', status: 'done', duration: '1.2s' }, content: '已发现 42 个导出 API（28 个函数、9 个类、5 个枚举）', timestamp: '13:09' },
+  { id: 'md-m4', role: 'agent', toolCall: { name: 'extract JSDoc annotations', status: 'done', duration: '0.8s' }, content: '95% 的 API 有完整的注释。3 个函数缺少 @returns，2 个缺少 @example。已标记待补充。', timestamp: '13:09' },
+  { id: 'md-m5', role: 'agent', toolCall: { name: 'write docs/api-reference.md', status: 'done', duration: '2.4s' }, content: '已生成 API 参考文档，共 28 页，包含：\n• 自动目录（TOC）\n• 安装与初始化\n• 核心 API 详细说明\n• 类型定义参考\n• 5 个完整代码示例\n• 错误处理指南', timestamp: '13:10' },
+  { id: 'md-m6', role: 'agent', content: 'API 文档已生成。预览面板可查看 Markdown 渲染效果。如需调整格式或补充示例，告诉我具体要求即可。', timestamp: '13:10' },
+];
+
+const SESSION_MD_STEPS: WorkflowStep[] = [
+  { id: 'md-s1', label: '扫描 SDK 导出 API', status: 'done' },
+  { id: 'md-s2', label: '提取 JSDoc 注释', status: 'done' },
+  { id: 'md-s3', label: '生成 Markdown 文档', status: 'done' },
+];
+
+const SESSION_MD_PREVIEW = `<!DOCTYPE html>
+<html lang="zh"><head><meta charset="utf-8">
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body { font-family: -apple-system, 'PingFang SC', BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif; background: #fafafa; color: #1f2937; -webkit-font-smoothing: antialiased; }
+  .toolbar { position: sticky; top: 0; z-index: 10; background: rgba(255,255,255,0.92); backdrop-filter: blur(10px); border-bottom: 1px solid #e5e7eb; padding: 10px 24px; display: flex; align-items: center; justify-content: space-between; font-size: 12px; color: #6b7280; }
+  .toolbar-title { display: flex; align-items: center; gap: 8px; color: #111827; font-weight: 500; }
+  .md-pill { background: #dbeafe; color: #1d4ed8; font-size: 10px; padding: 2px 8px; border-radius: 4px; font-weight: 600; }
+  .layout { display: grid; grid-template-columns: 240px 1fr; max-width: 1100px; margin: 0 auto; gap: 32px; padding: 20px 24px 40px; }
+  aside { position: sticky; top: 60px; align-self: start; max-height: calc(100vh - 80px); overflow-y: auto; padding-right: 8px; }
+  aside h4 { font-size: 11px; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.08em; margin: 8px 0 8px; }
+  aside a { display: block; padding: 4px 8px; color: #4b5563; font-size: 13px; text-decoration: none; border-radius: 4px; border-left: 2px solid transparent; }
+  aside a:hover { color: #111827; background: #f3f4f6; }
+  aside a.active { color: #2563eb; border-left-color: #2563eb; background: #eff6ff; }
+  aside .sub { padding-left: 18px; font-size: 12px; color: #6b7280; }
+  main { background: white; border: 1px solid #e5e7eb; border-radius: 12px; padding: 48px 56px; min-height: 70vh; }
+  main h1 { font-size: 30px; letter-spacing: -0.02em; margin: 0 0 6px; color: #0f172a; }
+  main .sub { color: #6b7280; font-size: 14px; margin-bottom: 32px; }
+  main h2 { font-size: 22px; margin: 36px 0 12px; padding-bottom: 8px; border-bottom: 1px solid #f3f4f6; color: #111827; }
+  main h3 { font-size: 16px; margin: 24px 0 8px; color: #1f2937; }
+  main p { font-size: 14px; line-height: 1.85; color: #374151; margin: 8px 0 12px; }
+  main p code, main li code { background: #f3f4f6; color: #be185d; padding: 1px 6px; border-radius: 4px; font-size: 13px; font-family: 'JetBrains Mono', Menlo, monospace; }
+  main pre { background: #0f172a; color: #e2e8f0; padding: 18px 20px; border-radius: 10px; font-size: 13px; line-height: 1.7; overflow-x: auto; margin: 12px 0; font-family: 'JetBrains Mono', Menlo, monospace; }
+  main pre .kw { color: #c4b5fd; }
+  main pre .str { color: #86efac; }
+  main pre .com { color: #64748b; font-style: italic; }
+  main pre .fn { color: #fcd34d; }
+  main ul, main ol { padding-left: 24px; margin: 8px 0 14px; }
+  main li { font-size: 14px; line-height: 1.85; color: #374151; }
+  table { width: 100%; border-collapse: collapse; margin: 12px 0 20px; font-size: 13px; }
+  th { text-align: left; padding: 10px 14px; background: #f9fafb; color: #4b5563; font-weight: 500; border-bottom: 1px solid #e5e7eb; }
+  td { padding: 10px 14px; border-bottom: 1px solid #f3f4f6; color: #374151; }
+  td code { background: #f3f4f6; color: #be185d; padding: 1px 6px; border-radius: 4px; font-size: 12px; font-family: 'JetBrains Mono', Menlo, monospace; }
+  blockquote { border-left: 4px solid #2563eb; background: #eff6ff; padding: 12px 16px; margin: 14px 0; border-radius: 0 8px 8px 0; color: #1e3a8a; font-size: 14px; }
+  .badge { display: inline-block; font-size: 11px; padding: 2px 8px; border-radius: 4px; font-weight: 500; margin-left: 6px; vertical-align: middle; }
+  .badge-stable { background: #d1fae5; color: #047857; }
+  .badge-beta { background: #fef3c7; color: #b45309; }
+  .badge-required { background: #fee2e2; color: #b91c1c; }
+</style></head><body>
+
+<div class="toolbar">
+  <div class="toolbar-title"><span class="md-pill">MD</span><span>docs/api-reference.md</span></div>
+  <span>实时预览 · 28 页 · 42 个 API</span>
+</div>
+
+<div class="layout">
+  <aside>
+    <h4>开始</h4>
+    <a href="#install">安装</a>
+    <a href="#quickstart" class="active">快速开始</a>
+    <h4>核心 API</h4>
+    <a href="#client">CherryClient</a>
+    <a href="#client" class="sub">.connect()</a>
+    <a href="#client" class="sub">.send()</a>
+    <a href="#client" class="sub">.subscribe()</a>
+    <a href="#types">类型定义</a>
+    <h4>高级</h4>
+    <a href="#errors">错误处理</a>
+    <a href="#middleware">中间件</a>
+    <a href="#testing">测试</a>
+  </aside>
+
+  <main>
+    <h1>Cherry SDK</h1>
+    <p class="sub">v2.4.0 · TypeScript · MIT · 2026-04-26</p>
+
+    <p>Cherry SDK 是一个轻量级的客户端 SDK，用于与 Cherry 平台进行实时双向通信。支持自动重连、消息队列、订阅多路复用。</p>
+
+    <h2 id="install">安装</h2>
+    <pre><span class="com"># npm</span>
+npm install @cherry/sdk
+
+<span class="com"># pnpm</span>
+pnpm add @cherry/sdk</pre>
+
+    <h2 id="quickstart">快速开始 <span class="badge badge-stable">稳定</span></h2>
+    <p>初始化客户端并发送第一条消息：</p>
+    <pre><span class="kw">import</span> { <span class="fn">CherryClient</span> } <span class="kw">from</span> <span class="str">'@cherry/sdk'</span>;
+
+<span class="kw">const</span> client = <span class="kw">new</span> <span class="fn">CherryClient</span>({
+  endpoint: <span class="str">'wss://api.cherry.ai/v2'</span>,
+  apiKey: process.env.CHERRY_KEY,
+});
+
+<span class="kw">await</span> client.<span class="fn">connect</span>();
+<span class="kw">await</span> client.<span class="fn">send</span>({ type: <span class="str">'chat'</span>, content: <span class="str">'Hello'</span> });</pre>
+
+    <blockquote>
+      💡 推荐使用环境变量保存 API Key，不要硬编码到代码中。
+    </blockquote>
+
+    <h2 id="client">CherryClient</h2>
+    <p>核心客户端类，封装了与服务器的所有通信。</p>
+
+    <h3>构造参数</h3>
+    <table>
+      <tr><th>参数</th><th>类型</th><th>必填</th><th>说明</th></tr>
+      <tr><td><code>endpoint</code></td><td><code>string</code></td><td><span class="badge badge-required">必填</span></td><td>WebSocket 服务地址</td></tr>
+      <tr><td><code>apiKey</code></td><td><code>string</code></td><td><span class="badge badge-required">必填</span></td><td>认证 Key</td></tr>
+      <tr><td><code>autoReconnect</code></td><td><code>boolean</code></td><td>否</td><td>断线自动重连，默认 <code>true</code></td></tr>
+      <tr><td><code>maxRetries</code></td><td><code>number</code></td><td>否</td><td>最大重试次数，默认 <code>5</code></td></tr>
+      <tr><td><code>timeout</code></td><td><code>number</code></td><td>否</td><td>请求超时（毫秒），默认 <code>30000</code></td></tr>
+    </table>
+
+    <h3><code>.subscribe(channel, handler)</code> <span class="badge badge-beta">Beta</span></h3>
+    <p>订阅指定频道的实时消息。</p>
+    <pre>client.<span class="fn">subscribe</span>(<span class="str">'user:123'</span>, (msg) =&gt; {
+  console.<span class="fn">log</span>(<span class="str">'received:'</span>, msg);
+});</pre>
+  </main>
+</div>
+
+</body></html>`;
+
+const SESSION_SLIDES_MESSAGES: ChatMessage[] = [
+  { id: 'sl-m1', role: 'user', content: '帮我做一份"2026 年 AI 产品趋势"演示稿，6 页左右，要简洁现代风格。', timestamp: '16:45' },
+  { id: 'sl-m2', role: 'agent', thinking: '需要规划核心叙事：现状 → 趋势 → 机会 → 行动。配色用深色背景 + 高对比强调色。', content: '我会按"现状洞察 → 三大趋势 → 落地机会 → 行动建议"四个章节组织，约 6 页幻灯片。', timestamp: '16:45' },
+  { id: 'sl-m3', role: 'agent', toolCall: { name: 'research: 2026 AI product trends', status: 'done', duration: '4.8s' }, content: '已综合 28 个数据源，提炼出三大核心趋势：Agent 化、个性化模型、端侧推理。', timestamp: '16:46' },
+  { id: 'sl-m4', role: 'agent', toolCall: { name: 'write slides/ai-trends-2026.html', status: 'done', duration: '3.2s' }, content: '已生成 6 页演示稿。深色主题、强调色为 Cherry 红，关键数据用大字号呈现。', timestamp: '16:47' },
+  { id: 'sl-m5', role: 'agent', content: '演示稿已完成，预览面板可查看效果。如需调整配色或重排顺序，告诉我即可。', timestamp: '16:47' },
+];
+
+const SESSION_SLIDES_STEPS: WorkflowStep[] = [
+  { id: 'sl-s1', label: '研究 AI 趋势数据', status: 'done' },
+  { id: 'sl-s2', label: '提炼核心叙事', status: 'done' },
+  { id: 'sl-s3', label: '设计幻灯片样式', status: 'done' },
+  { id: 'sl-s4', label: '生成 6 页内容', status: 'done' },
+];
+
+const SESSION_SLIDES_PREVIEW = `<!DOCTYPE html>
+<html lang="zh"><head><meta charset="utf-8">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, 'PingFang SC', system-ui, sans-serif; background: #1a1a1a; padding: 24px 0; color: #fafafa; }
+  .toolbar { position: sticky; top: 0; z-index: 10; max-width: 880px; margin: 0 auto 18px; background: rgba(255,255,255,0.08); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.12); border-radius: 10px; padding: 8px 16px; display: flex; align-items: center; justify-content: space-between; font-size: 12px; color: rgba(255,255,255,0.7); }
+  .toolbar-title { display: flex; align-items: center; gap: 8px; color: white; font-weight: 500; }
+  .slide-pill { background: rgba(244,63,94,0.18); color: #fda4af; font-size: 10px; padding: 2px 8px; border-radius: 4px; font-weight: 600; }
+  .slide { max-width: 880px; margin: 0 auto 24px; aspect-ratio: 16 / 9; border-radius: 12px; overflow: hidden; position: relative; display: flex; flex-direction: column; padding: 56px 64px; box-shadow: 0 12px 48px rgba(0,0,0,0.4); }
+  .slide-num { position: absolute; bottom: 20px; right: 28px; font-size: 11px; opacity: 0.4; letter-spacing: 0.1em; }
+  .slide-cover { background: radial-gradient(circle at 80% 20%, #ef4444 0%, transparent 50%), linear-gradient(135deg, #0a0a0a 0%, #1f1f1f 100%); justify-content: center; }
+  .cover-eyebrow { font-size: 12px; color: #ef4444; letter-spacing: 0.2em; text-transform: uppercase; margin-bottom: 14px; }
+  .cover-title { font-size: 56px; font-weight: 700; letter-spacing: -0.03em; line-height: 1.05; }
+  .cover-sub { font-size: 16px; opacity: 0.6; margin-top: 14px; }
+  .slide-section { background: linear-gradient(135deg, #1f1f1f 0%, #161616 100%); }
+  .section-label { font-size: 11px; color: #ef4444; letter-spacing: 0.18em; text-transform: uppercase; margin-bottom: 14px; }
+  .section-title { font-size: 36px; font-weight: 700; letter-spacing: -0.02em; line-height: 1.15; max-width: 600px; }
+  .section-sub { font-size: 14px; opacity: 0.55; margin-top: 12px; line-height: 1.7; max-width: 560px; }
+  .slide-stats { background: linear-gradient(135deg, #0f0f0f 0%, #1a1a1a 100%); }
+  .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 32px; margin-top: 28px; }
+  .stat-item .stat-num { font-size: 64px; font-weight: 800; letter-spacing: -0.04em; line-height: 1; color: #ef4444; }
+  .stat-item .stat-label { font-size: 13px; opacity: 0.7; margin-top: 10px; line-height: 1.5; }
+  .slide-trends { background: linear-gradient(135deg, #1a1a1a 0%, #0f0f0f 100%); }
+  .trends-list { display: grid; gap: 16px; margin-top: 24px; }
+  .trend-item { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 18px 22px; display: flex; gap: 16px; align-items: center; }
+  .trend-num { font-size: 14px; font-weight: 600; color: #ef4444; width: 28px; height: 28px; border-radius: 999px; background: rgba(239,68,68,0.15); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .trend-text { flex: 1; }
+  .trend-text strong { display: block; font-size: 18px; margin-bottom: 4px; }
+  .trend-text span { font-size: 13px; opacity: 0.55; line-height: 1.55; }
+  .slide-action { background: radial-gradient(circle at 20% 80%, rgba(239,68,68,0.3) 0%, transparent 50%), linear-gradient(135deg, #161616 0%, #1f1f1f 100%); justify-content: center; }
+  .action-list { margin-top: 32px; max-width: 580px; }
+  .action-item { display: flex; align-items: flex-start; gap: 14px; padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.06); }
+  .action-arrow { color: #ef4444; font-size: 18px; }
+  .action-item strong { font-size: 16px; display: block; }
+  .action-item span { font-size: 13px; opacity: 0.55; }
+</style></head><body>
+
+<div class="toolbar">
+  <div class="toolbar-title"><span class="slide-pill">SLIDES</span><span>ai-trends-2026.html</span></div>
+  <span>6 张幻灯片 · 16:9</span>
+</div>
+
+<div class="slide slide-cover">
+  <div class="cover-eyebrow">Cherry Insight Report</div>
+  <div class="cover-title">2026 年<br/>AI 产品趋势</div>
+  <div class="cover-sub">三大变局 · 七个机会 · 一份行动清单</div>
+  <div class="slide-num">01 / 06</div>
+</div>
+
+<div class="slide slide-stats">
+  <div class="section-label">现状速览</div>
+  <div class="section-title">AI 已是新基建</div>
+  <div class="stats-grid">
+    <div class="stat-item"><div class="stat-num">86%</div><div class="stat-label">企业部署了至少一个生产级 AI 应用</div></div>
+    <div class="stat-item"><div class="stat-num">3.2x</div><div class="stat-label">头部产品在 AI 加持下的留存提升</div></div>
+    <div class="stat-item"><div class="stat-num">$340B</div><div class="stat-label">2026 全球 AI 应用市场规模预测</div></div>
+  </div>
+  <div class="slide-num">02 / 06</div>
+</div>
+
+<div class="slide slide-trends">
+  <div class="section-label">趋势</div>
+  <div class="section-title">三大不可逆变局</div>
+  <div class="section-sub">从"接入 AI"到"重新设计"，产品形态正在经历底层变革</div>
+  <div class="trends-list">
+    <div class="trend-item"><div class="trend-num">1</div><div class="trend-text"><strong>Agent 化</strong><span>从 Copilot 转向 Autonomy — 产品自己决定下一步做什么</span></div></div>
+    <div class="trend-item"><div class="trend-num">2</div><div class="trend-text"><strong>个性化模型</strong><span>SLM + RAG 取代通用 LLM，每个用户都有自己的"小模型"</span></div></div>
+    <div class="trend-item"><div class="trend-num">3</div><div class="trend-text"><strong>端侧推理</strong><span>MLX / WebGPU 普及，隐私敏感场景全部下沉到设备</span></div></div>
+  </div>
+  <div class="slide-num">03 / 06</div>
+</div>
+
+<div class="slide slide-section">
+  <div class="section-label">机会</div>
+  <div class="section-title">"看不见的 AI"<br/>是下一个金矿</div>
+  <div class="section-sub">用户不再为"AI 功能"付费 — 他们为"问题被解决"付费。差异化将来自工作流、上下文和私有数据。</div>
+  <div class="slide-num">04 / 06</div>
+</div>
+
+<div class="slide slide-action">
+  <div class="section-label">行动清单</div>
+  <div class="section-title">90 天落地路径</div>
+  <div class="action-list">
+    <div class="action-item"><div class="action-arrow">→</div><div><strong>Week 1-2</strong><span>梳理 3 个用户高频痛点，评估 AI 介入的 ROI</span></div></div>
+    <div class="action-item"><div class="action-arrow">→</div><div><strong>Week 3-6</strong><span>选 1 个场景做 Agent 化 PoC，用真实数据验证</span></div></div>
+    <div class="action-item"><div class="action-arrow">→</div><div><strong>Week 7-12</strong><span>灰度发布 + 数据反馈循环 + 私有模型蒸馏</span></div></div>
+  </div>
+  <div class="slide-num">05 / 06</div>
+</div>
+
+<div class="slide slide-cover">
+  <div class="cover-eyebrow">Thank you</div>
+  <div class="cover-title">下一个十年<br/>由智能体定义</div>
+  <div class="cover-sub">Cherry Studio · cherry.ai · 2026</div>
+  <div class="slide-num">06 / 06</div>
+</div>
+
+</body></html>`;
+
+const SHOWCASE_FILES: FileNode[] = [
+  { name: 'reports', type: 'folder', children: [
+    { name: 'Q4-user-behavior-report.pdf', type: 'file' },
+    { name: 'cohort-analysis.csv', type: 'file' },
+  ]},
+  { name: 'docs', type: 'folder', children: [
+    { name: 'api-reference.md', type: 'file' },
+    { name: 'changelog.md', type: 'file' },
+  ]},
+  { name: 'slides', type: 'folder', children: [
+    { name: 'ai-trends-2026.html', type: 'file' },
+  ]},
+];
+
 export const SESSION_DATA_MAP: Record<string, SessionData> = {
+  'session-pdf': {
+    messages: SESSION_PDF_MESSAGES,
+    steps: SESSION_PDF_STEPS,
+    files: SHOWCASE_FILES,
+    outputFiles: [
+      { id: 'op-1', name: 'Q4-user-behavior-report.pdf', format: 'pdf', size: '2.4 MB', status: 'completed', timestamp: '15:14' },
+      { id: 'op-2', name: 'cohort-analysis.csv', format: 'csv', size: '48 KB', status: 'completed', timestamp: '15:12' },
+      { id: 'op-3', name: '执行摘要.docx', format: 'docx', size: '156 KB', status: 'completed', timestamp: '15:14' },
+      { id: 'op-4', name: '图表素材.zip', format: 'zip', size: '4.8 MB', status: 'generating', timestamp: '' },
+    ],
+    fileContents: {},
+    previewHtml: SESSION_PDF_PREVIEW,
+    workDir: '~/reports/2026-q4',
+  },
+  'session-md': {
+    messages: SESSION_MD_MESSAGES,
+    steps: SESSION_MD_STEPS,
+    files: SHOWCASE_FILES,
+    outputFiles: [
+      { id: 'om-1', name: 'api-reference.md', format: 'md', size: '38 KB', status: 'completed', timestamp: '13:10' },
+      { id: 'om-2', name: 'examples.zip', format: 'zip', size: '128 KB', status: 'completed', timestamp: '13:10' },
+    ],
+    fileContents: {},
+    previewHtml: SESSION_MD_PREVIEW,
+    workDir: '~/projects/cherry-sdk',
+  },
+  'session-slides': {
+    messages: SESSION_SLIDES_MESSAGES,
+    steps: SESSION_SLIDES_STEPS,
+    files: SHOWCASE_FILES,
+    outputFiles: [
+      { id: 'os-1', name: 'ai-trends-2026.html', format: 'html', size: '24 KB', status: 'completed', timestamp: '16:47' },
+      { id: 'os-2', name: 'ai-trends-2026.pdf', format: 'pdf', size: '1.8 MB', status: 'completed', timestamp: '16:48' },
+      { id: 'os-3', name: 'speaker-notes.md', format: 'md', size: '5.2 KB', status: 'completed', timestamp: '16:47' },
+    ],
+    fileContents: {},
+    previewHtml: SESSION_SLIDES_PREVIEW,
+    workDir: '~/presentations/2026-trends',
+  },
   'session-1': {
     messages: SESSION_1_MESSAGES,
     steps: SESSION_1_STEPS,
