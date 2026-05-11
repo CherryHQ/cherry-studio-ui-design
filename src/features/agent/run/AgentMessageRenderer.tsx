@@ -622,7 +622,7 @@ const ARTIFACT_TYPE_STYLE: Record<string, { iconCls: string; tileCls: string }> 
   jpg:  { iconCls: 'text-accent-pink', tileCls: 'bg-accent-pink/10' },
 };
 
-function ArtifactCard({ filePath }: { filePath: string }) {
+function ArtifactCard({ filePath, onOpen }: { filePath: string; onOpen?: (filePath: string) => void }) {
   const fileExt = (filePath.split('.').pop() || '').toLowerCase();
   const fileName = filePath.split('/').pop() || filePath;
   const fts = ARTIFACT_TYPE_STYLE[fileExt] || { iconCls: 'text-muted-foreground', tileCls: 'bg-muted/40' };
@@ -631,6 +631,7 @@ function ArtifactCard({ filePath }: { filePath: string }) {
   return (
     <motion.button
       type="button"
+      onClick={() => onOpen?.(filePath)}
       initial={{ opacity: 0, y: 4 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.15 }}
@@ -654,10 +655,11 @@ function ArtifactCard({ filePath }: { filePath: string }) {
 // Agent Message Group
 // ===========================
 
-export function AgentMessageGroup({ msgs, onResolve, onAvatarClick, isRunning = true }: {
+export function AgentMessageGroup({ msgs, onResolve, onAvatarClick, onOpenArtifact, isRunning = true }: {
   msgs: ChatMessage[];
   onResolve: (msgId: string, value: string) => void;
   onAvatarClick?: () => void;
+  onOpenArtifact?: (filePath: string) => void;
   isRunning?: boolean;
 }) {
   const [processExpanded, setProcessExpanded] = useState(false);
@@ -747,7 +749,7 @@ export function AgentMessageGroup({ msgs, onResolve, onAvatarClick, isRunning = 
         {artifacts.length > 0 && (
           <div className="flex flex-col gap-1.5 mt-1.5">
             {artifacts.map(a => (
-              <ArtifactCard key={a.id} filePath={a.filePath} />
+              <ArtifactCard key={a.id} filePath={a.filePath} onOpen={onOpenArtifact} />
             ))}
           </div>
         )}

@@ -1294,6 +1294,21 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
     setSelectedFile(path);
   }, []);
 
+  // Open an artifact in the right-side viewer (called from inline artifact card clicks)
+  const handleOpenArtifact = useCallback((filePath: string) => {
+    setSelectedFile(filePath);
+    setShowPreview(true);
+  }, []);
+
+  // Auto-open the artifact viewer when the current session has a previewHtml
+  // (i.e. produced visible deliverable). Runs only when session changes.
+  useEffect(() => {
+    if (sessionData.previewHtml && !showPreview) {
+      setShowPreview(true);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeSessionId]);
+
   const handleSelectSession = useCallback((id: string) => {
     setActiveSessionId(id);
     setSessions(prev => prev.map(s => s.id === id && s.unread ? { ...s, unread: false } : s));
@@ -1684,6 +1699,7 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
               onSendMessage={handleSendMessage}
               onResolveUI={handleResolveUI}
               onAvatarClick={() => setShowAgentInfo(true)}
+              onOpenArtifact={handleOpenArtifact}
             />
           )}
         </div>

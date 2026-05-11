@@ -155,6 +155,7 @@ export interface ChatPanelProps {
   onSendMessage: (text: string) => void;
   onResolveUI?: (msgId: string, value: string) => void;
   onAvatarClick?: () => void;
+  onOpenArtifact?: (filePath: string) => void;
 }
 
 export function ChatPanel({
@@ -163,6 +164,7 @@ export function ChatPanel({
   onSendMessage,
   onResolveUI,
   onAvatarClick,
+  onOpenArtifact,
 }: ChatPanelProps) {
   const [input, setInput] = useState('');
   const [showPlusMenu, setShowPlusMenu] = useState(false);
@@ -297,6 +299,7 @@ export function ChatPanel({
               msgs={group.msgs}
               onResolve={onResolveUI ?? (() => {})}
               onAvatarClick={onAvatarClick}
+              onOpenArtifact={onOpenArtifact}
               isRunning={group.msgs.some(m => m.toolCall?.status === 'running' || (m.thinking && !m.content))}
             />
           );
