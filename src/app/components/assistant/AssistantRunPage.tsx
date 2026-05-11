@@ -1862,11 +1862,17 @@ export function AssistantRunPage() {
   const plusMenuItems = [
     { id: 'attach', label: '添加图片或附件', icon: Paperclip, separator: true },
     { id: 'genimg', label: '生成图片', icon: ImageIcon },
-    { id: 'reasoning', label: '推理', icon: Brain },
     { id: 'websearch', label: '网络搜索', icon: Globe },
     { id: 'knowledge', label: '知识库', icon: BookOpen },
     { id: 'mcp', label: 'MCP', icon: Hammer },
-    { id: 'webcontext', label: '网页上下文', icon: Link },
+  ];
+  // Thinking effort cascade — submenu under 思考
+  const thinkingEfforts: { id: string; label: string; desc: string }[] = [
+    { id: 'off',     label: '关闭', desc: '不推理' },
+    { id: 'low',     label: '低',   desc: '快速' },
+    { id: 'default', label: '默认', desc: '均衡' },
+    { id: 'high',    label: '高',   desc: '深入' },
+    { id: 'extreme', label: '极高', desc: '最深' },
   ];
   const plusMenuSecondary = [
     { id: 'quickphrase', label: '快捷短语', icon: Zap, shortcut: null as string | null },
@@ -2380,6 +2386,22 @@ export function AssistantRunPage() {
                                 </div>
                               );
                             })}
+                            {/* 思考 — cascade with effort options */}
+                            <DropdownMenuSub>
+                              <DropdownMenuSubTrigger className="gap-2 px-2 py-[5px] text-xs">
+                                <Brain size={13} strokeWidth={1.5} className="text-muted-foreground flex-shrink-0" />
+                                <span className="flex-1 text-left">思考</span>
+                              </DropdownMenuSubTrigger>
+                              <DropdownMenuSubContent>
+                                {thinkingEfforts.map(t => (
+                                  <DropdownMenuItem key={t.id} className="gap-2 px-2 py-[5px] text-xs">
+                                    <Brain size={13} strokeWidth={1.5} className="text-muted-foreground flex-shrink-0" />
+                                    <span className="flex-1 text-left">{t.label}</span>
+                                    <span className="text-[10px] text-muted-foreground/50">{t.desc}</span>
+                                  </DropdownMenuItem>
+                                ))}
+                              </DropdownMenuSubContent>
+                            </DropdownMenuSub>
                             <DropdownMenuSeparator />
                             <DropdownMenuSub>
                               <DropdownMenuSubTrigger className="gap-2 px-2 py-[5px] text-xs text-muted-foreground">
@@ -2501,10 +2523,6 @@ export function AssistantRunPage() {
                     </div>
                     <div className="flex items-center gap-2">
                       <div className="flex items-center gap-2.5 text-xs text-muted-foreground">
-                        <Tooltip content="消息行数" side="top">
-                          <span className="flex items-center gap-0.5 cursor-default"><Layers size={10} /> 4/5</span>
-                        </Tooltip>
-                        <span className="flex items-center gap-0.5 cursor-default">↑ 0/0</span>
                         {input.length > 0 && (
                           <Tooltip content="预估 Token 数" side="top">
                             <span className="flex items-center gap-1 cursor-default"><Layers size={10} />{Math.ceil(input.length * 1.3)}</span>
