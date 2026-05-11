@@ -285,7 +285,7 @@ export function PermissionApprovalCard({
   /** "inline" = compact card in chat; "composer" = wider card replacing the input box */
   variant?: 'inline' | 'composer';
 }) {
-  const [expanded, setExpanded] = useState(variant === 'composer');
+  const [expanded, setExpanded] = useState(false);
   const cfg = RISK_CONFIG[request.risk || 'low'];
   const Icon = cfg.icon;
   const isPending = request.status === 'pending';
@@ -349,16 +349,36 @@ export function PermissionApprovalCard({
           </span>
         </div>
 
-        {/* Command/params preview */}
+        {/* Command/params preview — collapsible when content is long */}
         {hasParams && (
           <div className="px-4 pb-2.5">
-            <div className="rounded-lg bg-muted/40 px-3 py-2 space-y-0.5">
-              {request.params!.map(p => (
-                <div key={p.label} className="flex gap-2 text-xs">
-                  <span className="text-muted-foreground/60 flex-shrink-0">{p.label}</span>
-                  <span className="text-foreground font-mono break-all">{p.value}</span>
-                </div>
-              ))}
+            <div className="rounded-lg bg-muted/40 overflow-hidden">
+              <div
+                className="px-3 py-2 space-y-0.5 overflow-hidden transition-all duration-200 relative"
+                style={{ maxHeight: expanded ? 480 : 140 }}
+              >
+                {request.params!.map(p => (
+                  <div key={p.label} className="flex gap-2 text-xs">
+                    <span className="text-muted-foreground/60 flex-shrink-0">{p.label}</span>
+                    <span className="text-foreground font-mono break-all whitespace-pre-wrap">{p.value}</span>
+                  </div>
+                ))}
+                {/* Fade overlay when collapsed */}
+                {!expanded && (
+                  <div className="pointer-events-none absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-muted/80 to-transparent" />
+                )}
+              </div>
+              {/* Expand / collapse toggle — only shown when content might overflow */}
+              {request.params!.some(p => p.value.length > 60 || p.value.includes('\n')) && (
+                <button
+                  type="button"
+                  onClick={() => setExpanded(v => !v)}
+                  className="w-full flex items-center justify-center gap-1 py-1 text-[11px] text-muted-foreground/70 hover:text-foreground hover:bg-accent/30 border-t border-border/30 transition-colors"
+                >
+                  <ChevronDown size={10} className={`transition-transform duration-100 ${expanded ? 'rotate-180' : ''}`} />
+                  <span>{expanded ? '折叠' : '展开'}</span>
+                </button>
+              )}
             </div>
           </div>
         )}

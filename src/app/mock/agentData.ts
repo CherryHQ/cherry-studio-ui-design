@@ -736,6 +736,55 @@ const SESSION_2_MESSAGES: ChatMessage[] = [
   { id: 'r-m19', role: 'agent', toolCall: { name: 'update reports/ai-frameworks-comparison.md', status: 'done', duration: '1.9s' }, content: ' ## 性能基准测试\n ...\n \n+## 成本对比\n+\n+| 平台 | 定价模式 | 月费用估算 |\n+|------|---------|----------|\n+| LangSmith | $39/seat/mo | ~$200/团队 |\n+| LlamaCloud | $0.002/page | ~$50-150 |\n+| Azure AI | Pay-as-you-go | ~$100-500 |\n+\n+> 所有框架均为 MIT/Apache 开源，可免费商用。\n+> 云服务为可选增值服务。\n \n ## 推荐方案', timestamp: '11:45' },
   { id: 'r-m20', role: 'agent', content: '已添加成本对比章节。所有框架均为 MIT 开源协议可免费商用，云服务定价方面 LangSmith $39/seat/mo，LlamaCloud 按用量计费 $0.002/page。', timestamp: '11:45' },
   { id: 'r-m21', role: 'agent', generativeUI: { type: 'buttons', prompt: '还需要什么补充？', options: [{ label: '生成 PPT 演示稿' }, { label: '添加技术路线图' }, { label: '导出 PDF 报告' }], resolved: false }, timestamp: '11:45' },
+  // High-risk permission with long shell script
+  { id: 'r-m22', role: 'agent', permissionRequest: {
+    id: 'perm-r-m22',
+    toolName: 'shell.execute',
+    toolDescription: '要在桌面创建分类文件夹并移动现有文件夹（不删除、不覆盖），是否允许？',
+    params: [
+      { label: '工作目录', value: '/Users/siin/Desktop' },
+      { label: '命令', value: `set -euo pipefail
+
+desktop="/Users/siin/Desktop"
+log="/Users/siin/Desktop/desktop-folder-organize-$(date +%Y%m%d-%H%M%S).log"
+: > "$log"
+
+mkdir -p "$desktop/项目" "$desktop/公司资料" "$desktop/临时归档"
+print "CREATED/EXISTS: 项目"      >> "$log"
+print "CREATED/EXISTS: 公司资料"  >> "$log"
+print "CREATED/EXISTS: 临时归档"  >> "$log"
+print "USING EXISTING CATEGORY: 书籍" >> "$log"
+
+move_dir() {
+  local name="$1"
+  local category="$2"
+  local src="$desktop/$name"
+  local dst="$desktop/$category/$name"
+  if [[ -d "$src" ]]; then
+    if [[ -e "$dst" ]]; then
+      print "SKIP (already exists at destination): $src -> $dst" >> "$log"
+    else
+      mv -n "$src" "$dst"
+      print "MOVED: $src -> $dst" >> "$log"
+    fi
+  fi
+}
+
+# Project folders
+move_dir "code"        "项目"
+move_dir "manado"      "项目"
+move_dir "playground"  "项目"
+
+# Company materials
+move_dir "招聘资料"     "公司资料"
+move_dir "合同模板"     "公司资料"
+
+print "DONE. See log at $log" >> "$log"` },
+    ],
+    risk: 'high',
+    status: 'pending',
+    allowAutoApprove: true,
+  }, timestamp: '11:46' },
 ];
 
 const SESSION_2_PREVIEW = '<!DOCTYPE html>\n<html lang="zh"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">\n<style>\n* { margin: 0; padding: 0; box-sizing: border-box; }\nbody { font-family: \'Inter\', system-ui, sans-serif; background: #fff; color: #1e293b; padding: 32px 40px; line-height: 1.7; }\nh1 { font-size: 22px; font-weight: 700; letter-spacing: -0.02em; margin-bottom: 6px; color: #0f172a; }\nh2 { font-size: 16px; font-weight: 600; margin-top: 28px; margin-bottom: 10px; color: #0f172a; padding-bottom: 6px; border-bottom: 1px solid #f1f5f9; }\nh3 { font-size: 13px; font-weight: 600; margin-top: 18px; margin-bottom: 6px; color: #334155; }\np { font-size: 13px; color: #475569; margin-bottom: 10px; }\n.badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 500; }\n.badge-green { background: #ecfdf5; color: #059669; }\n.badge-blue { background: #eff6ff; color: #2563eb; }\n.badge-yellow { background: #fefce8; color: #ca8a04; }\ntable { width: 100%; border-collapse: collapse; margin: 12px 0 20px; font-size: 12px; }\nth { text-align: left; padding: 8px 12px; background: #f8fafc; color: #64748b; font-weight: 500; border-bottom: 1px solid #e2e8f0; }\ntd { padding: 8px 12px; border-bottom: 1px solid #f1f5f9; color: #334155; }\ntr:hover td { background: #f8fafc; }\n.score { font-weight: 600; }\n.recommend { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 16px; margin: 16px 0; }\n.recommend h3 { color: #166534; margin-top: 0; }\n.recommend p { color: #15803d; margin-bottom: 0; }\n.meta { font-size: 11px; color: #94a3b8; margin-bottom: 24px; }\n</style></head><body>\n<h1>AI 应用开发框架对比分析报告</h1>\n<p class="meta">调研分析师 · 2026-02-25 · 分析了 18 个数据源</p>\n\n<h2>框架综合评分</h2>\n<table>\n<tr><th>框架</th><th>综合评分</th><th>最佳场景</th><th>License</th></tr>\n<tr><td>LangChain</td><td class="score">8.2/10</td><td><span class="badge badge-green">通用 AI 应用</span></td><td>MIT</td></tr>\n<tr><td>LlamaIndex</td><td class="score">7.8/10</td><td><span class="badge badge-blue">RAG 场景</span></td><td>MIT</td></tr>\n<tr><td>AutoGen</td><td class="score">7.6/10</td><td><span class="badge badge-yellow">多 Agent</span></td><td>MIT</td></tr>\n<tr><td>Semantic Kernel</td><td class="score">7.5/10</td><td><span class="badge badge-blue">企业级</span></td><td>MIT</td></tr>\n<tr><td>Haystack</td><td class="score">7.3/10</td><td><span class="badge badge-green">Pipeline</span></td><td>Apache 2.0</td></tr>\n<tr><td>CrewAI</td><td class="score">7.1/10</td><td><span class="badge badge-yellow">快速原型</span></td><td>MIT</td></tr>\n</table>\n\n<h2>性能基准测试</h2>\n<p>基于 1000 次标准 RAG 查询的平均结果：</p>\n<table>\n<tr><th>框架</th><th>平均延迟</th><th>P99 延迟</th><th>准确率</th><th>内存占用</th></tr>\n<tr><td>LlamaIndex</td><td style="color:#059669;font-weight:600">0.9s</td><td>2.8s</td><td style="color:#059669;font-weight:600">91%</td><td>380MB</td></tr>\n<tr><td>Haystack</td><td>1.0s</td><td>2.9s</td><td>88%</td><td>390MB</td></tr>\n<tr><td>Semantic Kernel</td><td>1.1s</td><td>3.1s</td><td>85%</td><td>420MB</td></tr>\n<tr><td>LangChain</td><td>1.2s</td><td>3.4s</td><td>87%</td><td>512MB</td></tr>\n<tr><td>CrewAI</td><td>1.5s</td><td>4.1s</td><td>82%</td><td>520MB</td></tr>\n<tr><td>AutoGen</td><td>1.8s</td><td>5.2s</td><td>84%</td><td>680MB</td></tr>\n</table>\n\n<div class="recommend">\n<h3>推荐方案</h3>\n<p>LangChain (Agent 编排) + LlamaIndex (RAG 引擎) + LangSmith (可观测性)</p>\n</div>\n</body></html>';
@@ -835,6 +884,51 @@ const SESSION_3_MESSAGES: ChatMessage[] = [
   { id: 'd-m16', role: 'agent', generativeUI: { type: 'buttons', prompt: '需要哪些额外功能？', options: [{ label: '添加日期范围筛选' }, { label: '添加导出 CSV' }, { label: '添加暗色主题' }, { label: '暂时够了' }], resolved: true, resolvedValue: '添加日期范围筛选' }, timestamp: '09:37' },
   { id: 'd-m17', role: 'agent', toolCall: { name: 'write src/components/DateRangePicker.tsx', status: 'done', duration: '1.3s' }, timestamp: '09:38' },
   { id: 'd-m18', role: 'agent', content: '日期范围筛选器已添加到顶部导航栏，支持预设（今天/7天/30天/自定义）。', timestamp: '09:38' },
+  // Pending low-risk file write permission
+  { id: 'd-m19', role: 'agent', permissionRequest: {
+    id: 'perm-d-m19',
+    toolName: 'file.write',
+    toolDescription: '要将下面的代码写入 src/utils/exportCsv.ts（新建文件），是否允许？',
+    params: [
+      { label: '路径', value: 'src/utils/exportCsv.ts' },
+      { label: '内容预览', value: `import { format } from 'date-fns';
+
+export interface CsvColumn<T> {
+  header: string;
+  accessor: (row: T) => string | number | null | undefined;
+}
+
+export function exportCsv<T>(rows: T[], columns: CsvColumn<T>[], filename = 'export.csv') {
+  const lines: string[] = [];
+  lines.push(columns.map(c => escapeField(c.header)).join(','));
+  for (const row of rows) {
+    lines.push(columns.map(c => {
+      const v = c.accessor(row);
+      return escapeField(v == null ? '' : String(v));
+    }).join(','));
+  }
+  const blob = new Blob(['\\ufeff' + lines.join('\\n')], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename || \`export-\${format(new Date(), 'yyyyMMdd-HHmmss')}.csv\`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function escapeField(s: string) {
+  if (/[",\\n]/.test(s)) {
+    return '"' + s.replace(/"/g, '""') + '"';
+  }
+  return s;
+}` },
+    ],
+    risk: 'low',
+    status: 'pending',
+    allowAutoApprove: true,
+  }, timestamp: '09:39' },
 ];
 
 const SESSION_3_PREVIEW = '<!DOCTYPE html>\n<html><head><meta charset="utf-8"><style>\n* { margin: 0; padding: 0; box-sizing: border-box; }\nbody { font-family: \'Inter\', system-ui, sans-serif; background: #f8fafc; color: #0f172a; display: flex; height: 100vh; }\n.sidebar { width: 200px; background: #fff; border-right: 1px solid #f1f5f9; padding: 16px; flex-shrink: 0; }\n.sidebar h2 { font-size: 13px; font-weight: 600; margin-bottom: 20px; }\n.nav-item { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-radius: 6px; font-size: 12px; color: #64748b; margin-bottom: 2px; cursor: pointer; }\n.nav-item.active { background: #f1f5f9; color: #0f172a; font-weight: 500; }\n.main { flex: 1; padding: 20px 24px; overflow: auto; }\n.stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 16px; }\n.stat { background: #fff; border: 1px solid #f1f5f9; border-radius: 10px; padding: 16px; }\n.stat-label { font-size: 10px; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; }\n.stat-value { font-size: 22px; font-weight: 700; margin-top: 4px; }\n.stat-change { font-size: 10px; margin-top: 2px; }\n.up { color: #059669; }\n.down { color: #ef4444; }\n.charts { display: grid; grid-template-columns: 2fr 1fr; gap: 12px; margin-bottom: 16px; }\n.chart-box { background: #fff; border: 1px solid #f1f5f9; border-radius: 10px; padding: 16px; }\n.chart-box h3 { font-size: 12px; font-weight: 500; margin-bottom: 12px; }\n.chart-placeholder { height: 160px; background: linear-gradient(180deg, #ecfdf5 0%, #fff 100%); border-radius: 8px; display: flex; align-items: flex-end; padding: 0 4px; gap: 3px; }\n.bar { background: #10b981; border-radius: 3px 3px 0 0; flex: 1; }\n</style></head><body>\n<div class="sidebar">\n<h2>Dashboard</h2>\n<div class="nav-item active">Overview</div>\n<div class="nav-item">Analytics</div>\n<div class="nav-item">Customers</div>\n<div class="nav-item">Orders</div>\n<div class="nav-item">Settings</div>\n</div>\n<div class="main">\n<div class="stats">\n<div class="stat"><div class="stat-label">Total Revenue</div><div class="stat-value">$45,231</div><div class="stat-change up">+20.1%</div></div>\n<div class="stat"><div class="stat-label">Active Users</div><div class="stat-value">2,350</div><div class="stat-change up">+18.2%</div></div>\n<div class="stat"><div class="stat-label">Conversion</div><div class="stat-value">3.24%</div><div class="stat-change down">-2.1%</div></div>\n<div class="stat"><div class="stat-label">Avg Session</div><div class="stat-value">4m 32s</div><div class="stat-change up">+12.5%</div></div>\n</div>\n<div class="charts">\n<div class="chart-box"><h3>Revenue Overview</h3><div class="chart-placeholder"><div class="bar" style="height:40%"></div><div class="bar" style="height:55%"></div><div class="bar" style="height:45%"></div><div class="bar" style="height:70%"></div><div class="bar" style="height:60%"></div><div class="bar" style="height:80%"></div><div class="bar" style="height:65%"></div><div class="bar" style="height:90%"></div><div class="bar" style="height:75%"></div><div class="bar" style="height:85%"></div><div class="bar" style="height:95%"></div><div class="bar" style="height:88%"></div></div></div>\n<div class="chart-box"><h3>Traffic Sources</h3><div class="chart-placeholder" style="flex-direction:column;align-items:stretch;padding:8px;gap:6px"><div style="background:#10b981;height:24px;border-radius:4px;width:85%"></div><div style="background:#60a5fa;height:24px;border-radius:4px;width:62%"></div><div style="background:#f59e0b;height:24px;border-radius:4px;width:48%"></div><div style="background:#a78bfa;height:24px;border-radius:4px;width:30%"></div></div></div>\n</div>\n</div>\n</body></html>';
