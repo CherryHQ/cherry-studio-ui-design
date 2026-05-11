@@ -1561,6 +1561,8 @@ export function AssistantRunPage() {
   const onNavigateToLibrary = () => _navLib('assistant');
   const [messages, setMessages] = useState<AssistantMessage[]>([]);
   const [input, setInput] = useState('');
+  const [isResponding, setIsResponding] = useState(false);
+  const [queuedMessages, setQueuedMessages] = useState<{ id: string; text: string }[]>([]);
 
 
 
@@ -1866,14 +1868,13 @@ export function AssistantRunPage() {
     return () => document.removeEventListener('mousedown', handler);
   }, [showPlusMenu]);
 
-  const handleSend = useCallback(() => {
-    if (!input.trim()) return;
+  // Inner send: actually pushes the user message and simulates a response
+  const performSend = useCallback((text: string) => {
     const ts = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
     const activeModel = ASSISTANT_MODELS.find(m => m.id === selectedModels[0]) || ASSISTANT_MODELS[0];
 
-    setMessages(prev => [...prev, { id: `msg-${Date.now()}`, role: 'user', content: input.trim(), timestamp: ts }]);
-    setInput('');
-    if (textareaRef.current) textareaRef.current.style.height = 'auto';
+    setMessages(prev => [...prev, { id: `msg-${Date.now()}`, role: 'user', content: text, timestamp: ts }]);
+    setIsResponding(true);
 
     // Simulate response
     const respondingAssistants = selectedAssistants.length > 1 ? selectedAssistants : [selectedAssistants[0]];
@@ -1902,6 +1903,7 @@ export function AssistantRunPage() {
           timestamp: ts,
           parallelResponses: parallelResps,
         }]);
+        setIsResponding(false);
       }, 800);
     } else if (respondingModels.length > 1) {
       // Multi-model parallel
@@ -1926,6 +1928,7 @@ export function AssistantRunPage() {
           timestamp: ts,
           parallelResponses: parallelResps,
         }]);
+        setIsResponding(false);
       }, 800);
     } else {
       // Single response with thinking
@@ -1947,9 +1950,55 @@ export function AssistantRunPage() {
             responseJson: '{}',
           },
         }]);
+        setIsResponding(false);
       }, 800);
     }
-  }, [input, selectedModels, selectedAssistants]);
+  }, [selectedModels, selectedAssistants]);
+
+  // Public send: routes to queue when responding, else fires immediately
+  const handleSend = useCallback(() => {
+    const trimmed = input.trim();
+    if (!trimmed) return;
+    setInput('');
+    if (textareaRef.current) textareaRef.current.style.height = 'auto';
+    if (isResponding) {
+      setQueuedMessages(prev => [...prev, { id: `q-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`, text: trimmed }]);
+    } else {
+      performSend(trimmed);
+    }
+  }, [input, isResponding, performSend]);
+
+  // Auto-flush queue when assistant becomes idle
+  const queueRef = useRef(queuedMessages);
+  queueRef.current = queuedMessages;
+  useEffect(() => {
+    if (!isResponding && queueRef.current.length > 0) {
+      const next = queueRef.current[0];
+      setQueuedMessages(prev => prev.slice(1));
+      performSend(next.text);
+    }
+  }, [isResponding, performSend]);
+
+  const removeQueueItem = useCallback((id: string) => setQueuedMessages(prev => prev.filter(m => m.id !== id)), []);
+  const moveQueueItemUp = useCallback((id: string) => setQueuedMessages(prev => {
+    const idx = prev.findIndex(m => m.id === id);
+    if (idx <= 0) return prev;
+    const next = [...prev];
+    [next[idx - 1], next[idx]] = [next[idx], next[idx - 1]];
+    return next;
+  }), []);
+  const editQueueItem = useCallback((id: string) => {
+    setQueuedMessages(prev => {
+      const item = prev.find(m => m.id === id);
+      if (!item) return prev;
+      const existing = input.trim();
+      const filtered = prev.filter(m => m.id !== id);
+      setInput(item.text);
+      if (existing) return [{ id: `q-${Date.now()}`, text: existing }, ...filtered];
+      return filtered;
+    });
+  }, [input]);
+  const clearQueue = useCallback(() => setQueuedMessages([]), []);
 
   // Retry: create a new version of an assistant message
   const handleRetry = useCallback((msgId: string) => {
@@ -2181,11 +2230,66 @@ export function AssistantRunPage() {
               </div>
             }
             customComposer={
+              <>
+              {/* Queued user messages — sit above the input, sent in order when assistant idles */}
+              <AnimatePresence initial={false}>
+                {queuedMessages.length > 0 && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    transition={{ duration: 0.15 }}
+                    className="flex-shrink-0 px-4 pt-1 overflow-hidden"
+                  >
+                    <div className="rounded-xl border border-border/40 bg-muted/20 overflow-hidden">
+                      <div className="flex items-center justify-between px-3 py-1.5 border-b border-border/30">
+                        <div className="flex items-center gap-1.5">
+                          <Clock size={10} className="text-muted-foreground/60" />
+                          <span className="text-[11px] text-muted-foreground">待发送队列</span>
+                          <span className="text-[11px] text-muted-foreground/60 tabular-nums">{queuedMessages.length}</span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={clearQueue}
+                          className="text-[11px] text-muted-foreground/60 hover:text-foreground transition-colors"
+                        >
+                          清空
+                        </button>
+                      </div>
+                      <div className="max-h-[140px] overflow-y-auto">
+                        {queuedMessages.map((m, i) => (
+                          <div key={m.id} className="group/q flex items-center gap-2 px-3 py-1.5 hover:bg-accent/15 transition-colors border-b border-border/15 last:border-b-0">
+                            <span className="w-4 text-[10px] text-muted-foreground/60 tabular-nums flex-shrink-0">{i + 1}</span>
+                            <span className="flex-1 min-w-0 text-xs text-foreground truncate">{m.text}</span>
+                            <div className="flex items-center gap-0.5 opacity-0 group-hover/q:opacity-100 transition-opacity flex-shrink-0">
+                              {i > 0 && (
+                                <button type="button" onClick={() => moveQueueItemUp(m.id)} title="上移"
+                                  className="p-1 rounded text-muted-foreground/60 hover:text-foreground hover:bg-accent/25 transition-colors">
+                                  <ArrowUp size={10} />
+                                </button>
+                              )}
+                              <button type="button" onClick={() => editQueueItem(m.id)} title="编辑（取回到输入框）"
+                                className="p-1 rounded text-muted-foreground/60 hover:text-foreground hover:bg-accent/25 transition-colors">
+                                <Pencil size={10} />
+                              </button>
+                              <button type="button" onClick={() => removeQueueItem(m.id)} title="删除"
+                                className="p-1 rounded text-muted-foreground/60 hover:text-destructive hover:bg-destructive/8 transition-colors">
+                                <Trash2 size={10} />
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
               <div className="flex-shrink-0 px-4 pb-3">
                 <div className="relative rounded-xl border border-border/50 bg-background shadow-sm focus-within:border-border/60 transition-all duration-150">
                   <Textarea
                     ref={textareaRef} value={input} onChange={handleInput} onKeyDown={handleKeyDown}
-                    placeholder={minimalInput ? "在这里输入消息，按 Enter 发送 - @ 选择助手/模型 - / 插入 Prompt" : "在这里输入消息，按 Enter 发送"}
+                    placeholder={isResponding ? '助手回复中，发送的消息将加入队列…' : (minimalInput ? "在这里输入消息，按 Enter 发送 - @ 选择助手/模型 - / 插入 Prompt" : "在这里输入消息，按 Enter 发送")}
                     rows={1}
                     className="w-full bg-transparent text-sm text-foreground placeholder:text-muted-foreground/60 outline-none resize-none min-h-[36px] max-h-[140px] leading-[1.6] px-3.5 pt-[10px] pb-[36px] border-transparent focus-visible:border-transparent focus-visible:ring-0 shadow-none"
                   />
@@ -2429,6 +2533,7 @@ export function AssistantRunPage() {
                   </div>
                 </div>
               </div>
+              </>
             }
           >
             {messages.map(msg => (
