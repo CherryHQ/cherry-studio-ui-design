@@ -2,7 +2,7 @@ import React, { useState, useMemo, useRef, useEffect } from 'react';
 import {
   Plus, Paperclip, Code2, FolderOpen, Folder, FolderPlus, FolderX, FileText, AtSign,
   Globe, Hammer, Brain, MoreHorizontal,
-  Maximize2, RotateCcw, RefreshCw, ChevronDown, Clock, X,
+  Maximize2, RotateCcw, RefreshCw, ChevronDown, Clock, X, Trash2,
   TerminalSquare, Zap, Lightbulb,
   ArrowUp, Languages, Check, Hand, ShieldAlert, Pencil, Compass,
 } from 'lucide-react';
@@ -166,7 +166,6 @@ export function ChatPanel({
   const [showModelMenu, setShowModelMenu] = useState(false);
   const [projectQuery, setProjectQuery] = useState('');
   const [queuedMessages, setQueuedMessages] = useState<{ id: string; text: string }[]>([]);
-  const [editingQueueId, setEditingQueueId] = useState<string | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
   // Detect whether the agent is currently busy (running tools or thinking)
@@ -244,32 +243,29 @@ export function ChatPanel({
     [next[idx - 1], next[idx]] = [next[idx], next[idx - 1]];
     return next;
   });
-  const startEditQueueItem = (id: string) => {
+  // Pull a queued message back into the input box for editing — drops it from the queue
+  // so the user can modify it and press Enter to re-queue / send.
+  const editQueueItem = (id: string) => {
     const item = queuedMessages.find(m => m.id === id);
-    if (item) { setInput(item.text); setEditingQueueId(id); }
-  };
-  const commitEditQueueItem = () => {
-    if (!editingQueueId) return;
-    const trimmed = input.trim();
-    if (trimmed) {
-      setQueuedMessages(prev => prev.map(m => m.id === editingQueueId ? { ...m, text: trimmed } : m));
-    } else {
-      removeQueueItem(editingQueueId);
-    }
-    setInput('');
-    setEditingQueueId(null);
+    if (!item) return;
+    // If the input already has text, prepend it back to the queue to avoid losing work
+    const existing = input.trim();
+    setQueuedMessages(prev => {
+      const filtered = prev.filter(m => m.id !== id);
+      if (existing) return [{ id: `q-${Date.now()}`, text: existing }, ...filtered];
+      return filtered;
+    });
+    setInput(item.text);
   };
   const clearQueue = () => setQueuedMessages([]);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
-      if (editingQueueId) commitEditQueueItem();
-      else handleSend();
+      handleSend();
     }
     if (e.key === 'Escape') {
-      if (editingQueueId) { setEditingQueueId(null); setInput(''); }
-      else closePopup();
+      closePopup();
     }
   };
 
@@ -335,13 +331,13 @@ export function ChatPanel({
                           <ArrowUp size={10} />
                         </button>
                       )}
-                      <button type="button" onClick={() => startEditQueueItem(m.id)} title="编辑"
+                      <button type="button" onClick={() => editQueueItem(m.id)} title="编辑（取回到输入框）"
                         className="p-1 rounded text-muted-foreground/60 hover:text-foreground hover:bg-accent/25 transition-colors">
                         <Pencil size={10} />
                       </button>
                       <button type="button" onClick={() => removeQueueItem(m.id)} title="删除"
                         className="p-1 rounded text-muted-foreground/60 hover:text-destructive hover:bg-destructive/8 transition-colors">
-                        <X size={10} />
+                        <Trash2 size={10} />
                       </button>
                     </div>
                   </div>
@@ -480,11 +476,9 @@ export function ChatPanel({
           <Textarea
             className="w-full bg-transparent text-sm text-foreground placeholder:text-muted-foreground/50 outline-none resize-none min-h-[36px] max-h-[140px] leading-[1.6] px-3.5 pt-[10px] pb-2 border-transparent focus-visible:border-transparent focus-visible:ring-0 shadow-none"
             placeholder={
-              editingQueueId
-                ? '编辑队列中的消息，按 Enter 保存…'
-                : isAgentBusy
-                  ? '智能体执行中，发送的消息将加入队列…'
-                  : '可向智能体询问任何事。输入 / 使用斜杠命令，输入 @ 提及文件'
+              isAgentBusy
+                ? '智能体执行中，发送的消息将加入队列…'
+                : '可向智能体询问任何事。输入 / 使用斜杠命令，输入 @ 提及文件'
             }
             value={input}
             onChange={(e) => {
