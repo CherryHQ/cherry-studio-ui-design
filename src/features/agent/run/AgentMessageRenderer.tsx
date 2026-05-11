@@ -292,6 +292,31 @@ export function PermissionApprovalCard({
   const hasParams = request.params && request.params.length > 0;
   const composer = variant === 'composer';
 
+  // Resolved state in inline (history) view — render as a quiet single-line entry
+  if (!composer && !isPending) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 4 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.15 }}
+        className="my-1 flex items-center gap-2 px-2 py-1 text-xs text-muted-foreground"
+      >
+        {request.status === 'approved' ? (
+          <Check size={11} className="text-success/80 flex-shrink-0" />
+        ) : (
+          <X size={11} className="text-destructive/80 flex-shrink-0" />
+        )}
+        <span className="text-muted-foreground/60">权限请求</span>
+        <span className="text-muted-foreground/30">·</span>
+        <span className="font-mono text-foreground/60 truncate">{request.toolName}</span>
+        <span className="text-muted-foreground/30">·</span>
+        <span className="text-muted-foreground/60">
+          {request.status === 'approved' ? '已允许' : '已拒绝'}
+        </span>
+      </motion.div>
+    );
+  }
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 4 }}
