@@ -1,8 +1,8 @@
-import React, { useState, useMemo, useRef } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import {
   Plus, Paperclip, Code2, FolderOpen, Folder, FolderPlus, FolderX, FileText, AtSign,
   Globe, Hammer, Brain, MoreHorizontal,
-  Maximize2, RotateCcw, RefreshCw, ChevronDown,
+  Maximize2, RotateCcw, RefreshCw, ChevronDown, Clock, X,
   TerminalSquare, Zap, Lightbulb,
   ArrowUp, Languages, Check, Hand, ShieldAlert, Pencil, Compass,
 } from 'lucide-react';
@@ -165,7 +165,17 @@ export function ChatPanel({
   const [showProjectMenu, setShowProjectMenu] = useState(false);
   const [showModelMenu, setShowModelMenu] = useState(false);
   const [projectQuery, setProjectQuery] = useState('');
+  const [queuedMessages, setQueuedMessages] = useState<{ id: string; text: string }[]>([]);
+  const [editingQueueId, setEditingQueueId] = useState<string | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+
+  // Detect whether the agent is currently busy (running tools or thinking)
+  const isAgentBusy = useMemo(() => {
+    return messages.some(m =>
+      m.toolCall?.status === 'running' ||
+      (m.thinking && !m.content && m.role === 'agent')
+    );
+  }, [messages]);
 
   const currentPermission = PERMISSION_MODES.find(m => m.id === activeMode) ?? PERMISSION_MODES[0];
   const currentProject = PROJECTS.find(p => p.id === activeProject) ?? null;
@@ -206,17 +216,60 @@ export function ChatPanel({
   const handleSend = () => {
     const trimmed = input.trim();
     if (!trimmed) return;
-    onSendMessage(trimmed);
+    if (isAgentBusy) {
+      // Queue while agent is busy — will be sent automatically when agent idles
+      setQueuedMessages(prev => [...prev, { id: `q-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`, text: trimmed }]);
+    } else {
+      onSendMessage(trimmed);
+    }
     setInput('');
   };
+
+  // Auto-flush queue when agent becomes idle
+  const queueRef = useRef(queuedMessages);
+  queueRef.current = queuedMessages;
+  useEffect(() => {
+    if (!isAgentBusy && queueRef.current.length > 0) {
+      const next = queueRef.current[0];
+      setQueuedMessages(prev => prev.slice(1));
+      onSendMessage(next.text);
+    }
+  }, [isAgentBusy, onSendMessage]);
+
+  const removeQueueItem = (id: string) => setQueuedMessages(prev => prev.filter(m => m.id !== id));
+  const moveQueueItemUp = (id: string) => setQueuedMessages(prev => {
+    const idx = prev.findIndex(m => m.id === id);
+    if (idx <= 0) return prev;
+    const next = [...prev];
+    [next[idx - 1], next[idx]] = [next[idx], next[idx - 1]];
+    return next;
+  });
+  const startEditQueueItem = (id: string) => {
+    const item = queuedMessages.find(m => m.id === id);
+    if (item) { setInput(item.text); setEditingQueueId(id); }
+  };
+  const commitEditQueueItem = () => {
+    if (!editingQueueId) return;
+    const trimmed = input.trim();
+    if (trimmed) {
+      setQueuedMessages(prev => prev.map(m => m.id === editingQueueId ? { ...m, text: trimmed } : m));
+    } else {
+      removeQueueItem(editingQueueId);
+    }
+    setInput('');
+    setEditingQueueId(null);
+  };
+  const clearQueue = () => setQueuedMessages([]);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
-      handleSend();
+      if (editingQueueId) commitEditQueueItem();
+      else handleSend();
     }
     if (e.key === 'Escape') {
-      closePopup();
+      if (editingQueueId) { setEditingQueueId(null); setInput(''); }
+      else closePopup();
     }
   };
 
@@ -244,6 +297,60 @@ export function ChatPanel({
           );
         })}
       </MessageList>
+
+      {/* Queued user messages — sit above the input, sent in order when agent idles */}
+      <AnimatePresence initial={false}>
+        {queuedMessages.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.15 }}
+            className="flex-shrink-0 px-4 pt-2 overflow-hidden"
+          >
+            <div className="rounded-xl border border-border/40 bg-muted/20 overflow-hidden">
+              <div className="flex items-center justify-between px-3 py-1.5 border-b border-border/30">
+                <div className="flex items-center gap-1.5">
+                  <Clock size={10} className="text-muted-foreground/60" />
+                  <span className="text-[11px] text-muted-foreground">待发送队列</span>
+                  <span className="text-[11px] text-muted-foreground/60 tabular-nums">{queuedMessages.length}</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={clearQueue}
+                  className="text-[11px] text-muted-foreground/60 hover:text-foreground transition-colors"
+                >
+                  清空
+                </button>
+              </div>
+              <div className="max-h-[140px] overflow-y-auto">
+                {queuedMessages.map((m, i) => (
+                  <div key={m.id} className="group/q flex items-center gap-2 px-3 py-1.5 hover:bg-accent/15 transition-colors border-b border-border/15 last:border-b-0">
+                    <span className="w-4 text-[10px] text-muted-foreground/60 tabular-nums flex-shrink-0">{i + 1}</span>
+                    <span className="flex-1 min-w-0 text-xs text-foreground truncate">{m.text}</span>
+                    <div className="flex items-center gap-0.5 opacity-0 group-hover/q:opacity-100 transition-opacity flex-shrink-0">
+                      {i > 0 && (
+                        <button type="button" onClick={() => moveQueueItemUp(m.id)} title="上移"
+                          className="p-1 rounded text-muted-foreground/60 hover:text-foreground hover:bg-accent/25 transition-colors">
+                          <ArrowUp size={10} />
+                        </button>
+                      )}
+                      <button type="button" onClick={() => startEditQueueItem(m.id)} title="编辑"
+                        className="p-1 rounded text-muted-foreground/60 hover:text-foreground hover:bg-accent/25 transition-colors">
+                        <Pencil size={10} />
+                      </button>
+                      <button type="button" onClick={() => removeQueueItem(m.id)} title="删除"
+                        className="p-1 rounded text-muted-foreground/60 hover:text-destructive hover:bg-destructive/8 transition-colors">
+                        <X size={10} />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Input Bar or Interactive Overlay (permission > gen-ui > input) */}
       <div className="flex-shrink-0 px-4 pb-3 pt-2">
@@ -372,7 +479,13 @@ export function ChatPanel({
 
           <Textarea
             className="w-full bg-transparent text-sm text-foreground placeholder:text-muted-foreground/50 outline-none resize-none min-h-[36px] max-h-[140px] leading-[1.6] px-3.5 pt-[10px] pb-2 border-transparent focus-visible:border-transparent focus-visible:ring-0 shadow-none"
-            placeholder="可向智能体询问任何事。输入 / 使用斜杠命令，输入 @ 提及文件"
+            placeholder={
+              editingQueueId
+                ? '编辑队列中的消息，按 Enter 保存…'
+                : isAgentBusy
+                  ? '智能体执行中，发送的消息将加入队列…'
+                  : '可向智能体询问任何事。输入 / 使用斜杠命令，输入 @ 提及文件'
+            }
             value={input}
             onChange={(e) => {
               const val = e.target.value;
