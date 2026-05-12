@@ -1,7 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import {
-  Files, Clock, Star, Trash2, FileText, Image as ImageIcon,
-  Code2, Music, Video, ChevronRight, ChevronDown,
+  Files, Clock, Trash2, ChevronRight, ChevronDown,
   FolderClosed, FolderOpen, Plus,
 } from 'lucide-react';
 import { Button, Input } from '@cherry-studio/ui';
@@ -16,16 +15,7 @@ export type SidebarFilter =
 const libraryItems: { id: 'all' | 'recent' | 'starred' | 'trash'; label: string; icon: React.ElementType }[] = [
   { id: 'all', label: '全部文件', icon: Files },
   { id: 'recent', label: '最近使用', icon: Clock },
-  { id: 'starred', label: '已收藏', icon: Star },
   { id: 'trash', label: '回收站', icon: Trash2 },
-];
-
-const typeItems: { id: 'document' | 'image' | 'code' | 'audio' | 'video'; label: string; icon: React.ElementType; color: string }[] = [
-  { id: 'document', label: '文档', icon: FileText, color: 'text-accent-blue/45' },
-  { id: 'image', label: '图片', icon: ImageIcon, color: 'text-accent-pink/45' },
-  { id: 'code', label: '代码', icon: Code2, color: 'text-accent-cyan/45' },
-  { id: 'audio', label: '音频', icon: Music, color: 'text-accent-amber/45' },
-  { id: 'video', label: '视频', icon: Video, color: 'text-accent-violet/45' },
 ];
 
 function InlineInput({ onConfirm, onCancel }: { onConfirm: (v: string) => void; onCancel: () => void }) {
@@ -69,7 +59,6 @@ export function FileSidebar({
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set(['f1', 'f2']));
   const [showFolders, setShowFolders] = useState(true);
   const [showTags, setShowTags] = useState(true);
-  const [showTypes, setShowTypes] = useState(true);
   const [creatingFolder, setCreatingFolder] = useState(false);
 
   const toggleFolder = (id: string) => {
@@ -162,36 +151,6 @@ export function FileSidebar({
           );
         })}
       </div>
-
-      {/* Type Filter */}
-      <SectionHeader label="类型" expanded={showTypes} onToggle={() => setShowTypes(v => !v)} />
-      {showTypes && (
-        <div className="px-1.5 pb-1 space-y-[1px]">
-          {typeItems.map(item => {
-            const active = isActive({ kind: 'type', value: item.id });
-            const Icon = item.icon;
-            const count = fileCounts[`type_${item.id}`];
-            return (
-              <Button size="inline"
-                key={item.id}
-                variant="ghost"
-                onClick={() => onFilterChange({ kind: 'type', value: item.id })}
-                className={`w-full flex items-center gap-2 px-2.5 py-[5px] rounded-md transition-colors text-sm ${
-                  active
-                    ? 'bg-accent text-foreground'
-                    : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground'
-                }`}
-              >
-                <Icon size={12} strokeWidth={1.5} className={`flex-shrink-0 ${item.color}`} />
-                <span className="flex-1 text-left truncate">{item.label}</span>
-                {count !== undefined && count > 0 && (
-                  <span className="text-xs text-muted-foreground/40">{count}</span>
-                )}
-              </Button>
-            );
-          })}
-        </div>
-      )}
 
       {/* Folders */}
       <SectionHeader label="文件夹" expanded={showFolders} onToggle={() => setShowFolders(v => !v)} onAdd={() => setCreatingFolder(true)} />
