@@ -1601,13 +1601,6 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
       </div>
 
       <div className="flex items-center gap-0.5">
-        {hasMessages && (
-          <Tooltip content={"新建会话"} side="bottom"><Button variant="ghost" size="icon-xs" onClick={handleNewSession}
-            className="p-1.5 w-auto h-auto text-muted-foreground hover:text-foreground hover:bg-accent/15">
-            <MessageCirclePlus size={13} />
-          </Button></Tooltip>
-        )}
-
         {/* Plan toggle — only when there are workflow steps. Opens floating card. */}
         {sessionData.steps.length > 0 && (
           <Popover open={showPlan} onOpenChange={setShowPlan}>

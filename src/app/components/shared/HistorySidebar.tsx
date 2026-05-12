@@ -396,7 +396,7 @@ function GroupSection<T extends HistoryItem>({
         )}
         <Button variant="ghost" size="icon-xs"
           onClick={(e) => { e.stopPropagation(); onNewItem(); }}
-          className="p-0.5 w-auto h-auto text-muted-foreground/30 hover:text-foreground hover:bg-accent/15 opacity-0 group-hover/grp:opacity-100 transition-opacity"
+          className="p-0.5 w-auto h-auto text-muted-foreground/50 hover:text-foreground hover:bg-accent/15"
           title="新建"
         >
           <Plus size={10} />

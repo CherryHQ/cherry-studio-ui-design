@@ -2179,11 +2179,6 @@ export function AssistantRunPage() {
         />
         <div className="flex-1" />
         <div className="flex items-center gap-0.5">
-          {!(activeTopic && activeTopic.title === '\u65b0\u8bdd\u9898' && activeTopic.messageCount === 0) && (
-            <Tooltip content="新建话题" side="bottom"><Button variant="ghost" size="icon-xs" onClick={handleNewTopic} className="p-1.5 w-auto h-auto text-muted-foreground hover:text-foreground hover:bg-accent/15">
-              <MessageCirclePlus size={13} />
-            </Button></Tooltip>
-          )}
           {hasMessages && (
             <>
               <div className="relative">
