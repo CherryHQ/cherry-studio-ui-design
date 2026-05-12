@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import {
-  FileText, Image as ImageIcon, Code2, Music, Video,
+  FileText, Image as ImageIcon, FileCode, Music, Video,
   File, Star, MoreHorizontal, Eye,
 } from 'lucide-react';
 import { Button, Input } from '@cherry-studio/ui';
@@ -8,7 +8,7 @@ import type { FileItem, FileTag } from './mockData';
 import { getFormatLabel } from './mockData';
 
 const typeIcons: Record<string, React.ElementType> = {
-  image: ImageIcon, document: FileText, code: Code2,
+  image: ImageIcon, document: FileText, code: FileCode,
   audio: Music, video: Video, other: File,
 };
 
@@ -30,6 +30,28 @@ const typeBgColors: Record<string, string> = {
   video: 'bg-accent-violet/[0.04]',
   other: 'bg-muted/20',
 };
+
+// Curated photo-gallery placeholder gradients. Without real previews we pick a
+// deterministic gradient per filename so each image tile looks distinct.
+const GALLERY_GRADIENTS = [
+  'linear-gradient(135deg,#ffd3a5,#fd6585)',
+  'linear-gradient(135deg,#a1c4fd,#c2e9fb)',
+  'linear-gradient(135deg,#fbc2eb,#a6c1ee)',
+  'linear-gradient(135deg,#fad0c4,#ffd1ff)',
+  'linear-gradient(135deg,#a8edea,#fed6e3)',
+  'linear-gradient(135deg,#ffecd2,#fcb69f)',
+  'linear-gradient(135deg,#84fab0,#8fd3f4)',
+  'linear-gradient(135deg,#fccb90,#d57eeb)',
+  'linear-gradient(135deg,#e0c3fc,#8ec5fc)',
+  'linear-gradient(135deg,#f6d365,#fda085)',
+  'linear-gradient(135deg,#cfd9df,#e2ebf0)',
+  'linear-gradient(135deg,#43cea2,#185a9d)',
+];
+function gradientFor(name: string): string {
+  let h = 0;
+  for (let i = 0; i < name.length; i++) h = ((h << 5) - h + name.charCodeAt(i)) | 0;
+  return GALLERY_GRADIENTS[Math.abs(h) % GALLERY_GRADIENTS.length];
+}
 
 export function FileGrid({
   files,
@@ -55,12 +77,13 @@ export function FileGrid({
   onRenameCancel: () => void;
 }) {
   return (
-    <div className="grid grid-cols-[repeat(auto-fill,minmax(145px,1fr))] gap-2 p-3">
+    <div className="grid grid-cols-[repeat(auto-fill,minmax(170px,1fr))] gap-3 p-4">
       {files.map(file => {
         const selected = selectedIds.has(file.id);
         const Icon = typeIcons[file.type] || File;
         const fileTags = tags.filter(t => file.tags.includes(t.id));
         const isRenaming = renamingId === file.id;
+        const isImage = file.type === 'image';
         return (
           <div
             key={file.id}
@@ -73,11 +96,18 @@ export function FileGrid({
                 : 'border-border/30 hover:border-border/50 hover:bg-accent/50'
             }`}
           >
-            {/* Thumbnail */}
-            <div className={`h-[88px] rounded-t-lg flex items-center justify-center ${typeBgColors[file.type] || typeBgColors.other} relative overflow-hidden`}>
-              <Icon size={26} strokeWidth={1.2} className={typeIconColors[file.type] || typeIconColors.other} />
+            {/* Thumbnail — square gallery tile for images, fixed-height card for other types */}
+            <div
+              className={`${isImage ? 'aspect-square' : 'h-[88px]'} rounded-t-lg flex items-center justify-center ${isImage ? '' : (typeBgColors[file.type] || typeBgColors.other)} relative overflow-hidden`}
+              style={isImage ? { backgroundImage: gradientFor(file.name) } : undefined}
+            >
+              {!isImage && (
+                <Icon size={26} strokeWidth={1.2} className={typeIconColors[file.type] || typeIconColors.other} />
+              )}
               {/* Format badge */}
-              <span className="absolute top-1.5 left-1.5 px-1.5 py-[1px] rounded text-xs tracking-wide bg-muted/50 text-muted-foreground/60 font-medium">
+              <span className={`absolute top-1.5 left-1.5 px-1.5 py-[1px] rounded text-xs tracking-wide font-medium ${
+                isImage ? 'bg-black/30 text-white/85 backdrop-blur-sm' : 'bg-muted/50 text-muted-foreground/60'
+              }`}>
                 {getFormatLabel(file.format)}
               </span>
               {/* Hover actions */}

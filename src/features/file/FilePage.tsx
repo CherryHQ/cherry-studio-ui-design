@@ -8,6 +8,7 @@ import { Button, Input, Dialog, DialogContent, EmptyState, Checkbox } from '@che
 import { FileSidebar } from './FileSidebar';
 import type { SidebarFilter } from './FileSidebar';
 import { FileList } from './FileList';
+import { FileGrid } from './FileGrid';
 import type { SortKey, SortDir } from './FileList';
 import { FilePreview } from './FilePreview';
 import {
@@ -446,6 +447,19 @@ export function FilePage() {
                 />
               )}
             </div>
+          ) : filter.kind === 'type' && filter.value === 'image' ? (
+            <FileGrid
+              files={filteredFiles}
+              selectedIds={selectedIds}
+              onSelect={handleSelect}
+              onContextMenu={handleContextMenu}
+              onPreview={setPreviewFile}
+              onToggleStar={handleToggleStar}
+              tags={FILE_TAGS}
+              renamingId={renamingId}
+              onRenameConfirm={handleRename}
+              onRenameCancel={() => setRenamingId(null)}
+            />
           ) : (
             <FileList
               files={filteredFiles}
