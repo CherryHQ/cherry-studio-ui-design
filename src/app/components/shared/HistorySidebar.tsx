@@ -29,7 +29,6 @@ export interface HistoryItem {
 type GroupByMode = 'none' | 'status' | 'group' | 'time' | 'custom' | 'assistant' | 'tag';
 
 const GROUP_BY_OPTIONS: { key: GroupByMode; label: string }[] = [
-  { key: 'group', label: '项目文件' },
   { key: 'status', label: '状态' },
   { key: 'time', label: '时间' },
 ];
