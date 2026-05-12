@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import {
-  X, ChevronDown, Upload,
+  X, ChevronDown, Upload, Filter,
   Pencil, Trash2, FolderInput, Tag, Share2, Eye, Download,
   Copy, ArrowUpDown, Star, Check, RotateCcw, FolderClosed,
 } from 'lucide-react';
@@ -164,46 +164,35 @@ function TagPickerDialog({ allTags, currentTags, onToggleTag, onClose }: {
 // ===========================
 // Filter Dropdown
 // ===========================
-function FilterDropdown({ label, options, value, onChange }: {
+function FilterRow({ label, options, value, onChange }: {
   label: string;
   options: { value: string; label: string }[];
   value: string;
   onChange: (v: string) => void;
 }) {
-  const [open, setOpen] = useState(false);
-  const selected = options.find(o => o.value === value);
-
   return (
-    <UIPopover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <Button
-          variant="outline"
-          size="inline"
-          className={`flex items-center gap-1 px-2 py-[2px] rounded-md text-xs transition-colors ${
-            open ? 'border-border bg-accent text-foreground' : 'border-border/30 text-muted-foreground/60 hover:border-border hover:text-foreground'
-          }`}
-        >
-          <span>{label}: {selected?.label || 'All'}</span>
-          <ChevronDown size={9} />
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent align="start" className="w-32 p-0.5">
+    <div className="px-1 py-1.5">
+      <div className="text-[10px] uppercase tracking-wider text-muted-foreground/60 mb-1 px-1">{label}</div>
+      <div className="flex flex-wrap gap-1">
         {options.map(opt => (
-          <Button
+          <button
             key={opt.value}
-            variant="ghost"
-            onClick={() => { onChange(opt.value); setOpen(false); }}
-            className={`w-full text-left px-2 py-[3px] rounded-md text-xs transition-colors justify-start ${
-              value === opt.value ? 'bg-accent text-foreground' : 'text-muted-foreground/60 hover:bg-accent/50'
+            type="button"
+            onClick={() => onChange(opt.value)}
+            className={`px-2 py-[2px] rounded-md text-xs transition-colors ${
+              value === opt.value
+                ? 'bg-accent text-foreground'
+                : 'text-muted-foreground/70 hover:bg-accent/40 hover:text-foreground'
             }`}
           >
             {opt.label}
-          </Button>
+          </button>
         ))}
-      </PopoverContent>
-    </UIPopover>
+      </div>
+    </div>
   );
 }
+
 
 // ===========================
 // Batch Action Bar
@@ -259,6 +248,8 @@ export function FilePage() {
   const [sortDir, setSortDir] = useState<SortDir>('desc');
   const [dateFilter, setDateFilter] = useState('all');
   const [sizeFilter, setSizeFilter] = useState('all');
+  const [typeFilter, setTypeFilter] = useState('all');
+  const [filterPanelOpen, setFilterPanelOpen] = useState(false);
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number; fileId: string } | null>(null);
   const [dragOver, setDragOver] = useState(false);
   const [renamingId, setRenamingId] = useState<string | null>(null);
@@ -331,6 +322,11 @@ export function FilePage() {
       });
     }
 
+    // Type filter
+    if (typeFilter !== 'all') {
+      result = result.filter(f => f.type === typeFilter);
+    }
+
     // Sort
     result = [...result].sort((a, b) => {
       let cmp = 0;
@@ -342,7 +338,7 @@ export function FilePage() {
     });
 
     return result;
-  }, [files, filter, searchText, dateFilter, sizeFilter, sortKey, sortDir, flatFolderList]);
+  }, [files, filter, searchText, dateFilter, sizeFilter, typeFilter, sortKey, sortDir, flatFolderList]);
 
   // File counts
   const fileCounts = useMemo(() => {
@@ -514,10 +510,59 @@ export function FilePage() {
             clearable
           />
 
-          <FilterDropdown label="时间" value={dateFilter} onChange={setDateFilter}
-            options={[{ value: 'all', label: '全部' }, { value: 'today', label: '今天' }, { value: 'week', label: '本周' }, { value: 'month', label: '本月' }]} />
-          <FilterDropdown label="大小" value={sizeFilter} onChange={setSizeFilter}
-            options={[{ value: 'all', label: '全部' }, { value: 'small', label: '< 100KB' }, { value: 'medium', label: '100KB-10MB' }, { value: 'large', label: '> 10MB' }]} />
+          <UIPopover open={filterPanelOpen} onOpenChange={setFilterPanelOpen}>
+            <PopoverTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon-xs"
+                title="筛选"
+                className={`p-1.5 w-auto h-auto rounded-md transition-colors ${
+                  (typeFilter !== 'all' || dateFilter !== 'all' || sizeFilter !== 'all' || filterPanelOpen)
+                    ? 'text-foreground bg-accent/40'
+                    : 'text-muted-foreground/60 hover:text-foreground hover:bg-accent/30'
+                }`}
+              >
+                <Filter size={12} />
+                {(typeFilter !== 'all' || dateFilter !== 'all' || sizeFilter !== 'all') && (
+                  <span className="ml-0.5 w-1.5 h-1.5 rounded-full bg-cherry-primary-dark" />
+                )}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent align="start" className="w-[220px] p-2">
+              <FilterRow label="类型" value={typeFilter} onChange={setTypeFilter} options={[
+                { value: 'all',      label: '全部' },
+                { value: 'image',    label: '图片' },
+                { value: 'document', label: '文档' },
+                { value: 'code',     label: '代码' },
+                { value: 'audio',    label: '音频' },
+                { value: 'video',    label: '视频' },
+                { value: 'other',    label: '其他' },
+              ]} />
+              <FilterRow label="时间" value={dateFilter} onChange={setDateFilter} options={[
+                { value: 'all',   label: '全部' },
+                { value: 'today', label: '今天' },
+                { value: 'week',  label: '本周' },
+                { value: 'month', label: '本月' },
+              ]} />
+              <FilterRow label="大小" value={sizeFilter} onChange={setSizeFilter} options={[
+                { value: 'all',    label: '全部' },
+                { value: 'small',  label: '< 100KB' },
+                { value: 'medium', label: '100KB-10MB' },
+                { value: 'large',  label: '> 10MB' },
+              ]} />
+              {(typeFilter !== 'all' || dateFilter !== 'all' || sizeFilter !== 'all') && (
+                <>
+                  <div className="my-1 h-px bg-border/40" />
+                  <Button variant="ghost" size="xs"
+                    onClick={() => { setTypeFilter('all'); setDateFilter('all'); setSizeFilter('all'); }}
+                    className="w-full justify-center text-xs text-muted-foreground hover:text-foreground"
+                  >
+                    清除筛选
+                  </Button>
+                </>
+              )}
+            </PopoverContent>
+          </UIPopover>
 
           <div className="flex-1" />
 
