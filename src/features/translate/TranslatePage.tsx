@@ -60,8 +60,7 @@ const translateModels = [
 
 export function TranslatePage() {
   const { openSettings: onOpenSettings } = useGlobalActions();
-  const [sourceLang, setSourceLang] = useState('自动检测');
-  const [targetLang, setTargetLang] = useState('英语');
+  const [targetLang] = useState('英语');
   const [sourceText, setSourceText] = useState('');
   const [translatedText, setTranslatedText] = useState('');
   const [isTranslating, setIsTranslating] = useState(false);
@@ -120,17 +119,8 @@ export function TranslatePage() {
   ]);
   const [newLangName, setNewLangName] = useState('');
   const [newLangCode, setNewLangCode] = useState('');
-  const [showLangDropdownSrc, setShowLangDropdownSrc] = useState(false);
-  const [showLangDropdownTgt, setShowLangDropdownTgt] = useState(false);
-
   const languages = ['自动检测', '中文', '英语', '日语', '韩语', '法语', '德语', '西班牙语', '俄语', '阿拉伯语', '葡萄牙语', '意大利语'];
   const targetLanguages = languages.filter(l => l !== '自动检测');
-
-  const langFlags: Record<string, string> = {
-    '自动检测': '🌐', '中文': '🇨🇳', '英语': '🇬🇧', '日语': '🇯🇵',
-    '韩语': '🇰🇷', '法语': '🇫🇷', '德语': '🇩🇪', '西班牙语': '🇪🇸',
-    '俄语': '🇷🇺', '阿拉伯语': '🇸🇦', '葡萄牙语': '🇵🇹', '意大利语': '🇮🇹',
-  };
 
   const currentExpert = expertList.find(e => e.id === selectedExpert) || expertList[0];
   const currentModel = translateModels.find(m => m.id === selectedModelId) || translateModels[0];
@@ -173,18 +163,6 @@ export function TranslatePage() {
       );
       setIsTranslating(false);
     }, 800);
-  };
-
-  const handleSwapLangs = () => {
-    if (sourceLang === '自动检测') return;
-    const tmp = sourceLang;
-    setSourceLang(targetLang);
-    setTargetLang(tmp);
-    if (translatedText) {
-      const tmpText = sourceText;
-      setSourceText(translatedText);
-      setTranslatedText(tmpText);
-    }
   };
 
   const handleCopy = (text: string) => {
@@ -332,7 +310,15 @@ export function TranslatePage() {
               </PopoverContent>
             </Popover>
           </div>
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1.5">
+            <Button
+              variant="default" size="xs"
+              onClick={handleTranslate}
+              disabled={!sourceText.trim() || isTranslating}
+              className="px-3 py-1 text-xs flex items-center gap-1.5 rounded-md">
+              <Languages size={12} />
+              <span>翻译</span>
+            </Button>
             <Button
               variant="ghost" size="icon-xs"
               onClick={() => setHistoryOpen(v => !v)}
@@ -357,54 +343,6 @@ export function TranslatePage() {
         <div className="flex-1 min-h-0 flex flex-col p-4">
           {/* Translation card - fills available height */}
           <div className="flex-1 flex flex-col bg-card border border-border/30 rounded-2xl overflow-hidden min-h-0">
-            {/* Language selector row */}
-            <div className="flex items-center h-10 px-2 flex-shrink-0">
-              <Popover open={showLangDropdownSrc} onOpenChange={(v) => { setShowLangDropdownSrc(v); if (v) setShowLangDropdownTgt(false); }}>
-                <PopoverTrigger asChild>
-                  <Button variant="ghost" size="sm"
-                    className="flex-1 h-full flex items-center justify-center gap-1.5 text-xs text-foreground hover:bg-accent/50 py-1.5">
-                    <span className="text-xs text-muted-foreground/40 mr-0.5">源语言</span>
-                    <span className="text-sm leading-none">{langFlags[sourceLang] || '🌐'}</span>
-                    <span>{sourceLang}</span>
-                    <ChevronDown size={11} className="text-muted-foreground/50" />
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent align="center" sideOffset={4} className="w-40 p-0 py-1 rounded-xl max-h-[240px] overflow-y-auto">
-                  {languages.map(l => (
-                    <Button variant="ghost" size="sm" key={l} onClick={() => { setSourceLang(l); setShowLangDropdownSrc(false); }}
-                      className={`w-full text-left text-xs justify-start ${l === sourceLang ? 'text-foreground' : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground'}`}>
-                      <span className={`flex items-center gap-2 px-3 py-[6px] ${l === sourceLang ? 'bg-accent rounded-lg mx-1 my-0.5 px-2' : ''}`}><span className="text-sm leading-none">{langFlags[l] || '🌐'}</span>{l}</span>
-                    </Button>
-                  ))}
-                </PopoverContent>
-              </Popover>
-              <Button variant="ghost" size="icon-xs" onClick={handleSwapLangs}
-                className={`w-8 h-8 rounded-full flex-shrink-0 ${
-                  sourceLang === '自动检测' ? 'text-muted-foreground/30 cursor-not-allowed' : 'text-muted-foreground hover:text-foreground hover:bg-accent active:scale-[0.97]'
-                }`}>
-                <ArrowLeftRight size={14} />
-              </Button>
-              <Popover open={showLangDropdownTgt} onOpenChange={(v) => { setShowLangDropdownTgt(v); if (v) setShowLangDropdownSrc(false); }}>
-                <PopoverTrigger asChild>
-                  <Button variant="ghost" size="sm"
-                    className="flex-1 h-full flex items-center justify-center gap-1.5 text-xs text-foreground hover:bg-accent/50 py-1.5">
-                    <span className="text-xs text-muted-foreground/40 mr-0.5">目标语言</span>
-                    <span className="text-sm leading-none">{langFlags[targetLang] || '🌐'}</span>
-                    <span>{targetLang}</span>
-                    <ChevronDown size={11} className="text-muted-foreground/50" />
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent align="center" sideOffset={4} className="w-40 p-0 py-1 rounded-xl max-h-[240px] overflow-y-auto">
-                  {targetLanguages.map(l => (
-                    <Button variant="ghost" size="sm" key={l} onClick={() => { setTargetLang(l); setShowLangDropdownTgt(false); }}
-                      className={`w-full text-left text-xs justify-start ${l === targetLang ? 'text-foreground' : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground'}`}>
-                      <span className={`flex items-center gap-2 px-3 py-[6px] ${l === targetLang ? 'bg-accent rounded-lg mx-1 my-0.5 px-2' : ''}`}><span className="text-sm leading-none">{langFlags[l] || '🌐'}</span>{l}</span>
-                    </Button>
-                  ))}
-                </PopoverContent>
-              </Popover>
-            </div>
-
             {/* Two-column text area - fills remaining height */}
             <div className="flex-1 flex min-h-0">
               {/* Source */}
@@ -468,17 +406,7 @@ export function TranslatePage() {
                       {copied ? <Check size={12} className="text-primary" /> : <Copy size={12} />}
                     </Button>
                   </div>
-                  <div className="flex items-center gap-2">
-                    {translatedText && <span className="text-xs text-muted-foreground/50">{translatedText.length}</span>}
-                    <Button
-                      variant="default" size="xs"
-                      onClick={handleTranslate}
-                      disabled={!sourceText.trim() || isTranslating}
-                      className="px-3 py-1.5 text-xs flex items-center gap-1.5 rounded-lg">
-                      <Languages size={12} />
-                      <span>翻译</span>
-                    </Button>
-                  </div>
+                  {translatedText && <span className="text-xs text-muted-foreground/50">{translatedText.length}</span>}
                 </div>
               </div>
             </div>
