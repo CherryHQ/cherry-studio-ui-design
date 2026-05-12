@@ -1,9 +1,9 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React from 'react';
 import {
-  Files, Clock, Trash2, ChevronRight, ChevronDown,
-  FolderClosed, FolderOpen, Plus,
+  Files, Clock, Trash2,
+  FileText, Image as ImageIcon, FileCode, Music, Video,
 } from 'lucide-react';
-import { Button, Input } from '@cherry-studio/ui';
+import { Button } from '@cherry-studio/ui';
 import type { FileFolder } from './mockData';
 
 export type SidebarFilter =
@@ -12,41 +12,25 @@ export type SidebarFilter =
   | { kind: 'folder'; value: string }
   | { kind: 'tag'; value: string };
 
-const libraryItems: { id: 'all' | 'recent' | 'starred' | 'trash'; label: string; icon: React.ElementType }[] = [
-  { id: 'all', label: '全部文件', icon: Files },
-  { id: 'recent', label: '最近使用', icon: Clock },
-  { id: 'trash', label: '回收站', icon: Trash2 },
-];
+type SidebarEntry =
+  | { kind: 'library'; value: 'all' | 'recent' | 'trash'; label: string; icon: React.ElementType; countKey: string }
+  | { kind: 'type'; value: 'document' | 'image' | 'code' | 'audio' | 'video'; label: string; icon: React.ElementType; countKey: string };
 
-function InlineInput({ onConfirm, onCancel }: { onConfirm: (v: string) => void; onCancel: () => void }) {
-  const [text, setText] = useState('');
-  const ref = useRef<HTMLInputElement>(null);
-  useEffect(() => { ref.current?.focus(); }, []);
-  return (
-    <div className="flex items-center gap-1.5 px-3 py-[5px]">
-      <FolderClosed size={12} className="flex-shrink-0 text-muted-foreground/40" />
-      <Input
-        ref={ref}
-        value={text}
-        onChange={e => setText(e.target.value)}
-        onKeyDown={e => {
-          if (e.key === 'Enter' && text.trim()) onConfirm(text.trim());
-          if (e.key === 'Escape') onCancel();
-        }}
-        onBlur={() => { if (text.trim()) onConfirm(text.trim()); else onCancel(); }}
-        placeholder="文件夹名称"
-        className="flex-1 bg-background border border-border text-xs text-foreground px-2 py-1 h-auto rounded-md placeholder:text-muted-foreground/60 shadow-sm focus-visible:border-primary/60 focus-visible:ring-2 focus-visible:ring-primary/15"
-      />
-    </div>
-  );
-}
+const SIDEBAR_ENTRIES: SidebarEntry[] = [
+  { kind: 'library', value: 'all',      label: '全部文件', icon: Files,     countKey: 'all' },
+  { kind: 'type',    value: 'document', label: '文档',     icon: FileText,  countKey: 'type_document' },
+  { kind: 'type',    value: 'image',    label: '图片',     icon: ImageIcon, countKey: 'type_image' },
+  { kind: 'type',    value: 'code',     label: '代码',     icon: FileCode,  countKey: 'type_code' },
+  { kind: 'type',    value: 'audio',    label: '音频',     icon: Music,     countKey: 'type_audio' },
+  { kind: 'type',    value: 'video',    label: '视频',     icon: Video,     countKey: 'type_video' },
+  { kind: 'library', value: 'recent',   label: '最近使用', icon: Clock,     countKey: 'recent' },
+  { kind: 'library', value: 'trash',    label: '回收站',   icon: Trash2,    countKey: 'trash' },
+];
 
 export function FileSidebar({
   filter,
   onFilterChange,
-  folders,
   fileCounts,
-  onCreateFolder,
 }: {
   filter: SidebarFilter;
   onFilterChange: (f: SidebarFilter) => void;
@@ -54,85 +38,21 @@ export function FileSidebar({
   fileCounts: Record<string, number>;
   onCreateFolder: (name: string, parentId: string | null) => void;
 }) {
-  const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set(['f1', 'f2']));
-  const [showFolders, setShowFolders] = useState(true);
-  const [creatingFolder, setCreatingFolder] = useState(false);
-
-  const toggleFolder = (id: string) => {
-    setExpandedFolders(prev => {
-      const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
-      return next;
-    });
-  };
-
-  const isActive = (f: SidebarFilter) => f.kind === filter.kind && f.value === filter.value;
-
-  const SectionHeader = ({ label, expanded, onToggle, onAdd }: { label: string; expanded: boolean; onToggle: () => void; onAdd?: () => void }) => (
-    <div className="flex items-center justify-between px-3 pt-3 pb-1">
-      <Button variant="ghost" onClick={onToggle} size="inline" className="p-0 flex items-center gap-1 text-xs text-muted-foreground/60 uppercase tracking-wider hover:text-foreground transition-colors">
-        {expanded ? <ChevronDown size={9} /> : <ChevronRight size={9} />}
-        <span>{label}</span>
-      </Button>
-      {onAdd && (
-        <Button variant="ghost" onClick={onAdd} className="w-4 h-4 p-0 flex items-center justify-center text-muted-foreground/40 hover:text-foreground transition-colors">
-          <Plus size={10} />
-        </Button>
-      )}
-    </div>
-  );
-
-  const renderFolderTree = (items: FileFolder[], depth: number = 0) => {
-    return items.map(folder => {
-      const hasChildren = folder.children && folder.children.length > 0;
-      const expanded = expandedFolders.has(folder.id);
-      const active = isActive({ kind: 'folder', value: folder.id });
-      const FIcon = active && expanded ? FolderOpen : FolderClosed;
-      return (
-        <div key={folder.id}>
-          <Button size="inline"
-            variant="ghost"
-            onClick={() => {
-              onFilterChange({ kind: 'folder', value: folder.id });
-              if (hasChildren) toggleFolder(folder.id);
-            }}
-            className={`w-full flex items-center gap-1.5 py-[5px] rounded-md transition-colors text-sm ${
-              active
-                ? 'bg-accent text-foreground'
-                : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground'
-            }`}
-            style={{ paddingLeft: `${12 + depth * 14}px`, paddingRight: '8px' }}
-          >
-            {hasChildren ? (
-              expanded ? <ChevronDown size={9} className="flex-shrink-0 text-muted-foreground/40" /> : <ChevronRight size={9} className="flex-shrink-0 text-muted-foreground/40" />
-            ) : (
-              <span className="w-[9px] flex-shrink-0" />
-            )}
-            <FIcon size={12} className="flex-shrink-0 text-muted-foreground/60" />
-            <span className="truncate">{folder.name}</span>
-            {fileCounts[folder.id] !== undefined && fileCounts[folder.id] > 0 && (
-              <span className="ml-auto text-xs text-muted-foreground/40">{fileCounts[folder.id]}</span>
-            )}
-          </Button>
-          {hasChildren && expanded && renderFolderTree(folder.children!, depth + 1)}
-        </div>
-      );
-    });
-  };
+  const isActive = (entry: SidebarEntry) =>
+    filter.kind === entry.kind && filter.value === entry.value;
 
   return (
     <div className="w-[180px] flex-shrink-0 border-r border-border/30 flex flex-col overflow-y-auto select-none scrollbar-thin-xs">
-      {/* Library */}
       <div className="px-1.5 pt-2 pb-1 space-y-[1px]">
-        {libraryItems.map(item => {
-          const active = isActive({ kind: 'library', value: item.id });
-          const Icon = item.icon;
-          const count = fileCounts[item.id];
+        {SIDEBAR_ENTRIES.map(entry => {
+          const active = isActive(entry);
+          const Icon = entry.icon;
+          const count = fileCounts[entry.countKey];
           return (
             <Button size="inline"
-              key={item.id}
+              key={`${entry.kind}-${entry.value}`}
               variant="ghost"
-              onClick={() => onFilterChange({ kind: 'library', value: item.id })}
+              onClick={() => onFilterChange({ kind: entry.kind, value: entry.value } as SidebarFilter)}
               className={`w-full flex items-center gap-2 px-2.5 py-[5px] rounded-md transition-colors text-sm ${
                 active
                   ? 'bg-accent text-foreground'
@@ -140,7 +60,7 @@ export function FileSidebar({
               }`}
             >
               <Icon size={13} strokeWidth={1.5} className="flex-shrink-0 text-muted-foreground/60" />
-              <span className="flex-1 text-left truncate">{item.label}</span>
+              <span className="flex-1 text-left truncate">{entry.label}</span>
               {count !== undefined && count > 0 && (
                 <span className="text-xs text-muted-foreground/40">{count}</span>
               )}
@@ -148,21 +68,6 @@ export function FileSidebar({
           );
         })}
       </div>
-
-      {/* Folders */}
-      <SectionHeader label="文件夹" expanded={showFolders} onToggle={() => setShowFolders(v => !v)} onAdd={() => setCreatingFolder(true)} />
-      {showFolders && (
-        <div className="px-1.5 pb-1 space-y-[1px]">
-          {renderFolderTree(folders)}
-          {creatingFolder && (
-            <InlineInput
-              onConfirm={(name) => { onCreateFolder(name, null); setCreatingFolder(false); }}
-              onCancel={() => setCreatingFolder(false)}
-            />
-          )}
-        </div>
-      )}
-
     </div>
   );
 }

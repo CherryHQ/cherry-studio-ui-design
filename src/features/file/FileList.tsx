@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import {
-  FileText, Image as ImageIcon, Code2, Music, Video,
+  FileText, Image as ImageIcon, FileCode, Music, Video,
   File, ChevronUp, ChevronDown,
 } from 'lucide-react';
 import { Button, Input } from '@cherry-studio/ui';
@@ -8,7 +8,7 @@ import type { FileItem } from './mockData';
 import { getFormatLabel } from './mockData';
 
 const typeIcons: Record<string, React.ElementType> = {
-  image: ImageIcon, document: FileText, code: Code2,
+  image: ImageIcon, document: FileText, code: FileCode,
   audio: Music, video: Video, other: File,
 };
 
