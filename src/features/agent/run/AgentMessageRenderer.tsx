@@ -809,9 +809,9 @@ function ProcessBlock({ msgs, isRunning, onResolve }: {
             : <ChevronRight size={10} className="flex-shrink-0" />
           }
           <span>
-            {toolCallCount > 0
-              ? (totalDurationLabel ? `工具调用 · ${totalDurationLabel}` : `${toolCallCount} 次工具调用`)
-              : `${contentCount + thinkingCount} 条消息`}
+            {totalDurationLabel
+              ? `已处理 ${totalDurationLabel}`
+              : (toolCallCount > 0 ? `${toolCallCount} 次工具调用` : `${contentCount + thinkingCount} 条消息`)}
           </span>
           {typeIcons.length > 0 && (
             <span className="flex items-center gap-1 ml-0.5 text-text-tertiary">
