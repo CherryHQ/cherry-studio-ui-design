@@ -357,11 +357,20 @@ export function TranslatePage() {
           {/* Translation card - fills available height */}
           <div className="flex-1 flex flex-col bg-card border border-border/30 rounded-2xl overflow-hidden min-h-0">
             {/* Two-column text area - fills remaining height */}
-            <div className="flex-1 flex min-h-0">
+            <div className="flex-1 flex min-h-0 relative">
+              {/* Floating swap button on the divider, aligned with header strip */}
+              <Tooltip content="互换语言" side="bottom">
+                <Button variant="ghost" size="icon-xs" onClick={handleSwapLangs}
+                  className={`absolute left-1/2 -translate-x-1/2 top-[5px] z-10 w-6 h-6 rounded-full bg-background border border-border/40 shadow-sm ${
+                    sourceLang === '自动检测' ? 'text-muted-foreground/30 cursor-not-allowed hover:bg-background' : 'text-muted-foreground/70 hover:text-foreground hover:bg-accent/40'
+                  }`}>
+                  <ArrowLeftRight size={11} />
+                </Button>
+              </Tooltip>
               {/* Source */}
               <div className="flex-1 flex flex-col min-h-0">
                 {/* Source header — language picker (centered with label) */}
-                <div className="relative flex items-center justify-center px-3 py-1.5 flex-shrink-0 border-b border-border/20">
+                <div className="flex items-center justify-center px-3 py-1.5 flex-shrink-0 border-b border-border/20">
                   <Popover open={showLangDropdownSrc} onOpenChange={(v) => { setShowLangDropdownSrc(v); if (v) setShowLangDropdownTgt(false); }}>
                     <PopoverTrigger asChild>
                       <Button variant="ghost" size="xs"
@@ -381,14 +390,6 @@ export function TranslatePage() {
                       ))}
                     </PopoverContent>
                   </Popover>
-                  <Tooltip content="互换语言" side="bottom">
-                    <Button variant="ghost" size="icon-xs" onClick={handleSwapLangs}
-                      className={`absolute right-3 top-1/2 -translate-y-1/2 w-6 h-6 rounded-md ${
-                        sourceLang === '自动检测' ? 'text-muted-foreground/30 cursor-not-allowed' : 'text-muted-foreground/60 hover:text-foreground hover:bg-accent/40'
-                      }`}>
-                      <ArrowLeftRight size={11} />
-                    </Button>
-                  </Tooltip>
                 </div>
                 <div className="flex-1 relative min-h-0">
                   <Textarea
