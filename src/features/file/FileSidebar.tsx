@@ -35,7 +35,7 @@ function InlineInput({ onConfirm, onCancel }: { onConfirm: (v: string) => void; 
         }}
         onBlur={() => { if (text.trim()) onConfirm(text.trim()); else onCancel(); }}
         placeholder="文件夹名称"
-        className="flex-1 bg-transparent outline-none text-xs text-foreground border-b border-border/50 py-0.5 min-w-0 placeholder:text-muted-foreground/60 h-auto border-x-0 border-t-0 rounded-none shadow-none focus-visible:ring-0"
+        className="flex-1 bg-background border border-border text-xs text-foreground px-2 py-1 h-auto rounded-md placeholder:text-muted-foreground/60 shadow-sm focus-visible:border-primary/60 focus-visible:ring-2 focus-visible:ring-primary/15"
       />
     </div>
   );

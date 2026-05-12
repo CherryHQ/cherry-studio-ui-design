@@ -160,7 +160,7 @@ function InlineRename({ value, onConfirm, onCancel }: { value: string; onConfirm
         if (e.key === 'Escape') onCancel();
       }}
       onBlur={() => { if (text.trim()) onConfirm(text.trim()); else onCancel(); }}
-      className="w-full bg-transparent outline-none text-xs text-foreground border-b border-border/50 py-0 h-auto border-x-0 border-t-0 rounded-none shadow-none focus-visible:ring-0"
+      className="w-full bg-background border border-border text-xs text-foreground px-1.5 py-0.5 h-auto rounded-md shadow-sm focus-visible:border-primary/60 focus-visible:ring-2 focus-visible:ring-primary/15 text-center"
       onClick={e => e.stopPropagation()}
     />
   );
