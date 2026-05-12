@@ -2,7 +2,7 @@ import React, { useState, useCallback, useMemo, useRef, useEffect } from 'react'
 import {
   X, ChevronDown, Upload, Filter,
   Pencil, Trash2, FolderInput, Tag, Share2, Eye, Download,
-  Copy, ArrowUpDown, Star, Check, RotateCcw, FolderClosed,
+  Copy, Star, Check, RotateCcw, FolderClosed,
 } from 'lucide-react';
 import { Button, Input, SearchInput, Dialog, DialogContent, Popover as UIPopover, PopoverTrigger, PopoverContent, EmptyState, Checkbox } from '@cherry-studio/ui';
 import { FileSidebar } from './FileSidebar';
@@ -485,7 +485,6 @@ export function FilePage() {
         filter={filter}
         onFilterChange={(f) => { setFilter(f); setSelectedIds(new Set()); setRenamingId(null); }}
         folders={folders}
-        tags={FILE_TAGS}
         fileCounts={fileCounts}
         onCreateFolder={handleCreateFolder}
       />
@@ -565,16 +564,6 @@ export function FilePage() {
           </UIPopover>
 
           <div className="flex-1" />
-
-          <Button
-            variant="ghost"
-            onClick={() => setSortDir(d => d === 'asc' ? 'desc' : 'asc')}
-            className="flex items-center gap-1 px-1.5 py-[3px] rounded-md text-xs text-muted-foreground/40 hover:text-foreground hover:bg-accent transition-colors"
-          >
-            <ArrowUpDown size={9} />
-            <span>{sortKey === 'name' ? '名称' : sortKey === 'size' ? '大小' : sortKey === 'type' ? '类型' : '时间'}</span>
-          </Button>
-
         </div>
 
         {/* Batch action bar */}
@@ -620,8 +609,6 @@ export function FilePage() {
               onSelect={handleSelect}
               onContextMenu={handleContextMenu}
               onPreview={setPreviewFile}
-              onToggleStar={handleToggleStar}
-              tags={FILE_TAGS}
               sortKey={sortKey}
               sortDir={sortDir}
               onSort={handleSort}

@@ -4,7 +4,7 @@ import {
   FolderClosed, FolderOpen, Plus,
 } from 'lucide-react';
 import { Button, Input } from '@cherry-studio/ui';
-import type { FileFolder, FileTag } from './mockData';
+import type { FileFolder } from './mockData';
 
 export type SidebarFilter =
   | { kind: 'library'; value: 'all' | 'recent' | 'starred' | 'trash' }
@@ -45,20 +45,17 @@ export function FileSidebar({
   filter,
   onFilterChange,
   folders,
-  tags,
   fileCounts,
   onCreateFolder,
 }: {
   filter: SidebarFilter;
   onFilterChange: (f: SidebarFilter) => void;
   folders: FileFolder[];
-  tags: FileTag[];
   fileCounts: Record<string, number>;
   onCreateFolder: (name: string, parentId: string | null) => void;
 }) {
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set(['f1', 'f2']));
   const [showFolders, setShowFolders] = useState(true);
-  const [showTags, setShowTags] = useState(true);
   const [creatingFolder, setCreatingFolder] = useState(false);
 
   const toggleFolder = (id: string) => {
@@ -166,30 +163,6 @@ export function FileSidebar({
         </div>
       )}
 
-      {/* Tags */}
-      <SectionHeader label="标签" expanded={showTags} onToggle={() => setShowTags(v => !v)} />
-      {showTags && (
-        <div className="px-1.5 pb-2 space-y-[1px]">
-          {tags.map(tag => {
-            const active = isActive({ kind: 'tag', value: tag.id });
-            return (
-              <Button size="inline"
-                key={tag.id}
-                variant="ghost"
-                onClick={() => onFilterChange({ kind: 'tag', value: tag.id })}
-                className={`w-full flex items-center gap-2 px-2.5 py-[5px] rounded-md transition-colors text-sm ${
-                  active
-                    ? 'bg-accent text-foreground'
-                    : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground'
-                }`}
-              >
-                <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 opacity-70 ${tag.color.dot}`} />
-                <span className="flex-1 text-left truncate">{tag.name}</span>
-              </Button>
-            );
-          })}
-        </div>
-      )}
     </div>
   );
 }
