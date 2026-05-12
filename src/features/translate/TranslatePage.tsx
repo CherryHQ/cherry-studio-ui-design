@@ -360,18 +360,19 @@ export function TranslatePage() {
             <div className="flex-1 flex min-h-0">
               {/* Source */}
               <div className="flex-1 flex flex-col min-h-0">
-                {/* Source header — language picker */}
-                <div className="flex items-center justify-between px-3 py-1.5 flex-shrink-0 border-b border-border/20">
+                {/* Source header — language picker (centered with label) */}
+                <div className="relative flex items-center justify-center px-3 py-1.5 flex-shrink-0 border-b border-border/20">
                   <Popover open={showLangDropdownSrc} onOpenChange={(v) => { setShowLangDropdownSrc(v); if (v) setShowLangDropdownTgt(false); }}>
                     <PopoverTrigger asChild>
                       <Button variant="ghost" size="xs"
-                        className="flex items-center gap-1.5 px-1.5 py-[3px] rounded-md text-xs text-muted-foreground hover:text-foreground hover:bg-accent/40">
+                        className="flex items-center gap-1.5 px-2 py-[3px] rounded-md text-xs text-muted-foreground hover:text-foreground hover:bg-accent/40">
+                        <span className="text-muted-foreground/50">源语言</span>
                         <span className="text-sm leading-none">{langFlags[sourceLang] || '🌐'}</span>
                         <span className="truncate max-w-[100px]">{sourceLang}</span>
                         <ChevronDown size={9} className="text-muted-foreground/40" />
                       </Button>
                     </PopoverTrigger>
-                    <PopoverContent align="start" sideOffset={4} className="w-40 p-0 py-1 rounded-xl max-h-[240px] overflow-y-auto">
+                    <PopoverContent align="center" sideOffset={4} className="w-40 p-0 py-1 rounded-xl max-h-[240px] overflow-y-auto">
                       {languages.map(l => (
                         <Button variant="ghost" size="sm" key={l} onClick={() => { setSourceLang(l); setShowLangDropdownSrc(false); }}
                           className={`w-full text-left text-xs justify-start ${l === sourceLang ? 'text-foreground' : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground'}`}>
@@ -382,7 +383,7 @@ export function TranslatePage() {
                   </Popover>
                   <Tooltip content="互换语言" side="bottom">
                     <Button variant="ghost" size="icon-xs" onClick={handleSwapLangs}
-                      className={`w-6 h-6 rounded-md ${
+                      className={`absolute right-3 top-1/2 -translate-y-1/2 w-6 h-6 rounded-md ${
                         sourceLang === '自动检测' ? 'text-muted-foreground/30 cursor-not-allowed' : 'text-muted-foreground/60 hover:text-foreground hover:bg-accent/40'
                       }`}>
                       <ArrowLeftRight size={11} />
@@ -425,18 +426,19 @@ export function TranslatePage() {
               <div className="w-px bg-border/30 flex-shrink-0" />
               {/* Target */}
               <div className="flex-1 flex flex-col min-h-0 bg-muted/10 rounded-br-2xl">
-                {/* Target header — language picker */}
-                <div className="flex items-center justify-between px-3 py-1.5 flex-shrink-0 border-b border-border/20">
+                {/* Target header — language picker (centered with label) */}
+                <div className="flex items-center justify-center px-3 py-1.5 flex-shrink-0 border-b border-border/20">
                   <Popover open={showLangDropdownTgt} onOpenChange={(v) => { setShowLangDropdownTgt(v); if (v) setShowLangDropdownSrc(false); }}>
                     <PopoverTrigger asChild>
                       <Button variant="ghost" size="xs"
-                        className="flex items-center gap-1.5 px-1.5 py-[3px] rounded-md text-xs text-muted-foreground hover:text-foreground hover:bg-accent/40">
+                        className="flex items-center gap-1.5 px-2 py-[3px] rounded-md text-xs text-muted-foreground hover:text-foreground hover:bg-accent/40">
+                        <span className="text-muted-foreground/50">目标语言</span>
                         <span className="text-sm leading-none">{langFlags[targetLang] || '🌐'}</span>
                         <span className="truncate max-w-[100px]">{targetLang}</span>
                         <ChevronDown size={9} className="text-muted-foreground/40" />
                       </Button>
                     </PopoverTrigger>
-                    <PopoverContent align="start" sideOffset={4} className="w-40 p-0 py-1 rounded-xl max-h-[240px] overflow-y-auto">
+                    <PopoverContent align="center" sideOffset={4} className="w-40 p-0 py-1 rounded-xl max-h-[240px] overflow-y-auto">
                       {targetLanguages.map(l => (
                         <Button variant="ghost" size="sm" key={l} onClick={() => { setTargetLang(l); setShowLangDropdownTgt(false); }}
                           className={`w-full text-left text-xs justify-start ${l === targetLang ? 'text-foreground' : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground'}`}>
