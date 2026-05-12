@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import {
   FileText, Image as ImageIcon, FileCode, Music, Video,
-  File, ChevronUp, ChevronDown,
+  File, ChevronUp, ChevronDown, ChevronsUpDown,
 } from 'lucide-react';
 import { Button, Input } from '@cherry-studio/ui';
 import type { FileItem } from './mockData';
@@ -49,27 +49,33 @@ export function FileList({
   onRenameConfirm: (id: string, name: string) => void;
   onRenameCancel: () => void;
 }) {
-  const SortHeader = ({ label, field, className: cn }: { label: string; field: SortKey; className?: string }) => (
-    <Button size="inline"
-      variant="ghost"
-      onClick={() => onSort(field)}
-      className={`p-0 flex items-center gap-0.5 text-xs uppercase tracking-wider transition-colors ${
-        sortKey === field ? 'text-muted-foreground' : 'text-muted-foreground/40 hover:text-foreground'
-      } ${cn || ''}`}
-    >
-      <span>{label}</span>
-      {sortKey === field && (
-        sortDir === 'asc' ? <ChevronUp size={8} /> : <ChevronDown size={8} />
-      )}
-    </Button>
-  );
+  const SortHeader = ({ label, field, className: cn }: { label: string; field: SortKey; className?: string }) => {
+    const active = sortKey === field;
+    return (
+      <Button size="inline"
+        variant="ghost"
+        onClick={() => onSort(field)}
+        className={`p-0 flex items-center gap-0.5 text-xs uppercase tracking-wider transition-colors ${
+          active ? 'text-muted-foreground' : 'text-muted-foreground/40 hover:text-foreground'
+        } ${cn || ''}`}
+      >
+        <span>{label}</span>
+        {active
+          ? (sortDir === 'asc'
+            ? <ChevronUp size={9} className="flex-shrink-0" />
+            : <ChevronDown size={9} className="flex-shrink-0" />)
+          : <ChevronsUpDown size={9} className="flex-shrink-0 text-muted-foreground/30" />
+        }
+      </Button>
+    );
+  };
 
   return (
     <div className="flex flex-col">
       {/* Header */}
       <div className="flex items-center gap-2 px-4 py-1.5 border-b border-border/30 sticky top-0 bg-background z-10">
         <SortHeader label="名称" field="name" className="flex-1" />
-        <SortHeader label="大小" field="size" className="w-[70px] justify-end" />
+        <SortHeader label="大小" field="size" className="w-[70px]" />
         <SortHeader label="类型" field="type" className="w-[55px]" />
         <SortHeader label="修改时间" field="updatedAt" className="w-[110px]" />
       </div>
@@ -102,7 +108,7 @@ export function FileList({
               )}
             </div>
             {/* Size */}
-            <span className="text-xs text-muted-foreground/50 w-[70px] text-right flex-shrink-0">{file.size}</span>
+            <span className="text-xs text-muted-foreground/50 w-[70px] flex-shrink-0">{file.size}</span>
             {/* Type */}
             <span className="text-xs text-muted-foreground/50 w-[55px] flex-shrink-0">{getFormatLabel(file.format)}</span>
             {/* Date */}

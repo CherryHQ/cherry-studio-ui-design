@@ -4,7 +4,7 @@ import {
   Pencil, Trash2, FolderInput, Tag, Share2, Eye, Download,
   Copy, Star, Check, RotateCcw, FolderClosed,
 } from 'lucide-react';
-import { Button, Input, SearchInput, Dialog, DialogContent, EmptyState, Checkbox } from '@cherry-studio/ui';
+import { Button, Input, Dialog, DialogContent, EmptyState, Checkbox } from '@cherry-studio/ui';
 import { FileSidebar } from './FileSidebar';
 import type { SidebarFilter } from './FileSidebar';
 import { FileList } from './FileList';
@@ -196,10 +196,6 @@ function BatchBar({ count, onDelete, onMove, onDownload, onClear }: {
 }
 
 // Regex patterns constructed via new RegExp to satisfy project constraints
-const RE_TYPE_CAPTURE = new RegExp('type:(' + String.fromCharCode(92) + 'w+)');
-const RE_TAG_CAPTURE = new RegExp('tag:(' + String.fromCharCode(92) + 'S+)');
-const RE_TYPE_GLOBAL = new RegExp('type:' + String.fromCharCode(92) + 'w+', 'g');
-const RE_TAG_GLOBAL = new RegExp('tag:' + String.fromCharCode(92) + 'S+', 'g');
 const RE_EXT_SUFFIX = new RegExp('(' + String.fromCharCode(92) + '.' + String.fromCharCode(92) + 'w+)$');
 
 // ===========================
@@ -209,7 +205,6 @@ export function FilePage() {
   const [files, setFiles] = useState<FileItem[]>(MOCK_FILES);
   const [folders, setFolders] = useState<FileFolder[]>(FILE_FOLDERS);
   const [filter, setFilter] = useState<SidebarFilter>({ kind: 'library', value: 'all' });
-  const [searchText, setSearchText] = useState('');
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [previewFile, setPreviewFile] = useState<FileItem | null>(null);
   const [sortKey, setSortKey] = useState<SortKey>('updatedAt');
@@ -246,24 +241,6 @@ export function FilePage() {
       result = result.filter(f => !f.trashed && f.tags.includes(filter.value));
     }
 
-    // Search
-    if (searchText.trim()) {
-      const terms = searchText.toLowerCase().trim();
-      const typeMatch = terms.match(RE_TYPE_CAPTURE);
-      const tagMatch = terms.match(RE_TAG_CAPTURE);
-      let textSearch = terms.replace(RE_TYPE_GLOBAL, '').replace(RE_TAG_GLOBAL, '').trim();
-
-      if (typeMatch) result = result.filter(f => f.type === typeMatch[1] || f.format === typeMatch[1]);
-      if (tagMatch) {
-        const tagName = tagMatch[1];
-        const matchTag = FILE_TAGS.find(t => t.name.toLowerCase().includes(tagName));
-        if (matchTag) result = result.filter(f => f.tags.includes(matchTag.id));
-      }
-      if (textSearch) result = result.filter(f =>
-        f.name.toLowerCase().includes(textSearch) || (f.description || '').toLowerCase().includes(textSearch)
-      );
-    }
-
     // Sort
     result = [...result].sort((a, b) => {
       let cmp = 0;
@@ -275,7 +252,7 @@ export function FilePage() {
     });
 
     return result;
-  }, [files, filter, searchText, sortKey, sortDir, flatFolderList]);
+  }, [files, filter, sortKey, sortDir, flatFolderList]);
 
   // File counts
   const fileCounts = useMemo(() => {
@@ -433,22 +410,6 @@ export function FilePage() {
         onDragLeave={() => setDragOver(false)}
         onDrop={(e) => { e.preventDefault(); setDragOver(false); }}
       >
-        {/* Header Toolbar */}
-        <div className="flex items-center gap-1.5 px-4 py-1.5 border-b border-border/30">
-          <h2 className="text-sm text-foreground flex-shrink-0 mr-1 font-medium">{filterTitle}</h2>
-
-          {/* Search */}
-          <SearchInput
-            value={searchText}
-            onChange={setSearchText}
-            placeholder="搜索文件… (type:image, tag:工作)"
-            wrapperClassName="flex-1 max-w-[280px] px-2.5 h-[26px] bg-muted/20 rounded-md border border-border/20"
-            clearable
-          />
-
-          <div className="flex-1" />
-        </div>
-
         {/* Batch action bar */}
         {selectedIds.size > 1 && (
           <BatchBar
@@ -481,7 +442,7 @@ export function FilePage() {
                 <EmptyState
                   preset="no-result"
                   title="没有找到匹配的文件"
-                  description={searchText ? '尝试调整搜索关键词或筛选条件' : '当前筛选条件下没有文件'}
+                  description="当前筛选条件下没有文件"
                 />
               )}
             </div>
@@ -507,7 +468,6 @@ export function FilePage() {
           <span className="text-xs text-muted-foreground/40">{filteredFiles.length} 个文件</span>
           {selectedIds.size > 0 && <span className="text-xs text-muted-foreground/40">{selectedIds.size} 个已选</span>}
           <div className="flex-1" />
-          <span className="text-xs text-muted-foreground/50">空格预览 · F2 重命名 · 右键菜单</span>
         </div>
       </div>
 
