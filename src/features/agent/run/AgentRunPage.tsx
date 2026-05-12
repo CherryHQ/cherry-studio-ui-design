@@ -29,6 +29,7 @@ import { WorkflowPanel } from './WorkflowPanel';
 import type { AgentChatMessage, AgentSession, AgentSessionData } from '@/app/types/agent';
 import { SessionHistoryPage, type SessionDisplayMode } from './SessionHistoryPage';
 import { HistorySidebar } from '@/app/components/shared/HistorySidebar';
+import { CreateEntityDialog } from '@/app/components/shared/CreateEntityDialog';
 import { useHistorySidebar } from '@/app/hooks/useHistorySidebar';
 import {
   MOCK_SESSIONS, MODELS, SESSION_DATA_MAP, EMPTY_SESSION_DATA,
@@ -1347,6 +1348,7 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
   const [previewMaximized, setPreviewMaximized] = useState(false);
   const [showAgentInfo, setShowAgentInfo] = useState(false);
   const [showPlan, setShowPlan] = useState(false);
+  const [showCreateAgent, setShowCreateAgent] = useState(false);
 
   const sessionData: SessionData = useMemo(() => {
     if (!activeSessionId) return EMPTY_SESSION_DATA;
@@ -1562,7 +1564,7 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
         <AgentPicker
           selectedAgent={selectedAgent}
           onSelectAgent={setSelectedAgent}
-          onCreateNew={() => onNavigateToLibrary?.()}
+          onCreateNew={() => setShowCreateAgent(true)}
           onAvatarClick={() => setShowAgentInfo(true)}
           onConfigureAgent={(agent) => editAssistantInLibrary(agent.name)}
           pinnedIds={pinnedAgentIds}
@@ -1874,6 +1876,13 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
           />
         )}
       </AnimatePresence>
+
+      {/* ===== Create Agent Onboarding ===== */}
+      <CreateEntityDialog
+        open={showCreateAgent}
+        onOpenChange={setShowCreateAgent}
+        variant="agent"
+      />
     </div>
   );
 }

@@ -73,6 +73,7 @@ import { ChatSettingsPanel } from '@/features/assistant/ChatSettingsPanel';
 import { AtMentionPicker } from '@/app/components/shared/AtMentionPicker';
 import { ModelPickerPanel } from '@/app/components/shared/ModelPickerPanel';
 import { AssistantPickerPanel } from '@/app/components/shared/AssistantPickerPanel';
+import { CreateEntityDialog } from '@/app/components/shared/CreateEntityDialog';
 import { HistorySidebar } from '@/app/components/shared/HistorySidebar';
 import { useHistorySidebar } from '@/app/hooks/useHistorySidebar';
 
@@ -1718,6 +1719,7 @@ export function AssistantRunPage() {
     document.addEventListener('mouseup', onUp);
   }, [artifactPanelWidth]);
   const historySidebar = useHistorySidebar('compact');
+  const [showCreateAssistant, setShowCreateAssistant] = useState(false);
   const [showBranchTree, setShowBranchTree] = useState(false);
   const [showChatSettings, setShowChatSettings] = useState(false);
   const [minimalInput, setMinimalInput] = useState(true);
@@ -2175,7 +2177,7 @@ export function AssistantRunPage() {
           multiModel={multiModel}
           onToggleMultiAssistant={handleToggleMultiAssistant}
           onToggleMultiModel={handleToggleMultiModel}
-          onCreateAssistant={onNavigateToLibrary}
+          onCreateAssistant={() => setShowCreateAssistant(true)}
         />
         <div className="flex-1" />
         <div className="flex items-center gap-0.5">
@@ -2350,7 +2352,7 @@ export function AssistantRunPage() {
                       multiModel={multiModel}
                       onToggleMultiAssistant={handleToggleMultiAssistant}
                       onToggleMultiModel={handleToggleMultiModel}
-                      onCreateAssistant={onNavigateToLibrary}
+                      onCreateAssistant={() => setShowCreateAssistant(true)}
                       onClose={() => setShowAtMenu(false)}
                     />
                   )}
@@ -2671,6 +2673,13 @@ export function AssistantRunPage() {
           />
         )}
       </AnimatePresence>
+
+      {/* ===== Create Assistant Onboarding ===== */}
+      <CreateEntityDialog
+        open={showCreateAssistant}
+        onOpenChange={setShowCreateAssistant}
+        variant="assistant"
+      />
       </div>
     </div>
   );
