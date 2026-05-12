@@ -346,6 +346,7 @@ function CodexStyleInput({ onSendMessage, autoFocus = false, placeholder }: {
   const [activeMode, setActiveMode] = useState('normal');
   const [activeProject, setActiveProject] = useState<string | null>('work');
   const [showModelMenu, setShowModelMenu] = useState(false);
+  const [showSkillMenu, setShowSkillMenu] = useState(false);
   const [showProjectMenu, setShowProjectMenu] = useState(false);
   const [showSlash, setShowSlash] = useState(false);
   const [showMention, setShowMention] = useState(false);
@@ -560,6 +561,52 @@ function CodexStyleInput({ onSendMessage, autoFocus = false, placeholder }: {
                     <span className="flex-1">{t.label}</span>
                   </button>
                 ))}
+              </PopoverContent>
+            </Popover>
+
+            {/* Skill picker — quick access to installed skills */}
+            <Popover open={showSkillMenu} onOpenChange={setShowSkillMenu}>
+              <PopoverTrigger asChild>
+                <Button variant="ghost" size="inline"
+                  className={`flex items-center gap-1 px-1.5 py-[4px] rounded-md text-xs transition-colors ${
+                    showSkillMenu
+                      ? 'bg-accent/60 text-foreground'
+                      : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
+                  }`}
+                >
+                  <LayoutGrid size={13} className="text-muted-foreground/70" strokeWidth={1.5} />
+                  <span className="truncate">技能</span>
+                  <ChevronDown size={9} className={`transition-transform duration-100 ${showSkillMenu ? 'rotate-180' : ''}`} />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent side="top" align="start" className="w-[220px] p-1">
+                <div className="px-2 py-1 text-xs text-muted-foreground/60">已安装技能</div>
+                {[
+                  { id: 'docs',    label: 'Documents',     icon: FileText,     color: 'text-info' },
+                  { id: 'sheets',  label: 'Spreadsheets',  icon: Table2,       color: 'text-success' },
+                  { id: 'slides',  label: 'Presentations', icon: Presentation, color: 'text-warning' },
+                  { id: 'browser', label: '浏览器',         icon: Compass,      color: 'text-info' },
+                  { id: 'desktop', label: '电脑',           icon: Monitor,      color: 'text-accent-violet' },
+                ].map(s => {
+                  const Icon = s.icon;
+                  return (
+                    <button key={s.id} type="button"
+                      onClick={() => setShowSkillMenu(false)}
+                      className="w-full flex items-center gap-2 px-2 py-[6px] rounded-md text-left text-xs text-foreground/80 hover:bg-accent/25 transition-colors"
+                    >
+                      <Icon size={12} strokeWidth={1.5} className={`flex-shrink-0 ${s.color}`} />
+                      <span className="flex-1 truncate">{s.label}</span>
+                    </button>
+                  );
+                })}
+                <div className="my-1 h-px bg-border/40" />
+                <button type="button"
+                  onClick={() => setShowSkillMenu(false)}
+                  className="w-full flex items-center gap-2 px-2 py-[6px] rounded-md text-left text-xs text-muted-foreground hover:bg-accent/25 hover:text-foreground transition-colors"
+                >
+                  <Plus size={12} strokeWidth={1.5} className="flex-shrink-0" />
+                  <span className="flex-1 truncate">管理技能…</span>
+                </button>
               </PopoverContent>
             </Popover>
           </div>
