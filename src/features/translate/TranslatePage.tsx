@@ -354,7 +354,7 @@ export function TranslatePage() {
           </div>
         </div>
 
-        <div className="flex-1 min-h-0 flex flex-col p-4 relative">
+        <div className="flex-1 min-h-0 flex flex-col p-4">
           {/* Translation card - fills available height */}
           <div className="flex-1 flex flex-col bg-card border border-border/30 rounded-2xl overflow-hidden min-h-0">
             {/* Two-column text area - fills remaining height */}
@@ -460,7 +460,7 @@ export function TranslatePage() {
                     <span className="text-muted-foreground/50">翻译结果将显示在这里</span>
                   )}
                 </div>
-                {/* Target toolbar */}
+                {/* Target toolbar — actions + translate CTA pinned at bottom of the box */}
                 <div className="flex items-center justify-between px-3 py-1.5 flex-shrink-0">
                   <div className="flex items-center gap-0.5">
                     <Button variant="ghost" size="icon-xs" className="text-muted-foreground/40 hover:text-muted-foreground hover:bg-accent/50">
@@ -471,20 +471,21 @@ export function TranslatePage() {
                       {copied ? <Check size={12} className="text-primary" /> : <Copy size={12} />}
                     </Button>
                   </div>
-                  {translatedText && <span className="text-xs text-muted-foreground/50">{translatedText.length}</span>}
+                  <div className="flex items-center gap-2">
+                    {translatedText && <span className="text-xs text-muted-foreground/50">{translatedText.length}</span>}
+                    <Button
+                      variant="default" size="xs"
+                      onClick={handleTranslate}
+                      disabled={!sourceText.trim() || isTranslating}
+                      className="h-7 px-3 text-xs flex items-center gap-1.5 rounded-full">
+                      <Languages size={11} />
+                      <span>{isTranslating ? '翻译中...' : '翻译'}</span>
+                    </Button>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-          {/* Floating translate CTA — anchored to bottom-right, outside the card */}
-          <Button
-            variant="default" size="sm"
-            onClick={handleTranslate}
-            disabled={!sourceText.trim() || isTranslating}
-            className="absolute bottom-4 right-4 z-10 h-8 px-3.5 text-xs flex items-center gap-1.5 rounded-full shadow-md">
-            <Languages size={12} />
-            <span>{isTranslating ? '翻译中...' : '翻译'}</span>
-          </Button>
         </div>
       </div>
 
