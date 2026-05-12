@@ -1,13 +1,12 @@
 import React, { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import {
-  X, ChevronDown, LayoutGrid, List, Upload, FolderPlus,
+  X, ChevronDown, Upload,
   Pencil, Trash2, FolderInput, Tag, Share2, Eye, Download,
   Copy, ArrowUpDown, Star, Check, RotateCcw, FolderClosed,
 } from 'lucide-react';
 import { Button, Input, SearchInput, Dialog, DialogContent, Popover as UIPopover, PopoverTrigger, PopoverContent, EmptyState, Checkbox } from '@cherry-studio/ui';
 import { FileSidebar } from './FileSidebar';
 import type { SidebarFilter } from './FileSidebar';
-import { FileGrid } from './FileGrid';
 import { FileList } from './FileList';
 import type { SortKey, SortDir } from './FileList';
 import { FilePreview } from './FilePreview';
@@ -253,7 +252,6 @@ export function FilePage() {
   const [files, setFiles] = useState<FileItem[]>(MOCK_FILES);
   const [folders, setFolders] = useState<FileFolder[]>(FILE_FOLDERS);
   const [filter, setFilter] = useState<SidebarFilter>({ kind: 'library', value: 'all' });
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [searchText, setSearchText] = useState('');
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [previewFile, setPreviewFile] = useState<FileItem | null>(null);
@@ -532,30 +530,6 @@ export function FilePage() {
             <span>{sortKey === 'name' ? '名称' : sortKey === 'size' ? '大小' : sortKey === 'type' ? '类型' : '时间'}</span>
           </Button>
 
-          <div className="flex items-center border border-border/25 rounded-md overflow-hidden">
-            <Button variant="ghost" onClick={() => setViewMode('grid')}
-              className={`w-6 h-6 p-0 rounded-none flex items-center justify-center transition-colors ${viewMode === 'grid' ? 'bg-accent text-muted-foreground' : 'text-muted-foreground/40 hover:text-foreground'}`}>
-              <LayoutGrid size={11} />
-            </Button>
-            <Button variant="ghost" onClick={() => setViewMode('list')}
-              className={`w-6 h-6 p-0 rounded-none flex items-center justify-center transition-colors ${viewMode === 'list' ? 'bg-accent text-muted-foreground' : 'text-muted-foreground/40 hover:text-foreground'}`}>
-              <List size={11} />
-            </Button>
-          </div>
-
-          <Button variant="outline" size="inline" className="flex items-center gap-1 px-2 py-[2px] rounded-md text-xs text-muted-foreground/60 hover:text-foreground hover:bg-accent transition-colors border-border/30">
-            <Upload size={10} />
-            <span>上传</span>
-          </Button>
-          <Button
-            variant="outline"
-            size="inline"
-            onClick={() => handleCreateFolder('新建文件夹', null)}
-            className="flex items-center gap-1 px-2 py-[2px] rounded-md text-xs text-muted-foreground/60 hover:text-foreground hover:bg-accent transition-colors border-border/30"
-          >
-            <FolderPlus size={10} />
-            <span>新建</span>
-          </Button>
         </div>
 
         {/* Batch action bar */}
@@ -594,19 +568,6 @@ export function FilePage() {
                 />
               )}
             </div>
-          ) : viewMode === 'grid' ? (
-            <FileGrid
-              files={filteredFiles}
-              selectedIds={selectedIds}
-              onSelect={handleSelect}
-              onContextMenu={handleContextMenu}
-              onPreview={setPreviewFile}
-              onToggleStar={handleToggleStar}
-              tags={FILE_TAGS}
-              renamingId={renamingId}
-              onRenameConfirm={handleRename}
-              onRenameCancel={() => setRenamingId(null)}
-            />
           ) : (
             <FileList
               files={filteredFiles}

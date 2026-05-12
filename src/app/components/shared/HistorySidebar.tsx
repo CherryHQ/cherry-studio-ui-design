@@ -293,6 +293,7 @@ function GroupSection<T extends HistoryItem>({
   onToggleCollapse,
   onToggleExpand,
   onNewItem,
+  hideNewButton,
   activeItemId,
   onSelectItem,
   onUpdateItem,
@@ -311,6 +312,7 @@ function GroupSection<T extends HistoryItem>({
   onToggleCollapse: () => void;
   onToggleExpand: () => void;
   onNewItem: () => void;
+  hideNewButton?: boolean;
   activeItemId: string | null;
   onSelectItem: (id: string) => void;
   onUpdateItem: (id: string, updates: Partial<T>) => void;
@@ -394,13 +396,15 @@ function GroupSection<T extends HistoryItem>({
             <Pencil size={9} />
           </Button>
         )}
-        <Button variant="ghost" size="icon-xs"
-          onClick={(e) => { e.stopPropagation(); onNewItem(); }}
-          className="p-0.5 w-auto h-auto text-muted-foreground/50 hover:text-foreground hover:bg-accent/15"
-          title="新建"
-        >
-          <Plus size={10} />
-        </Button>
+        {!hideNewButton && (
+          <Button variant="ghost" size="icon-xs"
+            onClick={(e) => { e.stopPropagation(); onNewItem(); }}
+            className="p-0.5 w-auto h-auto text-muted-foreground/50 hover:text-foreground hover:bg-accent/15"
+            title="新建"
+          >
+            <Plus size={10} />
+          </Button>
+        )}
       </div>
       {!isCollapsed && (
         <>
@@ -533,14 +537,27 @@ export function HistorySidebar<T extends HistoryItem>({
     return groups;
   }, [filteredRecent, groupBy, showStatusDot, customGroupBy, hasItemMetadata]);
 
-  // Sorted group entries — '任务' first, then respect user drag order
+  // Canonical order for time-based groups: most recent first
+  const TIME_GROUP_ORDER = ['今天', '昨天', '本周', '更早'];
+
+  // Sorted group entries — '任务' first, time groups in canonical order, then respect user drag order
   const sortedGroupEntries = useMemo((): [string, T[]][] | null => {
     if (!groupedRecent) return null;
     const entries: [string, T[]][] = Object.entries(groupedRecent);
-    // Default sort: '任务' always first
     const sorted = [...entries].sort((a: [string, T[]], b: [string, T[]]) => {
+      // '任务' always first
       if (a[0] === '任务') return -1;
       if (b[0] === '任务') return 1;
+      // Time groups follow the canonical chronology
+      if (groupBy === 'time') {
+        const tia = TIME_GROUP_ORDER.indexOf(a[0]);
+        const tib = TIME_GROUP_ORDER.indexOf(b[0]);
+        if (tia !== -1 || tib !== -1) {
+          if (tia === -1) return 1;
+          if (tib === -1) return -1;
+          return tia - tib;
+        }
+      }
       if (!groupOrder) return 0;
       const ia = groupOrder.indexOf(a[0]);
       const ib = groupOrder.indexOf(b[0]);
@@ -550,7 +567,7 @@ export function HistorySidebar<T extends HistoryItem>({
       return ia - ib;
     });
     return sorted;
-  }, [groupedRecent, groupOrder]);
+  }, [groupedRecent, groupOrder, groupBy]);
 
   const toggleCollapse = useCallback((label: string) => {
     setCollapsedGroups((prev: Set<string>) => {
@@ -700,28 +717,35 @@ export function HistorySidebar<T extends HistoryItem>({
         {/* Recent */}
         {sortedGroupEntries ? (
           /* Grouped mode */
-          sortedGroupEntries.map(([groupLabel, groupItems]: [string, T[]]) => (
-            <GroupSection
-              key={groupLabel}
-              groupLabel={groupLabel}
-              groupItems={groupItems}
-              isCollapsed={collapsedGroups.has(groupLabel)}
-              isExpanded={expandedGroups.has(groupLabel)}
-              onToggleCollapse={() => toggleCollapse(groupLabel)}
-              onToggleExpand={() => toggleExpand(groupLabel)}
-              onNewItem={() => onNewItemForGroup ? onNewItemForGroup(groupLabel) : onNewItem()}
-              activeItemId={activeItemId}
-              onSelectItem={onSelectItem}
-              onUpdateItem={onUpdateItem}
-              onContextMenu={handleContextMenu}
-              showStatusDot={showStatusDot}
-              dragHandlers={makeGroupDragHandlers(groupLabel)}
-              onRenameGroup={onRenameGroup}
-              editingItemId={editingItemId}
-              onCommitEdit={(id, newTitle) => { onUpdateItem(id, { title: newTitle } as Partial<T>); setEditingItemId(null); }}
-              onArchiveItem={(id) => onUpdateItem(id, { archived: true } as Partial<T>)}
-            />
-          ))
+          sortedGroupEntries.map(([groupLabel, groupItems]: [string, T[]]) => {
+            // Time / assistant groupings are system-derived — no rename
+            const allowRename = groupBy !== 'time' && groupBy !== 'assistant';
+            // For time groups only "今天" gets the new-item button; older buckets are historical
+            const hideNewButton = groupBy === 'time' && groupLabel !== '今天';
+            return (
+              <GroupSection
+                key={groupLabel}
+                groupLabel={groupLabel}
+                groupItems={groupItems}
+                isCollapsed={collapsedGroups.has(groupLabel)}
+                isExpanded={expandedGroups.has(groupLabel)}
+                onToggleCollapse={() => toggleCollapse(groupLabel)}
+                onToggleExpand={() => toggleExpand(groupLabel)}
+                onNewItem={() => onNewItemForGroup ? onNewItemForGroup(groupLabel) : onNewItem()}
+                hideNewButton={hideNewButton}
+                activeItemId={activeItemId}
+                onSelectItem={onSelectItem}
+                onUpdateItem={onUpdateItem}
+                onContextMenu={handleContextMenu}
+                showStatusDot={showStatusDot}
+                dragHandlers={makeGroupDragHandlers(groupLabel)}
+                onRenameGroup={allowRename ? onRenameGroup : undefined}
+                editingItemId={editingItemId}
+                onCommitEdit={(id, newTitle) => { onUpdateItem(id, { title: newTitle } as Partial<T>); setEditingItemId(null); }}
+                onArchiveItem={(id) => onUpdateItem(id, { archived: true } as Partial<T>)}
+              />
+            );
+          })
         ) : (
           /* Flat mode */
           <>
