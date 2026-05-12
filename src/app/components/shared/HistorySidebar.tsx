@@ -718,8 +718,9 @@ export function HistorySidebar<T extends HistoryItem>({
         {sortedGroupEntries ? (
           /* Grouped mode */
           sortedGroupEntries.map(([groupLabel, groupItems]: [string, T[]]) => {
-            // Time / assistant groupings are system-derived — no rename
-            const allowRename = groupBy !== 'time' && groupBy !== 'assistant';
+            // Only user-authored "项目文件" group names are renameable; time/status/
+            // assistant/agent/tag labels are system-derived.
+            const allowRename = groupBy === 'group';
             // For time groups only "今天" gets the new-item button; older buckets are historical
             const hideNewButton = groupBy === 'time' && groupLabel !== '今天';
             return (
