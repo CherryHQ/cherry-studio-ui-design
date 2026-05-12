@@ -776,6 +776,26 @@ function ProcessBlock({ msgs, isRunning, onResolve }: {
   const totalCount = toolCallCount + contentCount + thinkingCount;
   const typeIcons = useMemo(() => collectTypeIcons(msgs), [msgs]);
 
+  // Sum of tool call durations (e.g. "3.2s") for the collapsed summary
+  const totalDurationLabel = useMemo(() => {
+    let totalMs = 0;
+    let hasDuration = false;
+    for (const m of msgs) {
+      const d = m.toolCall?.duration;
+      if (!d) continue;
+      const match = String(d).match(/([\d.]+)\s*(ms|s|m)?/);
+      if (!match) continue;
+      const v = parseFloat(match[1]);
+      const u = (match[2] || 's').toLowerCase();
+      const ms = u === 'ms' ? v : u === 'm' ? v * 60_000 : v * 1000;
+      if (!isNaN(ms)) { totalMs += ms; hasDuration = true; }
+    }
+    if (!hasDuration) return null;
+    if (totalMs >= 60_000) return `${(totalMs / 60_000).toFixed(1)}m`;
+    if (totalMs >= 1000) return `${(totalMs / 1000).toFixed(1)}s`;
+    return `${Math.round(totalMs)}ms`;
+  }, [msgs]);
+
   return (
     <div>
       {/* Collapsed summary (only when not running) */}
@@ -789,9 +809,9 @@ function ProcessBlock({ msgs, isRunning, onResolve }: {
             : <ChevronRight size={10} className="flex-shrink-0" />
           }
           <span>
-            {toolCallCount > 0 && `${toolCallCount} tool call${toolCallCount > 1 ? 's' : ''}`}
-            {toolCallCount > 0 && (contentCount + thinkingCount) > 0 && ', '}
-            {(contentCount + thinkingCount) > 0 && `${contentCount + thinkingCount} message${(contentCount + thinkingCount) > 1 ? 's' : ''}`}
+            {toolCallCount > 0
+              ? (totalDurationLabel ? `工具调用 · ${totalDurationLabel}` : `${toolCallCount} 次工具调用`)
+              : `${contentCount + thinkingCount} 条消息`}
           </span>
           {typeIcons.length > 0 && (
             <span className="flex items-center gap-1 ml-0.5 text-text-tertiary">

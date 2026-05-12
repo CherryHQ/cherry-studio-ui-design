@@ -14,6 +14,28 @@ import { motion, AnimatePresence } from 'motion/react';
 import { copyToClipboard } from '@/app/utils/clipboard';
 import { Tooltip } from '@/app/components/Tooltip';
 
+// Mimics the macOS Finder dock icon — a two-tone rounded square with a face
+function FinderIcon({ size = 12 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <defs>
+        <linearGradient id="finderBg" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stopColor="#9CC9F2" />
+          <stop offset="100%" stopColor="#3F8DD9" />
+        </linearGradient>
+      </defs>
+      <rect x="0.5" y="0.5" width="15" height="15" rx="3.5" fill="url(#finderBg)" stroke="rgba(0,0,0,0.08)" strokeWidth="0.5" />
+      {/* Vertical split line */}
+      <line x1="8" y1="2" x2="8" y2="14" stroke="rgba(255,255,255,0.35)" strokeWidth="0.5" />
+      {/* Eyes (two small dark slits) */}
+      <rect x="4.5" y="5" width="1" height="2.5" rx="0.4" fill="#0a2f5c" />
+      <rect x="10.5" y="5" width="1" height="2.5" rx="0.4" fill="#0a2f5c" />
+      {/* Smile */}
+      <path d="M4.5 10.5 Q 8 12.5 11.5 10.5" stroke="#0a2f5c" strokeWidth="0.8" fill="none" strokeLinecap="round" />
+    </svg>
+  );
+}
+
 // ===========================
 // Types
 // ===========================
@@ -205,7 +227,7 @@ export function ArtifactViewer({ fileContent, fileName, previewUrl, hasArtifact,
             <div className="w-px h-3 bg-border/30 mx-1" />
             <Tooltip content="在 Finder 中显示" side="bottom"><Button variant="ghost" size="icon-xs"
               className="text-muted-foreground hover:text-foreground">
-              <FolderOpen size={10} className="text-blue-500" />
+              <FinderIcon size={12} />
             </Button></Tooltip>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
