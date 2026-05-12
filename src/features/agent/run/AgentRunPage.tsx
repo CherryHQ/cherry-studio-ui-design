@@ -604,8 +604,15 @@ function CodexStyleInput({ onSendMessage, autoFocus = false, placeholder }: {
                   onClick={() => setShowSkillMenu(false)}
                   className="w-full flex items-center gap-2 px-2 py-[6px] rounded-md text-left text-xs text-muted-foreground hover:bg-accent/25 hover:text-foreground transition-colors"
                 >
-                  <Plus size={12} strokeWidth={1.5} className="flex-shrink-0" />
+                  <Wrench size={12} strokeWidth={1.5} className="flex-shrink-0" />
                   <span className="flex-1 truncate">管理技能…</span>
+                </button>
+                <button type="button"
+                  onClick={() => setShowSkillMenu(false)}
+                  className="w-full flex items-center gap-2 px-2 py-[6px] rounded-md text-left text-xs text-muted-foreground hover:bg-accent/25 hover:text-foreground transition-colors"
+                >
+                  <Plus size={12} strokeWidth={1.5} className="flex-shrink-0" />
+                  <span className="flex-1 truncate">添加技能</span>
                 </button>
               </PopoverContent>
             </Popover>
