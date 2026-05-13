@@ -286,6 +286,79 @@ function SidebarItem<T extends HistoryItem>({ item, isActive, isEditing, onClick
 }
 
 // ===========================
+// Quick-start Popover — search-enabled picker for the header "+" button
+// ===========================
+
+function QuickStartPopover({
+  options,
+  onSelect,
+  entityLabel,
+}: {
+  options: { id: string; label: string; avatar?: string; description?: string }[];
+  onSelect: (id: string) => void;
+  entityLabel: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState('');
+
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return options;
+    return options.filter(o =>
+      o.label.toLowerCase().includes(q) ||
+      (o.description || '').toLowerCase().includes(q)
+    );
+  }, [query, options]);
+
+  return (
+    <Popover open={open} onOpenChange={(v) => { setOpen(v); if (!v) setQuery(''); }}>
+      <PopoverTrigger asChild>
+        <Button variant="ghost" size="icon-xs"
+          title={`新建${entityLabel}`}
+          className="p-1 w-auto h-auto text-muted-foreground hover:text-foreground hover:bg-accent/15">
+          <Plus size={11} />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent align="end" className="w-[320px] p-0 overflow-hidden">
+        <div className="px-3 pt-3 pb-2">
+          <div className="flex items-center gap-2 px-2.5 py-[7px] rounded-xl bg-muted/40">
+            <Sparkles size={12} className="text-muted-foreground/40 flex-shrink-0" />
+            <input
+              autoFocus
+              value={query}
+              onChange={e => setQuery(e.target.value)}
+              placeholder={`搜索智能体...`}
+              className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground/30 min-w-0"
+            />
+          </div>
+        </div>
+        <div className="px-3 pb-1 text-xs text-muted-foreground/55">选择智能体开启对话</div>
+        <div className="max-h-[300px] overflow-y-auto scrollbar-thin px-1.5 pb-1">
+          {filtered.length === 0 ? (
+            <div className="px-3 py-6 text-center text-sm text-muted-foreground/40">无匹配结果</div>
+          ) : filtered.map(opt => (
+            <button
+              key={opt.id}
+              type="button"
+              onClick={() => { onSelect(opt.id); setOpen(false); }}
+              className="group w-full flex items-center gap-2.5 px-2.5 py-2 mb-0.5 text-left rounded-lg cursor-pointer text-foreground/80 hover:bg-accent/30 transition-colors"
+            >
+              {opt.avatar && <span className="text-base leading-none flex-shrink-0">{opt.avatar}</span>}
+              <span className="flex-1 min-w-0">
+                <span className="block text-sm text-foreground truncate">{opt.label}</span>
+                {opt.description && (
+                  <span className="block text-xs text-muted-foreground/55 truncate mt-0.5">{opt.description}</span>
+                )}
+              </span>
+            </button>
+          ))}
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
+}
+
+// ===========================
 // Group Section
 // ===========================
 
@@ -657,32 +730,11 @@ export function HistorySidebar<T extends HistoryItem>({
           </div>
           <div className="flex items-center gap-0.5">
             {quickStartOptions && quickStartOptions.length > 0 && (
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button variant="ghost" size="icon-xs"
-                    title={`新建${entityLabel}`}
-                    className="p-1 w-auto h-auto text-muted-foreground hover:text-foreground hover:bg-accent/15">
-                    <Plus size={11} />
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent align="end" className="w-[220px] p-1 max-h-[320px] overflow-y-auto scrollbar-thin">
-                  <div className="text-xs text-muted-foreground/60 px-2 py-1">选择智能体开启对话</div>
-                  {quickStartOptions.map(opt => (
-                    <Button key={opt.id} variant="ghost" size="xs"
-                      onClick={() => onQuickStart?.(opt.id)}
-                      className="w-full justify-start gap-2 px-2 py-1.5 text-foreground hover:bg-accent/40"
-                    >
-                      {opt.avatar && <span className="text-base leading-none flex-shrink-0">{opt.avatar}</span>}
-                      <span className="flex-1 min-w-0 text-left">
-                        <span className="block text-xs text-foreground truncate">{opt.label}</span>
-                        {opt.description && (
-                          <span className="block text-xs text-muted-foreground/55 truncate">{opt.description}</span>
-                        )}
-                      </span>
-                    </Button>
-                  ))}
-                </PopoverContent>
-              </Popover>
+              <QuickStartPopover
+                options={quickStartOptions}
+                onSelect={(id) => onQuickStart?.(id)}
+                entityLabel={entityLabel}
+              />
             )}
             {(showStatusDot || hasItemMetadata) && (
               <Popover>
