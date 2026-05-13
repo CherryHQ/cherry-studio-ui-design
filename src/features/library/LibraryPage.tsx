@@ -329,7 +329,7 @@ function PromptRichEditor({ value, onChange, onSlashCommand, placeholder }: {
         onCompositionStart={() => { isComposing.current = true; }}
         onCompositionEnd={() => { isComposing.current = false; handleInput(); }}
         className="w-full bg-muted/30 border border-border/40 rounded-xl px-3.5 py-3 text-sm text-foreground outline-none focus:border-border/60 transition-colors leading-relaxed whitespace-pre-wrap break-words"
-        style={{ minHeight: '120px' }}
+        style={{ minHeight: '420px' }}
       />
       <style>{`
         .prompt-var-tag {
