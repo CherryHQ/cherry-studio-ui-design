@@ -138,7 +138,7 @@ function AgentBasicSection({ resource }: { resource: ResourceItem }) {
   const [avatar, setAvatar] = useState(resource.avatar);
   const [avatarType, setAvatarType] = useState<'emoji' | 'image'>('emoji');
   const [avatarUrl, setAvatarUrl] = useState('');
-  const [avatarTab, setAvatarTab] = useState<'emoji' | 'upload' | 'link'>('emoji');
+  const [avatarTab, setAvatarTab] = useState<'emoji' | 'image'>('emoji');
   const fileInputRef2 = useRef<HTMLInputElement>(null);
   const [tags, setTags] = useState<string[]>(resource.tags || ['工具']);
   const [tagInput, setTagInput] = useState('');
@@ -169,8 +169,7 @@ function AgentBasicSection({ resource }: { resource: ResourceItem }) {
               <div className="flex items-center gap-0.5 px-1.5 pt-1.5">
                 {([
                   { key: 'emoji' as const, label: 'Emoji' },
-                  { key: 'upload' as const, label: '上传图片' },
-                  { key: 'link' as const, label: '链接' },
+                  { key: 'image' as const, label: '图片' },
                 ]).map(tab => {
                   const active = avatarTab === tab.key;
                   return (
@@ -184,7 +183,6 @@ function AgentBasicSection({ resource }: { resource: ResourceItem }) {
                 })}
               </div>
               <div className="h-px bg-border/30 mt-1.5" />
-              {/* Each tab body fits its own content; only the emoji grid caps height & scrolls. */}
               {avatarTab === 'emoji' && (
                 <div className="grid grid-cols-8 gap-1 p-2 max-h-[260px] overflow-y-auto scrollbar-thin">
                   {AVATAR_OPTIONS.map(a => (
@@ -198,8 +196,8 @@ function AgentBasicSection({ resource }: { resource: ResourceItem }) {
                   ))}
                 </div>
               )}
-              {avatarTab === 'upload' && (
-                <div className="p-3">
+              {avatarTab === 'image' && (
+                <div className="p-3 space-y-2.5">
                   <input ref={fileInputRef2} type="file" accept="image/*" className="hidden"
                     onChange={e => { const file = e.target.files?.[0]; if (file) { setAvatarUrl(URL.createObjectURL(file)); setAvatarType('image'); } }} />
                   <button onClick={() => fileInputRef2.current?.click()}
@@ -208,19 +206,19 @@ function AgentBasicSection({ resource }: { resource: ResourceItem }) {
                     <span>点击上传图片</span>
                     <span className="text-muted-foreground/40">PNG / JPG，建议 256×256</span>
                   </button>
-                </div>
-              )}
-              {avatarTab === 'link' && (
-                <div className="p-3 space-y-2">
-                  <div className="relative">
-                    <Link2 size={11} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground/40" />
-                    <Input value={avatarUrl} onChange={e => setAvatarUrl(e.target.value)} placeholder="https://… 或 data:image/…"
-                      className="w-full pl-7 h-8 text-xs rounded-md border-border/40" />
+                  <div className="text-xs text-muted-foreground/60">或粘贴图片链接</div>
+                  <div className="flex items-center gap-1.5">
+                    <div className="relative flex-1">
+                      <Link2 size={11} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground/40" />
+                      <Input value={avatarUrl} onChange={e => setAvatarUrl(e.target.value)} placeholder="https://… 或 data:image/…"
+                        className="w-full pl-7 h-7 text-xs rounded-md border-border/40" />
+                    </div>
+                    <Button variant="default" size="xs" onClick={() => { if (avatarUrl.trim()) setAvatarType('image'); }}
+                      disabled={!avatarUrl.trim()}
+                      className="h-7 px-3 text-xs">
+                      使用
+                    </Button>
                   </div>
-                  <Button variant="default" size="xs" onClick={() => { if (avatarUrl.trim()) setAvatarType('image'); }}
-                    className="w-full h-7 text-xs">
-                    使用此链接
-                  </Button>
                 </div>
               )}
             </PopoverContent>

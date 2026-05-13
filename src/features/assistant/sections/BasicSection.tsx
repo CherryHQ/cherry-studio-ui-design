@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { X, Tag, Check, ChevronDown, Upload, Link2 } from 'lucide-react';
+import { X, Check, ChevronDown, Upload, Link2 } from 'lucide-react';
 import type { ResourceItem } from '@/app/types';
 import { AVATAR_OPTIONS } from '@/app/config/constants';
 import { Button, Input, Slider, Textarea, Typography, Badge, Popover, PopoverTrigger, PopoverContent } from '@cherry-studio/ui';
@@ -49,7 +49,7 @@ export function BasicSection({ resource }: Props) {
   const [avatar, setAvatar] = useState(resource.avatar);
   const [avatarType, setAvatarType] = useState<'emoji' | 'image'>('emoji');
   const [avatarUrl, setAvatarUrl] = useState('');
-  const [avatarTab, setAvatarTab] = useState<'emoji' | 'upload' | 'link'>('emoji');
+  const [avatarTab, setAvatarTab] = useState<'emoji' | 'image'>('emoji');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [model, setModel] = useState(resource.model || 'claude-4-opus');
   const [modelPickerOpen, setModelPickerOpen] = useState(false);
@@ -57,19 +57,8 @@ export function BasicSection({ resource }: Props) {
   const [topP, setTopP] = useState(0.9);
   const [maxTokens, setMaxTokens] = useState(4096);
 
-  // Tags state
+  // Tags state — dropdown multi-select
   const [tags, setTags] = useState<string[]>(resource.tags || ['标签']);
-  const [tagInput, setTagInput] = useState('');
-  const [showTagPresets, setShowTagPresets] = useState(false);
-  const tagInputRef = useRef<HTMLInputElement>(null);
-
-  const addTag = (tag: string) => {
-    const trimmed = tag.trim();
-    if (trimmed && !tags.includes(trimmed)) {
-      setTags(prev => [...prev, trimmed]);
-    }
-    setTagInput('');
-  };
 
   const removeTag = (tag: string) => {
     setTags(prev => prev.filter(t => t !== tag));
@@ -105,8 +94,7 @@ export function BasicSection({ resource }: Props) {
               <div className="flex items-center gap-0.5 px-1.5 pt-1.5">
                 {([
                   { key: 'emoji' as const, label: 'Emoji' },
-                  { key: 'upload' as const, label: '上传图片' },
-                  { key: 'link' as const, label: '链接' },
+                  { key: 'image' as const, label: '图片' },
                 ]).map(tab => {
                   const active = avatarTab === tab.key;
                   return (
@@ -120,7 +108,6 @@ export function BasicSection({ resource }: Props) {
                 })}
               </div>
               <div className="h-px bg-border/30 mt-1.5" />
-              {/* Each tab body fits its own content; only the emoji grid caps its height & scrolls. */}
               {avatarTab === 'emoji' && (
                 <div className="grid grid-cols-8 gap-1 p-2 max-h-[260px] overflow-y-auto scrollbar-thin">
                   {AVATAR_OPTIONS.map(a => (
@@ -134,8 +121,8 @@ export function BasicSection({ resource }: Props) {
                   ))}
                 </div>
               )}
-              {avatarTab === 'upload' && (
-                <div className="p-3">
+              {avatarTab === 'image' && (
+                <div className="p-3 space-y-2.5">
                   <input ref={fileInputRef} type="file" accept="image/*" className="hidden"
                     onChange={e => {
                       const file = e.target.files?.[0];
@@ -152,19 +139,19 @@ export function BasicSection({ resource }: Props) {
                     <span>点击上传图片</span>
                     <span className="text-muted-foreground/40">PNG / JPG，建议 256×256</span>
                   </button>
-                </div>
-              )}
-              {avatarTab === 'link' && (
-                <div className="p-3 space-y-2">
-                  <div className="relative">
-                    <Link2 size={11} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground/40" />
-                    <Input value={avatarUrl} onChange={e => setAvatarUrl(e.target.value)} placeholder="https://… 或 data:image/…"
-                      className="w-full pl-7 h-8 text-xs rounded-md border-border/40" />
+                  <div className="text-xs text-muted-foreground/60">或粘贴图片链接</div>
+                  <div className="flex items-center gap-1.5">
+                    <div className="relative flex-1">
+                      <Link2 size={11} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground/40" />
+                      <Input value={avatarUrl} onChange={e => setAvatarUrl(e.target.value)} placeholder="https://… 或 data:image/…"
+                        className="w-full pl-7 h-7 text-xs rounded-md border-border/40" />
+                    </div>
+                    <Button variant="default" size="xs" onClick={() => { if (avatarUrl.trim()) setAvatarType('image'); }}
+                      disabled={!avatarUrl.trim()}
+                      className="h-7 px-3 text-xs">
+                      使用
+                    </Button>
                   </div>
-                  <Button variant="default" size="xs" onClick={() => { if (avatarUrl.trim()) setAvatarType('image'); }}
-                    className="w-full h-7 text-xs">
-                    使用此链接
-                  </Button>
                 </div>
               )}
             </PopoverContent>
@@ -180,57 +167,49 @@ export function BasicSection({ resource }: Props) {
           className="input-accent resize-none" />
       </FieldGroup>
 
-      {/* Tags */}
+      {/* Tags — dropdown multi-select */}
       <FieldGroup label="标签">
-        <div className="min-h-[36px] px-2.5 py-2 rounded-xl border border-border/20 bg-accent/15 flex flex-wrap items-center gap-1.5">
-          {tags.map(tag => (
-            <Badge
-              key={tag}
-              variant="outline"
-              className={`gap-1 px-1.5 py-[2px] rounded-md ${getTagColor(tag)}`}
-            >
-              {tag}
-              <Button
-                variant="ghost"
-                size="icon-xs"
-                onClick={() => removeTag(tag)}
-                className="ml-0.5 text-current opacity-40 hover:opacity-100 transition-opacity w-auto h-auto p-0"
-              >
-                <X size={7} />
-              </Button>
-            </Badge>
-          ))}
-          <Input
-            ref={tagInputRef}
-            value={tagInput}
-            onChange={e => setTagInput(e.target.value)}
-            onKeyDown={e => {
-              if (e.key === 'Enter' && tagInput.trim()) { e.preventDefault(); addTag(tagInput); }
-              if (e.key === 'Backspace' && !tagInput && tags.length > 0) removeTag(tags[tags.length - 1]);
-            }}
-            placeholder={tags.length === 0 ? '输入标签，回车添加' : ''}
-            className="flex-1 min-w-[80px] bg-transparent text-xs text-foreground placeholder:text-muted-foreground/60 border-0 h-auto p-0 focus-visible:ring-0"
-          />
-        </div>
-        {/* Preset row */}
-        <div className="flex flex-wrap gap-1 mt-2">
-          {TAG_PRESETS.slice(0, 8).map(preset => {
-            const selected = tags.includes(preset.tag);
-            return (
-              <Button size="inline"
-                key={preset.tag}
-                variant="ghost"
-                onClick={() => togglePresetTag(preset.tag)}
-                className={`inline-flex items-center gap-0.5 px-1.5 py-[2px] rounded-md border text-xs transition-all ${preset.color} ${
-                  selected ? 'ring-1 ring-ring/10' : 'opacity-50 hover:opacity-80'
-                }`}
-              >
-                {selected && <Check size={7} className="text-current" />}
-                {preset.tag}
-              </Button>
-            );
-          })}
-        </div>
+        <Popover>
+          <PopoverTrigger asChild>
+            <button type="button"
+              className="w-full min-h-[36px] px-2.5 py-1.5 rounded-xl border border-border/20 bg-accent/15 flex flex-wrap items-center gap-1.5 text-left hover:border-border/40 transition-colors">
+              {tags.length === 0 ? (
+                <span className="text-xs text-muted-foreground/60">选择标签…</span>
+              ) : tags.map(tag => (
+                <Badge key={tag} variant="outline"
+                  className={`gap-1 px-1.5 py-[2px] rounded-md ${getTagColor(tag)}`}>
+                  {tag}
+                  <Button variant="ghost" size="icon-xs"
+                    onClick={(e) => { e.stopPropagation(); removeTag(tag); }}
+                    className="ml-0.5 text-current opacity-40 hover:opacity-100 transition-opacity w-auto h-auto p-0">
+                    <X size={7} />
+                  </Button>
+                </Badge>
+              ))}
+              <span className="flex-1" />
+              <ChevronDown size={11} className="text-muted-foreground/40 flex-shrink-0" />
+            </button>
+          </PopoverTrigger>
+          <PopoverContent align="start" sideOffset={4} className="w-[var(--radix-popover-trigger-width)] p-1.5 max-h-[260px] overflow-y-auto">
+            {TAG_PRESETS.map(preset => {
+              const selected = tags.includes(preset.tag);
+              return (
+                <button key={preset.tag} type="button"
+                  onClick={() => togglePresetTag(preset.tag)}
+                  className={`w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-xs text-left transition-colors ${
+                    selected ? 'bg-accent/40 text-foreground' : 'text-muted-foreground/80 hover:bg-accent/30 hover:text-foreground'
+                  }`}>
+                  <span className={`w-3.5 h-3.5 rounded-[4px] border flex items-center justify-center flex-shrink-0 ${
+                    selected ? 'bg-primary border-primary text-primary-foreground' : 'border-border/60'
+                  }`}>
+                    {selected && <Check size={9} />}
+                  </span>
+                  <span className={`px-1.5 py-[1px] rounded-md text-xs border ${preset.color}`}>{preset.tag}</span>
+                </button>
+              );
+            })}
+          </PopoverContent>
+        </Popover>
       </FieldGroup>
 
       <div className="h-px bg-border/30" />
