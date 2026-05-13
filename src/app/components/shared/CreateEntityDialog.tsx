@@ -8,12 +8,7 @@ import {
 } from '@cherry-studio/ui';
 import { ModelPickerPanel } from '@/app/components/shared/ModelPickerPanel';
 import { ASSISTANT_MODELS } from '@/app/config/models';
-
-const AVATAR_EMOJIS = [
-  '🤖', '🧠', '📊', '✨', '⚙️', '🚀', '📈', '🎨', '🔬', '📚', '💡', '🛠️',
-  '🦊', '🐼', '🐨', '🦁', '🐵', '🐯', '🐧', '🦉', '🌟', '🔥', '🌈', '🎯',
-  '📝', '🧪', '🧭', '🧬', '🌍', '🌙', '🎵', '🎮', '🏆', '🎁', '🍀', '☕️',
-];
+import { AVATAR_OPTIONS as AVATAR_EMOJIS } from '@/app/config/constants';
 
 const DEFAULT_MODEL_ID = ASSISTANT_MODELS[0]?.id ?? 'claude-4-sonnet';
 
@@ -161,7 +156,7 @@ export function CreateEntityDialog({ open, onOpenChange, variant, onCreate }: Cr
                     <ChevronDown size={11} className="text-muted-foreground/50" />
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent align="start" sideOffset={4} className="w-[260px] p-0 overflow-hidden">
+                <PopoverContent align="start" sideOffset={4} className="w-[340px] p-0 overflow-hidden">
                   {/* Tabs */}
                   <div className="flex items-center gap-0.5 px-1.5 pt-1.5">
                     {([
@@ -185,7 +180,7 @@ export function CreateEntityDialog({ open, onOpenChange, variant, onCreate }: Cr
                   <div className="h-px bg-border/30 mt-1.5" />
                   {/* Tab body */}
                   {avatarTab === 'emoji' ? (
-                    <div className="grid grid-cols-6 gap-1 p-2 max-h-[200px] overflow-y-auto scrollbar-thin">
+                    <div className="grid grid-cols-8 gap-1 p-2 h-[260px] overflow-y-auto scrollbar-thin">
                       {AVATAR_EMOJIS.map(e => (
                         <button key={e} type="button"
                           onClick={() => { setAvatar(e); setAvatarIsImage(false); setAvatarOpen(false); }}

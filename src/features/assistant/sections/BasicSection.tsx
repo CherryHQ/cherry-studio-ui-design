@@ -100,7 +100,7 @@ export function BasicSection({ resource }: Props) {
                 )}
               </button>
             </PopoverTrigger>
-            <PopoverContent align="start" sideOffset={6} className="w-[280px] p-0 overflow-hidden">
+            <PopoverContent align="start" sideOffset={6} className="w-[340px] p-0 overflow-hidden">
               {/* Tabs */}
               <div className="flex items-center gap-0.5 px-1.5 pt-1.5">
                 {([
@@ -122,7 +122,7 @@ export function BasicSection({ resource }: Props) {
               <div className="h-px bg-border/30 mt-1.5" />
               {/* Emoji grid */}
               {avatarTab === 'emoji' && (
-                <div className="grid grid-cols-6 gap-1 p-2 max-h-[200px] overflow-y-auto scrollbar-thin">
+                <div className="grid grid-cols-8 gap-1 p-2 h-[260px] overflow-y-auto scrollbar-thin">
                   {AVATAR_OPTIONS.map(a => (
                     <button key={a} type="button"
                       onClick={() => { setAvatar(a); setAvatarType('emoji'); }}

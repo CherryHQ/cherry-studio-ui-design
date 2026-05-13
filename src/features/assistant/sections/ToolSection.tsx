@@ -293,21 +293,22 @@ export function ToolSection() {
   const connectedCount = servers.filter(s => s.status === 'connected').length;
 
   return (
-    <div className="max-w-lg space-y-6">
-      <div>
-        <Typography variant="subtitle" className="mb-1">MCP 工具配置</Typography>
-        <p className="text-xs text-muted-foreground/60">管理 MCP 服务连接和工具权限</p>
-      </div>
-
-      {/* Stats */}
-      <div className="flex items-center gap-4">
-        <div className="flex items-center gap-1.5 text-xs">
-          <Server size={10} className="text-muted-foreground/40" />
-          <span className="text-muted-foreground/50">{connectedCount}/{servers.length} 服务已连接</span>
+    <div className="max-w-3xl space-y-5">
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <Typography variant="subtitle" className="mb-1">MCP 工具配置</Typography>
+          <p className="text-xs text-muted-foreground/60">管理 MCP 服务连接和工具权限</p>
         </div>
-        <div className="flex items-center gap-1.5 text-xs">
-          <Wrench size={10} className="text-muted-foreground/40" />
-          <span className="text-muted-foreground/50">{enabledTools}/{totalTools} 工具已启用</span>
+        {/* Stats — right-aligned to balance the title */}
+        <div className="flex items-center gap-3 flex-shrink-0 pt-1">
+          <div className="flex items-center gap-1.5 text-xs">
+            <Server size={10} className="text-muted-foreground/40" />
+            <span className="text-muted-foreground/50">{connectedCount}/{servers.length} 服务</span>
+          </div>
+          <div className="flex items-center gap-1.5 text-xs">
+            <Wrench size={10} className="text-muted-foreground/40" />
+            <span className="text-muted-foreground/50">{enabledTools}/{totalTools} 工具</span>
+          </div>
         </div>
       </div>
 

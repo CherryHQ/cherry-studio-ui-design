@@ -9,7 +9,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import {
-  Button, Textarea, VarManagerPanel, SYSTEM_VARIABLES, SYSTEM_VAR_ICONS, VAR_TYPE_CONFIG, Typography,
+  Button, Textarea, SYSTEM_VARIABLES, SYSTEM_VAR_ICONS, VAR_TYPE_CONFIG, Typography,
   type VariableDef, type VarType,
 } from '@cherry-studio/ui';
 
@@ -163,8 +163,7 @@ export function PromptSection({ hideFewShot }: { hideFewShot?: boolean } = {}) {
 
   const [fsOpen, setFsOpen] = useState(true);
 
-  // Variable panel & slash command
-  const [showVarPanel, setShowVarPanel] = useState(false);
+  // Slash command for inline variable insertion
   const [showSlashMenu, setShowSlashMenu] = useState(false);
   const [slashSearch, setSlashSearch] = useState('');
   const [slashPos, setSlashPos] = useState({ top: 0, left: 0 });
@@ -548,15 +547,6 @@ export function PromptSection({ hideFewShot }: { hideFewShot?: boolean } = {}) {
       <div>
         <div className="flex items-center mb-1.5">
           <label className="text-xs text-foreground">系统提示词</label>
-          <div className="flex-1" />
-          <Button size="inline"
-            variant="ghost"
-            onClick={() => setShowVarPanel(true)}
-            className="gap-1 px-2 py-0.5 rounded-md text-xs text-accent-violet/70 bg-accent-violet/8 hover:bg-accent-violet/15 hover:text-accent-violet border border-accent-violet/15 transition-all"
-          >
-            <Variable size={9} />
-            <span>变量管理</span>
-          </Button>
         </div>
         <div className="relative">
           {/* ContentEditable Editor */}
@@ -808,21 +798,6 @@ export function PromptSection({ hideFewShot }: { hideFewShot?: boolean } = {}) {
         </div>
       )}
 
-      {/* Variable Management Sidebar Panel */}
-      <AnimatePresence>
-        {showVarPanel && (
-          <VarManagerPanel
-            systemVars={SYSTEM_VARIABLES}
-            userVars={variables}
-            onClose={() => setShowVarPanel(false)}
-            onInsert={(name) => { insertVariable(name); setShowVarPanel(false); }}
-            onAdd={addVariable}
-            onUpdate={updateVariable}
-            onUpdateType={updateVariableType}
-            onRemove={removeVariable}
-          />
-        )}
-      </AnimatePresence>
     </div>
   );
 }
