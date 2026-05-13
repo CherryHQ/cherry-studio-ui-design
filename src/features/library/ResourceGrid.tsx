@@ -369,40 +369,28 @@ function GridCard({ resource: r, index, onEdit, onToggle, onOpenMenu }: CardItem
       transition={{ duration: 0.2, delay: index * 0.02 }} whileHover={{ y: -2 }}
       className="group relative rounded-xl border border-border/30 bg-card hover:border-border/50 hover:shadow-lg hover:shadow-black/[0.04] transition-all duration-200 cursor-pointer"
       onClick={() => onEdit(r)}>
-      <div className="p-4">
-        <div className="flex items-start gap-3 mb-3">
+      <div className="p-3">
+        <div className="flex items-start gap-2.5">
           {isPrompt ? (
-            <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${cfg.color}`}>
-              <Icon size={16} />
+            <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${cfg.color}`}>
+              <Icon size={14} />
             </div>
           ) : (
-            <div className={`w-9 h-9 rounded-xl flex items-center justify-center text-base flex-shrink-0 ${!isToolType ? 'bg-accent/50' : cfg.color}`}>{r.avatar}</div>
+            <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-base flex-shrink-0 ${!isToolType ? 'bg-accent/50' : cfg.color}`}>{r.avatar}</div>
           )}
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-1.5">
               <h4 className="text-sm text-foreground truncate">{r.name}</h4>
               {r.hasUpdate && <Badge variant="secondary" className="text-xs px-1 py-px rounded-full bg-accent-orange-muted text-accent-orange flex-shrink-0">更新</Badge>}
             </div>
-            <div className="flex items-center gap-1.5 mt-0.5">
-              <Badge variant="secondary" className={`text-xs px-1.5 py-px rounded-full ${cfg.color}`}>{cfg.label}</Badge>
-              {r.model && <span className="text-xs text-muted-foreground/40">{r.model}</span>}
-              {r.version && <span className="text-xs text-muted-foreground/40">v{r.version}</span>}
-            </div>
+            <p className="text-xs text-muted-foreground/60 leading-relaxed line-clamp-2 mt-1">{r.description}</p>
           </div>
-          <div className="flex-shrink-0" onClick={e => e.stopPropagation()}>
+          <div className="flex items-center gap-1 flex-shrink-0" onClick={e => e.stopPropagation()}>
+            {isToolType && <Switch size="sm" checked={r.enabled} onCheckedChange={() => onToggle(r.id)} />}
             <Button variant="ghost" size="icon-xs" onClick={e => onOpenMenu(r.id, e)}
               className="w-6 h-6 rounded-md flex items-center justify-center text-muted-foreground/40 hover:text-foreground hover:bg-accent/50 transition-colors opacity-0 group-hover:opacity-100">
               <MoreHorizontal size={12} />
             </Button>
-          </div>
-        </div>
-        <p className="text-xs text-muted-foreground/60 leading-relaxed line-clamp-2 mb-3">{r.description}</p>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-1.5 text-xs text-muted-foreground/50"><Clock size={8} /><span>{timeAgo(r.updatedAt)}</span></div>
-          <div className="flex items-center gap-1.5">
-            {r.tags.slice(0, 2).map((t, i) => <span key={`${t}-${i}`} className="text-xs px-1.5 py-px rounded-full bg-accent/50 text-muted-foreground/50">{t}</span>)}
-            {r.tags.length > 2 && <span className="text-xs text-muted-foreground/40">+{r.tags.length - 2}</span>}
-            {isToolType && <div onClick={e => e.stopPropagation()}><Switch size="sm" checked={r.enabled} onCheckedChange={() => onToggle(r.id)} /></div>}
           </div>
         </div>
       </div>
