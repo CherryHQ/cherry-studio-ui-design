@@ -659,12 +659,11 @@ export function HistorySidebar<T extends HistoryItem>({
             {quickStartOptions && quickStartOptions.length > 0 && (
               <Popover>
                 <PopoverTrigger asChild>
-                  <Tooltip content={`新建${entityLabel}`} side="bottom">
-                    <Button variant="ghost" size="icon-xs"
-                      className="p-1 w-auto h-auto text-muted-foreground hover:text-foreground hover:bg-accent/15">
-                      <Plus size={11} />
-                    </Button>
-                  </Tooltip>
+                  <Button variant="ghost" size="icon-xs"
+                    title={`新建${entityLabel}`}
+                    className="p-1 w-auto h-auto text-muted-foreground hover:text-foreground hover:bg-accent/15">
+                    <Plus size={11} />
+                  </Button>
                 </PopoverTrigger>
                 <PopoverContent align="end" className="w-[220px] p-1 max-h-[320px] overflow-y-auto scrollbar-thin">
                   <div className="text-xs text-muted-foreground/60 px-2 py-1">选择智能体开启对话</div>
