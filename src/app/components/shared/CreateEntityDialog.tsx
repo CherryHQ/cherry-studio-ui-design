@@ -1,20 +1,21 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import {
-  X, Check, ChevronDown, Bot, Sparkles,
+  X, Check, ChevronDown, Bot, Sparkles, Smile, Image as ImageIcon, Upload,
 } from 'lucide-react';
 import {
   Dialog, DialogContent, DialogTitle,
   Button, Input, Textarea, Popover, PopoverTrigger, PopoverContent,
 } from '@cherry-studio/ui';
+import { ModelPickerPanel } from '@/app/components/shared/ModelPickerPanel';
+import { ASSISTANT_MODELS } from '@/app/config/models';
 
-const AVATAR_EMOJIS = ['🤖', '🧠', '📊', '✨', '⚙️', '🚀', '📈', '🎨', '🔬', '📚', '💡', '🛠️'];
-const DEFAULT_MODELS = [
-  { id: 'claude-4.7-opus', name: 'Claude 4.7 Opus' },
-  { id: 'claude-4.6-sonnet', name: 'Claude 4.6 Sonnet' },
-  { id: 'gpt-5', name: 'GPT-5' },
-  { id: 'gpt-4o', name: 'GPT-4o' },
-  { id: 'gemini-2.5-pro', name: 'Gemini 2.5 Pro' },
+const AVATAR_EMOJIS = [
+  '🤖', '🧠', '📊', '✨', '⚙️', '🚀', '📈', '🎨', '🔬', '📚', '💡', '🛠️',
+  '🦊', '🐼', '🐨', '🦁', '🐵', '🐯', '🐧', '🦉', '🌟', '🔥', '🌈', '🎯',
+  '📝', '🧪', '🧭', '🧬', '🌍', '🌙', '🎵', '🎮', '🏆', '🎁', '🍀', '☕️',
 ];
+
+const DEFAULT_MODEL_ID = ASSISTANT_MODELS[0]?.id ?? 'claude-4-sonnet';
 
 export type CreateEntityVariant = 'agent' | 'assistant';
 
@@ -28,10 +29,15 @@ export interface CreateEntityDialogProps {
 export interface CreateEntityResult {
   variant: CreateEntityVariant;
   name: string;
+  /** Either an emoji or a data: URL for an uploaded image */
   avatar: string;
+  /** True when avatar is an uploaded image URL rather than an emoji */
+  avatarIsImage: boolean;
   model: string;
   description: string;
 }
+
+type AvatarTab = 'emoji' | 'upload';
 
 export function CreateEntityDialog({ open, onOpenChange, variant, onCreate }: CreateEntityDialogProps) {
   const isAgent = variant === 'agent';
@@ -40,17 +46,26 @@ export function CreateEntityDialog({ open, onOpenChange, variant, onCreate }: Cr
 
   const [name, setName] = useState('');
   const [avatar, setAvatar] = useState(AVATAR_EMOJIS[0]);
-  const [modelId, setModelId] = useState(DEFAULT_MODELS[0].id);
+  const [avatarIsImage, setAvatarIsImage] = useState(false);
+  const [avatarTab, setAvatarTab] = useState<AvatarTab>('emoji');
+  const [modelId, setModelId] = useState<string>(DEFAULT_MODEL_ID);
   const [description, setDescription] = useState('');
   const [avatarOpen, setAvatarOpen] = useState(false);
   const [modelOpen, setModelOpen] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const currentModel = DEFAULT_MODELS.find(m => m.id === modelId) ?? DEFAULT_MODELS[0];
+  const currentModel = ASSISTANT_MODELS.find(m => m.id === modelId) ?? ASSISTANT_MODELS[0];
   const canSubmit = name.trim().length > 0;
 
   const reset = () => {
-    setName(''); setAvatar(AVATAR_EMOJIS[0]); setModelId(DEFAULT_MODELS[0].id);
-    setDescription(''); setAvatarOpen(false); setModelOpen(false);
+    setName('');
+    setAvatar(AVATAR_EMOJIS[0]);
+    setAvatarIsImage(false);
+    setAvatarTab('emoji');
+    setModelId(DEFAULT_MODEL_ID);
+    setDescription('');
+    setAvatarOpen(false);
+    setModelOpen(false);
   };
 
   const close = (next: boolean) => {
@@ -63,10 +78,25 @@ export function CreateEntityDialog({ open, onOpenChange, variant, onCreate }: Cr
       variant,
       name: name.trim(),
       avatar,
+      avatarIsImage,
       model: modelId,
       description: description.trim(),
     });
     close(false);
+  };
+
+  const onUploadFile = (file: File | null) => {
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const url = typeof reader.result === 'string' ? reader.result : '';
+      if (url) {
+        setAvatar(url);
+        setAvatarIsImage(true);
+        setAvatarOpen(false);
+      }
+    };
+    reader.readAsDataURL(file);
   };
 
   return (
@@ -100,22 +130,74 @@ export function CreateEntityDialog({ open, onOpenChange, variant, onCreate }: Cr
                 <PopoverTrigger asChild>
                   <Button variant="ghost" size="inline"
                     className="h-9 flex items-center gap-1 px-2 rounded-md border border-border/40 bg-background hover:bg-accent/30">
-                    <span className="text-lg leading-none">{avatar}</span>
+                    <span className="w-6 h-6 rounded flex items-center justify-center overflow-hidden">
+                      {avatarIsImage
+                        ? <img src={avatar} alt="" className="w-full h-full object-cover" />
+                        : <span className="text-lg leading-none">{avatar}</span>}
+                    </span>
                     <ChevronDown size={11} className="text-muted-foreground/50" />
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent align="start" sideOffset={4} className="w-[180px] p-2">
-                  <div className="grid grid-cols-6 gap-1">
-                    {AVATAR_EMOJIS.map(e => (
-                      <button key={e} type="button"
-                        onClick={() => { setAvatar(e); setAvatarOpen(false); }}
-                        className={`w-7 h-7 rounded-md flex items-center justify-center text-base transition-colors ${
-                          avatar === e ? 'bg-accent ring-1 ring-primary/40' : 'hover:bg-accent/50'
-                        }`}>
-                        {e}
-                      </button>
-                    ))}
+                <PopoverContent align="start" sideOffset={4} className="w-[260px] p-0 overflow-hidden">
+                  {/* Tabs */}
+                  <div className="flex items-center gap-0.5 px-1.5 pt-1.5">
+                    {([
+                      { key: 'emoji', label: '表情', icon: Smile },
+                      { key: 'upload', label: '上传图片', icon: ImageIcon },
+                    ] as { key: AvatarTab; label: string; icon: React.ElementType }[]).map(t => {
+                      const active = avatarTab === t.key;
+                      const Icon = t.icon;
+                      return (
+                        <button key={t.key} type="button"
+                          onClick={() => setAvatarTab(t.key)}
+                          className={`flex-1 flex items-center justify-center gap-1.5 px-2 py-1.5 rounded-md text-xs transition-colors ${
+                            active ? 'bg-accent text-foreground' : 'text-muted-foreground hover:bg-accent/40 hover:text-foreground'
+                          }`}>
+                          <Icon size={11} className={active ? 'text-primary/70' : 'text-muted-foreground/60'} />
+                          <span>{t.label}</span>
+                        </button>
+                      );
+                    })}
                   </div>
+                  <div className="h-px bg-border/30 mt-1.5" />
+                  {/* Tab body */}
+                  {avatarTab === 'emoji' ? (
+                    <div className="grid grid-cols-6 gap-1 p-2 max-h-[200px] overflow-y-auto scrollbar-thin">
+                      {AVATAR_EMOJIS.map(e => (
+                        <button key={e} type="button"
+                          onClick={() => { setAvatar(e); setAvatarIsImage(false); setAvatarOpen(false); }}
+                          className={`w-8 h-8 rounded-md flex items-center justify-center text-base transition-colors ${
+                            !avatarIsImage && avatar === e ? 'bg-accent ring-1 ring-primary/40' : 'hover:bg-accent/50'
+                          }`}>
+                          {e}
+                        </button>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="p-3 space-y-2">
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(e) => onUploadFile(e.target.files?.[0] ?? null)}
+                      />
+                      <button type="button"
+                        onClick={() => fileInputRef.current?.click()}
+                        className="w-full flex flex-col items-center justify-center gap-1.5 py-6 rounded-md border border-dashed border-border/50 text-xs text-muted-foreground hover:border-primary/40 hover:text-foreground transition-colors">
+                        <Upload size={16} className="text-muted-foreground/60" />
+                        <span>点击上传图片</span>
+                        <span className="text-muted-foreground/40">支持 PNG / JPG，建议 256×256</span>
+                      </button>
+                      {avatarIsImage && (
+                        <button type="button"
+                          onClick={() => { setAvatar(AVATAR_EMOJIS[0]); setAvatarIsImage(false); }}
+                          className="w-full text-xs text-muted-foreground/60 hover:text-foreground py-1">
+                          移除上传的图片
+                        </button>
+                      )}
+                    </div>
+                  )}
                 </PopoverContent>
               </Popover>
             </div>
@@ -127,7 +209,7 @@ export function CreateEntityDialog({ open, onOpenChange, variant, onCreate }: Cr
             </div>
           </div>
 
-          {/* Model */}
+          {/* Model — generic ModelPickerPanel inside a popover */}
           <div>
             <label className="block text-xs text-muted-foreground/70 mb-1">模型</label>
             <Popover open={modelOpen} onOpenChange={setModelOpen}>
@@ -136,23 +218,24 @@ export function CreateEntityDialog({ open, onOpenChange, variant, onCreate }: Cr
                   className="w-full h-9 flex items-center justify-between gap-2 px-3 rounded-md border border-border/40 bg-background hover:bg-accent/30">
                   <span className="flex items-center gap-2 min-w-0">
                     <Sparkles size={12} className="text-primary/60 flex-shrink-0" />
-                    <span className="text-sm truncate">{currentModel.name}</span>
+                    <span className="text-sm truncate">{currentModel?.name ?? '选择模型'}</span>
+                    {currentModel?.provider && (
+                      <span className="text-xs text-muted-foreground/50 flex-shrink-0">· {currentModel.provider}</span>
+                    )}
                   </span>
                   <ChevronDown size={11} className="text-muted-foreground/50 flex-shrink-0" />
                 </Button>
               </PopoverTrigger>
-              <PopoverContent align="start" sideOffset={4} className="w-[var(--radix-popover-trigger-width)] p-1">
-                {DEFAULT_MODELS.map(m => (
-                  <button key={m.id} type="button"
-                    onClick={() => { setModelId(m.id); setModelOpen(false); }}
-                    className={`w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-sm text-left transition-colors ${
-                      modelId === m.id ? 'bg-accent text-foreground' : 'text-foreground/80 hover:bg-accent/40'
-                    }`}>
-                    <Sparkles size={12} className="text-primary/60 flex-shrink-0" />
-                    <span className="flex-1 truncate">{m.name}</span>
-                    {modelId === m.id && <Check size={12} className="text-primary flex-shrink-0" />}
-                  </button>
-                ))}
+              <PopoverContent align="start" sideOffset={4}
+                className="w-[var(--radix-popover-trigger-width)] p-0 max-h-[360px] overflow-hidden">
+                <ModelPickerPanel
+                  selectedModels={[modelId]}
+                  onSelectModel={(id) => setModelId(id)}
+                  multiModel={false}
+                  onToggleMultiModel={() => { /* single-select only */ }}
+                  showMultiModelToggle={false}
+                  onClose={() => setModelOpen(false)}
+                />
               </PopoverContent>
             </Popover>
           </div>
