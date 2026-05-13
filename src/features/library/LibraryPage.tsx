@@ -3,7 +3,8 @@ import { motion, AnimatePresence } from 'motion/react';
 import { X, ArrowRight, ChevronLeft, Plus, Check, Download, Variable, Save } from 'lucide-react';
 import {
   Button, Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, SearchInput, Input, Typography,
-  VarManagerPanel, SYSTEM_VARIABLES, type VariableDef, type VarType,
+  Popover, PopoverTrigger, PopoverContent,
+  SYSTEM_VARIABLES, type VariableDef, type VarType,
 } from '@cherry-studio/ui';
 import { skills as discoverSkills, assistants as discoverAssistants } from '@/features/explore/ExploreData';
 import { useGlobalActions } from '@/app/context/GlobalActionContext';
@@ -408,10 +409,22 @@ function PromptEditPage({ resource, onBack, onSave }: {
           <div>
             <div className="flex items-center justify-between mb-2">
               <p className="text-xs text-muted-foreground/60 font-medium">内容</p>
-              <Button variant="ghost" size="xs" onClick={() => setShowVarPanel(true)}
-                className="flex items-center gap-1 px-2 text-accent-violet/70 hover:text-accent-violet hover:bg-accent-violet/[0.06]">
-                <Variable size={10} /><span>插入变量</span>
-              </Button>
+              <Popover open={showVarPanel} onOpenChange={setShowVarPanel}>
+                <PopoverTrigger asChild>
+                  <Button variant="ghost" size="xs"
+                    className="flex items-center gap-1 px-2 text-accent-violet/70 hover:text-accent-violet hover:bg-accent-violet/[0.06]">
+                    <Variable size={10} /><span>使用变量</span>
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent align="end" sideOffset={4} className="w-[280px] p-0 overflow-hidden">
+                  <VarPickerPopover
+                    systemVars={SYSTEM_VARIABLES}
+                    userVars={userVars}
+                    onInsert={handleInsertVar}
+                    onAddUserVar={handleAddVar}
+                  />
+                </PopoverContent>
+              </Popover>
             </div>
             <PromptRichEditor
               value={content}
@@ -419,7 +432,7 @@ function PromptEditPage({ resource, onBack, onSave }: {
               onSlashCommand={() => setShowVarPanel(true)}
               placeholder="输入 Prompt 内容，使用 / 快速插入变量..."
             />
-            <p className="text-xs text-muted-foreground/40 mt-1.5">输入 / 或点击「插入变量」打开变量面板</p>
+            <p className="text-xs text-muted-foreground/40 mt-1.5">输入 / 或点击「使用变量」插入变量</p>
           </div>
 
           {/* Referenced variables */}
@@ -437,23 +450,72 @@ function PromptEditPage({ resource, onBack, onSave }: {
           )}
         </div>
       </div>
+    </div>
+  );
+}
 
-      {/* Variable manager panel */}
-      <AnimatePresence>
-        {showVarPanel && (
-          <VarManagerPanel
-            systemVars={SYSTEM_VARIABLES}
-            userVars={userVars}
-            onClose={() => setShowVarPanel(false)}
-            onInsert={handleInsertVar}
-            onAdd={handleAddVar}
-            onUpdate={(id, field, value) => setUserVars(prev => prev.map(v => v.id === id ? { ...v, [field]: value } : v))}
-            onUpdateType={(id, type) => setUserVars(prev => prev.map(v => v.id === id ? { ...v, type } : v))}
-            onRemove={(id) => setUserVars(prev => prev.filter(v => v.id !== id))}
-            position="right"
-          />
+// ===========================
+// Inline variable picker — replaces the floating side panel
+// ===========================
+
+function VarPickerPopover({
+  systemVars,
+  userVars,
+  onInsert,
+  onAddUserVar,
+}: {
+  systemVars: VariableDef[];
+  userVars: VariableDef[];
+  onInsert: (name: string) => void;
+  onAddUserVar: () => string;
+}) {
+  const [query, setQuery] = useState('');
+  const q = query.trim().toLowerCase();
+  const filtSys = q ? systemVars.filter(v => v.name.toLowerCase().includes(q)) : systemVars;
+  const filtUser = q ? userVars.filter(v => v.name.toLowerCase().includes(q)) : userVars;
+
+  return (
+    <div className="flex flex-col max-h-[320px]">
+      <div className="p-2 border-b border-border/30">
+        <SearchInput value={query} onChange={setQuery} placeholder="搜索变量" iconSize={11}
+          wrapperClassName="px-2 h-7 rounded-md bg-muted/20 border border-border/20" />
+      </div>
+      <div className="flex-1 min-h-0 overflow-y-auto scrollbar-thin py-1">
+        {filtSys.length > 0 && (
+          <div className="mb-1">
+            <div className="px-2 py-1 text-xs text-muted-foreground/50 uppercase tracking-wider">系统变量</div>
+            {filtSys.map(v => (
+              <button key={v.id} type="button" onClick={() => onInsert(v.name)}
+                className="w-full flex items-center gap-2 px-2 py-1.5 text-left hover:bg-accent/40 transition-colors">
+                <span className="text-xs font-mono text-accent-violet/80">{'${' + v.name + '}'}</span>
+                {v.description && <span className="text-xs text-muted-foreground/60 truncate flex-1 text-right">{v.description}</span>}
+              </button>
+            ))}
+          </div>
         )}
-      </AnimatePresence>
+        {filtUser.length > 0 && (
+          <div>
+            <div className="px-2 py-1 text-xs text-muted-foreground/50 uppercase tracking-wider">自定义变量</div>
+            {filtUser.map(v => (
+              <button key={v.id} type="button" onClick={() => onInsert(v.name)}
+                className="w-full flex items-center gap-2 px-2 py-1.5 text-left hover:bg-accent/40 transition-colors">
+                <span className="text-xs font-mono text-accent-violet/80">{'${' + v.name + '}'}</span>
+                {v.description && <span className="text-xs text-muted-foreground/60 truncate flex-1 text-right">{v.description}</span>}
+              </button>
+            ))}
+          </div>
+        )}
+        {filtSys.length === 0 && filtUser.length === 0 && (
+          <div className="py-6 text-xs text-muted-foreground/50 text-center">无匹配变量</div>
+        )}
+      </div>
+      <div className="p-2 border-t border-border/30">
+        <Button variant="ghost" size="xs" onClick={() => onAddUserVar()}
+          className="w-full flex items-center justify-center gap-1 h-7 text-xs text-muted-foreground hover:text-foreground">
+          <Plus size={11} />
+          <span>新增自定义变量</span>
+        </Button>
+      </div>
     </div>
   );
 }
