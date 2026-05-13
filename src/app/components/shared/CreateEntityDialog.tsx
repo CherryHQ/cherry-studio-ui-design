@@ -52,6 +52,8 @@ export function CreateEntityDialog({ open, onOpenChange, variant, onCreate }: Cr
   const [description, setDescription] = useState('');
   const [avatarOpen, setAvatarOpen] = useState(false);
   const [modelOpen, setModelOpen] = useState(false);
+  const [urlInput, setUrlInput] = useState('');
+  const [urlError, setUrlError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const currentModel = ASSISTANT_MODELS.find(m => m.id === modelId) ?? ASSISTANT_MODELS[0];
@@ -66,6 +68,8 @@ export function CreateEntityDialog({ open, onOpenChange, variant, onCreate }: Cr
     setDescription('');
     setAvatarOpen(false);
     setModelOpen(false);
+    setUrlInput('');
+    setUrlError(null);
   };
 
   const close = (next: boolean) => {
@@ -97,6 +101,25 @@ export function CreateEntityDialog({ open, onOpenChange, variant, onCreate }: Cr
       }
     };
     reader.readAsDataURL(file);
+  };
+
+  const applyImageUrl = (raw: string) => {
+    const trimmed = raw.trim();
+    if (!trimmed) return;
+    let parsed: URL | null = null;
+    try { parsed = new URL(trimmed); } catch { /* fall through */ }
+    const ok = parsed
+      ? (parsed.protocol === 'http:' || parsed.protocol === 'https:' || parsed.protocol === 'data:')
+      : false;
+    if (!ok) {
+      setUrlError('请输入有效的 http(s) 或 data: 图片链接');
+      return;
+    }
+    setAvatar(trimmed);
+    setAvatarIsImage(true);
+    setUrlInput('');
+    setUrlError(null);
+    setAvatarOpen(false);
   };
 
   return (
@@ -174,7 +197,7 @@ export function CreateEntityDialog({ open, onOpenChange, variant, onCreate }: Cr
                       ))}
                     </div>
                   ) : (
-                    <div className="p-3 space-y-2">
+                    <div className="p-3 space-y-2.5">
                       <input
                         ref={fileInputRef}
                         type="file"
@@ -184,16 +207,53 @@ export function CreateEntityDialog({ open, onOpenChange, variant, onCreate }: Cr
                       />
                       <button type="button"
                         onClick={() => fileInputRef.current?.click()}
-                        className="w-full flex flex-col items-center justify-center gap-1.5 py-6 rounded-md border border-dashed border-border/50 text-xs text-muted-foreground hover:border-primary/40 hover:text-foreground transition-colors">
+                        onPaste={(e) => {
+                          const item = Array.from(e.clipboardData?.items ?? []).find(it => it.type.startsWith('image/'));
+                          if (item) {
+                            e.preventDefault();
+                            onUploadFile(item.getAsFile());
+                          }
+                        }}
+                        className="w-full flex flex-col items-center justify-center gap-1.5 py-5 rounded-md border border-dashed border-border/50 text-xs text-muted-foreground hover:border-primary/40 hover:text-foreground transition-colors">
                         <Upload size={16} className="text-muted-foreground/60" />
                         <span>点击上传图片</span>
-                        <span className="text-muted-foreground/40">支持 PNG / JPG，建议 256×256</span>
+                        <span className="text-muted-foreground/40">PNG / JPG，建议 256×256</span>
                       </button>
+                      {/* URL paste */}
+                      <div className="space-y-1">
+                        <div className="text-xs text-muted-foreground/60">或粘贴图片链接</div>
+                        <div className="flex items-center gap-1.5">
+                          <Input
+                            value={urlInput}
+                            onChange={(e) => { setUrlInput(e.target.value); if (urlError) setUrlError(null); }}
+                            onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); applyImageUrl(urlInput); } }}
+                            onPaste={(e) => {
+                              const text = e.clipboardData?.getData('text') ?? '';
+                              if (text) {
+                                e.preventDefault();
+                                setUrlInput(text);
+                                applyImageUrl(text);
+                              }
+                            }}
+                            placeholder="https://… 或 data:image/…"
+                            className="h-7 flex-1 text-xs"
+                          />
+                          <Button variant="default" size="xs"
+                            onClick={() => applyImageUrl(urlInput)}
+                            disabled={!urlInput.trim()}
+                            className="h-7 px-2 text-xs">
+                            使用
+                          </Button>
+                        </div>
+                        {urlError && (
+                          <div className="text-xs text-destructive/80">{urlError}</div>
+                        )}
+                      </div>
                       {avatarIsImage && (
                         <button type="button"
                           onClick={() => { setAvatar(AVATAR_EMOJIS[0]); setAvatarIsImage(false); }}
                           className="w-full text-xs text-muted-foreground/60 hover:text-foreground py-1">
-                          移除上传的图片
+                          移除当前图片
                         </button>
                       )}
                     </div>
