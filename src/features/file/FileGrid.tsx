@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import {
   FileText, Image as ImageIcon, FileCode, Music, Video,
-  File, Trash2, Eye,
+  File, Trash2,
 } from 'lucide-react';
 import { Button, Input } from '@cherry-studio/ui';
 import type { FileItem, FileTag } from './mockData';
@@ -85,7 +85,12 @@ export function FileGrid({
         return (
           <div
             key={file.id}
-            onClick={(e) => { if (!isRenaming) onSelect(file.id, e.metaKey || e.ctrlKey); }}
+            onClick={(e) => {
+              if (isRenaming) return;
+              // Image tiles: single click opens the full preview directly.
+              if (isImage) onPreview(file);
+              else onSelect(file.id, e.metaKey || e.ctrlKey);
+            }}
             onContextMenu={(e) => onContextMenu(e, file.id)}
             onDoubleClick={() => { if (!isRenaming) onPreview(file); }}
             className={`group relative rounded-lg border transition-all cursor-pointer ${
@@ -108,21 +113,15 @@ export function FileGrid({
                   {getFormatLabel(file.format)}
                 </span>
               )}
-              {/* Hover actions: preview + delete */}
+              {/* Hover action: delete only, kept subtle */}
               <div className="absolute top-1 right-1 flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
                 <Button
                   variant="ghost"
-                  onClick={(e) => { e.stopPropagation(); onPreview(file); }}
-                  className="w-5 h-5 p-0 rounded flex items-center justify-center text-muted-foreground/60 hover:text-foreground bg-background/70 transition-colors"
-                >
-                  <Eye size={11} />
-                </Button>
-                <Button
-                  variant="ghost"
                   onClick={(e) => { e.stopPropagation(); onDelete(file.id); }}
-                  className="w-5 h-5 p-0 rounded flex items-center justify-center text-muted-foreground/60 hover:text-destructive bg-background/70 transition-colors"
+                  title="删除"
+                  className="w-5 h-5 p-0 rounded flex items-center justify-center text-muted-foreground/35 hover:text-destructive/80 bg-background/40 backdrop-blur-[1px] transition-colors"
                 >
-                  <Trash2 size={11} />
+                  <Trash2 size={10} />
                 </Button>
               </div>
             </div>

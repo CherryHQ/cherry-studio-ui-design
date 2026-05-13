@@ -17,7 +17,6 @@ type SidebarEntry =
   | { kind: 'type'; value: 'document' | 'image' | 'code' | 'audio' | 'video'; label: string; icon: React.ElementType; countKey: string };
 
 const SIDEBAR_ENTRIES: SidebarEntry[] = [
-  { kind: 'library', value: 'all',      label: '全部文件', icon: Files,     countKey: 'all' },
   { kind: 'type',    value: 'document', label: '文档',     icon: FileText,  countKey: 'type_document' },
   { kind: 'type',    value: 'image',    label: '图片',     icon: ImageIcon, countKey: 'type_image' },
   { kind: 'type',    value: 'code',     label: '代码',     icon: FileCode,  countKey: 'type_code' },
@@ -25,6 +24,7 @@ const SIDEBAR_ENTRIES: SidebarEntry[] = [
   { kind: 'type',    value: 'video',    label: '视频',     icon: Video,     countKey: 'type_video' },
   { kind: 'library', value: 'recent',   label: '最近使用', icon: Clock,     countKey: 'recent' },
   { kind: 'library', value: 'trash',    label: '回收站',   icon: Trash2,    countKey: 'trash' },
+  { kind: 'library', value: 'all',      label: '全部文件', icon: Files,     countKey: 'all' },
 ];
 
 export function FileSidebar({
