@@ -4,7 +4,7 @@ import {
   Wrench, SlidersHorizontal, ChevronRight, ChevronDown,
   X, Check, Plus, Trash2,
   RefreshCw, CheckCircle2, Circle, AlertTriangle,
-  Search, ExternalLink, Power,
+  Search, ExternalLink,
   Terminal, FileEdit, Globe, Code2, Database, FolderSearch,
   Image, GitBranch, FileJson, Network, Lock,
   Mail, Calendar, Cpu, HardDrive, Clipboard, Eye,
@@ -515,12 +515,12 @@ function MCPServerCard({ server, onToggleConnect, onRemove, onToggleTool, onTogg
             {server.tags.map(t => (<span key={t} className="text-xs px-1 py-px rounded bg-accent/15 text-muted-foreground/50">{t}</span>))}
           </div>
         </div>
-        <div className="flex items-center gap-1 flex-shrink-0">
-          <Button variant="ghost" size="icon-xs" onClick={e => { e.stopPropagation(); onToggleConnect(); }} className={isConnected ? 'text-cherry-primary hover:bg-cherry-active-bg' : 'text-muted-foreground/40 hover:text-foreground hover:bg-accent/50'} title={isConnected ? '断开连接' : '连接'}>
-            <Power size={11} />
-          </Button>
-          <Button variant="ghost" size="icon-xs" onClick={e => { e.stopPropagation(); onRemove(); }} className="text-muted-foreground/40 hover:text-destructive hover:bg-destructive/8"><Trash2 size={10} /></Button>
+        <div className="flex items-center gap-2 flex-shrink-0">
           {isConnected && <ChevronDown size={10} className={`text-muted-foreground/40 transition-transform ${expanded ? 'rotate-180' : ''}`} />}
+          <Button variant="ghost" size="icon-xs" onClick={e => { e.stopPropagation(); onRemove(); }} className="text-muted-foreground/40 hover:text-destructive hover:bg-destructive/8" title="移除"><Trash2 size={10} /></Button>
+          <span onClick={e => { e.stopPropagation(); onToggleConnect(); }}>
+            <Switch size="sm" checked={isConnected} className="pointer-events-none" />
+          </span>
         </div>
       </div>
 
@@ -680,15 +680,17 @@ function ToolchainSection({ onExplore }: { onExplore: () => void }) {
               {activeTab === 'tools' && (tools.length === 0 ? <TabEmptyState preset="no-code-tool" label="内置工具" onAdd={() => setShowAddPanel(true)} /> : (
                 <div>
                   <TagFilter tags={TOOL_CATEGORIES} selected={toolTagFilter} onToggle={setToolTagFilter} />
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-3 gap-y-1">
+                  <div className="space-y-2">
                     {filteredTools.map(tool => { const Icon = tool.icon; return (
-                      <div key={tool.id} className={`flex items-center gap-2.5 px-3 py-2.5 rounded-lg transition-all cursor-pointer group ${tool.enabled ? 'hover:bg-accent/15' : 'opacity-40 hover:opacity-65'}`} onClick={() => toggleTool(tool.id)}>
-                        <Icon size={14} strokeWidth={1.5} className={tool.enabled ? 'text-muted-foreground' : 'text-muted-foreground/40'} />
+                      <div key={tool.id}
+                        onClick={() => toggleTool(tool.id)}
+                        className={`flex items-center gap-3 px-3 py-2.5 rounded-xl border border-border/12 bg-accent/5 hover:bg-accent/15 transition-all cursor-pointer ${tool.enabled ? '' : 'opacity-55'}`}>
+                        <Icon size={15} strokeWidth={1.5} className={tool.enabled ? 'text-muted-foreground flex-shrink-0' : 'text-muted-foreground/40 flex-shrink-0'} />
                         <div className="flex-1 min-w-0">
                           <div className="text-sm text-foreground truncate">{tool.name}</div>
                           <div className="text-xs text-muted-foreground/50 truncate">{tool.desc}</div>
                         </div>
-                        <Switch size="sm" checked={tool.enabled} className="pointer-events-none" />
+                        <Switch size="sm" checked={tool.enabled} className="pointer-events-none flex-shrink-0" />
                       </div>
                     ); })}
                   </div>
@@ -722,15 +724,17 @@ function ToolchainSection({ onExplore }: { onExplore: () => void }) {
               {activeTab === 'skills' && (skills.length === 0 ? <TabEmptyState preset="no-resource" label="Skill" onAdd={() => setShowAddPanel(true)} /> : (
                 <div>
                   <TagFilter tags={SKILL_TAGS} selected={skillTagFilter} onToggle={setSkillTagFilter} />
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-3 gap-y-1">
+                  <div className="space-y-2">
                     {filteredSkills.map(skill => { const Icon = skill.icon; return (
-                      <div key={skill.id} className={`flex items-center gap-2.5 px-3 py-2.5 rounded-lg transition-all cursor-pointer group ${skill.enabled ? 'hover:bg-accent/15' : 'opacity-40 hover:opacity-65'}`} onClick={() => toggleSkill(skill.id)}>
-                        <Icon size={14} strokeWidth={1.5} className={skill.enabled ? 'text-muted-foreground' : 'text-muted-foreground/40'} />
+                      <div key={skill.id}
+                        onClick={() => toggleSkill(skill.id)}
+                        className={`flex items-center gap-3 px-3 py-2.5 rounded-xl border border-border/12 bg-accent/5 hover:bg-accent/15 transition-all cursor-pointer ${skill.enabled ? '' : 'opacity-55'}`}>
+                        <Icon size={15} strokeWidth={1.5} className={skill.enabled ? 'text-muted-foreground flex-shrink-0' : 'text-muted-foreground/40 flex-shrink-0'} />
                         <div className="flex-1 min-w-0">
                           <div className="text-sm text-foreground truncate">{skill.name}</div>
                           <div className="text-xs text-muted-foreground/50 truncate">{skill.desc}</div>
                         </div>
-                        <Switch size="sm" checked={skill.enabled} className="pointer-events-none" />
+                        <Switch size="sm" checked={skill.enabled} className="pointer-events-none flex-shrink-0" />
                       </div>
                     ); })}
                   </div>
