@@ -539,7 +539,9 @@ export function LibraryPage() {
   const [folders, setFolders] = useState<FolderNode[]>(MOCK_FOLDERS);
 
   const [configView, setConfigView] = useState<LibraryConfigView>({ type: 'list' });
-  const [sidebarFilter, setSidebarFilter] = useState<LibrarySidebarFilter>({ type: 'all' });
+  // Default landing: open on the first resource type ("Skill") instead of
+  // mixing every type together. Users switch via the left sidebar.
+  const [sidebarFilter, setSidebarFilter] = useState<LibrarySidebarFilter>({ type: 'resource', resourceType: 'skill' });
   const [dismissedBanners, setDismissedBanners] = useState<Set<string>>(new Set());
   const [templateBrowse, setTemplateBrowse] = useState<'skill' | 'assistant' | null>(null);
 
