@@ -20,7 +20,7 @@ export function KnowledgeSection() {
   };
 
   return (
-    <div className="max-w-lg space-y-6">
+    <div className="max-w-3xl space-y-6">
       <div>
         <Typography variant="subtitle" className="mb-1">知识库关联</Typography>
         <p className="text-xs text-muted-foreground/60">选择知识库并配置检索参数</p>

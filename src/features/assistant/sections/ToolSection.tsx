@@ -293,7 +293,7 @@ export function ToolSection() {
   const connectedCount = servers.filter(s => s.status === 'connected').length;
 
   return (
-    <div className="max-w-3xl space-y-5">
+    <div className="max-w-3xl space-y-6">
       <div className="flex items-start justify-between gap-4">
         <div>
           <Typography variant="subtitle" className="mb-1">MCP 工具配置</Typography>

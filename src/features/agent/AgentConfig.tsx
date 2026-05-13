@@ -150,7 +150,7 @@ function AgentBasicSection({ resource }: { resource: ResourceItem }) {
   const removeTag = (tag: string) => setTags(prev => prev.filter(t => t !== tag));
   const togglePresetTag = (tag: string) => { if (tags.includes(tag)) removeTag(tag); else setTags(prev => [...prev, tag]); };
   return (
-    <div className="max-w-lg space-y-5">
+    <div className="max-w-3xl space-y-6">
       <div><Typography variant="subtitle" className="mb-1">{"基础设置"}</Typography><p className="text-xs text-muted-foreground/60">{"配置智能体的身份信息和模型"}</p></div>
       <FieldGroup label="头像与名称">
         <div className="flex items-center gap-3">
@@ -631,12 +631,12 @@ function ToolchainSection({ onExplore }: { onExplore: () => void }) {
 
   return (
     <div className="flex gap-4">
-      <div className="flex-1 min-w-0 space-y-4">
+      <div className="flex-1 min-w-0 space-y-6 max-w-3xl">
         {/* Header — title on left, search + add on right */}
         <div className="flex items-start justify-between gap-4">
           <div>
             <Typography variant="subtitle" className="mb-1">能力扩展</Typography>
-            <p className="text-xs text-muted-foreground/40">配置智能体可使用的工具和 MCP Server</p>
+            <p className="text-xs text-muted-foreground/60">配置智能体可使用的工具和 MCP Server</p>
           </div>
           <div className="flex items-center gap-2 flex-shrink-0 pt-1">
             <SearchInput value={search} onChange={setSearch} placeholder="搜索…"
@@ -782,10 +782,10 @@ function KnowledgeBaseSection() {
 
 
   return (
-    <div className="max-w-2xl space-y-6">
+    <div className="max-w-3xl space-y-6">
       <div>
         <Typography variant="subtitle" className="mb-1">{"知识库关联"}</Typography>
-        <p className="text-xs text-muted-foreground/40">{"选择知识库并配置检索参数"}</p>
+        <p className="text-xs text-muted-foreground/60">{"选择知识库并配置检索参数"}</p>
       </div>
 
       {/* Linked knowledge bases */}
@@ -899,8 +899,8 @@ function KnowledgeBaseSection() {
 function AgentAdvancedSection() {
   const [maxRounds, setMaxRounds] = useState(10);
   return (
-    <div className="max-w-lg space-y-6">
-      <div><Typography variant="subtitle" className="mb-1">{"高级设置"}</Typography><p className="text-xs text-muted-foreground/40">{"配置智能体的执行限制"}</p></div>
+    <div className="max-w-3xl space-y-6">
+      <div><Typography variant="subtitle" className="mb-1">{"高级设置"}</Typography><p className="text-xs text-muted-foreground/60">{"配置智能体的执行限制"}</p></div>
       <div>
         <label className="text-sm text-muted-foreground/60 mb-1.5 block">{"最大执行轮次"} <span className="text-muted-foreground/50 ml-1">{maxRounds}</span></label>
         <Slider min={1} max={50} step={1} value={[maxRounds]} onValueChange={([v]) => setMaxRounds(v)} />
