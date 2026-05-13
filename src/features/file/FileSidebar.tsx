@@ -1,28 +1,29 @@
 import React from 'react';
 import {
   Files,
-  FileText, Image as ImageIcon, FileCode, Music, Video,
+  FileText, Image as ImageIcon, FileCode, Music, Video, FileQuestion,
 } from 'lucide-react';
 import { Button } from '@cherry-studio/ui';
 import type { FileFolder } from './mockData';
 
 export type SidebarFilter =
   | { kind: 'library'; value: 'all' | 'recent' | 'starred' | 'trash' }
-  | { kind: 'type'; value: 'document' | 'image' | 'code' | 'audio' | 'video' }
+  | { kind: 'type'; value: 'image' | 'video' | 'audio' | 'text' | 'document' | 'other' }
   | { kind: 'folder'; value: string }
   | { kind: 'tag'; value: string };
 
 type SidebarEntry =
   | { kind: 'library'; value: 'all' | 'recent' | 'trash'; label: string; icon: React.ElementType; countKey: string }
-  | { kind: 'type'; value: 'document' | 'image' | 'code' | 'audio' | 'video'; label: string; icon: React.ElementType; countKey: string };
+  | { kind: 'type'; value: 'image' | 'video' | 'audio' | 'text' | 'document' | 'other'; label: string; icon: React.ElementType; countKey: string };
 
 const SIDEBAR_ENTRIES: SidebarEntry[] = [
-  { kind: 'type',    value: 'document', label: '文档',     icon: FileText,  countKey: 'type_document' },
-  { kind: 'type',    value: 'image',    label: '图片',     icon: ImageIcon, countKey: 'type_image' },
-  { kind: 'type',    value: 'code',     label: '代码',     icon: FileCode,  countKey: 'type_code' },
-  { kind: 'type',    value: 'audio',    label: '音频',     icon: Music,     countKey: 'type_audio' },
-  { kind: 'type',    value: 'video',    label: '视频',     icon: Video,     countKey: 'type_video' },
-  { kind: 'library', value: 'all',      label: '全部文件', icon: Files,     countKey: 'all' },
+  { kind: 'type',    value: 'image',    label: '图片',     icon: ImageIcon,   countKey: 'type_image' },
+  { kind: 'type',    value: 'video',    label: '视频',     icon: Video,       countKey: 'type_video' },
+  { kind: 'type',    value: 'audio',    label: '音频',     icon: Music,       countKey: 'type_audio' },
+  { kind: 'type',    value: 'text',     label: '文本',     icon: FileCode,    countKey: 'type_text' },
+  { kind: 'type',    value: 'document', label: '文档',     icon: FileText,    countKey: 'type_document' },
+  { kind: 'type',    value: 'other',    label: '其他',     icon: FileQuestion, countKey: 'type_other' },
+  { kind: 'library', value: 'all',      label: '全部文件', icon: Files,       countKey: 'all' },
 ];
 
 export function FileSidebar({

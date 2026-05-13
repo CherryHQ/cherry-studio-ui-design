@@ -263,11 +263,12 @@ export function FilePage() {
       recent: Math.min(active.length, 10),
       starred: active.filter(f => f.starred).length,
       trash: files.filter(f => f.trashed).length,
-      type_document: active.filter(f => f.type === 'document').length,
       type_image: active.filter(f => f.type === 'image').length,
-      type_code: active.filter(f => f.type === 'code').length,
-      type_audio: active.filter(f => f.type === 'audio').length,
       type_video: active.filter(f => f.type === 'video').length,
+      type_audio: active.filter(f => f.type === 'audio').length,
+      type_text: active.filter(f => f.type === 'text').length,
+      type_document: active.filter(f => f.type === 'document').length,
+      type_other: active.filter(f => f.type === 'other').length,
     };
     flatFolderList.forEach(f => {
       const childIds = flatFolderList.filter(c => c.parentId === f.id).map(c => c.id);
@@ -383,7 +384,7 @@ export function FilePage() {
       return ({ all: '全部文件', recent: '最近使用', starred: '已收藏', trash: '回收站' } as Record<string, string>)[filter.value] || '';
     }
     if (filter.kind === 'type') {
-      return ({ document: '文档', image: '图片', code: '代码', audio: '音频', video: '视频' } as Record<string, string>)[filter.value] || '';
+      return ({ image: '图片', video: '视频', audio: '音频', text: '文本', document: '文档', other: '其他' } as Record<string, string>)[filter.value] || '';
     }
     if (filter.kind === 'folder') return flatFolderList.find(f => f.id === filter.value)?.name || '';
     if (filter.kind === 'tag') return FILE_TAGS.find(t => t.id === filter.value)?.name || '';

@@ -19,7 +19,7 @@ export interface FileFolder {
 export interface FileItem {
   id: string;
   name: string;
-  type: 'image' | 'document' | 'code' | 'audio' | 'video' | 'other';
+  type: 'image' | 'video' | 'audio' | 'text' | 'document' | 'other';
   format: string;
   size: string;
   sizeBytes: number;

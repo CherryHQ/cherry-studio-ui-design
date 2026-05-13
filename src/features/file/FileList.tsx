@@ -8,16 +8,16 @@ import type { FileItem } from './mockData';
 import { getFormatLabel } from './mockData';
 
 const typeIcons: Record<string, React.ElementType> = {
-  image: ImageIcon, document: FileText, code: FileCode,
-  audio: Music, video: Video, other: File,
+  image: ImageIcon, video: Video, audio: Music,
+  text: FileCode, document: FileText, other: File,
 };
 
 const typeIconColors: Record<string, string> = {
   image: 'text-accent-pink/50',
-  document: 'text-accent-blue/50',
-  code: 'text-accent-cyan/50',
-  audio: 'text-accent-amber/50',
   video: 'text-accent-violet/50',
+  audio: 'text-accent-amber/50',
+  text: 'text-accent-cyan/50',
+  document: 'text-accent-blue/50',
   other: 'text-muted-foreground/40',
 };
 

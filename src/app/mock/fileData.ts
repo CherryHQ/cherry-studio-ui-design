@@ -45,27 +45,37 @@ export const MOCK_FILES: FileItem[] = [
   { id: 'file10', name: '用户调研摘要.docx', type: 'document', format: 'docx', size: '780 KB', sizeBytes: 798720, createdAt: '2026-02-20 13:00', updatedAt: '2026-02-21 08:30', folderId: 'f5', tags: ['t1'], starred: false, trashed: false },
   { id: 'file11', name: '2026 Q1 计划.pdf', type: 'document', format: 'pdf', size: '1.2 MB', sizeBytes: 1258291, createdAt: '2026-02-18 09:00', updatedAt: '2026-02-19 14:00', folderId: 'f5', tags: ['t1', 't4'], starred: false, trashed: false },
   // Code
-  { id: 'file12', name: 'data-pipeline.py', type: 'code', format: 'py', size: '12 KB', sizeBytes: 12288, createdAt: '2026-02-25 11:45', updatedAt: '2026-02-25 16:00', folderId: 'f3', tags: ['t3', 't1'], starred: false, trashed: false, session: 'Agent 任务 #7', description: 'Agent 生成的数据处理管线脚本' },
-  { id: 'file13', name: 'FileManager.tsx', type: 'code', format: 'tsx', size: '8.5 KB', sizeBytes: 8704, createdAt: '2026-02-24 20:00', updatedAt: '2026-02-25 11:30', folderId: 'f3', tags: ['t1'], starred: true, trashed: false, session: '编码助手 #3' },
-  { id: 'file14', name: 'api-schema.json', type: 'code', format: 'json', size: '4.2 KB', sizeBytes: 4300, createdAt: '2026-02-23 10:30', updatedAt: '2026-02-23 10:30', folderId: 'f1b', tags: ['t1', 't6'], starred: false, trashed: false },
-  { id: 'file15', name: 'embedding-utils.py', type: 'code', format: 'py', size: '6.8 KB', sizeBytes: 6963, createdAt: '2026-02-22 14:15', updatedAt: '2026-02-22 14:15', folderId: 'f3', tags: ['t5', 't3'], starred: false, trashed: false, session: 'Agent 任务 #4' },
-  { id: 'file16', name: 'config.yaml', type: 'code', format: 'yaml', size: '2.1 KB', sizeBytes: 2150, createdAt: '2026-02-21 09:00', updatedAt: '2026-02-21 09:00', folderId: 'f1a', tags: ['t7'], starred: false, trashed: false },
+  { id: 'file12', name: 'data-pipeline.py', type: 'text', format: 'py', size: '12 KB', sizeBytes: 12288, createdAt: '2026-02-25 11:45', updatedAt: '2026-02-25 16:00', folderId: 'f3', tags: ['t3', 't1'], starred: false, trashed: false, session: 'Agent 任务 #7', description: 'Agent 生成的数据处理管线脚本' },
+  { id: 'file13', name: 'FileManager.tsx', type: 'text', format: 'tsx', size: '8.5 KB', sizeBytes: 8704, createdAt: '2026-02-24 20:00', updatedAt: '2026-02-25 11:30', folderId: 'f3', tags: ['t1'], starred: true, trashed: false, session: '编码助手 #3' },
+  { id: 'file14', name: 'api-schema.json', type: 'text', format: 'json', size: '4.2 KB', sizeBytes: 4300, createdAt: '2026-02-23 10:30', updatedAt: '2026-02-23 10:30', folderId: 'f1b', tags: ['t1', 't6'], starred: false, trashed: false },
+  { id: 'file15', name: 'embedding-utils.py', type: 'text', format: 'py', size: '6.8 KB', sizeBytes: 6963, createdAt: '2026-02-22 14:15', updatedAt: '2026-02-22 14:15', folderId: 'f3', tags: ['t5', 't3'], starred: false, trashed: false, session: 'Agent 任务 #4' },
+  { id: 'file16', name: 'config.yaml', type: 'text', format: 'yaml', size: '2.1 KB', sizeBytes: 2150, createdAt: '2026-02-21 09:00', updatedAt: '2026-02-21 09:00', folderId: 'f1a', tags: ['t7'], starred: false, trashed: false },
   // Audio/Video
   { id: 'file17', name: '会议录音-0225.mp3', type: 'audio', format: 'mp3', size: '24 MB', sizeBytes: 25165824, createdAt: '2026-02-25 15:00', updatedAt: '2026-02-25 15:00', folderId: 'f5', tags: ['t1'], starred: false, trashed: false },
   { id: 'file18', name: 'demo-video.mp4', type: 'video', format: 'mp4', size: '48 MB', sizeBytes: 50331648, createdAt: '2026-02-24 12:00', updatedAt: '2026-02-24 12:00', folderId: 'f1a', tags: ['t1'], starred: false, trashed: false },
   // Trashed
   { id: 'file19', name: '旧版设计稿.png', type: 'image', format: 'png', size: '2.5 MB', sizeBytes: 2621440, createdAt: '2026-02-15 10:00', updatedAt: '2026-02-20 09:00', folderId: null, tags: [], starred: false, trashed: true },
-  { id: 'file20', name: '废弃的脚本.py', type: 'code', format: 'py', size: '3.4 KB', sizeBytes: 3481, createdAt: '2026-02-10 14:00', updatedAt: '2026-02-18 16:00', folderId: null, tags: [], starred: false, trashed: true },
+  { id: 'file20', name: '废弃的脚本.py', type: 'text', format: 'py', size: '3.4 KB', sizeBytes: 3481, createdAt: '2026-02-10 14:00', updatedAt: '2026-02-18 16:00', folderId: null, tags: [], starred: false, trashed: true },
   // More images
   { id: 'file21', name: '未来太空站.png', type: 'image', format: 'png', size: '6.1 MB', sizeBytes: 6396313, createdAt: '2026-02-20 17:00', updatedAt: '2026-02-20 17:00', folderId: 'f2b', tags: ['t3'], starred: false, trashed: false, session: 'AI 绘画 #6' },
   { id: 'file22', name: '极简建筑.jpg', type: 'image', format: 'jpg', size: '2.9 MB', sizeBytes: 3040870, createdAt: '2026-02-19 13:30', updatedAt: '2026-02-19 13:30', folderId: 'f2a', tags: ['t3', 't2'], starred: true, trashed: false, session: 'AI 绘画 #5' },
+  // Plain text / markdown
+  { id: 'file23', name: '会议纪要.md',          type: 'text',     format: 'md',  size: '5.4 KB',  sizeBytes: 5530,    createdAt: '2026-02-24 19:00', updatedAt: '2026-02-24 19:00', folderId: 'f5',  tags: ['t1'],       starred: false, trashed: false, description: '2026-02-24 周会纪要' },
+  { id: 'file24', name: 'TODO.txt',             type: 'text',     format: 'txt', size: '420 B',   sizeBytes: 420,     createdAt: '2026-02-22 08:30', updatedAt: '2026-02-25 17:00', folderId: null, tags: [],           starred: false, trashed: false },
+  // Spreadsheets / presentations (document)
+  { id: 'file25', name: '年度预算.xlsx',         type: 'document', format: 'xlsx',size: '1.8 MB',  sizeBytes: 1887436, createdAt: '2026-02-18 11:00', updatedAt: '2026-02-23 09:15', folderId: 'f5',  tags: ['t4'],       starred: false, trashed: false },
+  { id: 'file26', name: 'Q1 路演 PPT.pptx',     type: 'document', format: 'pptx',size: '12 MB',   sizeBytes: 12582912,createdAt: '2026-02-17 14:00', updatedAt: '2026-02-19 10:00', folderId: 'f5',  tags: ['t1','t4'],  starred: true,  trashed: false },
+  // Other / unknown
+  { id: 'file27', name: 'model-weights.bin',    type: 'other',    format: 'bin', size: '210 MB',  sizeBytes: 220200960,createdAt: '2026-02-16 22:00', updatedAt: '2026-02-16 22:00', folderId: 'f3',  tags: ['t3'],       starred: false, trashed: false, description: 'Embedding 模型权重导出文件' },
+  { id: 'file28', name: 'license-key',          type: 'other',    format: '',    size: '128 B',   sizeBytes: 128,     createdAt: '2026-02-14 09:00', updatedAt: '2026-02-14 09:00', folderId: null, tags: [],           starred: false, trashed: false, description: '无扩展名授权文件' },
 ];
 
 export function getFormatLabel(format: string): string {
   const map: Record<string, string> = {
     png: 'PNG', jpg: 'JPG', pdf: 'PDF', docx: 'DOCX',
     py: 'Python', tsx: 'TSX', json: 'JSON', yaml: 'YAML',
-    mp3: 'MP3', mp4: 'MP4',
+    mp3: 'MP3', mp4: 'MP4', md: 'Markdown', txt: 'Text',
+    xlsx: 'Excel', pptx: 'PPT', bin: 'Binary',
   };
   return map[format] || format.toUpperCase();
 }

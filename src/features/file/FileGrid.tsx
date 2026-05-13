@@ -8,26 +8,26 @@ import type { FileItem, FileTag } from './mockData';
 import { getFormatLabel } from './mockData';
 
 const typeIcons: Record<string, React.ElementType> = {
-  image: ImageIcon, document: FileText, code: FileCode,
-  audio: Music, video: Video, other: File,
+  image: ImageIcon, video: Video, audio: Music,
+  text: FileCode, document: FileText, other: File,
 };
 
 // Muted but distinguishable type colors
 const typeIconColors: Record<string, string> = {
   image: 'text-accent-pink/50',
-  document: 'text-accent-blue/50',
-  code: 'text-accent-cyan/50',
-  audio: 'text-accent-amber/50',
   video: 'text-accent-violet/50',
+  audio: 'text-accent-amber/50',
+  text: 'text-accent-cyan/50',
+  document: 'text-accent-blue/50',
   other: 'text-muted-foreground/50',
 };
 
 const typeBgColors: Record<string, string> = {
   image: 'bg-accent-pink/[0.04]',
-  document: 'bg-accent-blue/[0.04]',
-  code: 'bg-accent-cyan/[0.04]',
-  audio: 'bg-accent-amber/[0.04]',
   video: 'bg-accent-violet/[0.04]',
+  audio: 'bg-accent-amber/[0.04]',
+  text: 'bg-accent-cyan/[0.04]',
+  document: 'bg-accent-blue/[0.04]',
   other: 'bg-muted/20',
 };
 
