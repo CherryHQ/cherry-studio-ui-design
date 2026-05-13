@@ -458,29 +458,11 @@ export function PromptSection({ hideFewShot }: { hideFewShot?: boolean } = {}) {
 
   const handleEditorKeyDown = useCallback((e: React.KeyboardEvent<HTMLDivElement>) => {
     if (showSlashRef.current) {
-      if (e.key === 'ArrowDown') {
-        e.preventDefault();
-        setSlashIndex(prev => Math.min(prev + 1, currentTabItems.length - 1));
-      } else if (e.key === 'ArrowUp') {
-        e.preventDefault();
-        setSlashIndex(prev => Math.max(prev - 1, 0));
-      } else if (e.key === 'Enter') {
-        e.preventDefault();
-        handleSlashSelect();
-      } else if (e.key === 'Tab') {
-        e.preventDefault();
-        // Cycle through tabs
-        setSlashTab(prev => {
-          const tabs: SlashTab[] = ['var', 'kb', 'mcp'];
-          const dir = e.shiftKey ? -1 : 1;
-          const idx = tabs.indexOf(prev);
-          return tabs[(idx + dir + tabs.length) % tabs.length];
-        });
-        setSlashIndex(0);
-      } else if (e.key === 'Escape') {
+      if (e.key === 'Escape') {
         e.preventDefault();
         dismissSlash();
       }
+      // Variable picker takes over the rest — arrow / enter just navigate the editor.
       return;
     }
 
@@ -489,7 +471,7 @@ export function PromptSection({ hideFewShot }: { hideFewShot?: boolean } = {}) {
       document.execCommand('insertLineBreak');
       syncFromDOM();
     }
-  }, [currentTabItems.length, handleSlashSelect, dismissSlash, syncFromDOM]);
+  }, [dismissSlash, syncFromDOM]);
 
   // ===========================
   // Paste handler
@@ -612,166 +594,19 @@ export function PromptSection({ hideFewShot }: { hideFewShot?: boolean } = {}) {
             </div>
           </div>
 
-          {/* Slash command popup with tabs */}
+          {/* Slash command popup — reuses the same variable card as the "插入变量" button */}
           {showSlashMenu && (
-              <div
-                ref={slashMenuRef}
-                className="absolute z-[var(--z-popover)] bg-popover border border-border/30 rounded-xl shadow-2xl shadow-black/10 w-[300px] max-h-[280px] overflow-hidden"
-                style={{ top: slashPos.top, left: slashPos.left }}
-              >
-                {/* Tab bar */}
-                <div className="px-2 pt-2 pb-0 border-b border-border/15">
-                  <div className="flex items-center gap-0.5">
-                    {SLASH_TABS.map(tab => {
-                      const TabIcon = tab.icon;
-                      const isActive = slashTab === tab.id;
-                      return (
-                        <Button size="inline"
-                          variant="ghost"
-                          key={tab.id}
-                          onClick={() => { setSlashTab(tab.id); setSlashIndex(0); }}
-                          className={`gap-1 px-2.5 py-1.5 rounded-t-lg text-xs transition-all border-b-2 ${
-                            isActive
-                              ? 'text-foreground border-border bg-accent/25'
-                              : 'text-muted-foreground/40 border-transparent hover:text-foreground hover:bg-accent/15'
-                          }`}
-                        >
-                          <TabIcon size={9} />
-                          <span>{tab.label}</span>
-                        </Button>
-                      );
-                    })}
-                    {slashSearch && (
-                      <span className="text-xs text-muted-foreground/50 ml-auto pr-1 truncate max-w-[80px]">
-                        {slashSearch}
-                      </span>
-                    )}
-                  </div>
-                </div>
-
-                {/* Tab content */}
-                <div className="overflow-y-auto max-h-[210px] py-1 scrollbar-thin-xs">
-                  {/* Variables tab */}
-                  {slashTab === 'var' && (
-                    <div>
-                      {filteredSlashVars.length === 0 && (
-                        <div className="px-3 py-4 text-center text-xs text-muted-foreground/40">无匹配变量</div>
-                      )}
-                      {/* System variables */}
-                      {filteredSlashVars.some(v => v.isSystem) && (
-                        <div className="px-3 pt-1.5 pb-0.5">
-                          <span className="text-xs text-muted-foreground/50 uppercase tracking-wider">系统变量</span>
-                        </div>
-                      )}
-                      {filteredSlashVars.filter(v => v.isSystem).map((v) => {
-                        const idx = filteredSlashVars.indexOf(v);
-                        const SysIcon = SYSTEM_VAR_ICONS[v.name] || Variable;
-                        return (
-                          <Button size="inline"
-                            variant="ghost"
-                            key={v.id}
-                            data-active={idx === slashIndex}
-                            onMouseDown={(e) => { e.preventDefault(); insertVariable(v.name); }}
-                            className={`gap-2 w-full px-3 py-[6px] justify-start ${
-                              idx === slashIndex ? 'bg-accent/50 text-foreground' : 'text-muted-foreground/60 hover:bg-accent/50 hover:text-foreground'
-                            }`}
-                          >
-                            <SysIcon size={11} className="text-accent-emerald/60 flex-shrink-0" />
-                            <span className="text-xs font-mono flex-shrink-0">{v.name}</span>
-                            <span className="text-xs text-muted-foreground/40 truncate ml-auto">{v.description}</span>
-                          </Button>
-                        );
-                      })}
-                      {/* User variables */}
-                      {filteredSlashVars.some(v => !v.isSystem) && (
-                        <div className="px-3 pt-2 pb-0.5">
-                          <span className="text-xs text-muted-foreground/50 uppercase tracking-wider">自定义变量</span>
-                        </div>
-                      )}
-                      {filteredSlashVars.filter(v => !v.isSystem).map((v) => {
-                        const idx = filteredSlashVars.indexOf(v);
-                        const tc = VAR_TYPE_CONFIG[v.type];
-                        const TypeIcon = tc.icon;
-                        return (
-                          <Button size="inline"
-                            variant="ghost"
-                            key={v.id}
-                            data-active={idx === slashIndex}
-                            onMouseDown={(e) => { e.preventDefault(); insertVariable(v.name); }}
-                            className={`gap-2 w-full px-3 py-[6px] justify-start ${
-                              idx === slashIndex ? 'bg-accent/50 text-foreground' : 'text-muted-foreground/60 hover:bg-accent/50 hover:text-foreground'
-                            }`}
-                          >
-                            <TypeIcon size={11} className={`flex-shrink-0 ${tc.color.split(' ')[0]}`} />
-                            <span className="text-xs font-mono flex-shrink-0">{v.name}</span>
-                            <span className="text-xs text-muted-foreground/40 truncate ml-auto">{v.description || v.defaultValue}</span>
-                          </Button>
-                        );
-                      })}
-                    </div>
-                  )}
-
-                  {/* Knowledge base tab */}
-                  {slashTab === 'kb' && (
-                    <div>
-                      {filteredSlashKB.length === 0 && (
-                        <div className="px-3 py-4 text-center text-xs text-muted-foreground/40">无匹配知识库</div>
-                      )}
-                      {filteredSlashKB.map((kb, i) => (
-                        <Button size="inline"
-                          variant="ghost"
-                          key={kb.id}
-                          data-active={i === slashIndex}
-                          onMouseDown={(e) => { e.preventDefault(); insertBadge(kb.name, 'kb'); }}
-                          className={`gap-2 w-full px-3 py-[6px] justify-start ${
-                            i === slashIndex ? 'bg-accent/50 text-foreground' : 'text-muted-foreground/60 hover:bg-accent/50 hover:text-foreground'
-                          }`}
-                        >
-                          <BookOpen size={11} className="text-info/60 flex-shrink-0" />
-                          <span className="text-xs flex-shrink-0">{kb.name}</span>
-                          <span className="text-xs text-muted-foreground/40 truncate ml-auto">{kb.docCount} 篇</span>
-                        </Button>
-                      ))}
-                    </div>
-                  )}
-
-                  {/* MCP tools tab */}
-                  {slashTab === 'mcp' && (
-                    <div>
-                      {filteredSlashMCP.length === 0 && (
-                        <div className="px-3 py-4 text-center text-xs text-muted-foreground/40">无匹配工具</div>
-                      )}
-                      {filteredSlashMCP.map((tool, i) => {
-                        const ToolIcon = tool.icon;
-                        return (
-                          <Button size="inline"
-                            variant="ghost"
-                            key={tool.id}
-                            data-active={i === slashIndex}
-                            onMouseDown={(e) => { e.preventDefault(); insertBadge(tool.name, 'mcp'); }}
-                            className={`gap-2 w-full px-3 py-[6px] justify-start ${
-                              i === slashIndex ? 'bg-accent/50 text-foreground' : 'text-muted-foreground/60 hover:bg-accent/50 hover:text-foreground'
-                            }`}
-                          >
-                            <ToolIcon size={11} className="text-warning/60 flex-shrink-0" />
-                            <span className="text-xs font-mono flex-shrink-0">{tool.name}</span>
-                            <span className="text-xs text-muted-foreground/40 truncate ml-auto">{tool.description}</span>
-                          </Button>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
-
-                {/* Footer */}
-                <div className="px-3 py-1.5 border-t border-border/15 flex items-center gap-3 text-xs text-muted-foreground/50">
-                  <span>↑↓ 导航</span>
-                  <span>↵ 选择</span>
-                  <span>Tab 切换</span>
-                  <span>Esc 关闭</span>
-                </div>
-              </div>
-            )}
+            <div
+              ref={slashMenuRef}
+              className="absolute z-[var(--z-popover)] bg-popover border border-border/30 rounded-xl shadow-2xl shadow-black/10 w-[280px] overflow-hidden"
+              style={{ top: slashPos.top, left: slashPos.left }}
+              onMouseDown={(e) => e.preventDefault()}
+            >
+              <InlineVarPicker
+                onInsert={(name) => insertVariable(name)}
+              />
+            </div>
+          )}
         </div>
         <div className="flex items-center justify-end mt-1.5 px-1 gap-2">
           <span className="text-xs text-muted-foreground/50">{charCount} 字符</span>
