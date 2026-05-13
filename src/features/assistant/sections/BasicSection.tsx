@@ -70,11 +70,14 @@ export function BasicSection({ resource }: Props) {
   };
 
   return (
-    <div className="max-w-lg space-y-6">
+    <div className="max-w-3xl space-y-6">
       <div>
         <Typography variant="subtitle" className="mb-1">基础设置</Typography>
         <p className="text-xs text-muted-foreground/60">配置助手的身份信息和模型参数</p>
       </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-6">
+      {/* Left column — identity */}
+      <div className="space-y-5">
 
       <FieldGroup label="头像与名称">
         <div className="flex items-center gap-3">
@@ -212,7 +215,9 @@ export function BasicSection({ resource }: Props) {
         </Popover>
       </FieldGroup>
 
-      <div className="h-px bg-border/30" />
+      </div>
+      {/* Right column — model + parameters */}
+      <div className="space-y-5">
 
       <FieldGroup label="模型">
         <Popover open={modelPickerOpen} onOpenChange={setModelPickerOpen}>
@@ -248,6 +253,8 @@ export function BasicSection({ resource }: Props) {
         <Input type="number" value={maxTokens} onChange={e => setMaxTokens(parseInt(e.target.value) || 0)}
           className="w-full px-3 py-2 rounded-xl border-border/20 bg-accent/15 text-xs text-foreground focus:border-border/40 focus:bg-accent/15 transition-all tabular-nums" />
       </FieldGroup>
+      </div>
+      </div>
     </div>
   );
 }

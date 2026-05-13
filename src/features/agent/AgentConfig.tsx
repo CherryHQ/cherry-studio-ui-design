@@ -631,7 +631,7 @@ function ToolchainSection({ onExplore }: { onExplore: () => void }) {
 
   return (
     <div className="flex gap-4">
-      <div className="flex-1 min-w-0 space-y-4 max-w-3xl">
+      <div className="flex-1 min-w-0 space-y-4">
         {/* Header — title on left, search + add on right */}
         <div className="flex items-start justify-between gap-4">
           <div>
@@ -674,7 +674,7 @@ function ToolchainSection({ onExplore }: { onExplore: () => void }) {
               {/* === Tools === */}
               {activeTab === 'tools' && (tools.length === 0 ? <TabEmptyState preset="no-code-tool" label="内置工具" onAdd={() => setShowAddPanel(true)} /> : (
                 <div className="space-y-5">
-                  {TOOL_CATEGORIES.map(cat => { const items = groupedTools[cat]; if (!items || items.length === 0) return null; return (<div key={cat}><div className="flex items-center gap-2 mb-2.5"><span className="text-xs text-muted-foreground/50">{cat}</span><div className="flex-1 h-px bg-border/30" /><span className="text-xs text-muted-foreground/50">{items.filter(t => t.enabled).length}/{items.length}</span></div><div className="grid grid-cols-2 gap-x-3 gap-y-1">{items.map(tool => { const Icon = tool.icon; return (<div key={tool.id} className={`flex items-center gap-2.5 px-3 py-2.5 rounded-lg transition-all cursor-pointer group ${tool.enabled ? 'hover:bg-accent/15' : 'opacity-40 hover:opacity-65'}`} onClick={() => toggleTool(tool.id)}><Icon size={14} strokeWidth={1.5} className={tool.enabled ? 'text-muted-foreground' : 'text-muted-foreground/40'} /><div className="flex-1 min-w-0"><div className="text-sm text-foreground truncate">{tool.name}</div><div className="text-xs text-muted-foreground/50 truncate">{tool.desc}</div></div><Switch size="sm" checked={tool.enabled} className="pointer-events-none" /></div>); })}</div></div>); })}
+                  {TOOL_CATEGORIES.map(cat => { const items = groupedTools[cat]; if (!items || items.length === 0) return null; return (<div key={cat}><div className="flex items-center gap-2 mb-2.5"><span className="text-xs text-muted-foreground/50">{cat}</span><div className="flex-1 h-px bg-border/30" /><span className="text-xs text-muted-foreground/50">{items.filter(t => t.enabled).length}/{items.length}</span></div><div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-3 gap-y-1">{items.map(tool => { const Icon = tool.icon; return (<div key={tool.id} className={`flex items-center gap-2.5 px-3 py-2.5 rounded-lg transition-all cursor-pointer group ${tool.enabled ? 'hover:bg-accent/15' : 'opacity-40 hover:opacity-65'}`} onClick={() => toggleTool(tool.id)}><Icon size={14} strokeWidth={1.5} className={tool.enabled ? 'text-muted-foreground' : 'text-muted-foreground/40'} /><div className="flex-1 min-w-0"><div className="text-sm text-foreground truncate">{tool.name}</div><div className="text-xs text-muted-foreground/50 truncate">{tool.desc}</div></div><Switch size="sm" checked={tool.enabled} className="pointer-events-none" /></div>); })}</div></div>); })}
                   {filteredTools.length === 0 && search && <EmptyState preset="no-result" compact />}
                 </div>
               ))}
@@ -704,7 +704,7 @@ function ToolchainSection({ onExplore }: { onExplore: () => void }) {
               {activeTab === 'skills' && (skills.length === 0 ? <TabEmptyState preset="no-resource" label="Skill" onAdd={() => setShowAddPanel(true)} /> : (
                 <div>
                   <TagFilter tags={SKILL_TAGS} selected={skillTagFilter} onToggle={setSkillTagFilter} />
-                  <div className="grid grid-cols-2 gap-x-3 gap-y-1">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-3 gap-y-1">
                     {filteredSkills.map(skill => { const Icon = skill.icon; return (
                       <div key={skill.id} className={`flex items-center gap-2.5 px-3 py-2.5 rounded-lg transition-all cursor-pointer group ${skill.enabled ? 'hover:bg-accent/15' : 'opacity-40 hover:opacity-65'}`} onClick={() => toggleSkill(skill.id)}>
                         <Icon size={14} strokeWidth={1.5} className={skill.enabled ? 'text-muted-foreground' : 'text-muted-foreground/40'} />
