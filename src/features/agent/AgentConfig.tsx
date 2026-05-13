@@ -631,14 +631,43 @@ function ToolchainSection({ onExplore }: { onExplore: () => void }) {
 
   return (
     <div className="flex gap-4">
-      <div className="flex-1 min-w-0 space-y-4">
-        <div><Typography variant="subtitle" className="mb-1">{"能力扩展"}</Typography><p className="text-xs text-muted-foreground/40">{"配置智能体可使用的工具和 MCP Server"}</p></div>
-        <div className="max-w-2xl"><SearchInput value={search} onChange={setSearch} placeholder="搜索工具或 Server..." wrapperClassName="flex items-center gap-1.5 px-2 py-[5px] rounded-lg bg-accent/5 border border-border/15" /></div>
-        <div className="flex items-center border-b border-border/15 pb-px max-w-2xl">
-          {tabs.map(tab => (<Button variant="ghost" key={tab.id} onClick={() => setActiveTab(tab.id)} className={`relative px-3 py-1.5 font-normal rounded-none ${activeTab === tab.id ? 'text-foreground hover:bg-transparent' : 'text-muted-foreground/40 hover:text-foreground hover:bg-transparent'}`}>{tab.label}<span className={`ml-1.5 text-xs ${activeTab === tab.id ? 'text-muted-foreground/50' : 'text-muted-foreground/40'}`}>{tab.count}</span>{activeTab === tab.id && <motion.div layoutId="toolchain-tab" className="absolute bottom-0 left-0 right-0 h-[1.5px] bg-foreground/60 rounded-full" />}</Button>))}
-          <Button variant="ghost" size="xs" onClick={() => setShowAddPanel(!showAddPanel)} className={`ml-auto gap-1 ${showAddPanel ? 'text-foreground bg-accent/25' : 'text-muted-foreground/40 hover:text-foreground hover:bg-accent/15'}`}><Plus size={10} /><span>{"添加"}</span></Button>
+      <div className="flex-1 min-w-0 space-y-4 max-w-3xl">
+        {/* Header — title on left, search + add on right */}
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <Typography variant="subtitle" className="mb-1">能力扩展</Typography>
+            <p className="text-xs text-muted-foreground/40">配置智能体可使用的工具和 MCP Server</p>
+          </div>
+          <div className="flex items-center gap-2 flex-shrink-0 pt-1">
+            <SearchInput value={search} onChange={setSearch} placeholder="搜索…"
+              wrapperClassName="w-[180px] flex items-center gap-1.5 px-2 h-7 rounded-md bg-muted/30 border border-border/20" />
+            <Button variant="ghost" size="xs" onClick={() => setShowAddPanel(!showAddPanel)}
+              className={`gap-1 h-7 px-2.5 rounded-md text-xs border border-border/30 ${
+                showAddPanel ? 'text-foreground bg-accent/25 border-border/50' : 'text-muted-foreground/70 hover:text-foreground hover:bg-accent/15'
+              }`}>
+              <Plus size={11} />
+              <span>添加</span>
+            </Button>
+          </div>
         </div>
-        <div className="max-w-2xl">
+        {/* Tab bar across full width */}
+        <div className="flex items-center border-b border-border/15">
+          {tabs.map(tab => (
+            <Button variant="ghost" key={tab.id} onClick={() => setActiveTab(tab.id)}
+              className={`relative px-3 py-1.5 font-normal rounded-none ${
+                activeTab === tab.id ? 'text-foreground hover:bg-transparent' : 'text-muted-foreground/40 hover:text-foreground hover:bg-transparent'
+              }`}>
+              {tab.label}
+              <span className={`ml-1.5 text-xs tabular-nums ${activeTab === tab.id ? 'text-muted-foreground/60' : 'text-muted-foreground/40'}`}>
+                {tab.count}
+              </span>
+              {activeTab === tab.id && (
+                <motion.div layoutId="toolchain-tab" className="absolute bottom-0 left-0 right-0 h-[2px] bg-foreground/70 rounded-t" />
+              )}
+            </Button>
+          ))}
+        </div>
+        <div>
           <AnimatePresence mode="wait">
             <motion.div key={activeTab} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} transition={{ duration: 0.15 }}>
 
