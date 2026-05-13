@@ -369,21 +369,21 @@ function GridCard({ resource: r, index, onEdit, onToggle, onOpenMenu }: CardItem
       transition={{ duration: 0.2, delay: index * 0.02 }} whileHover={{ y: -2 }}
       className="group relative rounded-xl border border-border/30 bg-card hover:border-border/50 hover:shadow-lg hover:shadow-black/[0.04] transition-all duration-200 cursor-pointer"
       onClick={() => onEdit(r)}>
-      <div className="p-3">
-        <div className="flex items-start gap-2.5">
+      <div className="p-2.5">
+        <div className="flex items-center gap-2">
           {isPrompt ? (
-            <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${cfg.color}`}>
-              <Icon size={14} />
+            <div className={`w-7 h-7 rounded-md flex items-center justify-center flex-shrink-0 ${cfg.color}`}>
+              <Icon size={13} />
             </div>
           ) : (
-            <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-base flex-shrink-0 ${!isToolType ? 'bg-accent/50' : cfg.color}`}>{r.avatar}</div>
+            <div className={`w-7 h-7 rounded-md flex items-center justify-center text-sm flex-shrink-0 ${!isToolType ? 'bg-accent/50' : cfg.color}`}>{r.avatar}</div>
           )}
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-1.5">
-              <h4 className="text-sm text-foreground truncate">{r.name}</h4>
+              <h4 className="text-[13px] text-foreground truncate leading-tight">{r.name}</h4>
               {r.hasUpdate && <Badge variant="secondary" className="text-xs px-1 py-px rounded-full bg-accent-orange-muted text-accent-orange flex-shrink-0">更新</Badge>}
             </div>
-            <p className="text-xs text-muted-foreground/60 leading-relaxed line-clamp-2 mt-1">{r.description}</p>
+            <p className="text-xs text-muted-foreground/60 line-clamp-1 mt-0.5">{r.description}</p>
           </div>
           <div className="flex items-center gap-1 flex-shrink-0" onClick={e => e.stopPropagation()}>
             {isToolType && <Switch size="sm" checked={r.enabled} onCheckedChange={() => onToggle(r.id)} />}
@@ -551,25 +551,25 @@ function FixedCardMenu({ x, y, resource, onClose, onEdit, onDuplicate, onDelete,
         {/* Move to folder */}
         <div className="relative">
           <Button variant="ghost" size="xs" onClick={() => { setMoveMenuId(moveMenuId === resource.id ? null : resource.id); setShowTagPicker(false); }}
-            className="flex items-center gap-2 w-full px-2.5 py-[5px] rounded-md text-xs text-muted-foreground/60 hover:text-foreground hover:bg-accent/50 transition-colors">
+            className="flex items-center justify-start gap-2 w-full px-2.5 py-[5px] rounded-md text-xs text-muted-foreground/60 hover:text-foreground hover:bg-accent/50 transition-colors">
             <FolderInput size={10} /> 移动到...<ChevronDown size={8} className="ml-auto" />
           </Button>
           {moveMenuId === resource.id && (
             <div className={`absolute ${subMenuPos} bg-popover border border-border/30 rounded-xl shadow-xl p-1 min-w-[120px] max-h-[200px] overflow-y-auto`}>
               <Button variant="ghost" size="xs" onClick={() => { onMoveToFolder(resource.id, undefined); setMoveMenuId(null); onClose(); }}
-                className="flex items-center gap-2 w-full px-2.5 py-[5px] rounded-md text-xs text-muted-foreground/50 hover:text-foreground hover:bg-accent/50 transition-colors"><Layers size={9} /> 根目录</Button>
+                className="flex items-center justify-start gap-2 w-full px-2.5 py-[5px] rounded-md text-xs text-muted-foreground/50 hover:text-foreground hover:bg-accent/50 transition-colors"><Layers size={9} /> 根目录</Button>
               {flat.map(f => (
                 <Button variant="ghost" size="xs" key={f.id} onClick={() => { onMoveToFolder(resource.id, f.id); setMoveMenuId(null); onClose(); }}
-                  className="flex items-center gap-2 w-full px-2.5 py-[5px] rounded-md text-xs text-muted-foreground/50 hover:text-foreground hover:bg-accent/50 transition-colors"
+                  className="flex items-center justify-start gap-2 w-full px-2.5 py-[5px] rounded-md text-xs text-muted-foreground/50 hover:text-foreground hover:bg-accent/50 transition-colors"
                   style={{ paddingLeft: 10 + f.depth * 8 }}><FolderInput size={9} /> {f.name}</Button>
               ))}
             </div>
           )}
         </div>
-        <Button variant="ghost" size="xs" onClick={() => { onDuplicate(resource); onClose(); }} className="flex items-center gap-2 w-full px-2.5 py-[5px] rounded-md text-xs text-muted-foreground/60 hover:text-foreground hover:bg-accent/50 transition-colors"><Copy size={10} /> 创建副本</Button>
-        <Button variant="ghost" size="xs" onClick={() => onClose()} className="flex items-center gap-2 w-full px-2.5 py-[5px] rounded-md text-xs text-muted-foreground/60 hover:text-foreground hover:bg-accent/50 transition-colors"><Download size={10} /> 导出</Button>
+        <Button variant="ghost" size="xs" onClick={() => { onDuplicate(resource); onClose(); }} className="flex items-center justify-start gap-2 w-full px-2.5 py-[5px] rounded-md text-xs text-muted-foreground/60 hover:text-foreground hover:bg-accent/50 transition-colors"><Copy size={10} /> 创建副本</Button>
+        <Button variant="ghost" size="xs" onClick={() => onClose()} className="flex items-center justify-start gap-2 w-full px-2.5 py-[5px] rounded-md text-xs text-muted-foreground/60 hover:text-foreground hover:bg-accent/50 transition-colors"><Download size={10} /> 导出</Button>
         <div className="h-px bg-border/30 my-0.5 mx-1" />
-        <Button variant="destructive" size="xs" onClick={() => { onDelete(resource); onClose(); }} className="flex items-center gap-2 w-full px-2.5 py-[5px] rounded-md text-xs text-destructive/70 hover:text-destructive hover:bg-destructive/10 transition-colors"><Trash2 size={10} /> 删除</Button>
+        <Button variant="ghost" size="xs" onClick={() => { onDelete(resource); onClose(); }} className="flex items-center justify-start gap-2 w-full px-2.5 py-[5px] rounded-md text-xs text-destructive hover:text-destructive hover:bg-destructive/10 transition-colors"><Trash2 size={10} /> 删除</Button>
       </motion.div>
     </div>
   );
