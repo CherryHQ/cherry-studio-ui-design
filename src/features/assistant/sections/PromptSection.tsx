@@ -385,14 +385,26 @@ export function PromptSection({ hideFewShot }: { hideFewShot?: boolean } = {}) {
     const el = editorRef.current;
     if (!el) return;
 
-    syncFromDOM();
+    try {
+      syncFromDOM();
+    } catch {
+      // DOM walk should never crash the editor — bail out.
+      return;
+    }
 
-    // Slash detection
-    const sel = window.getSelection();
+    // Slash detection — fully guarded.
+    let sel: Selection | null = null;
+    try { sel = window.getSelection(); } catch { sel = null; }
     if (!sel || sel.rangeCount === 0) return;
-    const range = sel.getRangeAt(0);
+    let range: Range | null = null;
+    try { range = sel.getRangeAt(0); } catch { range = null; }
+    if (!range) return;
 
     if (showSlashRef.current && slashNodeRef.current) {
+      if (!el.contains(slashNodeRef.current)) {
+        dismissSlash();
+        return;
+      }
       if (range.startContainer === slashNodeRef.current) {
         const text = slashNodeRef.current.textContent || '';
         const searchText = text.slice(slashOffsetRef.current, range.startOffset);
@@ -601,14 +613,9 @@ export function PromptSection({ hideFewShot }: { hideFewShot?: boolean } = {}) {
           </div>
 
           {/* Slash command popup with tabs */}
-          <AnimatePresence>
-            {showSlashMenu && (
-              <motion.div
+          {showSlashMenu && (
+              <div
                 ref={slashMenuRef}
-                initial={{ opacity: 0, y: -4, scale: 0.98 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, y: -4, scale: 0.98 }}
-                transition={{ duration: 0.12 }}
                 className="absolute z-[var(--z-popover)] bg-popover border border-border/30 rounded-xl shadow-2xl shadow-black/10 w-[300px] max-h-[280px] overflow-hidden"
                 style={{ top: slashPos.top, left: slashPos.left }}
               >
@@ -763,9 +770,8 @@ export function PromptSection({ hideFewShot }: { hideFewShot?: boolean } = {}) {
                   <span>Tab 切换</span>
                   <span>Esc 关闭</span>
                 </div>
-              </motion.div>
+              </div>
             )}
-          </AnimatePresence>
         </div>
         <div className="flex items-center justify-end mt-1.5 px-1 gap-2">
           <span className="text-xs text-muted-foreground/50">{charCount} 字符</span>
