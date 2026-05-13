@@ -37,6 +37,7 @@ const TOPIC_GROUP_BY_OPTIONS: { key: GroupByMode; label: string }[] = [
   { key: 'time', label: '时间' },
   { key: 'assistant', label: '助手' },
   { key: 'tag', label: '标签' },
+  { key: 'group', label: '项目文件' },
 ];
 
 const STATUS_LABELS: Record<string, string> = {
@@ -397,7 +398,7 @@ function GroupSection<T extends HistoryItem>({
         {!hideNewButton && (
           <Button variant="ghost" size="icon-xs"
             onClick={(e) => { e.stopPropagation(); onNewItem(); }}
-            className="p-0.5 w-auto h-auto text-muted-foreground/50 hover:text-foreground hover:bg-accent/15"
+            className="p-0.5 w-auto h-auto text-muted-foreground/40 hover:text-foreground hover:bg-accent/15 opacity-0 group-hover/grp:opacity-100 transition-opacity"
             title="新建"
           >
             <Plus size={10} />
@@ -462,9 +463,10 @@ export function HistorySidebar<T extends HistoryItem>({
   const [groupOrder, setGroupOrder] = useState<string[] | null>(null);
   const dragRef = useRef<{ dragging: string | null }>({ dragging: null });
 
-  // Detect if items have assistant/tag metadata (topic-style data)
+  // Detect if items have assistant/tag/group metadata (topic-style data)
   const hasAssistantField = useMemo(() => items.some(item => !!item.assistantName), [items]);
   const hasTagsField = useMemo(() => items.some(item => item.tags && item.tags.length > 0), [items]);
+  const hasGroupField = useMemo(() => items.some(item => !!item.group), [items]);
   const hasItemMetadata = hasAssistantField || hasTagsField;
 
   // Default groupBy depends on data type
@@ -476,6 +478,7 @@ export function HistorySidebar<T extends HistoryItem>({
       const base = TOPIC_GROUP_BY_OPTIONS.filter(opt => {
         if (opt.key === 'assistant' && !hasAssistantField) return false;
         if (opt.key === 'tag' && !hasTagsField) return false;
+        if (opt.key === 'group' && !hasGroupField) return false;
         return true;
       });
       if (customGroupBy) base.push({ key: 'custom', label: customGroupBy.label });
@@ -484,7 +487,7 @@ export function HistorySidebar<T extends HistoryItem>({
     const base = [...GROUP_BY_OPTIONS];
     if (customGroupBy) base.push({ key: 'custom', label: customGroupBy.label });
     return base;
-  }, [customGroupBy, hasItemMetadata, hasAssistantField, hasTagsField]);
+  }, [customGroupBy, hasItemMetadata, hasAssistantField, hasTagsField, hasGroupField]);
 
   const [showArchived, setShowArchived] = useState(false);
   const activeItems = items.filter(s => !s.archived);
