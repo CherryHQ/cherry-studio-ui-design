@@ -10,6 +10,7 @@ import {
 import { motion, AnimatePresence } from 'motion/react';
 import {
   Button, Textarea, SYSTEM_VARIABLES, SYSTEM_VAR_ICONS, VAR_TYPE_CONFIG, Typography,
+  Popover, PopoverTrigger, PopoverContent, SearchInput,
   type VariableDef, type VarType,
 } from '@cherry-studio/ui';
 
@@ -545,9 +546,22 @@ export function PromptSection({ hideFewShot }: { hideFewShot?: boolean } = {}) {
 
       {/* System Prompt */}
       <div>
-        <div className="flex items-center mb-1.5">
+        <div className="flex items-center justify-between mb-1.5">
           <label className="text-xs text-foreground">系统提示词</label>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button size="inline" variant="ghost"
+                className="gap-1 px-2 py-0.5 rounded-md text-xs text-accent-violet/70 hover:text-accent-violet hover:bg-accent-violet/[0.06]">
+                <Variable size={10} />
+                <span>插入变量</span>
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent align="end" sideOffset={4} className="w-[280px] p-0 overflow-hidden">
+              <InlineVarPicker onInsert={(name) => insertVariable(name)} />
+            </PopoverContent>
+          </Popover>
         </div>
+        <p className="text-xs text-muted-foreground/50 mb-1.5">输入 <span className="font-mono text-muted-foreground/70">/</span> 也可以快速插入变量</p>
         <div className="relative">
           {/* ContentEditable Editor */}
           <div className="rounded-xl border border-border/20 bg-accent/15 transition-all focus-within:border-border/40 focus-within:bg-accent/15 overflow-hidden">
@@ -798,6 +812,38 @@ export function PromptSection({ hideFewShot }: { hideFewShot?: boolean } = {}) {
         </div>
       )}
 
+    </div>
+  );
+}
+
+// ===========================
+// Inline variable picker — opens from the "插入变量" button
+// ===========================
+
+function InlineVarPicker({ onInsert }: { onInsert: (name: string) => void }) {
+  const [query, setQuery] = useState('');
+  const q = query.trim().toLowerCase();
+  const filtered = q
+    ? SYSTEM_VARIABLES.filter(v => v.name.toLowerCase().includes(q))
+    : SYSTEM_VARIABLES;
+  return (
+    <div className="flex flex-col max-h-[320px]">
+      <div className="p-2 border-b border-border/30">
+        <SearchInput value={query} onChange={setQuery} placeholder="搜索变量" iconSize={11}
+          wrapperClassName="px-2 h-7 rounded-md bg-muted/20 border border-border/20" />
+      </div>
+      <div className="flex-1 min-h-0 overflow-y-auto scrollbar-thin py-1">
+        <div className="px-2 py-1 text-xs text-muted-foreground/50 uppercase tracking-wider">系统变量</div>
+        {filtered.length === 0 ? (
+          <div className="py-6 text-xs text-muted-foreground/50 text-center">无匹配变量</div>
+        ) : filtered.map(v => (
+          <button key={v.id} type="button" onClick={() => onInsert(v.name)}
+            className="w-full flex items-center gap-2 px-2 py-1.5 text-left hover:bg-accent/40 transition-colors">
+            <span className="text-xs font-mono text-accent-violet/80">{'${' + v.name + '}'}</span>
+            {v.description && <span className="text-xs text-muted-foreground/60 truncate flex-1 text-right">{v.description}</span>}
+          </button>
+        ))}
+      </div>
     </div>
   );
 }

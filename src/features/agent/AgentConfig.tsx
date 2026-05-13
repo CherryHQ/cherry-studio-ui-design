@@ -152,60 +152,85 @@ function AgentBasicSection({ resource }: { resource: ResourceItem }) {
   return (
     <div className="max-w-lg space-y-5">
       <div><Typography variant="subtitle" className="mb-1">{"基础设置"}</Typography><p className="text-xs text-muted-foreground/60">{"配置智能体的身份信息和模型"}</p></div>
-      <FieldGroup label="头像">
-        <div className="flex items-start gap-3">
-          <div className="w-14 h-14 rounded-xl bg-accent/50 flex items-center justify-center text-2xl flex-shrink-0 border border-border/20 overflow-hidden">
-            {avatarType === 'image' && avatarUrl ? (
-              <img src={avatarUrl} alt="avatar" className="w-full h-full object-cover" />
-            ) : (
-              avatar
-            )}
-          </div>
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-1 mb-2">
-              {([
-                { key: 'emoji' as const, label: 'Emoji' },
-                { key: 'upload' as const, label: '上传图片' },
-                { key: 'link' as const, label: '链接' },
-              ]).map(tab => (
-                <button key={tab.key} onClick={() => setAvatarTab(tab.key)}
-                  className={`px-2 py-1 rounded-md text-xs transition-all ${avatarTab === tab.key ? 'bg-accent text-foreground' : 'text-muted-foreground/50 hover:text-foreground hover:bg-accent/50'}`}>
-                  {tab.label}
-                </button>
-              ))}
-            </div>
-            {avatarTab === 'emoji' && (
-              <div className="flex flex-wrap gap-1">
-                {AVATAR_OPTIONS.map(a => (
-                  <Button variant="ghost" size="icon-xs" key={a} onClick={() => { setAvatar(a); setAvatarType('emoji'); }}
-                    className={`w-8 h-8 rounded-lg text-base ${avatar === a && avatarType === 'emoji' ? 'bg-accent ring-1 ring-primary/20' : 'hover:bg-accent/50'}`}>{a}</Button>
-                ))}
+      <FieldGroup label="头像与名称">
+        <div className="flex items-center gap-3">
+          <Popover>
+            <PopoverTrigger asChild>
+              <button type="button"
+                className="w-11 h-11 rounded-xl bg-accent/50 flex items-center justify-center text-xl flex-shrink-0 border border-border/20 overflow-hidden hover:border-border/40 transition-colors">
+                {avatarType === 'image' && avatarUrl ? (
+                  <img src={avatarUrl} alt="avatar" className="w-full h-full object-cover" />
+                ) : (
+                  avatar
+                )}
+              </button>
+            </PopoverTrigger>
+            <PopoverContent align="start" sideOffset={6} className="w-[340px] p-0 overflow-hidden">
+              <div className="flex items-center gap-0.5 px-1.5 pt-1.5">
+                {([
+                  { key: 'emoji' as const, label: 'Emoji' },
+                  { key: 'upload' as const, label: '上传图片' },
+                  { key: 'link' as const, label: '链接' },
+                ]).map(tab => {
+                  const active = avatarTab === tab.key;
+                  return (
+                    <button key={tab.key} onClick={() => setAvatarTab(tab.key)}
+                      className={`flex-1 px-2 py-1.5 rounded-md text-xs transition-colors ${
+                        active ? 'bg-accent text-foreground' : 'text-muted-foreground hover:bg-accent/40 hover:text-foreground'
+                      }`}>
+                      {tab.label}
+                    </button>
+                  );
+                })}
               </div>
-            )}
-            {avatarTab === 'upload' && (
-              <div>
-                <input ref={fileInputRef2} type="file" accept="image/*" className="hidden"
-                  onChange={e => { const file = e.target.files?.[0]; if (file) { setAvatarUrl(URL.createObjectURL(file)); setAvatarType('image'); } }} />
-                <button onClick={() => fileInputRef2.current?.click()}
-                  className="flex items-center gap-2 px-3 py-2.5 rounded-lg border border-dashed border-border/30 text-xs text-muted-foreground/50 hover:text-foreground hover:border-border/50 transition-all w-full">
-                  <Upload size={12} /><span>点击选择图片</span>
-                </button>
+              <div className="h-px bg-border/30 mt-1.5" />
+              {/* Fixed body height keeps the popover from jumping between tabs */}
+              <div className="h-[260px] overflow-y-auto scrollbar-thin">
+                {avatarTab === 'emoji' && (
+                  <div className="grid grid-cols-8 gap-1 p-2">
+                    {AVATAR_OPTIONS.map(a => (
+                      <button key={a} type="button"
+                        onClick={() => { setAvatar(a); setAvatarType('emoji'); }}
+                        className={`w-8 h-8 rounded-md flex items-center justify-center text-base transition-colors ${
+                          avatarType === 'emoji' && avatar === a ? 'bg-accent ring-1 ring-primary/40' : 'hover:bg-accent/50'
+                        }`}>
+                        {a}
+                      </button>
+                    ))}
+                  </div>
+                )}
+                {avatarTab === 'upload' && (
+                  <div className="p-3">
+                    <input ref={fileInputRef2} type="file" accept="image/*" className="hidden"
+                      onChange={e => { const file = e.target.files?.[0]; if (file) { setAvatarUrl(URL.createObjectURL(file)); setAvatarType('image'); } }} />
+                    <button onClick={() => fileInputRef2.current?.click()}
+                      className="w-full flex flex-col items-center justify-center gap-1.5 py-5 rounded-md border border-dashed border-border/50 text-xs text-muted-foreground hover:border-primary/40 hover:text-foreground transition-colors">
+                      <Upload size={16} className="text-muted-foreground/60" />
+                      <span>点击上传图片</span>
+                      <span className="text-muted-foreground/40">PNG / JPG，建议 256×256</span>
+                    </button>
+                  </div>
+                )}
+                {avatarTab === 'link' && (
+                  <div className="p-3 space-y-2">
+                    <div className="relative">
+                      <Link2 size={11} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground/40" />
+                      <Input value={avatarUrl} onChange={e => setAvatarUrl(e.target.value)} placeholder="https://… 或 data:image/…"
+                        className="w-full pl-7 h-8 text-xs rounded-md border-border/40" />
+                    </div>
+                    <Button variant="default" size="xs" onClick={() => { if (avatarUrl.trim()) setAvatarType('image'); }}
+                      className="w-full h-7 text-xs">
+                      使用此链接
+                    </Button>
+                  </div>
+                )}
               </div>
-            )}
-            {avatarTab === 'link' && (
-              <div className="flex items-center gap-2">
-                <div className="flex-1 relative">
-                  <Link2 size={11} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground/30" />
-                  <Input value={avatarUrl} onChange={e => setAvatarUrl(e.target.value)} placeholder="输入图片链接..."
-                    className="w-full pl-7 h-8 text-xs rounded-lg border-border/20 bg-accent/15" />
-                </div>
-                <Button variant="outline" size="xs" onClick={() => { if (avatarUrl.trim()) setAvatarType('image'); }}>确定</Button>
-              </div>
-            )}
-          </div>
+            </PopoverContent>
+          </Popover>
+          <Input value={name} onChange={e => setName(e.target.value)} placeholder="智能体名称"
+            className="flex-1 px-3 py-2 border-border/20 bg-accent/15 text-sm text-foreground focus-visible:border-border/40 focus-visible:ring-0 shadow-none" />
         </div>
       </FieldGroup>
-      <FieldGroup label="名称"><Input value={name} onChange={e => setName(e.target.value)} className="w-full px-3 py-2 border-border/20 bg-accent/15 text-sm text-foreground focus-visible:border-border/40 focus-visible:ring-0 shadow-none" /></FieldGroup>
       <div className="space-y-3"><div className="flex items-center gap-2 mb-1"><span className="text-sm text-muted-foreground/60">{"模型配置"}</span><div className="flex-1 h-px bg-border/30" /></div><ModelSelector label="规划模型" value={planningModel} onChange={setPlanningModel} hint="负责任务拆解和决策" /><ModelSelector label="常规模型" value={regularModel} onChange={setRegularModel} hint="负责主要推理和执行" /><ModelSelector label="快速模型" value={fastModel} onChange={setFastModel} hint="负责简单判断和格式化" /></div>
       <FieldGroup label="简介"><Textarea value={description} onChange={e => setDescription(e.target.value)} rows={2} className="input-accent resize-none" /></FieldGroup>
       <FieldGroup label="标签">
