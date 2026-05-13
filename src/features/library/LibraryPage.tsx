@@ -4,7 +4,7 @@ import { X, ArrowRight, ChevronLeft, Plus, Check, Download, Variable, Save } fro
 import {
   Button, Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, SearchInput, Input, Typography,
   Popover, PopoverTrigger, PopoverContent,
-  SYSTEM_VARIABLES, type VariableDef, type VarType,
+  SYSTEM_VARIABLES, type VariableDef,
 } from '@cherry-studio/ui';
 import { skills as discoverSkills, assistants as discoverAssistants } from '@/features/explore/ExploreData';
 import { useGlobalActions } from '@/app/context/GlobalActionContext';
@@ -207,11 +207,6 @@ function TemplateBrowsePage({ resourceType, onBack, onUse, installedNames }: {
 // Prompt Edit Page
 // ===========================
 
-const DEFAULT_PROMPT_VARS: VariableDef[] = [
-  { id: 'u1', name: 'user_name', defaultValue: '用户', description: '用户的称呼', type: 'string' },
-  { id: 'u2', name: 'language', defaultValue: '中文', description: '输出语言', type: 'string' },
-];
-
 function extractVars(content: string): string[] {
   const p = /\$\{(\w+)\}/g;
   const matches = content.match(p);
@@ -356,7 +351,6 @@ function PromptEditPage({ resource, onBack, onSave }: {
   const [name, setName] = useState(resource.name);
   const [content, setContent] = useState(resource.content || '');
   const [showVarPanel, setShowVarPanel] = useState(false);
-  const [userVars, setUserVars] = useState<VariableDef[]>(DEFAULT_PROMPT_VARS);
 
   const vars = extractVars(content);
   const hasChanges = name !== resource.name || content !== (resource.content || '');
@@ -369,12 +363,6 @@ function PromptEditPage({ resource, onBack, onSave }: {
   const handleInsertVar = (varName: string) => {
     setContent(prev => prev + '${' + varName + '}');
     setShowVarPanel(false);
-  };
-
-  const handleAddVar = () => {
-    const newId = `uvar-${Date.now()}`;
-    setUserVars(prev => [...prev, { id: newId, name: 'new_var', defaultValue: '', description: '', type: 'string' as VarType }]);
-    return newId;
   };
 
   return (
@@ -419,9 +407,7 @@ function PromptEditPage({ resource, onBack, onSave }: {
                 <PopoverContent align="end" sideOffset={4} className="w-[280px] p-0 overflow-hidden">
                   <VarPickerPopover
                     systemVars={SYSTEM_VARIABLES}
-                    userVars={userVars}
                     onInsert={handleInsertVar}
-                    onAddUserVar={handleAddVar}
                   />
                 </PopoverContent>
               </Popover>
@@ -460,19 +446,14 @@ function PromptEditPage({ resource, onBack, onSave }: {
 
 function VarPickerPopover({
   systemVars,
-  userVars,
   onInsert,
-  onAddUserVar,
 }: {
   systemVars: VariableDef[];
-  userVars: VariableDef[];
   onInsert: (name: string) => void;
-  onAddUserVar: () => string;
 }) {
   const [query, setQuery] = useState('');
   const q = query.trim().toLowerCase();
   const filtSys = q ? systemVars.filter(v => v.name.toLowerCase().includes(q)) : systemVars;
-  const filtUser = q ? userVars.filter(v => v.name.toLowerCase().includes(q)) : userVars;
 
   return (
     <div className="flex flex-col max-h-[320px]">
@@ -493,28 +474,9 @@ function VarPickerPopover({
             ))}
           </div>
         )}
-        {filtUser.length > 0 && (
-          <div>
-            <div className="px-2 py-1 text-xs text-muted-foreground/50 uppercase tracking-wider">自定义变量</div>
-            {filtUser.map(v => (
-              <button key={v.id} type="button" onClick={() => onInsert(v.name)}
-                className="w-full flex items-center gap-2 px-2 py-1.5 text-left hover:bg-accent/40 transition-colors">
-                <span className="text-xs font-mono text-accent-violet/80">{'${' + v.name + '}'}</span>
-                {v.description && <span className="text-xs text-muted-foreground/60 truncate flex-1 text-right">{v.description}</span>}
-              </button>
-            ))}
-          </div>
-        )}
-        {filtSys.length === 0 && filtUser.length === 0 && (
+        {filtSys.length === 0 && (
           <div className="py-6 text-xs text-muted-foreground/50 text-center">无匹配变量</div>
         )}
-      </div>
-      <div className="p-2 border-t border-border/30">
-        <Button variant="ghost" size="xs" onClick={() => onAddUserVar()}
-          className="w-full flex items-center justify-center gap-1 h-7 text-xs text-muted-foreground hover:text-foreground">
-          <Plus size={11} />
-          <span>新增自定义变量</span>
-        </Button>
       </div>
     </div>
   );
