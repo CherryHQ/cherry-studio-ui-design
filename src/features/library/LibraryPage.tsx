@@ -556,9 +556,8 @@ export function LibraryPage() {
   // Tag filter (separate from sidebar filter)
   const [activeTag, setActiveTag] = useState<string | null>(null);
 
-  // Type filter (toolbar, separate from sidebar) — always one specific type,
-  // shown as a tab bar in the resource grid. Default: skill.
-  const [activeType, setActiveType] = useState<ResourceType>('skill');
+  // Type filter (toolbar, separate from sidebar). Null = all types.
+  const [activeType, setActiveType] = useState<ResourceType | null>(null);
 
   // Track whether we came from external create (to enable return navigation)
   const [returnOnClose, setReturnOnClose] = useState(false);
@@ -634,8 +633,10 @@ export function LibraryPage() {
     if (activeTag) {
       list = list.filter(r => r.tags.includes(activeTag));
     }
-    // Apply type filter from the tab bar — always one type at a time
-    list = list.filter(r => r.type === activeType);
+    // Apply type filter from the tab bar (optional)
+    if (activeType) {
+      list = list.filter(r => r.type === activeType);
+    }
     if (search.trim()) {
       const q = search.toLowerCase();
       list = list.filter(r => r.name.toLowerCase().includes(q) || r.description.toLowerCase().includes(q));

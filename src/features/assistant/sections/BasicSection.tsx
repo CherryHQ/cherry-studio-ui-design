@@ -120,55 +120,53 @@ export function BasicSection({ resource }: Props) {
                 })}
               </div>
               <div className="h-px bg-border/30 mt-1.5" />
-              {/* Fixed body height keeps the popover from jumping between tabs */}
-              <div className="h-[260px] overflow-y-auto scrollbar-thin">
-                {avatarTab === 'emoji' && (
-                  <div className="grid grid-cols-8 gap-1 p-2">
-                    {AVATAR_OPTIONS.map(a => (
-                      <button key={a} type="button"
-                        onClick={() => { setAvatar(a); setAvatarType('emoji'); }}
-                        className={`w-8 h-8 rounded-md flex items-center justify-center text-base transition-colors ${
-                          avatarType === 'emoji' && avatar === a ? 'bg-accent ring-1 ring-primary/40' : 'hover:bg-accent/50'
-                        }`}>
-                        {a}
-                      </button>
-                    ))}
-                  </div>
-                )}
-                {avatarTab === 'upload' && (
-                  <div className="p-3">
-                    <input ref={fileInputRef} type="file" accept="image/*" className="hidden"
-                      onChange={e => {
-                        const file = e.target.files?.[0];
-                        if (file) {
-                          const url = URL.createObjectURL(file);
-                          setAvatarUrl(url);
-                          setAvatarType('image');
-                        }
-                      }}
-                    />
-                    <button onClick={() => fileInputRef.current?.click()}
-                      className="w-full flex flex-col items-center justify-center gap-1.5 py-5 rounded-md border border-dashed border-border/50 text-xs text-muted-foreground hover:border-primary/40 hover:text-foreground transition-colors">
-                      <Upload size={16} className="text-muted-foreground/60" />
-                      <span>点击上传图片</span>
-                      <span className="text-muted-foreground/40">PNG / JPG，建议 256×256</span>
+              {/* Each tab body fits its own content; only the emoji grid caps its height & scrolls. */}
+              {avatarTab === 'emoji' && (
+                <div className="grid grid-cols-8 gap-1 p-2 max-h-[260px] overflow-y-auto scrollbar-thin">
+                  {AVATAR_OPTIONS.map(a => (
+                    <button key={a} type="button"
+                      onClick={() => { setAvatar(a); setAvatarType('emoji'); }}
+                      className={`w-8 h-8 rounded-md flex items-center justify-center text-base transition-colors ${
+                        avatarType === 'emoji' && avatar === a ? 'bg-accent ring-1 ring-primary/40' : 'hover:bg-accent/50'
+                      }`}>
+                      {a}
                     </button>
+                  ))}
+                </div>
+              )}
+              {avatarTab === 'upload' && (
+                <div className="p-3">
+                  <input ref={fileInputRef} type="file" accept="image/*" className="hidden"
+                    onChange={e => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        const url = URL.createObjectURL(file);
+                        setAvatarUrl(url);
+                        setAvatarType('image');
+                      }
+                    }}
+                  />
+                  <button onClick={() => fileInputRef.current?.click()}
+                    className="w-full flex flex-col items-center justify-center gap-1.5 py-5 rounded-md border border-dashed border-border/50 text-xs text-muted-foreground hover:border-primary/40 hover:text-foreground transition-colors">
+                    <Upload size={16} className="text-muted-foreground/60" />
+                    <span>点击上传图片</span>
+                    <span className="text-muted-foreground/40">PNG / JPG，建议 256×256</span>
+                  </button>
+                </div>
+              )}
+              {avatarTab === 'link' && (
+                <div className="p-3 space-y-2">
+                  <div className="relative">
+                    <Link2 size={11} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground/40" />
+                    <Input value={avatarUrl} onChange={e => setAvatarUrl(e.target.value)} placeholder="https://… 或 data:image/…"
+                      className="w-full pl-7 h-8 text-xs rounded-md border-border/40" />
                   </div>
-                )}
-                {avatarTab === 'link' && (
-                  <div className="p-3 space-y-2">
-                    <div className="relative">
-                      <Link2 size={11} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground/40" />
-                      <Input value={avatarUrl} onChange={e => setAvatarUrl(e.target.value)} placeholder="https://… 或 data:image/…"
-                        className="w-full pl-7 h-8 text-xs rounded-md border-border/40" />
-                    </div>
-                    <Button variant="default" size="xs" onClick={() => { if (avatarUrl.trim()) setAvatarType('image'); }}
-                      className="w-full h-7 text-xs">
-                      使用此链接
-                    </Button>
-                  </div>
-                )}
-              </div>
+                  <Button variant="default" size="xs" onClick={() => { if (avatarUrl.trim()) setAvatarType('image'); }}
+                    className="w-full h-7 text-xs">
+                    使用此链接
+                  </Button>
+                </div>
+              )}
             </PopoverContent>
           </Popover>
           <Input value={name} onChange={e => setName(e.target.value)}

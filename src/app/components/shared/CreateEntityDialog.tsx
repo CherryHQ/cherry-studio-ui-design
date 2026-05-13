@@ -180,7 +180,7 @@ export function CreateEntityDialog({ open, onOpenChange, variant, onCreate }: Cr
                   <div className="h-px bg-border/30 mt-1.5" />
                   {/* Tab body */}
                   {avatarTab === 'emoji' ? (
-                    <div className="grid grid-cols-8 gap-1 p-2 h-[260px] overflow-y-auto scrollbar-thin">
+                    <div className="grid grid-cols-8 gap-1 p-2 max-h-[260px] overflow-y-auto scrollbar-thin">
                       {AVATAR_EMOJIS.map(e => (
                         <button key={e} type="button"
                           onClick={() => { setAvatar(e); setAvatarIsImage(false); setAvatarOpen(false); }}

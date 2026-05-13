@@ -35,9 +35,9 @@ interface Props {
   onDeleteTag: (tagName: string) => void;
   onUpdateResourceTags: (resourceId: string, tags: string[]) => void;
   allTagNames: string[];
-  // Type filtering — always one type, rendered as a tab bar
-  activeType: ResourceType;
-  onTypeFilter: (type: ResourceType) => void;
+  // Type filtering — optional, currently unused after the tab bar was removed
+  activeType: ResourceType | null;
+  onTypeFilter: (type: ResourceType | null) => void;
   typeCounts: Record<string, number>;
   templateBanner?: React.ReactNode;
   onBrowseTemplates?: () => void;
@@ -120,35 +120,6 @@ export function ResourceGrid({
 
   return (
     <div className="flex flex-col min-h-0 flex-1">
-      {/* Tab bar — resource types */}
-      <div className="flex items-center gap-0.5 px-5 pt-3 border-b border-border/30">
-        {RESOURCE_TYPES_LIST.map(t => {
-          const TabIcon = t.icon;
-          const active = activeType === t.id;
-          const count = typeCounts[t.id] ?? 0;
-          return (
-            <button
-              key={t.id}
-              type="button"
-              onClick={() => onTypeFilter(t.id)}
-              className={`relative flex items-center gap-1.5 px-3 py-2 text-sm transition-colors ${
-                active
-                  ? 'text-foreground font-medium'
-                  : 'text-muted-foreground/60 hover:text-foreground'
-              }`}
-            >
-              <TabIcon size={12} className={active ? 'text-primary/70' : 'text-muted-foreground/40'} />
-              <span>{t.label}</span>
-              {count > 0 && (
-                <span className={`text-xs tabular-nums ${active ? 'text-muted-foreground' : 'text-muted-foreground/40'}`}>{count}</span>
-              )}
-              {active && (
-                <span className="absolute left-2 right-2 -bottom-px h-[2px] rounded-t bg-primary/80" />
-              )}
-            </button>
-          );
-        })}
-      </div>
       {/* Toolbar */}
       <div className="flex flex-col flex-shrink-0 border-b border-border/30">
         {/* Row 1: Search + Sort + View + Create */}
