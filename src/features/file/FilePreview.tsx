@@ -1,8 +1,8 @@
 import React from 'react';
 import {
   X, FileText, Image as ImageIcon, Code2, Music, Video,
-  File, Download, Share2, Tag, Clock, HardDrive,
-  FolderClosed, MessageCircle, Maximize2,
+  File, Tag, Clock, HardDrive,
+  FolderClosed, MessageCircle,
 } from 'lucide-react';
 import { Button, Dialog, DialogContent } from '@cherry-studio/ui';
 import type { FileItem, FileTag, FileFolder } from './mockData';
@@ -195,16 +195,7 @@ export function FilePreview({
             <p className="text-xs text-muted-foreground/60 mt-0.5">{getFormatLabel(file.format)} · {file.size}</p>
           </div>
           <div className="flex items-center gap-1">
-            <Button variant="ghost" className="w-6 h-6 p-0 rounded-md flex items-center justify-center text-muted-foreground/40 hover:text-foreground hover:bg-accent transition-colors">
-              <Download size={12} />
-            </Button>
-            <Button variant="ghost" className="w-6 h-6 p-0 rounded-md flex items-center justify-center text-muted-foreground/40 hover:text-foreground hover:bg-accent transition-colors">
-              <Share2 size={12} />
-            </Button>
-            <Button variant="ghost" className="w-6 h-6 p-0 rounded-md flex items-center justify-center text-muted-foreground/40 hover:text-foreground hover:bg-accent transition-colors">
-              <Maximize2 size={12} />
-            </Button>
-            <Button variant="ghost" onClick={onClose} className="w-6 h-6 p-0 rounded-md flex items-center justify-center text-muted-foreground/40 hover:text-foreground hover:bg-accent transition-colors ml-1">
+            <Button variant="ghost" onClick={onClose} className="w-6 h-6 p-0 rounded-md flex items-center justify-center text-muted-foreground/40 hover:text-foreground hover:bg-accent transition-colors">
               <X size={13} />
             </Button>
           </div>

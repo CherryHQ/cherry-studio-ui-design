@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import {
   FileText, Image as ImageIcon, FileCode, Music, Video,
-  File, Star, MoreHorizontal, Eye,
+  File, Trash2, Eye,
 } from 'lucide-react';
 import { Button, Input } from '@cherry-studio/ui';
 import type { FileItem, FileTag } from './mockData';
@@ -59,8 +59,7 @@ export function FileGrid({
   onSelect,
   onContextMenu,
   onPreview,
-  onToggleStar,
-  tags,
+  onDelete,
   renamingId,
   onRenameConfirm,
   onRenameCancel,
@@ -70,18 +69,17 @@ export function FileGrid({
   onSelect: (id: string, multi: boolean) => void;
   onContextMenu: (e: React.MouseEvent, id: string) => void;
   onPreview: (file: FileItem) => void;
-  onToggleStar: (id: string) => void;
-  tags: FileTag[];
+  onDelete: (id: string) => void;
+  tags?: FileTag[];
   renamingId: string | null;
   onRenameConfirm: (id: string, name: string) => void;
   onRenameCancel: () => void;
 }) {
   return (
-    <div className="grid grid-cols-[repeat(auto-fill,minmax(170px,1fr))] gap-3 p-4">
+    <div className="grid grid-cols-[repeat(auto-fill,minmax(120px,1fr))] gap-2 p-3">
       {files.map(file => {
         const selected = selectedIds.has(file.id);
         const Icon = typeIcons[file.type] || File;
-        const fileTags = tags.filter(t => file.tags.includes(t.id));
         const isRenaming = renamingId === file.id;
         const isImage = file.type === 'image';
         return (
@@ -98,71 +96,53 @@ export function FileGrid({
           >
             {/* Thumbnail — square gallery tile for images, fixed-height card for other types */}
             <div
-              className={`${isImage ? 'aspect-square' : 'h-[88px]'} rounded-t-lg flex items-center justify-center ${isImage ? '' : (typeBgColors[file.type] || typeBgColors.other)} relative overflow-hidden`}
+              className={`${isImage ? 'aspect-square rounded-lg' : 'h-[72px] rounded-t-lg'} flex items-center justify-center ${isImage ? '' : (typeBgColors[file.type] || typeBgColors.other)} relative overflow-hidden`}
               style={isImage ? { backgroundImage: gradientFor(file.name) } : undefined}
             >
               {!isImage && (
-                <Icon size={26} strokeWidth={1.2} className={typeIconColors[file.type] || typeIconColors.other} />
+                <Icon size={22} strokeWidth={1.2} className={typeIconColors[file.type] || typeIconColors.other} />
               )}
-              {/* Format badge */}
-              <span className={`absolute top-1.5 left-1.5 px-1.5 py-[1px] rounded text-xs tracking-wide font-medium ${
-                isImage ? 'bg-black/30 text-white/85 backdrop-blur-sm' : 'bg-muted/50 text-muted-foreground/60'
-              }`}>
-                {getFormatLabel(file.format)}
-              </span>
-              {/* Hover actions */}
+              {/* Format badge — non-image only */}
+              {!isImage && (
+                <span className="absolute top-1.5 left-1.5 px-1.5 py-[1px] rounded text-xs tracking-wide font-medium bg-muted/50 text-muted-foreground/60">
+                  {getFormatLabel(file.format)}
+                </span>
+              )}
+              {/* Hover actions: preview + delete */}
               <div className="absolute top-1 right-1 flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
                 <Button
                   variant="ghost"
-                  onClick={(e) => { e.stopPropagation(); onToggleStar(file.id); }}
-                  className={`w-5 h-5 p-0 rounded flex items-center justify-center transition-colors text-xs ${
-                    file.starred ? 'text-accent-amber/70' : 'text-muted-foreground/50 hover:text-accent-amber/50 bg-background/70'
-                  }`}
-                >
-                  <Star size={11} fill={file.starred ? 'currentColor' : 'none'} />
-                </Button>
-                <Button
-                  variant="ghost"
                   onClick={(e) => { e.stopPropagation(); onPreview(file); }}
-                  className="w-5 h-5 p-0 rounded flex items-center justify-center text-muted-foreground/50 hover:text-foreground bg-background/70 transition-colors"
+                  className="w-5 h-5 p-0 rounded flex items-center justify-center text-muted-foreground/60 hover:text-foreground bg-background/70 transition-colors"
                 >
                   <Eye size={11} />
                 </Button>
                 <Button
                   variant="ghost"
-                  onClick={(e) => { e.stopPropagation(); onContextMenu(e, file.id); }}
-                  className="w-5 h-5 p-0 rounded flex items-center justify-center text-muted-foreground/50 hover:text-foreground bg-background/70 transition-colors"
+                  onClick={(e) => { e.stopPropagation(); onDelete(file.id); }}
+                  className="w-5 h-5 p-0 rounded flex items-center justify-center text-muted-foreground/60 hover:text-destructive bg-background/70 transition-colors"
                 >
-                  <MoreHorizontal size={11} />
+                  <Trash2 size={11} />
                 </Button>
               </div>
-              {/* Star indicator */}
-              {file.starred && (
-                <Star size={9} fill="currentColor" className="absolute bottom-1.5 right-1.5 text-accent-amber/50" />
-              )}
             </div>
-            {/* Info */}
-            <div className="px-2 py-1.5">
-              {isRenaming ? (
-                <InlineRename
-                  value={file.name}
-                  onConfirm={(v) => onRenameConfirm(file.id, v)}
-                  onCancel={onRenameCancel}
-                />
-              ) : (
-                <p className="text-sm text-foreground truncate" title={file.name}>{file.name}</p>
-              )}
-              <div className="flex items-center gap-1 mt-0.5">
-                <span className="text-xs text-muted-foreground/50">{file.size}</span>
-                {fileTags.length > 0 && (
-                  <div className="flex items-center gap-0.5 ml-auto">
-                    {fileTags.slice(0, 2).map(t => (
-                      <span key={t.id} className={`w-1.5 h-1.5 rounded-full flex-shrink-0 opacity-60 ${t.color.dot}`} />
-                    ))}
-                  </div>
+            {/* Info — kept only for non-image types */}
+            {!isImage && (
+              <div className="px-2 py-1.5">
+                {isRenaming ? (
+                  <InlineRename
+                    value={file.name}
+                    onConfirm={(v) => onRenameConfirm(file.id, v)}
+                    onCancel={onRenameCancel}
+                  />
+                ) : (
+                  <p className="text-sm text-foreground truncate" title={file.name}>{file.name}</p>
                 )}
+                <div className="flex items-center gap-1 mt-0.5">
+                  <span className="text-xs text-muted-foreground/50">{file.size}</span>
+                </div>
               </div>
-            </div>
+            )}
           </div>
         );
       })}

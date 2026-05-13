@@ -454,8 +454,7 @@ export function FilePage() {
               onSelect={handleSelect}
               onContextMenu={handleContextMenu}
               onPreview={setPreviewFile}
-              onToggleStar={handleToggleStar}
-              tags={FILE_TAGS}
+              onDelete={(id) => handleDelete(new Set([id]))}
               renamingId={renamingId}
               onRenameConfirm={handleRename}
               onRenameCancel={() => setRenamingId(null)}
