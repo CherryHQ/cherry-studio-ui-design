@@ -1742,6 +1742,16 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
               }}
               onNewItemForGroup={handleNewSessionForAgent}
               onRenameGroup={handleRenameGroup}
+              quickStartOptions={AVAILABLE_AGENTS.map(a => ({
+                id: a.id,
+                label: a.name,
+                avatar: a.avatar,
+                description: a.desc,
+              }))}
+              onQuickStart={(id) => {
+                const agent = AVAILABLE_AGENTS.find(a => a.id === id);
+                if (agent) handleNewSessionForAgent(agent.name);
+              }}
             />
           </motion.div>
         )}

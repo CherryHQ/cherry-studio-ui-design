@@ -68,6 +68,11 @@ interface HistorySidebarProps<T extends HistoryItem> {
   };
   onNewItemForGroup?: (groupKey: string) => void;
   onRenameGroup?: (oldName: string, newName: string) => void;
+  /** Optional quick-start picker. When provided, a "+" button in the
+   * header opens a popover listing these options; selecting one calls
+   * onQuickStart with that option's id. */
+  quickStartOptions?: { id: string; label: string; avatar?: string; description?: string }[];
+  onQuickStart?: (id: string) => void;
 }
 
 // ===========================
@@ -454,6 +459,8 @@ export function HistorySidebar<T extends HistoryItem>({
   customGroupBy,
   onNewItemForGroup,
   onRenameGroup,
+  quickStartOptions,
+  onQuickStart,
 }: HistorySidebarProps<T>) {
   const [searchQuery, setSearchQuery] = useState('');
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number; itemId: string } | null>(null);
@@ -649,6 +656,35 @@ export function HistorySidebar<T extends HistoryItem>({
             <span className="text-xs text-muted-foreground/40 tabular-nums">{items.length}</span>
           </div>
           <div className="flex items-center gap-0.5">
+            {quickStartOptions && quickStartOptions.length > 0 && (
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Tooltip content={`新建${entityLabel}`} side="bottom">
+                    <Button variant="ghost" size="icon-xs"
+                      className="p-1 w-auto h-auto text-muted-foreground hover:text-foreground hover:bg-accent/15">
+                      <Plus size={11} />
+                    </Button>
+                  </Tooltip>
+                </PopoverTrigger>
+                <PopoverContent align="end" className="w-[220px] p-1 max-h-[320px] overflow-y-auto scrollbar-thin">
+                  <div className="text-xs text-muted-foreground/60 px-2 py-1">选择智能体开启对话</div>
+                  {quickStartOptions.map(opt => (
+                    <Button key={opt.id} variant="ghost" size="xs"
+                      onClick={() => onQuickStart?.(opt.id)}
+                      className="w-full justify-start gap-2 px-2 py-1.5 text-foreground hover:bg-accent/40"
+                    >
+                      {opt.avatar && <span className="text-base leading-none flex-shrink-0">{opt.avatar}</span>}
+                      <span className="flex-1 min-w-0 text-left">
+                        <span className="block text-xs text-foreground truncate">{opt.label}</span>
+                        {opt.description && (
+                          <span className="block text-xs text-muted-foreground/55 truncate">{opt.description}</span>
+                        )}
+                      </span>
+                    </Button>
+                  ))}
+                </PopoverContent>
+              </Popover>
+            )}
             {(showStatusDot || hasItemMetadata) && (
               <Popover>
                 <PopoverTrigger asChild>
