@@ -1,6 +1,6 @@
 import React from 'react';
 import {
-  Files, Clock, Trash2,
+  Files,
   FileText, Image as ImageIcon, FileCode, Music, Video,
 } from 'lucide-react';
 import { Button } from '@cherry-studio/ui';
@@ -22,8 +22,6 @@ const SIDEBAR_ENTRIES: SidebarEntry[] = [
   { kind: 'type',    value: 'code',     label: '代码',     icon: FileCode,  countKey: 'type_code' },
   { kind: 'type',    value: 'audio',    label: '音频',     icon: Music,     countKey: 'type_audio' },
   { kind: 'type',    value: 'video',    label: '视频',     icon: Video,     countKey: 'type_video' },
-  { kind: 'library', value: 'recent',   label: '最近使用', icon: Clock,     countKey: 'recent' },
-  { kind: 'library', value: 'trash',    label: '回收站',   icon: Trash2,    countKey: 'trash' },
   { kind: 'library', value: 'all',      label: '全部文件', icon: Files,     countKey: 'all' },
 ];
 
