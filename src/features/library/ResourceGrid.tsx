@@ -120,35 +120,6 @@ export function ResourceGrid({
 
   return (
     <div className="flex flex-col min-h-0 flex-1">
-      {/* Category tab bar — resource types (no "全部" view) */}
-      <div className="flex items-center gap-1 px-5 pt-2 border-b border-border/30">
-        {RESOURCE_TYPES_LIST.map(t => {
-          const TabIcon = t.icon;
-          const active = activeType === t.id;
-          const count = typeCounts[t.id] ?? 0;
-          return (
-            <button
-              key={t.id}
-              type="button"
-              onClick={() => onTypeFilter(t.id)}
-              className={`relative flex items-center gap-2 px-3.5 py-2.5 text-sm transition-colors ${
-                active
-                  ? 'text-foreground font-medium'
-                  : 'text-muted-foreground/60 hover:text-foreground'
-              }`}
-            >
-              <TabIcon size={13} className={active ? 'text-primary/80' : 'text-muted-foreground/40'} />
-              <span>{t.label}</span>
-              <span className={`text-xs tabular-nums ${active ? 'text-muted-foreground/80' : 'text-muted-foreground/40'}`}>
-                {count}
-              </span>
-              {active && (
-                <span className="absolute left-2 right-2 -bottom-px h-[2px] rounded-t bg-primary/80" />
-              )}
-            </button>
-          );
-        })}
-      </div>
       {/* Toolbar */}
       <div className="flex flex-col flex-shrink-0 border-b border-border/30">
         {/* Row 1: Search + Sort + View + Create */}
