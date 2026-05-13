@@ -295,14 +295,22 @@ export function PromptSection({ hideFewShot }: { hideFewShot?: boolean } = {}) {
     const sel = window.getSelection();
     if (!sel) return;
 
-    // If from slash menu, delete the /search text
-    if (showSlashRef.current && slashNodeRef.current) {
+    // If from slash menu, delete the /search text.
+    // Critical: only operate when the slash node is still inside the editor
+    // and the active range (if any) also lives in the editor. Otherwise we'd
+    // end up creating a Range that spans the editor + slash-menu DOM and
+    // deleteContents() would nuke half the DOM tree.
+    if (
+      showSlashRef.current &&
+      slashNodeRef.current &&
+      el.contains(slashNodeRef.current)
+    ) {
       try {
         const range = document.createRange();
         const startOff = Math.max(0, slashOffsetRef.current - 1);
         range.setStart(slashNodeRef.current, startOff);
         const currentRange = sel.rangeCount > 0 ? sel.getRangeAt(0) : null;
-        if (currentRange) {
+        if (currentRange && el.contains(currentRange.startContainer)) {
           range.setEnd(currentRange.startContainer, currentRange.startOffset);
         } else {
           range.setEnd(slashNodeRef.current, slashNodeRef.current.length);
@@ -311,20 +319,20 @@ export function PromptSection({ hideFewShot }: { hideFewShot?: boolean } = {}) {
         sel.removeAllRanges();
         sel.addRange(range);
       } catch {
-        // fallback
+        // fallback — leave the /search text; insertion below will still drop a badge.
       }
     } else if (!el.contains(sel.anchorNode) && lastRangeRef.current) {
       sel.removeAllRanges();
       sel.addRange(lastRangeRef.current);
     }
 
-    // Insert badge
+    // Insert badge — only honor the active range if it points inside the editor,
+    // otherwise append to the end (avoids inserting into the slash menu / popover).
     const badge = createBadgeElement(name, kind);
-
-    if (sel.rangeCount > 0) {
-      const range = sel.getRangeAt(0);
-      range.deleteContents();
-      range.insertNode(badge);
+    const insertionRange = sel.rangeCount > 0 ? sel.getRangeAt(0) : null;
+    if (insertionRange && el.contains(insertionRange.startContainer)) {
+      insertionRange.deleteContents();
+      insertionRange.insertNode(badge);
     } else {
       el.appendChild(badge);
     }
@@ -656,7 +664,7 @@ export function PromptSection({ hideFewShot }: { hideFewShot?: boolean } = {}) {
                             variant="ghost"
                             key={v.id}
                             data-active={idx === slashIndex}
-                            onClick={() => insertVariable(v.name)}
+                            onMouseDown={(e) => { e.preventDefault(); insertVariable(v.name); }}
                             className={`gap-2 w-full px-3 py-[6px] justify-start ${
                               idx === slashIndex ? 'bg-accent/50 text-foreground' : 'text-muted-foreground/60 hover:bg-accent/50 hover:text-foreground'
                             }`}
@@ -682,7 +690,7 @@ export function PromptSection({ hideFewShot }: { hideFewShot?: boolean } = {}) {
                             variant="ghost"
                             key={v.id}
                             data-active={idx === slashIndex}
-                            onClick={() => insertVariable(v.name)}
+                            onMouseDown={(e) => { e.preventDefault(); insertVariable(v.name); }}
                             className={`gap-2 w-full px-3 py-[6px] justify-start ${
                               idx === slashIndex ? 'bg-accent/50 text-foreground' : 'text-muted-foreground/60 hover:bg-accent/50 hover:text-foreground'
                             }`}
@@ -707,7 +715,7 @@ export function PromptSection({ hideFewShot }: { hideFewShot?: boolean } = {}) {
                           variant="ghost"
                           key={kb.id}
                           data-active={i === slashIndex}
-                          onClick={() => insertBadge(kb.name, 'kb')}
+                          onMouseDown={(e) => { e.preventDefault(); insertBadge(kb.name, 'kb'); }}
                           className={`gap-2 w-full px-3 py-[6px] justify-start ${
                             i === slashIndex ? 'bg-accent/50 text-foreground' : 'text-muted-foreground/60 hover:bg-accent/50 hover:text-foreground'
                           }`}
@@ -733,7 +741,7 @@ export function PromptSection({ hideFewShot }: { hideFewShot?: boolean } = {}) {
                             variant="ghost"
                             key={tool.id}
                             data-active={i === slashIndex}
-                            onClick={() => insertBadge(tool.name, 'mcp')}
+                            onMouseDown={(e) => { e.preventDefault(); insertBadge(tool.name, 'mcp'); }}
                             className={`gap-2 w-full px-3 py-[6px] justify-start ${
                               i === slashIndex ? 'bg-accent/50 text-foreground' : 'text-muted-foreground/60 hover:bg-accent/50 hover:text-foreground'
                             }`}
