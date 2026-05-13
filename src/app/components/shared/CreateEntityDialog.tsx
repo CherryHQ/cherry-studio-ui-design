@@ -242,10 +242,7 @@ export function CreateEntityDialog({ open, onOpenChange, variant, onCreate }: Cr
 
           {/* Description */}
           <div>
-            <label className="flex items-center justify-between text-xs text-muted-foreground/70 mb-1">
-              <span>描述</span>
-              <span className="text-muted-foreground/40">非必填</span>
-            </label>
+            <label className="block text-xs text-muted-foreground/70 mb-1">描述</label>
             <Textarea value={description} onChange={e => setDescription(e.target.value)}
               placeholder={`一句话介绍这个${noun}的用途与擅长场景`}
               rows={3}
