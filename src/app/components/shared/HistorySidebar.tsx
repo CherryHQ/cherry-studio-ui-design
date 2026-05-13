@@ -346,9 +346,6 @@ function QuickStartPopover({
               {opt.avatar && <span className="text-base leading-none flex-shrink-0">{opt.avatar}</span>}
               <span className="flex-1 min-w-0">
                 <span className="block text-sm text-foreground truncate">{opt.label}</span>
-                {opt.description && (
-                  <span className="block text-xs text-muted-foreground/55 truncate mt-0.5">{opt.description}</span>
-                )}
               </span>
             </button>
           ))}
