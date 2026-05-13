@@ -460,7 +460,7 @@ export function TranslatePage() {
                     <span className="text-muted-foreground/50">翻译结果将显示在这里</span>
                   )}
                 </div>
-                {/* Target toolbar — actions + translate CTA pinned at bottom of the box */}
+                {/* Target toolbar */}
                 <div className="flex items-center justify-between px-3 py-1.5 flex-shrink-0">
                   <div className="flex items-center gap-0.5">
                     <Button variant="ghost" size="icon-xs" className="text-muted-foreground/40 hover:text-muted-foreground hover:bg-accent/50">
@@ -471,20 +471,21 @@ export function TranslatePage() {
                       {copied ? <Check size={12} className="text-primary" /> : <Copy size={12} />}
                     </Button>
                   </div>
-                  <div className="flex items-center gap-2">
-                    {translatedText && <span className="text-xs text-muted-foreground/50">{translatedText.length}</span>}
-                    <Button
-                      variant="default" size="xs"
-                      onClick={handleTranslate}
-                      disabled={!sourceText.trim() || isTranslating}
-                      className="h-7 px-3 text-xs flex items-center gap-1.5 rounded-full">
-                      <Languages size={11} />
-                      <span>{isTranslating ? '翻译中...' : '翻译'}</span>
-                    </Button>
-                  </div>
+                  {translatedText && <span className="text-xs text-muted-foreground/50">{translatedText.length}</span>}
                 </div>
               </div>
             </div>
+          </div>
+          {/* Translate CTA — sits outside the card, right-aligned */}
+          <div className="flex items-center justify-end pt-3 flex-shrink-0">
+            <Button
+              variant="default" size="sm"
+              onClick={handleTranslate}
+              disabled={!sourceText.trim() || isTranslating}
+              className="h-8 px-4 text-xs flex items-center gap-1.5 rounded-full">
+              <Languages size={12} />
+              <span>{isTranslating ? '翻译中...' : '翻译'}</span>
+            </Button>
           </div>
         </div>
       </div>
