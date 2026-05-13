@@ -55,7 +55,7 @@ export function FileList({
       <Button size="inline"
         variant="ghost"
         onClick={() => onSort(field)}
-        className={`p-0 flex items-center gap-0.5 text-xs uppercase tracking-wider transition-colors ${
+        className={`p-0 inline-flex items-center justify-start gap-0.5 text-xs uppercase tracking-wider transition-colors w-fit ${
           active ? 'text-muted-foreground' : 'text-muted-foreground/40 hover:text-foreground'
         } ${cn || ''}`}
       >
@@ -72,12 +72,20 @@ export function FileList({
 
   return (
     <div className="flex flex-col">
-      {/* Header */}
+      {/* Header — same column widths as the row cells below */}
       <div className="flex items-center gap-2 px-4 py-1.5 border-b border-border/30 sticky top-0 bg-background z-10">
-        <SortHeader label="名称" field="name" className="flex-1" />
-        <SortHeader label="大小" field="size" className="w-[70px]" />
-        <SortHeader label="类型" field="type" className="w-[55px]" />
-        <SortHeader label="修改时间" field="updatedAt" className="w-[110px]" />
+        <div className="flex-1 min-w-0">
+          <SortHeader label="名称" field="name" />
+        </div>
+        <div className="w-[70px]">
+          <SortHeader label="大小" field="size" />
+        </div>
+        <div className="w-[55px]">
+          <SortHeader label="类型" field="type" />
+        </div>
+        <div className="w-[110px]">
+          <SortHeader label="修改时间" field="updatedAt" />
+        </div>
       </div>
       {/* Rows */}
       {files.map(file => {

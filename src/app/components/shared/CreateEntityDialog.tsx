@@ -124,7 +124,7 @@ export function CreateEntityDialog({ open, onOpenChange, variant, onCreate }: Cr
 
   return (
     <Dialog open={open} onOpenChange={close}>
-      <DialogContent className="max-w-[520px] w-[520px] p-0 gap-0 overflow-hidden flex flex-col">
+      <DialogContent showCloseButton={false} className="max-w-[520px] w-[520px] p-0 gap-0 overflow-hidden flex flex-col">
         <DialogTitle className="sr-only">{title}</DialogTitle>
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-3 border-b border-border/30 flex-shrink-0">
