@@ -556,8 +556,9 @@ export function LibraryPage() {
   // Tag filter (separate from sidebar filter)
   const [activeTag, setActiveTag] = useState<string | null>(null);
 
-  // Type filter (toolbar). Resources are always shown by category — default Skill.
-  const [activeType, setActiveType] = useState<ResourceType>('skill');
+  // Type filter (toolbar). Null = no implicit filter — let the left sidebar
+  // drive resource-type selection.
+  const [activeType, setActiveType] = useState<ResourceType | null>(null);
 
   // Track whether we came from external create (to enable return navigation)
   const [returnOnClose, setReturnOnClose] = useState(false);
@@ -633,8 +634,10 @@ export function LibraryPage() {
     if (activeTag) {
       list = list.filter(r => r.tags.includes(activeTag));
     }
-    // Resources are always categorized by type — no "全部" view
-    list = list.filter(r => r.type === activeType);
+    // Optional toolbar-driven type filter (left sidebar is the primary one)
+    if (activeType) {
+      list = list.filter(r => r.type === activeType);
+    }
     if (search.trim()) {
       const q = search.toLowerCase();
       list = list.filter(r => r.name.toLowerCase().includes(q) || r.description.toLowerCase().includes(q));

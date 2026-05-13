@@ -35,9 +35,9 @@ interface Props {
   onDeleteTag: (tagName: string) => void;
   onUpdateResourceTags: (resourceId: string, tags: string[]) => void;
   allTagNames: string[];
-  // Type filtering — required, the tab bar at the top always selects one
-  activeType: ResourceType;
-  onTypeFilter: (type: ResourceType) => void;
+  // Type filtering — optional. Sidebar resource types are the primary entry.
+  activeType: ResourceType | null;
+  onTypeFilter: (type: ResourceType | null) => void;
   typeCounts: Record<string, number>;
   templateBanner?: React.ReactNode;
   onBrowseTemplates?: () => void;
