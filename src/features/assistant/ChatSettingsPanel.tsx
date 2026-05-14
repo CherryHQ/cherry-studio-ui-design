@@ -9,7 +9,7 @@ import { Button, Input, Switch, Slider, InlineSelect, FormRow } from '@cherry-st
 function Section({ title, defaultOpen = true, children }: { title: string; defaultOpen?: boolean; children: React.ReactNode }) {
   const [open, setOpen] = useState(defaultOpen);
   return (
-    <div className="border-b border-section-border last:border-b-0">
+    <div className="mb-1">
       <Button
         variant="ghost"
         size="sm"
@@ -19,7 +19,7 @@ function Section({ title, defaultOpen = true, children }: { title: string; defau
         {open ? <ChevronDown size={10} /> : <ChevronRight size={10} />}
         <span className="font-medium">{title}</span>
       </Button>
-      {open && <div className="pb-1.5 px-1 space-y-0">{children}</div>}
+      {open && <div className="pb-2 px-2 space-y-1 [&>*]:py-1.5">{children}</div>}
     </div>
   );
 }
