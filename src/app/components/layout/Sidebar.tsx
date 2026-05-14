@@ -1,6 +1,6 @@
 import React, { useRef, useCallback, useState } from 'react';
 import {
-  Search, X, ChevronRight, Settings, Sun, Moon,
+  Search, X, ChevronRight, Settings,
 } from 'lucide-react';
 import cherryLogoImg from "@/assets/cherry-icon.png";
 import { Button } from '@cherry-studio/ui';
@@ -593,14 +593,6 @@ export function Sidebar({
                 <Settings size={18} strokeWidth={1.6} />
               </Button>
             </Tooltip>
-            <Tooltip content={isDark ? '浅色模式' : '深色模式'}>
-              <Button variant="ghost" size="icon-sm" onClick={onToggleTheme} className="text-muted-foreground hover:text-foreground hover:bg-accent/50">
-                {isDark ? <Sun size={18} strokeWidth={1.6} /> : <Moon size={18} strokeWidth={1.6} />}
-              </Button>
-            </Tooltip>
-            <div className="w-7 h-7 rounded-full overflow-hidden ring-1 ring-border">
-              <div className="w-full h-full bg-gradient-to-br from-accent-blue to-accent-indigo flex items-center justify-center text-white text-xs">S</div>
-            </div>
           </div>
         )}
 
@@ -610,13 +602,6 @@ export function Sidebar({
               <Settings size={18} strokeWidth={1.6} />
               <span className="text-xs leading-tight">设置</span>
             </Button>
-            <Button variant="ghost" size="sm" onClick={onToggleTheme} className="w-full flex-col items-center gap-0.5 py-2 text-muted-foreground hover:text-foreground hover:bg-accent/50">
-              {isDark ? <Sun size={18} strokeWidth={1.6} /> : <Moon size={18} strokeWidth={1.6} />}
-              <span className="text-xs leading-tight">{isDark ? '浅色' : '深色'}</span>
-            </Button>
-            <div className="w-7 h-7 rounded-full overflow-hidden ring-1 ring-border mt-1">
-              <div className="w-full h-full bg-gradient-to-br from-accent-blue to-accent-indigo flex items-center justify-center text-white text-xs">S</div>
-            </div>
           </div>
         )}
 
