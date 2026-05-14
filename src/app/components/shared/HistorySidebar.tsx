@@ -265,12 +265,12 @@ function SidebarItem<T extends HistoryItem>({ item, isActive, isEditing, onClick
             : 'text-foreground hover:bg-accent/15 hover:text-foreground'
         }`}
       >
-        {statusCfg && item.unread && !isActive && (
-          <span className={`w-[5px] h-[5px] rounded-full flex-shrink-0 ${statusCfg.className} ${statusCfg.animate ? 'animate-pulse' : ''}`} />
-        )}
         <span className="text-sm truncate flex-1 text-left">
           {item.title}
         </span>
+        {statusCfg && item.unread && !isActive && (
+          <span className={`w-[5px] h-[5px] rounded-full flex-shrink-0 ${statusCfg.className} ${statusCfg.animate ? 'animate-pulse' : ''}`} />
+        )}
       </Button>
       {onArchive && (
         <button
