@@ -1739,6 +1739,9 @@ export function AssistantRunPage() {
     { id: 'clearctx', label: '清除上下文', icon: Eraser },
   ];
   const [secondaryToolOrder, setSecondaryToolOrder] = useState(defaultSecondaryTools.map(t => t.id));
+  // Image-gen tool state
+  const [imgResolution, setImgResolution] = useState<'1K' | '2K' | '4K'>('1K');
+  const [imgAspect, setImgAspect] = useState<string>('1:1');
   const toolDragRef = useRef<{ dragging: string | null; over: string | null }>({ dragging: null, over: null });
   const orderedSecondaryTools = secondaryToolOrder.map(id => defaultSecondaryTools.find(t => t.id === id)!).filter(Boolean);
   const [activeBranchId, setActiveBranchId] = useState('main');
@@ -2493,6 +2496,70 @@ export function AssistantRunPage() {
                                           {reasoningLevel === opt.key && <Check size={10} className="text-primary flex-shrink-0" />}
                                         </Button>
                                       ))}
+                                    </PopoverContent>
+                                  </Popover>
+                                ) : tool.id === 'genimg' ? (
+                                  <Popover>
+                                    <PopoverTrigger asChild>
+                                      <Button variant="ghost" size="inline"
+                                        className="px-1.5 py-[5px] gap-1 text-muted-foreground hover:text-foreground hover:bg-accent/50 rounded-md">
+                                        <Icon size={14} strokeWidth={1.5} />
+                                        <span className="text-xs text-muted-foreground/70">{imgResolution} · {imgAspect}</span>
+                                      </Button>
+                                    </PopoverTrigger>
+                                    <PopoverContent side="top" align="start" className="w-[280px] p-3 space-y-3">
+                                      {/* Resolution */}
+                                      <div>
+                                        <div className="text-xs text-muted-foreground/70 mb-1.5">Resolution</div>
+                                        <div className="flex items-center gap-1.5">
+                                          {(['1K', '2K', '4K'] as const).map(r => {
+                                            const active = imgResolution === r;
+                                            return (
+                                              <button key={r} type="button"
+                                                onClick={() => setImgResolution(r)}
+                                                className={`flex-1 py-1.5 rounded-md text-xs transition-colors border ${
+                                                  active
+                                                    ? 'bg-accent/40 border-border text-foreground'
+                                                    : 'border-border/30 text-muted-foreground/70 hover:bg-accent/20 hover:text-foreground'
+                                                }`}>
+                                                {r}
+                                              </button>
+                                            );
+                                          })}
+                                        </div>
+                                      </div>
+                                      {/* Size */}
+                                      <div>
+                                        <div className="text-xs text-muted-foreground/70 mb-1.5">Size</div>
+                                        <div className="grid grid-cols-3 gap-1.5">
+                                          {[
+                                            { ratio: '21:9', w: 28, h: 12 },
+                                            { ratio: '16:9', w: 26, h: 14 },
+                                            { ratio: '4:3',  w: 24, h: 18 },
+                                            { ratio: '5:4',  w: 22, h: 18 },
+                                            { ratio: '1:1',  w: 20, h: 20 },
+                                            { ratio: '4:5',  w: 18, h: 22 },
+                                            { ratio: '3:4',  w: 18, h: 24 },
+                                            { ratio: '2:3',  w: 14, h: 21 },
+                                            { ratio: '9:16', w: 14, h: 26 },
+                                          ].map(s => {
+                                            const active = imgAspect === s.ratio;
+                                            return (
+                                              <button key={s.ratio} type="button"
+                                                onClick={() => setImgAspect(s.ratio)}
+                                                className={`flex flex-col items-center justify-center gap-1 py-2 rounded-md transition-colors border ${
+                                                  active
+                                                    ? 'bg-accent/40 border-border text-foreground'
+                                                    : 'border-border/30 text-muted-foreground/70 hover:bg-accent/20 hover:text-foreground'
+                                                }`}>
+                                                <span className="rounded-[3px] border border-current/70"
+                                                  style={{ width: s.w, height: s.h }} />
+                                                <span className="text-[10px] tabular-nums">{s.ratio}</span>
+                                              </button>
+                                            );
+                                          })}
+                                        </div>
+                                      </div>
                                     </PopoverContent>
                                   </Popover>
                                 ) : (
