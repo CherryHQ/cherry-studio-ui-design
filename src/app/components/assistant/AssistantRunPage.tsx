@@ -1742,6 +1742,7 @@ export function AssistantRunPage() {
   // Image-gen tool state
   const [imgResolution, setImgResolution] = useState<'1K' | '2K' | '4K'>('1K');
   const [imgAspect, setImgAspect] = useState<string>('1:1');
+  const [imgCount, setImgCount] = useState<number>(1);
   const toolDragRef = useRef<{ dragging: string | null; over: string | null }>({ dragging: null, over: null });
   const orderedSecondaryTools = secondaryToolOrder.map(id => defaultSecondaryTools.find(t => t.id === id)!).filter(Boolean);
   const [activeBranchId, setActiveBranchId] = useState('main');
@@ -2504,7 +2505,7 @@ export function AssistantRunPage() {
                                       <Button variant="ghost" size="inline"
                                         className="px-1.5 py-[5px] gap-1 text-muted-foreground hover:text-foreground hover:bg-accent/50 rounded-md">
                                         <Icon size={14} strokeWidth={1.5} />
-                                        <span className="text-xs text-muted-foreground/70">{imgResolution} · {imgAspect}</span>
+                                        <span className="text-xs text-muted-foreground/70">{imgResolution} · {imgAspect} · {imgCount} img</span>
                                       </Button>
                                     </PopoverTrigger>
                                     <PopoverContent side="top" align="start" className="w-[280px] p-3 space-y-3">
@@ -2555,6 +2556,26 @@ export function AssistantRunPage() {
                                                 <span className="rounded-[3px] border border-current/70"
                                                   style={{ width: s.w, height: s.h }} />
                                                 <span className="text-[10px] tabular-nums">{s.ratio}</span>
+                                              </button>
+                                            );
+                                          })}
+                                        </div>
+                                      </div>
+                                      {/* Quantity */}
+                                      <div>
+                                        <div className="text-xs text-muted-foreground/70 mb-1.5">数量</div>
+                                        <div className="grid grid-cols-4 gap-1.5">
+                                          {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(n => {
+                                            const active = imgCount === n;
+                                            return (
+                                              <button key={n} type="button"
+                                                onClick={() => setImgCount(n)}
+                                                className={`py-1.5 rounded-md text-xs transition-colors border ${
+                                                  active
+                                                    ? 'bg-accent/40 border-border text-foreground'
+                                                    : 'border-border/30 text-muted-foreground/70 hover:bg-accent/20 hover:text-foreground'
+                                                }`}>
+                                                {n} img
                                               </button>
                                             );
                                           })}
