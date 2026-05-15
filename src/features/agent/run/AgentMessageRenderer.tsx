@@ -24,10 +24,9 @@ export type ChatMessage = AgentChatMessage;
 // ===========================
 
 function ToolCallRow({ msg }: { msg: ChatMessage }) {
-  const isError = msg.toolCall!.status === 'error';
-  // Auto-expand errored tool calls so the failure surfaces immediately.
-  const [expanded, setExpanded] = useState(isError);
+  const [expanded, setExpanded] = useState(false);
   const tc = msg.toolCall!;
+  const isError = tc.status === 'error';
   const isRunning = tc.status === 'running';
 
   // Extract file path from tool name (e.g. "write src/components/Card.tsx" -> "src/components/Card.tsx")
@@ -131,17 +130,13 @@ function ToolCallRow({ msg }: { msg: ChatMessage }) {
             className="overflow-hidden"
           >
             <div className="ml-[18px] py-1 space-y-1.5">
+              <ToolCallDetail content={msg.content} filePath={filePath} toolName={tc.name} />
               {isError && (
                 <MessageErrorBlock
                   size="compact"
                   message={tc.errorMessage || '工具调用失败'}
                   code={tc.errorCode}
-                  details={msg.content}
-                  onRetry={() => {/* mock — retry handler wired by runtime */}}
                 />
-              )}
-              {!isError && (
-                <ToolCallDetail content={msg.content} filePath={filePath} toolName={tc.name} />
               )}
             </div>
           </motion.div>
