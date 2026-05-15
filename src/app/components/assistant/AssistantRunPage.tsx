@@ -2580,11 +2580,11 @@ export function AssistantRunPage() {
                                 ) : tool.id === 'genimg' ? (
                                   <Popover>
                                     <PopoverTrigger asChild>
-                                      <Button variant="ghost" size="inline"
-                                        className="px-1.5 py-[5px] gap-1 text-muted-foreground hover:text-foreground hover:bg-accent/50 rounded-md">
-                                        <Icon size={14} strokeWidth={1.5} />
-                                        <span className="text-xs text-muted-foreground/70">{imgResolution} · {imgAspect} · {imgCount} img</span>
-                                      </Button>
+                                      <Tooltip content={`生成图片 · ${imgResolution} · ${imgAspect} · ${imgCount} img`} side="top">
+                                        <Button variant="ghost" size="icon-sm" className={btnCls}>
+                                          <Icon size={14} strokeWidth={1.5} />
+                                        </Button>
+                                      </Tooltip>
                                     </PopoverTrigger>
                                     <PopoverContent side="top" align="start" className="w-[280px] p-3 space-y-3">
                                       {/* Resolution */}
