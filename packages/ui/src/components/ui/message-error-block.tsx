@@ -126,12 +126,15 @@ export function MessageErrorBlock({
         role="alert"
         onClick={() => setModalOpen(true)}
         className={cn(
-          'group relative rounded-[var(--radius-button)] border cursor-pointer transition-colors',
-          // Neutral chrome — the red AlertTriangle carries the semantic;
-          // the card itself blends with surrounding chat bubbles.
-          'border-border/40 bg-muted/25',
-          'hover:border-border/60 hover:bg-muted/40',
-          compact ? 'px-2.5 py-2' : 'px-3 py-2.5',
+          'group relative rounded-[var(--radius-button)] border cursor-pointer transition-colors overflow-hidden',
+          // Faint destructive chrome + a left accent stripe — gives the card
+          // identity without flooding the bubble with red.
+          'border-destructive/15 bg-destructive/[0.025]',
+          'hover:border-destructive/30 hover:bg-destructive/[0.05]',
+          // Left accent stripe (3px wide destructive band)
+          'before:content-[""] before:absolute before:left-0 before:top-0 before:bottom-0 before:w-[3px]',
+          'before:bg-destructive/45 group-hover:before:bg-destructive/60 before:transition-colors',
+          compact ? 'pl-3 pr-2.5 py-2' : 'pl-3.5 pr-3 py-2.5',
           className,
         )}
       >
@@ -139,11 +142,11 @@ export function MessageErrorBlock({
         <div className="flex items-center gap-1.5">
           <AlertTriangle
             size={compact ? 12 : 13}
-            className="text-destructive/70 flex-shrink-0"
+            className="text-destructive flex-shrink-0"
           />
           <span
             className={cn(
-              'font-medium text-foreground/85 leading-snug truncate',
+              'font-medium text-destructive/85 leading-snug truncate',
               compact ? 'text-[11px]' : 'text-[12px]',
             )}
           >
@@ -153,7 +156,7 @@ export function MessageErrorBlock({
             <span
               className={cn(
                 'inline-flex items-center px-1.5 py-px rounded font-mono leading-none flex-shrink-0',
-                'bg-muted/60 text-muted-foreground/80',
+                'bg-destructive/8 text-destructive/75',
                 compact ? 'text-[9px]' : 'text-[10px]',
               )}
             >
@@ -165,7 +168,7 @@ export function MessageErrorBlock({
         {/* Description */}
         <div
           className={cn(
-            'ml-[18px] mt-0.5 line-clamp-3 leading-snug text-muted-foreground/70',
+            'ml-[18px] mt-0.5 line-clamp-3 leading-snug text-foreground/65',
             compact ? 'text-[11px]' : 'text-xs',
           )}
         >
@@ -180,8 +183,8 @@ export function MessageErrorBlock({
               size="inline"
               onClick={handleNavigate}
               className={cn(
-                'gap-1 px-1.5 py-0.5 rounded border border-border/40',
-                'text-muted-foreground/80 hover:text-foreground hover:bg-muted/60',
+                'gap-1 px-1.5 py-0.5 rounded border border-destructive/20',
+                'text-destructive/75 hover:text-destructive hover:bg-destructive/8 hover:border-destructive/35',
                 compact ? 'text-[10px]' : 'text-[11px]',
               )}
             >
@@ -195,7 +198,7 @@ export function MessageErrorBlock({
               size="inline"
               onClick={(e) => { e.stopPropagation(); onRetry(); }}
               className={cn(
-                'gap-1 px-1.5 py-0.5 rounded text-muted-foreground/80 hover:text-foreground hover:bg-muted/60',
+                'gap-1 px-1.5 py-0.5 rounded text-destructive/75 hover:text-destructive hover:bg-destructive/8',
                 compact ? 'text-[10px]' : 'text-[11px]',
               )}
             >
@@ -205,8 +208,8 @@ export function MessageErrorBlock({
           )}
           <span
             className={cn(
-              'ml-auto inline-flex items-center gap-0.5 text-muted-foreground/45',
-              'group-hover:text-foreground/80 transition-colors',
+              'ml-auto inline-flex items-center gap-0.5 text-muted-foreground/50',
+              'group-hover:text-destructive/80 transition-colors',
               compact ? 'text-[10px]' : 'text-[11px]',
             )}
           >
