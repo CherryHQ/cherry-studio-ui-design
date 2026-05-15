@@ -127,8 +127,10 @@ export function MessageErrorBlock({
         onClick={() => setModalOpen(true)}
         className={cn(
           'group relative rounded-[var(--radius-button)] border cursor-pointer transition-colors',
-          'border-destructive/20 bg-destructive/[0.04]',
-          'hover:border-destructive/35 hover:bg-destructive/[0.07]',
+          // Neutral chrome — the red AlertTriangle carries the semantic;
+          // the card itself blends with surrounding chat bubbles.
+          'border-border/40 bg-muted/25',
+          'hover:border-border/60 hover:bg-muted/40',
           compact ? 'px-2.5 py-2' : 'px-3 py-2.5',
           className,
         )}
@@ -137,11 +139,11 @@ export function MessageErrorBlock({
         <div className="flex items-center gap-1.5">
           <AlertTriangle
             size={compact ? 12 : 13}
-            className="text-destructive flex-shrink-0"
+            className="text-destructive/70 flex-shrink-0"
           />
           <span
             className={cn(
-              'font-medium text-destructive leading-snug truncate',
+              'font-medium text-foreground/85 leading-snug truncate',
               compact ? 'text-[11px]' : 'text-[12px]',
             )}
           >
@@ -151,7 +153,7 @@ export function MessageErrorBlock({
             <span
               className={cn(
                 'inline-flex items-center px-1.5 py-px rounded font-mono leading-none flex-shrink-0',
-                'bg-destructive/10 text-destructive/80',
+                'bg-muted/60 text-muted-foreground/80',
                 compact ? 'text-[9px]' : 'text-[10px]',
               )}
             >
@@ -163,7 +165,7 @@ export function MessageErrorBlock({
         {/* Description */}
         <div
           className={cn(
-            'ml-[18px] mt-0.5 line-clamp-3 leading-snug text-muted-foreground/80',
+            'ml-[18px] mt-0.5 line-clamp-3 leading-snug text-muted-foreground/70',
             compact ? 'text-[11px]' : 'text-xs',
           )}
         >
@@ -178,8 +180,8 @@ export function MessageErrorBlock({
               size="inline"
               onClick={handleNavigate}
               className={cn(
-                'gap-1 px-1.5 py-0.5 rounded border border-destructive/25',
-                'text-destructive/80 hover:text-destructive hover:bg-destructive/10',
+                'gap-1 px-1.5 py-0.5 rounded border border-border/40',
+                'text-muted-foreground/80 hover:text-foreground hover:bg-muted/60',
                 compact ? 'text-[10px]' : 'text-[11px]',
               )}
             >
@@ -193,7 +195,7 @@ export function MessageErrorBlock({
               size="inline"
               onClick={(e) => { e.stopPropagation(); onRetry(); }}
               className={cn(
-                'gap-1 px-1.5 py-0.5 rounded text-destructive/80 hover:text-destructive hover:bg-destructive/10',
+                'gap-1 px-1.5 py-0.5 rounded text-muted-foreground/80 hover:text-foreground hover:bg-muted/60',
                 compact ? 'text-[10px]' : 'text-[11px]',
               )}
             >
@@ -203,8 +205,8 @@ export function MessageErrorBlock({
           )}
           <span
             className={cn(
-              'ml-auto inline-flex items-center gap-0.5 text-muted-foreground/50',
-              'group-hover:text-destructive transition-colors',
+              'ml-auto inline-flex items-center gap-0.5 text-muted-foreground/45',
+              'group-hover:text-foreground/80 transition-colors',
               compact ? 'text-[10px]' : 'text-[11px]',
             )}
           >
