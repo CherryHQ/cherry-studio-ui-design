@@ -106,18 +106,32 @@ export function MessageErrorBlock({
     [detail, message, code],
   );
   const title = classifyError(effectiveDetail);
-  const hasExtras = !!(
-    effectiveDetail.statusCode ||
-    effectiveDetail.requestUrl ||
-    effectiveDetail.responseBody ||
-    effectiveDetail.stack ||
-    effectiveDetail.providerId
-  );
 
   const handleNavigate = (e: React.MouseEvent) => {
     e.stopPropagation();
     onNavigateToSettings?.(effectiveDetail.providerId);
   };
+
+  // Defensive cleanup — Radix Dialog can leave `pointer-events: none` on
+  // <body> if the host component unmounts while the dialog is open (e.g.
+  // the chat re-renders / session switches). That would make the rest of
+  // the page unclickable until refresh. Reset it whenever this block
+  // unmounts or its open state flips back to false.
+  React.useEffect(() => {
+    if (modalOpen) return;
+    const body = typeof document !== 'undefined' ? document.body : null;
+    if (body && body.style.pointerEvents === 'none') {
+      body.style.pointerEvents = '';
+    }
+  }, [modalOpen]);
+  React.useEffect(() => {
+    return () => {
+      const body = typeof document !== 'undefined' ? document.body : null;
+      if (body && body.style.pointerEvents === 'none') {
+        body.style.pointerEvents = '';
+      }
+    };
+  }, []);
 
   return (
     <>
