@@ -239,37 +239,6 @@ function ToolCallDetail({ content, filePath, toolName }: {
   );
 }
 
-// ===========================
-// Semantic Icon resolver for messages
-// ===========================
-
-function resolveToolIcon(name: string, size = 11): React.ReactNode {
-  const n = name.toLowerCase();
-  if (n.includes('search') || n.includes('find') || n.includes('analyz'))
-    return <Search size={size} className="text-muted-foreground flex-shrink-0" />;
-  if (n.includes('web') || n.includes('browse') || n.includes('http') || n.includes('fetch'))
-    return <Globe size={size} className="text-muted-foreground flex-shrink-0" />;
-  if (n.includes('write') || n.includes('edit') || n.includes('update') || n.includes('create') || n.includes('modify'))
-    return <Pencil size={size} className="text-muted-foreground flex-shrink-0" />;
-  if (n.includes('install') || n.includes('npm') || n.includes('pnpm') || n.includes('yarn') || n.includes('package'))
-    return <Package size={size} className="text-muted-foreground flex-shrink-0" />;
-  if (n.includes('config') || n.includes('init') || n.includes('setup') || n.includes('setting'))
-    return <Settings size={size} className="text-muted-foreground flex-shrink-0" />;
-  if (n.includes('run') || n.includes('exec') || n.includes('start') || n.includes('dev') || n.includes('vite') || n.includes('npx'))
-    return <Play size={size} className="text-muted-foreground flex-shrink-0" />;
-  if (n.includes('delete') || n.includes('remove') || n.includes('clean'))
-    return <Trash2 size={size} className="text-muted-foreground flex-shrink-0" />;
-  if (n.includes('read') || n.includes('view') || n.includes('inspect') || n.includes('check') || n.includes('review'))
-    return <Eye size={size} className="text-muted-foreground flex-shrink-0" />;
-  if (n.includes('build') || n.includes('compile') || n.includes('deploy'))
-    return <Rocket size={size} className="text-muted-foreground flex-shrink-0" />;
-  if (n.includes('folder') || n.includes('dir') || n.includes('mkdir'))
-    return <FolderOpen size={size} className="text-muted-foreground flex-shrink-0" />;
-  if (n.includes('code') || n.includes('component') || n.includes('function'))
-    return <Code2 size={size} className="text-muted-foreground flex-shrink-0" />;
-  return <Terminal size={size} className="text-muted-foreground flex-shrink-0" />;
-}
-
 // Collect unique tool type icons for the collapsed summary
 function collectTypeIcons(msgs: ChatMessage[]): React.ReactNode[] {
   const seen = new Set<string>();
