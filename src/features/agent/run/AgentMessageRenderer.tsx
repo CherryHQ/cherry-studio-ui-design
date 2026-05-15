@@ -51,11 +51,6 @@ function ToolCallRow({ msg }: { msg: ChatMessage }) {
           isExpandable ? 'hover:bg-accent/40 rounded-md cursor-pointer' : 'cursor-default'
         }`}
       >
-        {isRunning ? (
-          <motion.div {...shakeAnimation} className="flex items-center justify-center flex-shrink-0">
-            {resolveToolIcon(tc.name)}
-          </motion.div>
-        ) : resolveToolIcon(tc.name)}
         <span className="text-foreground truncate">{toolLabel}</span>
         {filePath && (
           <span className="inline-flex items-center gap-1 px-1.5 py-[1px] rounded bg-accent/60 text-muted-foreground text-xs font-mono truncate max-w-[200px]">
