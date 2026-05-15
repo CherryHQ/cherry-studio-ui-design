@@ -814,6 +814,35 @@ function StatsRow() {
       responseJson: '{ "data": [{ "url": "..." }] }',
     },
   },
+
+  // 15. User retries a request that hits provider rate limit
+  {
+    id: 'msg-15',
+    role: 'user',
+    content: '再生成 8 张同主题的配图，做成轮播图组合',
+    timestamp: '14:52',
+  },
+
+  // 16. Assistant message that failed mid-stream — demonstrates inline error banner
+  {
+    id: 'msg-16',
+    role: 'assistant',
+    content: '',
+    timestamp: '14:52',
+    errorCode: '429',
+    errorMessage: '上游模型当前请求过于频繁（rate limit），已暂停生成。请稍后重试，或切换到其他模型。',
+    metadata: {
+      sessionId: 'a1b2c3d4e5f60007',
+      model: 'dall-e-3',
+      provider: 'openai',
+      status: 'error',
+      startTime: '2025-10-03 14:52',
+      duration: '1.2s',
+      tokens: { input: 0, output: 0 },
+      requestJson: '{ "prompt": "social media batch (8x)", "n": 8 }',
+      responseJson: '{\n  "error": {\n    "code": "rate_limit_exceeded",\n    "message": "Rate limit reached for requests",\n    "type": "requests",\n    "param": null\n  }\n}',
+    },
+  },
 ];
 
 // ===========================

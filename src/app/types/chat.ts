@@ -37,6 +37,10 @@ export interface ToolCallData {
   name: string;
   status: 'running' | 'done' | 'error';
   duration?: string;
+  // Error text when status === 'error'. Mirrors Cherry Studio's ToolCallResult.error field.
+  errorMessage?: string;
+  // Optional error code (e.g. 'rate_limit_exceeded', '429', 'auth_failed') for compact badge display.
+  errorCode?: string;
 }
 
 // --- Generative UI (Agent) ---
@@ -186,4 +190,8 @@ export interface Message {
   retryVersions?: Message[];
   // Index of active retry version (0-based, undefined means original)
   activeRetryIndex?: number;
+  // Message-level error (e.g. API request failed). Surfaces as inline error banner.
+  // Mirrors how Cherry Studio source carries error text alongside the failed message.
+  errorMessage?: string;
+  errorCode?: string;
 }

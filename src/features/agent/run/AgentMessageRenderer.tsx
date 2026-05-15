@@ -9,7 +9,7 @@ import {
   ShieldCheck, ShieldAlert, ShieldQuestion,
   ArrowRight, AlertTriangle,
 } from 'lucide-react';
-import { Button, DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@cherry-studio/ui';
+import { Button, DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, MessageErrorBlock } from '@cherry-studio/ui';
 import { ExternalLink, Eye as EyeIcon, FolderOpen as FolderOpenIcon, MousePointer2, TerminalSquare } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { shakeAnimation } from '@/app/config/animations';
@@ -24,7 +24,9 @@ export type ChatMessage = AgentChatMessage;
 // ===========================
 
 function ToolCallRow({ msg }: { msg: ChatMessage }) {
-  const [expanded, setExpanded] = useState(false);
+  const isError = msg.toolCall!.status === 'error';
+  // Auto-expand errored tool calls so the failure surfaces immediately.
+  const [expanded, setExpanded] = useState(isError);
   const tc = msg.toolCall!;
   const isRunning = tc.status === 'running';
 
@@ -128,8 +130,19 @@ function ToolCallRow({ msg }: { msg: ChatMessage }) {
             transition={{ duration: 0.12 }}
             className="overflow-hidden"
           >
-            <div className="ml-[18px] py-1">
-              <ToolCallDetail content={msg.content} filePath={filePath} toolName={tc.name} />
+            <div className="ml-[18px] py-1 space-y-1.5">
+              {isError && (
+                <MessageErrorBlock
+                  size="compact"
+                  message={tc.errorMessage || '工具调用失败'}
+                  code={tc.errorCode}
+                  details={msg.content}
+                  onRetry={() => {/* mock — retry handler wired by runtime */}}
+                />
+              )}
+              {!isError && (
+                <ToolCallDetail content={msg.content} filePath={filePath} toolName={tc.name} />
+              )}
             </div>
           </motion.div>
         )}

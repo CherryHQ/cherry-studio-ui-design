@@ -29,6 +29,7 @@ import {
   DropdownMenuSub, DropdownMenuSubTrigger, DropdownMenuSubContent,
   Popover, PopoverTrigger, PopoverContent,
   HoverCard, HoverCardTrigger, HoverCardContent, BrandLogo,
+  MessageErrorBlock,
 } from '@cherry-studio/ui';
 import type { AssistantInfo, AssistantTopic } from '@/app/types/assistant';
 import type {
@@ -1412,6 +1413,17 @@ function MessageBubble({ msg, onOpenPanel, onAvatarClick, onOpenArtifact, assist
 
         {/* Generated images */}
         {msg.images && msg.images.length > 0 && <ImageGallery images={msg.images} />}
+
+        {/* Inline error banner — shown when the message itself failed (e.g. API/model error). */}
+        {(displayMsg.errorMessage || displayMsg.metadata?.status === 'error') && (
+          <div className="mt-1.5">
+            <MessageErrorBlock
+              message={displayMsg.errorMessage || '请求失败，请重试'}
+              code={displayMsg.errorCode}
+              onRetry={onRetry ? () => onRetry(msg.id) : undefined}
+            />
+          </div>
+        )}
 
         {/* Triggered indicators */}
         <div className="flex items-center gap-1.5 mt-1 flex-wrap">

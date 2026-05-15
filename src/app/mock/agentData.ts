@@ -758,6 +758,14 @@ const SESSION_2_MESSAGES: ChatMessage[] = [
   { id: 'r-m2', role: 'agent', thinking: '用户需要一份全面的 AI 框架技术选型报告。我需要调研 LangChain, LlamaIndex, Semantic Kernel, Haystack, AutoGen, CrewAI 这些主流框架，从功能、性能、生态、成本等维度进行对比分析。', content: '明白！我将对当前主流的 AI 应用开发框架进行系统调研。调研范围包括 LangChain、LlamaIndex、Semantic Kernel、Haystack、AutoGen 和 CrewAI。', timestamp: '10:15' },
   { id: 'r-m3', role: 'agent', generativeUI: { type: 'buttons', prompt: '调研报告需要包含哪些内容？（可多选后告知）', options: [{ label: '功能对比矩阵' }, { label: '性能基准测试' }, { label: '成本分析' }, { label: '团队适配建议' }], resolved: true, resolvedValue: '功能对比矩阵' }, timestamp: '10:16' },
   { id: 'r-m4', role: 'agent', toolCall: { name: 'search web: AI framework comparison 2025', status: 'done', duration: '4.1s' }, content: '已分析的来源  8\n\n📄 LangChain Documentation v0.3          langchain.com\n📄 LlamaIndex — Build RAG Apps            llamaindex.ai\n📄 Semantic Kernel Overview                learn.microsoft.com\n📄 Haystack by deepset                    haystack.deepset.ai\n📄 AutoGen — Multi-Agent Framework         microsoft.github.io\n📄 CrewAI Documentation                    docs.crewai.com\n💬 Reddit: Production experiences          reddit.com\n💬 HN: Why I switched from LangChain       news.ycombinator.com', timestamp: '10:16' },
+  // Errored tool call — surfaces the inline error banner with retry affordance.
+  { id: 'r-m4a', role: 'agent', toolCall: {
+      name: 'search web: LangChain vs LlamaIndex benchmark',
+      status: 'error',
+      duration: '0.9s',
+      errorCode: '429',
+      errorMessage: '搜索服务暂时限流，请稍后重试',
+    }, content: 'POST https://api.search.dev/v1/query 429 Too Many Requests\n\nRequest-ID: 7e9a-21f0-4c8b\nRetry-After: 12s\nQuota: 60/min · Used: 60', timestamp: '10:17' },
   { id: 'r-m5', role: 'agent', toolCall: { name: 'search web: LangChain vs LlamaIndex benchmark', status: 'done', duration: '3.8s' }, content: '已分析的来源  6\n\n📄 RAG Framework Benchmark 2025            blog.llamaindex.ai\n📄 LangChain Performance Guide             python.langchain.com\n📄 Choosing Between LangChain & LlamaIndex medium.com\n📄 AI Framework Latency Comparison         benchmarks.ai\n💬 Best RAG framework for production?      reddit.com/r/LocalLLaMA\n💬 LlamaIndex vs LangChain in 2025         dev.to', timestamp: '10:17' },
   { id: 'r-m6', role: 'agent', toolCall: { name: 'analyze 18 sources and extract key data', status: 'done', duration: '12.3s' }, content: '提取关键数据点：\n• LangChain GitHub Stars: 92.4k, Contributors: 2,800+\n• LlamaIndex GitHub Stars: 35.8k, RAG 专项优化\n• AutoGen: Microsoft 出品，多 Agent 协作支持\n• Semantic Kernel: .NET/Python 双语言支持\n• 6 个框架均采用 MIT/Apache 开源协议\n• 生产环境用户反馈样本: 47 条', timestamp: '10:18' },
   { id: 'r-m7', role: 'agent', content: '已收集到 18 个高质量来源的数据，包括官方文档、社区讨论和生产用户反馈。正在运行基准测试...', timestamp: '10:19' },
