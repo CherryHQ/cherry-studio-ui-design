@@ -2380,7 +2380,6 @@ export function AssistantRunPage() {
                                     <DropdownMenuSubTrigger className="gap-2 px-2 py-[5px] text-xs">
                                       <Icon size={13} strokeWidth={1.5} className="text-muted-foreground flex-shrink-0" />
                                       <span className="flex-1 text-left">{item.label}</span>
-                                      <span className="text-xs text-muted-foreground/55 tabular-nums">{imgResolution}·{imgAspect}·{imgCount}</span>
                                     </DropdownMenuSubTrigger>
                                     <DropdownMenuSubContent className="w-[280px] p-3 space-y-3">
                                       <div>
