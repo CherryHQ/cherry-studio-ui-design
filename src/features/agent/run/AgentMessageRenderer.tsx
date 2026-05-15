@@ -1,18 +1,15 @@
 import React, { useState, useMemo } from 'react';
 import {
   ChevronRight, ChevronDown,
-  Terminal, Loader2, Check, X,
-  Bot, FileText,
-  Search, Globe, Package, Code2,
-  Settings, Rocket,
-  Brain, Pencil, Eye, Play, Trash2, FolderOpen,
+  Loader2, Check, X,
+  Globe, Code2,
+  Brain,
   ShieldCheck, ShieldAlert, ShieldQuestion,
   ArrowRight, AlertTriangle,
+  ExternalLink, Eye as EyeIcon, FolderOpen as FolderOpenIcon, MousePointer2, TerminalSquare,
 } from 'lucide-react';
 import { Button, DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, MessageErrorBlock } from '@cherry-studio/ui';
-import { ExternalLink, Eye as EyeIcon, FolderOpen as FolderOpenIcon, MousePointer2, TerminalSquare } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { shakeAnimation } from '@/app/config/animations';
 import type { AgentChatMessage } from '@/app/types/agent';
 import { GenUIButtons, GenUISelection, GenUIConfirmation } from './GenerativeUI';
 
@@ -238,34 +235,6 @@ function ToolCallDetail({ content, filePath, toolName }: {
       <pre className="text-xs text-muted-foreground leading-[1.7] whitespace-pre-wrap break-all">{content}</pre>
     </div>
   );
-}
-
-// Collect unique tool type icons for the collapsed summary
-function collectTypeIcons(msgs: ChatMessage[]): React.ReactNode[] {
-  const seen = new Set<string>();
-  const icons: React.ReactNode[] = [];
-  for (const m of msgs) {
-    if (m.toolCall) {
-      const n = m.toolCall.name.toLowerCase();
-      let key = 'terminal';
-      if (n.includes('read') || n.includes('view')) key = 'file';
-      else if (n.includes('write') || n.includes('edit') || n.includes('create')) key = 'edit';
-      else if (n.includes('run') || n.includes('exec') || n.includes('npm') || n.includes('npx')) key = 'terminal';
-      else if (n.includes('search') || n.includes('find')) key = 'search';
-      if (!seen.has(key)) {
-        seen.add(key);
-        if (key === 'file') icons.push(<FileText key={key} size={10} />);
-        else if (key === 'edit') icons.push(<Pencil key={key} size={10} />);
-        else if (key === 'terminal') icons.push(<Terminal key={key} size={10} />);
-        else if (key === 'search') icons.push(<Search key={key} size={10} />);
-      }
-    }
-    if (m.thinking && !seen.has('thinking')) {
-      seen.add('thinking');
-      icons.push(<Brain key="thinking" size={10} />);
-    }
-  }
-  return icons;
 }
 
 // ===========================
@@ -747,7 +716,6 @@ function ProcessBlock({ msgs, isRunning, onResolve }: {
   const contentCount = msgs.filter(m => m.content && !m.toolCall && !m.thinking && !m.generativeUI).length;
   const thinkingCount = msgs.filter(m => m.thinking).length;
   const totalCount = toolCallCount + contentCount + thinkingCount;
-  const typeIcons = useMemo(() => collectTypeIcons(msgs), [msgs]);
 
   // Sum of tool call durations (e.g. "3.2s") for the collapsed summary
   const totalDurationLabel = useMemo(() => {
@@ -786,11 +754,6 @@ function ProcessBlock({ msgs, isRunning, onResolve }: {
               ? `已处理 ${totalDurationLabel}`
               : (toolCallCount > 0 ? `${toolCallCount} 次工具调用` : `${contentCount + thinkingCount} 条消息`)}
           </span>
-          {typeIcons.length > 0 && (
-            <span className="flex items-center gap-1 ml-0.5 text-text-tertiary">
-              {typeIcons}
-            </span>
-          )}
         </button>
       )}
 

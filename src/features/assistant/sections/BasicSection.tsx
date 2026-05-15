@@ -53,13 +53,22 @@ export function BasicSection({ resource }: Props) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [model, setModel] = useState(resource.model || 'claude-4-opus');
   const [modelPickerOpen, setModelPickerOpen] = useState(false);
+  // Model parameters — each carries its own `enable` toggle, mirroring
+  // Cherry Studio source's AssistantModelSettings (enableTemperature /
+  // enableTopP / enableMaxTokens / enableAutoContext etc). The slider /
+  // input only renders when the corresponding switch is on.
   const [temperature, setTemperature] = useState(0.7);
+  const [enableTemperature, setEnableTemperature] = useState(true);
   const [topP, setTopP] = useState(0.9);
+  const [enableTopP, setEnableTopP] = useState(true);
   const [maxTokens, setMaxTokens] = useState(4096);
-  // Required Cherry Studio params previously missing from this view
-  const [maxContextCount, setMaxContextCount] = useState(10);
+  const [enableMaxTokens, setEnableMaxTokens] = useState(true);
+  const [autoContextCount, setAutoContextCount] = useState(10);
+  const [enableAutoContext, setEnableAutoContext] = useState(false);
   const [frequencyPenalty, setFrequencyPenalty] = useState(0);
+  const [enableFrequencyPenalty, setEnableFrequencyPenalty] = useState(false);
   const [presencePenalty, setPresencePenalty] = useState(0);
+  const [enablePresencePenalty, setEnablePresencePenalty] = useState(false);
   const [streamOutput, setStreamOutput] = useState(true);
   const [defaultAssistant, setDefaultAssistant] = useState(false);
 
@@ -81,10 +90,8 @@ export function BasicSection({ resource }: Props) {
         <Typography variant="subtitle" className="mb-1">基础设置</Typography>
         <p className="text-xs text-muted-foreground/60">配置助手的身份信息和模型参数</p>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-6">
-      {/* Left column — identity */}
-      <div className="space-y-5">
 
+      {/* Row 1: 头像 + 名称 (single row, full width) */}
       <FieldGroup label="头像与名称">
         <div className="flex items-center gap-3">
           <Popover>
@@ -171,10 +178,14 @@ export function BasicSection({ resource }: Props) {
         </div>
       </FieldGroup>
 
+      {/* Row 2: 简介 (full width) */}
       <FieldGroup label="简介">
         <Textarea value={description} onChange={e => setDescription(e.target.value)} rows={3}
           className="input-accent resize-none" />
       </FieldGroup>
+
+      {/* Remaining params — parallel 2-column grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-5">
 
       {/* Tags — dropdown multi-select */}
       <FieldGroup label="标签">
@@ -221,24 +232,6 @@ export function BasicSection({ resource }: Props) {
         </Popover>
       </FieldGroup>
 
-      <ToggleRow
-        label="设为默认助手"
-        hint="新会话默认使用该助手"
-        checked={defaultAssistant}
-        onCheckedChange={setDefaultAssistant}
-      />
-
-      <ToggleRow
-        label="流式输出"
-        hint="逐字返回内容（建议保持开启）"
-        checked={streamOutput}
-        onCheckedChange={setStreamOutput}
-      />
-
-      </div>
-      {/* Right column — model + parameters */}
-      <div className="space-y-5">
-
       <FieldGroup label="模型">
         <Popover open={modelPickerOpen} onOpenChange={setModelPickerOpen}>
           <PopoverTrigger asChild>
@@ -260,33 +253,83 @@ export function BasicSection({ resource }: Props) {
         </Popover>
       </FieldGroup>
 
-      <FieldGroup label={<span>Temperature <span className="text-muted-foreground/40 ml-1">{temperature.toFixed(1)}</span></span>}>
-        <Slider min={0} max={2} step={0.1} value={[temperature]} onValueChange={([v]) => setTemperature(v)} />
+      <ToggleRow
+        label="设为默认助手"
+        hint="新会话默认使用该助手"
+        checked={defaultAssistant}
+        onCheckedChange={setDefaultAssistant}
+      />
+
+      <ToggleRow
+        label="流式输出"
+        hint="逐字返回内容（建议保持开启）"
+        checked={streamOutput}
+        onCheckedChange={setStreamOutput}
+      />
+
+      <ParamRow
+        label="Temperature"
+        hint="控制采样随机性，越大越发散"
+        valueLabel={temperature.toFixed(2)}
+        enabled={enableTemperature}
+        onEnabledChange={setEnableTemperature}
+      >
+        <Slider min={0} max={2} step={0.01} value={[temperature]} onValueChange={([v]) => setTemperature(v)} />
         <div className="flex justify-between mt-1"><span className="text-xs text-muted-foreground/50">精确</span><span className="text-xs text-muted-foreground/50">创意</span></div>
-      </FieldGroup>
+      </ParamRow>
 
-      <FieldGroup label={<span>Top-P <span className="text-muted-foreground/40 ml-1">{topP.toFixed(1)}</span></span>}>
-        <Slider min={0} max={1} step={0.05} value={[topP]} onValueChange={([v]) => setTopP(v)} />
-      </FieldGroup>
+      <ParamRow
+        label="Top-P"
+        hint="核采样阈值，越大候选词越多"
+        valueLabel={topP.toFixed(2)}
+        enabled={enableTopP}
+        onEnabledChange={setEnableTopP}
+      >
+        <Slider min={0} max={1} step={0.01} value={[topP]} onValueChange={([v]) => setTopP(v)} />
+      </ParamRow>
 
-      <FieldGroup label="最大输出 Token 数">
+      <ParamRow
+        label="自动上下文消息"
+        hint="开启后按指定上限自动保留历史消息"
+        valueLabel={enableAutoContext ? String(autoContextCount) : undefined}
+        enabled={enableAutoContext}
+        onEnabledChange={setEnableAutoContext}
+      >
+        <Slider min={0} max={50} step={1} value={[autoContextCount]} onValueChange={([v]) => setAutoContextCount(v)} />
+        <div className="flex justify-between mt-1"><span className="text-xs text-muted-foreground/50">单轮</span><span className="text-xs text-muted-foreground/50">长程</span></div>
+      </ParamRow>
+
+      <ParamRow
+        label="最大输出 Token 数"
+        hint="单次回复最多生成的 Token 数量"
+        valueLabel={enableMaxTokens ? String(maxTokens) : undefined}
+        enabled={enableMaxTokens}
+        onEnabledChange={setEnableMaxTokens}
+      >
         <Input type="number" value={maxTokens} onChange={e => setMaxTokens(parseInt(e.target.value) || 0)}
           className="w-full px-3 py-2 rounded-xl border-border/20 bg-accent/15 text-xs text-foreground focus:border-border/40 focus:bg-accent/15 transition-all tabular-nums" />
-      </FieldGroup>
+      </ParamRow>
 
-      <FieldGroup label={<span>上下文消息数 <span className="text-muted-foreground/40 ml-1 tabular-nums">{maxContextCount}</span></span>}>
-        <Slider min={0} max={50} step={1} value={[maxContextCount]} onValueChange={([v]) => setMaxContextCount(v)} />
-        <div className="flex justify-between mt-1"><span className="text-xs text-muted-foreground/50">单轮</span><span className="text-xs text-muted-foreground/50">长程</span></div>
-      </FieldGroup>
+      <ParamRow
+        label="Frequency Penalty"
+        hint="降低重复词的概率"
+        valueLabel={frequencyPenalty.toFixed(2)}
+        enabled={enableFrequencyPenalty}
+        onEnabledChange={setEnableFrequencyPenalty}
+      >
+        <Slider min={-2} max={2} step={0.01} value={[frequencyPenalty]} onValueChange={([v]) => setFrequencyPenalty(v)} />
+      </ParamRow>
 
-      <FieldGroup label={<span>Frequency Penalty <span className="text-muted-foreground/40 ml-1 tabular-nums">{frequencyPenalty.toFixed(1)}</span></span>}>
-        <Slider min={-2} max={2} step={0.1} value={[frequencyPenalty]} onValueChange={([v]) => setFrequencyPenalty(v)} />
-      </FieldGroup>
+      <ParamRow
+        label="Presence Penalty"
+        hint="鼓励引入新话题"
+        valueLabel={presencePenalty.toFixed(2)}
+        enabled={enablePresencePenalty}
+        onEnabledChange={setEnablePresencePenalty}
+      >
+        <Slider min={-2} max={2} step={0.01} value={[presencePenalty]} onValueChange={([v]) => setPresencePenalty(v)} />
+      </ParamRow>
 
-      <FieldGroup label={<span>Presence Penalty <span className="text-muted-foreground/40 ml-1 tabular-nums">{presencePenalty.toFixed(1)}</span></span>}>
-        <Slider min={-2} max={2} step={0.1} value={[presencePenalty]} onValueChange={([v]) => setPresencePenalty(v)} />
-      </FieldGroup>
-      </div>
       </div>
     </div>
   );
@@ -314,6 +357,38 @@ function ToggleRow({ label, hint, checked, onCheckedChange }: {
         {hint && <p className="text-xs text-muted-foreground/40 mt-0.5">{hint}</p>}
       </div>
       <Switch checked={checked} onCheckedChange={onCheckedChange} className="flex-shrink-0 mt-0.5" />
+    </div>
+  );
+}
+
+// Param row with enable Switch — mirrors Cherry Studio source's pattern
+// (AssistantModelSettings.tsx: SettingRow with Label + Switch, then
+// conditional slider/input row beneath when the toggle is on).
+function ParamRow({
+  label, hint, valueLabel, enabled, onEnabledChange, children,
+}: {
+  label: string;
+  hint?: string;
+  valueLabel?: string;
+  enabled: boolean;
+  onEnabledChange: (v: boolean) => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <div>
+      <div className="flex items-start justify-between gap-3 mb-1.5">
+        <div className="min-w-0">
+          <label className="text-sm text-muted-foreground/80 block">
+            {label}
+            {valueLabel != null && enabled && (
+              <span className="text-muted-foreground/40 ml-1.5 tabular-nums">{valueLabel}</span>
+            )}
+          </label>
+          {hint && <p className="text-xs text-muted-foreground/40 mt-0.5">{hint}</p>}
+        </div>
+        <Switch checked={enabled} onCheckedChange={onEnabledChange} className="flex-shrink-0 mt-0.5" />
+      </div>
+      {enabled && <div className="pt-1">{children}</div>}
     </div>
   );
 }
