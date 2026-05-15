@@ -32,6 +32,41 @@ export interface FewShotExample {
 // --- Roles ---
 export type MessageRole = 'user' | 'assistant' | 'agent' | 'system';
 
+// --- Error Detail (rich error payload, mirrors Cherry Studio's ErrorMessageBlock.error) ---
+export interface ErrorDetail {
+  /** Short human-readable message. */
+  message: string;
+  /** Short code or label rendered as a pill (e.g. 'rate_limit', 'auth_failed'). */
+  code?: string;
+  /** HTTP status code, if applicable (400, 401, 429, 500, …). */
+  statusCode?: number;
+  /** Stack trace text. */
+  stack?: string;
+  /** Request URL that triggered the error. */
+  requestUrl?: string;
+  /** Raw response body (often JSON). */
+  responseBody?: string;
+  /** Response headers — serialized as JSON for display. */
+  responseHeaders?: string;
+  /** Provider id (e.g. 'openai', 'anthropic') — drives "前往设置" nav target. */
+  providerId?: string;
+  /** Model id involved in the failed call. */
+  modelId?: string;
+  /** Localized title from rule-based classification (overrides message in header). */
+  classification?: string;
+  /** Optional cached AI diagnosis — shown immediately when reopening the modal. */
+  diagnosis?: ErrorDiagnosis;
+}
+
+export interface ErrorDiagnosis {
+  /** One-line headline summary. */
+  summary: string;
+  /** Longer explanation paragraph. */
+  explanation?: string;
+  /** Numbered remediation steps. */
+  steps?: { text: string }[];
+}
+
 // --- Tool Calls (Agent) ---
 export interface ToolCallData {
   name: string;
@@ -41,6 +76,8 @@ export interface ToolCallData {
   errorMessage?: string;
   // Optional error code (e.g. 'rate_limit_exceeded', '429', 'auth_failed') for compact badge display.
   errorCode?: string;
+  // Rich error payload — drives the detail modal + AI diagnosis flow.
+  error?: ErrorDetail;
 }
 
 // --- Generative UI (Agent) ---
@@ -194,4 +231,6 @@ export interface Message {
   // Mirrors how Cherry Studio source carries error text alongside the failed message.
   errorMessage?: string;
   errorCode?: string;
+  // Rich error payload — drives the detail modal + AI diagnosis flow.
+  error?: ErrorDetail;
 }

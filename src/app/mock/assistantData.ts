@@ -823,7 +823,7 @@ function StatsRow() {
     timestamp: '14:52',
   },
 
-  // 16. Assistant message that failed mid-stream — demonstrates inline error banner
+  // 16. Assistant message that failed mid-stream — click for full detail + AI diagnosis
   {
     id: 'msg-16',
     role: 'assistant',
@@ -831,6 +831,16 @@ function StatsRow() {
     timestamp: '14:52',
     errorCode: '429',
     errorMessage: '上游模型当前请求过于频繁（rate limit），已暂停生成。请稍后重试，或切换到其他模型。',
+    error: {
+      message: '上游模型当前请求过于频繁（rate limit），已暂停生成。请稍后重试，或切换到其他模型。',
+      code: 'rate_limit_exceeded',
+      statusCode: 429,
+      requestUrl: 'https://api.openai.com/v1/images/generations',
+      responseBody: '{\n  "error": {\n    "code": "rate_limit_exceeded",\n    "message": "Rate limit reached for requests",\n    "type": "requests",\n    "param": null\n  }\n}',
+      responseHeaders: '{\n  "content-type": "application/json",\n  "openai-organization": "org_abcDEF",\n  "x-request-id": "req_2c4e9a-3f01",\n  "x-ratelimit-limit-requests": "60",\n  "x-ratelimit-remaining-requests": "0",\n  "retry-after": "11"\n}',
+      providerId: 'openai',
+      modelId: 'dall-e-3',
+    },
     metadata: {
       sessionId: 'a1b2c3d4e5f60007',
       model: 'dall-e-3',
@@ -841,6 +851,42 @@ function StatsRow() {
       tokens: { input: 0, output: 0 },
       requestJson: '{ "prompt": "social media batch (8x)", "n": 8 }',
       responseJson: '{\n  "error": {\n    "code": "rate_limit_exceeded",\n    "message": "Rate limit reached for requests",\n    "type": "requests",\n    "param": null\n  }\n}',
+    },
+  },
+
+  // 17. Another user message + assistant auth error — different error class for variety
+  {
+    id: 'msg-17',
+    role: 'user',
+    content: '切换到 Claude 4 试试',
+    timestamp: '14:55',
+  },
+  {
+    id: 'msg-18',
+    role: 'assistant',
+    content: '',
+    timestamp: '14:55',
+    errorCode: '401',
+    errorMessage: '当前 Anthropic 服务商的 API Key 已失效，请前往设置重新配置。',
+    error: {
+      message: '当前 Anthropic 服务商的 API Key 已失效，请前往设置重新配置。',
+      code: 'invalid_api_key',
+      statusCode: 401,
+      requestUrl: 'https://api.anthropic.com/v1/messages',
+      responseBody: '{\n  "type": "error",\n  "error": {\n    "type": "authentication_error",\n    "message": "Your API key is invalid or has been revoked."\n  }\n}',
+      providerId: 'anthropic',
+      modelId: 'claude-4-sonnet',
+    },
+    metadata: {
+      sessionId: 'a1b2c3d4e5f60008',
+      model: 'claude-4-sonnet',
+      provider: 'anthropic',
+      status: 'error',
+      startTime: '2025-10-03 14:55',
+      duration: '0.4s',
+      tokens: { input: 0, output: 0 },
+      requestJson: '{ "model": "claude-4-sonnet" }',
+      responseJson: '{ "error": { "type": "authentication_error" } }',
     },
   },
 ];

@@ -134,8 +134,9 @@ function ToolCallRow({ msg }: { msg: ChatMessage }) {
               {isError && (
                 <MessageErrorBlock
                   size="compact"
-                  message={tc.errorMessage || '工具调用失败'}
-                  code={tc.errorCode}
+                  message={tc.errorMessage || tc.error?.message || '工具调用失败'}
+                  code={tc.errorCode || tc.error?.code}
+                  detail={tc.error}
                 />
               )}
             </div>

@@ -1414,11 +1414,12 @@ function MessageBubble({ msg, onOpenPanel, onAvatarClick, onOpenArtifact, assist
         {/* Generated images */}
         {msg.images && msg.images.length > 0 && <ImageGallery images={msg.images} />}
 
-        {(displayMsg.errorMessage || displayMsg.metadata?.status === 'error') && (
+        {(displayMsg.errorMessage || displayMsg.error || displayMsg.metadata?.status === 'error') && (
           <MessageErrorBlock
-            className="mt-1"
-            message={displayMsg.errorMessage || '请求失败，请重试'}
-            code={displayMsg.errorCode}
+            className="mt-1.5"
+            message={displayMsg.errorMessage || displayMsg.error?.message || '请求失败，请重试'}
+            code={displayMsg.errorCode || displayMsg.error?.code}
+            detail={displayMsg.error}
             onRetry={onRetry ? () => onRetry(msg.id) : undefined}
           />
         )}
