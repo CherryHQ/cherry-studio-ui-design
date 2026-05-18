@@ -63,12 +63,10 @@ export function BasicSection({ resource }: Props) {
   const [enableTemperature, setEnableTemperature] = useState(true);
   const [topP, setTopP] = useState(0.9);
   const [enableTopP, setEnableTopP] = useState(false);
-  const [contextCount, setContextCount] = useState(10);
   const [enableContextCount, setEnableContextCount] = useState(true);
   const [maxTokens, setMaxTokens] = useState(0);
   const [enableMaxTokens, setEnableMaxTokens] = useState(false);
   const [streamOutput, setStreamOutput] = useState(true);
-  const [toolUseMode, setToolUseMode] = useState<'prompt' | 'function'>('function');
   const [maxToolCalls, setMaxToolCalls] = useState(20);
   const [enableMaxToolCalls, setEnableMaxToolCalls] = useState(true);
   // Custom parameters — dynamic list matching source's AssistantSettingCustomParameters
@@ -99,10 +97,9 @@ export function BasicSection({ resource }: Props) {
   const resetParameters = () => {
     setTemperature(0.7); setEnableTemperature(true);
     setTopP(0.9); setEnableTopP(false);
-    setContextCount(10); setEnableContextCount(true);
+    setEnableContextCount(true);
     setMaxTokens(0); setEnableMaxTokens(false);
     setStreamOutput(true);
-    setToolUseMode('function');
     setMaxToolCalls(20); setEnableMaxToolCalls(true);
     setCustomParameters([]);
   };
@@ -296,18 +293,12 @@ export function BasicSection({ resource }: Props) {
 
         <Divider />
 
-        <ParamRow
-          label="上下文数"
-          hint="单次请求附带的历史消息条数，100 即不限"
-          valueLabel={enableContextCount ? (contextCount >= 100 ? '不限' : String(contextCount)) : undefined}
-          enabled={enableContextCount}
-          onEnabledChange={setEnableContextCount}
-        >
-          <Slider min={0} max={100} step={1} value={[contextCount]} onValueChange={([v]) => setContextCount(v)} />
-          <div className="flex justify-between mt-1 tabular-nums text-[10px] text-muted-foreground/50">
-            <span>0</span><span>25</span><span>50</span><span>75</span><span>不限</span>
-          </div>
-        </ParamRow>
+        <ToggleRow
+          label="自动上下文"
+          hint="自动管理历史消息上下文长度"
+          checked={enableContextCount}
+          onCheckedChange={setEnableContextCount}
+        />
 
         <Divider />
 
@@ -330,21 +321,6 @@ export function BasicSection({ resource }: Props) {
           checked={streamOutput}
           onCheckedChange={setStreamOutput}
         />
-
-        <Divider />
-
-        <div className="flex items-center justify-between gap-3 py-2">
-          <label className="text-sm text-muted-foreground/80">工具调用方式</label>
-          <Select value={toolUseMode} onValueChange={(v) => setToolUseMode(v as 'prompt' | 'function')}>
-            <SelectTrigger className="w-[140px] h-8 text-xs">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="prompt">提示词</SelectItem>
-              <SelectItem value="function">函数</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
 
         <Divider />
 
@@ -447,16 +423,22 @@ function DefaultModelRow({ model, modelLabel, pickerOpen, setPickerOpen, setMode
   setModel: (id: string) => void;
 }) {
   return (
-    <div className="flex items-center justify-between gap-3 py-2">
-      <label className="text-sm text-muted-foreground/80">默认模型</label>
+    <div className="py-2">
+      <label className="text-sm text-muted-foreground/80 mb-1.5 block">默认模型</label>
       <Popover open={pickerOpen} onOpenChange={setPickerOpen}>
         <PopoverTrigger asChild>
-          <Button variant="outline" size="xs" className="gap-2 h-8 px-3 text-xs">
-            <Plus size={11} className="text-muted-foreground/60" />
-            <span className="truncate max-w-[200px]">{modelLabel}</span>
+          <Button
+            variant="outline"
+            className="w-full justify-between gap-2 h-9 px-3 text-xs border-border/30 bg-accent/15 hover:bg-accent/25"
+          >
+            <span className="truncate text-foreground">{modelLabel}</span>
+            <ChevronDown
+              size={12}
+              className={`text-muted-foreground/50 flex-shrink-0 transition-transform ${pickerOpen ? 'rotate-180' : ''}`}
+            />
           </Button>
         </PopoverTrigger>
-        <PopoverContent align="end" className="p-0 w-[480px]">
+        <PopoverContent align="start" className="p-0 w-[var(--radix-popover-trigger-width)] min-w-[420px]">
           <ModelPickerPanel
             selectedModels={[model]}
             onSelectModel={setModel}
