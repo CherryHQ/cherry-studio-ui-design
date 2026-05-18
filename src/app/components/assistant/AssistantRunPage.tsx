@@ -2374,6 +2374,26 @@ export function AssistantRunPage() {
 
               <div className="flex-shrink-0 px-4 pb-3">
                 <div className="relative rounded-xl border border-border/50 bg-background shadow-sm focus-within:border-border/60 transition-all duration-150">
+                  {/* Thinking mode indicator — only when reasoning level is set */}
+                  {reasoningLevel && (
+                    <div className="px-3 pt-2.5 flex items-center gap-1.5 flex-wrap">
+                      <span className="inline-flex items-center gap-1 px-1.5 py-[2px] rounded-sm border border-success/25 bg-success/10 text-success/90 text-[11px] leading-none font-medium">
+                        <Lightbulb size={10} strokeWidth={2} className="text-success" />
+                        <span>思考</span>
+                        <span className="opacity-60 uppercase tracking-wide">
+                          {reasoningLevel === 'low' ? '低' : reasoningLevel === 'medium' ? '中' : reasoningLevel === 'high' ? '高' : reasoningLevel}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => setReasoningLevel(null)}
+                          aria-label="关闭思考"
+                          className="ml-0.5 inline-flex items-center justify-center w-3.5 h-3.5 rounded-sm text-success/60 hover:text-success hover:bg-success/15 transition-colors"
+                        >
+                          <X size={9} />
+                        </button>
+                      </span>
+                    </div>
+                  )}
                   <RichComposer
                     ref={composerRef}
                     attachments={inlineAttachments}
