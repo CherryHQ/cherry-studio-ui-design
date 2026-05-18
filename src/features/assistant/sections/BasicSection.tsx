@@ -326,7 +326,7 @@ export function BasicSection({ resource }: Props) {
         </ParamRow>
 
         {/* 自定义参数 — dynamic list with name + type + value + delete */}
-        <div className="py-2 space-y-2">
+        <div className="py-3 space-y-2">
           <div className="flex items-center justify-between gap-3">
             <label className="text-sm text-muted-foreground/80">自定义参数</label>
             <Button variant="outline" size="xs" onClick={addCustomParam} className="gap-1.5 h-7">
@@ -410,8 +410,8 @@ function DefaultModelRow({ model, modelLabel, pickerOpen, setPickerOpen, setMode
   setModel: (id: string) => void;
 }) {
   return (
-    <div className="py-2">
-      <label className="text-sm text-muted-foreground/80 mb-1.5 block">默认模型</label>
+    <div className="py-3">
+      <label className="text-sm text-muted-foreground/80 mb-2 block">默认模型</label>
       <Popover open={pickerOpen} onOpenChange={setPickerOpen}>
         <PopoverTrigger asChild>
           <Button
@@ -456,7 +456,7 @@ function ToggleRow({ label, hint, checked, onCheckedChange }: {
   onCheckedChange: (v: boolean) => void;
 }) {
   return (
-    <div className="flex items-center justify-between gap-3 py-2">
+    <div className="flex items-center justify-between gap-3 py-3">
       <div className="flex items-center gap-1.5 min-w-0">
         <label className="text-sm text-muted-foreground/80">{label}</label>
         {hint && <InfoTip text={hint} />}
@@ -480,8 +480,8 @@ function ParamRow({
   children: React.ReactNode;
 }) {
   return (
-    <div>
-      <div className="flex items-center justify-between gap-3 mb-1.5">
+    <div className="py-3">
+      <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-1.5 min-w-0">
           <label className="text-sm text-muted-foreground/80">
             {label}
@@ -493,7 +493,7 @@ function ParamRow({
         </div>
         <Switch checked={enabled} onCheckedChange={onEnabledChange} className="flex-shrink-0" />
       </div>
-      {enabled && <div className="pt-1">{children}</div>}
+      {enabled && <div className="pt-3">{children}</div>}
     </div>
   );
 }
