@@ -157,7 +157,7 @@ function AgentBasicSection({ resource }: { resource: ResourceItem }) {
     <div className="max-w-3xl space-y-6">
       <div><Typography variant="subtitle" className="mb-1">{"基础设置"}</Typography><p className="text-xs text-muted-foreground/60">{"配置智能体的身份信息和模型"}</p></div>
       <FieldGroup label="头像与名称">
-        <div className="flex items-center gap-3">
+        <div className="flex items-end gap-3">
           <Popover>
             <PopoverTrigger asChild>
               <button type="button"
@@ -228,9 +228,9 @@ function AgentBasicSection({ resource }: { resource: ResourceItem }) {
             </PopoverContent>
           </Popover>
           <Input value={name} onChange={e => setName(e.target.value)} placeholder="智能体名称"
-            className="flex-1 min-w-0 px-3 py-2 border-border/20 bg-accent/15 text-sm text-foreground focus-visible:border-border/40 focus-visible:ring-0 shadow-none" />
-          <div className="flex items-center gap-2 flex-shrink-0">
-            <label className="text-sm text-muted-foreground/70 whitespace-nowrap">类型</label>
+            className="flex-1 min-w-0 h-11 px-3 border-border/20 bg-accent/15 text-sm text-foreground focus-visible:border-border/40 focus-visible:ring-0 shadow-none" />
+          <div className="flex flex-col gap-1.5 flex-shrink-0">
+            <label className="text-xs text-muted-foreground/60 leading-none">类型</label>
             <Select value={agentType} onValueChange={(v) => setAgentType(v as typeof agentType)}>
               <SelectTrigger className="w-[160px] h-11 px-3 text-sm border-border/20 bg-accent/15 hover:bg-accent/25 rounded-xl">
                 <SelectValue placeholder="类型" />
