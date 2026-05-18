@@ -181,6 +181,21 @@ export function MessageErrorBlock({
         >
           {effectiveDetail.message || message}
         </span>
+        {effectiveDetail.providerId && (
+          <button
+            type="button"
+            onClick={handleNavigate}
+            className={cn(
+              'inline-flex items-center gap-1 px-1.5 py-0.5 rounded flex-shrink-0',
+              'text-foreground/70 hover:text-foreground hover:bg-muted/60 transition-colors',
+              'border border-border/35 hover:border-border/55',
+              compact ? 'text-[10px]' : 'text-[11px]',
+            )}
+          >
+            <Settings size={compact ? 9 : 10} />
+            <span>去配置</span>
+          </button>
+        )}
         <span
           className={cn(
             'inline-flex items-center gap-0.5 text-muted-foreground/40 flex-shrink-0',
@@ -278,7 +293,7 @@ function MessageErrorDetailDialog({
                   className="gap-1.5"
                 >
                   <Settings size={11} />
-                  前往设置
+                  去配置
                 </Button>
               )}
               {onRetry && (
