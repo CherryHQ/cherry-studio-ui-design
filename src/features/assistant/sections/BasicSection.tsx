@@ -1,8 +1,11 @@
 import React, { useState, useRef } from 'react';
-import { X, Check, ChevronDown, Upload, Link2 } from 'lucide-react';
+import { X, Check, ChevronDown, Upload, Link2, Plus, Trash2, RotateCcw } from 'lucide-react';
 import type { ResourceItem } from '@/app/types';
 import { AVATAR_OPTIONS } from '@/app/config/constants';
-import { Button, Input, Slider, Switch, Textarea, Typography, Badge, Popover, PopoverTrigger, PopoverContent } from '@cherry-studio/ui';
+import {
+  Button, Input, Slider, Switch, Textarea, Typography, Badge, Popover, PopoverTrigger, PopoverContent,
+  Select, SelectTrigger, SelectValue, SelectContent, SelectItem,
+} from '@cherry-studio/ui';
 import { ModelPickerPanel } from '@/app/components/shared/ModelPickerPanel';
 import { ASSISTANT_MODELS } from '@/app/config/models';
 
@@ -53,24 +56,24 @@ export function BasicSection({ resource }: Props) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [model, setModel] = useState(resource.model || 'claude-4-opus');
   const [modelPickerOpen, setModelPickerOpen] = useState(false);
-  // Model parameters — each carries its own `enable` toggle, mirroring
-  // Cherry Studio source's AssistantModelSettings (enableTemperature /
-  // enableTopP / enableMaxTokens / enableAutoContext etc). The slider /
-  // input only renders when the corresponding switch is on.
+  // Model parameters — exact set + order from Cherry Studio source's
+  // AssistantModelSettings.tsx. Each adjustable param has its own enable
+  // Switch; the slider/input row only renders when that switch is on.
   const [temperature, setTemperature] = useState(0.7);
   const [enableTemperature, setEnableTemperature] = useState(true);
   const [topP, setTopP] = useState(0.9);
-  const [enableTopP, setEnableTopP] = useState(true);
-  const [maxTokens, setMaxTokens] = useState(4096);
-  const [enableMaxTokens, setEnableMaxTokens] = useState(true);
-  const [autoContextCount, setAutoContextCount] = useState(10);
-  const [enableAutoContext, setEnableAutoContext] = useState(false);
-  const [frequencyPenalty, setFrequencyPenalty] = useState(0);
-  const [enableFrequencyPenalty, setEnableFrequencyPenalty] = useState(false);
-  const [presencePenalty, setPresencePenalty] = useState(0);
-  const [enablePresencePenalty, setEnablePresencePenalty] = useState(false);
+  const [enableTopP, setEnableTopP] = useState(false);
+  const [contextCount, setContextCount] = useState(10);
+  const [enableContextCount, setEnableContextCount] = useState(true);
+  const [maxTokens, setMaxTokens] = useState(0);
+  const [enableMaxTokens, setEnableMaxTokens] = useState(false);
   const [streamOutput, setStreamOutput] = useState(true);
-  const [defaultAssistant, setDefaultAssistant] = useState(false);
+  const [toolUseMode, setToolUseMode] = useState<'prompt' | 'function'>('function');
+  const [maxToolCalls, setMaxToolCalls] = useState(20);
+  const [enableMaxToolCalls, setEnableMaxToolCalls] = useState(true);
+  // Custom parameters — dynamic list matching source's AssistantSettingCustomParameters
+  type CustomParam = { name: string; type: 'string' | 'number' | 'boolean' | 'json'; value: string };
+  const [customParameters, setCustomParameters] = useState<CustomParam[]>([]);
 
   // Tags state — dropdown multi-select
   const [tags, setTags] = useState<string[]>(resource.tags || ['标签']);
@@ -82,6 +85,26 @@ export function BasicSection({ resource }: Props) {
   const togglePresetTag = (tag: string) => {
     if (tags.includes(tag)) removeTag(tag);
     else setTags(prev => [...prev, tag]);
+  };
+
+  const addCustomParam = () => {
+    setCustomParameters(prev => [...prev, { name: '', type: 'string', value: '' }]);
+  };
+  const updateCustomParam = (i: number, field: keyof CustomParam, value: string) => {
+    setCustomParameters(prev => prev.map((p, idx) => idx === i ? { ...p, [field]: value } as CustomParam : p));
+  };
+  const removeCustomParam = (i: number) => {
+    setCustomParameters(prev => prev.filter((_, idx) => idx !== i));
+  };
+  const resetParameters = () => {
+    setTemperature(0.7); setEnableTemperature(true);
+    setTopP(0.9); setEnableTopP(false);
+    setContextCount(10); setEnableContextCount(true);
+    setMaxTokens(0); setEnableMaxTokens(false);
+    setStreamOutput(true);
+    setToolUseMode('function');
+    setMaxToolCalls(20); setEnableMaxToolCalls(true);
+    setCustomParameters([]);
   };
 
   return (
@@ -184,10 +207,7 @@ export function BasicSection({ resource }: Props) {
           className="input-accent resize-none" />
       </FieldGroup>
 
-      {/* Remaining params — parallel 2-column grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-5">
-
-      {/* Tags — dropdown multi-select */}
+      {/* Tags — full width */}
       <FieldGroup label="标签">
         <Popover>
           <PopoverTrigger asChild>
@@ -232,107 +252,227 @@ export function BasicSection({ resource }: Props) {
         </Popover>
       </FieldGroup>
 
-      <FieldGroup label="模型">
-        <Popover open={modelPickerOpen} onOpenChange={setModelPickerOpen}>
-          <PopoverTrigger asChild>
-            <Button variant="outline" className="w-full justify-between gap-2 px-3 py-2 h-auto text-xs border-border/20 bg-accent/15 hover:bg-accent/25">
-              <span className="truncate text-foreground">{ASSISTANT_MODELS.find(m => m.id === model)?.name || model}</span>
-              <ChevronDown size={10} className={`text-muted-foreground/40 flex-shrink-0 transition-transform ${modelPickerOpen ? 'rotate-180' : ''}`} />
+      {/* Model parameters — single-column list matching Cherry Studio's
+          模型设置 tab (CherryHQ/cherry-studio
+          src/renderer/src/pages/settings/AssistantSettings/AssistantModelSettings.tsx) */}
+      <div className="space-y-1">
+        <DefaultModelRow
+          model={model}
+          modelLabel={ASSISTANT_MODELS.find(m => m.id === model)?.name || model}
+          pickerOpen={modelPickerOpen}
+          setPickerOpen={setModelPickerOpen}
+          setModel={setModel}
+        />
+
+        <Divider />
+
+        <ParamRow
+          label="模型温度"
+          hint="控制采样随机性，越大越发散"
+          valueLabel={enableTemperature ? temperature.toFixed(2) : undefined}
+          enabled={enableTemperature}
+          onEnabledChange={setEnableTemperature}
+        >
+          <Slider min={0} max={2} step={0.01} value={[temperature]} onValueChange={([v]) => setTemperature(v)} />
+          <div className="flex justify-between mt-1 tabular-nums text-[10px] text-muted-foreground/50">
+            <span>0</span><span>0.7</span><span>2</span>
+          </div>
+        </ParamRow>
+
+        <Divider />
+
+        <ParamRow
+          label="Top-P"
+          hint="核采样阈值，越大候选词越多"
+          valueLabel={enableTopP ? topP.toFixed(2) : undefined}
+          enabled={enableTopP}
+          onEnabledChange={setEnableTopP}
+        >
+          <Slider min={0} max={1} step={0.01} value={[topP]} onValueChange={([v]) => setTopP(v)} />
+          <div className="flex justify-between mt-1 tabular-nums text-[10px] text-muted-foreground/50">
+            <span>0</span><span>1</span>
+          </div>
+        </ParamRow>
+
+        <Divider />
+
+        <ParamRow
+          label="上下文数"
+          hint="单次请求附带的历史消息条数，100 即不限"
+          valueLabel={enableContextCount ? (contextCount >= 100 ? '不限' : String(contextCount)) : undefined}
+          enabled={enableContextCount}
+          onEnabledChange={setEnableContextCount}
+        >
+          <Slider min={0} max={100} step={1} value={[contextCount]} onValueChange={([v]) => setContextCount(v)} />
+          <div className="flex justify-between mt-1 tabular-nums text-[10px] text-muted-foreground/50">
+            <span>0</span><span>25</span><span>50</span><span>75</span><span>不限</span>
+          </div>
+        </ParamRow>
+
+        <Divider />
+
+        <ParamRow
+          label="最大 Token 数"
+          hint="单次回复最多生成的 Token 数量"
+          valueLabel={enableMaxTokens ? String(maxTokens) : undefined}
+          enabled={enableMaxTokens}
+          onEnabledChange={setEnableMaxTokens}
+        >
+          <Input type="number" min={0} step={100} value={maxTokens}
+            onChange={e => setMaxTokens(parseInt(e.target.value) || 0)}
+            className="w-full px-3 py-2 rounded-xl border-border/20 bg-accent/15 text-xs text-foreground focus:border-border/40 focus:bg-accent/15 transition-all tabular-nums" />
+        </ParamRow>
+
+        <Divider />
+
+        <ToggleRow
+          label="流式输出"
+          checked={streamOutput}
+          onCheckedChange={setStreamOutput}
+        />
+
+        <Divider />
+
+        <div className="flex items-center justify-between gap-3 py-2">
+          <label className="text-sm text-muted-foreground/80">工具调用方式</label>
+          <Select value={toolUseMode} onValueChange={(v) => setToolUseMode(v as 'prompt' | 'function')}>
+            <SelectTrigger className="w-[140px] h-8 text-xs">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="prompt">提示词</SelectItem>
+              <SelectItem value="function">函数</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        <Divider />
+
+        <ParamRow
+          label="最大工具调用次数"
+          hint="单轮中允许调用工具的最大次数"
+          valueLabel={enableMaxToolCalls ? String(maxToolCalls) : undefined}
+          enabled={enableMaxToolCalls}
+          onEnabledChange={setEnableMaxToolCalls}
+        >
+          <Input type="number" min={1} max={100} step={1} value={maxToolCalls}
+            onChange={e => setMaxToolCalls(parseInt(e.target.value) || 1)}
+            className="w-full px-3 py-2 rounded-xl border-border/20 bg-accent/15 text-xs text-foreground focus:border-border/40 focus:bg-accent/15 transition-all tabular-nums" />
+        </ParamRow>
+
+        <Divider />
+
+        {/* 自定义参数 — dynamic list with name + type + value + delete */}
+        <div className="py-2 space-y-2">
+          <div className="flex items-center justify-between gap-3">
+            <label className="text-sm text-muted-foreground/80">自定义参数</label>
+            <Button variant="outline" size="xs" onClick={addCustomParam} className="gap-1.5 h-7">
+              <Plus size={11} />
+              添加参数
             </Button>
-          </PopoverTrigger>
-          <PopoverContent align="start" className="p-0 w-[480px]">
-            <ModelPickerPanel
-              selectedModels={[model]}
-              onSelectModel={setModel}
-              multiModel={false}
-              onToggleMultiModel={() => {}}
-              onClose={() => setModelPickerOpen(false)}
-              showMultiModelToggle={false}
-            />
-          </PopoverContent>
-        </Popover>
-      </FieldGroup>
+          </div>
+          {customParameters.map((param, i) => (
+            <div key={i} className="grid grid-cols-[1fr_120px_1fr_auto] gap-2 items-center">
+              <Input
+                placeholder="参数名称"
+                value={param.name}
+                onChange={e => updateCustomParam(i, 'name', e.target.value)}
+                className="h-8 text-xs"
+              />
+              <Select value={param.type} onValueChange={(v) => updateCustomParam(i, 'type', v)}>
+                <SelectTrigger className="h-8 text-xs">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="string">文本</SelectItem>
+                  <SelectItem value="number">数字</SelectItem>
+                  <SelectItem value="boolean">布尔值</SelectItem>
+                  <SelectItem value="json">JSON</SelectItem>
+                </SelectContent>
+              </Select>
+              {param.type === 'boolean' ? (
+                <Select value={param.value || 'false'} onValueChange={(v) => updateCustomParam(i, 'value', v)}>
+                  <SelectTrigger className="h-8 text-xs">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="true">true</SelectItem>
+                    <SelectItem value="false">false</SelectItem>
+                  </SelectContent>
+                </Select>
+              ) : (
+                <Input
+                  type={param.type === 'number' ? 'number' : 'text'}
+                  placeholder={param.type === 'json' ? '{ ... }' : '参数值'}
+                  value={param.value}
+                  onChange={e => updateCustomParam(i, 'value', e.target.value)}
+                  className="h-8 text-xs"
+                />
+              )}
+              <Button
+                variant="ghost"
+                size="icon-xs"
+                onClick={() => removeCustomParam(i)}
+                className="text-destructive/70 hover:text-destructive hover:bg-destructive/10"
+                title="删除"
+              >
+                <Trash2 size={12} />
+              </Button>
+            </div>
+          ))}
+        </div>
 
-      <ToggleRow
-        label="设为默认助手"
-        hint="新会话默认使用该助手"
-        checked={defaultAssistant}
-        onCheckedChange={setDefaultAssistant}
-      />
-
-      <ToggleRow
-        label="流式输出"
-        hint="逐字返回内容（建议保持开启）"
-        checked={streamOutput}
-        onCheckedChange={setStreamOutput}
-      />
-
-      <ParamRow
-        label="Temperature"
-        hint="控制采样随机性，越大越发散"
-        valueLabel={temperature.toFixed(2)}
-        enabled={enableTemperature}
-        onEnabledChange={setEnableTemperature}
-      >
-        <Slider min={0} max={2} step={0.01} value={[temperature]} onValueChange={([v]) => setTemperature(v)} />
-        <div className="flex justify-between mt-1"><span className="text-xs text-muted-foreground/50">精确</span><span className="text-xs text-muted-foreground/50">创意</span></div>
-      </ParamRow>
-
-      <ParamRow
-        label="Top-P"
-        hint="核采样阈值，越大候选词越多"
-        valueLabel={topP.toFixed(2)}
-        enabled={enableTopP}
-        onEnabledChange={setEnableTopP}
-      >
-        <Slider min={0} max={1} step={0.01} value={[topP]} onValueChange={([v]) => setTopP(v)} />
-      </ParamRow>
-
-      <ParamRow
-        label="自动上下文消息"
-        hint="开启后按指定上限自动保留历史消息"
-        valueLabel={enableAutoContext ? String(autoContextCount) : undefined}
-        enabled={enableAutoContext}
-        onEnabledChange={setEnableAutoContext}
-      >
-        <Slider min={0} max={50} step={1} value={[autoContextCount]} onValueChange={([v]) => setAutoContextCount(v)} />
-        <div className="flex justify-between mt-1"><span className="text-xs text-muted-foreground/50">单轮</span><span className="text-xs text-muted-foreground/50">长程</span></div>
-      </ParamRow>
-
-      <ParamRow
-        label="最大输出 Token 数"
-        hint="单次回复最多生成的 Token 数量"
-        valueLabel={enableMaxTokens ? String(maxTokens) : undefined}
-        enabled={enableMaxTokens}
-        onEnabledChange={setEnableMaxTokens}
-      >
-        <Input type="number" value={maxTokens} onChange={e => setMaxTokens(parseInt(e.target.value) || 0)}
-          className="w-full px-3 py-2 rounded-xl border-border/20 bg-accent/15 text-xs text-foreground focus:border-border/40 focus:bg-accent/15 transition-all tabular-nums" />
-      </ParamRow>
-
-      <ParamRow
-        label="Frequency Penalty"
-        hint="降低重复词的概率"
-        valueLabel={frequencyPenalty.toFixed(2)}
-        enabled={enableFrequencyPenalty}
-        onEnabledChange={setEnableFrequencyPenalty}
-      >
-        <Slider min={-2} max={2} step={0.01} value={[frequencyPenalty]} onValueChange={([v]) => setFrequencyPenalty(v)} />
-      </ParamRow>
-
-      <ParamRow
-        label="Presence Penalty"
-        hint="鼓励引入新话题"
-        valueLabel={presencePenalty.toFixed(2)}
-        enabled={enablePresencePenalty}
-        onEnabledChange={setEnablePresencePenalty}
-      >
-        <Slider min={-2} max={2} step={0.01} value={[presencePenalty]} onValueChange={([v]) => setPresencePenalty(v)} />
-      </ParamRow>
-
+        {/* Reset all parameters to defaults — mirrors source's 重置 button */}
+        <div className="flex justify-end pt-4">
+          <Button
+            variant="destructive"
+            size="xs"
+            onClick={resetParameters}
+            className="gap-1.5"
+          >
+            <RotateCcw size={11} />
+            重置
+          </Button>
+        </div>
       </div>
     </div>
   );
+}
+
+function DefaultModelRow({ model, modelLabel, pickerOpen, setPickerOpen, setModel }: {
+  model: string;
+  modelLabel: string;
+  pickerOpen: boolean;
+  setPickerOpen: (v: boolean) => void;
+  setModel: (id: string) => void;
+}) {
+  return (
+    <div className="flex items-center justify-between gap-3 py-2">
+      <label className="text-sm text-muted-foreground/80">默认模型</label>
+      <Popover open={pickerOpen} onOpenChange={setPickerOpen}>
+        <PopoverTrigger asChild>
+          <Button variant="outline" size="xs" className="gap-2 h-8 px-3 text-xs">
+            <Plus size={11} className="text-muted-foreground/60" />
+            <span className="truncate max-w-[200px]">{modelLabel}</span>
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent align="end" className="p-0 w-[480px]">
+          <ModelPickerPanel
+            selectedModels={[model]}
+            onSelectModel={setModel}
+            multiModel={false}
+            onToggleMultiModel={() => {}}
+            onClose={() => setPickerOpen(false)}
+            showMultiModelToggle={false}
+          />
+        </PopoverContent>
+      </Popover>
+    </div>
+  );
+}
+
+function Divider() {
+  return <div className="h-px bg-border/25" />;
 }
 
 function FieldGroup({ label, children }: { label: React.ReactNode; children: React.ReactNode }) {
