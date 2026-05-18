@@ -68,6 +68,8 @@ export function BasicSection({ resource }: Props) {
   const [maxTokens, setMaxTokens] = useState(0);
   const [enableMaxTokens, setEnableMaxTokens] = useState(false);
   const [streamOutput, setStreamOutput] = useState(true);
+  // Runtime / agent type — Claude Code, Cherry Runtime, Long Running
+  const [agentRuntime, setAgentRuntime] = useState<'claude-code' | 'cherry-runtime' | 'long-running'>('cherry-runtime');
   const [maxToolCalls, setMaxToolCalls] = useState(20);
   const [enableMaxToolCalls, setEnableMaxToolCalls] = useState(true);
   // Custom parameters — dynamic list matching source's AssistantSettingCustomParameters
@@ -112,8 +114,8 @@ export function BasicSection({ resource }: Props) {
         <InfoTip text="配置助手的身份信息和模型参数" />
       </div>
 
-      {/* Row 1: 头像 + 名称 + 默认模型 (single row, full width) */}
-      <FieldGroup label="头像、名称与默认模型">
+      {/* Row 1: 头像 + 名称 + 默认模型 + Agent 类型 (single row, full width) */}
+      <FieldGroup label="头像、名称、默认模型与 Agent 类型">
         <div className="flex items-center gap-3">
           <Popover>
             <PopoverTrigger asChild>
@@ -200,7 +202,7 @@ export function BasicSection({ resource }: Props) {
             <PopoverTrigger asChild>
               <Button
                 variant="outline"
-                className="flex-shrink-0 justify-between gap-2 h-11 px-3 text-xs border-border/20 bg-accent/15 hover:bg-accent/25 w-[200px] rounded-xl"
+                className="flex-shrink-0 justify-between gap-2 h-11 px-3 text-xs border-border/20 bg-accent/15 hover:bg-accent/25 w-[180px] rounded-xl"
               >
                 <span className="truncate text-foreground">
                   {ASSISTANT_MODELS.find(m => m.id === model)?.name || model}
@@ -222,6 +224,18 @@ export function BasicSection({ resource }: Props) {
               />
             </PopoverContent>
           </Popover>
+          <Select value={agentRuntime} onValueChange={(v) => setAgentRuntime(v as typeof agentRuntime)}>
+            <SelectTrigger
+              className="flex-shrink-0 w-[160px] h-11 px-3 text-xs border-border/20 bg-accent/15 hover:bg-accent/25 rounded-xl"
+            >
+              <SelectValue placeholder="Agent 类型" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="claude-code">Claude Code</SelectItem>
+              <SelectItem value="cherry-runtime">Cherry Runtime</SelectItem>
+              <SelectItem value="long-running">Long Running</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       </FieldGroup>
 

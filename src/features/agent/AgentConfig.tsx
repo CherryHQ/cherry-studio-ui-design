@@ -11,6 +11,7 @@ import {
   Download, MessageSquare, Zap, Bug,
   Layers, Sparkles, BookOpen, FolderOpen,
   Upload, Link2,
+  Send, MessageCircle, Github,
 } from 'lucide-react';
 import { Button, Input, Slider, Textarea, Popover, PopoverTrigger, PopoverContent, EmptyState, SearchInput, Typography, Switch, Checkbox, Badge } from '@cherry-studio/ui';
 import { motion, AnimatePresence } from 'motion/react';
@@ -255,7 +256,28 @@ interface MCPServerLocal {
 interface SkillItem { id: string; name: string; desc: string; icon: React.ElementType; enabled: boolean; tags: string[] }
 interface MCPCatalogItem { id: string; name: string; desc: string; author: string; url: string; tags: string[]; tools: MCPToolItem[] }
 interface SkillCatalogItem { id: string; name: string; desc: string; icon: React.ElementType; tags: string[] }
-type ToolchainTab = 'tools' | 'mcp' | 'skills';
+type ToolchainTab = 'tools' | 'mcp' | 'skills' | 'integrations';
+
+interface IntegrationItem {
+  id: string;
+  name: string;
+  desc: string;
+  /** Lucide icon component */
+  icon: React.ComponentType<{ size?: number; strokeWidth?: number; className?: string }>;
+  /** Visual hint behind the icon */
+  tintCls: string;
+  enabled: boolean;
+}
+
+const ALL_INTEGRATIONS_CATALOG: Omit<IntegrationItem, 'enabled'>[] = [
+  { id: 'integ-cli',       name: 'CLI',          desc: '在终端中调用助手能力（cherry-cli）',           icon: Terminal,      tintCls: 'text-foreground' },
+  { id: 'integ-notion',    name: 'Notion',       desc: 'Notion 页面读写、数据库查询',                   icon: FileText,      tintCls: 'text-foreground' },
+  { id: 'integ-yuque',     name: '语雀',          desc: '语雀知识库 / 文档读写',                         icon: BookOpen,      tintCls: 'text-success' },
+  { id: 'integ-feishu',    name: '飞书',          desc: '飞书消息 / 文档 / 多维表格',                    icon: Send,          tintCls: 'text-info' },
+  { id: 'integ-slack',     name: 'Slack',        desc: '频道消息 / DM / 工作流',                        icon: MessageCircle, tintCls: 'text-accent-violet' },
+  { id: 'integ-github',    name: 'GitHub',       desc: 'Issue / PR / Release 自动化',                  icon: Github,        tintCls: 'text-foreground' },
+  { id: 'integ-linear',    name: 'Linear',       desc: '任务 / 项目 / 冲刺管理',                        icon: Layers,        tintCls: 'text-accent-violet' },
+];
 
 const TOOL_CATEGORIES = ['执行环境', '计算资源', '文件操作', '网络与数据', '开发工具', '系统集成', '内容处理'] as const;
 
@@ -559,6 +581,9 @@ function ToolchainSection({ onExplore }: { onExplore: () => void }) {
   const [tools, setTools] = useState<ToolItem[]>(() => ALL_TOOLS_CATALOG.map(t => ({ ...t })));
   const [mcpServers, setMcpServers] = useState<MCPServerLocal[]>([]);
   const [skills, setSkills] = useState<SkillItem[]>([]);
+  const [integrations, setIntegrations] = useState<IntegrationItem[]>(() =>
+    ALL_INTEGRATIONS_CATALOG.slice(0, 3).map(i => ({ ...i, enabled: true })),
+  );
   const [search, setSearch] = useState('');
   const [activeTab, setActiveTab] = useState<ToolchainTab>('tools');
   const [showAddPanel, setShowAddPanel] = useState(false);
@@ -568,6 +593,7 @@ function ToolchainSection({ onExplore }: { onExplore: () => void }) {
 
   const toggleTool = (id: string) => setTools(prev => prev.map(t => t.id === id ? { ...t, enabled: !t.enabled } : t));
   const toggleSkill = (id: string) => setSkills(prev => prev.map(s => s.id === id ? { ...s, enabled: !s.enabled } : s));
+  const toggleIntegration = (id: string) => setIntegrations(prev => prev.map(i => i.id === id ? { ...i, enabled: !i.enabled } : i));
 
   const handleAdd = useCallback((item: any) => {
     if (activeTab === 'tools') setTools(prev => [...prev, { ...item, enabled: true }]);
@@ -598,12 +624,23 @@ function ToolchainSection({ onExplore }: { onExplore: () => void }) {
   const enabledToolsCount = tools.filter(t => t.enabled).length;
   const connectedMCPCount = mcpServers.filter(s => s.status === 'connected').length;
   const enabledSkillsCount = skills.filter(s => s.enabled).length;
+  const enabledIntegrationsCount = integrations.filter(i => i.enabled).length;
 
   const addedIds = useMemo(() => {
     if (activeTab === 'tools') return new Set(tools.map(t => t.id));
     if (activeTab === 'mcp') return new Set(mcpServers.map(m => m.id));
+    if (activeTab === 'integrations') return new Set(integrations.map(i => i.id));
     return new Set(skills.map(s => s.id));
-  }, [activeTab, tools, mcpServers, skills]);
+  }, [activeTab, tools, mcpServers, skills, integrations]);
+
+  const filteredIntegrations = useMemo(() => {
+    let list = integrations;
+    if (search.trim()) {
+      const q = search.toLowerCase();
+      list = list.filter(i => i.name.toLowerCase().includes(q) || i.desc.toLowerCase().includes(q));
+    }
+    return list;
+  }, [integrations, search]);
 
 
 
@@ -632,6 +669,7 @@ function ToolchainSection({ onExplore }: { onExplore: () => void }) {
     { id: 'tools' as const, label: '内置工具', count: `${enabledToolsCount}/${tools.length}` },
     { id: 'mcp' as const, label: 'MCP Server', count: `${connectedMCPCount}/${mcpServers.length}` },
     { id: 'skills' as const, label: 'Skills', count: `${enabledSkillsCount}/${skills.length}` },
+    { id: 'integrations' as const, label: '集成', count: `${enabledIntegrationsCount}/${integrations.length}` },
   ];
 
   return (
@@ -716,6 +754,28 @@ function ToolchainSection({ onExplore }: { onExplore: () => void }) {
                     ))}
                     {filteredMCP.length === 0 && <EmptyState preset="no-result" title={search ? '未找到匹配结果' : '该分类下无 Server'} compact />}
                   </div>
+                  <div className="pt-3 flex items-center gap-2"><Button variant="ghost" size="xs" onClick={() => setShowAddPanel(true)} className="text-muted-foreground/50 hover:text-foreground hover:bg-accent/15"><Plus size={10} /> {"继续添加"}</Button><Button variant="link" size="xs" onClick={onExplore} className="text-cherry-text-muted hover:text-cherry-primary-dark"><ExternalLink size={9} /> {"去探索浏览"}</Button></div>
+                </div>
+              ))}
+
+              {/* === Integrations === */}
+              {activeTab === 'integrations' && (integrations.length === 0 ? <TabEmptyState preset="no-resource" label="集成" onAdd={() => setShowAddPanel(true)} /> : (
+                <div>
+                  <div className="space-y-2">
+                    {filteredIntegrations.map(integ => { const Icon = integ.icon; return (
+                      <div key={integ.id}
+                        onClick={() => toggleIntegration(integ.id)}
+                        className={`flex items-center gap-3 px-3 py-2.5 rounded-xl border border-border/12 bg-accent/5 hover:bg-accent/15 transition-all cursor-pointer ${integ.enabled ? '' : 'opacity-55'}`}>
+                        <Icon size={15} strokeWidth={1.5} className={integ.enabled ? `${integ.tintCls} flex-shrink-0` : 'text-muted-foreground/40 flex-shrink-0'} />
+                        <div className="flex-1 min-w-0">
+                          <div className="text-sm text-foreground truncate">{integ.name}</div>
+                          <div className="text-xs text-muted-foreground/50 truncate">{integ.desc}</div>
+                        </div>
+                        <Switch size="sm" checked={integ.enabled} className="pointer-events-none flex-shrink-0" />
+                      </div>
+                    ); })}
+                  </div>
+                  {filteredIntegrations.length === 0 && <EmptyState preset="no-result" title={search ? '未找到匹配结果' : '暂无集成'} compact />}
                   <div className="pt-3 flex items-center gap-2"><Button variant="ghost" size="xs" onClick={() => setShowAddPanel(true)} className="text-muted-foreground/50 hover:text-foreground hover:bg-accent/15"><Plus size={10} /> {"继续添加"}</Button><Button variant="link" size="xs" onClick={onExplore} className="text-cherry-text-muted hover:text-cherry-primary-dark"><ExternalLink size={9} /> {"去探索浏览"}</Button></div>
                 </div>
               ))}

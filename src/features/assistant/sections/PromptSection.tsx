@@ -178,7 +178,7 @@ export function PromptSection({ hideFewShot }: { hideFewShot?: boolean } = {}) {
   const slashOffsetRef = useRef(0);
   const lastRangeRef = useRef<Range | null>(null);
   const isComposing = useRef(false);
-  const [editorHeight, setEditorHeight] = useState(220);
+  const [editorHeight, setEditorHeight] = useState(360);
   const [editorEmpty, setEditorEmpty] = useState(false);
   const showSlashRef = useRef(false);
 
@@ -493,7 +493,7 @@ export function PromptSection({ hideFewShot }: { hideFewShot?: boolean } = {}) {
     const startY = e.clientY;
     const startH = editorHeight;
     const onMove = (ev: MouseEvent) => {
-      setEditorHeight(Math.max(120, Math.min(500, startH + ev.clientY - startY)));
+      setEditorHeight(Math.max(120, Math.min(640, startH + ev.clientY - startY)));
     };
     const onUp = () => {
       document.removeEventListener('mousemove', onMove);
