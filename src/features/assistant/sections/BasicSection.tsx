@@ -1,10 +1,11 @@
 import React, { useState, useRef } from 'react';
-import { X, Check, ChevronDown, Upload, Link2, Plus, Trash2, RotateCcw } from 'lucide-react';
+import { X, Check, ChevronDown, Upload, Link2, Plus, Trash2, RotateCcw, Info } from 'lucide-react';
 import type { ResourceItem } from '@/app/types';
 import { AVATAR_OPTIONS } from '@/app/config/constants';
 import {
   Button, Input, Slider, Switch, Textarea, Typography, Badge, Popover, PopoverTrigger, PopoverContent,
   Select, SelectTrigger, SelectValue, SelectContent, SelectItem,
+  SimpleTooltip,
 } from '@cherry-studio/ui';
 import { ModelPickerPanel } from '@/app/components/shared/ModelPickerPanel';
 import { ASSISTANT_MODELS } from '@/app/config/models';
@@ -106,9 +107,9 @@ export function BasicSection({ resource }: Props) {
 
   return (
     <div className="max-w-3xl space-y-6">
-      <div>
-        <Typography variant="subtitle" className="mb-1">基础设置</Typography>
-        <p className="text-xs text-muted-foreground/60">配置助手的身份信息和模型参数</p>
+      <div className="flex items-center gap-1.5">
+        <Typography variant="subtitle">基础设置</Typography>
+        <InfoTip text="配置助手的身份信息和模型参数" />
       </div>
 
       {/* Row 1: 头像 + 名称 (single row, full width) */}
@@ -473,12 +474,12 @@ function ToggleRow({ label, hint, checked, onCheckedChange }: {
   onCheckedChange: (v: boolean) => void;
 }) {
   return (
-    <div className="flex items-start justify-between gap-3 py-1">
-      <div className="min-w-0">
-        <label className="text-sm text-muted-foreground/80 block">{label}</label>
-        {hint && <p className="text-xs text-muted-foreground/40 mt-0.5">{hint}</p>}
+    <div className="flex items-center justify-between gap-3 py-2">
+      <div className="flex items-center gap-1.5 min-w-0">
+        <label className="text-sm text-muted-foreground/80">{label}</label>
+        {hint && <InfoTip text={hint} />}
       </div>
-      <Switch checked={checked} onCheckedChange={onCheckedChange} className="flex-shrink-0 mt-0.5" />
+      <Switch checked={checked} onCheckedChange={onCheckedChange} className="flex-shrink-0" />
     </div>
   );
 }
@@ -498,19 +499,35 @@ function ParamRow({
 }) {
   return (
     <div>
-      <div className="flex items-start justify-between gap-3 mb-1.5">
-        <div className="min-w-0">
-          <label className="text-sm text-muted-foreground/80 block">
+      <div className="flex items-center justify-between gap-3 mb-1.5">
+        <div className="flex items-center gap-1.5 min-w-0">
+          <label className="text-sm text-muted-foreground/80">
             {label}
             {valueLabel != null && enabled && (
               <span className="text-muted-foreground/40 ml-1.5 tabular-nums">{valueLabel}</span>
             )}
           </label>
-          {hint && <p className="text-xs text-muted-foreground/40 mt-0.5">{hint}</p>}
+          {hint && <InfoTip text={hint} />}
         </div>
-        <Switch checked={enabled} onCheckedChange={onEnabledChange} className="flex-shrink-0 mt-0.5" />
+        <Switch checked={enabled} onCheckedChange={onEnabledChange} className="flex-shrink-0" />
       </div>
       {enabled && <div className="pt-1">{children}</div>}
     </div>
+  );
+}
+
+// Small info icon that reveals an explanation on hover.
+function InfoTip({ text }: { text: string }) {
+  return (
+    <SimpleTooltip content={text} side="top" sideOffset={6} delayDuration={200}>
+      <button
+        type="button"
+        tabIndex={-1}
+        aria-label={text}
+        className="inline-flex items-center text-muted-foreground/40 hover:text-muted-foreground transition-colors cursor-help flex-shrink-0"
+      >
+        <Info size={12} />
+      </button>
+    </SimpleTooltip>
   );
 }
