@@ -187,28 +187,34 @@ export function MessageErrorBlock({
             type="button"
             onClick={handleNavigate}
             className={cn(
-              // Plain inline link — sits on the chip's baseline next to
-              // 详情, no pill/border that would float as a cutout.
-              'inline-flex items-center gap-0.5 flex-shrink-0 leading-none',
-              'text-destructive/85 hover:text-destructive font-medium',
+              // Inline link with breathing padding + hover bg/underline so
+              // it actually reads as clickable, but no permanent border or
+              // fill (those felt like cutouts on the red chip).
+              'inline-flex items-center gap-1 flex-shrink-0 leading-none rounded',
+              'text-destructive/85 font-medium',
+              'hover:text-destructive hover:bg-destructive/10 hover:underline underline-offset-[3px]',
               'transition-colors',
-              compact ? 'text-[10px]' : 'text-[11px]',
+              compact ? 'text-[10px] px-1.5 py-1' : 'text-[11px] px-1.5 py-1',
             )}
           >
+            <Settings size={compact ? 9 : 10} />
             <span>去配置</span>
-            <ChevronRight size={compact ? 10 : 11} />
           </button>
         )}
-        <span
+        <button
+          type="button"
+          onClick={(e) => { e.stopPropagation(); setModalOpen(true); }}
           className={cn(
-            'inline-flex items-center gap-0.5 text-muted-foreground/50 flex-shrink-0',
-            'group-hover:text-foreground/80 transition-colors',
-            compact ? 'text-[10px]' : 'text-[11px]',
+            'inline-flex items-center gap-0.5 flex-shrink-0 leading-none rounded',
+            'text-muted-foreground/60',
+            'hover:text-foreground hover:bg-muted/50 hover:underline underline-offset-[3px]',
+            'transition-colors',
+            compact ? 'text-[10px] px-1.5 py-1' : 'text-[11px] px-1.5 py-1',
           )}
         >
           <span>详情</span>
           <ChevronRight size={compact ? 10 : 11} />
-        </span>
+        </button>
       </div>
 
       <MessageErrorDetailDialog
