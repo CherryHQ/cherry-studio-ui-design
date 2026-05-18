@@ -140,15 +140,12 @@ export function MessageErrorBlock({
         role="alert"
         onClick={() => setModalOpen(true)}
         className={cn(
-          'group relative rounded-[var(--radius-button)] border cursor-pointer transition-colors overflow-hidden',
-          // Faint destructive chrome + a left accent stripe — gives the card
-          // identity without flooding the bubble with red.
+          'group relative rounded-[var(--radius-button)] border cursor-pointer transition-colors',
+          // Faint destructive chrome — the red AlertTriangle carries the
+          // semantic, no left stripe needed.
           'border-destructive/15 bg-destructive/[0.025]',
           'hover:border-destructive/30 hover:bg-destructive/[0.05]',
-          // Left accent stripe (3px wide destructive band)
-          'before:content-[""] before:absolute before:left-0 before:top-0 before:bottom-0 before:w-[3px]',
-          'before:bg-destructive/45 group-hover:before:bg-destructive/60 before:transition-colors',
-          compact ? 'pl-3 pr-2.5 py-2' : 'pl-3.5 pr-3 py-2.5',
+          compact ? 'px-2.5 py-2' : 'px-3 py-2.5',
           className,
         )}
       >
@@ -354,21 +351,43 @@ function DetailRow({
   language?: string;
   tone?: 'error';
 }) {
+  // Code-type rows (response body / headers / stack) are heavy payloads —
+  // collapse them by default to keep the modal scannable; the user can
+  // expand on demand via the header.
+  const [expanded, setExpanded] = React.useState(false);
   if (code) {
+    const charCount = value?.length ?? 0;
     return (
       <div className="space-y-1.5">
-        <div className="text-xs font-medium text-foreground">{label}</div>
-        <pre
-          className={cn(
-            'rounded-md border p-3 text-[11px] leading-[1.55] font-mono whitespace-pre-wrap break-all max-h-[200px] overflow-y-auto scrollbar-thin',
-            tone === 'error'
-              ? 'bg-destructive/[0.04] border-destructive/25 text-destructive/85'
-              : 'bg-muted/30 border-border/30 text-muted-foreground',
-          )}
-          data-language={language}
+        <button
+          type="button"
+          onClick={() => setExpanded(v => !v)}
+          className="flex items-center gap-1.5 text-xs font-medium text-foreground hover:text-cherry-primary transition-colors"
         >
-          {value}
-        </pre>
+          <ChevronRight
+            size={11}
+            className={cn('text-muted-foreground/60 transition-transform', expanded && 'rotate-90')}
+          />
+          <span>{label}</span>
+          {charCount > 0 && (
+            <span className="text-[10px] font-normal text-muted-foreground/50 tabular-nums">
+              {charCount} 字符
+            </span>
+          )}
+        </button>
+        {expanded && (
+          <pre
+            className={cn(
+              'rounded-md border p-3 text-[11px] leading-[1.55] font-mono whitespace-pre-wrap break-all max-h-[200px] overflow-y-auto scrollbar-thin',
+              tone === 'error'
+                ? 'bg-destructive/[0.04] border-destructive/25 text-destructive/85'
+                : 'bg-muted/30 border-border/30 text-muted-foreground',
+            )}
+            data-language={language}
+          >
+            {value}
+          </pre>
+        )}
       </div>
     );
   }
