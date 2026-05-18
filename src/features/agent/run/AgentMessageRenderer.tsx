@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import {
   ChevronRight, ChevronDown,
   Loader2, Check, X,
-  Globe, Code2,
+  Globe, Code2, Package, FileText,
   Brain,
   ShieldCheck, ShieldAlert, ShieldQuestion,
   ArrowRight, AlertTriangle,
