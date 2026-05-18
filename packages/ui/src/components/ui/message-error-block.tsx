@@ -188,8 +188,12 @@ export function MessageErrorBlock({
             onClick={handleNavigate}
             className={cn(
               'inline-flex items-center gap-1 rounded-md flex-shrink-0',
-              'bg-destructive/10 text-destructive/90 hover:bg-destructive/18 hover:text-destructive',
-              'transition-colors leading-none',
+              // Neutral pill so it doesn't fight the red chip — the chip
+              // bg already carries the error semantic; this button just
+              // needs to read as a clickable "next step".
+              'bg-background/85 text-foreground/80 border border-border/40',
+              'hover:bg-background hover:text-foreground hover:border-border/70',
+              'transition-colors leading-none shadow-[0_1px_0_rgba(0,0,0,0.02)]',
               compact ? 'px-2 py-[3px] text-[10px]' : 'px-2 py-[3px] text-[11px]',
             )}
           >
