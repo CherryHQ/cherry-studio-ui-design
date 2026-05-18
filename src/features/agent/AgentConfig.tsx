@@ -156,8 +156,12 @@ function AgentBasicSection({ resource }: { resource: ResourceItem }) {
   return (
     <div className="max-w-3xl space-y-6">
       <div><Typography variant="subtitle" className="mb-1">{"基础设置"}</Typography><p className="text-xs text-muted-foreground/60">{"配置智能体的身份信息和模型"}</p></div>
-      <FieldGroup label="头像与名称">
-        <div className="flex items-end gap-3">
+      <div>
+        <div className="flex items-center justify-between gap-3 mb-1.5">
+          <label className="text-sm text-muted-foreground/60">头像与名称</label>
+          <label className="text-sm text-muted-foreground/60 w-[160px] flex-shrink-0">类型</label>
+        </div>
+        <div className="flex items-center gap-3">
           <Popover>
             <PopoverTrigger asChild>
               <button type="button"
@@ -229,20 +233,18 @@ function AgentBasicSection({ resource }: { resource: ResourceItem }) {
           </Popover>
           <Input value={name} onChange={e => setName(e.target.value)} placeholder="智能体名称"
             className="flex-1 min-w-0 h-11 px-3 border-border/20 bg-accent/15 text-sm text-foreground focus-visible:border-border/40 focus-visible:ring-0 shadow-none" />
-          <div className="flex flex-col gap-1.5 flex-shrink-0">
-            <label className="text-xs text-muted-foreground/60 leading-none">类型</label>
-            <Select value={agentType} onValueChange={(v) => setAgentType(v as typeof agentType)}>
-              <SelectTrigger className="w-[160px] h-11 px-3 text-sm border-border/20 bg-accent/15 hover:bg-accent/25 rounded-xl">
-                <SelectValue placeholder="类型" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="claude-code">Claude Code</SelectItem>
-                <SelectItem value="cherry-runtime">Cherry Runtime</SelectItem>
-                <SelectItem value="long-running">Long Running</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+          <Select value={agentType} onValueChange={(v) => setAgentType(v as typeof agentType)}>
+            <SelectTrigger className="w-[160px] flex-shrink-0 h-11 px-3 text-sm border-border/20 bg-accent/15 hover:bg-accent/25 rounded-xl">
+              <SelectValue placeholder="类型" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="claude-code">Claude Code</SelectItem>
+              <SelectItem value="cherry-runtime">Cherry Runtime</SelectItem>
+              <SelectItem value="long-running">Long Running</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
+      </div>
       </FieldGroup>
       <div className="space-y-3"><div className="flex items-center gap-2 mb-1"><span className="text-sm text-muted-foreground/60">{"模型配置"}</span><div className="flex-1 h-px bg-border/30" /></div><ModelSelector label="规划模型" value={planningModel} onChange={setPlanningModel} hint="负责任务拆解和决策" /><ModelSelector label="常规模型" value={regularModel} onChange={setRegularModel} hint="负责主要推理和执行" /><ModelSelector label="快速模型" value={fastModel} onChange={setFastModel} hint="负责简单判断和格式化" /></div>
       <FieldGroup label="简介"><Textarea value={description} onChange={e => setDescription(e.target.value)} rows={2} className="input-accent resize-none" /></FieldGroup>
