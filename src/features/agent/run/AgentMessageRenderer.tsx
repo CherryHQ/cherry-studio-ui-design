@@ -68,6 +68,9 @@ function ToolCallRow({ msg }: { msg: ChatMessage }) {
         {tc.status === 'error' && (
           <X size={9} className="text-destructive flex-shrink-0" />
         )}
+        {isExpandable && (
+          <ChevronRight size={9} className={`text-muted-foreground flex-shrink-0 transition-transform duration-100 ${expanded ? 'rotate-90' : ''}`} />
+        )}
         {/* Open with dropdown — appears on hover when a file was produced */}
         {showOpenWith && (
           <DropdownMenu>
@@ -111,9 +114,6 @@ function ToolCallRow({ msg }: { msg: ChatMessage }) {
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-        )}
-        {isExpandable && (
-          <ChevronRight size={9} className={`text-muted-foreground flex-shrink-0 transition-transform duration-100 ${expanded ? 'rotate-90' : ''}`} />
         )}
       </div>
 

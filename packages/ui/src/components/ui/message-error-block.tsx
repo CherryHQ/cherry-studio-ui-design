@@ -15,7 +15,7 @@
 
 import * as React from 'react';
 import {
-  AlertCircle, AlertTriangle, ChevronRight, Copy, Check, Loader2, Stethoscope, CheckCircle,
+  AlertCircle, AlertTriangle, ChevronRight, Copy, Check, Info, Loader2, Stethoscope, CheckCircle,
   Settings, RotateCcw, X as XIcon,
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
@@ -140,23 +140,23 @@ export function MessageErrorBlock({
         role="alert"
         onClick={() => setModalOpen(true)}
         className={cn(
-          'group relative rounded-[var(--radius-button)] border cursor-pointer transition-colors',
-          // Friendly chrome — neutral border + faint warm wash, hover only
-          // hints at the destructive color. Detail / retry live in the modal.
-          'border-border/40 bg-muted/20',
-          'hover:border-destructive/25 hover:bg-destructive/[0.03]',
+          'group relative rounded-[var(--radius-button)] cursor-pointer transition-colors',
+          // Fully neutral chrome — reads as a "note" rather than an alert.
+          // No border by default; subtle muted bg + slight border on hover.
+          'bg-muted/25 border border-transparent',
+          'hover:bg-muted/45 hover:border-border/35',
           'flex items-center gap-2',
           compact ? 'px-2.5 py-1.5' : 'px-3 py-1.5',
           className,
         )}
       >
-        <AlertCircle
+        <Info
           size={compact ? 12 : 13}
-          className="text-destructive/65 flex-shrink-0"
+          className="text-muted-foreground/55 flex-shrink-0"
         />
         <span
           className={cn(
-            'font-medium text-foreground/85 leading-none flex-shrink-0',
+            'font-medium text-foreground/80 leading-none flex-shrink-0',
             compact ? 'text-[11px]' : 'text-[12px]',
           )}
         >
@@ -166,7 +166,7 @@ export function MessageErrorBlock({
           <span
             className={cn(
               'inline-flex items-center px-1.5 py-px rounded font-mono leading-none flex-shrink-0',
-              'bg-muted/60 text-muted-foreground/75',
+              'bg-muted/60 text-muted-foreground/70',
               compact ? 'text-[9px]' : 'text-[10px]',
             )}
           >
@@ -175,7 +175,7 @@ export function MessageErrorBlock({
         )}
         <span
           className={cn(
-            'flex-1 min-w-0 truncate text-muted-foreground/60 leading-none',
+            'flex-1 min-w-0 truncate text-muted-foreground/55 leading-none',
             compact ? 'text-[11px]' : 'text-xs',
           )}
         >
@@ -183,8 +183,8 @@ export function MessageErrorBlock({
         </span>
         <span
           className={cn(
-            'inline-flex items-center gap-0.5 text-muted-foreground/45 flex-shrink-0',
-            'group-hover:text-foreground/80 transition-colors',
+            'inline-flex items-center gap-0.5 text-muted-foreground/40 flex-shrink-0',
+            'group-hover:text-foreground/70 transition-colors',
             compact ? 'text-[10px]' : 'text-[11px]',
           )}
         >
