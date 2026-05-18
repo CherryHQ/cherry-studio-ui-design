@@ -112,8 +112,12 @@ export function BasicSection({ resource }: Props) {
         <InfoTip text="配置助手的身份信息和模型参数" />
       </div>
 
-      {/* Row 1: 头像 + 名称 + 默认模型 + Agent 类型 — no label, controls self-explanatory */}
+      {/* Row 1: 头像与名称 + 模型 — two-row form with aligned label band */}
       <div>
+        <div className="flex items-center justify-between gap-3 mb-1.5">
+          <label className="text-sm text-muted-foreground/60">头像与名称</label>
+          <label className="text-sm text-muted-foreground/60 w-[220px] flex-shrink-0">模型</label>
+        </div>
         <div className="flex items-center gap-3">
           <Popover>
             <PopoverTrigger asChild>
@@ -196,35 +200,32 @@ export function BasicSection({ resource }: Props) {
           <Input value={name} onChange={e => setName(e.target.value)}
             placeholder="助手名称"
             className="flex-1 min-w-0 h-11 px-3 rounded-xl border-border/20 bg-accent/15 text-xs text-foreground focus:border-border/40 focus:bg-accent/15 transition-all" />
-          <div className="flex items-center gap-2 flex-shrink-0">
-            <label className="text-sm text-muted-foreground/70 whitespace-nowrap">模型</label>
-            <Popover open={modelPickerOpen} onOpenChange={setModelPickerOpen}>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  className="justify-between gap-2 h-11 px-3 text-xs border-border/20 bg-accent/15 hover:bg-accent/25 w-[220px] rounded-xl"
-                >
-                  <span className="truncate text-foreground">
-                    {ASSISTANT_MODELS.find(m => m.id === model)?.name || model}
-                  </span>
-                  <ChevronDown
-                    size={12}
-                    className={`text-muted-foreground/50 flex-shrink-0 transition-transform ${modelPickerOpen ? 'rotate-180' : ''}`}
-                  />
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent align="end" className="p-0 w-[480px]">
-                <ModelPickerPanel
-                  selectedModels={[model]}
-                  onSelectModel={setModel}
-                  multiModel={false}
-                  onToggleMultiModel={() => {}}
-                  onClose={() => setModelPickerOpen(false)}
-                  showMultiModelToggle={false}
+          <Popover open={modelPickerOpen} onOpenChange={setModelPickerOpen}>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                className="flex-shrink-0 justify-between gap-2 h-11 px-3 text-xs border-border/20 bg-accent/15 hover:bg-accent/25 w-[220px] rounded-xl"
+              >
+                <span className="truncate text-foreground">
+                  {ASSISTANT_MODELS.find(m => m.id === model)?.name || model}
+                </span>
+                <ChevronDown
+                  size={12}
+                  className={`text-muted-foreground/50 flex-shrink-0 transition-transform ${modelPickerOpen ? 'rotate-180' : ''}`}
                 />
-              </PopoverContent>
-            </Popover>
-          </div>
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent align="end" className="p-0 w-[480px]">
+              <ModelPickerPanel
+                selectedModels={[model]}
+                onSelectModel={setModel}
+                multiModel={false}
+                onToggleMultiModel={() => {}}
+                onClose={() => setModelPickerOpen(false)}
+                showMultiModelToggle={false}
+              />
+            </PopoverContent>
+          </Popover>
         </div>
       </div>
 
