@@ -262,8 +262,6 @@ export function BasicSection({ resource }: Props) {
           setModel={setModel}
         />
 
-        <Divider />
-
         <ParamRow
           label="模型温度"
           hint="控制采样随机性，越大越发散"
@@ -276,8 +274,6 @@ export function BasicSection({ resource }: Props) {
             <span>0</span><span>0.7</span><span>2</span>
           </div>
         </ParamRow>
-
-        <Divider />
 
         <ParamRow
           label="Top-P"
@@ -292,16 +288,12 @@ export function BasicSection({ resource }: Props) {
           </div>
         </ParamRow>
 
-        <Divider />
-
         <ToggleRow
           label="自动上下文"
           hint="自动管理历史消息上下文长度"
           checked={enableContextCount}
           onCheckedChange={setEnableContextCount}
         />
-
-        <Divider />
 
         <ParamRow
           label="最大 Token 数"
@@ -315,15 +307,11 @@ export function BasicSection({ resource }: Props) {
             className="w-full px-3 py-2 rounded-xl border-border/20 bg-accent/15 text-xs text-foreground focus:border-border/40 focus:bg-accent/15 transition-all tabular-nums" />
         </ParamRow>
 
-        <Divider />
-
         <ToggleRow
           label="流式输出"
           checked={streamOutput}
           onCheckedChange={setStreamOutput}
         />
-
-        <Divider />
 
         <ParamRow
           label="最大工具调用次数"
@@ -336,8 +324,6 @@ export function BasicSection({ resource }: Props) {
             onChange={e => setMaxToolCalls(parseInt(e.target.value) || 1)}
             className="w-full px-3 py-2 rounded-xl border-border/20 bg-accent/15 text-xs text-foreground focus:border-border/40 focus:bg-accent/15 transition-all tabular-nums" />
         </ParamRow>
-
-        <Divider />
 
         {/* 自定义参数 — dynamic list with name + type + value + delete */}
         <div className="py-2 space-y-2">
@@ -452,10 +438,6 @@ function DefaultModelRow({ model, modelLabel, pickerOpen, setPickerOpen, setMode
       </Popover>
     </div>
   );
-}
-
-function Divider() {
-  return <div className="h-px bg-border/25" />;
 }
 
 function FieldGroup({ label, children }: { label: React.ReactNode; children: React.ReactNode }) {
