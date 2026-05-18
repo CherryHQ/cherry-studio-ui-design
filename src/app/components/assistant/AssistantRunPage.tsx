@@ -1932,7 +1932,6 @@ export function AssistantRunPage() {
   const plusMenuItems = [
     { id: 'attach', label: '添加图片或附件', icon: Paperclip, separator: true },
     { id: 'genimg', label: '生成图片', icon: ImageIcon },
-    { id: 'websearch', label: '网络搜索', icon: Globe },
     { id: 'knowledge', label: '知识库', icon: BookOpen },
     { id: 'mcp', label: 'MCP', icon: Hammer },
   ];
