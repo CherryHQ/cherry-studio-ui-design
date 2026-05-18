@@ -187,10 +187,10 @@ export function MessageErrorBlock({
             type="button"
             onClick={handleNavigate}
             className={cn(
-              'inline-flex items-center gap-1 px-1.5 py-0.5 rounded flex-shrink-0',
-              'text-destructive/80 hover:text-destructive hover:bg-destructive/10 transition-colors',
-              'border border-destructive/25 hover:border-destructive/45',
-              compact ? 'text-[10px]' : 'text-[11px]',
+              'inline-flex items-center gap-1 rounded-md flex-shrink-0',
+              'bg-destructive/10 text-destructive/90 hover:bg-destructive/18 hover:text-destructive',
+              'transition-colors leading-none',
+              compact ? 'px-2 py-[3px] text-[10px]' : 'px-2 py-[3px] text-[11px]',
             )}
           >
             <Settings size={compact ? 9 : 10} />
