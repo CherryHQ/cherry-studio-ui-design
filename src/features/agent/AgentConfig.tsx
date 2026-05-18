@@ -13,7 +13,7 @@ import {
   Upload, Link2,
   Send, MessageCircle, Github,
 } from 'lucide-react';
-import { Button, Input, Slider, Textarea, Popover, PopoverTrigger, PopoverContent, EmptyState, SearchInput, Typography, Switch, Checkbox, Badge } from '@cherry-studio/ui';
+import { Button, Input, Slider, Textarea, Popover, PopoverTrigger, PopoverContent, EmptyState, SearchInput, Typography, Switch, Checkbox, Badge, Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@cherry-studio/ui';
 import { motion, AnimatePresence } from 'motion/react';
 import type { ResourceItem, MCPServerStatus } from '@/app/types';
 import { PromptSection } from '@/features/assistant/sections/PromptSection';
@@ -147,6 +147,9 @@ function AgentBasicSection({ resource }: { resource: ResourceItem }) {
   const [planningModel, setPlanningModel] = useState('claude-4-opus');
   const [regularModel, setRegularModel] = useState('gpt-41');
   const [fastModel, setFastModel] = useState('gemini-25-flash');
+  // Agent runtime type — drives how the agent executes (terminal-native
+  // Claude Code, Cherry's in-app runtime, or long-running background job)
+  const [agentType, setAgentType] = useState<'claude-code' | 'cherry-runtime' | 'long-running'>('cherry-runtime');
   const addTag = (tag: string) => { const t = tag.trim(); if (t && !tags.includes(t)) setTags(prev => [...prev, t]); setTagInput(''); };
   const removeTag = (tag: string) => setTags(prev => prev.filter(t => t !== tag));
   const togglePresetTag = (tag: string) => { if (tags.includes(tag)) removeTag(tag); else setTags(prev => [...prev, tag]); };
@@ -225,7 +228,20 @@ function AgentBasicSection({ resource }: { resource: ResourceItem }) {
             </PopoverContent>
           </Popover>
           <Input value={name} onChange={e => setName(e.target.value)} placeholder="智能体名称"
-            className="flex-1 px-3 py-2 border-border/20 bg-accent/15 text-sm text-foreground focus-visible:border-border/40 focus-visible:ring-0 shadow-none" />
+            className="flex-1 min-w-0 px-3 py-2 border-border/20 bg-accent/15 text-sm text-foreground focus-visible:border-border/40 focus-visible:ring-0 shadow-none" />
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <label className="text-sm text-muted-foreground/70 whitespace-nowrap">类型</label>
+            <Select value={agentType} onValueChange={(v) => setAgentType(v as typeof agentType)}>
+              <SelectTrigger className="w-[160px] h-11 px-3 text-sm border-border/20 bg-accent/15 hover:bg-accent/25 rounded-xl">
+                <SelectValue placeholder="类型" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="claude-code">Claude Code</SelectItem>
+                <SelectItem value="cherry-runtime">Cherry Runtime</SelectItem>
+                <SelectItem value="long-running">Long Running</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
       </FieldGroup>
       <div className="space-y-3"><div className="flex items-center gap-2 mb-1"><span className="text-sm text-muted-foreground/60">{"模型配置"}</span><div className="flex-1 h-px bg-border/30" /></div><ModelSelector label="规划模型" value={planningModel} onChange={setPlanningModel} hint="负责任务拆解和决策" /><ModelSelector label="常规模型" value={regularModel} onChange={setRegularModel} hint="负责主要推理和执行" /><ModelSelector label="快速模型" value={fastModel} onChange={setFastModel} hint="负责简单判断和格式化" /></div>
