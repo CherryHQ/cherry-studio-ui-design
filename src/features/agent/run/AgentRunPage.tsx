@@ -348,6 +348,7 @@ function CodexStyleInput({ onSendMessage, autoFocus = false, placeholder }: {
   const [activeProject, setActiveProject] = useState<string | null>('work');
   const [showModelMenu, setShowModelMenu] = useState(false);
   const [showSkillMenu, setShowSkillMenu] = useState(false);
+  const [skillSearch, setSkillSearch] = useState('');
   const [showProjectMenu, setShowProjectMenu] = useState(false);
   const [showSlash, setShowSlash] = useState(false);
   const [showMention, setShowMention] = useState(false);
@@ -580,26 +581,51 @@ function CodexStyleInput({ onSendMessage, autoFocus = false, placeholder }: {
                   <ChevronDown size={9} className={`transition-transform duration-100 ${showSkillMenu ? 'rotate-180' : ''}`} />
                 </Button>
               </PopoverTrigger>
-              <PopoverContent side="top" align="start" className="w-[220px] p-1">
-                <div className="px-2 py-1 text-xs text-muted-foreground/60">已安装技能</div>
-                {[
-                  { id: 'docs',    label: 'Documents',     icon: FileText,     color: 'text-info' },
-                  { id: 'sheets',  label: 'Spreadsheets',  icon: Table2,       color: 'text-success' },
-                  { id: 'slides',  label: 'Presentations', icon: Presentation, color: 'text-warning' },
-                  { id: 'browser', label: '浏览器',         icon: Compass,      color: 'text-info' },
-                  { id: 'desktop', label: '电脑',           icon: Monitor,      color: 'text-accent-violet' },
-                ].map(s => {
-                  const Icon = s.icon;
+              <PopoverContent side="top" align="start" className="w-[240px] p-1">
+                <div className="px-1.5 pt-1 pb-1.5">
+                  <SearchInput
+                    value={skillSearch}
+                    onChange={setSkillSearch}
+                    placeholder="搜索技能…"
+                    clearable
+                    wrapperClassName="flex items-center gap-1.5 px-2 h-7 rounded-md bg-muted/30 border border-border/25"
+                  />
+                </div>
+                {(() => {
+                  const allSkills = [
+                    { id: 'docs',    label: 'Documents',     icon: FileText,     color: 'text-info' },
+                    { id: 'sheets',  label: 'Spreadsheets',  icon: Table2,       color: 'text-success' },
+                    { id: 'slides',  label: 'Presentations', icon: Presentation, color: 'text-warning' },
+                    { id: 'browser', label: '浏览器',         icon: Compass,      color: 'text-info' },
+                    { id: 'desktop', label: '电脑',           icon: Monitor,      color: 'text-accent-violet' },
+                  ];
+                  const q = skillSearch.trim().toLowerCase();
+                  const filtered = q ? allSkills.filter(s => s.label.toLowerCase().includes(q)) : allSkills;
+                  if (filtered.length === 0) {
+                    return (
+                      <div className="px-2 py-3 text-center text-[11px] text-muted-foreground/50">
+                        未找到匹配技能
+                      </div>
+                    );
+                  }
                   return (
-                    <button key={s.id} type="button"
-                      onClick={() => setShowSkillMenu(false)}
-                      className="w-full flex items-center gap-2 px-2 py-[6px] rounded-md text-left text-xs text-foreground/80 hover:bg-accent/25 transition-colors"
-                    >
-                      <Icon size={12} strokeWidth={1.5} className={`flex-shrink-0 ${s.color}`} />
-                      <span className="flex-1 truncate">{s.label}</span>
-                    </button>
+                    <>
+                      {!q && <div className="px-2 py-1 text-xs text-muted-foreground/60">已安装技能</div>}
+                      {filtered.map(s => {
+                        const Icon = s.icon;
+                        return (
+                          <button key={s.id} type="button"
+                            onClick={() => { setShowSkillMenu(false); setSkillSearch(''); }}
+                            className="w-full flex items-center gap-2 px-2 py-[6px] rounded-md text-left text-xs text-foreground/80 hover:bg-accent/25 transition-colors"
+                          >
+                            <Icon size={12} strokeWidth={1.5} className={`flex-shrink-0 ${s.color}`} />
+                            <span className="flex-1 truncate">{s.label}</span>
+                          </button>
+                        );
+                      })}
+                    </>
                   );
-                })}
+                })()}
                 <div className="my-1 h-px bg-border/40" />
                 <button type="button"
                   onClick={() => setShowSkillMenu(false)}
