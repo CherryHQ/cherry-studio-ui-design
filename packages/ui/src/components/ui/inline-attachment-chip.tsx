@@ -15,7 +15,7 @@
 import * as React from "react";
 import {
   Image as ImageIcon, FileText, FileCode2, FileArchive,
-  Music, Video, Sheet, FileQuestion, FileType2,
+  Music, Video, Sheet, FileQuestion, FileType2, Trash2,
 } from "lucide-react";
 import { cn } from "../../lib/utils";
 import { Popover, PopoverTrigger, PopoverContent } from "./popover";
@@ -160,11 +160,22 @@ function ChipPreviewBody({
         </div>
       )}
       <div className="p-3 space-y-1.5">
-        <div className="flex items-center justify-between gap-2">
-          <div className="text-xs font-medium text-foreground truncate" title={name}>{name}</div>
-          <span className="text-[10px] uppercase px-1.5 py-px rounded-sm border border-border/40 bg-muted/50 text-muted-foreground/80">
+        <div className="flex items-center gap-2">
+          <div className="text-xs font-medium text-foreground truncate flex-1 min-w-0" title={name}>{name}</div>
+          <span className="text-[10px] uppercase px-1.5 py-px rounded-sm border border-border/40 bg-muted/50 text-muted-foreground/80 flex-shrink-0">
             {cfg.hoverHint}
           </span>
+          {onRemove && (
+            <button
+              type="button"
+              onClick={(e) => { e.stopPropagation(); onRemove(); }}
+              aria-label="移除附件"
+              title="移除附件"
+              className="inline-flex items-center justify-center w-6 h-6 rounded-sm text-muted-foreground/60 hover:text-destructive hover:bg-destructive/10 transition-colors flex-shrink-0"
+            >
+              <Trash2 size={12} />
+            </button>
+          )}
         </div>
         <div className="flex items-center gap-2 text-[11px] text-muted-foreground/70">
           {ext && <span className="font-mono uppercase">{ext}</span>}
@@ -175,15 +186,6 @@ function ChipPreviewBody({
           <div className="text-[11px] text-muted-foreground/60 line-clamp-3 leading-relaxed pt-1 border-t border-border/30 mt-1.5">
             {snippet}
           </div>
-        )}
-        {onRemove && (
-          <button
-            type="button"
-            onClick={(e) => { e.stopPropagation(); onRemove(); }}
-            className="text-[11px] text-destructive/80 hover:text-destructive transition-colors pt-1.5"
-          >
-            移除附件
-          </button>
         )}
       </div>
     </div>
