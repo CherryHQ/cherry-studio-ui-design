@@ -234,7 +234,7 @@ function AgentBasicSection({ resource }: { resource: ResourceItem }) {
           <Input value={name} onChange={e => setName(e.target.value)} placeholder="智能体名称"
             className="flex-1 min-w-0 h-11 px-3 border-border/20 bg-accent/15 text-sm text-foreground focus-visible:border-border/40 focus-visible:ring-0 shadow-none" />
           <Select value={agentType} onValueChange={(v) => setAgentType(v as typeof agentType)}>
-            <SelectTrigger className="w-[160px] flex-shrink-0 h-11 px-3 text-sm border-border/20 bg-accent/15 hover:bg-accent/25 rounded-xl">
+            <SelectTrigger className="w-[160px] flex-shrink-0 !h-11 px-3 text-sm border-border/20 bg-accent/15 hover:bg-accent/25 rounded-xl">
               <SelectValue placeholder="类型" />
             </SelectTrigger>
             <SelectContent>
