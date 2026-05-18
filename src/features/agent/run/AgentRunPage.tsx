@@ -347,6 +347,12 @@ function CodexStyleInput({ onSendMessage, autoFocus = false, placeholder }: {
   const [activeMode, setActiveMode] = useState('normal');
   const [activeProject, setActiveProject] = useState<string | null>('work');
   const [showModelMenu, setShowModelMenu] = useState(false);
+  // Thinking effort selector — kept in sync with the popover and surfaced
+  // inside the composer (chip above the textarea) so the user can see the
+  // active level without opening the menu.
+  type ThinkingEffort = 'default' | 'low' | 'mid' | 'high';
+  const [thinkingEffort, setThinkingEffort] = useState<ThinkingEffort>('default');
+  const THINKING_LABELS: Record<ThinkingEffort, string> = { default: '默认', low: '浮想', mid: '斟酌', high: '沉思' };
   const [showSkillMenu, setShowSkillMenu] = useState(false);
   const [skillSearch, setSkillSearch] = useState('');
   const [showProjectMenu, setShowProjectMenu] = useState(false);
@@ -438,6 +444,25 @@ function CodexStyleInput({ onSendMessage, autoFocus = false, placeholder }: {
                 );
               })}
             </div>
+          </div>
+        )}
+
+        {/* Thinking effort indicator — visible when a non-default level is chosen */}
+        {thinkingEffort !== 'default' && (
+          <div className="px-3 pt-2.5 flex items-center gap-1.5 flex-wrap">
+            <span className="inline-flex items-center gap-1 px-1.5 py-[2px] rounded-sm border border-success/25 bg-success/10 text-success/90 text-[11px] leading-none font-medium">
+              <Lightbulb size={10} strokeWidth={2} className="text-success" />
+              <span>思考</span>
+              <span className="opacity-60 tracking-wide">{THINKING_LABELS[thinkingEffort]}</span>
+              <button
+                type="button"
+                onClick={() => setThinkingEffort('default')}
+                aria-label="关闭思考"
+                className="ml-0.5 inline-flex items-center justify-center w-3.5 h-3.5 rounded-sm text-success/60 hover:text-success hover:bg-success/15 transition-colors"
+              >
+                <X size={9} />
+              </button>
+            </span>
           </div>
         )}
 
@@ -542,27 +567,31 @@ function CodexStyleInput({ onSendMessage, autoFocus = false, placeholder }: {
                       : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
                   }`}
                 >
-                  <Lightbulb size={13} className="text-muted-foreground/70" strokeWidth={1.5} />
-                  <span className="truncate">默认</span>
+                  <Lightbulb size={13} className={thinkingEffort === 'default' ? 'text-muted-foreground/70' : 'text-success'} strokeWidth={1.5} />
+                  <span className="truncate">{THINKING_LABELS[thinkingEffort]}</span>
                   <ChevronDown size={9} className={`transition-transform duration-100 ${showModelMenu ? 'rotate-180' : ''}`} />
                 </Button>
               </PopoverTrigger>
               <PopoverContent side="top" align="start" className="w-[200px] p-1">
                 <div className="px-2 py-1 text-xs text-muted-foreground/60">思维链长度</div>
-                {[
-                  { id: 'default', label: '默认' },
-                  { id: 'low',     label: '浮想' },
-                  { id: 'mid',     label: '斟酌' },
-                  { id: 'high',    label: '沉思' },
-                ].map(t => (
-                  <button key={t.id} type="button"
-                    onClick={() => setShowModelMenu(false)}
-                    className="w-full flex items-center gap-2 px-2 py-[6px] rounded-md text-left text-xs text-foreground/80 hover:bg-accent/25 transition-colors"
-                  >
-                    <Lightbulb size={12} strokeWidth={1.5} className="flex-shrink-0 text-muted-foreground/70" />
-                    <span className="flex-1">{t.label}</span>
-                  </button>
-                ))}
+                {([
+                  { id: 'default' as const, label: '默认' },
+                  { id: 'low'     as const, label: '浮想' },
+                  { id: 'mid'     as const, label: '斟酌' },
+                  { id: 'high'    as const, label: '沉思' },
+                ]).map(t => {
+                  const active = thinkingEffort === t.id;
+                  return (
+                    <button key={t.id} type="button"
+                      onClick={() => { setThinkingEffort(t.id); setShowModelMenu(false); }}
+                      className={`w-full flex items-center gap-2 px-2 py-[6px] rounded-md text-left text-xs transition-colors ${active ? 'bg-accent/40 text-foreground' : 'text-foreground/80 hover:bg-accent/25'}`}
+                    >
+                      <Lightbulb size={12} strokeWidth={1.5} className={`flex-shrink-0 ${active ? 'text-success' : 'text-muted-foreground/70'}`} />
+                      <span className="flex-1">{t.label}</span>
+                      {active && <Check size={10} className="text-primary flex-shrink-0" />}
+                    </button>
+                  );
+                })}
               </PopoverContent>
             </Popover>
 
