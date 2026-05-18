@@ -26,20 +26,22 @@ type ChipKind = "image" | "doc" | "pdf" | "code" | "archive" | "audio" | "video"
 
 interface KindConfig {
   Icon: React.ComponentType<{ size?: number; className?: string; strokeWidth?: number }>;
-  classes: string;     // bg + text + border classes for the chip body
-  hoverHint: string;   // short label shown in the tooltip header
+  /** Type-coded color — only applied to the icon, never to the chip chrome. */
+  iconCls: string;
+  /** Short label shown on the preview popover. */
+  hoverHint: string;
 }
 
 const KIND_CONFIG: Record<ChipKind, KindConfig> = {
-  image:   { Icon: ImageIcon,     classes: "bg-accent-pink-muted   text-accent-pink   border-accent-pink/20",   hoverHint: "图片" },
-  doc:     { Icon: FileText,      classes: "bg-accent-blue-muted   text-accent-blue   border-accent-blue/20",   hoverHint: "文档" },
-  pdf:     { Icon: FileType2,     classes: "bg-destructive/10      text-destructive   border-destructive/20",   hoverHint: "PDF" },
-  code:    { Icon: FileCode2,     classes: "bg-accent-violet-muted text-accent-violet border-accent-violet/20", hoverHint: "代码" },
-  archive: { Icon: FileArchive,   classes: "bg-accent-orange-muted text-accent-orange border-accent-orange/20", hoverHint: "压缩包" },
-  audio:   { Icon: Music,         classes: "bg-accent-amber-muted  text-accent-amber  border-accent-amber/20",  hoverHint: "音频" },
-  video:   { Icon: Video,         classes: "bg-accent-indigo-muted text-accent-indigo border-accent-indigo/20", hoverHint: "视频" },
-  sheet:   { Icon: Sheet,         classes: "bg-success/10          text-success       border-success/20",       hoverHint: "表格" },
-  generic: { Icon: FileQuestion,  classes: "bg-muted               text-muted-foreground border-border/40",     hoverHint: "文件" },
+  image:   { Icon: ImageIcon,    iconCls: "text-accent-pink",   hoverHint: "图片" },
+  doc:     { Icon: FileText,     iconCls: "text-accent-blue",   hoverHint: "文档" },
+  pdf:     { Icon: FileType2,    iconCls: "text-destructive",   hoverHint: "PDF" },
+  code:    { Icon: FileCode2,    iconCls: "text-accent-violet", hoverHint: "代码" },
+  archive: { Icon: FileArchive,  iconCls: "text-accent-orange", hoverHint: "压缩包" },
+  audio:   { Icon: Music,        iconCls: "text-accent-amber",  hoverHint: "音频" },
+  video:   { Icon: Video,        iconCls: "text-accent-indigo", hoverHint: "视频" },
+  sheet:   { Icon: Sheet,        iconCls: "text-success",       hoverHint: "表格" },
+  generic: { Icon: FileQuestion, iconCls: "text-muted-foreground", hoverHint: "文件" },
 };
 
 const EXT_TO_KIND: Record<string, ChipKind> = {
@@ -98,8 +100,9 @@ export function InlineAttachmentChip({
             "inline-flex items-center gap-1 align-baseline mx-[1px]",
             "px-1.5 py-[1px] rounded-md border font-medium leading-none",
             "text-[11px] cursor-default select-none",
-            "hover:opacity-90 transition-opacity",
-            cfg.classes,
+            // Neutral chrome — color lives only in the icon below.
+            "border-border/40 bg-muted/50 text-foreground/85",
+            "hover:bg-muted/70 hover:border-border/60 transition-colors",
             className,
           )}
           title={name}
@@ -111,7 +114,7 @@ export function InlineAttachmentChip({
               className="w-3 h-3 rounded-[2px] object-cover flex-shrink-0"
             />
           ) : (
-            <Icon size={10} strokeWidth={2} className="flex-shrink-0 opacity-80" />
+            <Icon size={10} strokeWidth={2} className={cn("flex-shrink-0", cfg.iconCls)} />
           )}
           <span className="truncate max-w-[180px]">{name}</span>
           {ext && <span className="opacity-50 uppercase tracking-wide text-[9px]">{ext}</span>}
@@ -151,18 +154,15 @@ function ChipPreviewBody({
           "bg-[image:linear-gradient(135deg,var(--color-muted)_25%,transparent_25%,transparent_50%,var(--color-muted)_50%,var(--color-muted)_75%,transparent_75%)]",
           "bg-[length:8px_8px] bg-muted/15",
         )}>
-          <div className={cn(
-            "w-12 h-12 rounded-lg border flex items-center justify-center",
-            cfg.classes,
-          )}>
-            <Icon size={22} strokeWidth={1.6} />
+          <div className="w-12 h-12 rounded-lg border border-border/40 bg-muted/50 flex items-center justify-center">
+            <Icon size={22} strokeWidth={1.6} className={cfg.iconCls} />
           </div>
         </div>
       )}
       <div className="p-3 space-y-1.5">
         <div className="flex items-center justify-between gap-2">
           <div className="text-xs font-medium text-foreground truncate" title={name}>{name}</div>
-          <span className={cn("text-[10px] uppercase px-1.5 py-px rounded border", cfg.classes)}>
+          <span className="text-[10px] uppercase px-1.5 py-px rounded border border-border/40 bg-muted/50 text-muted-foreground/80">
             {cfg.hoverHint}
           </span>
         </div>
