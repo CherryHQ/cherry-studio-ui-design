@@ -114,8 +114,8 @@ export function BasicSection({ resource }: Props) {
         <InfoTip text="配置助手的身份信息和模型参数" />
       </div>
 
-      {/* Row 1: 头像 + 名称 + 默认模型 + Agent 类型 (single row, full width) */}
-      <FieldGroup label="头像、名称、默认模型与 Agent 类型">
+      {/* Row 1: 头像 + 名称 + 默认模型 + Agent 类型 — no label, controls self-explanatory */}
+      <div>
         <div className="flex items-center gap-3">
           <Popover>
             <PopoverTrigger asChild>
@@ -237,7 +237,7 @@ export function BasicSection({ resource }: Props) {
             </SelectContent>
           </Select>
         </div>
-      </FieldGroup>
+      </div>
 
       {/* Row 2: 简介 (full width) */}
       <FieldGroup label="简介">
@@ -358,7 +358,7 @@ export function BasicSection({ resource }: Props) {
         </ParamRow>
 
         {/* 自定义参数 — dynamic list with name + type + value + delete */}
-        <div className="py-4 space-y-2">
+        <div className="py-3 space-y-2">
           <div className="flex items-center justify-between gap-3">
             <label className="text-sm text-muted-foreground/80">自定义参数</label>
             <Button variant="outline" size="xs" onClick={addCustomParam} className="gap-1.5 h-7">
@@ -451,7 +451,7 @@ function ToggleRow({ label, hint, checked, onCheckedChange }: {
   onCheckedChange: (v: boolean) => void;
 }) {
   return (
-    <div className="flex items-center justify-between gap-3 py-4">
+    <div className="flex items-center justify-between gap-3 py-3">
       <div className="flex items-center gap-1.5 min-w-0">
         <label className="text-sm text-muted-foreground/80">{label}</label>
         {hint && <InfoTip text={hint} />}
@@ -475,7 +475,7 @@ function ParamRow({
   children: React.ReactNode;
 }) {
   return (
-    <div className="py-4">
+    <div className="py-3">
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-1.5 min-w-0">
           <label className="text-sm text-muted-foreground/80">
@@ -488,7 +488,7 @@ function ParamRow({
         </div>
         <Switch checked={enabled} onCheckedChange={onEnabledChange} className="flex-shrink-0" />
       </div>
-      {enabled && <div className="pt-3">{children}</div>}
+      {enabled && <div className="pt-2.5">{children}</div>}
     </div>
   );
 }
