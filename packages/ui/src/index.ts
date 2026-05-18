@@ -134,6 +134,8 @@ export * from "./components/ui/assistant-picker-panel"
 export * from "./components/ui/at-mention-picker"
 export * from "./components/ui/error-boundary"
 export * from "./components/ui/message-error-block"
+export * from "./components/ui/inline-attachment-chip"
+export * from "./components/ui/rich-composer"
 
 // Prompt input components
 export * from "./components/ui/prompt-input"

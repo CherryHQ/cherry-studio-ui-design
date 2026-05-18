@@ -30,6 +30,7 @@ import {
   Popover, PopoverTrigger, PopoverContent,
   HoverCard, HoverCardTrigger, HoverCardContent, BrandLogo,
   MessageErrorBlock,
+  RichComposer, type RichComposerHandle, type ComposerAttachment,
 } from '@cherry-studio/ui';
 import type { AssistantInfo, AssistantTopic } from '@/app/types/assistant';
 import type {
@@ -1866,6 +1867,58 @@ export function AssistantRunPage() {
   const [showHeaderFileHistory, setShowHeaderFileHistory] = useState(false);
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const composerRef = useRef<RichComposerHandle>(null);
+
+  // Inline attachment chips that sit beside the user-typed text in the
+  // RichComposer. Pre-seeded with one of each major category so the UI
+  // demonstrates the design at a glance; new ones are appended via the
+  // Paperclip button.
+  const [inlineAttachments, setInlineAttachments] = useState<ComposerAttachment[]>([
+    {
+      id: 'demo-img',
+      name: 'dashboard-mockup.png',
+      ext: 'png',
+      size: '1.8 MB',
+      previewUrl: 'https://images.unsplash.com/photo-1766934587214-86e21b3ae093?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=320',
+    },
+    {
+      id: 'demo-doc',
+      name: 'design-spec.md',
+      ext: 'md',
+      size: '4.2 KB',
+      snippet: '# 仪表盘设计规范\n\n- 主色调：#2563EB / #F59E0B\n- 字体：Inter, system-ui\n- 卡片圆角：12px ...',
+    },
+    {
+      id: 'demo-pdf',
+      name: '品牌指南.pdf',
+      ext: 'pdf',
+      size: '5.6 MB',
+      snippet: '完整的品牌识别系统手册，包含 logo 使用规范、配色系统与排版规则。',
+    },
+  ]);
+
+  // Demo file pool that the Paperclip button cycles through when clicked
+  const demoAttachmentPool = useRef<Omit<ComposerAttachment, 'id'>[]>([
+    { name: 'analytics.xlsx', ext: 'xlsx', size: '230 KB', snippet: '过去 30 天的产品 KPI 表，含 1,024 行数据。' },
+    { name: 'demo-clip.mp4', ext: 'mp4', size: '12.4 MB', snippet: '产品演示视频，时长 2:38。' },
+    { name: 'reference.zip', ext: 'zip', size: '3.1 MB', snippet: '5 张参考图 + 1 份样例数据 JSON。' },
+    { name: 'voice-memo.m4a', ext: 'm4a', size: '892 KB', snippet: '产品负责人的录音备注，时长 1:24。' },
+    { name: 'server.ts', ext: 'ts', size: '6.8 KB', snippet: 'Express + tRPC 路由初始化文件，183 行。' },
+  ]);
+  const demoPoolCursor = useRef(0);
+
+  const addDemoAttachment = useCallback(() => {
+    const pool = demoAttachmentPool.current;
+    if (pool.length === 0) return;
+    const next = pool[demoPoolCursor.current % pool.length];
+    demoPoolCursor.current += 1;
+    setInlineAttachments(prev => [...prev, { ...next, id: `att-${Date.now()}-${prev.length}` }]);
+    composerRef.current?.focus();
+  }, []);
+
+  const removeInlineAttachment = useCallback((id: string) => {
+    setInlineAttachments(prev => prev.filter(a => a.id !== id));
+  }, []);
 
   // Plus & @ menu state
   const [showPlusMenu, setShowPlusMenu] = useState(false);
@@ -2321,11 +2374,12 @@ export function AssistantRunPage() {
 
               <div className="flex-shrink-0 px-4 pb-3">
                 <div className="relative rounded-xl border border-border/50 bg-background shadow-sm focus-within:border-border/60 transition-all duration-150">
-                  <Textarea
-                    ref={textareaRef} value={input} onChange={handleInput} onKeyDown={handleKeyDown}
-                    placeholder={isResponding ? '助手回复中，发送的消息将加入队列…' : (minimalInput ? "在这里输入消息，按 Enter 发送 - @ 选择助手/模型 - / 插入 Prompt" : "在这里输入消息，按 Enter 发送")}
-                    rows={1}
-                    className="w-full bg-transparent text-sm text-foreground placeholder:text-muted-foreground/60 outline-none resize-none min-h-[36px] max-h-[140px] leading-[1.6] px-3.5 pt-[10px] pb-[36px] border-transparent focus-visible:border-transparent focus-visible:ring-0 shadow-none"
+                  <RichComposer
+                    ref={composerRef}
+                    attachments={inlineAttachments}
+                    onRemoveAttachment={removeInlineAttachment}
+                    placeholder={isResponding ? '助手回复中，发送的消息将加入队列…' : (minimalInput ? '在这里输入消息，附件可以与文字混合 — @ 选择助手 / 插入 Prompt' : '在这里输入消息，附件可以与文字混合插入')}
+                    onKeyDown={handleKeyDown}
                   />
                   {/* / Slash Prompt Picker */}
                   {showSlashMenu && (
@@ -2514,8 +2568,8 @@ export function AssistantRunPage() {
                         /* Full toolbar mode */
                         <>
                           {/* Primary tools — always visible */}
-                          <Tooltip content="添加附件" side="top">
-                            <Button variant="ghost" size="icon-sm" className="p-[5px] w-auto h-auto text-muted-foreground hover:text-foreground hover:bg-accent/50"><Paperclip size={14} strokeWidth={1.5} /></Button>
+                          <Tooltip content="添加附件（与文字混合插入）" side="top">
+                            <Button variant="ghost" size="icon-sm" onClick={addDemoAttachment} className="p-[5px] w-auto h-auto text-muted-foreground hover:text-foreground hover:bg-accent/50"><Paperclip size={14} strokeWidth={1.5} /></Button>
                           </Tooltip>
                           <Tooltip content="网络搜索" side="top">
                             <Button variant="ghost" size="icon-sm" className="p-[5px] w-auto h-auto text-muted-foreground hover:text-foreground hover:bg-accent/50"><Globe size={14} strokeWidth={1.5} /></Button>
