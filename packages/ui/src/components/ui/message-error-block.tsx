@@ -187,24 +187,22 @@ export function MessageErrorBlock({
             type="button"
             onClick={handleNavigate}
             className={cn(
-              'inline-flex items-center gap-1 rounded-md flex-shrink-0',
-              // Neutral pill so it doesn't fight the red chip — the chip
-              // bg already carries the error semantic; this button just
-              // needs to read as a clickable "next step".
-              'bg-background/85 text-foreground/80 border border-border/40',
-              'hover:bg-background hover:text-foreground hover:border-border/70',
-              'transition-colors leading-none shadow-[0_1px_0_rgba(0,0,0,0.02)]',
-              compact ? 'px-2 py-[3px] text-[10px]' : 'px-2 py-[3px] text-[11px]',
+              // Plain inline link — sits on the chip's baseline next to
+              // 详情, no pill/border that would float as a cutout.
+              'inline-flex items-center gap-0.5 flex-shrink-0 leading-none',
+              'text-destructive/85 hover:text-destructive font-medium',
+              'transition-colors',
+              compact ? 'text-[10px]' : 'text-[11px]',
             )}
           >
-            <Settings size={compact ? 9 : 10} />
             <span>去配置</span>
+            <ChevronRight size={compact ? 10 : 11} />
           </button>
         )}
         <span
           className={cn(
             'inline-flex items-center gap-0.5 text-muted-foreground/50 flex-shrink-0',
-            'group-hover:text-destructive/80 transition-colors',
+            'group-hover:text-foreground/80 transition-colors',
             compact ? 'text-[10px]' : 'text-[11px]',
           )}
         >
