@@ -15,7 +15,7 @@
 
 import * as React from 'react';
 import {
-  AlertTriangle, ChevronRight, Copy, Check, Loader2, Stethoscope, CheckCircle,
+  AlertCircle, AlertTriangle, ChevronRight, Copy, Check, Loader2, Stethoscope, CheckCircle,
   Settings, RotateCcw, X as XIcon,
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
@@ -141,93 +141,56 @@ export function MessageErrorBlock({
         onClick={() => setModalOpen(true)}
         className={cn(
           'group relative rounded-[var(--radius-button)] border cursor-pointer transition-colors',
-          // Faint destructive chrome — the red AlertTriangle carries the
-          // semantic, no left stripe needed.
-          'border-destructive/15 bg-destructive/[0.025]',
-          'hover:border-destructive/30 hover:bg-destructive/[0.05]',
-          compact ? 'px-2.5 py-2' : 'px-3 py-2.5',
+          // Friendly chrome — neutral border + faint warm wash, hover only
+          // hints at the destructive color. Detail / retry live in the modal.
+          'border-border/40 bg-muted/20',
+          'hover:border-destructive/25 hover:bg-destructive/[0.03]',
+          'flex items-center gap-2',
+          compact ? 'px-2.5 py-1.5' : 'px-3 py-1.5',
           className,
         )}
       >
-        {/* Header */}
-        <div className="flex items-center gap-1.5">
-          <AlertTriangle
-            size={compact ? 12 : 13}
-            className="text-destructive flex-shrink-0"
-          />
+        <AlertCircle
+          size={compact ? 12 : 13}
+          className="text-destructive/65 flex-shrink-0"
+        />
+        <span
+          className={cn(
+            'font-medium text-foreground/85 leading-none flex-shrink-0',
+            compact ? 'text-[11px]' : 'text-[12px]',
+          )}
+        >
+          {title}
+        </span>
+        {effectiveDetail.code && (
           <span
             className={cn(
-              'font-medium text-destructive/85 leading-snug truncate',
-              compact ? 'text-[11px]' : 'text-[12px]',
+              'inline-flex items-center px-1.5 py-px rounded font-mono leading-none flex-shrink-0',
+              'bg-muted/60 text-muted-foreground/75',
+              compact ? 'text-[9px]' : 'text-[10px]',
             )}
           >
-            {title}
+            {effectiveDetail.code}
           </span>
-          {effectiveDetail.code && (
-            <span
-              className={cn(
-                'inline-flex items-center px-1.5 py-px rounded font-mono leading-none flex-shrink-0',
-                'bg-destructive/8 text-destructive/75',
-                compact ? 'text-[9px]' : 'text-[10px]',
-              )}
-            >
-              {effectiveDetail.code}
-            </span>
-          )}
-        </div>
-
-        {/* Description */}
-        <div
+        )}
+        <span
           className={cn(
-            'ml-[18px] mt-0.5 line-clamp-3 leading-snug text-foreground/65',
+            'flex-1 min-w-0 truncate text-muted-foreground/60 leading-none',
             compact ? 'text-[11px]' : 'text-xs',
           )}
         >
           {effectiveDetail.message || message}
-        </div>
-
-        {/* Footer */}
-        <div className="ml-[18px] mt-1.5 flex items-center gap-1.5">
-          {effectiveDetail.providerId && (
-            <Button
-              variant="ghost"
-              size="inline"
-              onClick={handleNavigate}
-              className={cn(
-                'gap-1 px-1.5 py-0.5 rounded border border-destructive/20',
-                'text-destructive/75 hover:text-destructive hover:bg-destructive/8 hover:border-destructive/35',
-                compact ? 'text-[10px]' : 'text-[11px]',
-              )}
-            >
-              <Settings size={compact ? 9 : 10} />
-              <span>前往设置</span>
-            </Button>
+        </span>
+        <span
+          className={cn(
+            'inline-flex items-center gap-0.5 text-muted-foreground/45 flex-shrink-0',
+            'group-hover:text-foreground/80 transition-colors',
+            compact ? 'text-[10px]' : 'text-[11px]',
           )}
-          {onRetry && (
-            <Button
-              variant="ghost"
-              size="inline"
-              onClick={(e) => { e.stopPropagation(); onRetry(); }}
-              className={cn(
-                'gap-1 px-1.5 py-0.5 rounded text-destructive/75 hover:text-destructive hover:bg-destructive/8',
-                compact ? 'text-[10px]' : 'text-[11px]',
-              )}
-            >
-              <RotateCcw size={compact ? 9 : 10} />
-              <span>{retryLabel}</span>
-            </Button>
-          )}
-          <span
-            className={cn(
-              'ml-auto inline-flex items-center gap-0.5 text-muted-foreground/50',
-              'group-hover:text-destructive/80 transition-colors',
-              compact ? 'text-[10px]' : 'text-[11px]',
-            )}
-          >
-            <span>查看详情</span>
-            <ChevronRight size={compact ? 10 : 11} />
-          </span>
-        </div>
+        >
+          <span>详情</span>
+          <ChevronRight size={compact ? 10 : 11} />
+        </span>
       </div>
 
       <MessageErrorDetailDialog
