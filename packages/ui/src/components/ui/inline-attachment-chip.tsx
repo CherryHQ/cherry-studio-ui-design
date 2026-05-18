@@ -98,7 +98,7 @@ export function InlineAttachmentChip({
           data-chip-kind={resolvedKind}
           className={cn(
             "inline-flex items-center gap-1 align-baseline mx-[1px]",
-            "px-1.5 py-[1px] rounded-md border font-medium leading-none",
+            "px-1.5 py-[1px] rounded-sm border font-medium leading-none",
             "text-[11px] cursor-default select-none",
             // Neutral chrome — color lives only in the icon below.
             "border-border/40 bg-muted/50 text-foreground/85",
@@ -154,7 +154,7 @@ function ChipPreviewBody({
           "bg-[image:linear-gradient(135deg,var(--color-muted)_25%,transparent_25%,transparent_50%,var(--color-muted)_50%,var(--color-muted)_75%,transparent_75%)]",
           "bg-[length:8px_8px] bg-muted/15",
         )}>
-          <div className="w-12 h-12 rounded-lg border border-border/40 bg-muted/50 flex items-center justify-center">
+          <div className="w-12 h-12 rounded-md border border-border/40 bg-muted/50 flex items-center justify-center">
             <Icon size={22} strokeWidth={1.6} className={cfg.iconCls} />
           </div>
         </div>
@@ -162,7 +162,7 @@ function ChipPreviewBody({
       <div className="p-3 space-y-1.5">
         <div className="flex items-center justify-between gap-2">
           <div className="text-xs font-medium text-foreground truncate" title={name}>{name}</div>
-          <span className="text-[10px] uppercase px-1.5 py-px rounded border border-border/40 bg-muted/50 text-muted-foreground/80">
+          <span className="text-[10px] uppercase px-1.5 py-px rounded-sm border border-border/40 bg-muted/50 text-muted-foreground/80">
             {cfg.hoverHint}
           </span>
         </div>
