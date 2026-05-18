@@ -140,23 +140,24 @@ export function MessageErrorBlock({
         role="alert"
         onClick={() => setModalOpen(true)}
         className={cn(
-          'group relative rounded-[var(--radius-button)] cursor-pointer transition-colors',
-          // Fully neutral chrome — reads as a "note" rather than an alert.
-          // No border by default; subtle muted bg + slight border on hover.
-          'bg-muted/25 border border-transparent',
-          'hover:bg-muted/45 hover:border-border/35',
+          'group relative rounded-[var(--radius-button)] border cursor-pointer transition-colors',
+          // Soft destructive wash — icon + badge + faint bg carry the
+          // semantic; title text stays neutral so the chip reads warm,
+          // not alarming.
+          'border-destructive/20 bg-destructive/[0.04]',
+          'hover:border-destructive/35 hover:bg-destructive/[0.07]',
           'flex items-center gap-2',
           compact ? 'px-2.5 py-1.5' : 'px-3 py-1.5',
           className,
         )}
       >
-        <Info
+        <AlertCircle
           size={compact ? 12 : 13}
-          className="text-muted-foreground/55 flex-shrink-0"
+          className="text-destructive flex-shrink-0"
         />
         <span
           className={cn(
-            'font-medium text-foreground/80 leading-none flex-shrink-0',
+            'font-medium text-foreground/85 leading-none flex-shrink-0',
             compact ? 'text-[11px]' : 'text-[12px]',
           )}
         >
@@ -166,7 +167,7 @@ export function MessageErrorBlock({
           <span
             className={cn(
               'inline-flex items-center px-1.5 py-px rounded font-mono leading-none flex-shrink-0',
-              'bg-muted/60 text-muted-foreground/70',
+              'bg-destructive/10 text-destructive/80',
               compact ? 'text-[9px]' : 'text-[10px]',
             )}
           >
@@ -175,7 +176,7 @@ export function MessageErrorBlock({
         )}
         <span
           className={cn(
-            'flex-1 min-w-0 truncate text-muted-foreground/55 leading-none',
+            'flex-1 min-w-0 truncate text-muted-foreground/70 leading-none',
             compact ? 'text-[11px]' : 'text-xs',
           )}
         >
@@ -187,8 +188,8 @@ export function MessageErrorBlock({
             onClick={handleNavigate}
             className={cn(
               'inline-flex items-center gap-1 px-1.5 py-0.5 rounded flex-shrink-0',
-              'text-foreground/70 hover:text-foreground hover:bg-muted/60 transition-colors',
-              'border border-border/35 hover:border-border/55',
+              'text-destructive/80 hover:text-destructive hover:bg-destructive/10 transition-colors',
+              'border border-destructive/25 hover:border-destructive/45',
               compact ? 'text-[10px]' : 'text-[11px]',
             )}
           >
@@ -198,8 +199,8 @@ export function MessageErrorBlock({
         )}
         <span
           className={cn(
-            'inline-flex items-center gap-0.5 text-muted-foreground/40 flex-shrink-0',
-            'group-hover:text-foreground/70 transition-colors',
+            'inline-flex items-center gap-0.5 text-muted-foreground/50 flex-shrink-0',
+            'group-hover:text-destructive/80 transition-colors',
             compact ? 'text-[10px]' : 'text-[11px]',
           )}
         >
