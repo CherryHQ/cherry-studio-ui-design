@@ -112,8 +112,8 @@ export function BasicSection({ resource }: Props) {
         <InfoTip text="配置助手的身份信息和模型参数" />
       </div>
 
-      {/* Row 1: 头像 + 名称 (single row, full width) */}
-      <FieldGroup label="头像与名称">
+      {/* Row 1: 头像 + 名称 + 默认模型 (single row, full width) */}
+      <FieldGroup label="头像、名称与默认模型">
         <div className="flex items-center gap-3">
           <Popover>
             <PopoverTrigger asChild>
@@ -195,7 +195,33 @@ export function BasicSection({ resource }: Props) {
           </Popover>
           <Input value={name} onChange={e => setName(e.target.value)}
             placeholder="助手名称"
-            className="flex-1 px-3 py-2 rounded-xl border-border/20 bg-accent/15 text-xs text-foreground focus:border-border/40 focus:bg-accent/15 transition-all" />
+            className="flex-1 min-w-0 h-11 px-3 rounded-xl border-border/20 bg-accent/15 text-xs text-foreground focus:border-border/40 focus:bg-accent/15 transition-all" />
+          <Popover open={modelPickerOpen} onOpenChange={setModelPickerOpen}>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                className="flex-shrink-0 justify-between gap-2 h-11 px-3 text-xs border-border/20 bg-accent/15 hover:bg-accent/25 w-[200px] rounded-xl"
+              >
+                <span className="truncate text-foreground">
+                  {ASSISTANT_MODELS.find(m => m.id === model)?.name || model}
+                </span>
+                <ChevronDown
+                  size={12}
+                  className={`text-muted-foreground/50 flex-shrink-0 transition-transform ${modelPickerOpen ? 'rotate-180' : ''}`}
+                />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent align="end" className="p-0 w-[480px]">
+              <ModelPickerPanel
+                selectedModels={[model]}
+                onSelectModel={setModel}
+                multiModel={false}
+                onToggleMultiModel={() => {}}
+                onClose={() => setModelPickerOpen(false)}
+                showMultiModelToggle={false}
+              />
+            </PopoverContent>
+          </Popover>
         </div>
       </FieldGroup>
 
@@ -254,14 +280,6 @@ export function BasicSection({ resource }: Props) {
           模型设置 tab (CherryHQ/cherry-studio
           src/renderer/src/pages/settings/AssistantSettings/AssistantModelSettings.tsx) */}
       <div className="space-y-1">
-        <DefaultModelRow
-          model={model}
-          modelLabel={ASSISTANT_MODELS.find(m => m.id === model)?.name || model}
-          pickerOpen={modelPickerOpen}
-          setPickerOpen={setModelPickerOpen}
-          setModel={setModel}
-        />
-
         <ParamRow
           label="模型温度"
           hint="控制采样随机性，越大越发散"
@@ -402,43 +420,6 @@ export function BasicSection({ resource }: Props) {
   );
 }
 
-function DefaultModelRow({ model, modelLabel, pickerOpen, setPickerOpen, setModel }: {
-  model: string;
-  modelLabel: string;
-  pickerOpen: boolean;
-  setPickerOpen: (v: boolean) => void;
-  setModel: (id: string) => void;
-}) {
-  return (
-    <div className="py-4">
-      <label className="text-sm text-muted-foreground/80 mb-2 block">默认模型</label>
-      <Popover open={pickerOpen} onOpenChange={setPickerOpen}>
-        <PopoverTrigger asChild>
-          <Button
-            variant="outline"
-            className="w-full justify-between gap-2 h-9 px-3 text-xs border-border/30 bg-accent/15 hover:bg-accent/25"
-          >
-            <span className="truncate text-foreground">{modelLabel}</span>
-            <ChevronDown
-              size={12}
-              className={`text-muted-foreground/50 flex-shrink-0 transition-transform ${pickerOpen ? 'rotate-180' : ''}`}
-            />
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent align="start" className="p-0 w-[var(--radix-popover-trigger-width)] min-w-[420px]">
-          <ModelPickerPanel
-            selectedModels={[model]}
-            onSelectModel={setModel}
-            multiModel={false}
-            onToggleMultiModel={() => {}}
-            onClose={() => setPickerOpen(false)}
-            showMultiModelToggle={false}
-          />
-        </PopoverContent>
-      </Popover>
-    </div>
-  );
-}
 
 function FieldGroup({ label, children }: { label: React.ReactNode; children: React.ReactNode }) {
   return (
