@@ -65,6 +65,8 @@ export function BasicSection({ resource }: Props) {
   const [topP, setTopP] = useState(0.9);
   const [enableTopP, setEnableTopP] = useState(false);
   const [enableContextCount, setEnableContextCount] = useState(true);
+  // Manual context count — only used when "自动上下文" is OFF
+  const [contextCount, setContextCount] = useState(10);
   const [maxTokens, setMaxTokens] = useState(0);
   const [enableMaxTokens, setEnableMaxTokens] = useState(false);
   const [streamOutput, setStreamOutput] = useState(true);
@@ -98,7 +100,7 @@ export function BasicSection({ resource }: Props) {
   const resetParameters = () => {
     setTemperature(0.7); setEnableTemperature(true);
     setTopP(0.9); setEnableTopP(false);
-    setEnableContextCount(true);
+    setEnableContextCount(true); setContextCount(10);
     setMaxTokens(0); setEnableMaxTokens(false);
     setStreamOutput(true);
     setMaxToolCalls(20); setEnableMaxToolCalls(true);
@@ -310,12 +312,33 @@ export function BasicSection({ resource }: Props) {
           </div>
         </ParamRow>
 
-        <ToggleRow
-          label="自动上下文"
-          hint="自动管理历史消息上下文长度"
-          checked={enableContextCount}
-          onCheckedChange={setEnableContextCount}
-        />
+        {/* 自动上下文 — Switch ON means auto-manage (no slider). When the
+            user turns it OFF, surface a manual slider for the exact
+            number of history messages to include. */}
+        <div className="py-3">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-1.5 min-w-0">
+              <label className="text-sm text-muted-foreground/80">
+                自动上下文
+                {!enableContextCount && (
+                  <span className="text-muted-foreground/40 ml-1.5 tabular-nums">
+                    {contextCount >= 100 ? '不限' : contextCount}
+                  </span>
+                )}
+              </label>
+              <InfoTip text="开启自动；关闭后用滑块设定保留的历史消息数" />
+            </div>
+            <Switch checked={enableContextCount} onCheckedChange={setEnableContextCount} className="flex-shrink-0" />
+          </div>
+          {!enableContextCount && (
+            <div className="pt-2.5">
+              <Slider min={0} max={100} step={1} value={[contextCount]} onValueChange={([v]) => setContextCount(v)} />
+              <div className="flex justify-between mt-1 tabular-nums text-[10px] text-muted-foreground/50">
+                <span>0</span><span>25</span><span>50</span><span>75</span><span>不限</span>
+              </div>
+            </div>
+          )}
+        </div>
 
         <ParamRow
           label="最大 Token 数"
