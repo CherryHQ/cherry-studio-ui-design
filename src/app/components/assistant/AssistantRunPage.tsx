@@ -8,7 +8,7 @@ import {
   Layers, Activity, Database, Info, Languages,
   Trash2, Bookmark, Share2, MoreHorizontal,
   GitBranch, GitFork, ListChecks, Edit3,
-  Quote, Type, Brain, RotateCcw,
+  Quote, Type, Brain, BrainCircuit, BrainCog, Minus, RotateCcw,
   LayoutGrid, Rows3, Columns3,
   Search, Paperclip, Hammer, Link, Zap,
   Settings2, NotebookPen, PenTool, Lightbulb, ScanLine, Eraser,
@@ -1936,17 +1936,16 @@ export function AssistantRunPage() {
     { id: 'mcp', label: 'MCP', icon: Hammer },
   ];
   // Thinking effort cascade — submenu under 思考.
-  // Same Lightbulb icon at every step, only the bulb's brightness ramps
-  // up so "stronger thinking" reads as a "brighter lit bulb":
-  //   默认 — dim gray   (off / barely lit)
-  //   浮想 — soft gray  (a glimmer)
-  //   斟酌 — warm amber (steady glow)
-  //   沉思 — full amber (fully lit)
-  const thinkingEfforts: { id: string; label: string; iconCls: string }[] = [
-    { id: 'default', label: '默认', iconCls: 'text-muted-foreground/30' },
-    { id: 'low',     label: '浮想', iconCls: 'text-muted-foreground/65' },
-    { id: 'mid',     label: '斟酌', iconCls: 'text-warning/65' },
-    { id: 'high',    label: '沉思', iconCls: 'text-warning' },
+  // Distinct brain-family icons that visibly ramp in complexity:
+  //   默认 — Minus         (no thinking — neutral dash)
+  //   浮想 — Brain         (brain alive)
+  //   斟酌 — BrainCircuit  (brain + circuits — actively reasoning)
+  //   沉思 — BrainCog      (brain + cog — deepest deliberation)
+  const thinkingEfforts: { id: string; label: string; Icon: React.ComponentType<{ size?: number; className?: string; strokeWidth?: number }> }[] = [
+    { id: 'default', label: '默认', Icon: Minus },
+    { id: 'low',     label: '浮想', Icon: Brain },
+    { id: 'mid',     label: '斟酌', Icon: BrainCircuit },
+    { id: 'high',    label: '沉思', Icon: BrainCog },
   ];
   const plusMenuSecondary = [
     { id: 'quickphrase', label: '快捷短语', icon: Zap, shortcut: null as string | null },
@@ -2540,19 +2539,22 @@ export function AssistantRunPage() {
                                 <span className="flex-1 text-left">思考</span>
                               </DropdownMenuSubTrigger>
                               <DropdownMenuSubContent>
-                                {thinkingEfforts.map(t => (
-                                  <DropdownMenuItem
-                                    key={t.id}
-                                    className="gap-2 px-2 py-[5px] text-xs"
-                                    onSelect={() => setReasoningLevel(t.id === 'default' ? null : t.id)}
-                                  >
-                                    <Lightbulb size={13} strokeWidth={1.5} className={`${t.iconCls} flex-shrink-0`} />
-                                    <span className="flex-1 text-left">{t.label}</span>
-                                    {((t.id === 'default' && reasoningLevel === null) || reasoningLevel === t.id) && (
-                                      <Check size={10} className="text-primary flex-shrink-0" />
-                                    )}
-                                  </DropdownMenuItem>
-                                ))}
+                                {thinkingEfforts.map(t => {
+                                  const Icon = t.Icon;
+                                  return (
+                                    <DropdownMenuItem
+                                      key={t.id}
+                                      className="gap-2 px-2 py-[5px] text-xs"
+                                      onSelect={() => setReasoningLevel(t.id === 'default' ? null : t.id)}
+                                    >
+                                      <Icon size={13} strokeWidth={1.5} className="text-muted-foreground flex-shrink-0" />
+                                      <span className="flex-1 text-left">{t.label}</span>
+                                      {((t.id === 'default' && reasoningLevel === null) || reasoningLevel === t.id) && (
+                                        <Check size={10} className="text-primary flex-shrink-0" />
+                                      )}
+                                    </DropdownMenuItem>
+                                  );
+                                })}
                               </DropdownMenuSubContent>
                             </DropdownMenuSub>
                             <DropdownMenuSeparator />
