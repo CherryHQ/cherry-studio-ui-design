@@ -11,7 +11,8 @@ import {
   Quote, Type, Brain, RotateCcw,
   LayoutGrid, Rows3, Columns3,
   Search, Paperclip, Hammer, Link, Zap,
-  Settings2, NotebookPen, PenTool, Lightbulb, ScanLine, Eraser, Sparkle, BrainCircuit, Minus,
+  Settings2, NotebookPen, PenTool, Lightbulb, ScanLine, Eraser,
+  SignalZero, SignalLow, SignalMedium, SignalHigh,
   PanelLeftOpen, PanelLeftClose,
   MessageCircle, Image as ImageIcon,
 } from 'lucide-react';
@@ -1936,16 +1937,17 @@ export function AssistantRunPage() {
     { id: 'mcp', label: 'MCP', icon: Hammer },
   ];
   // Thinking effort cascade — submenu under 思考.
-  // Each level gets a distinct lucide icon (text styling stays uniform):
-  //   默认 — Minus (no extra thinking)
-  //   浮想 — Sparkle (a flicker of an idea)
-  //   斟酌 — Lightbulb (clear thought)
-  //   沉思 — BrainCircuit (multi-step deliberation)
+  // Same Signal-bars family for visual consistency, just more bars per
+  // step so "more thinking" reads as "stronger signal":
+  //   默认 — SignalZero (0 bars)
+  //   浮想 — SignalLow (1 bar)
+  //   斟酌 — SignalMedium (2 bars)
+  //   沉思 — SignalHigh (3 bars)
   const thinkingEfforts: { id: string; label: string; Icon: React.ComponentType<{ size?: number; className?: string; strokeWidth?: number }> }[] = [
-    { id: 'default', label: '默认', Icon: Minus },
-    { id: 'low',     label: '浮想', Icon: Sparkle },
-    { id: 'mid',     label: '斟酌', Icon: Lightbulb },
-    { id: 'high',    label: '沉思', Icon: BrainCircuit },
+    { id: 'default', label: '默认', Icon: SignalZero },
+    { id: 'low',     label: '浮想', Icon: SignalLow },
+    { id: 'mid',     label: '斟酌', Icon: SignalMedium },
+    { id: 'high',    label: '沉思', Icon: SignalHigh },
   ];
   const plusMenuSecondary = [
     { id: 'quickphrase', label: '快捷短语', icon: Zap, shortcut: null as string | null },
