@@ -12,7 +12,6 @@ import {
   LayoutGrid, Rows3, Columns3,
   Search, Paperclip, Hammer, Link, Zap,
   Settings2, NotebookPen, PenTool, Lightbulb, ScanLine, Eraser,
-  SignalZero, SignalLow, SignalMedium, SignalHigh,
   PanelLeftOpen, PanelLeftClose,
   MessageCircle, Image as ImageIcon,
 } from 'lucide-react';
@@ -1937,17 +1936,17 @@ export function AssistantRunPage() {
     { id: 'mcp', label: 'MCP', icon: Hammer },
   ];
   // Thinking effort cascade — submenu under 思考.
-  // Same Signal-bars family for visual consistency, just more bars per
-  // step so "more thinking" reads as "stronger signal":
-  //   默认 — SignalZero (0 bars)
-  //   浮想 — SignalLow (1 bar)
-  //   斟酌 — SignalMedium (2 bars)
-  //   沉思 — SignalHigh (3 bars)
-  const thinkingEfforts: { id: string; label: string; Icon: React.ComponentType<{ size?: number; className?: string; strokeWidth?: number }> }[] = [
-    { id: 'default', label: '默认', Icon: SignalZero },
-    { id: 'low',     label: '浮想', Icon: SignalLow },
-    { id: 'mid',     label: '斟酌', Icon: SignalMedium },
-    { id: 'high',    label: '沉思', Icon: SignalHigh },
+  // Same Lightbulb icon at every step, only the bulb's brightness ramps
+  // up so "stronger thinking" reads as a "brighter lit bulb":
+  //   默认 — dim gray   (off / barely lit)
+  //   浮想 — soft gray  (a glimmer)
+  //   斟酌 — warm amber (steady glow)
+  //   沉思 — full amber (fully lit)
+  const thinkingEfforts: { id: string; label: string; iconCls: string }[] = [
+    { id: 'default', label: '默认', iconCls: 'text-muted-foreground/30' },
+    { id: 'low',     label: '浮想', iconCls: 'text-muted-foreground/65' },
+    { id: 'mid',     label: '斟酌', iconCls: 'text-warning/65' },
+    { id: 'high',    label: '沉思', iconCls: 'text-warning' },
   ];
   const plusMenuSecondary = [
     { id: 'quickphrase', label: '快捷短语', icon: Zap, shortcut: null as string | null },
@@ -2541,22 +2540,19 @@ export function AssistantRunPage() {
                                 <span className="flex-1 text-left">思考</span>
                               </DropdownMenuSubTrigger>
                               <DropdownMenuSubContent>
-                                {thinkingEfforts.map(t => {
-                                  const Icon = t.Icon;
-                                  return (
-                                    <DropdownMenuItem
-                                      key={t.id}
-                                      className="gap-2 px-2 py-[5px] text-xs"
-                                      onSelect={() => setReasoningLevel(t.id === 'default' ? null : t.id)}
-                                    >
-                                      <Icon size={13} strokeWidth={1.5} className="text-muted-foreground flex-shrink-0" />
-                                      <span className="flex-1 text-left">{t.label}</span>
-                                      {((t.id === 'default' && reasoningLevel === null) || reasoningLevel === t.id) && (
-                                        <Check size={10} className="text-primary flex-shrink-0" />
-                                      )}
-                                    </DropdownMenuItem>
-                                  );
-                                })}
+                                {thinkingEfforts.map(t => (
+                                  <DropdownMenuItem
+                                    key={t.id}
+                                    className="gap-2 px-2 py-[5px] text-xs"
+                                    onSelect={() => setReasoningLevel(t.id === 'default' ? null : t.id)}
+                                  >
+                                    <Lightbulb size={13} strokeWidth={1.5} className={`${t.iconCls} flex-shrink-0`} />
+                                    <span className="flex-1 text-left">{t.label}</span>
+                                    {((t.id === 'default' && reasoningLevel === null) || reasoningLevel === t.id) && (
+                                      <Check size={10} className="text-primary flex-shrink-0" />
+                                    )}
+                                  </DropdownMenuItem>
+                                ))}
                               </DropdownMenuSubContent>
                             </DropdownMenuSub>
                             <DropdownMenuSeparator />
