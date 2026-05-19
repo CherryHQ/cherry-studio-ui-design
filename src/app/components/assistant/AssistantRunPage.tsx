@@ -1936,11 +1936,12 @@ export function AssistantRunPage() {
     { id: 'mcp', label: 'MCP', icon: Hammer },
   ];
   // Thinking effort cascade — submenu under 思考
-  const thinkingEfforts: { id: string; label: string }[] = [
-    { id: 'default', label: '默认' },
-    { id: 'low',     label: '浮想' },
-    { id: 'mid',     label: '斟酌' },
-    { id: 'high',    label: '沉思' },
+  // Icon ramps in size + intensity so the level is readable at a glance.
+  const thinkingEfforts: { id: string; label: string; iconSize: number; iconCls: string }[] = [
+    { id: 'default', label: '默认', iconSize: 11, iconCls: 'text-muted-foreground/40' },
+    { id: 'low',     label: '浮想', iconSize: 12, iconCls: 'text-muted-foreground/75' },
+    { id: 'mid',     label: '斟酌', iconSize: 13, iconCls: 'text-foreground/85' },
+    { id: 'high',    label: '沉思', iconSize: 14, iconCls: 'text-success' },
   ];
   const plusMenuSecondary = [
     { id: 'quickphrase', label: '快捷短语', icon: Zap, shortcut: null as string | null },
@@ -2555,9 +2556,19 @@ export function AssistantRunPage() {
                               </DropdownMenuSubTrigger>
                               <DropdownMenuSubContent>
                                 {thinkingEfforts.map(t => (
-                                  <DropdownMenuItem key={t.id} className="gap-2 px-2 py-[5px] text-xs">
-                                    <Lightbulb size={13} strokeWidth={1.5} className="text-muted-foreground flex-shrink-0" />
+                                  <DropdownMenuItem
+                                    key={t.id}
+                                    className="gap-2 px-2 py-[5px] text-xs"
+                                    onSelect={() => setReasoningLevel(t.id === 'default' ? null : t.id)}
+                                  >
+                                    {/* Fixed-width slot so icons of varying size still align */}
+                                    <span className="flex items-center justify-center w-3.5 flex-shrink-0">
+                                      <Lightbulb size={t.iconSize} strokeWidth={1.5} className={t.iconCls} />
+                                    </span>
                                     <span className="flex-1 text-left">{t.label}</span>
+                                    {((t.id === 'default' && reasoningLevel === null) || reasoningLevel === t.id) && (
+                                      <Check size={10} className="text-primary flex-shrink-0" />
+                                    )}
                                   </DropdownMenuItem>
                                 ))}
                               </DropdownMenuSubContent>
