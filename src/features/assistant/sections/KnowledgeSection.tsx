@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Plus, Trash2, Database, Info } from 'lucide-react';
 import {
-  Button, SearchInput, Typography,
+  Button, SearchInput, Switch, Typography,
   Popover, PopoverTrigger, PopoverContent,
   SimpleTooltip,
 } from '@cherry-studio/ui';
@@ -115,12 +115,12 @@ export function KnowledgeSection() {
         </Popover>
       </div>
 
-      {/* 知识库识别 — Segmented toggle (off / on) */}
-      <div>
-        <div className="flex items-center gap-1.5 mb-2">
+      {/* 知识库识别 — single Switch matching the rest of the assistant config */}
+      <div className="flex items-center justify-between gap-3 py-3 border-t border-border/15">
+        <div className="flex items-center gap-1.5 min-w-0">
           <label className="text-sm text-muted-foreground/80">知识库识别</label>
           <SimpleTooltip
-            content="开启后，助手会自动判断是否需要从已引用的知识库中检索内容来回答。关闭时则每条消息都强制检索。"
+            content="开启后助手自动判断是否需要检索已引用的知识库；关闭则每条消息都强制检索。"
             side="top"
             sideOffset={6}
           >
@@ -134,34 +134,11 @@ export function KnowledgeSection() {
             </button>
           </SimpleTooltip>
         </div>
-        <div
-          role="radiogroup"
-          aria-label="知识库识别"
-          className="inline-flex p-0.5 rounded-md border border-border/30 bg-muted/30"
-        >
-          {([
-            { id: 'off', label: '关闭' },
-            { id: 'on',  label: '开启' },
-          ] as const).map(opt => {
-            const active = recognition === opt.id;
-            return (
-              <button
-                key={opt.id}
-                type="button"
-                role="radio"
-                aria-checked={active}
-                onClick={() => setRecognition(opt.id)}
-                className={`min-w-[60px] px-3 h-7 rounded text-xs transition-colors ${
-                  active
-                    ? 'bg-background shadow-sm text-foreground font-medium'
-                    : 'text-muted-foreground/60 hover:text-foreground'
-                }`}
-              >
-                {opt.label}
-              </button>
-            );
-          })}
-        </div>
+        <Switch
+          checked={recognition === 'on'}
+          onCheckedChange={(v) => setRecognition(v ? 'on' : 'off')}
+          className="flex-shrink-0"
+        />
       </div>
     </div>
   );
