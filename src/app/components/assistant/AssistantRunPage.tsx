@@ -2758,25 +2758,31 @@ export function AssistantRunPage() {
                           </Tooltip>
                         </>
                       )}
-                      {/* Thinking level pill — sits right after the + / toolbar
-                          buttons; click to clear back to "no thinking". */}
-                      {reasoningLevel && (
-                        <Tooltip content="点击关闭思考" side="top">
-                          <button
-                            type="button"
-                            onClick={() => setReasoningLevel(null)}
-                            className="inline-flex items-center gap-1 px-1.5 h-[22px] rounded-md bg-success/12 text-success hover:bg-success/20 transition-colors text-[11px] leading-none font-medium ml-1"
-                          >
-                            <Lightbulb size={11} strokeWidth={2} />
-                            <span>
-                              {reasoningLevel === 'low' ? '低'
-                                : reasoningLevel === 'medium' || reasoningLevel === 'mid' ? '中'
-                                : reasoningLevel === 'high' ? '高'
-                                : reasoningLevel}
-                            </span>
-                          </button>
-                        </Tooltip>
-                      )}
+                      {/* Thinking level pill — matches the cascade icons:
+                          Brain / BrainCircuit / BrainCog ramp by depth. */}
+                      {reasoningLevel && (() => {
+                        const LevelIcon =
+                          reasoningLevel === 'high' ? BrainCog
+                          : reasoningLevel === 'mid' || reasoningLevel === 'medium' ? BrainCircuit
+                          : Brain;
+                        const levelLabel =
+                          reasoningLevel === 'low' ? '低'
+                          : reasoningLevel === 'mid' || reasoningLevel === 'medium' ? '中'
+                          : reasoningLevel === 'high' ? '高'
+                          : reasoningLevel;
+                        return (
+                          <Tooltip content="点击关闭思考" side="top">
+                            <button
+                              type="button"
+                              onClick={() => setReasoningLevel(null)}
+                              className="inline-flex items-center gap-1 px-1.5 h-[22px] rounded-md bg-success/12 text-success hover:bg-success/20 transition-colors text-[11px] leading-none font-medium ml-1"
+                            >
+                              <LevelIcon size={12} strokeWidth={1.6} />
+                              <span>{levelLabel}</span>
+                            </button>
+                          </Tooltip>
+                        );
+                      })()}
                     </div>
                     <div className="flex items-center gap-2">
                       <div className="flex items-center gap-2.5 text-xs text-muted-foreground">
