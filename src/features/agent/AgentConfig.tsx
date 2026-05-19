@@ -11,9 +11,9 @@ import {
   Download, MessageSquare, Zap, Bug,
   Layers, Sparkles, BookOpen, FolderOpen,
   Upload, Link2,
-  Send, MessageCircle, Github,
+  Send, MessageCircle, Github, Info,
 } from 'lucide-react';
-import { Button, Input, Slider, Textarea, Popover, PopoverTrigger, PopoverContent, EmptyState, SearchInput, Typography, Switch, Checkbox, Badge, Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@cherry-studio/ui';
+import { Button, Input, Slider, Textarea, Popover, PopoverTrigger, PopoverContent, EmptyState, SearchInput, Typography, Switch, Checkbox, Badge, Select, SelectTrigger, SelectValue, SelectContent, SelectItem, SimpleTooltip } from '@cherry-studio/ui';
 import { motion, AnimatePresence } from 'motion/react';
 import type { ResourceItem, MCPServerStatus } from '@/app/types';
 import { PromptSection } from '@/features/assistant/sections/PromptSection';
@@ -273,7 +273,7 @@ interface MCPServerLocal {
 interface SkillItem { id: string; name: string; desc: string; icon: React.ElementType; enabled: boolean; tags: string[] }
 interface MCPCatalogItem { id: string; name: string; desc: string; author: string; url: string; tags: string[]; tools: MCPToolItem[] }
 interface SkillCatalogItem { id: string; name: string; desc: string; icon: React.ElementType; tags: string[] }
-type ToolchainTab = 'tools' | 'mcp' | 'skills' | 'integrations' | 'knowledge';
+type ToolchainTab = 'tools' | 'mcp' | 'skills' | 'integrations';
 
 interface IntegrationItem {
   id: string;
@@ -286,24 +286,6 @@ interface IntegrationItem {
   enabled: boolean;
 }
 
-interface ToolchainKBItem {
-  id: string;
-  name: string;
-  desc: string;
-  docCount: number;
-  size: string;
-  enabled: boolean;
-}
-
-const ALL_TOOLCHAIN_KB_CATALOG: Omit<ToolchainKBItem, 'enabled'>[] = [
-  { id: 'tc-kb-1',  name: '产品文档库',       desc: '产品需求、设计规范、迭代记录', docCount: 128,  size: '45 MB' },
-  { id: 'tc-kb-2',  name: 'API 参考文档',     desc: 'REST API、SDK 接入文档',       docCount: 256,  size: '120 MB' },
-  { id: 'tc-kb-3',  name: '内部 Wiki',        desc: '团队知识沉淀、最佳实践',       docCount: 512,  size: '180 MB' },
-  { id: 'tc-kb-4',  name: '用户反馈集',       desc: '用户工单、NPS 调研、反馈汇总', docCount: 1024, size: '230 MB' },
-  { id: 'tc-kb-5',  name: '技术博客合集',     desc: '技术博客、分享文章汇编',       docCount: 89,   size: '35 MB' },
-  { id: 'tc-kb-6',  name: '运维手册',         desc: '部署文档、故障排查指南',       docCount: 145,  size: '55 MB' },
-  { id: 'tc-kb-7',  name: '法务合规文档',     desc: '隐私政策、合规条款、审计记录', docCount: 38,   size: '12 MB' },
-];
 
 const ALL_INTEGRATIONS_CATALOG: Omit<IntegrationItem, 'enabled'>[] = [
   { id: 'integ-cli',       name: 'CLI',          desc: '在终端中调用助手能力（cherry-cli）',           icon: Terminal,      tintCls: 'text-foreground' },
@@ -620,9 +602,6 @@ function ToolchainSection({ onExplore }: { onExplore: () => void }) {
   const [integrations, setIntegrations] = useState<IntegrationItem[]>(() =>
     ALL_INTEGRATIONS_CATALOG.slice(0, 3).map(i => ({ ...i, enabled: true })),
   );
-  const [knowledgeBases, setKnowledgeBases] = useState<ToolchainKBItem[]>(() =>
-    ALL_TOOLCHAIN_KB_CATALOG.slice(0, 2).map(kb => ({ ...kb, enabled: true })),
-  );
   const [search, setSearch] = useState('');
   const [activeTab, setActiveTab] = useState<ToolchainTab>('tools');
   const [showAddPanel, setShowAddPanel] = useState(false);
@@ -633,7 +612,6 @@ function ToolchainSection({ onExplore }: { onExplore: () => void }) {
   const toggleTool = (id: string) => setTools(prev => prev.map(t => t.id === id ? { ...t, enabled: !t.enabled } : t));
   const toggleSkill = (id: string) => setSkills(prev => prev.map(s => s.id === id ? { ...s, enabled: !s.enabled } : s));
   const toggleIntegration = (id: string) => setIntegrations(prev => prev.map(i => i.id === id ? { ...i, enabled: !i.enabled } : i));
-  const toggleKnowledgeBase = (id: string) => setKnowledgeBases(prev => prev.map(k => k.id === id ? { ...k, enabled: !k.enabled } : k));
 
   const handleAdd = useCallback((item: any) => {
     if (activeTab === 'tools') setTools(prev => [...prev, { ...item, enabled: true }]);
@@ -665,15 +643,13 @@ function ToolchainSection({ onExplore }: { onExplore: () => void }) {
   const connectedMCPCount = mcpServers.filter(s => s.status === 'connected').length;
   const enabledSkillsCount = skills.filter(s => s.enabled).length;
   const enabledIntegrationsCount = integrations.filter(i => i.enabled).length;
-  const enabledKnowledgeCount = knowledgeBases.filter(k => k.enabled).length;
 
   const addedIds = useMemo(() => {
     if (activeTab === 'tools') return new Set(tools.map(t => t.id));
     if (activeTab === 'mcp') return new Set(mcpServers.map(m => m.id));
     if (activeTab === 'integrations') return new Set(integrations.map(i => i.id));
-    if (activeTab === 'knowledge') return new Set(knowledgeBases.map(k => k.id));
     return new Set(skills.map(s => s.id));
-  }, [activeTab, tools, mcpServers, skills, integrations, knowledgeBases]);
+  }, [activeTab, tools, mcpServers, skills, integrations]);
 
   const filteredIntegrations = useMemo(() => {
     let list = integrations;
@@ -684,14 +660,6 @@ function ToolchainSection({ onExplore }: { onExplore: () => void }) {
     return list;
   }, [integrations, search]);
 
-  const filteredKnowledge = useMemo(() => {
-    let list = knowledgeBases;
-    if (search.trim()) {
-      const q = search.toLowerCase();
-      list = list.filter(k => k.name.toLowerCase().includes(q) || k.desc.toLowerCase().includes(q));
-    }
-    return list;
-  }, [knowledgeBases, search]);
 
 
 
@@ -721,7 +689,6 @@ function ToolchainSection({ onExplore }: { onExplore: () => void }) {
     { id: 'mcp' as const, label: 'MCP Server', count: `${connectedMCPCount}/${mcpServers.length}` },
     { id: 'skills' as const, label: 'Skills', count: `${enabledSkillsCount}/${skills.length}` },
     { id: 'integrations' as const, label: '集成', count: `${enabledIntegrationsCount}/${integrations.length}` },
-    { id: 'knowledge' as const, label: '知识库', count: `${enabledKnowledgeCount}/${knowledgeBases.length}` },
   ];
 
   return (
@@ -810,35 +777,6 @@ function ToolchainSection({ onExplore }: { onExplore: () => void }) {
                 </div>
               ))}
 
-              {/* === Knowledge Bases ===
-                  Mirrors Cherry Studio source's AssistantKnowledgeBaseSettings
-                  pattern — list of available KBs that the user toggles in. */}
-              {activeTab === 'knowledge' && (knowledgeBases.length === 0 ? <TabEmptyState preset="no-knowledge" label="知识库" onAdd={() => setShowAddPanel(true)} /> : (
-                <div>
-                  <div className="space-y-2">
-                    {filteredKnowledge.map(kb => (
-                      <div key={kb.id}
-                        onClick={() => toggleKnowledgeBase(kb.id)}
-                        className={`flex items-center gap-3 px-3 py-2.5 rounded-xl border border-border/12 bg-accent/5 hover:bg-accent/15 transition-all cursor-pointer ${kb.enabled ? '' : 'opacity-55'}`}>
-                        <div className={`w-7 h-7 rounded-md flex items-center justify-center flex-shrink-0 ${kb.enabled ? 'bg-info/15 text-info' : 'bg-muted/40 text-muted-foreground/50'}`}>
-                          <BookOpen size={13} strokeWidth={1.6} />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-1.5">
-                            <span className="text-sm text-foreground truncate">{kb.name}</span>
-                            <span className="text-[10px] text-muted-foreground/50 tabular-nums flex-shrink-0">{kb.docCount} 文档 · {kb.size}</span>
-                          </div>
-                          <div className="text-xs text-muted-foreground/50 truncate">{kb.desc}</div>
-                        </div>
-                        <Switch size="sm" checked={kb.enabled} className="pointer-events-none flex-shrink-0" />
-                      </div>
-                    ))}
-                  </div>
-                  {filteredKnowledge.length === 0 && <EmptyState preset="no-result" title={search ? '未找到匹配结果' : '暂无知识库'} compact />}
-                  <div className="pt-3 flex items-center gap-2"><Button variant="ghost" size="xs" onClick={() => setShowAddPanel(true)} className="text-muted-foreground/50 hover:text-foreground hover:bg-accent/15"><Plus size={10} /> {"继续添加"}</Button><Button variant="link" size="xs" onClick={onExplore} className="text-cherry-text-muted hover:text-cherry-primary-dark"><ExternalLink size={9} /> {"去探索浏览"}</Button></div>
-                </div>
-              ))}
-
               {/* === Integrations === */}
               {activeTab === 'integrations' && (integrations.length === 0 ? <TabEmptyState preset="no-resource" label="集成" onAdd={() => setShowAddPanel(true)} /> : (
                 <div>
@@ -923,8 +861,9 @@ function KnowledgeBaseSection() {
   const [showAddPanel, setShowAddPanel] = useState(false);
   const [addSearch, setAddSearch] = useState('');
   const [addGroupFilter, setAddGroupFilter] = useState('全部');
-  const [similarity, setSimilarity] = useState(0.95);
-  const [topK, setTopK] = useState(5);
+  // 知识库识别 — 'off' / 'on' segment, matches Cherry Studio source's
+  // AssistantKnowledgeBaseSettings.knowledgeRecognition.
+  const [recognition, setRecognition] = useState<'off' | 'on'>('off');
 
   const linkedIds = useMemo(() => new Set(linkedKBs.map(k => k.id)), [linkedKBs]);
 
@@ -1029,31 +968,34 @@ function KnowledgeBaseSection() {
         </div>
       </div>
 
-      {/* Retrieval parameters */}
-      <div className="border-t border-border/15 pt-5 space-y-5">
-        <div className="text-xs text-muted-foreground/50 mb-2">{"检索参数"}</div>
-
-        {/* Similarity threshold */}
-        <div>
-          <div className="flex items-center justify-between mb-2">
-            <label className="text-sm text-muted-foreground/60">{"相似度阈值"}</label>
-            <span className="text-xs text-foreground font-mono">{similarity.toFixed(2)}</span>
-          </div>
-          <Slider min={0} max={1} step={0.01} value={[similarity]} onValueChange={([v]) => setSimilarity(v)} />
-          <div className="flex justify-between mt-1"><span className="text-xs text-muted-foreground/50">0</span><span className="text-xs text-muted-foreground/50">1.0</span></div>
-          <p className="text-xs text-muted-foreground/50 mt-1.5">{"仅返回相似度高于该阈值的文档片段。值越高匹配越精确，但可能遗漏相关内容。"}</p>
+      {/* 知识库识别 — Switch row, matches Cherry Studio source pattern
+          (knowledgeRecognition off/on Segmented + question tooltip).
+          Retrieval params (Top-K, similarity threshold) are not part of
+          source's AssistantKnowledgeBaseSettings — they belong on the
+          knowledge base itself, configured in 资源库 → 知识库. */}
+      <div className="flex items-center justify-between gap-3 py-3 border-t border-border/15">
+        <div className="flex items-center gap-1.5 min-w-0">
+          <label className="text-sm text-muted-foreground/80">知识库识别</label>
+          <SimpleTooltip
+            content="开启后助手自动判断是否需要检索已引用的知识库；关闭则每条消息都强制检索。"
+            side="top"
+            sideOffset={6}
+          >
+            <button
+              type="button"
+              tabIndex={-1}
+              className="inline-flex items-center text-muted-foreground/40 hover:text-muted-foreground cursor-help"
+              aria-label="什么是知识库识别"
+            >
+              <Info size={12} />
+            </button>
+          </SimpleTooltip>
         </div>
-
-        {/* Top K */}
-        <div>
-          <div className="flex items-center justify-between mb-2">
-            <label className="text-sm text-muted-foreground/60">{"返回数量 (Top K)"}</label>
-            <span className="text-xs text-foreground font-mono">{topK}</span>
-          </div>
-          <Slider min={1} max={20} step={1} value={[topK]} onValueChange={([v]) => setTopK(v)} />
-          <div className="flex justify-between mt-1"><span className="text-xs text-muted-foreground/50">1</span><span className="text-xs text-muted-foreground/50">20</span></div>
-          <p className="text-xs text-muted-foreground/50 mt-1.5">{"每次检索返回的最大文档片段数量。增加数量可提供更多上下文，但会消耗更多 Token。"}</p>
-        </div>
+        <Switch
+          checked={recognition === 'on'}
+          onCheckedChange={(v) => setRecognition(v ? 'on' : 'off')}
+          className="flex-shrink-0"
+        />
       </div>
     </div>
   );
