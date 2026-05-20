@@ -118,7 +118,6 @@ const CATALOG: MarketItem[] = [
 
 // ─── Filter pills ─────────────────────────────────────────────────────
 
-type FilterValue = 'all' | string;
 const KIND_FILTERS: { id: ResourceKind | 'all'; label: string }[] = [
   { id: 'all',         label: '全部' },
   { id: 'skill',       label: 'Skill' },
@@ -128,26 +127,6 @@ const KIND_FILTERS: { id: ResourceKind | 'all'; label: string }[] = [
   { id: 'prompt',      label: 'Prompt' },
   { id: 'kb',          label: '知识库' },
   { id: 'integration', label: '集成' },
-];
-
-const LANGS: { id: FilterValue; label: string }[] = [
-  { id: 'all',  label: '全部语言' },
-  { id: '中文', label: '中文' },
-  { id: 'EN',   label: 'English' },
-  { id: '多语', label: '多语' },
-];
-
-const CATEGORIES: { id: FilterValue; label: string }[] = [
-  { id: 'all',     label: '全部分类' },
-  { id: '开发',    label: '开发' },
-  { id: '编程',    label: '编程' },
-  { id: '办公',    label: '办公' },
-  { id: '研究',    label: '研究' },
-  { id: '设计',    label: '设计' },
-  { id: '内容创作', label: '内容创作' },
-  { id: '翻译',    label: '翻译' },
-  { id: '数据',    label: '数据' },
-  { id: '写作',    label: '写作' },
 ];
 
 // Use-case tiles for the "Handpicked" carousel
@@ -165,8 +144,6 @@ export function MarketPage() {
   const [tab, setTab] = useState<'explore' | 'mine'>('explore');
   const [search, setSearch] = useState('');
   const [kind, setKind] = useState<ResourceKind | 'all'>('all');
-  const [language, setLanguage] = useState<FilterValue>('all');
-  const [category, setCategory] = useState<FilterValue>('all');
   const [bannerOpen, setBannerOpen] = useState(true);
   const [installed, setInstalled] = useState<Set<string>>(new Set(['m-2', 'm-8']));
   // First-visit onboarding modal — opens on initial render. In a real
@@ -190,8 +167,6 @@ export function MarketPage() {
     let list = CATALOG;
     if (tab === 'mine') list = list.filter(it => installed.has(it.id));
     if (kind !== 'all') list = list.filter(it => it.kind === kind);
-    if (language !== 'all') list = list.filter(it => it.language === language);
-    if (category !== 'all') list = list.filter(it => it.category === category);
     const q = search.trim().toLowerCase();
     if (q) list = list.filter(it =>
       it.name.toLowerCase().includes(q) ||
@@ -199,7 +174,7 @@ export function MarketPage() {
       it.author.toLowerCase().includes(q),
     );
     return list;
-  }, [tab, kind, language, category, search, installed]);
+  }, [tab, kind, search, installed]);
 
   const trending = CATALOG.filter(it => it.trending).slice(0, 6);
 
@@ -309,33 +284,6 @@ export function MarketPage() {
               </Button>
             </div>
 
-            {/* Pill row — only language + category, kind is in the left rail now */}
-            <div className="flex items-center gap-1.5 mt-3 flex-wrap">
-              <FilterPill
-                label={LANGS.find(l => l.id === language)?.label ?? '语言'}
-                active={language !== 'all'}
-                dropdown
-                options={LANGS}
-                onSelect={(v) => setLanguage(v)}
-              />
-              <FilterPill
-                label={CATEGORIES.find(c => c.id === category)?.label ?? '分类'}
-                active={category !== 'all'}
-                dropdown
-                options={CATEGORIES}
-                onSelect={(v) => setCategory(v)}
-              />
-              {(language !== 'all' || category !== 'all') && (
-                <button
-                  type="button"
-                  onClick={() => { setLanguage('all'); setCategory('all'); }}
-                  className="h-7 px-2 inline-flex items-center gap-1 text-[11px] text-muted-foreground/55 hover:text-foreground transition-colors"
-                >
-                  <X size={10} />
-                  清除筛选
-                </button>
-              )}
-            </div>
           </div>
 
           {/* Campaign / promo banner — fresh light-pastel "integration hub" look */}
@@ -420,7 +368,7 @@ export function MarketPage() {
           )}
 
           {/* Trending — only on Explore / no filter */}
-          {tab === 'explore' && kind === 'all' && category === 'all' && !search.trim() && (
+          {tab === 'explore' && kind === 'all' && !search.trim() && (
             <section>
               <div className="flex items-center gap-1.5 mb-3">
                 <span className="text-sm font-medium text-foreground">热门资源</span>
@@ -454,7 +402,7 @@ export function MarketPage() {
           )}
 
           {/* Handpicked carousel */}
-          {tab === 'explore' && kind === 'all' && category === 'all' && !search.trim() && (
+          {tab === 'explore' && kind === 'all' && !search.trim() && (
             <section>
               <div className="flex items-center justify-between gap-3 mb-3">
                 <span className="text-sm font-medium text-foreground">为你精选</span>
@@ -493,7 +441,6 @@ export function MarketPage() {
               <div>
                 <div className="text-sm font-medium text-foreground">
                   {tab === 'mine' ? '我的资源' : (kind === 'all' ? '全部资源' : KIND_LABEL[kind])}
-                  {category !== 'all' && <span className="text-muted-foreground/60"> · {category}</span>}
                 </div>
                 <div className="text-[11px] text-muted-foreground/55 tabular-nums mt-0.5">
                   共 {filtered.length} 条
@@ -964,48 +911,6 @@ function Avatar({ item, size = 36 }: { item: MarketItem; size?: number }) {
     >
       <span className={`${size >= 40 ? 'text-lg' : 'text-base'}`}>{item.avatar}</span>
     </div>
-  );
-}
-
-function FilterPill({
-  label, active, dropdown, options, onSelect,
-}: {
-  label: string;
-  active?: boolean;
-  dropdown?: boolean;
-  options?: { id: string; label: string }[];
-  onSelect?: (v: string) => void;
-}) {
-  const trigger = (
-    <button
-      type="button"
-      className={`inline-flex items-center gap-1 h-7 px-2.5 rounded-md text-xs border transition-colors ${
-        active
-          ? 'border-foreground/80 bg-foreground text-background'
-          : 'border-border/30 text-muted-foreground/80 hover:text-foreground hover:bg-muted/40'
-      }`}
-    >
-      <span>{label}</span>
-      {dropdown && <ChevronRight size={10} className="rotate-90 opacity-70" />}
-    </button>
-  );
-  if (!dropdown || !options) return trigger;
-  return (
-    <Popover>
-      <PopoverTrigger asChild>{trigger}</PopoverTrigger>
-      <PopoverContent align="start" className="w-[180px] p-1">
-        {options.map(opt => (
-          <button
-            key={opt.id}
-            type="button"
-            onClick={() => onSelect?.(opt.id)}
-            className="w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-xs text-left hover:bg-accent/40 transition-colors"
-          >
-            <span className="flex-1">{opt.label}</span>
-          </button>
-        ))}
-      </PopoverContent>
-    </Popover>
   );
 }
 
