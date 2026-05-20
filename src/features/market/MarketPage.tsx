@@ -186,28 +186,14 @@ const CATALOG: MarketItem[] = [
   { id: 'c-6',  kind: 'skill',     name: '合同条款检查',           tagline: '上传合同 PDF，自动比对模板 / 标出风险条款 / 输出修订建议',     author: '@me',           avatar: '⚖',   avatarBg: 'bg-accent-violet/25', language: '中文', region: '个人',     category: '法务',     ageLabel: '6d',  installs: 1, custom: true       },
 ];
 
-// ─── Top tabs + sub-kind groupings ────────────────────────────────────
-
-// Two top-level groups, matching the cleaner pill-tab layout. Everything
-// "tool-y" (MCP / CLI / 集成) is grouped as 插件; everything more
-// behavior/knowledge-shaped (Skill / Prompt / Assistant / Agent / KB)
-// is grouped as 技能.
-type TopTab = 'plugin' | 'skill';
-
-const TOP_TABS: { id: TopTab; label: string }[] = [
-  { id: 'plugin', label: '插件' },
-  { id: 'skill',  label: '技能' },
+// ─── Sidebar kind list ────────────────────────────────────────────────
+//
+// The sidebar lists every resource kind in a single flat list — no top
+// pill tabs, no plugin/skill grouping. Reorder to put the most common
+// kinds first.
+const SIDEBAR_KINDS: (ResourceKind | 'all')[] = [
+  'all', 'skill', 'mcp', 'cli', 'agent', 'assistant', 'prompt', 'kb', 'integration',
 ];
-
-const KIND_GROUP: Record<ResourceKind, TopTab> = {
-  mcp: 'plugin', cli: 'plugin', integration: 'plugin',
-  skill: 'skill', prompt: 'skill', assistant: 'skill', agent: 'skill', kb: 'skill',
-};
-
-const SUB_KINDS: Record<TopTab, (ResourceKind | 'all')[]> = {
-  plugin: ['all', 'mcp', 'cli', 'integration'],
-  skill:  ['all', 'skill', 'prompt', 'assistant', 'agent', 'kb'],
-};
 
 // Quote-style copy for the hero carousel — pairs an existing CATALOG
 // item with a "in-action" snippet, mirroring the reference UI.
@@ -224,10 +210,8 @@ const FEATURED_QUOTES: { itemId: string; quote: string }[] = [
 // ─── Page component ───────────────────────────────────────────────────
 
 export function MarketPage() {
-  const [topTab, setTopTab] = useState<TopTab>('plugin');
   const [search, setSearch] = useState('');
-  // Sub-kind narrowing within the current top tab (e.g. only MCP within
-  // 插件). 'all' = no sub-filter.
+  // Which kind the sidebar has narrowed to. 'all' = no filter.
   const [kind, setKind] = useState<ResourceKind | 'all'>('all');
   // Mock pre-installed set — backs the 管理 panel where users see
   // everything they own (installed-from-market + 自定义).
@@ -244,10 +228,6 @@ export function MarketPage() {
   const [newCustomOpen, setNewCustomOpen] = useState(false);
   // Hero carousel auto-rotate
   const [heroIndex, setHeroIndex] = useState(0);
-
-  // Reset sub-kind when switching top tab so the kind dropdown can't
-  // hold an option that doesn't belong to the new tab.
-  useEffect(() => { setKind('all'); }, [topTab]);
 
   // Defensive: Radix Dialog occasionally leaves body.style.pointerEvents
   // set to 'none' after closing, blocking all clicks. Flush it whenever
@@ -278,9 +258,9 @@ export function MarketPage() {
     return () => clearInterval(id);
   }, [heroSlides.length]);
 
-  // Public 市场 view: scoped to current top tab, hides 自定义.
+  // Public 市场 view: hides 自定义 (those live in 管理).
   const filtered = useMemo(() => {
-    let list = CATALOG.filter(it => !it.custom && KIND_GROUP[it.kind] === topTab);
+    let list = CATALOG.filter(it => !it.custom);
     if (kind !== 'all') list = list.filter(it => it.kind === kind);
     const q = search.trim().toLowerCase();
     if (q) list = list.filter(it =>
@@ -289,7 +269,7 @@ export function MarketPage() {
       it.author.toLowerCase().includes(q),
     );
     return list;
-  }, [topTab, kind, search]);
+  }, [kind, search]);
 
   // Featured strip — top 6 trending in the current top tab. Below
   // this, the remaining items in `filtered` get grouped by category.
@@ -329,57 +309,37 @@ export function MarketPage() {
 
   return (
     <div className="flex flex-col h-full bg-background">
-      {/* Top bar — pill tabs (left) + action cluster (right) */}
+      {/* Top bar — action cluster only (top pill tabs were dropped;
+          the sidebar now lists every kind in a single flat list) */}
       <div className="flex-shrink-0 px-6 pt-5">
-        <div className="max-w-[1120px] mx-auto flex items-center justify-between gap-4">
-          <div className="flex items-center gap-1.5">
-            {TOP_TABS.map(t => {
-              const active = topTab === t.id;
-              return (
-                <button
-                  key={t.id}
-                  type="button"
-                  onClick={() => setTopTab(t.id)}
-                  className={`px-3 h-8 rounded-full text-sm transition-colors ${
-                    active
-                      ? 'bg-foreground text-background'
-                      : 'text-muted-foreground/75 hover:text-foreground hover:bg-muted/40'
-                  }`}
-                >
-                  {t.label}
-                </button>
-              );
-            })}
-          </div>
-          <div className="flex items-center gap-1">
-            <Button
-              variant="outline"
-              size="xs"
-              onClick={() => setManageOpen(true)}
-              className="h-8 px-2.5 gap-1 text-xs"
-            >
-              <Wrench size={12} />
-              管理
-            </Button>
-            <Button
-              variant="outline"
-              size="xs"
-              onClick={() => setNewCustomOpen(true)}
-              className="h-8 px-2.5 gap-1 text-xs"
-            >
-              <Plus size={12} />
-              创建
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon-sm"
-              onClick={() => setSubmitOpen(true)}
-              className="h-8 w-8"
-              title="提交到公开市场"
-            >
-              <MoreHorizontal size={14} />
-            </Button>
-          </div>
+        <div className="max-w-[1120px] mx-auto flex items-center justify-end gap-1">
+          <Button
+            variant="outline"
+            size="xs"
+            onClick={() => setManageOpen(true)}
+            className="h-8 px-2.5 gap-1 text-xs"
+          >
+            <Wrench size={12} />
+            管理
+          </Button>
+          <Button
+            variant="outline"
+            size="xs"
+            onClick={() => setNewCustomOpen(true)}
+            className="h-8 px-2.5 gap-1 text-xs"
+          >
+            <Plus size={12} />
+            创建
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            onClick={() => setSubmitOpen(true)}
+            className="h-8 w-8"
+            title="提交到公开市场"
+          >
+            <MoreHorizontal size={14} />
+          </Button>
         </div>
       </div>
 
@@ -388,20 +348,20 @@ export function MarketPage() {
         <div className="max-w-[1120px] mx-auto px-6 pt-8 pb-12">
           <div className="flex gap-8">
 
-            {/* Left rail — sub-kind nav scoped to current top tab */}
+            {/* Left rail — every kind in one flat list with counts */}
             <aside className="hidden md:flex flex-shrink-0 w-[176px] flex-col">
               <div className="sticky top-0 pt-2">
                 <div className="text-[10px] uppercase tracking-wide text-muted-foreground/45 px-2 pb-2">
-                  {topTab === 'plugin' ? '插件类型' : '技能类型'}
+                  资源类型
                 </div>
                 <div className="space-y-0.5">
-                  {SUB_KINDS[topTab].map(k => {
+                  {SIDEBAR_KINDS.map(k => {
                     const active = kind === k;
                     const isAll = k === 'all';
                     const Icon = isAll ? Sparkles : KIND_ICON[k];
                     const label = isAll ? '全部' : KIND_LABEL[k];
                     const count = isAll
-                      ? CATALOG.filter(it => !it.custom && KIND_GROUP[it.kind] === topTab).length
+                      ? CATALOG.filter(it => !it.custom).length
                       : CATALOG.filter(it => !it.custom && it.kind === k).length;
                     return (
                       <button
@@ -440,7 +400,7 @@ export function MarketPage() {
               <SearchInput
                 value={search}
                 onChange={setSearch}
-                placeholder={topTab === 'plugin' ? '搜索插件' : '搜索技能'}
+                placeholder="搜索资源"
                 clearable
                 wrapperClassName="flex items-center gap-2 px-3 h-10 rounded-md border border-border/40 bg-background hover:border-border/60 focus-within:border-foreground/70 transition-colors"
               />
