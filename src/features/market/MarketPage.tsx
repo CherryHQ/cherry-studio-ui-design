@@ -1,6 +1,6 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
-  Plus, Search, Filter, ArrowUpDown, ChevronRight, ChevronLeft,
+  Plus, Search, Filter, ArrowUpDown, ChevronRight, ChevronLeft, ChevronDown,
   Check, Download, X, MoreHorizontal, Terminal, FileText,
   Wrench, Sparkles, MousePointerClick, BookOpen, Network, Plug,
   CheckCircle2, Zap, Compass, Star, ExternalLink, Shield,
@@ -186,97 +186,76 @@ const CATALOG: MarketItem[] = [
   { id: 'c-6',  kind: 'skill',     name: '合同条款检查',           tagline: '上传合同 PDF，自动比对模板 / 标出风险条款 / 输出修订建议',     author: '@me',           avatar: '⚖',   avatarBg: 'bg-accent-violet/25', language: '中文', region: '个人',     category: '法务',     ageLabel: '6d',  installs: 1, custom: true       },
 ];
 
-// ─── Filter pills ─────────────────────────────────────────────────────
+// ─── Top tabs + sub-kind groupings ────────────────────────────────────
 
-const KIND_FILTERS: { id: ResourceKind | 'all'; label: string }[] = [
-  { id: 'all',         label: '全部' },
-  { id: 'skill',       label: 'Skill' },
-  { id: 'cli',         label: 'CLI' },
-  { id: 'assistant',   label: 'Assistant' },
-  { id: 'agent',       label: 'Agent' },
-  { id: 'mcp',         label: 'MCP' },
-  { id: 'prompt',      label: 'Prompt' },
-  { id: 'kb',          label: '知识库' },
-  { id: 'integration', label: '集成' },
+// Two top-level groups, matching the cleaner pill-tab layout. Everything
+// "tool-y" (MCP / CLI / 集成) is grouped as 插件; everything more
+// behavior/knowledge-shaped (Skill / Prompt / Assistant / Agent / KB)
+// is grouped as 技能.
+type TopTab = 'plugin' | 'skill';
+
+const TOP_TABS: { id: TopTab; label: string }[] = [
+  { id: 'plugin', label: '插件' },
+  { id: 'skill',  label: '技能' },
 ];
 
-// Use-case tiles for the "Handpicked" carousel — enough entries that
-// the row actually has content to scroll across on lg screens (4 fit
-// in view at once, so 12 tiles = ~3 pages).
-const HANDPICKED = [
-  { id: 'uc-1',  label: '开发工作流', bg: 'bg-[#1a1a1a] text-white',     art: 'circles' },
-  { id: 'uc-2',  label: '内容创作',   bg: 'bg-[#f5efe6] text-foreground', art: 'waves'   },
-  { id: 'uc-3',  label: '研究分析',   bg: 'bg-[#efe7e0] text-foreground', art: 'orbits'  },
-  { id: 'uc-4',  label: '学习辅导',   bg: 'bg-[#0f1019] text-white',     art: 'lattice' },
-  { id: 'uc-5',  label: '数据分析',   bg: 'bg-[#e9e3f5] text-foreground', art: 'circles' },
-  { id: 'uc-6',  label: '团队协作',   bg: 'bg-[#1c1a26] text-white',     art: 'waves'   },
-  { id: 'uc-7',  label: '自动化办公', bg: 'bg-[#e6f0ea] text-foreground', art: 'orbits'  },
-  { id: 'uc-8',  label: '文档管理',   bg: 'bg-[#211a1a] text-white',     art: 'lattice' },
-  { id: 'uc-9',  label: '翻译本地化', bg: 'bg-[#fff4e5] text-foreground', art: 'circles' },
-  { id: 'uc-10', label: '设计创意',   bg: 'bg-[#dfeaf2] text-foreground', art: 'waves'   },
-  { id: 'uc-11', label: '多模态创作', bg: 'bg-[#171a1f] text-white',     art: 'orbits'  },
-  { id: 'uc-12', label: '客户沟通',   bg: 'bg-[#f6e9e9] text-foreground', art: 'lattice' },
-] as const;
+const KIND_GROUP: Record<ResourceKind, TopTab> = {
+  mcp: 'plugin', cli: 'plugin', integration: 'plugin',
+  skill: 'skill', prompt: 'skill', assistant: 'skill', agent: 'skill', kb: 'skill',
+};
+
+const SUB_KINDS: Record<TopTab, (ResourceKind | 'all')[]> = {
+  plugin: ['all', 'mcp', 'cli', 'integration'],
+  skill:  ['all', 'skill', 'prompt', 'assistant', 'agent', 'kb'],
+};
+
+// Quote-style copy for the hero carousel — pairs an existing CATALOG
+// item with a "in-action" snippet, mirroring the reference UI.
+const FEATURED_QUOTES: { itemId: string; quote: string }[] = [
+  { itemId: 'm-25', quote: '为每封我还没来得及回复的邮件起草回复' },
+  { itemId: 'm-32', quote: '在终端里把一段 stack trace 定位到具体代码并提出修复' },
+  { itemId: 'm-51', quote: '把会议笔记里的事件描述自动转成时序图' },
+  { itemId: 'm-5',  quote: '把仓库刚提的 issue 整理成可以直接派给 AI 的 PR 描述' },
+  { itemId: 'm-11', quote: '在你提问时拉取最新框架文档帮 LLM 引用' },
+  { itemId: 'm-46', quote: '把这段聊天里的产品决策同步到对应的需求文档' },
+];
 
 
 // ─── Page component ───────────────────────────────────────────────────
 
 export function MarketPage() {
+  const [topTab, setTopTab] = useState<TopTab>('plugin');
   const [search, setSearch] = useState('');
+  // Sub-kind narrowing within the current top tab (e.g. only MCP within
+  // 插件). 'all' = no sub-filter.
   const [kind, setKind] = useState<ResourceKind | 'all'>('all');
-  const [bannerOpen, setBannerOpen] = useState(true);
   // Mock pre-installed set — backs the 管理 panel where users see
-  // everything they own (installed-from-market + 自定义). The 我的资源
-  // tab is gone; management happens via the top-right "管理" button.
+  // everything they own (installed-from-market + 自定义).
   const [installed, setInstalled] = useState<Set<string>>(() => new Set([
-    'm-1',   // pdf skill
-    'm-2',   // server-filesystem mcp
-    'm-5',   // server-github mcp
-    'm-8',   // React Docs kb
-    'm-11',  // context7 mcp
-    'm-19',  // Notion integration
-    'm-22',  // 飞书 integration
-    'm-26',  // GitHub integration
-    'm-29',  // gh CLI
-    'm-32',  // claude-code CLI
-    'm-7',   // 调研分析师 agent
-    'm-13',  // 代码导师 assistant
-    'm-3',   // Code Consultant prompt
+    'm-1', 'm-2', 'm-5', 'm-8', 'm-11', 'm-19', 'm-22', 'm-26',
+    'm-29', 'm-32', 'm-7', 'm-13', 'm-3',
   ]));
-  // First-visit onboarding modal — closed by default. Auto-opening on
-  // every mount caused Radix to leak `body { pointer-events: none }`
-  // after dismiss, which blocked every subsequent click on the page.
+  // First-visit onboarding modal — closed by default (the auto-open
+  // triggered a Radix pointer-events leak that killed all clicks).
   const [onboardOpen, setOnboardOpen] = useState(false);
-  // Detail dialog (二级页面) — opens when a row is clicked
   const [detailItem, setDetailItem] = useState<MarketItem | null>(null);
-  // Submit-resource dialog — opens from the header CTA
   const [submitOpen, setSubmitOpen] = useState(false);
-  // "查看全部热门" 二级页面 — lists every trending item, not just the 6
-  // surfaced in the strip on the index.
-  const [trendingDialogOpen, setTrendingDialogOpen] = useState(false);
-  // 我的资源 → 管理 panel
   const [manageOpen, setManageOpen] = useState(false);
-  // 我的资源 → 新建自定义资源 panel — reuses the submit-resource dialog
-  // but for personal/private resources rather than public submissions.
   const [newCustomOpen, setNewCustomOpen] = useState(false);
+  // Hero carousel auto-rotate
+  const [heroIndex, setHeroIndex] = useState(0);
+
+  // Reset sub-kind when switching top tab so the kind dropdown can't
+  // hold an option that doesn't belong to the new tab.
+  useEffect(() => { setKind('all'); }, [topTab]);
 
   // Defensive: Radix Dialog occasionally leaves body.style.pointerEvents
-  // set to 'none' after closing, which kills every click on the page.
-  // Whenever every dialog is closed, flush the inline style so the page
-  // stays interactive.
+  // set to 'none' after closing, blocking all clicks. Flush it whenever
+  // every dialog is closed.
   useEffect(() => {
-    const anyOpen = onboardOpen || detailItem !== null || submitOpen
-      || trendingDialogOpen || manageOpen || newCustomOpen;
+    const anyOpen = onboardOpen || detailItem !== null || submitOpen || manageOpen || newCustomOpen;
     if (!anyOpen) document.body.style.pointerEvents = '';
-  }, [onboardOpen, detailItem, submitOpen, trendingDialogOpen, manageOpen, newCustomOpen]);
-
-  // Carousel scroller ref + arrow handlers
-  const carouselRef = useRef<HTMLDivElement | null>(null);
-  const scrollCarousel = (dir: -1 | 1) => {
-    const el = carouselRef.current;
-    if (!el) return;
-    el.scrollBy({ left: dir * Math.round(el.clientWidth * 0.85), behavior: 'smooth' });
-  };
+  }, [onboardOpen, detailItem, submitOpen, manageOpen, newCustomOpen]);
 
   const toggleInstall = (id: string) => {
     setInstalled(prev => {
@@ -286,10 +265,22 @@ export function MarketPage() {
     });
   };
 
-  // Public 市场 view: never shows user-created custom items
-  // (those live behind the 管理 panel).
+  // Hero carousel slides — resolve item ids against the catalog
+  const heroSlides = useMemo(() => FEATURED_QUOTES
+    .map(q => ({ item: CATALOG.find(c => c.id === q.itemId), quote: q.quote }))
+    .filter((s): s is { item: MarketItem; quote: string } => !!s.item),
+  []);
+
+  // Auto-advance the hero every 6s
+  useEffect(() => {
+    if (heroSlides.length <= 1) return;
+    const id = setInterval(() => setHeroIndex(i => (i + 1) % heroSlides.length), 6000);
+    return () => clearInterval(id);
+  }, [heroSlides.length]);
+
+  // Public 市场 view: scoped to current top tab, hides 自定义.
   const filtered = useMemo(() => {
-    let list = CATALOG.filter(it => !it.custom);
+    let list = CATALOG.filter(it => !it.custom && KIND_GROUP[it.kind] === topTab);
     if (kind !== 'all') list = list.filter(it => it.kind === kind);
     const q = search.trim().toLowerCase();
     if (q) list = list.filter(it =>
@@ -298,403 +289,203 @@ export function MarketPage() {
       it.author.toLowerCase().includes(q),
     );
     return list;
-  }, [kind, search]);
+  }, [topTab, kind, search]);
+
+  // Featured cards in the section below the hero — trending first,
+  // then by installs desc. Cap at 14 so the page doesn't get long.
+  const featured = useMemo(() => [...filtered].sort((a, b) => {
+    if (a.trending !== b.trending) return a.trending ? -1 : 1;
+    return b.installs - a.installs;
+  }).slice(0, 14), [filtered]);
 
   const myResources = useMemo(
     () => CATALOG.filter(it => it.custom || installed.has(it.id)),
     [installed],
   );
 
-  const allTrending = useMemo(
-    () => CATALOG.filter(it => it.trending).sort((a, b) => b.installs - a.installs),
-    [],
-  );
-  const trending = useMemo(() => allTrending.slice(0, 6), [allTrending]);
+  const currentSlide = heroSlides[heroIndex];
 
   return (
     <div className="flex flex-col h-full bg-background">
-      {/* Header: title + tabs + primary CTA */}
-      <div className="flex-shrink-0 px-8 pt-8 pb-3">
-        <div className="max-w-[1200px] mx-auto">
-          <div className="flex items-center justify-between gap-4">
-            <Typography variant="title" className="text-2xl">市场</Typography>
-            <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setSubmitOpen(true)}
-                className="gap-1.5 h-8"
-              >
-                <Plus size={13} />
-                提交资源
-              </Button>
-              <Button
-                variant="default"
-                size="sm"
-                onClick={() => setManageOpen(true)}
-                className="gap-1.5 h-8 bg-foreground text-background hover:bg-foreground/90"
-              >
-                <Wrench size={12} />
-                管理
-              </Button>
-            </div>
+      {/* Top bar — pill tabs (left) + action cluster (right) */}
+      <div className="flex-shrink-0 px-6 pt-5">
+        <div className="max-w-[920px] mx-auto flex items-center justify-between gap-4">
+          <div className="flex items-center gap-1.5">
+            {TOP_TABS.map(t => {
+              const active = topTab === t.id;
+              return (
+                <button
+                  key={t.id}
+                  type="button"
+                  onClick={() => setTopTab(t.id)}
+                  className={`px-3 h-8 rounded-full text-sm transition-colors ${
+                    active
+                      ? 'bg-foreground text-background'
+                      : 'text-muted-foreground/75 hover:text-foreground hover:bg-muted/40'
+                  }`}
+                >
+                  {t.label}
+                </button>
+              );
+            })}
+          </div>
+          <div className="flex items-center gap-1">
+            <Button
+              variant="outline"
+              size="xs"
+              onClick={() => setManageOpen(true)}
+              className="h-8 px-2.5 gap-1 text-xs"
+            >
+              <Wrench size={12} />
+              管理
+            </Button>
+            <Button
+              variant="outline"
+              size="xs"
+              onClick={() => setNewCustomOpen(true)}
+              className="h-8 px-2.5 gap-1 text-xs"
+            >
+              <Plus size={12} />
+              创建
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              onClick={() => setSubmitOpen(true)}
+              className="h-8 w-8"
+              title="提交到公开市场"
+            >
+              <MoreHorizontal size={14} />
+            </Button>
           </div>
         </div>
       </div>
 
-      {/* Content scroll */}
+      {/* Scrollable content */}
       <div className="flex-1 overflow-y-auto scrollbar-thin">
-        <div className="max-w-[1200px] mx-auto px-8 pb-10">
-          <div className="flex gap-6 pt-4">
+        <div className="max-w-[920px] mx-auto px-6 pt-10 pb-12">
 
-            {/* Left rail — resource kinds with counts */}
-            <aside className="hidden md:flex flex-shrink-0 w-[200px] flex-col">
-              <div className="sticky top-0">
-                <div className="text-[10px] uppercase tracking-wide text-muted-foreground/45 px-2 pb-2">
-                  资源类型
-                </div>
-                <div className="space-y-0.5">
-                  {KIND_FILTERS.map(k => {
-                    const active = kind === k.id;
-                    const Icon = k.id === 'all' ? Sparkles : KIND_ICON[k.id as ResourceKind];
-                    const count = k.id === 'all'
-                      ? CATALOG.filter(it => !it.custom).length
-                      : CATALOG.filter(it => !it.custom && it.kind === k.id).length;
-                    return (
-                      <button
-                        key={k.id}
-                        type="button"
-                        onClick={() => setKind(k.id as typeof kind)}
-                        className={`w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-sm transition-colors ${
-                          active
-                            ? 'bg-accent/50 text-foreground'
-                            : 'text-muted-foreground/75 hover:text-foreground hover:bg-muted/40'
-                        }`}
-                      >
-                        <Icon size={13} strokeWidth={1.6} className="flex-shrink-0" />
-                        <span className="flex-1 text-left truncate">{k.label}</span>
-                        <span className={`text-[10px] tabular-nums flex-shrink-0 ${active ? 'text-muted-foreground/70' : 'text-muted-foreground/45'}`}>
-                          {count}
-                        </span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            </aside>
+          {/* Centered hero title */}
+          <h1 className="text-center text-2xl sm:text-3xl font-semibold text-foreground mb-6">
+            让 Cherry 按你的方式工作
+          </h1>
 
-            {/* Right main */}
-            <div className="flex-1 min-w-0 space-y-8">
-
-          {/* Toolbar: search + filters + sort */}
-          <div>
-            <div className="flex items-center gap-2">
-              <div className="flex-1">
-                <SearchInput
-                  value={search}
-                  onChange={setSearch}
-                  placeholder="搜索资源…"
-                  clearable
-                  wrapperClassName="flex items-center gap-2 px-3 h-10 rounded-full border border-border/40 bg-background hover:border-border/60 focus-within:border-foreground/70 transition-colors"
-                />
-              </div>
-              <Button variant="outline" size="sm" className="h-10 px-3 gap-1.5 rounded-md">
-                <Filter size={13} />
-                Filters
-              </Button>
-              <Button variant="outline" size="icon-sm" className="h-10 w-10 rounded-md">
-                <ArrowUpDown size={13} />
-              </Button>
+          {/* Search bar + 2 inline dropdown filters */}
+          <div className="flex items-center gap-2 mb-5">
+            <div className="flex-1">
+              <SearchInput
+                value={search}
+                onChange={setSearch}
+                placeholder={topTab === 'plugin' ? '搜索插件' : '搜索技能'}
+                clearable
+                wrapperClassName="flex items-center gap-2 px-3 h-10 rounded-md border border-border/40 bg-background hover:border-border/60 focus-within:border-foreground/70 transition-colors"
+              />
             </div>
-
+            <KindFilterDropdown
+              topTab={topTab}
+              value={kind}
+              onChange={setKind}
+            />
+            <PublisherFilterDropdown />
           </div>
 
-          {/* Campaign / promo banner — fresh light-pastel "integration hub" look */}
-          {bannerOpen && (
-            <div className="relative rounded-2xl overflow-hidden border border-border/30 bg-gradient-to-br from-[#eef9f1] via-[#eef4ff] to-[#f6ecff] text-foreground shadow-sm">
-              {/* Soft blurred color blobs */}
-              <div aria-hidden="true" className="absolute -top-10 -right-10 w-[260px] h-[260px] rounded-full bg-[#a8d8b9]/35 blur-3xl pointer-events-none" />
-              <div aria-hidden="true" className="absolute -bottom-16 right-[140px] w-[200px] h-[200px] rounded-full bg-[#c7c0ff]/40 blur-3xl pointer-events-none" />
+          {/* Hero carousel — gradient bg, cycling quote card, dot rail on the right */}
+          {currentSlide && (
+            <div className="relative h-[230px] sm:h-[260px] rounded-2xl overflow-hidden bg-gradient-to-br from-[#ece5f8] via-[#f1deea] to-[#dde2f4] mb-8">
+              <div aria-hidden="true" className="absolute -top-16 -left-16 w-[280px] h-[280px] rounded-full bg-[#d5c2eb]/45 blur-3xl pointer-events-none" />
+              <div aria-hidden="true" className="absolute -bottom-16 -right-16 w-[280px] h-[280px] rounded-full bg-[#e8c8d8]/45 blur-3xl pointer-events-none" />
 
-              {/* Floating service tiles — illustration of an integration hub */}
-              <div aria-hidden="true" className="hidden md:block pointer-events-none">
-                {/* Center "Cherry" hub */}
-                <div className="absolute right-[150px] top-1/2 -translate-y-1/2 w-12 h-12 rounded-2xl bg-white shadow-md flex items-center justify-center text-base font-semibold text-foreground/85 border border-border/25">
-                  🍒
+              <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 px-6">
+                <div className="bg-white/80 backdrop-blur-md rounded-xl px-3.5 py-2.5 max-w-[460px] shadow-sm border border-border/15 flex items-center gap-2.5">
+                  <span className="text-base flex-shrink-0">{currentSlide.item.avatar}</span>
+                  <div className="text-sm leading-snug min-w-0">
+                    <span className="font-semibold text-foreground">{currentSlide.item.name}</span>
+                    <span className="text-foreground/75"> {currentSlide.quote}</span>
+                  </div>
                 </div>
-                {/* Orbiting service tiles */}
-                {[
-                  { emoji: '📝', label: 'Notion',    cls: 'right-[230px] top-3'       },
-                  { emoji: '📘', label: '语雀',      cls: 'right-[58px] top-3'         },
-                  { emoji: '📅', label: 'Calendar',  cls: 'right-[18px] top-[70px]'    },
-                  { emoji: '🪶', label: '飞书',      cls: 'right-[230px] bottom-3'     },
-                  { emoji: '💬', label: 'Slack',     cls: 'right-[58px] bottom-3'      },
-                  { emoji: '🐙', label: 'GitHub',    cls: 'right-[280px] top-[70px]'   },
-                ].map(tile => (
+                <button
+                  type="button"
+                  onClick={() => setDetailItem(currentSlide.item)}
+                  className="inline-flex items-center gap-1.5 h-9 px-4 rounded-full bg-foreground text-background text-sm hover:bg-foreground/90 transition-colors"
+                >
+                  <MousePointerClick size={12} />
+                  在对话中试用
+                </button>
+              </div>
+
+              {/* Dot indicators (right side, vertical) */}
+              <div className="absolute right-3 top-1/2 -translate-y-1/2 flex flex-col gap-1.5">
+                {heroSlides.map((_, i) => (
+                  <button
+                    key={i}
+                    type="button"
+                    onClick={() => setHeroIndex(i)}
+                    aria-label={`第 ${i + 1} 项`}
+                    className={`w-1.5 h-1.5 rounded-full transition-colors ${
+                      i === heroIndex ? 'bg-foreground/75' : 'bg-foreground/20 hover:bg-foreground/40'
+                    }`}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Featured section */}
+          <h2 className="text-sm font-medium text-foreground mb-3">Featured</h2>
+          {featured.length === 0 ? (
+            <div className="border border-dashed border-border/30 rounded-xl py-12 flex flex-col items-center text-muted-foreground/55">
+              <Sparkles size={20} strokeWidth={1.3} className="mb-2 text-muted-foreground/30" />
+              <p className="text-xs">没有匹配的资源</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-1">
+              {featured.map(it => {
+                const isInstalled = installed.has(it.id);
+                return (
                   <div
-                    key={tile.label}
-                    className={`absolute ${tile.cls} w-9 h-9 rounded-xl bg-white shadow-sm border border-border/20 flex items-center justify-center text-base`}
-                    title={tile.label}
+                    key={it.id}
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => setDetailItem(it)}
+                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setDetailItem(it); } }}
+                    className="group flex items-center gap-3 py-2.5 border-b border-border/15 last:border-b-0 hover:bg-muted/15 -mx-2 px-2 rounded-md cursor-pointer transition-colors"
                   >
-                    {tile.emoji}
-                  </div>
-                ))}
-                {/* Connector dots */}
-                <svg className="absolute inset-0 w-full h-full" viewBox="0 0 600 180" preserveAspectRatio="none">
-                  <g stroke="rgba(124,108,189,0.35)" strokeWidth="0.8" strokeDasharray="2 4" fill="none">
-                    <path d="M 470 90 L 380 30" />
-                    <path d="M 470 90 L 550 30" />
-                    <path d="M 470 90 L 590 90" />
-                    <path d="M 470 90 L 380 160" />
-                    <path d="M 470 90 L 550 160" />
-                    <path d="M 470 90 L 320 90" />
-                  </g>
-                </svg>
-              </div>
-
-              <div className="relative flex items-center gap-5 px-6 py-5">
-                <div className="flex-1 min-w-0 max-w-[58%]">
-                  <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-white/75 backdrop-blur text-[10px] uppercase tracking-wide font-medium mb-2 border border-border/20 text-foreground/75">
-                    <Sparkles size={10} className="text-cherry-primary" />
-                    本月上新
-                  </div>
-                  <h3 className="text-base font-semibold leading-tight text-foreground">
-                    30+ 集成正式上架 · 一键对接你的工作流
-                  </h3>
-                  <p className="text-xs text-muted-foreground/75 mt-1 leading-relaxed">
-                    Notion / 语雀 / Google Calendar / 飞书 / Slack / GitHub 等主流服务即开即用，
-                    授权后可在对话中直接读写、查询、同步。
-                  </p>
-                  <div className="mt-3">
-                    <Button
-                      variant="default"
-                      size="sm"
-                      onClick={() => setKind('integration')}
-                      className="h-8 px-3.5 gap-1.5 bg-foreground text-background hover:bg-foreground/90"
-                    >
-                      查看集成
-                      <ChevronRight size={12} />
-                    </Button>
-                  </div>
-                </div>
-              </div>
-
-              <button
-                type="button"
-                onClick={() => setBannerOpen(false)}
-                className="absolute top-2.5 right-2.5 w-6 h-6 inline-flex items-center justify-center rounded-md text-muted-foreground/45 hover:text-foreground hover:bg-muted/40 transition-colors"
-                aria-label="关闭活动横幅"
-              >
-                <X size={12} />
-              </button>
-            </div>
-          )}
-
-          {/* Trending — hidden when filter / search narrows the view */}
-          {kind === 'all' && !search.trim() && (
-            <section>
-              <div className="flex items-center justify-between gap-3 mb-3">
-                <button
-                  type="button"
-                  onClick={() => setTrendingDialogOpen(true)}
-                  className="inline-flex items-center gap-1.5 group"
-                  aria-label="查看全部热门资源"
-                >
-                  <span className="text-sm font-medium text-foreground">热门资源</span>
-                  <ChevronRight size={13} className="text-muted-foreground/50 group-hover:text-foreground transition-colors" />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setTrendingDialogOpen(true)}
-                  className="text-xs text-muted-foreground/60 hover:text-foreground transition-colors"
-                >
-                  查看全部 {allTrending.length}
-                </button>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2.5">
-                {trending.map(it => {
-                  const KIcon = KIND_ICON[it.kind];
-                  return (
+                    <Avatar item={it} size={36} />
+                    <div className="flex-1 min-w-0 pr-2">
+                      <div className="text-sm font-medium text-foreground truncate">{it.name}</div>
+                      <div className="text-[12px] text-muted-foreground/60 truncate mt-0.5">{it.tagline}</div>
+                    </div>
                     <button
-                      key={it.id}
                       type="button"
-                      onClick={() => setDetailItem(it)}
-                      className="text-left flex items-center gap-3 px-3 py-2.5 rounded-xl border border-border/25 hover:border-border/55 hover:bg-muted/15 transition-all cursor-pointer"
+                      onClick={(e) => { e.stopPropagation(); toggleInstall(it.id); }}
+                      aria-label={isInstalled ? '已安装' : '安装'}
+                      title={isInstalled ? '已安装 — 点击卸载' : '安装'}
+                      className={`h-8 w-8 inline-flex items-center justify-center rounded-md transition-colors flex-shrink-0 ${
+                        isInstalled
+                          ? 'text-success hover:text-destructive hover:bg-destructive/10'
+                          : 'text-muted-foreground/55 hover:text-foreground hover:bg-muted/50'
+                      }`}
                     >
-                      <Avatar item={it} size={36} />
-                      <div className="flex-1 min-w-0">
-                        <div className="text-sm text-foreground truncate">{it.name}</div>
-                        <div className="text-[11px] text-muted-foreground/60 flex items-center gap-1 mt-px">
-                          <KIcon size={10} />
-                          <span>{it.category}</span>
-                        </div>
-                      </div>
+                      {isInstalled ? <Check size={14} /> : <Plus size={14} />}
                     </button>
-                  );
-                })}
-              </div>
-            </section>
-          )}
-
-          {/* Handpicked carousel — real horizontal scroller with
-              snap + working prev/next arrows */}
-          {kind === 'all' && !search.trim() && (
-            <section>
-              <div className="flex items-center justify-between gap-3 mb-3">
-                <span className="text-sm font-medium text-foreground">为你精选</span>
-                <div className="flex items-center gap-1">
-                  <button
-                    type="button"
-                    onClick={() => scrollCarousel(-1)}
-                    aria-label="向左滚动"
-                    className="h-7 w-7 inline-flex items-center justify-center rounded-md border border-border/30 text-muted-foreground/60 hover:text-foreground hover:bg-muted/40"
-                  >
-                    <ChevronLeft size={13} />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => scrollCarousel(1)}
-                    aria-label="向右滚动"
-                    className="h-7 w-7 inline-flex items-center justify-center rounded-md border border-border/30 text-muted-foreground/60 hover:text-foreground hover:bg-muted/40"
-                  >
-                    <ChevronRight size={13} />
-                  </button>
-                </div>
-              </div>
-              <div
-                ref={carouselRef}
-                className="flex gap-2.5 overflow-x-auto snap-x snap-mandatory scrollbar-thin -mx-1 px-1 pb-1"
-                style={{ scrollbarGutter: 'stable' }}
-              >
-                {HANDPICKED.map(uc => (
-                  <button
-                    key={uc.id}
-                    type="button"
-                    onClick={() => setSearch(uc.label)}
-                    className={`relative flex-shrink-0 snap-start basis-[78%] sm:basis-[46%] lg:basis-[23.5%] aspect-[16/10] rounded-xl overflow-hidden ${uc.bg} group`}
-                  >
-                    <HandpickedArt kind={uc.art} />
-                    <div className="absolute inset-0 p-4 flex flex-col justify-end">
-                      <span className="text-lg font-semibold tracking-tight">{uc.label}</span>
-                    </div>
-                    <div className="absolute bottom-3 right-3 w-7 h-7 rounded-full bg-foreground/85 text-background flex items-center justify-center group-hover:scale-110 transition-transform">
-                      <ChevronRight size={13} />
-                    </div>
-                  </button>
-                ))}
-              </div>
-            </section>
-          )}
-
-          {/* Detail list */}
-          <section>
-            <div className="flex items-center justify-between gap-3 mb-3">
-              <div>
-                <div className="text-sm font-medium text-foreground">
-                  {kind === 'all' ? '全部资源' : KIND_LABEL[kind]}
-                </div>
-                <div className="text-[11px] text-muted-foreground/55 tabular-nums mt-0.5">
-                  共 {filtered.length} 条
-                </div>
-              </div>
+                  </div>
+                );
+              })}
             </div>
+          )}
+        </div>
+      </div>
 
-            {filtered.length === 0 ? (
-              <div className="border border-dashed border-border/30 rounded-xl py-12 flex flex-col items-center text-muted-foreground/55">
-                <Sparkles size={20} strokeWidth={1.3} className="mb-2 text-muted-foreground/30" />
-                <p className="text-xs">没有匹配的资源</p>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
-                {filtered.map(it => {
-                  const KIcon = KIND_ICON[it.kind];
-                  const isInstalled = installed.has(it.id);
-                  return (
-                    <div
-                      key={it.id}
-                      onClick={() => setDetailItem(it)}
-                      role="button"
-                      tabIndex={0}
-                      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setDetailItem(it); } }}
-                      className="group flex items-center gap-3 px-3.5 py-2.5 rounded-xl border border-border/25 bg-card/50 hover:bg-card hover:border-border/55 hover:shadow-sm transition-all cursor-pointer"
-                    >
-                      <Avatar item={it} size={36} />
-                      <div className="flex-1 min-w-0 pr-1">
-                        <div className="flex items-center gap-1.5">
-                          <div className="text-sm text-foreground truncate">{it.name}</div>
-                          {it.custom && (
-                            <span className="flex-shrink-0 px-1.5 py-px rounded text-[10px] leading-none border border-border/35 bg-muted/40 text-muted-foreground/75">
-                              自定义
-                            </span>
-                          )}
-                        </div>
-                        <div className="text-[11px] text-muted-foreground/55 truncate mt-0.5">{it.tagline}</div>
-                      </div>
-                      <div className="hidden sm:flex items-center gap-1 text-[11px] flex-shrink-0">
-                        <KIcon size={11} className="text-muted-foreground/55" />
-                        <span className="text-muted-foreground/75">{it.category}</span>
-                      </div>
-                      <div className="flex items-center gap-0.5 flex-shrink-0">
-                        <button
-                          type="button"
-                          onClick={(e) => { e.stopPropagation(); toggleInstall(it.id); }}
-                          title={isInstalled ? '已安装 — 点击卸载' : '安装'}
-                          aria-label={isInstalled ? '已安装' : '安装'}
-                          className={`h-7 w-7 inline-flex items-center justify-center rounded-md transition-colors mr-1 ${
-                            isInstalled
-                              ? 'text-success hover:text-destructive hover:bg-destructive/10'
-                              : 'text-muted-foreground/65 hover:text-foreground hover:bg-muted/50'
-                          }`}
-                        >
-                          {isInstalled ? <Check size={13} /> : <Download size={12} />}
-                        </button>
-                        <button
-                          onClick={(e) => e.stopPropagation()}
-                          className="h-7 w-7 inline-flex items-center justify-center rounded-md text-muted-foreground/50 hover:text-foreground hover:bg-muted/40 opacity-0 group-hover:opacity-100 transition-all"
-                          title="更多"
-                        >
-                          <MoreHorizontal size={12} />
-                        </button>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </section>
-
-            </div>{/* /right main */}
-          </div>{/* /flex split */}
-        </div>{/* /max-w container */}
-      </div>{/* /scroll */}
-
-      {/* Onboarding modal — first-visit feature introduction */}
+      {/* Dialogs */}
       <MarketOnboardingModal open={onboardOpen} onOpenChange={setOnboardOpen} />
-
-      {/* Detail dialog — opens when a row is clicked (二级页面) */}
       <MarketDetailDialog
         item={detailItem}
         onOpenChange={(open) => { if (!open) setDetailItem(null); }}
         installed={detailItem ? installed.has(detailItem.id) : false}
         onToggleInstall={(id) => toggleInstall(id)}
       />
-
-      {/* Submit-resource dialog — opens from header CTA on 探索 tab */}
       <SubmitResourceDialog open={submitOpen} onOpenChange={setSubmitOpen} />
-      {/* "新建资源" — same shape as Submit, semantically a private create */}
       <SubmitResourceDialog open={newCustomOpen} onOpenChange={setNewCustomOpen} mode="custom" />
-
-      {/* "查看全部热门" 二级页面 — full trending list */}
-      <TrendingListDialog
-        open={trendingDialogOpen}
-        onOpenChange={setTrendingDialogOpen}
-        items={allTrending}
-        installed={installed}
-        onSelect={(it) => { setTrendingDialogOpen(false); setDetailItem(it); }}
-        onToggleInstall={toggleInstall}
-      />
-
-      {/* 管理 panel — manages installed + custom resources */}
       <MyResourcesManageDialog
         open={manageOpen}
         onOpenChange={setManageOpen}
@@ -708,76 +499,96 @@ export function MarketPage() {
   );
 }
 
-// ─── Trending list dialog (二级页面) ───────────────────────────────────
+// ─── Inline filter dropdowns (next to search) ───────────────────────
 
-function TrendingListDialog({
-  open, onOpenChange, items, installed, onSelect, onToggleInstall,
+function KindFilterDropdown({
+  topTab, value, onChange,
 }: {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  items: MarketItem[];
-  installed: Set<string>;
-  onSelect: (item: MarketItem) => void;
-  onToggleInstall: (id: string) => void;
+  topTab: TopTab;
+  value: ResourceKind | 'all';
+  onChange: (v: ResourceKind | 'all') => void;
 }) {
+  const [open, setOpen] = useState(false);
+  const options = SUB_KINDS[topTab];
+  const label = value === 'all' ? '类型' : KIND_LABEL[value];
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[820px] p-0 overflow-hidden">
-        <DialogHeader className="px-6 pt-5 pb-3 border-b border-border/30">
-          <div className="flex items-center gap-2">
-            <DialogTitle className="text-base font-semibold">热门资源</DialogTitle>
-            <span className="text-xs text-muted-foreground/60 tabular-nums">{items.length}</span>
-          </div>
-          <DialogDescription className="text-xs text-muted-foreground/70 mt-1">
-            按真实热度排序（GitHub stars 快照）。点击进入详情，或直接安装。
-          </DialogDescription>
-        </DialogHeader>
-        <div className="max-h-[60vh] overflow-y-auto scrollbar-thin px-3 py-3">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-            {items.map(it => {
-              const KIcon = KIND_ICON[it.kind];
-              const isInstalled = installed.has(it.id);
-              const installsLabel = it.installs >= 10000
-                ? `${(it.installs / 1000).toFixed(1)}K`
-                : it.installs.toLocaleString();
-              return (
-                <div
-                  key={it.id}
-                  role="button"
-                  tabIndex={0}
-                  onClick={() => onSelect(it)}
-                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSelect(it); } }}
-                  className="group flex items-center gap-3 px-3 py-2.5 rounded-xl border border-border/25 bg-card/50 hover:bg-card hover:border-border/55 hover:shadow-sm transition-all cursor-pointer"
-                >
-                  <Avatar item={it} size={36} />
-                  <div className="flex-1 min-w-0">
-                    <div className="text-sm text-foreground truncate">{it.name}</div>
-                    <div className="text-[11px] text-muted-foreground/60 flex items-center gap-1.5 mt-px">
-                      <KIcon size={10} />
-                      <span>{it.category}</span>
-                      <span className="text-muted-foreground/40">·</span>
-                      <span className="tabular-nums">{installsLabel}</span>
-                    </div>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={(e) => { e.stopPropagation(); onToggleInstall(it.id); }}
-                    aria-label={isInstalled ? '已安装' : '安装'}
-                    className={`h-7 w-7 inline-flex items-center justify-center rounded-md transition-colors ${
-                      isInstalled
-                        ? 'text-success hover:text-destructive hover:bg-destructive/10'
-                        : 'text-muted-foreground/65 hover:text-foreground hover:bg-muted/50'
-                    }`}
-                  >
-                    {isInstalled ? <Check size={13} /> : <Download size={12} />}
-                  </button>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      </DialogContent>
-    </Dialog>
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <button
+          type="button"
+          className="inline-flex items-center gap-1.5 h-10 px-3 rounded-md border border-border/40 text-sm text-foreground/85 hover:border-border/60 hover:bg-muted/15 transition-colors"
+        >
+          <span>{label}</span>
+          <ChevronDown size={12} className="text-muted-foreground/55" />
+        </button>
+      </PopoverTrigger>
+      <PopoverContent align="end" className="w-[180px] p-1">
+        {options.map(opt => {
+          const isAll = opt === 'all';
+          const labelText = isAll ? '全部类型' : KIND_LABEL[opt];
+          const active = value === opt;
+          return (
+            <button
+              key={opt}
+              type="button"
+              onClick={() => { onChange(opt); setOpen(false); }}
+              className={`w-full text-left px-2.5 py-1.5 rounded text-sm transition-colors flex items-center justify-between ${
+                active
+                  ? 'bg-muted/60 text-foreground'
+                  : 'text-foreground/80 hover:bg-muted/40'
+              }`}
+            >
+              <span>{labelText}</span>
+              {active && <Check size={12} className="text-foreground/70" />}
+            </button>
+          );
+        })}
+      </PopoverContent>
+    </Popover>
+  );
+}
+
+function PublisherFilterDropdown() {
+  const [open, setOpen] = useState(false);
+  const [value, setValue] = useState<'all' | 'official' | 'community'>('all');
+  const label = value === 'all' ? '全部' : value === 'official' ? '官方' : '社区';
+  const options: { id: typeof value; label: string }[] = [
+    { id: 'all',       label: '全部来源' },
+    { id: 'official',  label: '官方' },
+    { id: 'community', label: '社区' },
+  ];
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <button
+          type="button"
+          className="inline-flex items-center gap-1.5 h-10 px-3 rounded-md border border-border/40 text-sm text-foreground/85 hover:border-border/60 hover:bg-muted/15 transition-colors"
+        >
+          <span>{label}</span>
+          <ChevronDown size={12} className="text-muted-foreground/55" />
+        </button>
+      </PopoverTrigger>
+      <PopoverContent align="end" className="w-[160px] p-1">
+        {options.map(opt => {
+          const active = value === opt.id;
+          return (
+            <button
+              key={opt.id}
+              type="button"
+              onClick={() => { setValue(opt.id); setOpen(false); }}
+              className={`w-full text-left px-2.5 py-1.5 rounded text-sm transition-colors flex items-center justify-between ${
+                active
+                  ? 'bg-muted/60 text-foreground'
+                  : 'text-foreground/80 hover:bg-muted/40'
+              }`}
+            >
+              <span>{opt.label}</span>
+              {active && <Check size={12} className="text-foreground/70" />}
+            </button>
+          );
+        })}
+      </PopoverContent>
+    </Popover>
   );
 }
 
@@ -1381,56 +1192,3 @@ function Avatar({ item, size = 36 }: { item: MarketItem; size?: number }) {
   );
 }
 
-// Abstract background art for handpicked tiles
-function HandpickedArt({ kind }: { kind: 'circles' | 'waves' | 'orbits' | 'lattice' }) {
-  if (kind === 'circles') {
-    return (
-      <svg className="absolute inset-0 w-full h-full opacity-90" viewBox="0 0 200 120" preserveAspectRatio="none">
-        <defs>
-          <radialGradient id="rg1" cx="35%" cy="55%" r="40%">
-            <stop offset="0%" stopColor="rgba(255,255,255,0.15)" />
-            <stop offset="100%" stopColor="rgba(255,255,255,0)" />
-          </radialGradient>
-        </defs>
-        <circle cx="60" cy="60" r="44" fill="none" stroke="rgba(255,255,255,0.35)" strokeWidth="0.6" />
-        <circle cx="60" cy="60" r="32" fill="none" stroke="rgba(255,255,255,0.25)" strokeWidth="0.5" />
-        <circle cx="60" cy="60" r="20" fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth="0.5" />
-        <circle cx="60" cy="60" r="8"  fill="rgba(255,255,255,0.4)" />
-        <rect width="200" height="120" fill="url(#rg1)" />
-      </svg>
-    );
-  }
-  if (kind === 'waves') {
-    return (
-      <svg className="absolute inset-0 w-full h-full" viewBox="0 0 200 120" preserveAspectRatio="none">
-        <path d="M 0 70 Q 50 30 100 70 T 200 70" fill="none" stroke="rgba(0,0,0,0.35)" strokeWidth="0.8" />
-        <path d="M 0 80 Q 50 40 100 80 T 200 80" fill="none" stroke="rgba(0,0,0,0.25)" strokeWidth="0.6" />
-        <path d="M 0 90 Q 50 50 100 90 T 200 90" fill="none" stroke="rgba(0,0,0,0.2)"  strokeWidth="0.5" />
-      </svg>
-    );
-  }
-  if (kind === 'orbits') {
-    return (
-      <svg className="absolute inset-0 w-full h-full" viewBox="0 0 200 120" preserveAspectRatio="none">
-        <ellipse cx="100" cy="60" rx="80" ry="22" fill="none" stroke="rgba(0,0,0,0.35)" strokeWidth="0.7" />
-        <ellipse cx="100" cy="60" rx="50" ry="40" fill="none" stroke="rgba(0,0,0,0.28)" strokeWidth="0.6" />
-        <ellipse cx="100" cy="60" rx="25" ry="50" fill="none" stroke="rgba(0,0,0,0.22)" strokeWidth="0.5" />
-        <circle cx="100" cy="60" r="4" fill="rgba(0,0,0,0.6)" />
-      </svg>
-    );
-  }
-  // lattice
-  return (
-    <svg className="absolute inset-0 w-full h-full opacity-80" viewBox="0 0 200 120" preserveAspectRatio="none">
-      <g stroke="rgba(255,255,255,0.32)" strokeWidth="0.4" fill="none">
-        {Array.from({ length: 8 }).map((_, i) => (
-          <line key={`v${i}`} x1={20 + i * 22} y1="20" x2={20 + i * 22} y2="100" />
-        ))}
-        {Array.from({ length: 5 }).map((_, i) => (
-          <line key={`h${i}`} x1="20" y1={20 + i * 20} x2="180" y2={20 + i * 20} />
-        ))}
-        <path d="M 20 20 L 180 100 M 180 20 L 20 100" />
-      </g>
-    </svg>
-  );
-}
