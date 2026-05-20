@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Plus, Search, Filter, ArrowUpDown, ChevronRight, ChevronLeft,
   Check, Download, X, MoreHorizontal, Terminal, FileText,
@@ -192,14 +192,31 @@ export function MarketPage() {
   const [kind, setKind] = useState<ResourceKind | 'all'>('all');
   const [bannerOpen, setBannerOpen] = useState(true);
   const [installed, setInstalled] = useState<Set<string>>(new Set(['m-2', 'm-8']));
-  // First-visit onboarding modal — opens on initial render. In a real
-  // app this would gate on a localStorage flag; for the design mock we
-  // just open it every mount so the entrance is always visible.
-  const [onboardOpen, setOnboardOpen] = useState(true);
+  // First-visit onboarding modal — closed by default. Auto-opening on
+  // every mount caused Radix to leak `body { pointer-events: none }`
+  // after dismiss, which blocked every subsequent click on the page.
+  const [onboardOpen, setOnboardOpen] = useState(false);
   // Detail dialog (二级页面) — opens when a row is clicked
   const [detailItem, setDetailItem] = useState<MarketItem | null>(null);
   // Submit-resource dialog — opens from the header CTA
   const [submitOpen, setSubmitOpen] = useState(false);
+
+  // Defensive: Radix Dialog occasionally leaves body.style.pointerEvents
+  // set to 'none' after closing, which kills every click on the page.
+  // Whenever every dialog is closed, flush the inline style so the page
+  // stays interactive.
+  useEffect(() => {
+    const anyOpen = onboardOpen || detailItem !== null || submitOpen;
+    if (!anyOpen) document.body.style.pointerEvents = '';
+  }, [onboardOpen, detailItem, submitOpen]);
+
+  // Carousel scroller ref + arrow handlers
+  const carouselRef = useRef<HTMLDivElement | null>(null);
+  const scrollCarousel = (dir: -1 | 1) => {
+    const el = carouselRef.current;
+    if (!el) return;
+    el.scrollBy({ left: dir * Math.round(el.clientWidth * 0.85), behavior: 'smooth' });
+  };
 
   const toggleInstall = (id: string) => {
     setInstalled(prev => {
@@ -430,7 +447,8 @@ export function MarketPage() {
                     <button
                       key={it.id}
                       type="button"
-                      className="text-left flex items-center gap-3 px-3 py-2.5 rounded-xl border border-border/25 hover:border-border/55 hover:bg-muted/15 transition-all"
+                      onClick={() => setDetailItem(it)}
+                      className="text-left flex items-center gap-3 px-3 py-2.5 rounded-xl border border-border/25 hover:border-border/55 hover:bg-muted/15 transition-all cursor-pointer"
                     >
                       <Avatar item={it} size={36} />
                       <div className="flex-1 min-w-0">
@@ -450,26 +468,42 @@ export function MarketPage() {
             </section>
           )}
 
-          {/* Handpicked carousel */}
+          {/* Handpicked carousel — real horizontal scroller with
+              snap + working prev/next arrows */}
           {tab === 'explore' && kind === 'all' && !search.trim() && (
             <section>
               <div className="flex items-center justify-between gap-3 mb-3">
                 <span className="text-sm font-medium text-foreground">为你精选</span>
                 <div className="flex items-center gap-1">
-                  <button className="h-7 w-7 inline-flex items-center justify-center rounded-md border border-border/30 text-muted-foreground/60 hover:text-foreground hover:bg-muted/40">
+                  <button
+                    type="button"
+                    onClick={() => scrollCarousel(-1)}
+                    aria-label="向左滚动"
+                    className="h-7 w-7 inline-flex items-center justify-center rounded-md border border-border/30 text-muted-foreground/60 hover:text-foreground hover:bg-muted/40"
+                  >
                     <ChevronLeft size={13} />
                   </button>
-                  <button className="h-7 w-7 inline-flex items-center justify-center rounded-md border border-border/30 text-muted-foreground/60 hover:text-foreground hover:bg-muted/40">
+                  <button
+                    type="button"
+                    onClick={() => scrollCarousel(1)}
+                    aria-label="向右滚动"
+                    className="h-7 w-7 inline-flex items-center justify-center rounded-md border border-border/30 text-muted-foreground/60 hover:text-foreground hover:bg-muted/40"
+                  >
                     <ChevronRight size={13} />
                   </button>
                 </div>
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
+              <div
+                ref={carouselRef}
+                className="flex gap-2.5 overflow-x-auto snap-x snap-mandatory scrollbar-thin -mx-1 px-1 pb-1"
+                style={{ scrollbarGutter: 'stable' }}
+              >
                 {HANDPICKED.map(uc => (
                   <button
                     key={uc.id}
                     type="button"
-                    className={`relative aspect-[16/10] rounded-xl overflow-hidden ${uc.bg} group`}
+                    onClick={() => setSearch(uc.label)}
+                    className={`relative flex-shrink-0 snap-start basis-[78%] sm:basis-[46%] lg:basis-[23.5%] aspect-[16/10] rounded-xl overflow-hidden ${uc.bg} group`}
                   >
                     <HandpickedArt kind={uc.art} />
                     <div className="absolute inset-0 p-4 flex flex-col justify-end">
