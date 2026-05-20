@@ -2,11 +2,13 @@ import React, { useMemo, useState } from 'react';
 import {
   Plus, Search, Filter, ArrowUpDown, ChevronRight, ChevronLeft,
   Check, Download, X, MoreHorizontal, Link2, Terminal, FileText,
-  Wrench, Sparkles, MousePointerClick, BookOpen, Network,
+  Wrench, Sparkles, MousePointerClick, BookOpen, Network, Plug,
+  CheckCircle2, Zap, Compass,
 } from 'lucide-react';
 import {
   Button, SearchInput, Typography, Badge,
   Popover, PopoverTrigger, PopoverContent,
+  Dialog, DialogContent,
 } from '@cherry-studio/ui';
 
 // ===========================
@@ -26,7 +28,7 @@ import {
 
 // ─── Types ─────────────────────────────────────────────────────────────
 
-type ResourceKind = 'skill' | 'cli' | 'assistant' | 'mcp' | 'prompt' | 'kb';
+type ResourceKind = 'skill' | 'cli' | 'assistant' | 'mcp' | 'prompt' | 'kb' | 'integration';
 
 interface MarketItem {
   id: string;
@@ -48,21 +50,22 @@ interface MarketItem {
 
 const KIND_LABEL: Record<ResourceKind, string> = {
   skill: 'Skill', cli: 'CLI', assistant: 'Assistant',
-  mcp: 'MCP', prompt: 'Prompt', kb: '知识库',
+  mcp: 'MCP', prompt: 'Prompt', kb: '知识库', integration: '集成',
 };
 
 const KIND_ICON: Record<ResourceKind, React.ComponentType<{ size?: number; className?: string; strokeWidth?: number }>> = {
   skill: Sparkles, cli: Terminal, assistant: MousePointerClick,
-  mcp: Network, prompt: FileText, kb: BookOpen,
+  mcp: Network, prompt: FileText, kb: BookOpen, integration: Plug,
 };
 
 const KIND_COLOR: Record<ResourceKind, string> = {
-  skill:     'bg-accent-violet/70',
-  cli:       'bg-foreground/80',
-  assistant: 'bg-accent-cyan/70',
-  mcp:       'bg-info/70',
-  prompt:    'bg-accent-amber/70',
-  kb:        'bg-success/70',
+  skill:       'bg-accent-violet/70',
+  cli:         'bg-foreground/80',
+  assistant:   'bg-accent-cyan/70',
+  mcp:         'bg-info/70',
+  prompt:      'bg-accent-amber/70',
+  kb:          'bg-success/70',
+  integration: 'bg-accent-orange/70',
 };
 
 // ─── Catalog ──────────────────────────────────────────────────────────
@@ -86,19 +89,31 @@ const CATALOG: MarketItem[] = [
   { id: 'm-16', kind: 'skill',     name: '语言翻译 Pro',       tagline: '上下文感知翻译，保留专有名词 / 注释 / 代码',  author: '@polyglot',     avatar: '🌍',  avatarBg: 'bg-accent-blue/20',   language: '多语', region: '通用',     category: '翻译',     ageLabel: '1y',  installs: 22148, trending: true  },
   { id: 'm-17', kind: 'assistant', name: 'SQL 报表助手',       tagline: '自然语言转 SQL，跑数 + 图表 + 解读',           author: '@dataops',      avatar: '🧮',  avatarBg: 'bg-accent-indigo/25', language: '中文', region: '通用',     category: '数据',     ageLabel: '4mo', installs: 5832,                 },
   { id: 'm-18', kind: 'mcp',       name: 'Browser MCP',        tagline: '受控浏览器：截图 / 提取 / 表单 / 批量爬取',    author: '@modelcontext', avatar: '🌐',  avatarBg: 'bg-info/25',          language: 'EN',  region: '通用',     category: '开发',     ageLabel: '6mo', installs: 16208,                },
+  // ─── Integrations ───────────────────────────────────────────────
+  { id: 'm-19', kind: 'integration', name: 'Notion',           tagline: '页面读写、数据库查询、批量更新与权限同步',     author: '@notion-labs',  avatar: '📝',  avatarBg: 'bg-muted',            language: 'EN',  region: '通用',     category: '办公',     ageLabel: '1y',  installs: 41203, trending: true  },
+  { id: 'm-20', kind: 'integration', name: '语雀',              tagline: '语雀知识库 / 文档 / 团队空间读写',             author: '@yuque',        avatar: '📘',  avatarBg: 'bg-success/20',       language: '中文', region: '中国',     category: '办公',     ageLabel: '8mo', installs: 18420, trending: true  },
+  { id: 'm-21', kind: 'integration', name: 'Google Calendar',  tagline: '查询、创建日程，自动找时间，跨账号同步',       author: '@google',       avatar: '📅',  avatarBg: 'bg-info/20',          language: '多语', region: '全球',     category: '办公',     ageLabel: '11mo', installs: 38501, trending: true  },
+  { id: 'm-22', kind: 'integration', name: '飞书',              tagline: '消息、文档、多维表格、日历、视频会议一体化',   author: '@feishu',       avatar: '🪶',  avatarBg: 'bg-accent-blue/25',   language: '中文', region: '中国',     category: '办公',     ageLabel: '7mo', installs: 22340, trending: true  },
+  { id: 'm-23', kind: 'integration', name: 'Slack',             tagline: '频道消息 / DM / 工作流，含 Bot 双向通信',       author: '@slack',        avatar: '💬',  avatarBg: 'bg-accent-violet/25', language: '多语', region: '全球',     category: '办公',     ageLabel: '1y',  installs: 33215                  },
+  { id: 'm-24', kind: 'integration', name: 'Linear',            tagline: '任务、项目、冲刺管理，自动开 issue 与转 PR',    author: '@linear',       avatar: '◰',   avatarBg: 'bg-accent-indigo/25', language: 'EN',  region: '全球',     category: '研究',     ageLabel: '6mo', installs: 12087                  },
+  { id: 'm-25', kind: 'integration', name: 'Gmail',             tagline: '收发邮件、自动分类、生成回复草稿与摘要',       author: '@google',       avatar: '✉️',  avatarBg: 'bg-destructive/15',   language: '多语', region: '全球',     category: '办公',     ageLabel: '9mo', installs: 28910                  },
+  { id: 'm-26', kind: 'integration', name: 'GitHub',            tagline: '仓库 / Issue / PR / Release 自然语言自动化',     author: '@github',       avatar: '🐙',  avatarBg: 'bg-foreground/15',    language: 'EN',  region: '全球',     category: '开发',     ageLabel: '1y',  installs: 51208, trending: true  },
+  { id: 'm-27', kind: 'integration', name: 'Confluence',        tagline: '企业 Wiki 读写、模板插入、跨空间检索',         author: '@atlassian',    avatar: '🧭',  avatarBg: 'bg-info/15',          language: '多语', region: '全球',     category: '办公',     ageLabel: '5mo', installs: 7402                   },
+  { id: 'm-28', kind: 'integration', name: 'Outlook',           tagline: '收发邮件 + 会议邀请 + 联系人同步',             author: '@microsoft',    avatar: '📧',  avatarBg: 'bg-info/20',          language: '多语', region: '全球',     category: '办公',     ageLabel: '6mo', installs: 14620                  },
 ];
 
 // ─── Filter pills ─────────────────────────────────────────────────────
 
 type FilterValue = 'all' | string;
 const KIND_FILTERS: { id: ResourceKind | 'all'; label: string }[] = [
-  { id: 'all',       label: '全部' },
-  { id: 'skill',     label: 'Skill' },
-  { id: 'cli',       label: 'CLI' },
-  { id: 'assistant', label: 'Assistant' },
-  { id: 'mcp',       label: 'MCP' },
-  { id: 'prompt',    label: 'Prompt' },
-  { id: 'kb',        label: '知识库' },
+  { id: 'all',         label: '全部' },
+  { id: 'skill',       label: 'Skill' },
+  { id: 'cli',         label: 'CLI' },
+  { id: 'assistant',   label: 'Assistant' },
+  { id: 'mcp',         label: 'MCP' },
+  { id: 'prompt',      label: 'Prompt' },
+  { id: 'kb',          label: '知识库' },
+  { id: 'integration', label: '集成' },
 ];
 
 const LANGS: { id: FilterValue; label: string }[] = [
@@ -145,6 +160,10 @@ export function MarketPage() {
   const [category, setCategory] = useState<FilterValue>('all');
   const [bannerOpen, setBannerOpen] = useState(true);
   const [installed, setInstalled] = useState<Set<string>>(new Set(['m-2', 'm-8']));
+  // First-visit onboarding modal — opens on initial render. In a real
+  // app this would gate on a localStorage flag; for the design mock we
+  // just open it every mount so the entrance is always visible.
+  const [onboardOpen, setOnboardOpen] = useState(true);
 
   const toggleInstall = (id: string) => {
     setInstalled(prev => {
@@ -485,7 +504,98 @@ export function MarketPage() {
 
         </div>
       </div>
+
+      {/* Onboarding modal — first-visit feature introduction */}
+      <MarketOnboardingModal open={onboardOpen} onOpenChange={setOnboardOpen} />
     </div>
+  );
+}
+
+// ─── Onboarding modal ────────────────────────────────────────────────
+
+function MarketOnboardingModal({ open, onOpenChange }: { open: boolean; onOpenChange: (v: boolean) => void }) {
+  const bullets: { Icon: React.ComponentType<{ size?: number; className?: string; strokeWidth?: number }>; text: string }[] = [
+    { Icon: Zap,         text: '一键安装社区精心打磨的 Skill / MCP / Prompt 模板' },
+    { Icon: Plug,        text: '直接对接 Notion / 语雀 / Google Calendar 等集成' },
+    { Icon: Compass,     text: '上传你的资源参与黑客松，赢取奖池和 Pro 激活码' },
+  ];
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent
+        showCloseButton={false}
+        className="max-w-[360px] p-0 overflow-hidden rounded-2xl border border-border/30"
+      >
+        {/* Top hero — gradient illustration */}
+        <div className="relative h-[160px] bg-gradient-to-br from-[#f0c5a6] via-[#c89cb0] to-[#9b6db0] overflow-hidden">
+          <svg
+            aria-hidden="true"
+            viewBox="0 0 360 160"
+            preserveAspectRatio="xMidYMid slice"
+            className="absolute inset-0 w-full h-full"
+          >
+            {/* Decorative tilted tiles representing "templates / resources" */}
+            <g transform="translate(120 32) rotate(-8)">
+              <rect width="80" height="80" rx="12" fill="rgba(255,255,255,0.85)" stroke="rgba(0,0,0,0.05)" />
+              <rect x="10" y="10" width="60" height="22" rx="4" fill="#b5856f" />
+              <rect x="10" y="40" width="36" height="6"  rx="3" fill="#d6b8a8" />
+              <rect x="10" y="50" width="48" height="6"  rx="3" fill="#e6d4c8" />
+            </g>
+            <g transform="translate(200 56) rotate(12)">
+              <rect width="80" height="58" rx="10" fill="rgba(255,255,255,0.92)" stroke="rgba(0,0,0,0.05)" />
+              <rect x="10" y="10" width="60" height="22" rx="4" fill="#cda0bf" />
+              <rect x="10" y="38" width="40" height="6"  rx="3" fill="#e5cbdc" />
+            </g>
+            <g transform="translate(58 78) rotate(-3)">
+              <rect width="60" height="36" rx="8" fill="rgba(255,255,255,0.88)" stroke="rgba(0,0,0,0.05)" />
+              <rect x="8" y="8"  width="44" height="6" rx="3" fill="#c98b6a" />
+              <rect x="8" y="18" width="36" height="6" rx="3" fill="#e8c8b3" />
+              <rect x="8" y="28" width="28" height="6" rx="3" fill="#f1d9c6" />
+            </g>
+            {/* Connection arrow between the two main tiles */}
+            <g transform="translate(192 80)">
+              <circle r="11" fill="white" stroke="rgba(0,0,0,0.06)" />
+              <path d="M -4 -4 L 4 0 L -4 4 Z" fill="#7d4a8e" />
+            </g>
+          </svg>
+        </div>
+
+        {/* Body */}
+        <div className="px-5 pt-5 pb-4">
+          <div className="flex items-center gap-1.5 mb-2.5">
+            <h2 className="text-base font-semibold text-foreground">认识市场</h2>
+            <span className="px-1.5 py-px rounded text-[10px] uppercase tracking-wide font-medium bg-muted/60 text-muted-foreground/80 border border-border/30">
+              Beta
+            </span>
+          </div>
+          <ul className="space-y-2.5">
+            {bullets.map((b, i) => {
+              const Icon = b.Icon;
+              return (
+                <li key={i} className="flex items-start gap-2.5">
+                  <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-foreground/8 text-foreground/75 flex-shrink-0 mt-px">
+                    <Icon size={11} />
+                  </span>
+                  <span className="text-xs text-foreground/85 leading-relaxed">{b.text}</span>
+                </li>
+              );
+            })}
+          </ul>
+          <Button
+            variant="default"
+            size="sm"
+            onClick={() => onOpenChange(false)}
+            className="w-full h-9 mt-4 bg-foreground text-background hover:bg-foreground/90 text-sm rounded-lg"
+          >
+            开始浏览
+          </Button>
+          <p className="text-[10px] text-muted-foreground/55 text-center mt-2.5">
+            市场目前处于 Beta，使用即视为同意
+            <span className="underline cursor-pointer ml-0.5">Beta 服务条款</span>
+            。
+          </p>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 
