@@ -222,13 +222,12 @@ const HANDPICKED = [
 // ─── Page component ───────────────────────────────────────────────────
 
 export function MarketPage() {
-  const [tab, setTab] = useState<'explore' | 'mine'>('explore');
   const [search, setSearch] = useState('');
   const [kind, setKind] = useState<ResourceKind | 'all'>('all');
   const [bannerOpen, setBannerOpen] = useState(true);
-  // Mock pre-installed set — what shows up in 我的资源 alongside the
-  // user-created custom items. A real-feeling spread across kinds so
-  // the tab has content to manage on first visit.
+  // Mock pre-installed set — backs the 管理 panel where users see
+  // everything they own (installed-from-market + 自定义). The 我的资源
+  // tab is gone; management happens via the top-right "管理" button.
   const [installed, setInstalled] = useState<Set<string>>(() => new Set([
     'm-1',   // pdf skill
     'm-2',   // server-filesystem mcp
@@ -287,13 +286,10 @@ export function MarketPage() {
     });
   };
 
-  // 探索 hides user-created custom items (they're private to the user
-  // and only belong in 我的资源). 我的资源 shows everything the user
-  // owns — installed-from-market entries + their own custom items.
+  // Public 市场 view: never shows user-created custom items
+  // (those live behind the 管理 panel).
   const filtered = useMemo(() => {
-    let list = tab === 'mine'
-      ? CATALOG.filter(it => it.custom || installed.has(it.id))
-      : CATALOG.filter(it => !it.custom);
+    let list = CATALOG.filter(it => !it.custom);
     if (kind !== 'all') list = list.filter(it => it.kind === kind);
     const q = search.trim().toLowerCase();
     if (q) list = list.filter(it =>
@@ -302,7 +298,7 @@ export function MarketPage() {
       it.author.toLowerCase().includes(q),
     );
     return list;
-  }, [tab, kind, search, installed]);
+  }, [kind, search]);
 
   const myResources = useMemo(
     () => CATALOG.filter(it => it.custom || installed.has(it.id)),
@@ -320,61 +316,28 @@ export function MarketPage() {
       {/* Header: title + tabs + primary CTA */}
       <div className="flex-shrink-0 px-8 pt-8 pb-3">
         <div className="max-w-[1200px] mx-auto">
-          <div className="flex items-start justify-between gap-4 mb-3">
+          <div className="flex items-center justify-between gap-4">
             <Typography variant="title" className="text-2xl">市场</Typography>
-            {tab === 'mine' ? (
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setNewCustomOpen(true)}
-                  className="gap-1.5 h-8"
-                >
-                  <Plus size={13} />
-                  新建资源
-                </Button>
-                <Button
-                  variant="default"
-                  size="sm"
-                  onClick={() => setManageOpen(true)}
-                  className="gap-1.5 h-8 bg-foreground text-background hover:bg-foreground/90"
-                >
-                  <Wrench size={12} />
-                  管理
-                </Button>
-              </div>
-            ) : (
+            <div className="flex items-center gap-2">
               <Button
-                variant="default"
+                variant="outline"
                 size="sm"
                 onClick={() => setSubmitOpen(true)}
-                className="gap-1.5 h-8 bg-foreground text-background hover:bg-foreground/90"
+                className="gap-1.5 h-8"
               >
                 <Plus size={13} />
                 提交资源
               </Button>
-            )}
-          </div>
-          <div className="flex items-center gap-1 border-b border-border/30">
-            {([
-              { id: 'explore', label: '探索' },
-              { id: 'mine',    label: '我的资源' },
-            ] as const).map(t => {
-              const active = tab === t.id;
-              return (
-                <button
-                  key={t.id}
-                  type="button"
-                  onClick={() => setTab(t.id)}
-                  className={`relative px-3 py-2 text-sm transition-colors ${
-                    active ? 'text-foreground' : 'text-muted-foreground/60 hover:text-foreground'
-                  }`}
-                >
-                  {t.label}
-                  {active && <span className="absolute left-2 right-2 -bottom-px h-[2px] rounded-full bg-foreground" />}
-                </button>
-              );
-            })}
+              <Button
+                variant="default"
+                size="sm"
+                onClick={() => setManageOpen(true)}
+                className="gap-1.5 h-8 bg-foreground text-background hover:bg-foreground/90"
+              >
+                <Wrench size={12} />
+                管理
+              </Button>
+            </div>
           </div>
         </div>
       </div>
@@ -394,11 +357,9 @@ export function MarketPage() {
                   {KIND_FILTERS.map(k => {
                     const active = kind === k.id;
                     const Icon = k.id === 'all' ? Sparkles : KIND_ICON[k.id as ResourceKind];
-                    const count = tab === 'mine'
-                      ? myResources.filter(it => k.id === 'all' || it.kind === k.id).length
-                      : (k.id === 'all'
-                          ? CATALOG.filter(it => !it.custom).length
-                          : CATALOG.filter(it => !it.custom && it.kind === k.id).length);
+                    const count = k.id === 'all'
+                      ? CATALOG.filter(it => !it.custom).length
+                      : CATALOG.filter(it => !it.custom && it.kind === k.id).length;
                     return (
                       <button
                         key={k.id}
@@ -529,8 +490,8 @@ export function MarketPage() {
             </div>
           )}
 
-          {/* Trending — only on Explore / no filter */}
-          {tab === 'explore' && kind === 'all' && !search.trim() && (
+          {/* Trending — hidden when filter / search narrows the view */}
+          {kind === 'all' && !search.trim() && (
             <section>
               <div className="flex items-center justify-between gap-3 mb-3">
                 <button
@@ -577,7 +538,7 @@ export function MarketPage() {
 
           {/* Handpicked carousel — real horizontal scroller with
               snap + working prev/next arrows */}
-          {tab === 'explore' && kind === 'all' && !search.trim() && (
+          {kind === 'all' && !search.trim() && (
             <section>
               <div className="flex items-center justify-between gap-3 mb-3">
                 <span className="text-sm font-medium text-foreground">为你精选</span>
@@ -625,23 +586,12 @@ export function MarketPage() {
             </section>
           )}
 
-          {/* 我的资源 — info note about the 资源库 merge */}
-          {tab === 'mine' && (
-            <div className="rounded-xl border border-dashed border-border/40 bg-muted/15 px-4 py-3 flex items-start gap-3">
-              <Sparkles size={14} strokeWidth={1.4} className="text-muted-foreground/55 mt-0.5 flex-shrink-0" />
-              <div className="text-xs text-muted-foreground/75 leading-relaxed">
-                这里统一管理你从市场安装的资源和自定义创建的私有资源。
-                <span className="text-muted-foreground/55">未来"资源库"会合并进这里，所有资源都在一个入口管理。</span>
-              </div>
-            </div>
-          )}
-
           {/* Detail list */}
           <section>
             <div className="flex items-center justify-between gap-3 mb-3">
               <div>
                 <div className="text-sm font-medium text-foreground">
-                  {tab === 'mine' ? '我的资源' : (kind === 'all' ? '全部资源' : KIND_LABEL[kind])}
+                  {kind === 'all' ? '全部资源' : KIND_LABEL[kind]}
                 </div>
                 <div className="text-[11px] text-muted-foreground/55 tabular-nums mt-0.5">
                   共 {filtered.length} 条
@@ -744,7 +694,7 @@ export function MarketPage() {
         onToggleInstall={toggleInstall}
       />
 
-      {/* 我的资源 → 管理 panel */}
+      {/* 管理 panel — manages installed + custom resources */}
       <MyResourcesManageDialog
         open={manageOpen}
         onOpenChange={setManageOpen}
@@ -752,6 +702,7 @@ export function MarketPage() {
         installed={installed}
         onOpenDetail={(it) => { setManageOpen(false); setDetailItem(it); }}
         onUninstall={(id) => toggleInstall(id)}
+        onCreateCustom={() => setNewCustomOpen(true)}
       />
     </div>
   );
@@ -833,7 +784,7 @@ function TrendingListDialog({
 // ─── 我的资源 → 管理 dialog ───────────────────────────────────────────
 
 function MyResourcesManageDialog({
-  open, onOpenChange, items, installed, onOpenDetail, onUninstall,
+  open, onOpenChange, items, installed, onOpenDetail, onUninstall, onCreateCustom,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -841,6 +792,7 @@ function MyResourcesManageDialog({
   installed: Set<string>;
   onOpenDetail: (item: MarketItem) => void;
   onUninstall: (id: string) => void;
+  onCreateCustom: () => void;
 }) {
   // Items default to enabled. We don't sync against `items` changes
   // beyond mount — toggling install in the underlying page won't
@@ -889,8 +841,9 @@ function MyResourcesManageDialog({
           </DialogDescription>
         </DialogHeader>
 
-        {/* Filter pills */}
-        <div className="px-6 pt-3 pb-2 flex items-center gap-1.5 border-b border-border/15">
+        {/* Filter pills + 新建 action */}
+        <div className="px-6 pt-3 pb-2 flex items-center justify-between gap-3 border-b border-border/15">
+          <div className="flex items-center gap-1.5">
           {([
             { id: 'all',       label: '全部',       count: items.length    },
             { id: 'installed', label: '从市场安装', count: installedCount  },
@@ -913,6 +866,16 @@ function MyResourcesManageDialog({
               </button>
             );
           })}
+          </div>
+          <Button
+            variant="outline"
+            size="xs"
+            onClick={onCreateCustom}
+            className="h-7 gap-1 text-xs"
+          >
+            <Plus size={11} />
+            新建
+          </Button>
         </div>
 
         <div className="max-h-[55vh] overflow-y-auto scrollbar-thin px-4 py-3">
@@ -1185,7 +1148,7 @@ function SubmitResourceDialog({
           </DialogTitle>
           <DialogDescription className="text-xs">
             {isCustom
-              ? '资源会保存在「我的资源」中，私有可见，可随时编辑 / 启停 / 卸载。'
+              ? '资源会保存到「管理」里，私有可见，可随时编辑 / 启停 / 卸载。'
               : '提交的资源会在 24 小时内由社区审核员审阅。审核通过后才会出现在公开目录中。'}
           </DialogDescription>
         </DialogHeader>
@@ -1291,7 +1254,7 @@ function SubmitResourceDialog({
             <Upload size={13} className="text-muted-foreground/55 flex-shrink-0 mt-0.5" />
             <p className="text-[11px] text-muted-foreground/70 leading-relaxed">
               {isCustom
-                ? <>仅你自己可见。如需将这条资源分享到公开市场，可以在「我的资源」里点「<span className="text-foreground/80">分享到市场</span>」走审核流程。</>
+                ? <>仅你自己可见。如需将这条资源分享到公开市场，可以在「管理」里点「<span className="text-foreground/80">分享到市场</span>」走审核流程。</>
                 : <>如果你的资源需要附带文件，请将仓库根目录的 <span className="font-mono text-foreground/80">cherry.json</span> + 资源主体一起打包推送到上述地址，审核员会自动拉取。</>}
             </p>
           </div>
@@ -1323,7 +1286,7 @@ function MarketOnboardingModal({ open, onOpenChange }: { open: boolean; onOpenCh
   const bullets: { Icon: React.ComponentType<{ size?: number; className?: string; strokeWidth?: number }>; text: string }[] = [
     { Icon: Zap,           text: '一键安装社区精心打磨的 Skill / MCP / Prompt 模板' },
     { Icon: Plug,          text: '直接对接 Notion / 语雀 / Google Calendar 等集成' },
-    { Icon: CheckCircle2,  text: '在「我的资源」中统一管理已安装项，启停 / 更新 / 卸载一目了然' },
+    { Icon: CheckCircle2,  text: '右上角「管理」统一管理已安装与自定义资源，启停 / 编辑 / 卸载一目了然' },
   ];
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
