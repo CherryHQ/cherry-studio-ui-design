@@ -331,7 +331,7 @@ export function MarketPage() {
     <div className="flex flex-col h-full bg-background">
       {/* Top bar — pill tabs (left) + action cluster (right) */}
       <div className="flex-shrink-0 px-6 pt-5">
-        <div className="max-w-[920px] mx-auto flex items-center justify-between gap-4">
+        <div className="max-w-[1120px] mx-auto flex items-center justify-between gap-4">
           <div className="flex items-center gap-1.5">
             {TOP_TABS.map(t => {
               const active = topTab === t.id;
@@ -383,16 +383,58 @@ export function MarketPage() {
         </div>
       </div>
 
-      {/* Scrollable content */}
+      {/* Scrollable content — left sub-kind nav + right main */}
       <div className="flex-1 overflow-y-auto scrollbar-thin">
-        <div className="max-w-[920px] mx-auto px-6 pt-10 pb-12">
+        <div className="max-w-[1120px] mx-auto px-6 pt-8 pb-12">
+          <div className="flex gap-8">
+
+            {/* Left rail — sub-kind nav scoped to current top tab */}
+            <aside className="hidden md:flex flex-shrink-0 w-[176px] flex-col">
+              <div className="sticky top-0 pt-2">
+                <div className="text-[10px] uppercase tracking-wide text-muted-foreground/45 px-2 pb-2">
+                  {topTab === 'plugin' ? '插件类型' : '技能类型'}
+                </div>
+                <div className="space-y-0.5">
+                  {SUB_KINDS[topTab].map(k => {
+                    const active = kind === k;
+                    const isAll = k === 'all';
+                    const Icon = isAll ? Sparkles : KIND_ICON[k];
+                    const label = isAll ? '全部' : KIND_LABEL[k];
+                    const count = isAll
+                      ? CATALOG.filter(it => !it.custom && KIND_GROUP[it.kind] === topTab).length
+                      : CATALOG.filter(it => !it.custom && it.kind === k).length;
+                    return (
+                      <button
+                        key={k}
+                        type="button"
+                        onClick={() => setKind(k)}
+                        className={`w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-sm transition-colors ${
+                          active
+                            ? 'bg-accent/50 text-foreground'
+                            : 'text-muted-foreground/75 hover:text-foreground hover:bg-muted/40'
+                        }`}
+                      >
+                        <Icon size={13} strokeWidth={1.6} className="flex-shrink-0" />
+                        <span className="flex-1 text-left truncate">{label}</span>
+                        <span className={`text-[10px] tabular-nums flex-shrink-0 ${active ? 'text-muted-foreground/70' : 'text-muted-foreground/45'}`}>
+                          {count}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            </aside>
+
+            {/* Right main */}
+            <div className="flex-1 min-w-0">
 
           {/* Centered hero title */}
           <h1 className="text-center text-2xl sm:text-3xl font-semibold text-foreground mb-6">
             让 Cherry 按你的方式工作
           </h1>
 
-          {/* Search bar + 2 inline dropdown filters */}
+          {/* Search bar + publisher dropdown (sub-kind moved to left rail) */}
           <div className="flex items-center gap-2 mb-5">
             <div className="flex-1">
               <SearchInput
@@ -403,11 +445,6 @@ export function MarketPage() {
                 wrapperClassName="flex items-center gap-2 px-3 h-10 rounded-md border border-border/40 bg-background hover:border-border/60 focus-within:border-foreground/70 transition-colors"
               />
             </div>
-            <KindFilterDropdown
-              topTab={topTab}
-              value={kind}
-              onChange={setKind}
-            />
             <PublisherFilterDropdown />
           </div>
 
@@ -505,8 +542,11 @@ export function MarketPage() {
               ))
             )
           )}
-        </div>
-      </div>
+
+            </div>{/* /right main */}
+          </div>{/* /flex split */}
+        </div>{/* /max-w container */}
+      </div>{/* /scroll */}
 
       {/* Dialogs */}
       <MarketOnboardingModal open={onboardOpen} onOpenChange={setOnboardOpen} />
@@ -579,54 +619,7 @@ function MarketRowGrid({
   );
 }
 
-// ─── Inline filter dropdowns (next to search) ───────────────────────
-
-function KindFilterDropdown({
-  topTab, value, onChange,
-}: {
-  topTab: TopTab;
-  value: ResourceKind | 'all';
-  onChange: (v: ResourceKind | 'all') => void;
-}) {
-  const [open, setOpen] = useState(false);
-  const options = SUB_KINDS[topTab];
-  const label = value === 'all' ? '类型' : KIND_LABEL[value];
-  return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <button
-          type="button"
-          className="inline-flex items-center gap-1.5 h-10 px-3 rounded-md border border-border/40 text-sm text-foreground/85 hover:border-border/60 hover:bg-muted/15 transition-colors"
-        >
-          <span>{label}</span>
-          <ChevronDown size={12} className="text-muted-foreground/55" />
-        </button>
-      </PopoverTrigger>
-      <PopoverContent align="end" className="w-[180px] p-1">
-        {options.map(opt => {
-          const isAll = opt === 'all';
-          const labelText = isAll ? '全部类型' : KIND_LABEL[opt];
-          const active = value === opt;
-          return (
-            <button
-              key={opt}
-              type="button"
-              onClick={() => { onChange(opt); setOpen(false); }}
-              className={`w-full text-left px-2.5 py-1.5 rounded text-sm transition-colors flex items-center justify-between ${
-                active
-                  ? 'bg-muted/60 text-foreground'
-                  : 'text-foreground/80 hover:bg-muted/40'
-              }`}
-            >
-              <span>{labelText}</span>
-              {active && <Check size={12} className="text-foreground/70" />}
-            </button>
-          );
-        })}
-      </PopoverContent>
-    </Popover>
-  );
-}
+// ─── Publisher filter dropdown (next to search) ─────────────────────
 
 function PublisherFilterDropdown() {
   const [open, setOpen] = useState(false);
