@@ -276,18 +276,60 @@ export function MarketPage() {
             </div>
           </div>
 
-          {/* Announcement banner */}
+          {/* Campaign / promo banner — bigger, more visual */}
           {bannerOpen && (
-            <div className="flex items-start gap-2 px-4 py-2.5 rounded-md bg-muted/30 border border-border/15">
-              <p className="text-xs text-muted-foreground/75 flex-1">
-                <span className="font-medium text-foreground/85">默认资源</span> 已迁移到「我的资源」，并将在 2026 年底前停止维护。详见
-                <span className="underline cursor-pointer ml-1">公告</span>。
-              </p>
+            <div className="relative rounded-2xl overflow-hidden bg-gradient-to-br from-[#1a1a1f] via-[#2a1f4a] to-[#3a1a3a] text-white shadow-sm">
+              {/* Decorative SVG art */}
+              <svg
+                aria-hidden="true"
+                className="absolute right-0 top-0 h-full w-[60%] opacity-90 pointer-events-none"
+                viewBox="0 0 480 180"
+                preserveAspectRatio="xMaxYMid slice"
+              >
+                <defs>
+                  <radialGradient id="promoGlow" cx="80%" cy="50%" r="60%">
+                    <stop offset="0%"   stopColor="rgba(255,179,71,0.55)" />
+                    <stop offset="40%"  stopColor="rgba(255,99,144,0.25)" />
+                    <stop offset="100%" stopColor="rgba(0,0,0,0)" />
+                  </radialGradient>
+                </defs>
+                <rect width="480" height="180" fill="url(#promoGlow)" />
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <circle key={i} cx={380 - i * 18} cy={90} r={70 - i * 8} fill="none" stroke="rgba(255,255,255,0.18)" strokeWidth="0.6" />
+                ))}
+              </svg>
+
+              <div className="relative flex items-center gap-5 px-6 py-5">
+                <div className="flex-1 min-w-0">
+                  <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-white/15 backdrop-blur text-[10px] uppercase tracking-wide font-medium mb-2">
+                    <Sparkles size={10} />
+                    限时活动
+                  </div>
+                  <h3 className="text-base font-semibold leading-tight">
+                    Cherry Skills 黑客松 · 首届社区创作大赛
+                  </h3>
+                  <p className="text-xs text-white/65 mt-1 leading-relaxed max-w-[640px]">
+                    上传你的 Skill / MCP / Agent 模板瓜分百万奖池，30 强可获 Cherry Pro 年度激活码。
+                    报名截止 <span className="text-white font-medium">2026-06-30</span>。
+                  </p>
+                </div>
+                <div className="hidden sm:flex flex-shrink-0 items-center gap-2">
+                  <Button
+                    variant="default"
+                    size="sm"
+                    className="h-8 px-3.5 gap-1.5 bg-white text-[#1a1a1f] hover:bg-white/90"
+                  >
+                    立即参与
+                    <ChevronRight size={12} />
+                  </Button>
+                </div>
+              </div>
+
               <button
                 type="button"
                 onClick={() => setBannerOpen(false)}
-                className="text-muted-foreground/50 hover:text-foreground transition-colors flex-shrink-0"
-                aria-label="关闭公告"
+                className="absolute top-2.5 right-2.5 w-6 h-6 inline-flex items-center justify-center rounded-md text-white/55 hover:text-white hover:bg-white/15 transition-colors"
+                aria-label="关闭活动横幅"
               >
                 <X size={12} />
               </button>
