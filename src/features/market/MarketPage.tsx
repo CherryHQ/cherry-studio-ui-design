@@ -291,12 +291,34 @@ export function MarketPage() {
     return list;
   }, [topTab, kind, search]);
 
-  // Featured cards in the section below the hero — trending first,
-  // then by installs desc. Cap at 14 so the page doesn't get long.
-  const featured = useMemo(() => [...filtered].sort((a, b) => {
-    if (a.trending !== b.trending) return a.trending ? -1 : 1;
-    return b.installs - a.installs;
-  }).slice(0, 14), [filtered]);
+  // Featured strip — top 6 trending in the current top tab. Below
+  // this, the remaining items in `filtered` get grouped by category.
+  const featured = useMemo(() => [...filtered]
+    .filter(it => it.trending)
+    .sort((a, b) => b.installs - a.installs)
+    .slice(0, 6),
+  [filtered]);
+
+  // Group everything else by category, biggest groups first. Skipped
+  // when there's an active search (search shows results flat instead
+  // of by category).
+  const categoryGroups = useMemo(() => {
+    if (search.trim()) return [];
+    const featuredIds = new Set(featured.map(f => f.id));
+    const rest = filtered.filter(it => !featuredIds.has(it.id));
+    const byCat = new Map<string, MarketItem[]>();
+    rest.forEach(it => {
+      const arr = byCat.get(it.category) ?? [];
+      arr.push(it);
+      byCat.set(it.category, arr);
+    });
+    return [...byCat.entries()]
+      .map(([category, items]) => ({
+        category,
+        items: items.sort((a, b) => b.installs - a.installs),
+      }))
+      .sort((a, b) => b.items.length - a.items.length || a.category.localeCompare(b.category));
+  }, [filtered, featured, search]);
 
   const myResources = useMemo(
     () => CATALOG.filter(it => it.custom || installed.has(it.id)),
@@ -431,47 +453,57 @@ export function MarketPage() {
           )}
 
           {/* Featured section */}
-          <h2 className="text-sm font-medium text-foreground mb-3">Featured</h2>
-          {featured.length === 0 ? (
-            <div className="border border-dashed border-border/30 rounded-xl py-12 flex flex-col items-center text-muted-foreground/55">
-              <Sparkles size={20} strokeWidth={1.3} className="mb-2 text-muted-foreground/30" />
-              <p className="text-xs">没有匹配的资源</p>
-            </div>
+          {featured.length > 0 && (
+            <section className="mb-8">
+              <h2 className="text-sm font-medium text-foreground mb-3">Featured</h2>
+              <MarketRowGrid
+                items={featured}
+                installed={installed}
+                onSelect={setDetailItem}
+                onToggleInstall={toggleInstall}
+              />
+            </section>
+          )}
+
+          {/* Categorized sections — one 2-col grid per category */}
+          {search.trim() ? (
+            // When searching, show flat results so users see matches
+            // across categories.
+            filtered.length === 0 ? (
+              <div className="border border-dashed border-border/30 rounded-xl py-12 flex flex-col items-center text-muted-foreground/55">
+                <Sparkles size={20} strokeWidth={1.3} className="mb-2 text-muted-foreground/30" />
+                <p className="text-xs">没有匹配的资源</p>
+              </div>
+            ) : (
+              <section>
+                <h2 className="text-sm font-medium text-foreground mb-3">搜索结果</h2>
+                <MarketRowGrid
+                  items={filtered}
+                  installed={installed}
+                  onSelect={setDetailItem}
+                  onToggleInstall={toggleInstall}
+                />
+              </section>
+            )
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-1">
-              {featured.map(it => {
-                const isInstalled = installed.has(it.id);
-                return (
-                  <div
-                    key={it.id}
-                    role="button"
-                    tabIndex={0}
-                    onClick={() => setDetailItem(it)}
-                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setDetailItem(it); } }}
-                    className="group flex items-center gap-3 py-2.5 border-b border-border/15 last:border-b-0 hover:bg-muted/15 -mx-2 px-2 rounded-md cursor-pointer transition-colors"
-                  >
-                    <Avatar item={it} size={36} />
-                    <div className="flex-1 min-w-0 pr-2">
-                      <div className="text-sm font-medium text-foreground truncate">{it.name}</div>
-                      <div className="text-[12px] text-muted-foreground/60 truncate mt-0.5">{it.tagline}</div>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={(e) => { e.stopPropagation(); toggleInstall(it.id); }}
-                      aria-label={isInstalled ? '已安装' : '安装'}
-                      title={isInstalled ? '已安装 — 点击卸载' : '安装'}
-                      className={`h-8 w-8 inline-flex items-center justify-center rounded-md transition-colors flex-shrink-0 ${
-                        isInstalled
-                          ? 'text-success hover:text-destructive hover:bg-destructive/10'
-                          : 'text-muted-foreground/55 hover:text-foreground hover:bg-muted/50'
-                      }`}
-                    >
-                      {isInstalled ? <Check size={14} /> : <Plus size={14} />}
-                    </button>
-                  </div>
-                );
-              })}
-            </div>
+            categoryGroups.length === 0 && featured.length === 0 ? (
+              <div className="border border-dashed border-border/30 rounded-xl py-12 flex flex-col items-center text-muted-foreground/55">
+                <Sparkles size={20} strokeWidth={1.3} className="mb-2 text-muted-foreground/30" />
+                <p className="text-xs">没有匹配的资源</p>
+              </div>
+            ) : (
+              categoryGroups.map(({ category, items }) => (
+                <section key={category} className="mb-8 last:mb-0">
+                  <h2 className="text-sm font-medium text-foreground mb-3">{category}</h2>
+                  <MarketRowGrid
+                    items={items}
+                    installed={installed}
+                    onSelect={setDetailItem}
+                    onToggleInstall={toggleInstall}
+                  />
+                </section>
+              ))
+            )
           )}
         </div>
       </div>
@@ -495,6 +527,54 @@ export function MarketPage() {
         onUninstall={(id) => toggleInstall(id)}
         onCreateCustom={() => setNewCustomOpen(true)}
       />
+    </div>
+  );
+}
+
+// ─── 2-column row grid (Featured + per-category sections) ───────────
+
+function MarketRowGrid({
+  items, installed, onSelect, onToggleInstall,
+}: {
+  items: MarketItem[];
+  installed: Set<string>;
+  onSelect: (item: MarketItem) => void;
+  onToggleInstall: (id: string) => void;
+}) {
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-1">
+      {items.map(it => {
+        const isInstalled = installed.has(it.id);
+        return (
+          <div
+            key={it.id}
+            role="button"
+            tabIndex={0}
+            onClick={() => onSelect(it)}
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSelect(it); } }}
+            className="group flex items-center gap-3 py-2.5 border-b border-border/15 last:border-b-0 hover:bg-muted/15 -mx-2 px-2 rounded-md cursor-pointer transition-colors"
+          >
+            <Avatar item={it} size={36} />
+            <div className="flex-1 min-w-0 pr-2">
+              <div className="text-sm font-medium text-foreground truncate">{it.name}</div>
+              <div className="text-[12px] text-muted-foreground/60 truncate mt-0.5">{it.tagline}</div>
+            </div>
+            <button
+              type="button"
+              onClick={(e) => { e.stopPropagation(); onToggleInstall(it.id); }}
+              aria-label={isInstalled ? '已安装' : '安装'}
+              title={isInstalled ? '已安装 — 点击卸载' : '安装'}
+              className={`h-8 w-8 inline-flex items-center justify-center rounded-md transition-colors flex-shrink-0 ${
+                isInstalled
+                  ? 'text-success hover:text-destructive hover:bg-destructive/10'
+                  : 'text-muted-foreground/55 hover:text-foreground hover:bg-muted/50'
+              }`}
+            >
+              {isInstalled ? <Check size={14} /> : <Plus size={14} />}
+            </button>
+          </div>
+        );
+      })}
     </div>
   );
 }
