@@ -175,12 +175,22 @@ const KIND_FILTERS: { id: ResourceKind | 'all'; label: string }[] = [
   { id: 'integration', label: '集成' },
 ];
 
-// Use-case tiles for the "Handpicked" carousel
+// Use-case tiles for the "Handpicked" carousel — enough entries that
+// the row actually has content to scroll across on lg screens (4 fit
+// in view at once, so 12 tiles = ~3 pages).
 const HANDPICKED = [
-  { id: 'uc-1', label: '开发工作流', bg: 'bg-[#1a1a1a] text-white',                  art: 'circles' },
-  { id: 'uc-2', label: '内容创作',   bg: 'bg-[#f5efe6] text-foreground',              art: 'waves' },
-  { id: 'uc-3', label: '研究分析',   bg: 'bg-[#efe7e0] text-foreground',              art: 'orbits' },
-  { id: 'uc-4', label: '学习辅导',   bg: 'bg-[#0f1019] text-white',                   art: 'lattice' },
+  { id: 'uc-1',  label: '开发工作流', bg: 'bg-[#1a1a1a] text-white',     art: 'circles' },
+  { id: 'uc-2',  label: '内容创作',   bg: 'bg-[#f5efe6] text-foreground', art: 'waves'   },
+  { id: 'uc-3',  label: '研究分析',   bg: 'bg-[#efe7e0] text-foreground', art: 'orbits'  },
+  { id: 'uc-4',  label: '学习辅导',   bg: 'bg-[#0f1019] text-white',     art: 'lattice' },
+  { id: 'uc-5',  label: '数据分析',   bg: 'bg-[#e9e3f5] text-foreground', art: 'circles' },
+  { id: 'uc-6',  label: '团队协作',   bg: 'bg-[#1c1a26] text-white',     art: 'waves'   },
+  { id: 'uc-7',  label: '自动化办公', bg: 'bg-[#e6f0ea] text-foreground', art: 'orbits'  },
+  { id: 'uc-8',  label: '文档管理',   bg: 'bg-[#211a1a] text-white',     art: 'lattice' },
+  { id: 'uc-9',  label: '翻译本地化', bg: 'bg-[#fff4e5] text-foreground', art: 'circles' },
+  { id: 'uc-10', label: '设计创意',   bg: 'bg-[#dfeaf2] text-foreground', art: 'waves'   },
+  { id: 'uc-11', label: '多模态创作', bg: 'bg-[#171a1f] text-white',     art: 'orbits'  },
+  { id: 'uc-12', label: '客户沟通',   bg: 'bg-[#f6e9e9] text-foreground', art: 'lattice' },
 ] as const;
 
 
@@ -200,15 +210,18 @@ export function MarketPage() {
   const [detailItem, setDetailItem] = useState<MarketItem | null>(null);
   // Submit-resource dialog — opens from the header CTA
   const [submitOpen, setSubmitOpen] = useState(false);
+  // "查看全部热门" 二级页面 — lists every trending item, not just the 6
+  // surfaced in the strip on the index.
+  const [trendingDialogOpen, setTrendingDialogOpen] = useState(false);
 
   // Defensive: Radix Dialog occasionally leaves body.style.pointerEvents
   // set to 'none' after closing, which kills every click on the page.
   // Whenever every dialog is closed, flush the inline style so the page
   // stays interactive.
   useEffect(() => {
-    const anyOpen = onboardOpen || detailItem !== null || submitOpen;
+    const anyOpen = onboardOpen || detailItem !== null || submitOpen || trendingDialogOpen;
     if (!anyOpen) document.body.style.pointerEvents = '';
-  }, [onboardOpen, detailItem, submitOpen]);
+  }, [onboardOpen, detailItem, submitOpen, trendingDialogOpen]);
 
   // Carousel scroller ref + arrow handlers
   const carouselRef = useRef<HTMLDivElement | null>(null);
@@ -239,10 +252,11 @@ export function MarketPage() {
     return list;
   }, [tab, kind, search, installed]);
 
-  const trending = useMemo(
-    () => CATALOG.filter(it => it.trending).sort((a, b) => b.installs - a.installs).slice(0, 6),
+  const allTrending = useMemo(
+    () => CATALOG.filter(it => it.trending).sort((a, b) => b.installs - a.installs),
     [],
   );
+  const trending = useMemo(() => allTrending.slice(0, 6), [allTrending]);
 
   return (
     <div className="flex flex-col h-full bg-background">
@@ -436,9 +450,23 @@ export function MarketPage() {
           {/* Trending — only on Explore / no filter */}
           {tab === 'explore' && kind === 'all' && !search.trim() && (
             <section>
-              <div className="flex items-center gap-1.5 mb-3">
-                <span className="text-sm font-medium text-foreground">热门资源</span>
-                <ChevronRight size={13} className="text-muted-foreground/50" />
+              <div className="flex items-center justify-between gap-3 mb-3">
+                <button
+                  type="button"
+                  onClick={() => setTrendingDialogOpen(true)}
+                  className="inline-flex items-center gap-1.5 group"
+                  aria-label="查看全部热门资源"
+                >
+                  <span className="text-sm font-medium text-foreground">热门资源</span>
+                  <ChevronRight size={13} className="text-muted-foreground/50 group-hover:text-foreground transition-colors" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setTrendingDialogOpen(true)}
+                  className="text-xs text-muted-foreground/60 hover:text-foreground transition-colors"
+                >
+                  查看全部 {allTrending.length}
+                </button>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2.5">
                 {trending.map(it => {
@@ -606,7 +634,90 @@ export function MarketPage() {
 
       {/* Submit-resource dialog — opens from header CTA */}
       <SubmitResourceDialog open={submitOpen} onOpenChange={setSubmitOpen} />
+
+      {/* "查看全部热门" 二级页面 — full trending list */}
+      <TrendingListDialog
+        open={trendingDialogOpen}
+        onOpenChange={setTrendingDialogOpen}
+        items={allTrending}
+        installed={installed}
+        onSelect={(it) => { setTrendingDialogOpen(false); setDetailItem(it); }}
+        onToggleInstall={toggleInstall}
+      />
     </div>
+  );
+}
+
+// ─── Trending list dialog (二级页面) ───────────────────────────────────
+
+function TrendingListDialog({
+  open, onOpenChange, items, installed, onSelect, onToggleInstall,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  items: MarketItem[];
+  installed: Set<string>;
+  onSelect: (item: MarketItem) => void;
+  onToggleInstall: (id: string) => void;
+}) {
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-[820px] p-0 overflow-hidden">
+        <DialogHeader className="px-6 pt-5 pb-3 border-b border-border/30">
+          <div className="flex items-center gap-2">
+            <DialogTitle className="text-base font-semibold">热门资源</DialogTitle>
+            <span className="text-xs text-muted-foreground/60 tabular-nums">{items.length}</span>
+          </div>
+          <DialogDescription className="text-xs text-muted-foreground/70 mt-1">
+            按真实热度排序（GitHub stars 快照）。点击进入详情，或直接安装。
+          </DialogDescription>
+        </DialogHeader>
+        <div className="max-h-[60vh] overflow-y-auto scrollbar-thin px-3 py-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+            {items.map(it => {
+              const KIcon = KIND_ICON[it.kind];
+              const isInstalled = installed.has(it.id);
+              const installsLabel = it.installs >= 10000
+                ? `${(it.installs / 1000).toFixed(1)}K`
+                : it.installs.toLocaleString();
+              return (
+                <div
+                  key={it.id}
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => onSelect(it)}
+                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSelect(it); } }}
+                  className="group flex items-center gap-3 px-3 py-2.5 rounded-xl border border-border/25 bg-card/50 hover:bg-card hover:border-border/55 hover:shadow-sm transition-all cursor-pointer"
+                >
+                  <Avatar item={it} size={36} />
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm text-foreground truncate">{it.name}</div>
+                    <div className="text-[11px] text-muted-foreground/60 flex items-center gap-1.5 mt-px">
+                      <KIcon size={10} />
+                      <span>{it.category}</span>
+                      <span className="text-muted-foreground/40">·</span>
+                      <span className="tabular-nums">{installsLabel}</span>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={(e) => { e.stopPropagation(); onToggleInstall(it.id); }}
+                    aria-label={isInstalled ? '已安装' : '安装'}
+                    className={`h-7 w-7 inline-flex items-center justify-center rounded-md transition-colors ${
+                      isInstalled
+                        ? 'text-success hover:text-destructive hover:bg-destructive/10'
+                        : 'text-muted-foreground/65 hover:text-foreground hover:bg-muted/50'
+                    }`}
+                  >
+                    {isInstalled ? <Check size={13} /> : <Download size={12} />}
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 
