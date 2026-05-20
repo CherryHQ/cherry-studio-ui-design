@@ -486,9 +486,6 @@ export function MarketPage() {
                           <span>{it.category}</span>
                         </div>
                       </div>
-                      <span className="px-1.5 py-px rounded border border-border/30 bg-muted/30 text-[10px] text-muted-foreground/70 flex-shrink-0">
-                        {it.language}
-                      </span>
                     </button>
                   );
                 })}
