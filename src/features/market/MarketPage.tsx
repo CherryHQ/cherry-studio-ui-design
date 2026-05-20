@@ -51,6 +51,8 @@ interface MarketItem {
   ageLabel: string;     // 上架时间（2y / 6mo）
   installs: number;
   trending?: boolean;
+  /** User-created resource — only appears in 我的资源, never in 探索. */
+  custom?: boolean;
 }
 
 const KIND_LABEL: Record<ResourceKind, string> = {
@@ -172,6 +174,16 @@ const CATALOG: MarketItem[] = [
   { id: 'm-26', kind: 'integration', name: 'GitHub',            tagline: '仓库 / Issue / PR / Release 自然语言自动化',     author: '@github',       avatar: '🐙',  avatarBg: 'bg-foreground/15',    language: 'EN',  region: '全球',     category: '开发',     ageLabel: '1y',  installs: 5240                   },
   { id: 'm-27', kind: 'integration', name: 'Confluence',        tagline: '企业 Wiki 读写、模板插入、跨空间检索',         author: '@atlassian',    avatar: '🧭',  avatarBg: 'bg-info/15',          language: '多语', region: '全球',     category: '办公',     ageLabel: '5mo', installs: 312                    },
   { id: 'm-28', kind: 'integration', name: 'Outlook',           tagline: '收发邮件 + 会议邀请 + 联系人同步',             author: '@microsoft',    avatar: '📧',  avatarBg: 'bg-info/20',          language: '多语', region: '全球',     category: '办公',     ageLabel: '6mo', installs: 580                    },
+
+  // ─── User-created custom resources — only show in 我的资源 ─────
+  // 这是用户自己在本地创建 / 自定义 / 私有的资源（来自即将合并进市场
+  // 的"资源库"）。它们不进探索目录、没有 installs 概念，只属于当前用户。
+  { id: 'c-1',  kind: 'prompt',    name: '我的代码评审 Prompt',  tagline: '给定 diff，按团队规范输出可执行的 review 评语与改进建议',     author: '@me',           avatar: '✏️',  avatarBg: 'bg-accent-amber/25',  language: '中文', region: '个人',     category: '编程',     ageLabel: '12d', installs: 1, custom: true       },
+  { id: 'c-2',  kind: 'assistant', name: '客户支持助手',         tagline: '挂载我们的产品知识库，按客服话术回复 + 提取工单要点',           author: '@me',           avatar: '🎧',  avatarBg: 'bg-accent-cyan/25',   language: '中文', region: '个人',     category: '办公',     ageLabel: '8d',  installs: 1, custom: true       },
+  { id: 'c-3',  kind: 'agent',     name: '周报生成 Agent',        tagline: '抓取我本周的 GitHub PR + Linear 任务 + 飞书文档，整理成结构化周报', author: '@me',           avatar: '🗓',  avatarBg: 'bg-accent-indigo/25', language: '中文', region: '个人',     category: '办公',     ageLabel: '5d',  installs: 1, custom: true       },
+  { id: 'c-4',  kind: 'kb',        name: '团队 Wiki',             tagline: '从 Notion / Confluence 同步的内部文档全文索引（私有，仅自己可见）', author: '@me',           avatar: '📚',  avatarBg: 'bg-success/15',       language: '中文', region: '个人',     category: '研究',     ageLabel: '1mo', installs: 1, custom: true       },
+  { id: 'c-5',  kind: 'mcp',       name: '内部 SQL Gateway',      tagline: '本地起的 MCP，连我们数据仓库的只读副本，做 BI 查询用',         author: '@me',           avatar: '🔌',  avatarBg: 'bg-info/15',          language: '中文', region: '个人',     category: '数据',     ageLabel: '20d', installs: 1, custom: true       },
+  { id: 'c-6',  kind: 'skill',     name: '合同条款检查',           tagline: '上传合同 PDF，自动比对模板 / 标出风险条款 / 输出修订建议',     author: '@me',           avatar: '⚖',   avatarBg: 'bg-accent-violet/25', language: '中文', region: '个人',     category: '法务',     ageLabel: '6d',  installs: 1, custom: true       },
 ];
 
 // ─── Filter pills ─────────────────────────────────────────────────────
@@ -214,7 +226,24 @@ export function MarketPage() {
   const [search, setSearch] = useState('');
   const [kind, setKind] = useState<ResourceKind | 'all'>('all');
   const [bannerOpen, setBannerOpen] = useState(true);
-  const [installed, setInstalled] = useState<Set<string>>(new Set(['m-2', 'm-8']));
+  // Mock pre-installed set — what shows up in 我的资源 alongside the
+  // user-created custom items. A real-feeling spread across kinds so
+  // the tab has content to manage on first visit.
+  const [installed, setInstalled] = useState<Set<string>>(() => new Set([
+    'm-1',   // pdf skill
+    'm-2',   // server-filesystem mcp
+    'm-5',   // server-github mcp
+    'm-8',   // React Docs kb
+    'm-11',  // context7 mcp
+    'm-19',  // Notion integration
+    'm-22',  // 飞书 integration
+    'm-26',  // GitHub integration
+    'm-29',  // gh CLI
+    'm-32',  // claude-code CLI
+    'm-7',   // 调研分析师 agent
+    'm-13',  // 代码导师 assistant
+    'm-3',   // Code Consultant prompt
+  ]));
   // First-visit onboarding modal — closed by default. Auto-opening on
   // every mount caused Radix to leak `body { pointer-events: none }`
   // after dismiss, which blocked every subsequent click on the page.
@@ -226,15 +255,21 @@ export function MarketPage() {
   // "查看全部热门" 二级页面 — lists every trending item, not just the 6
   // surfaced in the strip on the index.
   const [trendingDialogOpen, setTrendingDialogOpen] = useState(false);
+  // 我的资源 → 管理 panel
+  const [manageOpen, setManageOpen] = useState(false);
+  // 我的资源 → 新建自定义资源 panel — reuses the submit-resource dialog
+  // but for personal/private resources rather than public submissions.
+  const [newCustomOpen, setNewCustomOpen] = useState(false);
 
   // Defensive: Radix Dialog occasionally leaves body.style.pointerEvents
   // set to 'none' after closing, which kills every click on the page.
   // Whenever every dialog is closed, flush the inline style so the page
   // stays interactive.
   useEffect(() => {
-    const anyOpen = onboardOpen || detailItem !== null || submitOpen || trendingDialogOpen;
+    const anyOpen = onboardOpen || detailItem !== null || submitOpen
+      || trendingDialogOpen || manageOpen || newCustomOpen;
     if (!anyOpen) document.body.style.pointerEvents = '';
-  }, [onboardOpen, detailItem, submitOpen, trendingDialogOpen]);
+  }, [onboardOpen, detailItem, submitOpen, trendingDialogOpen, manageOpen, newCustomOpen]);
 
   // Carousel scroller ref + arrow handlers
   const carouselRef = useRef<HTMLDivElement | null>(null);
@@ -252,9 +287,13 @@ export function MarketPage() {
     });
   };
 
+  // 探索 hides user-created custom items (they're private to the user
+  // and only belong in 我的资源). 我的资源 shows everything the user
+  // owns — installed-from-market entries + their own custom items.
   const filtered = useMemo(() => {
-    let list = CATALOG;
-    if (tab === 'mine') list = list.filter(it => installed.has(it.id));
+    let list = tab === 'mine'
+      ? CATALOG.filter(it => it.custom || installed.has(it.id))
+      : CATALOG.filter(it => !it.custom);
     if (kind !== 'all') list = list.filter(it => it.kind === kind);
     const q = search.trim().toLowerCase();
     if (q) list = list.filter(it =>
@@ -264,6 +303,11 @@ export function MarketPage() {
     );
     return list;
   }, [tab, kind, search, installed]);
+
+  const myResources = useMemo(
+    () => CATALOG.filter(it => it.custom || installed.has(it.id)),
+    [installed],
+  );
 
   const allTrending = useMemo(
     () => CATALOG.filter(it => it.trending).sort((a, b) => b.installs - a.installs),
@@ -278,15 +322,38 @@ export function MarketPage() {
         <div className="max-w-[1200px] mx-auto">
           <div className="flex items-start justify-between gap-4 mb-3">
             <Typography variant="title" className="text-2xl">市场</Typography>
-            <Button
-              variant="default"
-              size="sm"
-              onClick={() => setSubmitOpen(true)}
-              className="gap-1.5 h-8 bg-foreground text-background hover:bg-foreground/90"
-            >
-              <Plus size={13} />
-              提交资源
-            </Button>
+            {tab === 'mine' ? (
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setNewCustomOpen(true)}
+                  className="gap-1.5 h-8"
+                >
+                  <Plus size={13} />
+                  新建资源
+                </Button>
+                <Button
+                  variant="default"
+                  size="sm"
+                  onClick={() => setManageOpen(true)}
+                  className="gap-1.5 h-8 bg-foreground text-background hover:bg-foreground/90"
+                >
+                  <Wrench size={12} />
+                  管理
+                </Button>
+              </div>
+            ) : (
+              <Button
+                variant="default"
+                size="sm"
+                onClick={() => setSubmitOpen(true)}
+                className="gap-1.5 h-8 bg-foreground text-background hover:bg-foreground/90"
+              >
+                <Plus size={13} />
+                提交资源
+              </Button>
+            )}
           </div>
           <div className="flex items-center gap-1 border-b border-border/30">
             {([
@@ -328,8 +395,10 @@ export function MarketPage() {
                     const active = kind === k.id;
                     const Icon = k.id === 'all' ? Sparkles : KIND_ICON[k.id as ResourceKind];
                     const count = tab === 'mine'
-                      ? CATALOG.filter(it => installed.has(it.id) && (k.id === 'all' || it.kind === k.id)).length
-                      : (k.id === 'all' ? CATALOG.length : CATALOG.filter(it => it.kind === k.id).length);
+                      ? myResources.filter(it => k.id === 'all' || it.kind === k.id).length
+                      : (k.id === 'all'
+                          ? CATALOG.filter(it => !it.custom).length
+                          : CATALOG.filter(it => !it.custom && it.kind === k.id).length);
                     return (
                       <button
                         key={k.id}
@@ -556,6 +625,17 @@ export function MarketPage() {
             </section>
           )}
 
+          {/* 我的资源 — info note about the 资源库 merge */}
+          {tab === 'mine' && (
+            <div className="rounded-xl border border-dashed border-border/40 bg-muted/15 px-4 py-3 flex items-start gap-3">
+              <Sparkles size={14} strokeWidth={1.4} className="text-muted-foreground/55 mt-0.5 flex-shrink-0" />
+              <div className="text-xs text-muted-foreground/75 leading-relaxed">
+                这里统一管理你从市场安装的资源和自定义创建的私有资源。
+                <span className="text-muted-foreground/55">未来"资源库"会合并进这里，所有资源都在一个入口管理。</span>
+              </div>
+            </div>
+          )}
+
           {/* Detail list */}
           <section>
             <div className="flex items-center justify-between gap-3 mb-3">
@@ -590,8 +670,15 @@ export function MarketPage() {
                     >
                       <Avatar item={it} size={36} />
                       <div className="flex-1 min-w-0 pr-1">
-                        <div className="text-sm text-foreground truncate">{it.name}</div>
-                        <div className="text-[11px] text-muted-foreground/55 truncate">{it.tagline}</div>
+                        <div className="flex items-center gap-1.5">
+                          <div className="text-sm text-foreground truncate">{it.name}</div>
+                          {it.custom && (
+                            <span className="flex-shrink-0 px-1.5 py-px rounded text-[10px] leading-none border border-border/35 bg-muted/40 text-muted-foreground/75">
+                              自定义
+                            </span>
+                          )}
+                        </div>
+                        <div className="text-[11px] text-muted-foreground/55 truncate mt-0.5">{it.tagline}</div>
                       </div>
                       <div className="hidden sm:flex items-center gap-1 text-[11px] flex-shrink-0">
                         <KIcon size={11} className="text-muted-foreground/55" />
@@ -642,8 +729,10 @@ export function MarketPage() {
         onToggleInstall={(id) => toggleInstall(id)}
       />
 
-      {/* Submit-resource dialog — opens from header CTA */}
+      {/* Submit-resource dialog — opens from header CTA on 探索 tab */}
       <SubmitResourceDialog open={submitOpen} onOpenChange={setSubmitOpen} />
+      {/* "新建资源" — same shape as Submit, semantically a private create */}
+      <SubmitResourceDialog open={newCustomOpen} onOpenChange={setNewCustomOpen} mode="custom" />
 
       {/* "查看全部热门" 二级页面 — full trending list */}
       <TrendingListDialog
@@ -653,6 +742,16 @@ export function MarketPage() {
         installed={installed}
         onSelect={(it) => { setTrendingDialogOpen(false); setDetailItem(it); }}
         onToggleInstall={toggleInstall}
+      />
+
+      {/* 我的资源 → 管理 panel */}
+      <MyResourcesManageDialog
+        open={manageOpen}
+        onOpenChange={setManageOpen}
+        items={myResources}
+        installed={installed}
+        onOpenDetail={(it) => { setManageOpen(false); setDetailItem(it); }}
+        onUninstall={(id) => toggleInstall(id)}
       />
     </div>
   );
@@ -726,6 +825,190 @@ function TrendingListDialog({
             })}
           </div>
         </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+// ─── 我的资源 → 管理 dialog ───────────────────────────────────────────
+
+function MyResourcesManageDialog({
+  open, onOpenChange, items, installed, onOpenDetail, onUninstall,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  items: MarketItem[];
+  installed: Set<string>;
+  onOpenDetail: (item: MarketItem) => void;
+  onUninstall: (id: string) => void;
+}) {
+  // Items default to enabled. We don't sync against `items` changes
+  // beyond mount — toggling install in the underlying page won't
+  // reset a user's deliberate enable/disable decisions here.
+  const [enabled, setEnabled] = useState<Set<string>>(() => new Set(items.map(it => it.id)));
+  const [filter, setFilter] = useState<'all' | 'installed' | 'custom'>('all');
+
+  // Newly appearing items in the list (e.g. a freshly installed one
+  // while the manage dialog is open) should default to enabled.
+  useEffect(() => {
+    setEnabled(prev => {
+      let changed = false;
+      const next = new Set(prev);
+      items.forEach(it => { if (!next.has(it.id)) { next.add(it.id); changed = true; } });
+      return changed ? next : prev;
+    });
+  }, [items]);
+
+  const toggleEnabled = (id: string) => {
+    setEnabled(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
+
+  const visible = useMemo(() => {
+    if (filter === 'installed') return items.filter(it => !it.custom);
+    if (filter === 'custom')    return items.filter(it => it.custom);
+    return items;
+  }, [items, filter]);
+
+  const installedCount = items.filter(it => !it.custom).length;
+  const customCount    = items.filter(it => it.custom).length;
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-[820px] p-0 overflow-hidden">
+        <DialogHeader className="px-6 pt-5 pb-3 border-b border-border/30">
+          <div className="flex items-center gap-2">
+            <DialogTitle className="text-base font-semibold">管理我的资源</DialogTitle>
+            <span className="text-xs text-muted-foreground/60 tabular-nums">{items.length}</span>
+          </div>
+          <DialogDescription className="text-xs text-muted-foreground/70 mt-1">
+            统一管理已安装与自定义创建的所有资源 — 启停、编辑、卸载，所有动作即时生效。
+          </DialogDescription>
+        </DialogHeader>
+
+        {/* Filter pills */}
+        <div className="px-6 pt-3 pb-2 flex items-center gap-1.5 border-b border-border/15">
+          {([
+            { id: 'all',       label: '全部',       count: items.length    },
+            { id: 'installed', label: '从市场安装', count: installedCount  },
+            { id: 'custom',    label: '自定义',     count: customCount     },
+          ] as const).map(f => {
+            const active = filter === f.id;
+            return (
+              <button
+                key={f.id}
+                type="button"
+                onClick={() => setFilter(f.id)}
+                className={`px-2.5 h-7 rounded-md text-xs inline-flex items-center gap-1.5 transition-colors ${
+                  active
+                    ? 'bg-foreground text-background'
+                    : 'text-muted-foreground/75 hover:text-foreground hover:bg-muted/40'
+                }`}
+              >
+                {f.label}
+                <span className={`tabular-nums text-[10px] ${active ? 'opacity-75' : 'opacity-55'}`}>{f.count}</span>
+              </button>
+            );
+          })}
+        </div>
+
+        <div className="max-h-[55vh] overflow-y-auto scrollbar-thin px-4 py-3">
+          {visible.length === 0 ? (
+            <div className="border border-dashed border-border/30 rounded-xl py-10 flex flex-col items-center text-muted-foreground/55">
+              <Sparkles size={20} strokeWidth={1.3} className="mb-2 text-muted-foreground/30" />
+              <p className="text-xs">这个分类下还没有资源</p>
+            </div>
+          ) : (
+            <div className="space-y-1.5">
+              {visible.map(it => {
+                const KIcon = KIND_ICON[it.kind];
+                const isOn = enabled.has(it.id);
+                return (
+                  <div
+                    key={it.id}
+                    className="flex items-center gap-3 px-3 py-2.5 rounded-lg border border-border/20 bg-card/40 hover:bg-card transition-colors"
+                  >
+                    <Avatar item={it} size={32} />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-sm text-foreground truncate">{it.name}</span>
+                        {it.custom ? (
+                          <span className="flex-shrink-0 px-1.5 py-px rounded text-[10px] leading-none border border-border/35 bg-muted/40 text-muted-foreground/75">
+                            自定义
+                          </span>
+                        ) : (
+                          <span className="flex-shrink-0 px-1.5 py-px rounded text-[10px] leading-none border border-border/30 bg-muted/30 text-muted-foreground/70">
+                            {KIND_LABEL[it.kind]}
+                          </span>
+                        )}
+                      </div>
+                      <div className="text-[11px] text-muted-foreground/55 flex items-center gap-1.5 mt-px">
+                        <KIcon size={10} />
+                        <span>{it.category}</span>
+                        <span className="text-muted-foreground/30">·</span>
+                        <span>{it.author}</span>
+                      </div>
+                    </div>
+
+                    {/* Enable/disable toggle (visual switch) */}
+                    <button
+                      type="button"
+                      onClick={() => toggleEnabled(it.id)}
+                      aria-label={isOn ? '已启用' : '已禁用'}
+                      className={`relative inline-flex h-5 w-9 flex-shrink-0 items-center rounded-full transition-colors ${
+                        isOn ? 'bg-foreground' : 'bg-muted-foreground/25'
+                      }`}
+                    >
+                      <span
+                        className={`inline-block h-4 w-4 transform rounded-full bg-background transition-transform ${
+                          isOn ? 'translate-x-[18px]' : 'translate-x-0.5'
+                        }`}
+                      />
+                    </button>
+
+                    {/* Detail */}
+                    <button
+                      type="button"
+                      onClick={() => onOpenDetail(it)}
+                      aria-label="查看详情"
+                      className="h-7 w-7 inline-flex items-center justify-center rounded-md text-muted-foreground/55 hover:text-foreground hover:bg-muted/40 transition-colors"
+                      title="详情"
+                    >
+                      <ExternalLink size={12} />
+                    </button>
+
+                    {/* Uninstall / delete — only meaningful for installed items;
+                        custom items would normally have a delete-custom action
+                        but we share the same affordance for now */}
+                    <button
+                      type="button"
+                      onClick={() => onUninstall(it.id)}
+                      aria-label={it.custom ? '删除自定义' : '卸载'}
+                      title={it.custom ? '删除' : '卸载'}
+                      className="h-7 w-7 inline-flex items-center justify-center rounded-md text-muted-foreground/55 hover:text-destructive hover:bg-destructive/10 transition-colors"
+                    >
+                      <X size={13} />
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        <DialogFooter className="px-5 py-3 border-t border-border/20 bg-muted/15">
+          <div className="flex items-center justify-between gap-2 w-full">
+            <span className="text-[11px] text-muted-foreground/55">
+              启用 / 禁用 即刻生效，无需重启会话。
+            </span>
+            <Button variant="default" size="sm" onClick={() => onOpenChange(false)} className="h-8 bg-foreground text-background hover:bg-foreground/90">
+              完成
+            </Button>
+          </div>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
@@ -867,7 +1150,15 @@ function MarketDetailDialog({
 
 // ─── Submit-resource dialog ────────────────────────────────────────────
 
-function SubmitResourceDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (v: boolean) => void }) {
+function SubmitResourceDialog({
+  open, onOpenChange, mode = 'submit',
+}: {
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  /** 'submit' = 提交到公共市场；'custom' = 创建私有资源到我的资源 */
+  mode?: 'submit' | 'custom';
+}) {
+  const isCustom = mode === 'custom';
   const [kind, setKind] = useState<ResourceKind>('skill');
   const [name, setName] = useState('');
   const [tagline, setTagline] = useState('');
@@ -889,9 +1180,13 @@ function SubmitResourceDialog({ open, onOpenChange }: { open: boolean; onOpenCha
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-[560px] p-0 overflow-hidden">
         <DialogHeader className="px-5 pt-5 pb-3 border-b border-border/20">
-          <DialogTitle className="text-base">提交资源到市场</DialogTitle>
+          <DialogTitle className="text-base">
+            {isCustom ? '新建自定义资源' : '提交资源到市场'}
+          </DialogTitle>
           <DialogDescription className="text-xs">
-            提交的资源会在 24 小时内由社区审核员审阅。审核通过后才会出现在公开目录中。
+            {isCustom
+              ? '资源会保存在「我的资源」中，私有可见，可随时编辑 / 启停 / 卸载。'
+              : '提交的资源会在 24 小时内由社区审核员审阅。审核通过后才会出现在公开目录中。'}
           </DialogDescription>
         </DialogHeader>
 
@@ -953,13 +1248,15 @@ function SubmitResourceDialog({ open, onOpenChange }: { open: boolean; onOpenCha
               />
             </div>
             <div>
-              <label className="text-xs text-muted-foreground/70 mb-1.5 block">源仓库 / 安装地址</label>
+              <label className="text-xs text-muted-foreground/70 mb-1.5 block">
+                {isCustom ? '源文件 / 入口（可选）' : '源仓库 / 安装地址'}
+              </label>
               <div className="relative">
                 <Link2 size={12} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground/45" />
                 <Input
                   value={sourceUrl}
                   onChange={e => setSourceUrl(e.target.value)}
-                  placeholder="https://github.com/your-org/your-skill"
+                  placeholder={isCustom ? '~/skills/my-skill 或 https://…（可留空）' : 'https://github.com/your-org/your-skill'}
                   className="h-9 pl-8 text-sm font-mono"
                 />
               </div>
@@ -993,8 +1290,9 @@ function SubmitResourceDialog({ open, onOpenChange }: { open: boolean; onOpenCha
           <div className="flex items-start gap-2 px-3 py-2.5 rounded-lg border border-dashed border-border/30 bg-muted/15">
             <Upload size={13} className="text-muted-foreground/55 flex-shrink-0 mt-0.5" />
             <p className="text-[11px] text-muted-foreground/70 leading-relaxed">
-              如果你的资源需要附带文件，请将仓库根目录的 <span className="font-mono text-foreground/80">cherry.json</span>
-              + 资源主体一起打包推送到上述地址，审核员会自动拉取。
+              {isCustom
+                ? <>仅你自己可见。如需将这条资源分享到公开市场，可以在「我的资源」里点「<span className="text-foreground/80">分享到市场</span>」走审核流程。</>
+                : <>如果你的资源需要附带文件，请将仓库根目录的 <span className="font-mono text-foreground/80">cherry.json</span> + 资源主体一起打包推送到上述地址，审核员会自动拉取。</>}
             </p>
           </div>
         </div>
@@ -1010,7 +1308,7 @@ function SubmitResourceDialog({ open, onOpenChange }: { open: boolean; onOpenCha
               className="h-8 gap-1.5 bg-foreground text-background hover:bg-foreground/90 disabled:opacity-40"
             >
               <Plus size={12} />
-              提交审核
+              {isCustom ? '创建' : '提交审核'}
             </Button>
           </div>
         </DialogFooter>
