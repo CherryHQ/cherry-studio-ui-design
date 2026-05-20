@@ -290,60 +290,80 @@ export function MarketPage() {
             </div>
           </div>
 
-          {/* Campaign / promo banner — bigger, more visual */}
+          {/* Campaign / promo banner — fresh light-pastel "integration hub" look */}
           {bannerOpen && (
-            <div className="relative rounded-2xl overflow-hidden bg-gradient-to-br from-[#1a1a1f] via-[#2a1f4a] to-[#3a1a3a] text-white shadow-sm">
-              {/* Decorative SVG art */}
-              <svg
-                aria-hidden="true"
-                className="absolute right-0 top-0 h-full w-[60%] opacity-90 pointer-events-none"
-                viewBox="0 0 480 180"
-                preserveAspectRatio="xMaxYMid slice"
-              >
-                <defs>
-                  <radialGradient id="promoGlow" cx="80%" cy="50%" r="60%">
-                    <stop offset="0%"   stopColor="rgba(255,179,71,0.55)" />
-                    <stop offset="40%"  stopColor="rgba(255,99,144,0.25)" />
-                    <stop offset="100%" stopColor="rgba(0,0,0,0)" />
-                  </radialGradient>
-                </defs>
-                <rect width="480" height="180" fill="url(#promoGlow)" />
-                {Array.from({ length: 6 }).map((_, i) => (
-                  <circle key={i} cx={380 - i * 18} cy={90} r={70 - i * 8} fill="none" stroke="rgba(255,255,255,0.18)" strokeWidth="0.6" />
+            <div className="relative rounded-2xl overflow-hidden border border-border/30 bg-gradient-to-br from-[#eef9f1] via-[#eef4ff] to-[#f6ecff] text-foreground shadow-sm">
+              {/* Soft blurred color blobs */}
+              <div aria-hidden="true" className="absolute -top-10 -right-10 w-[260px] h-[260px] rounded-full bg-[#a8d8b9]/35 blur-3xl pointer-events-none" />
+              <div aria-hidden="true" className="absolute -bottom-16 right-[140px] w-[200px] h-[200px] rounded-full bg-[#c7c0ff]/40 blur-3xl pointer-events-none" />
+
+              {/* Floating service tiles — illustration of an integration hub */}
+              <div aria-hidden="true" className="hidden md:block pointer-events-none">
+                {/* Center "Cherry" hub */}
+                <div className="absolute right-[150px] top-1/2 -translate-y-1/2 w-12 h-12 rounded-2xl bg-white shadow-md flex items-center justify-center text-base font-semibold text-foreground/85 border border-border/25">
+                  🍒
+                </div>
+                {/* Orbiting service tiles */}
+                {[
+                  { emoji: '📝', label: 'Notion',    cls: 'right-[230px] top-3'       },
+                  { emoji: '📘', label: '语雀',      cls: 'right-[58px] top-3'         },
+                  { emoji: '📅', label: 'Calendar',  cls: 'right-[18px] top-[70px]'    },
+                  { emoji: '🪶', label: '飞书',      cls: 'right-[230px] bottom-3'     },
+                  { emoji: '💬', label: 'Slack',     cls: 'right-[58px] bottom-3'      },
+                  { emoji: '🐙', label: 'GitHub',    cls: 'right-[280px] top-[70px]'   },
+                ].map(tile => (
+                  <div
+                    key={tile.label}
+                    className={`absolute ${tile.cls} w-9 h-9 rounded-xl bg-white shadow-sm border border-border/20 flex items-center justify-center text-base`}
+                    title={tile.label}
+                  >
+                    {tile.emoji}
+                  </div>
                 ))}
-              </svg>
+                {/* Connector dots */}
+                <svg className="absolute inset-0 w-full h-full" viewBox="0 0 600 180" preserveAspectRatio="none">
+                  <g stroke="rgba(124,108,189,0.35)" strokeWidth="0.8" strokeDasharray="2 4" fill="none">
+                    <path d="M 470 90 L 380 30" />
+                    <path d="M 470 90 L 550 30" />
+                    <path d="M 470 90 L 590 90" />
+                    <path d="M 470 90 L 380 160" />
+                    <path d="M 470 90 L 550 160" />
+                    <path d="M 470 90 L 320 90" />
+                  </g>
+                </svg>
+              </div>
 
               <div className="relative flex items-center gap-5 px-6 py-5">
-                <div className="flex-1 min-w-0">
-                  <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-white/15 backdrop-blur text-[10px] uppercase tracking-wide font-medium mb-2">
-                    <Sparkles size={10} />
+                <div className="flex-1 min-w-0 max-w-[58%]">
+                  <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-white/75 backdrop-blur text-[10px] uppercase tracking-wide font-medium mb-2 border border-border/20 text-foreground/75">
+                    <Sparkles size={10} className="text-cherry-primary" />
                     本月上新
                   </div>
-                  <h3 className="text-base font-semibold leading-tight">
+                  <h3 className="text-base font-semibold leading-tight text-foreground">
                     30+ 集成正式上架 · 一键对接你的工作流
                   </h3>
-                  <p className="text-xs text-white/65 mt-1 leading-relaxed max-w-[640px]">
+                  <p className="text-xs text-muted-foreground/75 mt-1 leading-relaxed">
                     Notion / 语雀 / Google Calendar / 飞书 / Slack / GitHub 等主流服务即开即用，
                     授权后可在对话中直接读写、查询、同步。
                   </p>
-                </div>
-                <div className="hidden sm:flex flex-shrink-0 items-center gap-2">
-                  <Button
-                    variant="default"
-                    size="sm"
-                    onClick={() => setKind('integration')}
-                    className="h-8 px-3.5 gap-1.5 bg-white text-[#1a1a1f] hover:bg-white/90"
-                  >
-                    查看集成
-                    <ChevronRight size={12} />
-                  </Button>
+                  <div className="mt-3">
+                    <Button
+                      variant="default"
+                      size="sm"
+                      onClick={() => setKind('integration')}
+                      className="h-8 px-3.5 gap-1.5 bg-foreground text-background hover:bg-foreground/90"
+                    >
+                      查看集成
+                      <ChevronRight size={12} />
+                    </Button>
+                  </div>
                 </div>
               </div>
 
               <button
                 type="button"
                 onClick={() => setBannerOpen(false)}
-                className="absolute top-2.5 right-2.5 w-6 h-6 inline-flex items-center justify-center rounded-md text-white/55 hover:text-white hover:bg-white/15 transition-colors"
+                className="absolute top-2.5 right-2.5 w-6 h-6 inline-flex items-center justify-center rounded-md text-muted-foreground/45 hover:text-foreground hover:bg-muted/40 transition-colors"
                 aria-label="关闭活动横幅"
               >
                 <X size={12} />
