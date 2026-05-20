@@ -3,12 +3,13 @@ import {
   Plus, Search, Filter, ArrowUpDown, ChevronRight, ChevronLeft,
   Check, Download, X, MoreHorizontal, Terminal, FileText,
   Wrench, Sparkles, MousePointerClick, BookOpen, Network, Plug,
-  CheckCircle2, Zap, Compass,
+  CheckCircle2, Zap, Compass, Star, ExternalLink, Shield,
+  Upload, Link2,
 } from 'lucide-react';
 import {
-  Button, SearchInput, Typography, Badge,
+  Button, Input, Textarea, SearchInput, Typography, Badge,
   Popover, PopoverTrigger, PopoverContent,
-  Dialog, DialogContent,
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
 } from '@cherry-studio/ui';
 
 // ===========================
@@ -159,6 +160,10 @@ export function MarketPage() {
   // app this would gate on a localStorage flag; for the design mock we
   // just open it every mount so the entrance is always visible.
   const [onboardOpen, setOnboardOpen] = useState(true);
+  // Detail dialog (二级页面) — opens when a row is clicked
+  const [detailItem, setDetailItem] = useState<MarketItem | null>(null);
+  // Submit-resource dialog — opens from the header CTA
+  const [submitOpen, setSubmitOpen] = useState(false);
 
   const toggleInstall = (id: string) => {
     setInstalled(prev => {
@@ -192,7 +197,12 @@ export function MarketPage() {
         <div className="max-w-[1200px] mx-auto">
           <div className="flex items-start justify-between gap-4 mb-3">
             <Typography variant="title" className="text-2xl">市场</Typography>
-            <Button variant="default" size="sm" className="gap-1.5 h-8 bg-foreground text-background hover:bg-foreground/90">
+            <Button
+              variant="default"
+              size="sm"
+              onClick={() => setSubmitOpen(true)}
+              className="gap-1.5 h-8 bg-foreground text-background hover:bg-foreground/90"
+            >
               <Plus size={13} />
               提交资源
             </Button>
@@ -466,7 +476,11 @@ export function MarketPage() {
                   return (
                     <div
                       key={it.id}
-                      className={`group flex items-center gap-3 px-4 py-2.5 hover:bg-muted/25 transition-colors ${
+                      onClick={() => setDetailItem(it)}
+                      role="button"
+                      tabIndex={0}
+                      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setDetailItem(it); } }}
+                      className={`group flex items-center gap-3 px-4 py-2.5 hover:bg-muted/25 transition-colors cursor-pointer ${
                         i > 0 ? 'border-t border-border/15' : ''
                       }`}
                     >
@@ -482,7 +496,7 @@ export function MarketPage() {
                       <div className="flex items-center gap-0.5 flex-shrink-0">
                         <button
                           type="button"
-                          onClick={() => toggleInstall(it.id)}
+                          onClick={(e) => { e.stopPropagation(); toggleInstall(it.id); }}
                           title={isInstalled ? '已安装 — 点击卸载' : '安装'}
                           aria-label={isInstalled ? '已安装' : '安装'}
                           className={`h-7 w-7 inline-flex items-center justify-center rounded-md transition-colors mr-1 ${
@@ -493,7 +507,11 @@ export function MarketPage() {
                         >
                           {isInstalled ? <Check size={13} /> : <Download size={12} />}
                         </button>
-                        <button className="h-7 w-7 inline-flex items-center justify-center rounded-md text-muted-foreground/50 hover:text-foreground hover:bg-muted/40 opacity-0 group-hover:opacity-100 transition-all" title="更多">
+                        <button
+                          onClick={(e) => e.stopPropagation()}
+                          className="h-7 w-7 inline-flex items-center justify-center rounded-md text-muted-foreground/50 hover:text-foreground hover:bg-muted/40 opacity-0 group-hover:opacity-100 transition-all"
+                          title="更多"
+                        >
                           <MoreHorizontal size={12} />
                         </button>
                       </div>
@@ -509,7 +527,304 @@ export function MarketPage() {
 
       {/* Onboarding modal — first-visit feature introduction */}
       <MarketOnboardingModal open={onboardOpen} onOpenChange={setOnboardOpen} />
+
+      {/* Detail dialog — opens when a row is clicked (二级页面) */}
+      <MarketDetailDialog
+        item={detailItem}
+        onOpenChange={(open) => { if (!open) setDetailItem(null); }}
+        installed={detailItem ? installed.has(detailItem.id) : false}
+        onToggleInstall={(id) => toggleInstall(id)}
+      />
+
+      {/* Submit-resource dialog — opens from header CTA */}
+      <SubmitResourceDialog open={submitOpen} onOpenChange={setSubmitOpen} />
     </div>
+  );
+}
+
+// ─── Market detail dialog (二级页面) ────────────────────────────────────
+
+function MarketDetailDialog({
+  item, onOpenChange, installed, onToggleInstall,
+}: {
+  item: MarketItem | null;
+  onOpenChange: (open: boolean) => void;
+  installed: boolean;
+  onToggleInstall: (id: string) => void;
+}) {
+  if (!item) return (
+    <Dialog open={false} onOpenChange={onOpenChange}>
+      <DialogContent />
+    </Dialog>
+  );
+  const KIcon = KIND_ICON[item.kind];
+  // Mocked extended fields — production data would carry these natively.
+  const featureBullets = [
+    '即开即用，无需手动配置',
+    '与其它已安装资源自动协同',
+    '由社区维护，每月发布新版',
+  ];
+  const permissions = item.kind === 'integration'
+    ? ['读取你的账号基础信息', '读取与写入指定空间内容', '通过 OAuth 授权，可随时撤销']
+    : item.kind === 'mcp'
+      ? ['启动本地 / 远端 MCP 进程', '读取上下文中的会话历史', '调用注册的 MCP 工具集']
+      : ['仅在被显式调用时执行', '不主动读取剪贴板或外部文件'];
+  const installsLabel = item.installs >= 10000 ? `${(item.installs / 1000).toFixed(1)}K` : item.installs.toLocaleString();
+  return (
+    <Dialog open={!!item} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-[680px] p-0 overflow-hidden">
+        {/* Hero — gradient bar with avatar + name */}
+        <div className={`relative h-[120px] ${item.avatarBg} overflow-hidden`}>
+          <div aria-hidden="true" className="absolute inset-0 bg-gradient-to-br from-white/60 via-transparent to-black/10" />
+          <div className="absolute inset-0 flex items-end gap-3 px-5 pb-4">
+            <div className="w-14 h-14 rounded-xl bg-white shadow-md border border-border/30 flex items-center justify-center text-2xl flex-shrink-0">
+              {item.avatar}
+            </div>
+            <div className="flex-1 min-w-0 pb-1">
+              <div className="flex items-center gap-2 mb-0.5">
+                <span className="text-base font-semibold text-foreground truncate">{item.name}</span>
+                <span className="text-[10px] uppercase px-1.5 py-px rounded border border-border/30 bg-white/70 text-muted-foreground/85">
+                  {KIND_LABEL[item.kind]}
+                </span>
+              </div>
+              <div className="text-xs text-muted-foreground/75 truncate">
+                {item.author} · 上架于 {item.ageLabel} 前
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Body */}
+        <div className="max-h-[60vh] overflow-y-auto scrollbar-thin">
+          <div className="px-5 py-4 space-y-5">
+            {/* Stats strip */}
+            <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-xs text-muted-foreground/75">
+              <span className="inline-flex items-center gap-1"><Download size={11} />{installsLabel} 次安装</span>
+              <span className="inline-flex items-center gap-1"><Star size={11} />社区评分 4.6</span>
+              <span className="inline-flex items-center gap-1"><KIcon size={11} />{item.category}</span>
+              {item.language && <span className="text-muted-foreground/55">· {item.language}</span>}
+              {item.region && <span className="text-muted-foreground/55">· {item.region}</span>}
+            </div>
+
+            <div>
+              <h4 className="text-xs text-foreground font-medium mb-1.5">描述</h4>
+              <p className="text-sm text-foreground/85 leading-relaxed">
+                {item.tagline}
+              </p>
+            </div>
+
+            <div>
+              <h4 className="text-xs text-foreground font-medium mb-2">功能亮点</h4>
+              <ul className="space-y-1.5">
+                {featureBullets.map((b, i) => (
+                  <li key={i} className="flex items-start gap-2 text-xs text-foreground/80">
+                    <CheckCircle2 size={12} className="text-success mt-0.5 flex-shrink-0" />
+                    <span>{b}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <div>
+              <h4 className="text-xs text-foreground font-medium mb-2 flex items-center gap-1.5">
+                <Shield size={11} className="text-muted-foreground/60" />
+                需要的权限
+              </h4>
+              <ul className="space-y-1.5">
+                {permissions.map((p, i) => (
+                  <li key={i} className="text-xs text-muted-foreground/80 pl-4 relative">
+                    <span className="absolute left-0 top-2 w-1 h-1 rounded-full bg-muted-foreground/40" />
+                    {p}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        {/* Footer */}
+        <DialogFooter className="px-5 py-3 border-t border-border/20 bg-muted/15">
+          <div className="flex items-center justify-between w-full gap-2">
+            <Button variant="ghost" size="xs" className="gap-1.5 text-muted-foreground/70">
+              <ExternalLink size={11} />
+              查看源仓库
+            </Button>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => onOpenChange(false)}
+                className="h-8"
+              >
+                关闭
+              </Button>
+              <Button
+                variant={installed ? 'outline' : 'default'}
+                size="sm"
+                onClick={() => onToggleInstall(item.id)}
+                className="h-8 gap-1.5"
+              >
+                {installed ? <><Check size={12} />已安装</> : <><Download size={12} />立即安装</>}
+              </Button>
+            </div>
+          </div>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+// ─── Submit-resource dialog ────────────────────────────────────────────
+
+function SubmitResourceDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (v: boolean) => void }) {
+  const [kind, setKind] = useState<ResourceKind>('skill');
+  const [name, setName] = useState('');
+  const [tagline, setTagline] = useState('');
+  const [description, setDescription] = useState('');
+  const [sourceUrl, setSourceUrl] = useState('');
+  const [tags, setTags] = useState<string[]>([]);
+  const [tagInput, setTagInput] = useState('');
+
+  const addTag = () => {
+    const t = tagInput.trim();
+    if (!t || tags.includes(t)) return;
+    setTags(prev => [...prev, t]);
+    setTagInput('');
+  };
+
+  const canSubmit = name.trim().length > 0 && tagline.trim().length > 0;
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-[560px] p-0 overflow-hidden">
+        <DialogHeader className="px-5 pt-5 pb-3 border-b border-border/20">
+          <DialogTitle className="text-base">提交资源到市场</DialogTitle>
+          <DialogDescription className="text-xs">
+            提交的资源会在 24 小时内由社区审核员审阅。审核通过后才会出现在公开目录中。
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="max-h-[60vh] overflow-y-auto scrollbar-thin px-5 py-4 space-y-4">
+          {/* Type selector */}
+          <div>
+            <label className="text-xs text-muted-foreground/70 mb-1.5 block">资源类型</label>
+            <div className="grid grid-cols-3 gap-1.5">
+              {(['skill','cli','assistant','mcp','prompt','kb','integration'] as ResourceKind[]).map(k => {
+                const Icon = KIND_ICON[k];
+                const active = kind === k;
+                return (
+                  <button
+                    key={k}
+                    type="button"
+                    onClick={() => setKind(k)}
+                    className={`flex items-center justify-center gap-1.5 h-9 rounded-md border text-xs transition-colors ${
+                      active
+                        ? 'border-foreground/80 bg-foreground text-background'
+                        : 'border-border/30 text-muted-foreground/75 hover:text-foreground hover:bg-muted/40'
+                    }`}
+                  >
+                    <Icon size={12} />
+                    {KIND_LABEL[k]}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Name + Tagline */}
+          <div className="grid grid-cols-1 gap-3">
+            <div>
+              <label className="text-xs text-muted-foreground/70 mb-1.5 block">名称</label>
+              <Input
+                value={name}
+                onChange={e => setName(e.target.value)}
+                placeholder="例如：网页摘要"
+                className="h-9 text-sm"
+              />
+            </div>
+            <div>
+              <label className="text-xs text-muted-foreground/70 mb-1.5 block">一句话简介</label>
+              <Input
+                value={tagline}
+                onChange={e => setTagline(e.target.value)}
+                placeholder="120 字以内，描述这条资源的核心能力"
+                className="h-9 text-sm"
+              />
+            </div>
+            <div>
+              <label className="text-xs text-muted-foreground/70 mb-1.5 block">详细描述</label>
+              <Textarea
+                value={description}
+                onChange={e => setDescription(e.target.value)}
+                placeholder="支持 Markdown：用法说明、示例输入输出、依赖等"
+                rows={5}
+                className="text-xs leading-relaxed resize-none"
+              />
+            </div>
+            <div>
+              <label className="text-xs text-muted-foreground/70 mb-1.5 block">源仓库 / 安装地址</label>
+              <div className="relative">
+                <Link2 size={12} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground/45" />
+                <Input
+                  value={sourceUrl}
+                  onChange={e => setSourceUrl(e.target.value)}
+                  placeholder="https://github.com/your-org/your-skill"
+                  className="h-9 pl-8 text-sm font-mono"
+                />
+              </div>
+            </div>
+            <div>
+              <label className="text-xs text-muted-foreground/70 mb-1.5 block">标签</label>
+              {tags.length > 0 && (
+                <div className="flex items-center gap-1.5 flex-wrap mb-1.5">
+                  {tags.map(t => (
+                    <Badge key={t} variant="outline" className="gap-1 px-1.5 py-[2px] rounded-md text-[11px] border-border/40 bg-muted/40 text-foreground/80">
+                      {t}
+                      <button onClick={() => setTags(prev => prev.filter(x => x !== t))} className="opacity-50 hover:opacity-100">×</button>
+                    </Badge>
+                  ))}
+                </div>
+              )}
+              <div className="flex items-center gap-1.5">
+                <Input
+                  value={tagInput}
+                  onChange={e => setTagInput(e.target.value)}
+                  onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addTag(); } }}
+                  placeholder="输入标签后回车"
+                  className="h-8 text-xs flex-1"
+                />
+                <Button variant="outline" size="xs" onClick={addTag} className="h-8">添加</Button>
+              </div>
+            </div>
+          </div>
+
+          {/* Upload hint */}
+          <div className="flex items-start gap-2 px-3 py-2.5 rounded-lg border border-dashed border-border/30 bg-muted/15">
+            <Upload size={13} className="text-muted-foreground/55 flex-shrink-0 mt-0.5" />
+            <p className="text-[11px] text-muted-foreground/70 leading-relaxed">
+              如果你的资源需要附带文件，请将仓库根目录的 <span className="font-mono text-foreground/80">cherry.json</span>
+              + 资源主体一起打包推送到上述地址，审核员会自动拉取。
+            </p>
+          </div>
+        </div>
+
+        <DialogFooter className="px-5 py-3 border-t border-border/20 bg-muted/15">
+          <div className="flex items-center justify-end gap-2 w-full">
+            <Button variant="ghost" size="sm" onClick={() => onOpenChange(false)} className="h-8">取消</Button>
+            <Button
+              variant="default"
+              size="sm"
+              disabled={!canSubmit}
+              onClick={() => { /* mock */ onOpenChange(false); }}
+              className="h-8 gap-1.5 bg-foreground text-background hover:bg-foreground/90 disabled:opacity-40"
+            >
+              <Plus size={12} />
+              提交审核
+            </Button>
+          </div>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
 
