@@ -469,8 +469,8 @@ export function MarketPage() {
                 <p className="text-xs">没有匹配的资源</p>
               </div>
             ) : (
-              <div className="rounded-xl border border-border/25 bg-card/50 overflow-hidden">
-                {filtered.map((it, i) => {
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
+                {filtered.map(it => {
                   const KIcon = KIND_ICON[it.kind];
                   const isInstalled = installed.has(it.id);
                   return (
@@ -480,16 +480,14 @@ export function MarketPage() {
                       role="button"
                       tabIndex={0}
                       onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setDetailItem(it); } }}
-                      className={`group flex items-center gap-3 px-4 py-2.5 hover:bg-muted/25 transition-colors cursor-pointer ${
-                        i > 0 ? 'border-t border-border/15' : ''
-                      }`}
+                      className="group flex items-center gap-3 px-3.5 py-2.5 rounded-xl border border-border/25 bg-card/50 hover:bg-card hover:border-border/55 hover:shadow-sm transition-all cursor-pointer"
                     >
                       <Avatar item={it} size={36} />
-                      <div className="flex-1 min-w-0 pr-2">
+                      <div className="flex-1 min-w-0 pr-1">
                         <div className="text-sm text-foreground truncate">{it.name}</div>
                         <div className="text-[11px] text-muted-foreground/55 truncate">{it.tagline}</div>
                       </div>
-                      <div className="hidden md:flex items-center gap-1.5 text-[11px] flex-shrink-0 w-[110px]">
+                      <div className="hidden sm:flex items-center gap-1 text-[11px] flex-shrink-0">
                         <KIcon size={11} className="text-muted-foreground/55" />
                         <span className="text-muted-foreground/75">{it.category}</span>
                       </div>
