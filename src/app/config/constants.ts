@@ -1,7 +1,7 @@
 import {
   MessageCircle, Bot, Palette, Languages, Compass,
   Library, BookOpen, FileText, Code2, Puzzle, NotebookPen, Layers,
-  Sparkles, MousePointerClick, Blocks,
+  Sparkles, MousePointerClick, Blocks, ShoppingBag,
   Zap, Cloud, MessageSquareText,
   Shield, ShieldCheck, ShieldAlert,
 } from 'lucide-react';
@@ -21,6 +21,7 @@ export const menuItems: MenuItem[] = [
   { id: 'painting', label: '创作', icon: Palette },
   { id: 'translate', label: '翻译', icon: Languages },
   { id: 'explore', label: '探索', icon: Compass },
+  { id: 'market', label: '市场', icon: ShoppingBag },
   { id: 'library', label: '资源', icon: Library },
   { id: 'knowledge', label: '知识库', icon: BookOpen },
   { id: 'file', label: '文件', icon: FileText },

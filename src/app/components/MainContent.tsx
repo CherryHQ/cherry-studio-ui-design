@@ -12,6 +12,7 @@ import { MiniAppsPage } from '@/features/miniapp/MiniAppsPage';
 import { MiniAppEmbedPage } from '@/features/miniapp/MiniAppEmbedPage';
 import { ExplorePage } from '@/features/explore/ExplorePage';
 import { LibraryPage } from '@/features/library/LibraryPage';
+import { MarketPage } from '@/features/market/MarketPage';
 import { AgentRunPage } from '@/features/agent/run/AgentRunPage';
 import { AssistantRunPage } from '@/app/components/assistant/AssistantRunPage';
 import { ImagePage } from '@/features/painting/ImagePage';
@@ -96,6 +97,7 @@ const TabContent = React.memo(function TabContent({ tab, isActive }: { tab: Tab;
         : menuItemId === 'code' ? <CodeToolPage />
         : menuItemId === 'knowledge' ? <KnowledgePage />
         : menuItemId === 'explore' ? <ExplorePage />
+        : menuItemId === 'market' ? <MarketPage />
         : menuItemId === 'library' ? <LibraryPage />
         : menuItemId === 'file' ? <FilePage />
         : menuItemId === 'miniapp' ? <MiniAppsPage />
