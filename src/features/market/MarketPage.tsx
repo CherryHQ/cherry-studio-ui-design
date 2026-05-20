@@ -322,23 +322,24 @@ export function MarketPage() {
                 <div className="flex-1 min-w-0">
                   <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-white/15 backdrop-blur text-[10px] uppercase tracking-wide font-medium mb-2">
                     <Sparkles size={10} />
-                    限时活动
+                    本月上新
                   </div>
                   <h3 className="text-base font-semibold leading-tight">
-                    Cherry Skills 黑客松 · 首届社区创作大赛
+                    30+ 集成正式上架 · 一键对接你的工作流
                   </h3>
                   <p className="text-xs text-white/65 mt-1 leading-relaxed max-w-[640px]">
-                    上传你的 Skill / MCP / Agent 模板瓜分百万奖池，30 强可获 Cherry Pro 年度激活码。
-                    报名截止 <span className="text-white font-medium">2026-06-30</span>。
+                    Notion / 语雀 / Google Calendar / 飞书 / Slack / GitHub 等主流服务即开即用，
+                    授权后可在对话中直接读写、查询、同步。
                   </p>
                 </div>
                 <div className="hidden sm:flex flex-shrink-0 items-center gap-2">
                   <Button
                     variant="default"
                     size="sm"
+                    onClick={() => setKind('integration')}
                     className="h-8 px-3.5 gap-1.5 bg-white text-[#1a1a1f] hover:bg-white/90"
                   >
-                    立即参与
+                    查看集成
                     <ChevronRight size={12} />
                   </Button>
                 </div>
