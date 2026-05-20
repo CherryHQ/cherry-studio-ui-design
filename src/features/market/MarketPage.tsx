@@ -4,7 +4,7 @@ import {
   Check, Download, X, MoreHorizontal, Terminal, FileText,
   Wrench, Sparkles, MousePointerClick, BookOpen, Network, Plug,
   CheckCircle2, Zap, Compass, Star, ExternalLink, Shield,
-  Upload, Link2,
+  Upload, Link2, Bot,
 } from 'lucide-react';
 import {
   Button, Input, Textarea, SearchInput, Typography, Badge,
@@ -29,7 +29,11 @@ import {
 
 // ─── Types ─────────────────────────────────────────────────────────────
 
-type ResourceKind = 'skill' | 'cli' | 'assistant' | 'mcp' | 'prompt' | 'kb' | 'integration';
+// Assistant 和 Agent 在 Cherry Studio 里是两个独立的产品概念：
+//   - Assistant: 对话型 persona — system prompt + 模型设置 +（可选）MCP/知识库
+//   - Agent:     多步自治 workflow — 在 tool-call 循环里调用工具产出结构化产物
+// 所以 Market 的 kind 列表里两者必须分开。
+type ResourceKind = 'skill' | 'cli' | 'assistant' | 'agent' | 'mcp' | 'prompt' | 'kb' | 'integration';
 
 interface MarketItem {
   id: string;
@@ -50,12 +54,12 @@ interface MarketItem {
 }
 
 const KIND_LABEL: Record<ResourceKind, string> = {
-  skill: 'Skill', cli: 'CLI', assistant: 'Assistant',
+  skill: 'Skill', cli: 'CLI', assistant: 'Assistant', agent: 'Agent',
   mcp: 'MCP', prompt: 'Prompt', kb: '知识库', integration: '集成',
 };
 
 const KIND_ICON: Record<ResourceKind, React.ComponentType<{ size?: number; className?: string; strokeWidth?: number }>> = {
-  skill: Sparkles, cli: Terminal, assistant: MousePointerClick,
+  skill: Sparkles, cli: Terminal, assistant: MousePointerClick, agent: Bot,
   mcp: Network, prompt: FileText, kb: BookOpen, integration: Plug,
 };
 
@@ -63,6 +67,7 @@ const KIND_COLOR: Record<ResourceKind, string> = {
   skill:       'bg-accent-violet/70',
   cli:         'bg-foreground/80',
   assistant:   'bg-accent-cyan/70',
+  agent:       'bg-accent-indigo/75',
   mcp:         'bg-info/70',
   prompt:      'bg-accent-amber/70',
   kb:          'bg-success/70',
@@ -99,9 +104,12 @@ const CATALOG: MarketItem[] = [
   { id: 'm-12', kind: 'prompt',    name: 'Email Companion',     tagline: 'Anthropic Prompt Library：个性化邮件回复，语气 / 长度 / 表态可控', author: '@anthropics',   avatar: '✉️',  avatarBg: 'bg-accent-amber/25',  language: 'EN',  region: '全球',     category: '写作',     ageLabel: '1y',  installs: 5400                   },
   { id: 'm-17', kind: 'prompt',    name: 'Excel Formula Expert', tagline: 'Anthropic Prompt Library：根据需求生成 Excel / Sheets 公式与解释', author: '@anthropics',   avatar: 'ƒ',   avatarBg: 'bg-success/20',       language: 'EN',  region: '全球',     category: '数据',     ageLabel: '1y',  installs: 4600                   },
 
-  // ─── Pre-configured Assistants (Cherry first-party, no OSS repo) ──
-  { id: 'm-7',  kind: 'assistant', name: '调研分析师',         tagline: '多步调研 Agent：搜索 → 抓取 → 整理 → 输出含引用的报告与对比表', author: '@cherry-team',  avatar: '🔬',  avatarBg: 'bg-accent-cyan/25',   language: '中文', region: '通用',     category: '研究',     ageLabel: '3mo', installs: 642                    },
-  { id: 'm-13', kind: 'assistant', name: '代码导师',           tagline: '逐步讲解算法 / 设计模式 / 代码片段，附带练习题与测试',     author: '@cherry-team',  avatar: '🎓',  avatarBg: 'bg-accent-emerald/25', language: '中文', region: '通用',     category: '编程',     ageLabel: '5mo', installs: 489                    },
+  // ─── Pre-configured Assistants (chat persona — system prompt
+  // + 模型 +（可选）MCP/知识库；不是多步 workflow) ───────────────
+  { id: 'm-13', kind: 'assistant', name: '代码导师',           tagline: '逐步讲解算法 / 设计模式 / 代码片段，附带练习题与测试',           author: '@cherry-team',  avatar: '🎓',  avatarBg: 'bg-accent-emerald/25', language: '中文', region: '通用',     category: '编程',     ageLabel: '5mo', installs: 489                    },
+
+  // ─── Agents — 多步自治 workflow（tool-loop 产出结构化产物）───
+  { id: 'm-7',  kind: 'agent',     name: '调研分析师',         tagline: '多步调研：搜索 → 抓取 → 整理 → 输出含引用的报告与对比表',     author: '@cherry-team',  avatar: '🔬',  avatarBg: 'bg-accent-cyan/25',   language: '中文', region: '通用',     category: '研究',     ageLabel: '3mo', installs: 712                    },
 
   // ─── Knowledge bases — backing project's real stars ────────────
   { id: 'm-8',  kind: 'kb',        name: 'React Docs',          tagline: '官方 React 文档全文索引（覆盖 react.dev / RFC / 19 preview）',  author: '@meta',         avatar: '⚛️', avatarBg: 'bg-info/20',          language: 'EN',  region: '全球',     category: '编程',     ageLabel: '8mo', installs: 245145, trending: true  },
@@ -144,9 +152,13 @@ const CATALOG: MarketItem[] = [
   { id: 'm-51', kind: 'skill',     name: 'mermaid',             tagline: '在对话中实时渲染 Mermaid 流程图 / 时序图 / Gantt，支持 SVG 导出', author: '@mermaid-js',   avatar: '🌊',  avatarBg: 'bg-accent-cyan/25',   language: 'EN',  region: '全球',     category: '设计',     ageLabel: '11mo', installs: 88166, trending: true },
   { id: 'm-52', kind: 'skill',     name: 'code-interpreter',    tagline: 'E2B 提供的 Python 沙箱：跑代码、出图、读 csv / xlsx / parquet',     author: '@e2b-dev',      avatar: '⚙',   avatarBg: 'bg-accent-emerald/25', language: 'EN',  region: '全球',     category: '编程',     ageLabel: '9mo', installs: 2322                   },
 
-  // ─── Community pre-configured Assistants (Cherry first-party) ───
+  // ─── Community pre-configured Assistants (chat persona) ─────────
   { id: 'm-53', kind: 'assistant', name: '写作教练',           tagline: '逐段给出语序 / 节奏 / 用词建议，并给出可直接采纳的改写版本',     author: '@cherry-team',  avatar: '✍️',  avatarBg: 'bg-accent-amber/25',  language: '中文', region: '通用',     category: '写作',     ageLabel: '4mo', installs: 521                    },
-  { id: 'm-54', kind: 'assistant', name: 'SQL 数据分析师',     tagline: '自然语言转 SQL，跑数 + 出表 + 解读，对接主流仓库与 BI',          author: '@cherry-team',  avatar: '🧮',  avatarBg: 'bg-accent-indigo/25', language: '中文', region: '通用',     category: '数据',     ageLabel: '5mo', installs: 612                    },
+
+  // ─── More Agents — 多步 workflow，读写文件 / 跑查询 / 出报告 ──
+  { id: 'm-54', kind: 'agent',     name: 'SQL 数据分析 Agent', tagline: '自然语言转 SQL，连库跑数 + 出表 + 解读，对接主流仓库与 BI',     author: '@cherry-team',  avatar: '🧮',  avatarBg: 'bg-accent-indigo/25', language: '中文', region: '通用',     category: '数据',     ageLabel: '5mo', installs: 838                    },
+  { id: 'm-56', kind: 'agent',     name: 'Bug 修复 Agent',      tagline: '读栈追踪 → 定位文件 → 读 / 改代码 → 跑测试，最后输出 diff',     author: '@cherry-team',  avatar: '🛠',   avatarBg: 'bg-destructive/15',   language: '中文', region: '通用',     category: '编程',     ageLabel: '2mo', installs: 423,  trending: true   },
+  { id: 'm-57', kind: 'agent',     name: '竞品调研 Agent',      tagline: '给一个产品名，自动抓取官网 / 定价 / 评测 / 社交反馈，输出对比表', author: '@cherry-team',  avatar: '🧭',  avatarBg: 'bg-accent-violet/25', language: '中文', region: '通用',     category: '研究',     ageLabel: '2mo', installs: 356                    },
 
   // ─── Integrations (commercial products, no public OSS repo —
   // numbers reflect modest in-app connection counts, not stars) ───
@@ -169,6 +181,7 @@ const KIND_FILTERS: { id: ResourceKind | 'all'; label: string }[] = [
   { id: 'skill',       label: 'Skill' },
   { id: 'cli',         label: 'CLI' },
   { id: 'assistant',   label: 'Assistant' },
+  { id: 'agent',       label: 'Agent' },
   { id: 'mcp',         label: 'MCP' },
   { id: 'prompt',      label: 'Prompt' },
   { id: 'kb',          label: '知识库' },
@@ -744,7 +757,9 @@ function MarketDetailDialog({
     ? ['读取你的账号基础信息', '读取与写入指定空间内容', '通过 OAuth 授权，可随时撤销']
     : item.kind === 'mcp'
       ? ['启动本地 / 远端 MCP 进程', '读取上下文中的会话历史', '调用注册的 MCP 工具集']
-      : ['仅在被显式调用时执行', '不主动读取剪贴板或外部文件'];
+      : item.kind === 'agent'
+        ? ['在 tool-call 循环中自主调用挂载的工具', '可读写工作区中的文件与运行命令', '每次敏感动作前会请求人工确认']
+        : ['仅在被显式调用时执行', '不主动读取剪贴板或外部文件'];
   const installsLabel = item.installs >= 10000 ? `${(item.installs / 1000).toFixed(1)}K` : item.installs.toLocaleString();
   return (
     <Dialog open={!!item} onOpenChange={onOpenChange}>
@@ -885,7 +900,7 @@ function SubmitResourceDialog({ open, onOpenChange }: { open: boolean; onOpenCha
           <div>
             <label className="text-xs text-muted-foreground/70 mb-1.5 block">资源类型</label>
             <div className="grid grid-cols-3 gap-1.5">
-              {(['skill','cli','assistant','mcp','prompt','kb','integration'] as ResourceKind[]).map(k => {
+              {(['skill','cli','assistant','agent','mcp','prompt','kb','integration'] as ResourceKind[]).map(k => {
                 const Icon = KIND_ICON[k];
                 const active = kind === k;
                 return (
