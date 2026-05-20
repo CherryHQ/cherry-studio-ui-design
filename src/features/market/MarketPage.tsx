@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import {
   Plus, Search, Filter, ArrowUpDown, ChevronRight, ChevronLeft,
-  Check, Download, X, MoreHorizontal, Link2, Terminal, FileText,
+  Check, Download, X, MoreHorizontal, Terminal, FileText,
   Wrench, Sparkles, MousePointerClick, BookOpen, Network, Plug,
   CheckCircle2, Zap, Compass,
 } from 'lucide-react';
@@ -144,11 +144,6 @@ const HANDPICKED = [
   { id: 'uc-4', label: '学习辅导',   bg: 'bg-[#0f1019] text-white',                   art: 'lattice' },
 ] as const;
 
-function formatCount(n: number) {
-  if (n >= 1000000) return `${(n / 1000000).toFixed(1)}M`;
-  if (n >= 1000) return `${(n / 1000).toFixed(1)}K`;
-  return n.toLocaleString();
-}
 
 // ─── Page component ───────────────────────────────────────────────────
 
@@ -460,22 +455,6 @@ export function MarketPage() {
                         <div className="text-sm text-foreground truncate">{it.name}</div>
                         <div className="text-[11px] text-muted-foreground/55 truncate">{it.tagline}</div>
                       </div>
-                      <div className="hidden lg:flex items-center gap-2 text-[11px] text-muted-foreground/65 flex-shrink-0">
-                        {it.language && (
-                          <span className="px-1.5 py-px rounded border border-border/25 bg-muted/30">{it.language}</span>
-                        )}
-                        {it.region && (
-                          <span className="text-muted-foreground/50">{it.region}</span>
-                        )}
-                      </div>
-                      <div className="hidden md:flex items-center gap-1.5 text-[11px] text-muted-foreground/65 flex-shrink-0 w-[88px] tabular-nums">
-                        <span className="text-muted-foreground/40">⓵</span>
-                        <span>{it.ageLabel}</span>
-                      </div>
-                      <div className="hidden md:flex items-center gap-1.5 text-[11px] text-muted-foreground/65 flex-shrink-0 w-[88px] tabular-nums">
-                        <Download size={10} className="text-muted-foreground/45" />
-                        <span>{formatCount(it.installs)}</span>
-                      </div>
                       <div className="hidden md:flex items-center gap-1.5 text-[11px] flex-shrink-0 w-[110px]">
                         <KIcon size={11} className="text-muted-foreground/55" />
                         <span className="text-muted-foreground/75">{it.category}</span>
@@ -493,9 +472,6 @@ export function MarketPage() {
                           }`}
                         >
                           {isInstalled ? <Check size={13} /> : <Download size={12} />}
-                        </button>
-                        <button className="h-7 w-7 inline-flex items-center justify-center rounded-md text-muted-foreground/50 hover:text-foreground hover:bg-muted/40 opacity-0 group-hover:opacity-100 transition-all" title="复制链接">
-                          <Link2 size={12} />
                         </button>
                         <button className="h-7 w-7 inline-flex items-center justify-center rounded-md text-muted-foreground/50 hover:text-foreground hover:bg-muted/40 opacity-0 group-hover:opacity-100 transition-all" title="更多">
                           <MoreHorizontal size={12} />
