@@ -1,144 +1,150 @@
 import React, { useMemo, useState } from 'react';
 import {
-  Download, TrendingUp, Sparkles, Clock, Check, ChevronDown,
-  ShoppingBag, Sparkle, Star,
+  Plus, Search, Filter, ArrowUpDown, ChevronRight, ChevronLeft,
+  Check, Download, X, MoreHorizontal, Link2, Terminal, FileText,
+  Wrench, Sparkles, MousePointerClick, BookOpen, Network,
 } from 'lucide-react';
 import {
   Button, SearchInput, Typography, Badge,
   Popover, PopoverTrigger, PopoverContent,
-  EmptyState,
 } from '@cherry-studio/ui';
 
 // ===========================
 // Market Place
 // ===========================
-// Browse + install community-contributed Skills / MCPs / Prompts /
-// Knowledge bases / Agents. Layout takes its cues from lobehub.com/skills
-// (the public Lobe skills marketplace):
-//   - Hero header with title + tagline + central SearchInput
-//   - Pill row of category tabs across the top
-//   - Right-aligned sort selector
-//   - 3-column responsive card grid; each card carries a large emoji
-//     avatar, title, author handle, 2-line description, tag chips,
-//     installs/star stats, and an "安装/已安装" CTA
+// Cherry Studio's public catalog of Skills / CLI / Assistant / MCP /
+// Prompt / 知识库. Layout takes cues from ElevenLabs' voice-library
+// (elevenlabs.io/app/agents/voice-library):
+//   - Big page title + "Explore / My Library" tabs
+//   - Long search bar + Filters / Sort icon buttons on the right
+//   - Pill row of filter selectors (some dropdown-able)
+//   - Dismissable announcement banner
+//   - "Trending" section — 3-column grid of thin horizontal cards
+//   - "Handpicked" carousel — 4 wide abstract-bg tiles
+//   - Long detail list — table-like rows with avatar / name / lang /
+//     usage / tag / action icons
 
-type CategoryId =
-  | 'all' | 'skill' | 'mcp' | 'prompt' | 'agent' | 'kb' | 'plugin';
+// ─── Types ─────────────────────────────────────────────────────────────
+
+type ResourceKind = 'skill' | 'cli' | 'assistant' | 'mcp' | 'prompt' | 'kb';
 
 interface MarketItem {
   id: string;
-  type: Exclude<CategoryId, 'all'>;
+  kind: ResourceKind;
   name: string;
+  tagline: string;
   author: string;
-  emoji: string;
-  description: string;
-  tags: string[];
-  installs: number;   // # of installs
-  stars: number;      // GitHub stars / community stars
-  featured?: boolean;
+  /** Single-letter / emoji avatar */
+  avatar: string;
+  /** Tailwind bg class for the avatar tile */
+  avatarBg: string;
+  language?: string;
+  region?: string;
+  category: string;     // 主类别（对话 / 写作 / 编程 / 研究 …）
+  ageLabel: string;     // 上架时间（2y / 6mo）
+  installs: number;
+  trending?: boolean;
 }
 
-const CATEGORIES: { id: CategoryId; label: string }[] = [
-  { id: 'all',    label: '全部' },
-  { id: 'skill',  label: 'Skill' },
-  { id: 'mcp',    label: 'MCP Server' },
-  { id: 'prompt', label: 'Prompt' },
-  { id: 'agent',  label: 'Agent' },
-  { id: 'kb',     label: '知识库' },
-  { id: 'plugin', label: 'Plugin' },
-];
-
-type SortKey = 'trending' | 'latest' | 'popular';
-
-const SORT_OPTIONS: { id: SortKey; label: string; icon: React.ComponentType<{ size?: number; className?: string }> }[] = [
-  { id: 'trending', label: '热门', icon: TrendingUp },
-  { id: 'latest',   label: '最新', icon: Clock },
-  { id: 'popular',  label: '安装最多', icon: Download },
-];
-
-const TAG_COLOR: Record<string, string> = {
-  生产力: 'bg-accent-emerald-muted text-accent-emerald border-accent-emerald/20',
-  编程:   'bg-accent-cyan-muted    text-accent-cyan    border-accent-cyan/20',
-  写作:   'bg-accent-amber-muted   text-accent-amber   border-accent-amber/20',
-  翻译:   'bg-accent-violet-muted  text-accent-violet  border-accent-violet/20',
-  设计:   'bg-accent-pink-muted    text-accent-pink    border-accent-pink/20',
-  数据:   'bg-accent-blue-muted    text-accent-blue    border-accent-blue/20',
-  研究:   'bg-accent-indigo-muted  text-accent-indigo  border-accent-indigo/20',
-  办公:   'bg-success/10           text-success        border-success/20',
-  开发:   'bg-accent-orange-muted  text-accent-orange  border-accent-orange/20',
-};
-function tagClass(t: string) { return TAG_COLOR[t] || 'bg-muted text-muted-foreground border-border/40'; }
-
-const TYPE_LABEL: Record<MarketItem['type'], string> = {
-  skill: 'Skill', mcp: 'MCP', prompt: 'Prompt', agent: 'Agent', kb: '知识库', plugin: 'Plugin',
+const KIND_LABEL: Record<ResourceKind, string> = {
+  skill: 'Skill', cli: 'CLI', assistant: 'Assistant',
+  mcp: 'MCP', prompt: 'Prompt', kb: '知识库',
 };
 
-const TYPE_COLOR: Record<MarketItem['type'], string> = {
-  skill:  'text-accent-violet',
-  mcp:    'text-info',
-  prompt: 'text-accent-amber',
-  agent:  'text-foreground/85',
-  kb:     'text-success',
-  plugin: 'text-accent-orange',
+const KIND_ICON: Record<ResourceKind, React.ComponentType<{ size?: number; className?: string; strokeWidth?: number }>> = {
+  skill: Sparkles, cli: Terminal, assistant: MousePointerClick,
+  mcp: Network, prompt: FileText, kb: BookOpen,
 };
+
+const KIND_COLOR: Record<ResourceKind, string> = {
+  skill:     'bg-accent-violet/70',
+  cli:       'bg-foreground/80',
+  assistant: 'bg-accent-cyan/70',
+  mcp:       'bg-info/70',
+  prompt:    'bg-accent-amber/70',
+  kb:        'bg-success/70',
+};
+
+// ─── Catalog ──────────────────────────────────────────────────────────
 
 const CATALOG: MarketItem[] = [
-  { id: 'm-1',  type: 'skill',  name: '网页摘要',        author: '@cherry-team',     emoji: '📄', description: '自动抓取网页主要内容并生成结构化摘要，附带原文引用。', tags: ['生产力', '研究'], installs: 18432, stars: 412, featured: true },
-  { id: 'm-2',  type: 'mcp',    name: 'Filesystem MCP',  author: '@modelcontext',    emoji: '📁', description: '安全地读取与写入本地文件系统，支持 glob 搜索与跨目录批处理。', tags: ['开发'], installs: 32018, stars: 980, featured: true },
-  { id: 'm-3',  type: 'prompt', name: 'Code Review Pro', author: '@octocat',         emoji: '🔍', description: '结构化代码审查模板，输出潜在 bug / 性能 / 安全 / 可读性四个维度的建议。', tags: ['编程', '开发'], installs: 9301, stars: 274 },
-  { id: 'm-4',  type: 'skill',  name: '配色方案生成器',  author: '@design-lab',      emoji: '🎨', description: '根据品牌关键词生成 5 套配色方案，含主色 / 辅色 / 强调色与对比度评分。', tags: ['设计', '创意'], installs: 6420, stars: 188, featured: true },
-  { id: 'm-5',  type: 'mcp',    name: 'GitHub MCP',      author: '@github-ext',      emoji: '🐙', description: '通过自然语言管理仓库：列 PR、创建 Issue、查看 commit、合并审查。', tags: ['开发'], installs: 27015, stars: 845 },
-  { id: 'm-6',  type: 'prompt', name: '会议纪要',        author: '@productivity',    emoji: '📝', description: '基于对话记录提炼议题 / 决议 / 行动项，自动指派负责人与 deadline。', tags: ['办公', '生产力'], installs: 14502, stars: 360 },
-  { id: 'm-7',  type: 'agent',  name: '调研分析师',      author: '@research-co',     emoji: '🔬', description: '多步调研 Agent：搜索 → 抓取 → 整理 → 输出图文报告与对比表。', tags: ['研究'], installs: 5210, stars: 156, featured: true },
-  { id: 'm-8',  type: 'kb',     name: 'React 文档库',    author: '@meta',            emoji: '⚛️', description: '官方 React 文档全文索引，覆盖 18+ 版本与最新 RFC。', tags: ['编程'], installs: 8703, stars: 220 },
-  { id: 'm-9',  type: 'plugin', name: 'Mermaid 渲染',    author: '@diagrams',        emoji: '📈', description: '在聊天中实时渲染 Mermaid 流程图 / 时序图 / 类图，可一键导出 SVG。', tags: ['数据', '设计'], installs: 11240, stars: 318 },
-  { id: 'm-10', type: 'skill',  name: 'Markdown 转 PPT', author: '@slides-io',       emoji: '🪄', description: '把 Markdown 大纲一键转成幻灯片，支持 16:9 / 9:16 与品牌主题。', tags: ['办公', '设计'], installs: 13580, stars: 287 },
-  { id: 'm-11', type: 'mcp',    name: 'Notion MCP',      author: '@notion-labs',     emoji: '📒', description: '页面读写、数据库查询、批量更新。所需 token 在 Notion 集成中心配置。', tags: ['办公'], installs: 19402, stars: 522 },
-  { id: 'm-12', type: 'prompt', name: '邮件润色',        author: '@writers-club',    emoji: '✉️', description: '将草稿邮件改写成更得体、更简洁、或更友善的版本，可选语气。', tags: ['写作', '办公'], installs: 7681, stars: 198 },
-  { id: 'm-13', type: 'agent',  name: '前端骨架生成',    author: '@uiverse',         emoji: '🧱', description: '根据需求自动生成 Next.js + Tailwind 项目脚手架与首屏页面。', tags: ['编程', '设计'], installs: 4128, stars: 142 },
-  { id: 'm-14', type: 'plugin', name: 'LaTeX 渲染',      author: '@mathlab',         emoji: '𝑓',  description: '聊天中正确渲染数学公式与化学方程式，支持 KaTeX 全部宏。', tags: ['研究', '编程'], installs: 6024, stars: 161 },
-  { id: 'm-15', type: 'kb',     name: '产品分析手册',    author: '@growth-os',       emoji: '📊', description: '增长黑客经典案例 + 北极星指标拆解，含每月更新的实战素材。', tags: ['数据', '办公'], installs: 3209, stars: 88 },
-  { id: 'm-16', type: 'skill',  name: '语言翻译 Pro',    author: '@polyglot',        emoji: '🌍', description: '上下文感知翻译，自动保留专有名词、注释与代码块格式。', tags: ['翻译', '写作'], installs: 22148, stars: 615 },
-  { id: 'm-17', type: 'agent',  name: 'SQL 报表助手',    author: '@dataops',         emoji: '🧮', description: '自然语言转 SQL，自动跑数 + 生成图表与解读，对接主流数仓。', tags: ['数据', '编程'], installs: 5832, stars: 165 },
-  { id: 'm-18', type: 'mcp',    name: 'Browser MCP',     author: '@modelcontext',    emoji: '🌐', description: '受控浏览器自动化：打开网页、截图、提取内容、表单提交、批量爬取。', tags: ['开发', '研究'], installs: 16208, stars: 477 },
+  { id: 'm-1',  kind: 'skill',     name: '网页摘要',         tagline: '抓取网页主要内容并生成结构化摘要',          author: '@cherry-team',  avatar: '页',  avatarBg: 'bg-accent-pink/30',   language: '中文', region: '通用',     category: '内容创作', ageLabel: '6mo', installs: 18432, trending: true  },
+  { id: 'm-2',  kind: 'mcp',       name: 'Filesystem MCP',    tagline: '安全地读取与写入本地文件系统，含 glob 搜索',  author: '@modelcontext', avatar: '📁',  avatarBg: 'bg-accent-blue/25',   language: 'EN',  region: '通用',     category: '开发',     ageLabel: '8mo', installs: 32018, trending: true  },
+  { id: 'm-3',  kind: 'prompt',    name: 'Code Review Pro',   tagline: '结构化代码审查模板，输出四个维度的建议',       author: '@octocat',      avatar: '🔍',  avatarBg: 'bg-accent-violet/25', language: 'EN',  region: '通用',     category: '编程',     ageLabel: '1y',  installs: 9301,                 },
+  { id: 'm-4',  kind: 'skill',     name: '配色方案生成器',     tagline: '根据品牌关键词生成 5 套配色 + 对比度评分',    author: '@design-lab',   avatar: '🎨',  avatarBg: 'bg-accent-pink/25',   language: '中文', region: '通用',     category: '设计',     ageLabel: '4mo', installs: 6420,  trending: true  },
+  { id: 'm-5',  kind: 'mcp',       name: 'GitHub MCP',        tagline: '自然语言管理仓库、PR、Issue、Release',         author: '@github-ext',   avatar: '🐙',  avatarBg: 'bg-foreground/15',     language: 'EN',  region: '通用',     category: '开发',     ageLabel: '1y',  installs: 27015                 },
+  { id: 'm-6',  kind: 'prompt',    name: '会议纪要',           tagline: '提炼议题 / 决议 / 行动项，自动指派负责人',     author: '@productivity', avatar: '📝',  avatarBg: 'bg-accent-amber/30',  language: '中文', region: '通用',     category: '办公',     ageLabel: '5mo', installs: 14502, trending: true  },
+  { id: 'm-7',  kind: 'assistant', name: '调研分析师',         tagline: '多步调研：搜索 → 抓取 → 整理 → 报告与对比表',  author: '@research-co',  avatar: '🔬',  avatarBg: 'bg-accent-cyan/25',   language: '中文', region: '通用',     category: '研究',     ageLabel: '3mo', installs: 5210,  trending: true  },
+  { id: 'm-8',  kind: 'kb',        name: 'React 文档库',       tagline: '官方 React 文档全文索引，覆盖 18+ 与最新 RFC', author: '@meta',         avatar: '⚛️', avatarBg: 'bg-info/20',          language: 'EN',  region: '通用',     category: '编程',     ageLabel: '11mo', installs: 8703                  },
+  { id: 'm-9',  kind: 'cli',       name: 'cherry-cli',         tagline: '在终端中直接调用助手、跑 prompt、管理 KB',     author: '@cherry-team',  avatar: '⌘',   avatarBg: 'bg-foreground/15',    language: 'EN',  region: '通用',     category: '开发',     ageLabel: '7mo', installs: 11240, trending: true  },
+  { id: 'm-10', kind: 'skill',     name: 'Markdown 转 PPT',    tagline: '一键把 Markdown 大纲转成 16:9 / 9:16 幻灯片',  author: '@slides-io',    avatar: '🪄',  avatarBg: 'bg-accent-orange/25', language: '中文', region: '通用',     category: '办公',     ageLabel: '6mo', installs: 13580,                },
+  { id: 'm-11', kind: 'mcp',       name: 'Notion MCP',         tagline: '页面读写、数据库查询、批量更新',               author: '@notion-labs',  avatar: '📒',  avatarBg: 'bg-muted',            language: 'EN',  region: '通用',     category: '办公',     ageLabel: '1y',  installs: 19402, trending: true  },
+  { id: 'm-12', kind: 'prompt',    name: '邮件润色',           tagline: '把草稿邮件改写成更得体 / 简洁 / 友善的版本',   author: '@writers-club', avatar: '✉️',  avatarBg: 'bg-accent-amber/25',  language: '中文', region: '通用',     category: '写作',     ageLabel: '3mo', installs: 7681,                 },
+  { id: 'm-13', kind: 'assistant', name: '前端骨架生成',       tagline: '自动生成 Next.js + Tailwind 项目与首屏页面',  author: '@uiverse',      avatar: '🧱',  avatarBg: 'bg-accent-emerald/25', language: '中文', region: '通用',     category: '开发',     ageLabel: '4mo', installs: 4128,                 },
+  { id: 'm-14', kind: 'cli',       name: 'mcp-runner',         tagline: '本地一行命令启动任意 MCP server，含进程托管',  author: '@modelcontext', avatar: '⚡',  avatarBg: 'bg-accent-yellow/25', language: 'EN',  region: '通用',     category: '开发',     ageLabel: '5mo', installs: 6024,                 },
+  { id: 'm-15', kind: 'kb',        name: '产品分析手册',       tagline: '增长黑客经典案例 + 北极星指标拆解',           author: '@growth-os',    avatar: '📊',  avatarBg: 'bg-success/20',       language: '中文', region: '通用',     category: '数据',     ageLabel: '8mo', installs: 3209                  },
+  { id: 'm-16', kind: 'skill',     name: '语言翻译 Pro',       tagline: '上下文感知翻译，保留专有名词 / 注释 / 代码',  author: '@polyglot',     avatar: '🌍',  avatarBg: 'bg-accent-blue/20',   language: '多语', region: '通用',     category: '翻译',     ageLabel: '1y',  installs: 22148, trending: true  },
+  { id: 'm-17', kind: 'assistant', name: 'SQL 报表助手',       tagline: '自然语言转 SQL，跑数 + 图表 + 解读',           author: '@dataops',      avatar: '🧮',  avatarBg: 'bg-accent-indigo/25', language: '中文', region: '通用',     category: '数据',     ageLabel: '4mo', installs: 5832,                 },
+  { id: 'm-18', kind: 'mcp',       name: 'Browser MCP',        tagline: '受控浏览器：截图 / 提取 / 表单 / 批量爬取',    author: '@modelcontext', avatar: '🌐',  avatarBg: 'bg-info/25',          language: 'EN',  region: '通用',     category: '开发',     ageLabel: '6mo', installs: 16208,                },
 ];
 
+// ─── Filter pills ─────────────────────────────────────────────────────
+
+type FilterValue = 'all' | string;
+const KIND_FILTERS: { id: ResourceKind | 'all'; label: string }[] = [
+  { id: 'all',       label: '全部' },
+  { id: 'skill',     label: 'Skill' },
+  { id: 'cli',       label: 'CLI' },
+  { id: 'assistant', label: 'Assistant' },
+  { id: 'mcp',       label: 'MCP' },
+  { id: 'prompt',    label: 'Prompt' },
+  { id: 'kb',        label: '知识库' },
+];
+
+const LANGS: { id: FilterValue; label: string }[] = [
+  { id: 'all',  label: '全部语言' },
+  { id: '中文', label: '中文' },
+  { id: 'EN',   label: 'English' },
+  { id: '多语', label: '多语' },
+];
+
+const CATEGORIES: { id: FilterValue; label: string }[] = [
+  { id: 'all',     label: '全部分类' },
+  { id: '开发',    label: '开发' },
+  { id: '编程',    label: '编程' },
+  { id: '办公',    label: '办公' },
+  { id: '研究',    label: '研究' },
+  { id: '设计',    label: '设计' },
+  { id: '内容创作', label: '内容创作' },
+  { id: '翻译',    label: '翻译' },
+  { id: '数据',    label: '数据' },
+  { id: '写作',    label: '写作' },
+];
+
+// Use-case tiles for the "Handpicked" carousel
+const HANDPICKED = [
+  { id: 'uc-1', label: '开发工作流', bg: 'bg-[#1a1a1a] text-white',                  art: 'circles' },
+  { id: 'uc-2', label: '内容创作',   bg: 'bg-[#f5efe6] text-foreground',              art: 'waves' },
+  { id: 'uc-3', label: '研究分析',   bg: 'bg-[#efe7e0] text-foreground',              art: 'orbits' },
+  { id: 'uc-4', label: '学习辅导',   bg: 'bg-[#0f1019] text-white',                   art: 'lattice' },
+] as const;
+
 function formatCount(n: number) {
-  if (n >= 10000) return `${(n / 1000).toFixed(1)}K`;
+  if (n >= 1000000) return `${(n / 1000000).toFixed(1)}M`;
+  if (n >= 1000) return `${(n / 1000).toFixed(1)}K`;
   return n.toLocaleString();
 }
 
+// ─── Page component ───────────────────────────────────────────────────
+
 export function MarketPage() {
+  const [tab, setTab] = useState<'explore' | 'mine'>('explore');
   const [search, setSearch] = useState('');
-  const [category, setCategory] = useState<CategoryId>('all');
-  const [sort, setSort] = useState<SortKey>('trending');
+  const [kind, setKind] = useState<ResourceKind | 'all'>('all');
+  const [language, setLanguage] = useState<FilterValue>('all');
+  const [category, setCategory] = useState<FilterValue>('all');
+  const [bannerOpen, setBannerOpen] = useState(true);
   const [installed, setInstalled] = useState<Set<string>>(new Set(['m-2', 'm-8']));
-
-  const filtered = useMemo(() => {
-    let list = CATALOG;
-    if (category !== 'all') list = list.filter(it => it.type === category);
-    const q = search.trim().toLowerCase();
-    if (q) {
-      list = list.filter(it =>
-        it.name.toLowerCase().includes(q) ||
-        it.description.toLowerCase().includes(q) ||
-        it.author.toLowerCase().includes(q) ||
-        it.tags.some(t => t.toLowerCase().includes(q)),
-      );
-    }
-    const sorted = [...list].sort((a, b) => {
-      if (sort === 'latest')  return b.id.localeCompare(a.id); // newer ids last → reverse
-      if (sort === 'popular') return b.installs - a.installs;
-      // trending: featured first, then by installs
-      const af = a.featured ? 1 : 0;
-      const bf = b.featured ? 1 : 0;
-      if (af !== bf) return bf - af;
-      return b.installs - a.installs;
-    });
-    return sorted;
-  }, [category, search, sort]);
-
-  const featured = CATALOG.filter(it => it.featured).slice(0, 3);
 
   const toggleInstall = (id: string) => {
     setInstalled(prev => {
@@ -148,142 +154,173 @@ export function MarketPage() {
     });
   };
 
-  const activeSort = SORT_OPTIONS.find(s => s.id === sort) ?? SORT_OPTIONS[0];
+  const filtered = useMemo(() => {
+    let list = CATALOG;
+    if (tab === 'mine') list = list.filter(it => installed.has(it.id));
+    if (kind !== 'all') list = list.filter(it => it.kind === kind);
+    if (language !== 'all') list = list.filter(it => it.language === language);
+    if (category !== 'all') list = list.filter(it => it.category === category);
+    const q = search.trim().toLowerCase();
+    if (q) list = list.filter(it =>
+      it.name.toLowerCase().includes(q) ||
+      it.tagline.toLowerCase().includes(q) ||
+      it.author.toLowerCase().includes(q),
+    );
+    return list;
+  }, [tab, kind, language, category, search, installed]);
+
+  const trending = CATALOG.filter(it => it.trending).slice(0, 6);
 
   return (
     <div className="flex flex-col h-full bg-background">
-      {/* Hero header */}
-      <div className="flex-shrink-0 px-8 pt-8 pb-5 border-b border-border/15">
-        <div className="max-w-[1100px] mx-auto">
-          <div className="flex items-center gap-2 mb-1.5">
-            <ShoppingBag size={16} strokeWidth={1.6} className="text-cherry-primary" />
-            <span className="text-xs text-muted-foreground/60 tracking-wide uppercase">Cherry Studio Market</span>
+      {/* Header: title + tabs + primary CTA */}
+      <div className="flex-shrink-0 px-8 pt-8 pb-3">
+        <div className="max-w-[1200px] mx-auto">
+          <div className="flex items-start justify-between gap-4 mb-3">
+            <Typography variant="title" className="text-2xl">市场</Typography>
+            <Button variant="default" size="sm" className="gap-1.5 h-8 bg-foreground text-background hover:bg-foreground/90">
+              <Plus size={13} />
+              提交资源
+            </Button>
           </div>
-          <Typography variant="title" className="text-2xl mb-1">市场</Typography>
-          <p className="text-sm text-muted-foreground/60 max-w-[640px]">
-            发现并安装社区贡献的 Skill / MCP / Prompt / Agent / 知识库。一键引入到当前工作区。
-          </p>
-          <div className="mt-5 max-w-[560px]">
-            <SearchInput
-              value={search}
-              onChange={setSearch}
-              placeholder="搜索 Skill、Prompt、MCP Server…"
-              clearable
-              wrapperClassName="flex items-center gap-2 px-3 h-10 rounded-lg border border-border/40 bg-background shadow-sm hover:border-border/60 focus-within:border-border/70 transition-colors"
-            />
-          </div>
-        </div>
-      </div>
-
-      {/* Toolbar — categories + sort */}
-      <div className="flex-shrink-0 px-8 py-3 border-b border-border/15 bg-background/80 backdrop-blur sticky top-0 z-10">
-        <div className="max-w-[1100px] mx-auto flex items-center gap-3 flex-wrap">
-          <div className="flex items-center gap-1 flex-wrap">
-            {CATEGORIES.map(cat => {
-              const active = category === cat.id;
+          <div className="flex items-center gap-1 border-b border-border/30">
+            {([
+              { id: 'explore', label: '探索' },
+              { id: 'mine',    label: '我的资源' },
+            ] as const).map(t => {
+              const active = tab === t.id;
               return (
-                <Button
-                  key={cat.id}
-                  variant="ghost"
-                  size="xs"
-                  onClick={() => setCategory(cat.id)}
-                  className={`h-8 px-3 rounded-full text-xs transition-colors border ${
-                    active
-                      ? 'border-foreground/80 bg-foreground text-background hover:bg-foreground hover:text-background'
-                      : 'border-border/30 text-muted-foreground/75 hover:text-foreground hover:bg-muted/40'
+                <button
+                  key={t.id}
+                  type="button"
+                  onClick={() => setTab(t.id)}
+                  className={`relative px-3 py-2 text-sm transition-colors ${
+                    active ? 'text-foreground' : 'text-muted-foreground/60 hover:text-foreground'
                   }`}
                 >
-                  {cat.label}
-                </Button>
+                  {t.label}
+                  {active && <span className="absolute left-2 right-2 -bottom-px h-[2px] rounded-full bg-foreground" />}
+                </button>
               );
             })}
           </div>
-          <div className="ml-auto flex items-center gap-2">
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button variant="outline" size="xs" className="h-8 gap-1.5 text-xs">
-                  <activeSort.icon size={11} />
-                  <span>{activeSort.label}</span>
-                  <ChevronDown size={11} className="text-muted-foreground/50" />
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent align="end" className="w-[160px] p-1">
-                {SORT_OPTIONS.map(opt => {
-                  const Icon = opt.icon;
-                  const sActive = sort === opt.id;
-                  return (
-                    <button
-                      key={opt.id}
-                      type="button"
-                      onClick={() => setSort(opt.id)}
-                      className={`w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-xs text-left transition-colors ${
-                        sActive ? 'bg-accent/40 text-foreground' : 'text-muted-foreground hover:bg-accent/25 hover:text-foreground'
-                      }`}
-                    >
-                      <Icon size={12} className="text-muted-foreground/70" />
-                      <span className="flex-1">{opt.label}</span>
-                      {sActive && <Check size={10} className="text-primary" />}
-                    </button>
-                  );
-                })}
-              </PopoverContent>
-            </Popover>
-          </div>
         </div>
       </div>
 
-      {/* Content scroll area */}
+      {/* Content scroll */}
       <div className="flex-1 overflow-y-auto scrollbar-thin">
-        <div className="max-w-[1100px] mx-auto px-8 py-6 space-y-8">
+        <div className="max-w-[1200px] mx-auto px-8 pb-10 space-y-8">
 
-          {/* Featured strip — only shown on "All" + no search */}
-          {category === 'all' && !search.trim() && (
-            <section>
-              <div className="flex items-center gap-2 mb-3">
-                <Sparkles size={13} className="text-cherry-primary" />
-                <span className="text-sm font-medium text-foreground">本周精选</span>
+          {/* Toolbar: search + filters + sort */}
+          <div className="pt-4">
+            <div className="flex items-center gap-2">
+              <div className="flex-1">
+                <SearchInput
+                  value={search}
+                  onChange={setSearch}
+                  placeholder="搜索资源…"
+                  clearable
+                  wrapperClassName="flex items-center gap-2 px-3 h-10 rounded-full border border-border/40 bg-background hover:border-border/60 focus-within:border-foreground/70 transition-colors"
+                />
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                {featured.map(it => {
-                  const isInstalled = installed.has(it.id);
+              <Button variant="outline" size="sm" className="h-10 px-3 gap-1.5 rounded-md">
+                <Filter size={13} />
+                Filters
+              </Button>
+              <Button variant="outline" size="icon-sm" className="h-10 w-10 rounded-md">
+                <ArrowUpDown size={13} />
+              </Button>
+            </div>
+
+            {/* Pill row */}
+            <div className="flex items-center gap-1.5 mt-3 flex-wrap">
+              <FilterPill
+                label={LANGS.find(l => l.id === language)?.label ?? '语言'}
+                active={language !== 'all'}
+                dropdown
+                options={LANGS}
+                onSelect={(v) => setLanguage(v)}
+              />
+              <FilterPill
+                label={CATEGORIES.find(c => c.id === category)?.label ?? '分类'}
+                active={category !== 'all'}
+                dropdown
+                options={CATEGORIES}
+                onSelect={(v) => setCategory(v)}
+              />
+              <span className="w-px h-4 bg-border/40 mx-1" />
+              {KIND_FILTERS.filter(k => k.id !== 'all').map(k => {
+                const active = kind === k.id;
+                return (
+                  <button
+                    key={k.id}
+                    type="button"
+                    onClick={() => setKind(active ? 'all' : k.id as ResourceKind)}
+                    className={`h-7 px-2.5 rounded-md text-xs border transition-colors ${
+                      active
+                        ? 'border-foreground/80 bg-foreground text-background'
+                        : 'border-border/30 text-muted-foreground/80 hover:text-foreground hover:bg-muted/40'
+                    }`}
+                  >
+                    {k.label}
+                  </button>
+                );
+              })}
+              <button
+                type="button"
+                className="h-7 w-7 inline-flex items-center justify-center rounded-md border border-border/30 text-muted-foreground/60 hover:text-foreground hover:bg-muted/40"
+                title="更多"
+              >
+                <ChevronRight size={12} />
+              </button>
+            </div>
+          </div>
+
+          {/* Announcement banner */}
+          {bannerOpen && (
+            <div className="flex items-start gap-2 px-4 py-2.5 rounded-md bg-muted/30 border border-border/15">
+              <p className="text-xs text-muted-foreground/75 flex-1">
+                <span className="font-medium text-foreground/85">默认资源</span> 已迁移到「我的资源」，并将在 2026 年底前停止维护。详见
+                <span className="underline cursor-pointer ml-1">公告</span>。
+              </p>
+              <button
+                type="button"
+                onClick={() => setBannerOpen(false)}
+                className="text-muted-foreground/50 hover:text-foreground transition-colors flex-shrink-0"
+                aria-label="关闭公告"
+              >
+                <X size={12} />
+              </button>
+            </div>
+          )}
+
+          {/* Trending — only on Explore / no filter */}
+          {tab === 'explore' && kind === 'all' && category === 'all' && !search.trim() && (
+            <section>
+              <div className="flex items-center gap-1.5 mb-3">
+                <span className="text-sm font-medium text-foreground">热门资源</span>
+                <ChevronRight size={13} className="text-muted-foreground/50" />
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2.5">
+                {trending.map(it => {
+                  const KIcon = KIND_ICON[it.kind];
                   return (
                     <button
                       key={it.id}
                       type="button"
-                      className="text-left p-4 rounded-xl border border-border/30 bg-card hover:border-border/60 hover:shadow-sm transition-all relative overflow-hidden"
+                      className="text-left flex items-center gap-3 px-3 py-2.5 rounded-xl border border-border/25 hover:border-border/55 hover:bg-muted/15 transition-all"
                     >
-                      <div className="absolute top-0 right-0 px-2 py-0.5 bg-cherry-primary/10 text-cherry-primary text-[10px] rounded-bl-md">
-                        Featured
-                      </div>
-                      <div className="flex items-start gap-3">
-                        <div className="w-10 h-10 rounded-lg bg-accent/40 flex items-center justify-center text-2xl flex-shrink-0">
-                          {it.emoji}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-1.5 mb-0.5">
-                            <span className="text-sm font-medium text-foreground truncate">{it.name}</span>
-                            <span className={`text-[9px] uppercase tracking-wide ${TYPE_COLOR[it.type]} flex-shrink-0`}>
-                              {TYPE_LABEL[it.type]}
-                            </span>
-                          </div>
-                          <div className="text-[11px] text-muted-foreground/55 mb-1.5">{it.author}</div>
-                          <p className="text-xs text-muted-foreground/70 line-clamp-2 leading-relaxed">{it.description}</p>
+                      <Avatar item={it} size={36} />
+                      <div className="flex-1 min-w-0">
+                        <div className="text-sm text-foreground truncate">{it.name}</div>
+                        <div className="text-[11px] text-muted-foreground/60 flex items-center gap-1 mt-px">
+                          <KIcon size={10} />
+                          <span>{it.category}</span>
                         </div>
                       </div>
-                      <div className="mt-3 flex items-center justify-between gap-2">
-                        <div className="flex items-center gap-2.5 text-[11px] text-muted-foreground/60">
-                          <span className="inline-flex items-center gap-0.5"><Download size={10} />{formatCount(it.installs)}</span>
-                          <span className="inline-flex items-center gap-0.5"><Star size={10} />{formatCount(it.stars)}</span>
-                        </div>
-                        <Button
-                          variant={isInstalled ? 'outline' : 'default'}
-                          size="xs"
-                          onClick={(e) => { e.stopPropagation(); toggleInstall(it.id); }}
-                          className="gap-1 h-7"
-                        >
-                          {isInstalled ? <><Check size={10} />已安装</> : <><Download size={10} />安装</>}
-                        </Button>
-                      </div>
+                      <span className="px-1.5 py-px rounded border border-border/30 bg-muted/30 text-[10px] text-muted-foreground/70 flex-shrink-0">
+                        {it.language}
+                      </span>
                     </button>
                   );
                 })}
@@ -291,64 +328,111 @@ export function MarketPage() {
             </section>
           )}
 
-          {/* Main grid */}
-          <section>
-            {category === 'all' && !search.trim() && (
-              <div className="flex items-center gap-2 mb-3">
-                <Sparkle size={13} className="text-muted-foreground/60" />
-                <span className="text-sm font-medium text-foreground">全部</span>
-                <span className="text-xs text-muted-foreground/50 tabular-nums">{filtered.length}</span>
+          {/* Handpicked carousel */}
+          {tab === 'explore' && kind === 'all' && category === 'all' && !search.trim() && (
+            <section>
+              <div className="flex items-center justify-between gap-3 mb-3">
+                <span className="text-sm font-medium text-foreground">为你精选</span>
+                <div className="flex items-center gap-1">
+                  <button className="h-7 w-7 inline-flex items-center justify-center rounded-md border border-border/30 text-muted-foreground/60 hover:text-foreground hover:bg-muted/40">
+                    <ChevronLeft size={13} />
+                  </button>
+                  <button className="h-7 w-7 inline-flex items-center justify-center rounded-md border border-border/30 text-muted-foreground/60 hover:text-foreground hover:bg-muted/40">
+                    <ChevronRight size={13} />
+                  </button>
+                </div>
               </div>
-            )}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
+                {HANDPICKED.map(uc => (
+                  <button
+                    key={uc.id}
+                    type="button"
+                    className={`relative aspect-[16/10] rounded-xl overflow-hidden ${uc.bg} group`}
+                  >
+                    <HandpickedArt kind={uc.art} />
+                    <div className="absolute inset-0 p-4 flex flex-col justify-end">
+                      <span className="text-lg font-semibold tracking-tight">{uc.label}</span>
+                    </div>
+                    <div className="absolute bottom-3 right-3 w-7 h-7 rounded-full bg-foreground/85 text-background flex items-center justify-center group-hover:scale-110 transition-transform">
+                      <ChevronRight size={13} />
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {/* Detail list */}
+          <section>
+            <div className="flex items-center justify-between gap-3 mb-3">
+              <div>
+                <div className="text-sm font-medium text-foreground">
+                  {tab === 'mine' ? '我的资源' : (kind === 'all' ? '全部资源' : KIND_LABEL[kind])}
+                  {category !== 'all' && <span className="text-muted-foreground/60"> · {category}</span>}
+                </div>
+                <div className="text-[11px] text-muted-foreground/55 tabular-nums mt-0.5">
+                  共 {filtered.length} 条
+                </div>
+              </div>
+            </div>
+
             {filtered.length === 0 ? (
-              <EmptyState preset="no-result" title={search.trim() ? '未找到匹配的内容' : '该分类暂无内容'} />
+              <div className="border border-dashed border-border/30 rounded-xl py-12 flex flex-col items-center text-muted-foreground/55">
+                <Sparkles size={20} strokeWidth={1.3} className="mb-2 text-muted-foreground/30" />
+                <p className="text-xs">没有匹配的资源</p>
+              </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                {filtered.map(it => {
+              <div className="rounded-xl border border-border/25 bg-card/50 overflow-hidden">
+                {filtered.map((it, i) => {
+                  const KIcon = KIND_ICON[it.kind];
                   const isInstalled = installed.has(it.id);
                   return (
                     <div
                       key={it.id}
-                      className="group p-4 rounded-xl border border-border/25 bg-card/60 hover:border-border/55 hover:bg-card hover:shadow-sm transition-all flex flex-col"
+                      className={`group flex items-center gap-3 px-4 py-2.5 hover:bg-muted/25 transition-colors ${
+                        i > 0 ? 'border-t border-border/15' : ''
+                      }`}
                     >
-                      <div className="flex items-start gap-3">
-                        <div className="w-10 h-10 rounded-lg bg-accent/40 flex items-center justify-center text-2xl flex-shrink-0">
-                          {it.emoji}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-1.5">
-                            <span className="text-sm font-medium text-foreground truncate">{it.name}</span>
-                          </div>
-                          <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground/55 mt-0.5">
-                            <span className="truncate">{it.author}</span>
-                            <span className="opacity-50">·</span>
-                            <span className={`uppercase tracking-wide ${TYPE_COLOR[it.type]} flex-shrink-0`}>
-                              {TYPE_LABEL[it.type]}
-                            </span>
-                          </div>
-                        </div>
+                      <Avatar item={it} size={36} />
+                      <div className="flex-1 min-w-0 pr-2">
+                        <div className="text-sm text-foreground truncate">{it.name}</div>
+                        <div className="text-[11px] text-muted-foreground/55 truncate">{it.tagline}</div>
                       </div>
-                      <p className="text-xs text-muted-foreground/70 leading-relaxed line-clamp-2 mt-2.5 flex-1">
-                        {it.description}
-                      </p>
-                      <div className="flex items-center gap-1 mt-2.5 flex-wrap">
-                        {it.tags.map(t => (
-                          <span key={t} className={`text-[10px] px-1.5 py-px rounded border ${tagClass(t)}`}>{t}</span>
-                        ))}
+                      <div className="hidden lg:flex items-center gap-2 text-[11px] text-muted-foreground/65 flex-shrink-0">
+                        {it.language && (
+                          <span className="px-1.5 py-px rounded border border-border/25 bg-muted/30">{it.language}</span>
+                        )}
+                        {it.region && (
+                          <span className="text-muted-foreground/50">{it.region}</span>
+                        )}
                       </div>
-                      <div className="mt-3 pt-3 border-t border-border/15 flex items-center justify-between gap-2">
-                        <div className="flex items-center gap-2.5 text-[11px] text-muted-foreground/60">
-                          <span className="inline-flex items-center gap-0.5"><Download size={10} />{formatCount(it.installs)}</span>
-                          <span className="inline-flex items-center gap-0.5"><Star size={10} />{formatCount(it.stars)}</span>
-                        </div>
+                      <div className="hidden md:flex items-center gap-1.5 text-[11px] text-muted-foreground/65 flex-shrink-0 w-[88px] tabular-nums">
+                        <span className="text-muted-foreground/40">⓵</span>
+                        <span>{it.ageLabel}</span>
+                      </div>
+                      <div className="hidden md:flex items-center gap-1.5 text-[11px] text-muted-foreground/65 flex-shrink-0 w-[88px] tabular-nums">
+                        <Download size={10} className="text-muted-foreground/45" />
+                        <span>{formatCount(it.installs)}</span>
+                      </div>
+                      <div className="hidden md:flex items-center gap-1.5 text-[11px] flex-shrink-0 w-[110px]">
+                        <KIcon size={11} className="text-muted-foreground/55" />
+                        <span className="text-muted-foreground/75">{it.category}</span>
+                      </div>
+                      <div className="flex items-center gap-0.5 flex-shrink-0">
                         <Button
                           variant={isInstalled ? 'outline' : 'default'}
                           size="xs"
                           onClick={() => toggleInstall(it.id)}
-                          className="gap-1 h-7"
+                          className="h-7 gap-1 mr-1"
                         >
                           {isInstalled ? <><Check size={10} />已安装</> : <><Download size={10} />安装</>}
                         </Button>
+                        <button className="h-7 w-7 inline-flex items-center justify-center rounded-md text-muted-foreground/50 hover:text-foreground hover:bg-muted/40 opacity-0 group-hover:opacity-100 transition-all" title="复制链接">
+                          <Link2 size={12} />
+                        </button>
+                        <button className="h-7 w-7 inline-flex items-center justify-center rounded-md text-muted-foreground/50 hover:text-foreground hover:bg-muted/40 opacity-0 group-hover:opacity-100 transition-all" title="更多">
+                          <MoreHorizontal size={12} />
+                        </button>
                       </div>
                     </div>
                   );
@@ -356,8 +440,118 @@ export function MarketPage() {
               </div>
             )}
           </section>
+
         </div>
       </div>
     </div>
+  );
+}
+
+// ─── Sub-components ───────────────────────────────────────────────────
+
+function Avatar({ item, size = 36 }: { item: MarketItem; size?: number }) {
+  return (
+    <div
+      className={`rounded-md ${item.avatarBg} flex items-center justify-center flex-shrink-0 text-base`}
+      style={{ width: size, height: size }}
+    >
+      <span className={`${size >= 40 ? 'text-lg' : 'text-base'}`}>{item.avatar}</span>
+    </div>
+  );
+}
+
+function FilterPill({
+  label, active, dropdown, options, onSelect,
+}: {
+  label: string;
+  active?: boolean;
+  dropdown?: boolean;
+  options?: { id: string; label: string }[];
+  onSelect?: (v: string) => void;
+}) {
+  const trigger = (
+    <button
+      type="button"
+      className={`inline-flex items-center gap-1 h-7 px-2.5 rounded-md text-xs border transition-colors ${
+        active
+          ? 'border-foreground/80 bg-foreground text-background'
+          : 'border-border/30 text-muted-foreground/80 hover:text-foreground hover:bg-muted/40'
+      }`}
+    >
+      <span>{label}</span>
+      {dropdown && <ChevronRight size={10} className="rotate-90 opacity-70" />}
+    </button>
+  );
+  if (!dropdown || !options) return trigger;
+  return (
+    <Popover>
+      <PopoverTrigger asChild>{trigger}</PopoverTrigger>
+      <PopoverContent align="start" className="w-[180px] p-1">
+        {options.map(opt => (
+          <button
+            key={opt.id}
+            type="button"
+            onClick={() => onSelect?.(opt.id)}
+            className="w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-xs text-left hover:bg-accent/40 transition-colors"
+          >
+            <span className="flex-1">{opt.label}</span>
+          </button>
+        ))}
+      </PopoverContent>
+    </Popover>
+  );
+}
+
+// Abstract background art for handpicked tiles
+function HandpickedArt({ kind }: { kind: 'circles' | 'waves' | 'orbits' | 'lattice' }) {
+  if (kind === 'circles') {
+    return (
+      <svg className="absolute inset-0 w-full h-full opacity-90" viewBox="0 0 200 120" preserveAspectRatio="none">
+        <defs>
+          <radialGradient id="rg1" cx="35%" cy="55%" r="40%">
+            <stop offset="0%" stopColor="rgba(255,255,255,0.15)" />
+            <stop offset="100%" stopColor="rgba(255,255,255,0)" />
+          </radialGradient>
+        </defs>
+        <circle cx="60" cy="60" r="44" fill="none" stroke="rgba(255,255,255,0.35)" strokeWidth="0.6" />
+        <circle cx="60" cy="60" r="32" fill="none" stroke="rgba(255,255,255,0.25)" strokeWidth="0.5" />
+        <circle cx="60" cy="60" r="20" fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth="0.5" />
+        <circle cx="60" cy="60" r="8"  fill="rgba(255,255,255,0.4)" />
+        <rect width="200" height="120" fill="url(#rg1)" />
+      </svg>
+    );
+  }
+  if (kind === 'waves') {
+    return (
+      <svg className="absolute inset-0 w-full h-full" viewBox="0 0 200 120" preserveAspectRatio="none">
+        <path d="M 0 70 Q 50 30 100 70 T 200 70" fill="none" stroke="rgba(0,0,0,0.35)" strokeWidth="0.8" />
+        <path d="M 0 80 Q 50 40 100 80 T 200 80" fill="none" stroke="rgba(0,0,0,0.25)" strokeWidth="0.6" />
+        <path d="M 0 90 Q 50 50 100 90 T 200 90" fill="none" stroke="rgba(0,0,0,0.2)"  strokeWidth="0.5" />
+      </svg>
+    );
+  }
+  if (kind === 'orbits') {
+    return (
+      <svg className="absolute inset-0 w-full h-full" viewBox="0 0 200 120" preserveAspectRatio="none">
+        <ellipse cx="100" cy="60" rx="80" ry="22" fill="none" stroke="rgba(0,0,0,0.35)" strokeWidth="0.7" />
+        <ellipse cx="100" cy="60" rx="50" ry="40" fill="none" stroke="rgba(0,0,0,0.28)" strokeWidth="0.6" />
+        <ellipse cx="100" cy="60" rx="25" ry="50" fill="none" stroke="rgba(0,0,0,0.22)" strokeWidth="0.5" />
+        <circle cx="100" cy="60" r="4" fill="rgba(0,0,0,0.6)" />
+      </svg>
+    );
+  }
+  // lattice
+  return (
+    <svg className="absolute inset-0 w-full h-full opacity-80" viewBox="0 0 200 120" preserveAspectRatio="none">
+      <g stroke="rgba(255,255,255,0.32)" strokeWidth="0.4" fill="none">
+        {Array.from({ length: 8 }).map((_, i) => (
+          <line key={`v${i}`} x1={20 + i * 22} y1="20" x2={20 + i * 22} y2="100" />
+        ))}
+        {Array.from({ length: 5 }).map((_, i) => (
+          <line key={`h${i}`} x1="20" y1={20 + i * 20} x2="180" y2={20 + i * 20} />
+        ))}
+        <path d="M 20 20 L 180 100 M 180 20 L 20 100" />
+      </g>
+    </svg>
   );
 }
