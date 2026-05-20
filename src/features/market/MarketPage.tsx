@@ -481,14 +481,19 @@ export function MarketPage() {
                         <span className="text-muted-foreground/75">{it.category}</span>
                       </div>
                       <div className="flex items-center gap-0.5 flex-shrink-0">
-                        <Button
-                          variant={isInstalled ? 'outline' : 'default'}
-                          size="xs"
+                        <button
+                          type="button"
                           onClick={() => toggleInstall(it.id)}
-                          className="h-7 gap-1 mr-1"
+                          title={isInstalled ? '已安装 — 点击卸载' : '安装'}
+                          aria-label={isInstalled ? '已安装' : '安装'}
+                          className={`h-7 w-7 inline-flex items-center justify-center rounded-md transition-colors mr-1 ${
+                            isInstalled
+                              ? 'text-success hover:text-destructive hover:bg-destructive/10'
+                              : 'text-muted-foreground/65 hover:text-foreground hover:bg-muted/50'
+                          }`}
                         >
-                          {isInstalled ? <><Check size={10} />已安装</> : <><Download size={10} />安装</>}
-                        </Button>
+                          {isInstalled ? <Check size={13} /> : <Download size={12} />}
+                        </button>
                         <button className="h-7 w-7 inline-flex items-center justify-center rounded-md text-muted-foreground/50 hover:text-foreground hover:bg-muted/40 opacity-0 group-hover:opacity-100 transition-all" title="复制链接">
                           <Link2 size={12} />
                         </button>
