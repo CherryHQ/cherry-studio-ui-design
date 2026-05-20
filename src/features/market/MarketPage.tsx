@@ -515,9 +515,9 @@ export function MarketPage() {
 
 function MarketOnboardingModal({ open, onOpenChange }: { open: boolean; onOpenChange: (v: boolean) => void }) {
   const bullets: { Icon: React.ComponentType<{ size?: number; className?: string; strokeWidth?: number }>; text: string }[] = [
-    { Icon: Zap,         text: '一键安装社区精心打磨的 Skill / MCP / Prompt 模板' },
-    { Icon: Plug,        text: '直接对接 Notion / 语雀 / Google Calendar 等集成' },
-    { Icon: Compass,     text: '上传你的资源参与黑客松，赢取奖池和 Pro 激活码' },
+    { Icon: Zap,           text: '一键安装社区精心打磨的 Skill / MCP / Prompt 模板' },
+    { Icon: Plug,          text: '直接对接 Notion / 语雀 / Google Calendar 等集成' },
+    { Icon: CheckCircle2,  text: '在「我的资源」中统一管理已安装项，启停 / 更新 / 卸载一目了然' },
   ];
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
