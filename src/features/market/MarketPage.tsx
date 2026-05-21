@@ -667,6 +667,14 @@ function MyResourcesManageView({
   // Edit drawer — opens when a row is clicked. The drawer slides in
   // from the right and exposes the resource's editable fields.
   const [editItem, setEditItem] = useState<MarketItem | null>(null);
+  // Per-item field overrides (CATALOG is a const, so edits live here).
+  // Saving from the drawer merges into this map; rows apply the override
+  // before rendering so edits stick visually after the drawer closes.
+  const [overrides, setOverrides] = useState<Record<string, Partial<MarketItem>>>({});
+  const applyOverride = (it: MarketItem): MarketItem => {
+    const patch = overrides[it.id];
+    return patch ? { ...it, ...patch } : it;
+  };
 
   useEffect(() => {
     setEnabled(prev => {
@@ -685,12 +693,15 @@ function MyResourcesManageView({
     });
   };
 
-  // After the top filter pills (全部 / 从市场安装 / 自定义)
+  // After the top filter pills (全部 / 从市场安装 / 自定义). Apply
+  // per-item overrides so edits made via the drawer are visible.
   const afterPills = useMemo(() => {
-    if (filter === 'installed') return items.filter(it => !it.custom);
-    if (filter === 'custom')    return items.filter(it => it.custom);
-    return items;
-  }, [items, filter]);
+    const base = items.map(applyOverride);
+    if (filter === 'installed') return base.filter(it => !it.custom);
+    if (filter === 'custom')    return base.filter(it => it.custom);
+    return base;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [items, filter, overrides]);
 
   // After both pills + sidebar narrowing — what actually renders.
   const visible = useMemo(() => {
@@ -912,13 +923,20 @@ function MyResourcesManageView({
         </div>{/* /max-w container */}
       </div>{/* /scroll */}
 
-      {/* Edit drawer — slides in from the right when a row is clicked */}
+      {/* Edit drawer — slides in from the right when a row is clicked.
+          `key` forces a fresh mount per item so local form state always
+          seeds from the new item's fields rather than from stale state. */}
       <ResourceEditDrawer
-        item={editItem}
+        key={editItem?.id ?? 'closed'}
+        item={editItem ? applyOverride(editItem) : null}
         onOpenChange={(open) => { if (!open) setEditItem(null); }}
         enabled={editItem ? enabled.has(editItem.id) : false}
         onToggleEnabled={(id) => toggleEnabled(id)}
         onDelete={(id) => { onUninstall(id); setEditItem(null); }}
+        onSave={(id, patch) => {
+          setOverrides(prev => ({ ...prev, [id]: { ...(prev[id] ?? {}), ...patch } }));
+          setEditItem(null);
+        }}
       />
     </div>
   );
@@ -927,29 +945,24 @@ function MyResourcesManageView({
 // ─── Resource edit drawer (slides in from the right) ─────────────────
 
 function ResourceEditDrawer({
-  item, onOpenChange, enabled, onToggleEnabled, onDelete,
+  item, onOpenChange, enabled, onToggleEnabled, onDelete, onSave,
 }: {
   item: MarketItem | null;
   onOpenChange: (open: boolean) => void;
   enabled: boolean;
   onToggleEnabled: (id: string) => void;
   onDelete: (id: string) => void;
+  onSave: (id: string, patch: Partial<MarketItem>) => void;
 }) {
-  // Local form state — seeded from the item on open. Saving is mocked
-  // (closes the drawer); a real impl would commit back to a store.
-  const [name, setName] = useState('');
-  const [tagline, setTagline] = useState('');
-  const [description, setDescription] = useState('');
-  const [category, setCategory] = useState('');
-
-  useEffect(() => {
-    if (item) {
-      setName(item.name);
-      setTagline(item.tagline);
-      setDescription(item.tagline);
-      setCategory(item.category);
-    }
-  }, [item]);
+  // Local form state, seeded once per item via lazy initializer.
+  // (Parent passes a fresh `key` whenever `item` changes, so this
+  // component remounts and the initializers re-read the new values.
+  // Saving is mocked — closes the drawer; a real impl would commit
+  // back to a store.)
+  const [name, setName] = useState(() => item?.name ?? '');
+  const [tagline, setTagline] = useState(() => item?.tagline ?? '');
+  const [description, setDescription] = useState(() => item?.tagline ?? '');
+  const [category, setCategory] = useState(() => item?.category ?? '');
 
   if (!item) return (
     <Sheet open={false} onOpenChange={onOpenChange}>
@@ -1066,7 +1079,7 @@ function ResourceEditDrawer({
             <Button
               variant="default"
               size="sm"
-              onClick={() => onOpenChange(false)}
+              onClick={() => onSave(item.id, { name, tagline, category })}
               className="h-8 bg-foreground text-background hover:bg-foreground/90"
             >
               保存
