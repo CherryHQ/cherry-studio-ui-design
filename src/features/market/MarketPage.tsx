@@ -662,6 +662,9 @@ function MyResourcesManageView({
   // adding newcomers, so the user's deliberate disable choices stick.
   const [enabled, setEnabled] = useState<Set<string>>(() => new Set(items.map(it => it.id)));
   const [filter, setFilter] = useState<'all' | 'installed' | 'custom'>('all');
+  // Sidebar narrowing — mirrors the market homepage. 'all' = show every
+  // kind grouped into sections; a specific kind = flat list of that kind.
+  const [kindFilter, setKindFilter] = useState<ResourceKind | 'all'>('all');
 
   useEffect(() => {
     setEnabled(prev => {
@@ -680,14 +683,21 @@ function MyResourcesManageView({
     });
   };
 
-  const visible = useMemo(() => {
+  // After the top filter pills (全部 / 从市场安装 / 自定义)
+  const afterPills = useMemo(() => {
     if (filter === 'installed') return items.filter(it => !it.custom);
     if (filter === 'custom')    return items.filter(it => it.custom);
     return items;
   }, [items, filter]);
 
-  // Group visible items by kind for section rendering — mirrors the
-  // market homepage's 全部 view ("资源库" pattern).
+  // After both pills + sidebar narrowing — what actually renders.
+  const visible = useMemo(() => {
+    if (kindFilter === 'all') return afterPills;
+    return afterPills.filter(it => it.kind === kindFilter);
+  }, [afterPills, kindFilter]);
+
+  // When showing 全部 we group by kind; when a kind is pinned the list
+  // is flat (single implicit group covering that one kind).
   const kindGroups = useMemo(() => {
     const byKind = new Map<ResourceKind, MarketItem[]>();
     visible.forEach(it => {
@@ -695,8 +705,6 @@ function MyResourcesManageView({
       arr.push(it);
       byKind.set(it.kind, arr);
     });
-    // Preserve a stable kind order from SIDEBAR_KINDS so groups don't
-    // visually re-shuffle when the user toggles items on/off.
     return SIDEBAR_KINDS
       .filter((k): k is ResourceKind => k !== 'all')
       .map(k => ({ kind: k, items: byKind.get(k) ?? [] }))
@@ -733,6 +741,48 @@ function MyResourcesManageView({
 
       <div className="flex-1 overflow-y-auto scrollbar-thin">
         <div className="max-w-[1120px] mx-auto px-6 pt-6 pb-10">
+          <div className="flex gap-8">
+
+            {/* Left rail — kind sub-filter (matches market homepage) */}
+            <aside className="hidden md:flex flex-shrink-0 w-[176px] flex-col">
+              <div className="sticky top-0 pt-2">
+                <div className="text-[10px] uppercase tracking-wide text-muted-foreground/45 px-2 pb-2">
+                  资源类型
+                </div>
+                <div className="space-y-0.5">
+                  {SIDEBAR_KINDS.map(k => {
+                    const active = kindFilter === k;
+                    const isAll = k === 'all';
+                    const Icon = isAll ? Sparkles : KIND_ICON[k];
+                    const label = isAll ? '全部' : KIND_LABEL[k];
+                    const count = isAll
+                      ? afterPills.length
+                      : afterPills.filter(it => it.kind === k).length;
+                    return (
+                      <button
+                        key={k}
+                        type="button"
+                        onClick={() => setKindFilter(k)}
+                        className={`w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-sm transition-colors ${
+                          active
+                            ? 'bg-accent/50 text-foreground'
+                            : 'text-muted-foreground/75 hover:text-foreground hover:bg-muted/40'
+                        }`}
+                      >
+                        <Icon size={13} strokeWidth={1.6} className="flex-shrink-0" />
+                        <span className="flex-1 text-left truncate">{label}</span>
+                        <span className={`text-[10px] tabular-nums flex-shrink-0 ${active ? 'text-muted-foreground/70' : 'text-muted-foreground/45'}`}>
+                          {count}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            </aside>
+
+            {/* Right main */}
+            <div className="flex-1 min-w-0">
           {/* Title + summary */}
           <div className="mb-5">
             <div className="flex items-baseline gap-2">
@@ -860,8 +910,11 @@ function MyResourcesManageView({
           <p className="text-[11px] text-muted-foreground/55 mt-8 text-center">
             启用 / 禁用 即刻生效，无需重启会话。
           </p>
-        </div>
-      </div>
+
+            </div>{/* /right main */}
+          </div>{/* /flex split */}
+        </div>{/* /max-w container */}
+      </div>{/* /scroll */}
     </div>
   );
 }
