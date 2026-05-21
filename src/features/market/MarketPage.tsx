@@ -686,6 +686,23 @@ function MyResourcesManageView({
     return items;
   }, [items, filter]);
 
+  // Group visible items by kind for section rendering — mirrors the
+  // market homepage's 全部 view ("资源库" pattern).
+  const kindGroups = useMemo(() => {
+    const byKind = new Map<ResourceKind, MarketItem[]>();
+    visible.forEach(it => {
+      const arr = byKind.get(it.kind) ?? [];
+      arr.push(it);
+      byKind.set(it.kind, arr);
+    });
+    // Preserve a stable kind order from SIDEBAR_KINDS so groups don't
+    // visually re-shuffle when the user toggles items on/off.
+    return SIDEBAR_KINDS
+      .filter((k): k is ResourceKind => k !== 'all')
+      .map(k => ({ kind: k, items: byKind.get(k) ?? [] }))
+      .filter(g => g.items.length > 0);
+  }, [visible]);
+
   const installedCount = items.filter(it => !it.custom).length;
   const customCount    = items.filter(it => it.custom).length;
 
@@ -759,78 +776,88 @@ function MyResourcesManageView({
               <p className="text-xs">这个分类下还没有资源</p>
             </div>
           ) : (
-            <div className="space-y-1.5">
-              {visible.map(it => {
-                const KIcon = KIND_ICON[it.kind];
-                const isOn = enabled.has(it.id);
+            <div className="space-y-8">
+              {kindGroups.map(({ kind, items: kindItems }) => {
+                const KindIcon = KIND_ICON[kind];
                 return (
-                  <div
-                    key={it.id}
-                    className="flex items-center gap-3 px-3.5 py-2.5 rounded-lg border border-border/20 bg-card/40 hover:bg-card transition-colors"
-                  >
-                    <Avatar item={it} size={32} />
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-sm text-foreground truncate">{it.name}</span>
-                        {it.custom ? (
-                          <span className="flex-shrink-0 px-1.5 py-px rounded text-[10px] leading-none border border-border/35 bg-muted/40 text-muted-foreground/75">
-                            自定义
-                          </span>
-                        ) : (
-                          <span className="flex-shrink-0 px-1.5 py-px rounded text-[10px] leading-none border border-border/30 bg-muted/30 text-muted-foreground/70">
-                            {KIND_LABEL[it.kind]}
-                          </span>
-                        )}
-                      </div>
-                      <div className="text-[11px] text-muted-foreground/55 flex items-center gap-1.5 mt-px">
-                        <KIcon size={10} />
-                        <span>{it.category}</span>
-                        <span className="text-muted-foreground/30">·</span>
-                        <span>{it.author}</span>
-                      </div>
+                  <section key={kind}>
+                    <div className="flex items-center gap-2 mb-3">
+                      <KindIcon size={13} strokeWidth={1.6} className="text-muted-foreground/60" />
+                      <h2 className="text-sm font-medium text-foreground">{KIND_LABEL[kind]}</h2>
+                      <span className="text-[11px] text-muted-foreground/55 tabular-nums">{kindItems.length}</span>
                     </div>
+                    <div className="space-y-1.5">
+                      {kindItems.map(it => {
+                        const KIcon = KIND_ICON[it.kind];
+                        const isOn = enabled.has(it.id);
+                        return (
+                          <div
+                            key={it.id}
+                            className="flex items-center gap-3 px-3.5 py-2.5 rounded-lg border border-border/20 bg-card/40 hover:bg-card transition-colors"
+                          >
+                            <Avatar item={it} size={32} />
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-1.5">
+                                <span className="text-sm text-foreground truncate">{it.name}</span>
+                                {it.custom && (
+                                  <span className="flex-shrink-0 px-1.5 py-px rounded text-[10px] leading-none border border-border/35 bg-muted/40 text-muted-foreground/75">
+                                    自定义
+                                  </span>
+                                )}
+                              </div>
+                              <div className="text-[11px] text-muted-foreground/55 flex items-center gap-1.5 mt-px">
+                                <KIcon size={10} />
+                                <span>{it.category}</span>
+                                <span className="text-muted-foreground/30">·</span>
+                                <span>{it.author}</span>
+                              </div>
+                            </div>
 
-                    <button
-                      type="button"
-                      onClick={() => toggleEnabled(it.id)}
-                      aria-label={isOn ? '已启用' : '已禁用'}
-                      className={`relative inline-flex h-5 w-9 flex-shrink-0 items-center rounded-full transition-colors ${
-                        isOn ? 'bg-foreground' : 'bg-muted-foreground/25'
-                      }`}
-                    >
-                      <span
-                        className={`inline-block h-4 w-4 transform rounded-full bg-background transition-transform ${
-                          isOn ? 'translate-x-[18px]' : 'translate-x-0.5'
-                        }`}
-                      />
-                    </button>
+                            <button
+                              type="button"
+                              onClick={() => toggleEnabled(it.id)}
+                              aria-label={isOn ? '已启用' : '已禁用'}
+                              className={`relative inline-flex h-5 w-9 flex-shrink-0 items-center rounded-full transition-colors ${
+                                isOn ? 'bg-foreground' : 'bg-muted-foreground/25'
+                              }`}
+                            >
+                              <span
+                                className={`inline-block h-4 w-4 transform rounded-full bg-background transition-transform ${
+                                  isOn ? 'translate-x-[18px]' : 'translate-x-0.5'
+                                }`}
+                              />
+                            </button>
 
-                    <button
-                      type="button"
-                      onClick={() => onOpenDetail(it)}
-                      aria-label="查看详情"
-                      title="详情"
-                      className="h-7 w-7 inline-flex items-center justify-center rounded-md text-muted-foreground/55 hover:text-foreground hover:bg-muted/40 transition-colors"
-                    >
-                      <ExternalLink size={12} />
-                    </button>
+                            <button
+                              type="button"
+                              onClick={() => onOpenDetail(it)}
+                              aria-label="查看详情"
+                              title="详情"
+                              className="h-7 w-7 inline-flex items-center justify-center rounded-md text-muted-foreground/55 hover:text-foreground hover:bg-muted/40 transition-colors"
+                            >
+                              <ExternalLink size={12} />
+                            </button>
 
-                    <button
-                      type="button"
-                      onClick={() => onUninstall(it.id)}
-                      aria-label={it.custom ? '删除自定义' : '卸载'}
-                      title={it.custom ? '删除' : '卸载'}
-                      className="h-7 w-7 inline-flex items-center justify-center rounded-md text-muted-foreground/55 hover:text-destructive hover:bg-destructive/10 transition-colors"
-                    >
-                      <X size={13} />
-                    </button>
-                  </div>
+                            <button
+                              type="button"
+                              onClick={() => onUninstall(it.id)}
+                              aria-label={it.custom ? '删除自定义' : '卸载'}
+                              title={it.custom ? '删除' : '卸载'}
+                              className="h-7 w-7 inline-flex items-center justify-center rounded-md text-muted-foreground/55 hover:text-destructive hover:bg-destructive/10 transition-colors"
+                            >
+                              <X size={13} />
+                            </button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </section>
                 );
               })}
             </div>
           )}
 
-          <p className="text-[11px] text-muted-foreground/55 mt-6 text-center">
+          <p className="text-[11px] text-muted-foreground/55 mt-8 text-center">
             启用 / 禁用 即刻生效，无需重启会话。
           </p>
         </div>
