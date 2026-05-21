@@ -1,2 +1,6 @@
 packages:
   - "packages/*"
+  # Reference copy of CherryHQ/cherry-studio v2's @cherrystudio/ui — kept
+  # out of the workspace because it pulls in React 19 / Tailwind 4 /
+  # Storybook, which would conflict with the rest of the monorepo.
+  - "!packages/cherry-v2-ui"
