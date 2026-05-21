@@ -10,6 +10,7 @@ import {
   Button, Input, Textarea, SearchInput, Typography, Badge,
   Popover, PopoverTrigger, PopoverContent,
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
+  Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetFooter,
 } from '@cherry-studio/ui';
 
 // ===========================
@@ -323,7 +324,6 @@ export function MarketPage() {
         <MyResourcesManageView
           items={myResources}
           onBack={() => setManageOpen(false)}
-          onOpenDetail={(it) => setDetailItem(it)}
           onUninstall={(id) => toggleInstall(id)}
           onCreateCustom={() => setNewCustomOpen(true)}
         />
@@ -650,11 +650,10 @@ function PublisherFilterDropdown() {
 // ─── 我的资源 → 管理 view (full-page) ────────────────────────────────
 
 function MyResourcesManageView({
-  items, onBack, onOpenDetail, onUninstall, onCreateCustom,
+  items, onBack, onUninstall, onCreateCustom,
 }: {
   items: MarketItem[];
   onBack: () => void;
-  onOpenDetail: (item: MarketItem) => void;
   onUninstall: (id: string) => void;
   onCreateCustom: () => void;
 }) {
@@ -665,6 +664,9 @@ function MyResourcesManageView({
   // Sidebar narrowing — mirrors the market homepage. 'all' = show every
   // kind grouped into sections; a specific kind = flat list of that kind.
   const [kindFilter, setKindFilter] = useState<ResourceKind | 'all'>('all');
+  // Edit drawer — opens when a row is clicked. The drawer slides in
+  // from the right and exposes the resource's editable fields.
+  const [editItem, setEditItem] = useState<MarketItem | null>(null);
 
   useEffect(() => {
     setEnabled(prev => {
@@ -843,7 +845,11 @@ function MyResourcesManageView({
                         return (
                           <div
                             key={it.id}
-                            className="flex items-center gap-3 px-3.5 py-2.5 rounded-lg border border-border/20 bg-card/40 hover:bg-card transition-colors"
+                            role="button"
+                            tabIndex={0}
+                            onClick={() => setEditItem(it)}
+                            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setEditItem(it); } }}
+                            className="group flex items-center gap-3 px-3.5 py-2.5 rounded-lg border border-border/20 bg-card/40 hover:bg-card hover:border-border/40 cursor-pointer transition-colors"
                           >
                             <Avatar item={it} size={32} />
                             <div className="flex-1 min-w-0">
@@ -865,7 +871,7 @@ function MyResourcesManageView({
 
                             <button
                               type="button"
-                              onClick={() => toggleEnabled(it.id)}
+                              onClick={(e) => { e.stopPropagation(); toggleEnabled(it.id); }}
                               aria-label={isOn ? '已启用' : '已禁用'}
                               className={`relative inline-flex h-5 w-9 flex-shrink-0 items-center rounded-full transition-colors ${
                                 isOn ? 'bg-foreground' : 'bg-muted-foreground/25'
@@ -880,20 +886,10 @@ function MyResourcesManageView({
 
                             <button
                               type="button"
-                              onClick={() => onOpenDetail(it)}
-                              aria-label="查看详情"
-                              title="详情"
-                              className="h-7 w-7 inline-flex items-center justify-center rounded-md text-muted-foreground/55 hover:text-foreground hover:bg-muted/40 transition-colors"
-                            >
-                              <ExternalLink size={12} />
-                            </button>
-
-                            <button
-                              type="button"
-                              onClick={() => onUninstall(it.id)}
+                              onClick={(e) => { e.stopPropagation(); onUninstall(it.id); }}
                               aria-label={it.custom ? '删除自定义' : '卸载'}
                               title={it.custom ? '删除' : '卸载'}
-                              className="h-7 w-7 inline-flex items-center justify-center rounded-md text-muted-foreground/55 hover:text-destructive hover:bg-destructive/10 transition-colors"
+                              className="h-7 w-7 inline-flex items-center justify-center rounded-md text-muted-foreground/55 hover:text-destructive hover:bg-destructive/10 transition-colors opacity-0 group-hover:opacity-100"
                             >
                               <X size={13} />
                             </button>
@@ -915,7 +911,170 @@ function MyResourcesManageView({
           </div>{/* /flex split */}
         </div>{/* /max-w container */}
       </div>{/* /scroll */}
+
+      {/* Edit drawer — slides in from the right when a row is clicked */}
+      <ResourceEditDrawer
+        item={editItem}
+        onOpenChange={(open) => { if (!open) setEditItem(null); }}
+        enabled={editItem ? enabled.has(editItem.id) : false}
+        onToggleEnabled={(id) => toggleEnabled(id)}
+        onDelete={(id) => { onUninstall(id); setEditItem(null); }}
+      />
     </div>
+  );
+}
+
+// ─── Resource edit drawer (slides in from the right) ─────────────────
+
+function ResourceEditDrawer({
+  item, onOpenChange, enabled, onToggleEnabled, onDelete,
+}: {
+  item: MarketItem | null;
+  onOpenChange: (open: boolean) => void;
+  enabled: boolean;
+  onToggleEnabled: (id: string) => void;
+  onDelete: (id: string) => void;
+}) {
+  // Local form state — seeded from the item on open. Saving is mocked
+  // (closes the drawer); a real impl would commit back to a store.
+  const [name, setName] = useState('');
+  const [tagline, setTagline] = useState('');
+  const [description, setDescription] = useState('');
+  const [category, setCategory] = useState('');
+
+  useEffect(() => {
+    if (item) {
+      setName(item.name);
+      setTagline(item.tagline);
+      setDescription(item.tagline);
+      setCategory(item.category);
+    }
+  }, [item]);
+
+  if (!item) return (
+    <Sheet open={false} onOpenChange={onOpenChange}>
+      <SheetContent />
+    </Sheet>
+  );
+
+  const KIcon = KIND_ICON[item.kind];
+
+  return (
+    <Sheet open={!!item} onOpenChange={onOpenChange}>
+      <SheetContent
+        side="right"
+        showCloseButton={false}
+        className="!max-w-[480px] sm:!max-w-[480px] w-full p-0 flex flex-col"
+      >
+        <SheetHeader className="px-5 pt-5 pb-3 border-b border-border/25">
+          <div className="flex items-start gap-3">
+            <Avatar item={item} size={40} />
+            <div className="flex-1 min-w-0">
+              <SheetTitle className="text-base font-semibold truncate">
+                {item.name}
+              </SheetTitle>
+              <SheetDescription className="text-[11px] text-muted-foreground/60 flex items-center gap-1.5 mt-1">
+                <KIcon size={10} />
+                <span>{KIND_LABEL[item.kind]}</span>
+                <span className="text-muted-foreground/30">·</span>
+                <span>{item.author}</span>
+                {item.custom && (
+                  <>
+                    <span className="text-muted-foreground/30">·</span>
+                    <span>自定义</span>
+                  </>
+                )}
+              </SheetDescription>
+            </div>
+            <button
+              type="button"
+              onClick={() => onOpenChange(false)}
+              aria-label="关闭"
+              className="h-7 w-7 inline-flex items-center justify-center rounded-md text-muted-foreground/60 hover:text-foreground hover:bg-muted/40 transition-colors flex-shrink-0"
+            >
+              <X size={14} />
+            </button>
+          </div>
+        </SheetHeader>
+
+        <div className="flex-1 overflow-y-auto scrollbar-thin px-5 py-4 space-y-4">
+          {/* Enabled toggle */}
+          <div className="flex items-center justify-between gap-3 px-3 py-2.5 rounded-lg border border-border/20 bg-muted/15">
+            <div className="min-w-0">
+              <div className="text-sm text-foreground">启用</div>
+              <div className="text-[11px] text-muted-foreground/60">
+                禁用后该资源不会被对话/工具调用
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => onToggleEnabled(item.id)}
+              aria-label={enabled ? '已启用' : '已禁用'}
+              className={`relative inline-flex h-5 w-9 flex-shrink-0 items-center rounded-full transition-colors ${
+                enabled ? 'bg-foreground' : 'bg-muted-foreground/25'
+              }`}
+            >
+              <span
+                className={`inline-block h-4 w-4 transform rounded-full bg-background transition-transform ${
+                  enabled ? 'translate-x-[18px]' : 'translate-x-0.5'
+                }`}
+              />
+            </button>
+          </div>
+
+          {/* Editable fields — common to all kinds for now. A real impl
+              would expand per-kind (system prompt for assistants,
+              workflow steps for agents, files for kb, etc.) */}
+          <div>
+            <label className="text-xs text-muted-foreground/70 mb-1.5 block">名称</label>
+            <Input value={name} onChange={e => setName(e.target.value)} className="h-9 text-sm" />
+          </div>
+          <div>
+            <label className="text-xs text-muted-foreground/70 mb-1.5 block">一句话简介</label>
+            <Input value={tagline} onChange={e => setTagline(e.target.value)} className="h-9 text-sm" />
+          </div>
+          <div>
+            <label className="text-xs text-muted-foreground/70 mb-1.5 block">分类</label>
+            <Input value={category} onChange={e => setCategory(e.target.value)} className="h-9 text-sm" />
+          </div>
+          <div>
+            <label className="text-xs text-muted-foreground/70 mb-1.5 block">详细描述</label>
+            <Textarea
+              value={description}
+              onChange={e => setDescription(e.target.value)}
+              rows={6}
+              className="text-xs leading-relaxed resize-none"
+            />
+          </div>
+
+          <div className="pt-2">
+            <button
+              type="button"
+              onClick={() => onDelete(item.id)}
+              className="text-[11px] text-destructive/85 hover:text-destructive transition-colors"
+            >
+              {item.custom ? '删除这条自定义资源' : '从我的资源中卸载'}
+            </button>
+          </div>
+        </div>
+
+        <SheetFooter className="px-5 py-3 border-t border-border/25 bg-muted/15">
+          <div className="flex items-center justify-end gap-2 w-full">
+            <Button variant="ghost" size="sm" onClick={() => onOpenChange(false)} className="h-8">
+              取消
+            </Button>
+            <Button
+              variant="default"
+              size="sm"
+              onClick={() => onOpenChange(false)}
+              className="h-8 bg-foreground text-background hover:bg-foreground/90"
+            >
+              保存
+            </Button>
+          </div>
+        </SheetFooter>
+      </SheetContent>
+    </Sheet>
   );
 }
 
