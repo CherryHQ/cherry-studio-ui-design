@@ -233,9 +233,9 @@ export function MarketPage() {
   // set to 'none' after closing, blocking all clicks. Flush it whenever
   // every dialog is closed.
   useEffect(() => {
-    const anyOpen = onboardOpen || detailItem !== null || submitOpen || manageOpen || newCustomOpen;
+    const anyOpen = onboardOpen || detailItem !== null || submitOpen || newCustomOpen;
     if (!anyOpen) document.body.style.pointerEvents = '';
-  }, [onboardOpen, detailItem, submitOpen, manageOpen, newCustomOpen]);
+  }, [onboardOpen, detailItem, submitOpen, newCustomOpen]);
 
   const toggleInstall = (id: string) => {
     setInstalled(prev => {
@@ -313,6 +313,30 @@ export function MarketPage() {
   );
 
   const currentSlide = heroSlides[heroIndex];
+
+  // When 管理 is active, replace the market home with the full-page
+  // manage view. Detail / submit / create-custom dialogs remain
+  // available on top of it.
+  if (manageOpen) {
+    return (
+      <>
+        <MyResourcesManageView
+          items={myResources}
+          onBack={() => setManageOpen(false)}
+          onOpenDetail={(it) => setDetailItem(it)}
+          onUninstall={(id) => toggleInstall(id)}
+          onCreateCustom={() => setNewCustomOpen(true)}
+        />
+        <MarketDetailDialog
+          item={detailItem}
+          onOpenChange={(open) => { if (!open) setDetailItem(null); }}
+          installed={detailItem ? installed.has(detailItem.id) : false}
+          onToggleInstall={(id) => toggleInstall(id)}
+        />
+        <SubmitResourceDialog open={newCustomOpen} onOpenChange={setNewCustomOpen} mode="custom" />
+      </>
+    );
+  }
 
   return (
     <div className="flex flex-col h-full bg-background">
@@ -525,15 +549,6 @@ export function MarketPage() {
       />
       <SubmitResourceDialog open={submitOpen} onOpenChange={setSubmitOpen} />
       <SubmitResourceDialog open={newCustomOpen} onOpenChange={setNewCustomOpen} mode="custom" />
-      <MyResourcesManageDialog
-        open={manageOpen}
-        onOpenChange={setManageOpen}
-        items={myResources}
-        installed={installed}
-        onOpenDetail={(it) => { setManageOpen(false); setDetailItem(it); }}
-        onUninstall={(id) => toggleInstall(id)}
-        onCreateCustom={() => setNewCustomOpen(true)}
-      />
     </div>
   );
 }
@@ -632,27 +647,22 @@ function PublisherFilterDropdown() {
   );
 }
 
-// ─── 我的资源 → 管理 dialog ───────────────────────────────────────────
+// ─── 我的资源 → 管理 view (full-page) ────────────────────────────────
 
-function MyResourcesManageDialog({
-  open, onOpenChange, items, installed, onOpenDetail, onUninstall, onCreateCustom,
+function MyResourcesManageView({
+  items, onBack, onOpenDetail, onUninstall, onCreateCustom,
 }: {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
   items: MarketItem[];
-  installed: Set<string>;
+  onBack: () => void;
   onOpenDetail: (item: MarketItem) => void;
   onUninstall: (id: string) => void;
   onCreateCustom: () => void;
 }) {
-  // Items default to enabled. We don't sync against `items` changes
-  // beyond mount — toggling install in the underlying page won't
-  // reset a user's deliberate enable/disable decisions here.
+  // Items default to enabled. Don't sync against `items` changes beyond
+  // adding newcomers, so the user's deliberate disable choices stick.
   const [enabled, setEnabled] = useState<Set<string>>(() => new Set(items.map(it => it.id)));
   const [filter, setFilter] = useState<'all' | 'installed' | 'custom'>('all');
 
-  // Newly appearing items in the list (e.g. a freshly installed one
-  // while the manage dialog is open) should default to enabled.
   useEffect(() => {
     setEnabled(prev => {
       let changed = false;
@@ -680,58 +690,71 @@ function MyResourcesManageDialog({
   const customCount    = items.filter(it => it.custom).length;
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[820px] p-0 overflow-hidden">
-        <DialogHeader className="px-6 pt-5 pb-3 border-b border-border/30">
-          <div className="flex items-center gap-2">
-            <DialogTitle className="text-base font-semibold">管理我的资源</DialogTitle>
-            <span className="text-xs text-muted-foreground/60 tabular-nums">{items.length}</span>
-          </div>
-          <DialogDescription className="text-xs text-muted-foreground/70 mt-1">
-            统一管理已安装与自定义创建的所有资源 — 启停、编辑、卸载，所有动作即时生效。
-          </DialogDescription>
-        </DialogHeader>
-
-        {/* Filter pills + 新建 action */}
-        <div className="px-6 pt-3 pb-2 flex items-center justify-between gap-3 border-b border-border/15">
-          <div className="flex items-center gap-1.5">
-          {([
-            { id: 'all',       label: '全部',       count: items.length    },
-            { id: 'installed', label: '从市场安装', count: installedCount  },
-            { id: 'custom',    label: '自定义',     count: customCount     },
-          ] as const).map(f => {
-            const active = filter === f.id;
-            return (
-              <button
-                key={f.id}
-                type="button"
-                onClick={() => setFilter(f.id)}
-                className={`px-2.5 h-7 rounded-md text-xs inline-flex items-center gap-1.5 transition-colors ${
-                  active
-                    ? 'bg-foreground text-background'
-                    : 'text-muted-foreground/75 hover:text-foreground hover:bg-muted/40'
-                }`}
-              >
-                {f.label}
-                <span className={`tabular-nums text-[10px] ${active ? 'opacity-75' : 'opacity-55'}`}>{f.count}</span>
-              </button>
-            );
-          })}
-          </div>
+    <div className="flex flex-col h-full bg-background">
+      {/* Top bar — back + title + 新建 */}
+      <div className="flex-shrink-0 px-6 pt-5">
+        <div className="max-w-[1120px] mx-auto flex items-center justify-between gap-4">
+          <button
+            type="button"
+            onClick={onBack}
+            className="inline-flex items-center gap-1.5 h-8 px-2 -ml-2 rounded-md text-sm text-muted-foreground/75 hover:text-foreground hover:bg-muted/40 transition-colors"
+          >
+            <ChevronLeft size={14} />
+            返回市场
+          </button>
           <Button
-            variant="outline"
+            variant="default"
             size="xs"
             onClick={onCreateCustom}
-            className="h-7 gap-1 text-xs"
+            className="h-8 px-2.5 gap-1 text-xs bg-foreground text-background hover:bg-foreground/90"
           >
-            <Plus size={11} />
-            新建
+            <Plus size={12} />
+            新建资源
           </Button>
         </div>
+      </div>
 
-        <div className="max-h-[55vh] overflow-y-auto scrollbar-thin px-4 py-3">
+      <div className="flex-1 overflow-y-auto scrollbar-thin">
+        <div className="max-w-[1120px] mx-auto px-6 pt-6 pb-10">
+          {/* Title + summary */}
+          <div className="mb-5">
+            <div className="flex items-baseline gap-2">
+              <h1 className="text-xl font-semibold text-foreground">管理我的资源</h1>
+              <span className="text-xs text-muted-foreground/60 tabular-nums">{items.length}</span>
+            </div>
+            <p className="text-xs text-muted-foreground/70 mt-1">
+              统一管理已安装与自定义创建的所有资源 — 启停、编辑、卸载，所有动作即时生效。
+            </p>
+          </div>
+
+          {/* Filter pills */}
+          <div className="flex items-center gap-1.5 mb-4">
+            {([
+              { id: 'all',       label: '全部',       count: items.length    },
+              { id: 'installed', label: '从市场安装', count: installedCount  },
+              { id: 'custom',    label: '自定义',     count: customCount     },
+            ] as const).map(f => {
+              const active = filter === f.id;
+              return (
+                <button
+                  key={f.id}
+                  type="button"
+                  onClick={() => setFilter(f.id)}
+                  className={`px-3 h-8 rounded-md text-xs inline-flex items-center gap-1.5 transition-colors ${
+                    active
+                      ? 'bg-foreground text-background'
+                      : 'text-muted-foreground/75 hover:text-foreground hover:bg-muted/40'
+                  }`}
+                >
+                  {f.label}
+                  <span className={`tabular-nums text-[10px] ${active ? 'opacity-75' : 'opacity-55'}`}>{f.count}</span>
+                </button>
+              );
+            })}
+          </div>
+
           {visible.length === 0 ? (
-            <div className="border border-dashed border-border/30 rounded-xl py-10 flex flex-col items-center text-muted-foreground/55">
+            <div className="border border-dashed border-border/30 rounded-xl py-12 flex flex-col items-center text-muted-foreground/55">
               <Sparkles size={20} strokeWidth={1.3} className="mb-2 text-muted-foreground/30" />
               <p className="text-xs">这个分类下还没有资源</p>
             </div>
@@ -743,7 +766,7 @@ function MyResourcesManageDialog({
                 return (
                   <div
                     key={it.id}
-                    className="flex items-center gap-3 px-3 py-2.5 rounded-lg border border-border/20 bg-card/40 hover:bg-card transition-colors"
+                    className="flex items-center gap-3 px-3.5 py-2.5 rounded-lg border border-border/20 bg-card/40 hover:bg-card transition-colors"
                   >
                     <Avatar item={it} size={32} />
                     <div className="flex-1 min-w-0">
@@ -767,7 +790,6 @@ function MyResourcesManageDialog({
                       </div>
                     </div>
 
-                    {/* Enable/disable toggle (visual switch) */}
                     <button
                       type="button"
                       onClick={() => toggleEnabled(it.id)}
@@ -783,20 +805,16 @@ function MyResourcesManageDialog({
                       />
                     </button>
 
-                    {/* Detail */}
                     <button
                       type="button"
                       onClick={() => onOpenDetail(it)}
                       aria-label="查看详情"
-                      className="h-7 w-7 inline-flex items-center justify-center rounded-md text-muted-foreground/55 hover:text-foreground hover:bg-muted/40 transition-colors"
                       title="详情"
+                      className="h-7 w-7 inline-flex items-center justify-center rounded-md text-muted-foreground/55 hover:text-foreground hover:bg-muted/40 transition-colors"
                     >
                       <ExternalLink size={12} />
                     </button>
 
-                    {/* Uninstall / delete — only meaningful for installed items;
-                        custom items would normally have a delete-custom action
-                        but we share the same affordance for now */}
                     <button
                       type="button"
                       onClick={() => onUninstall(it.id)}
@@ -811,20 +829,13 @@ function MyResourcesManageDialog({
               })}
             </div>
           )}
-        </div>
 
-        <DialogFooter className="px-5 py-3 border-t border-border/20 bg-muted/15">
-          <div className="flex items-center justify-between gap-2 w-full">
-            <span className="text-[11px] text-muted-foreground/55">
-              启用 / 禁用 即刻生效，无需重启会话。
-            </span>
-            <Button variant="default" size="sm" onClick={() => onOpenChange(false)} className="h-8 bg-foreground text-background hover:bg-foreground/90">
-              完成
-            </Button>
-          </div>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+          <p className="text-[11px] text-muted-foreground/55 mt-6 text-center">
+            启用 / 禁用 即刻生效，无需重启会话。
+          </p>
+        </div>
+      </div>
+    </div>
   );
 }
 
