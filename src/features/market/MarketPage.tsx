@@ -7,7 +7,7 @@ import {
   Upload, Link2, Bot,
 } from 'lucide-react';
 import {
-  Button, Input, Textarea, SearchInput, Typography, Badge,
+  Button, Input, Textarea, SearchInput, Typography, Badge, Slider,
   Popover, PopoverTrigger, PopoverContent,
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
   Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetFooter,
@@ -54,6 +54,25 @@ interface MarketItem {
   trending?: boolean;
   /** User-created resource — only appears in 我的资源, never in 探索. */
   custom?: boolean;
+  // ── Optional, kind-specific edit fields (mirrors V2 library editor
+  // schema; see DESIGN audit). Filled lazily by the 管理 drawer so
+  // existing CATALOG entries don't need to declare them up front.
+  /** Assistant: system prompt. Agent: agent instructions. Prompt: body. */
+  body?: string;
+  /** Assistant + Agent: backing model id (e.g. 'claude-sonnet-4-6'). */
+  model?: string;
+  /** Assistant: sampling temperature (0–2). */
+  temperature?: number;
+  /** Agent: permission mode. */
+  permissionMode?: 'default' | 'plan' | 'acceptEdits' | 'bypassPermissions';
+  /** Agent: max conversation turns (0 = default). */
+  maxTurns?: number;
+  /** MCP: server endpoint. */
+  baseUrl?: string;
+  /** CLI: install command. */
+  installCmd?: string;
+  /** KB / Integration: connection / status string for the readonly stat line. */
+  statusLabel?: string;
 }
 
 const KIND_LABEL: Record<ResourceKind, string> = {
@@ -944,6 +963,42 @@ function MyResourcesManageView({
 
 // ─── Resource edit drawer (slides in from the right) ─────────────────
 
+function FieldSection({
+  title, hint, children,
+}: {
+  title: string;
+  hint?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <section className="space-y-2.5">
+      <div className="flex items-baseline justify-between gap-3">
+        <h3 className="text-xs font-medium text-foreground/75 uppercase tracking-wide">{title}</h3>
+        {hint && <span className="text-[11px] text-muted-foreground/55">{hint}</span>}
+      </div>
+      <div className="space-y-2.5">{children}</div>
+    </section>
+  );
+}
+
+function Field({
+  label, hint, children,
+}: {
+  label: string;
+  hint?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div>
+      <div className="flex items-baseline justify-between gap-3 mb-1.5">
+        <label className="text-xs text-muted-foreground/75">{label}</label>
+        {hint && <span className="text-[10px] text-muted-foreground/50">{hint}</span>}
+      </div>
+      {children}
+    </div>
+  );
+}
+
 function ResourceEditDrawer({
   item, onOpenChange, enabled, onToggleEnabled, onDelete, onSave,
 }: {
@@ -956,13 +1011,21 @@ function ResourceEditDrawer({
 }) {
   // Local form state, seeded once per item via lazy initializer.
   // (Parent passes a fresh `key` whenever `item` changes, so this
-  // component remounts and the initializers re-read the new values.
-  // Saving is mocked — closes the drawer; a real impl would commit
-  // back to a store.)
-  const [name, setName] = useState(() => item?.name ?? '');
-  const [tagline, setTagline] = useState(() => item?.tagline ?? '');
-  const [description, setDescription] = useState(() => item?.tagline ?? '');
-  const [category, setCategory] = useState(() => item?.category ?? '');
+  // component remounts and the initializers re-read the new values.)
+  // Field set mirrors the V2 资源库 editor (per-kind sections; see
+  // .context/cherry-v2/src/renderer/src/pages/library/editor/…).
+  const [name, setName]                     = useState(() => item?.name ?? '');
+  const [tagline, setTagline]               = useState(() => item?.tagline ?? '');
+  const [category, setCategory]             = useState(() => item?.category ?? '');
+  const [body, setBody]                     = useState(() => item?.body ?? '');
+  const [model, setModel]                   = useState(() => item?.model ?? '');
+  const [temperature, setTemperature]       = useState(() => item?.temperature ?? 0.7);
+  const [permissionMode, setPermissionMode] = useState<NonNullable<MarketItem['permissionMode']>>(
+    () => item?.permissionMode ?? 'default',
+  );
+  const [maxTurns, setMaxTurns]             = useState(() => item?.maxTurns ?? 0);
+  const [baseUrl, setBaseUrl]               = useState(() => item?.baseUrl ?? '');
+  const [installCmd, setInstallCmd]         = useState(() => item?.installCmd ?? '');
 
   if (!item) return (
     <Sheet open={false} onOpenChange={onOpenChange}>
@@ -1035,30 +1098,175 @@ function ResourceEditDrawer({
             </button>
           </div>
 
-          {/* Editable fields — common to all kinds for now. A real impl
-              would expand per-kind (system prompt for assistants,
-              workflow steps for agents, files for kb, etc.) */}
-          <div>
-            <label className="text-xs text-muted-foreground/70 mb-1.5 block">名称</label>
-            <Input value={name} onChange={e => setName(e.target.value)} className="h-9 text-sm" />
-          </div>
-          <div>
-            <label className="text-xs text-muted-foreground/70 mb-1.5 block">一句话简介</label>
-            <Input value={tagline} onChange={e => setTagline(e.target.value)} className="h-9 text-sm" />
-          </div>
-          <div>
-            <label className="text-xs text-muted-foreground/70 mb-1.5 block">分类</label>
-            <Input value={category} onChange={e => setCategory(e.target.value)} className="h-9 text-sm" />
-          </div>
-          <div>
-            <label className="text-xs text-muted-foreground/70 mb-1.5 block">详细描述</label>
-            <Textarea
-              value={description}
-              onChange={e => setDescription(e.target.value)}
-              rows={6}
-              className="text-xs leading-relaxed resize-none"
-            />
-          </div>
+          {/* ── 基础信息 (common across kinds, with one exception:
+                 Prompt uses 标题 / 内容 instead of 名称 / 简介 since
+                 that's how V2's PromptConfigPage shapes it.) */}
+          <FieldSection title="基础信息">
+            <Field label={item.kind === 'prompt' ? '标题' : '名称'}>
+              <Input value={name} onChange={e => setName(e.target.value)} className="h-9 text-sm" />
+            </Field>
+            {item.kind !== 'prompt' && (
+              <Field label="一句话简介">
+                <Input value={tagline} onChange={e => setTagline(e.target.value)} className="h-9 text-sm" />
+              </Field>
+            )}
+            {item.kind !== 'prompt' && (
+              <Field label="分类">
+                <Input value={category} onChange={e => setCategory(e.target.value)} className="h-9 text-sm" />
+              </Field>
+            )}
+          </FieldSection>
+
+          {/* ── Kind-specific sections — mirror V2 library editor schemas */}
+          {item.kind === 'assistant' && (
+            <>
+              <FieldSection title="系统提示词" hint="支持 {{date}} / {{model_name}} 等变量">
+                <Textarea
+                  value={body}
+                  onChange={e => setBody(e.target.value)}
+                  rows={10}
+                  placeholder="在这里输入系统提示词…"
+                  className="text-xs leading-relaxed resize-none font-mono"
+                />
+              </FieldSection>
+              <FieldSection title="模型与参数">
+                <Field label="默认模型">
+                  <Input
+                    value={model}
+                    onChange={e => setModel(e.target.value)}
+                    placeholder="例如 claude-sonnet-4-6"
+                    className="h-9 text-sm font-mono"
+                  />
+                </Field>
+                <Field label={`温度 (${temperature.toFixed(2)})`} hint="0 = 精确，2 = 创意">
+                  <Slider
+                    value={[temperature]}
+                    onValueChange={([v]) => setTemperature(v)}
+                    min={0}
+                    max={2}
+                    step={0.05}
+                    className="py-1"
+                  />
+                </Field>
+              </FieldSection>
+            </>
+          )}
+
+          {item.kind === 'agent' && (
+            <>
+              <FieldSection title="系统提示词" hint="告诉 Agent 它是谁、它能做什么">
+                <Textarea
+                  value={body}
+                  onChange={e => setBody(e.target.value)}
+                  rows={10}
+                  placeholder="例如：你是一个谨慎的研究助手，遇到不确定的信息先搜索…"
+                  className="text-xs leading-relaxed resize-none font-mono"
+                />
+              </FieldSection>
+              <FieldSection title="模型">
+                <Field label="主模型">
+                  <Input
+                    value={model}
+                    onChange={e => setModel(e.target.value)}
+                    placeholder="例如 claude-opus-4-7"
+                    className="h-9 text-sm font-mono"
+                  />
+                </Field>
+              </FieldSection>
+              <FieldSection title="权限与执行">
+                <Field label="权限模式">
+                  <div className="inline-flex items-center gap-0 rounded-md border border-border/40 bg-muted/15 p-0.5">
+                    {([
+                      { id: 'default',          label: '默认' },
+                      { id: 'plan',             label: 'Plan' },
+                      { id: 'acceptEdits',      label: '接受编辑' },
+                      { id: 'bypassPermissions', label: '绕过' },
+                    ] as const).map(opt => {
+                      const active = permissionMode === opt.id;
+                      return (
+                        <button
+                          key={opt.id}
+                          type="button"
+                          onClick={() => setPermissionMode(opt.id)}
+                          className={`px-2.5 h-7 rounded text-xs transition-colors ${
+                            active
+                              ? 'bg-background text-foreground shadow-xs'
+                              : 'text-muted-foreground/75 hover:text-foreground'
+                          }`}
+                        >
+                          {opt.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </Field>
+                <Field label="最大对话轮数" hint="0 表示使用默认值">
+                  <Input
+                    type="number"
+                    min={0}
+                    max={100}
+                    value={maxTurns}
+                    onChange={e => setMaxTurns(parseInt(e.target.value, 10) || 0)}
+                    className="h-9 text-sm w-32"
+                  />
+                </Field>
+              </FieldSection>
+            </>
+          )}
+
+          {item.kind === 'prompt' && (
+            <FieldSection title="内容" hint='可在文本中用 ${variable} 插入变量'>
+              <Textarea
+                value={body}
+                onChange={e => setBody(e.target.value)}
+                rows={14}
+                placeholder="在这里输入 prompt 模板…"
+                className="text-xs leading-relaxed resize-none font-mono"
+              />
+            </FieldSection>
+          )}
+
+          {item.kind === 'mcp' && (
+            <FieldSection title="MCP 配置">
+              <Field label="服务地址">
+                <Input
+                  value={baseUrl}
+                  onChange={e => setBaseUrl(e.target.value)}
+                  placeholder="stdio://… 或 https://…"
+                  className="h-9 text-sm font-mono"
+                />
+              </Field>
+            </FieldSection>
+          )}
+
+          {item.kind === 'cli' && (
+            <FieldSection title="安装">
+              <Field label="安装命令">
+                <Input
+                  value={installCmd}
+                  onChange={e => setInstallCmd(e.target.value)}
+                  placeholder="npm i -g ... / brew install ..."
+                  className="h-9 text-sm font-mono"
+                />
+              </Field>
+            </FieldSection>
+          )}
+
+          {(item.kind === 'kb' || item.kind === 'integration' || item.kind === 'skill') && (
+            <FieldSection title={item.kind === 'skill' ? '说明' : '描述'}>
+              <Textarea
+                value={body}
+                onChange={e => setBody(e.target.value)}
+                rows={6}
+                placeholder={
+                  item.kind === 'kb' ? '知识库的内容范围、来源、更新频率…'
+                  : item.kind === 'integration' ? '该集成的功能、授权范围、限制…'
+                  : '说明这个 Skill 做什么 / 如何调用…'
+                }
+                className="text-xs leading-relaxed resize-none"
+              />
+            </FieldSection>
+          )}
 
           <div className="pt-2">
             <button
@@ -1079,7 +1287,35 @@ function ResourceEditDrawer({
             <Button
               variant="default"
               size="sm"
-              onClick={() => onSave(item.id, { name, tagline, category })}
+              onClick={() => {
+                // Build a patch that only carries fields meaningful for
+                // this kind, mirroring V2's per-kind save payloads.
+                const patch: Partial<MarketItem> = { name };
+                if (item.kind !== 'prompt') {
+                  patch.tagline = tagline;
+                  patch.category = category;
+                }
+                if (item.kind === 'assistant') {
+                  patch.body = body;
+                  patch.model = model;
+                  patch.temperature = temperature;
+                } else if (item.kind === 'agent') {
+                  patch.body = body;
+                  patch.model = model;
+                  patch.permissionMode = permissionMode;
+                  patch.maxTurns = maxTurns;
+                } else if (item.kind === 'prompt') {
+                  patch.body = body;
+                } else if (item.kind === 'mcp') {
+                  patch.baseUrl = baseUrl;
+                } else if (item.kind === 'cli') {
+                  patch.installCmd = installCmd;
+                } else {
+                  // kb / integration / skill — carry the description body
+                  patch.body = body;
+                }
+                onSave(item.id, patch);
+              }}
               className="h-8 bg-foreground text-background hover:bg-foreground/90"
             >
               保存
