@@ -279,26 +279,33 @@ export function MarketPage() {
     .slice(0, 6),
   [filtered]);
 
-  // Group everything else by category, biggest groups first. Skipped
-  // when there's an active search (search shows results flat instead
-  // of by category).
-  const categoryGroups = useMemo(() => {
+  // Sections under Featured:
+  //   - On 全部:     group by 功能 (= resource kind) — one section per
+  //                  Skill / MCP / CLI / Agent / Assistant / Prompt / 知识库 / 集成.
+  //   - On a kind:   group by 场景标签 (= category field — 开发 / 数据 /
+  //                  办公 / 编程 / 研究 / 内容创作 / …) since the
+  //                  function is already fixed by the sidebar.
+  //   - Skipped during search — results render flat under 搜索结果.
+  const sectionGroups = useMemo(() => {
     if (search.trim()) return [];
     const featuredIds = new Set(featured.map(f => f.id));
     const rest = filtered.filter(it => !featuredIds.has(it.id));
-    const byCat = new Map<string, MarketItem[]>();
+    const byKey = new Map<string, MarketItem[]>();
+    const keyOf = (it: MarketItem) => kind === 'all' ? it.kind : it.category;
     rest.forEach(it => {
-      const arr = byCat.get(it.category) ?? [];
+      const k = keyOf(it);
+      const arr = byKey.get(k) ?? [];
       arr.push(it);
-      byCat.set(it.category, arr);
+      byKey.set(k, arr);
     });
-    return [...byCat.entries()]
-      .map(([category, items]) => ({
-        category,
+    return [...byKey.entries()]
+      .map(([key, items]) => ({
+        key,
+        label: kind === 'all' ? KIND_LABEL[key as ResourceKind] : key,
         items: items.sort((a, b) => b.installs - a.installs),
       }))
-      .sort((a, b) => b.items.length - a.items.length || a.category.localeCompare(b.category));
-  }, [filtered, featured, search]);
+      .sort((a, b) => b.items.length - a.items.length || a.label.localeCompare(b.label));
+  }, [filtered, featured, search, kind]);
 
   const myResources = useMemo(
     () => CATALOG.filter(it => it.custom || installed.has(it.id)),
@@ -483,15 +490,15 @@ export function MarketPage() {
               </section>
             )
           ) : (
-            categoryGroups.length === 0 && featured.length === 0 ? (
+            sectionGroups.length === 0 && featured.length === 0 ? (
               <div className="border border-dashed border-border/30 rounded-xl py-12 flex flex-col items-center text-muted-foreground/55">
                 <Sparkles size={20} strokeWidth={1.3} className="mb-2 text-muted-foreground/30" />
                 <p className="text-xs">没有匹配的资源</p>
               </div>
             ) : (
-              categoryGroups.map(({ category, items }) => (
-                <section key={category} className="mb-8 last:mb-0">
-                  <h2 className="text-sm font-medium text-foreground mb-3">{category}</h2>
+              sectionGroups.map(({ key, label, items }) => (
+                <section key={key} className="mb-8 last:mb-0">
+                  <h2 className="text-sm font-medium text-foreground mb-3">{label}</h2>
                   <MarketRowGrid
                     items={items}
                     installed={installed}
