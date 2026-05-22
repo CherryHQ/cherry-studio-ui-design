@@ -362,21 +362,32 @@ function PromptEditPage({ resource, onBack, onSave, inModal = false }: {
 }) {
   const [name, setName] = useState(resource.name);
   const [content, setContent] = useState(resource.content || '');
+  const [tags, setTags] = useState<string[]>(resource.tags || []);
+  const [tagInput, setTagInput] = useState('');
   const [showVarPanel, setShowVarPanel] = useState(false);
   const [activeSection, setActiveSection] = useState<'basic' | 'content'>('basic');
 
   const vars = extractVars(content);
-  const hasChanges = name !== resource.name || content !== (resource.content || '');
+  const tagsChanged = tags.join('|') !== (resource.tags || []).join('|');
+  const hasChanges = name !== resource.name || content !== (resource.content || '') || tagsChanged;
 
   const handleSave = () => {
     if (!name.trim()) return;
-    onSave({ name: name.trim(), content, description: content.slice(0, 60).replace(/\n/g, ' '), updatedAt: new Date().toISOString() });
+    onSave({ name: name.trim(), content, tags, description: content.slice(0, 60).replace(/\n/g, ' '), updatedAt: new Date().toISOString() });
   };
 
   const handleInsertVar = (varName: string) => {
     setContent(prev => prev + '${' + varName + '}');
     setShowVarPanel(false);
   };
+
+  const addTag = (raw: string) => {
+    const t = raw.trim();
+    if (!t || tags.includes(t)) return;
+    setTags(prev => [...prev, t]);
+    setTagInput('');
+  };
+  const removeTag = (t: string) => setTags(prev => prev.filter(x => x !== t));
 
   // ── Section bodies, reused below ──────────────────────────────
   const BasicSection = (
@@ -387,6 +398,41 @@ function PromptEditPage({ resource, onBack, onSave, inModal = false }: {
         <Input value={name} onChange={e => setName(e.target.value)}
           className="w-full bg-muted/30 border border-border/40 px-3.5 py-2.5 text-sm text-foreground rounded-xl"
           placeholder="Prompt 名称" />
+      </div>
+      <div>
+        <p className="text-xs text-muted-foreground/60 mb-2 font-medium">标签</p>
+        <div className="min-h-[36px] px-2.5 py-2 rounded-xl border border-border/40 bg-muted/30 flex flex-wrap items-center gap-1.5">
+          {tags.map(tag => {
+            const c = TAG_COLORS[tag] || DEFAULT_TAG_COLOR;
+            return (
+              <span key={tag} className={`inline-flex items-center gap-1 px-1.5 py-[2px] rounded-md text-[11px] border ${c.badge}`}>
+                <span className={`w-1.5 h-1.5 rounded-full ${c.dot}`} />
+                {tag}
+                <button
+                  type="button"
+                  onClick={() => removeTag(tag)}
+                  aria-label={`移除 ${tag}`}
+                  className="ml-0.5 opacity-50 hover:opacity-100 transition-opacity"
+                >
+                  <X size={9} />
+                </button>
+              </span>
+            );
+          })}
+          <input
+            value={tagInput}
+            onChange={e => setTagInput(e.target.value)}
+            onKeyDown={e => {
+              if (e.key === 'Enter' && tagInput.trim()) {
+                e.preventDefault();
+                addTag(tagInput);
+              }
+              if (e.key === 'Backspace' && !tagInput && tags.length > 0) removeTag(tags[tags.length - 1]);
+            }}
+            placeholder={tags.length === 0 ? '输入标签，回车添加' : ''}
+            className="flex-1 min-w-[80px] bg-transparent outline-none text-sm text-foreground placeholder:text-muted-foreground/55"
+          />
+        </div>
       </div>
     </div>
   );
