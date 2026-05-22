@@ -1487,7 +1487,7 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
     setSelectedFile(null);
   }, []);
 
-  const { moveToBin: moveToRecycleBin, skipSessionConfirm, setSkipSessionConfirm, retentionDays: recycleRetentionDays } = useRecycleBin();
+  const { moveToBin: moveToRecycleBin, retentionDays: recycleRetentionDays } = useRecycleBin();
   const [pendingDeleteSession, setPendingDeleteSession] = useState<AgentSession | null>(null);
 
   const sendSessionToBin = useCallback((session: AgentSession) => {
@@ -1516,12 +1516,8 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
   const handleDeleteSession = useCallback((id: string) => {
     const session = sessions.find(s => s.id === id);
     if (!session) return;
-    if (skipSessionConfirm) {
-      sendSessionToBin(session);
-    } else {
-      setPendingDeleteSession(session);
-    }
-  }, [sessions, skipSessionConfirm, sendSessionToBin]);
+    setPendingDeleteSession(session);
+  }, [sessions]);
 
   const handleRenameGroup = useCallback((oldName: string, newName: string) => {
     setSessions(prev => prev.map(s =>
@@ -1981,19 +1977,12 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
       <RecycleBinConfirmDialog
         open={!!pendingDeleteSession}
         onOpenChange={(open) => { if (!open) setPendingDeleteSession(null); }}
-        itemName={pendingDeleteSession?.title ?? ''}
-        itemIcon={pendingDeleteSession?.agentIcon ?? '▶️'}
-        itemTypeLabel="Agent 会话"
         retentionDays={recycleRetentionDays}
-        allowSkip
-        onConfirm={(skipNextTime) => {
-          if (pendingDeleteSession) {
-            if (skipNextTime) setSkipSessionConfirm(true);
-            sendSessionToBin(pendingDeleteSession);
-          }
-          setPendingDeleteSession(null);
+        onConfirm={() => {
+          if (pendingDeleteSession) sendSessionToBin(pendingDeleteSession);
         }}
       />
+
     </div>
   );
 }

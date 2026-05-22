@@ -6,18 +6,17 @@ import { toast } from 'sonner';
 // ===========================
 
 export type RecycleBinItemType =
-  // 对话记录
+  // 历史记录（用户的活动产出）
   | 'topic'        // 聊天助手的话题
   | 'session'      // Agent 运行会话
+  | 'painting'     // 绘图（在「创作」里生成的图）
   // 自定义资源（与「新建自定义资源」Dialog 一一对应）
   | 'skill'
-  | 'cli'
   | 'assistant'
   | 'agent'
   | 'mcp'
   | 'prompt'
-  | 'kb'
-  | 'integration';
+  | 'kb';
 export type RecycleBinItemSource = 'manual' | 'uninstall';
 
 export interface RecycleBinItem {
@@ -32,11 +31,16 @@ export interface RecycleBinItem {
   /** True if the item was deleted from the 归档管理 page — surfaced as a
       "曾归档" badge in the recycle bin so users can recall the path. */
   fromArchived?: boolean;
-  /** Parent bin item id. When a parent (assistant/agent) is deleted, its
-      child topics/sessions enter the bin as a group; children cannot be
-      independently restored or permanently deleted while the parent is
-      in the bin (the parent's action cascades). */
-  parentId?: string;
+  /** Display name of the assistant/agent this item originally belonged to.
+      In the decoupled model, topics/sessions are no longer tightly bound
+      to a parent — this is just informational context shown in the meta
+      line, and used by the orphan-recovery flow to decide whether to
+      show the fallback-parent picker. */
+  originalParentName?: string;
+  /** True when the original parent (assistant/agent) no longer exists in
+      any state. On restore, the user is offered a small picker to choose
+      a fallback parent instead of being blocked. */
+  originalParentMissing?: boolean;
 }
 
 interface MoveToBinOptions {
@@ -48,13 +52,12 @@ interface MoveToBinOptions {
 interface RecycleBinContextValue {
   items: RecycleBinItem[];
   retentionDays: number;
-  skipTopicConfirm: boolean;
-  skipSessionConfirm: boolean;
   setRetentionDays: (days: number) => void;
-  setSkipTopicConfirm: (v: boolean) => void;
-  setSkipSessionConfirm: (v: boolean) => void;
   moveToBin: (item: Omit<RecycleBinItem, 'deletedAt' | 'expiresAt'>, options?: MoveToBinOptions) => void;
-  restore: (id: string) => void;
+  /** Restore an item from the bin. `silent` skips the generic "已恢复"
+      toast — callers that want to show their own (e.g. orphan-recovery
+      with the picked fallback parent name) should pass silent: true. */
+  restore: (id: string, options?: { silent?: boolean }) => void;
   permanentDelete: (id: string) => void;
   restoreMany: (ids: string[]) => void;
   permanentDeleteMany: (ids: string[]) => void;
@@ -161,42 +164,77 @@ const seedItems: RecycleBinItem[] = [
     expiresAt: now + 24 * MS_PER_DAY,
   },
 
-  // ── Parent-child cascade example: a deleted assistant taking its
-  // child topics with it. Demonstrates the group display + locked-child
-  // affordances in the recycle bin UI.
+  // ── Decoupled flat items. Topics and sessions no longer cascade with
+  // their parent; they live in the bin as independent peers. The
+  // `originalParentName` field is just informational meta. When the
+  // original parent is gone (`originalParentMissing: true`), restoring
+  // pops a fallback-parent picker dialog instead of being blocked.
   {
-    id: 'rb-grp-translator',
-    type: 'assistant',
-    name: 'Translator',
-    icon: '🌐',
-    meta: '自定义',
-    source: 'manual',
-    deletedAt: now - 3 * MS_PER_DAY,
-    expiresAt: now + 27 * MS_PER_DAY,
-  },
-  {
-    id: 'rb-grp-translator-c1',
+    id: 'rb-orphan-1',
     type: 'topic',
     name: '如何翻译技术文档',
     icon: '💬',
-    meta: 'Translator',
+    meta: 'Translator（已删除）',
     source: 'manual',
     deletedAt: now - 3 * MS_PER_DAY,
     expiresAt: now + 27 * MS_PER_DAY,
-    parentId: 'rb-grp-translator',
+    originalParentName: 'Translator',
+    originalParentMissing: true,
   },
   {
-    id: 'rb-grp-translator-c2',
-    type: 'topic',
-    name: '中英文术语对照表',
-    icon: '💬',
-    meta: 'Translator',
+    id: 'rb-orphan-2',
+    type: 'session',
+    name: '周报生成 · 第 12 周',
+    icon: '▶️',
+    meta: '周报生成 Agent（已删除）',
     source: 'manual',
-    deletedAt: now - 3 * MS_PER_DAY,
-    expiresAt: now + 27 * MS_PER_DAY,
-    parentId: 'rb-grp-translator',
+    deletedAt: now - 4 * MS_PER_DAY,
+    expiresAt: now + 26 * MS_PER_DAY,
+    originalParentName: '周报生成 Agent',
+    originalParentMissing: true,
+  },
+
+  // ── Painting (drawings produced in 创作 page) ─────────────────────
+  {
+    id: 'rb-painting-1',
+    type: 'painting',
+    name: '赛博朋克城市夜景，霓虹灯反射在湿润的街道上',
+    icon: '🎨',
+    meta: 'Midjourney v6 · 1024×1024',
+    source: 'manual',
+    deletedAt: now - 1 * MS_PER_DAY,
+    expiresAt: now + 29 * MS_PER_DAY,
+  },
+  {
+    id: 'rb-painting-2',
+    type: 'painting',
+    name: '极简风格的工作台插画，光线柔和',
+    icon: '🎨',
+    meta: 'DALL·E 3 · 1792×1024',
+    source: 'manual',
+    deletedAt: now - 8 * MS_PER_DAY,
+    expiresAt: now + 22 * MS_PER_DAY,
   },
 ];
+
+// ===========================
+// Fallback-parent mock — used by the orphan-recovery picker.
+// In real product this would query active assistants/agents from the
+// store; prototype uses a fixed small list per type.
+// ===========================
+export const FALLBACK_PARENTS_BY_TYPE: Partial<Record<RecycleBinItemType, { id: string; name: string; isDefault?: boolean }[]>> = {
+  topic: [
+    { id: 'fallback-default-assistant', name: '默认助手', isDefault: true },
+    { id: 'fallback-claude',            name: 'Claude 4 Sonnet' },
+    { id: 'fallback-gpt',               name: 'GPT-4o' },
+    { id: 'fallback-gemini',            name: 'Gemini 2.5 Pro' },
+  ],
+  session: [
+    { id: 'fallback-default-agent',     name: '默认 Agent',     isDefault: true },
+    { id: 'fallback-code-agent',        name: 'Coding Agent' },
+    { id: 'fallback-research-agent',    name: 'Research Agent' },
+  ],
+};
 
 // ===========================
 // Context
@@ -206,8 +244,6 @@ const RecycleBinContext = createContext<RecycleBinContextValue | null>(null);
 export function RecycleBinProvider({ children }: { children: React.ReactNode }) {
   const [items, setItems] = useState<RecycleBinItem[]>(seedItems);
   const [retentionDays, setRetentionDays] = useState(RETENTION_DAYS_DEFAULT);
-  const [skipTopicConfirm, setSkipTopicConfirm] = useState(false);
-  const [skipSessionConfirm, setSkipSessionConfirm] = useState(false);
 
   // Stored undo / restore callbacks keyed by item id; kept in a ref so the
   // bin doesn't re-render every time a callback is registered.
@@ -216,15 +252,6 @@ export function RecycleBinProvider({ children }: { children: React.ReactNode }) 
   const removeFromBin = useCallback((id: string) => {
     setItems(prev => prev.filter(it => it.id !== id));
     callbacksRef.current.delete(id);
-  }, []);
-
-  // Cascade helper: given an item id, returns the set of ids that should
-  // be acted on together — the item itself, plus any direct children
-  // (items whose parentId === id). Children of children are not supported
-  // (the model is single-level: parent has children, children are leaves).
-  const expandCascade = useCallback((id: string, allItems: RecycleBinItem[]): string[] => {
-    const children = allItems.filter(it => it.parentId === id).map(it => it.id);
-    return [id, ...children];
   }, []);
 
   const moveToBin = useCallback<RecycleBinContextValue['moveToBin']>((item, options) => {
@@ -242,25 +269,15 @@ export function RecycleBinProvider({ children }: { children: React.ReactNode }) 
           ? {
               label: '撤销',
               onClick: () => {
-                // Run the parent's onUndo (restores source state).
                 const cb = callbacksRef.current.get(item.id);
                 cb?.onUndo?.();
-                // Cascade-remove from bin: parent + any children that
-                // were seeded with parentId = item.id. Children are a
-                // group — undoing the parent should also pull them out
-                // of the bin (they were never independent entities).
-                setItems(prev => {
-                  const removeIds = new Set<string>([item.id]);
-                  prev.forEach(it => { if (it.parentId === item.id) removeIds.add(it.id); });
-                  removeIds.forEach(id => callbacksRef.current.delete(id));
-                  return prev.filter(it => !removeIds.has(it.id));
-                });
+                removeFromBin(item.id);
               },
             }
           : undefined,
       });
     }
-  }, [retentionDays]);
+  }, [retentionDays, removeFromBin]);
 
   // Recycle-bin "restore":
   // - If a call site registered an explicit onRestore, it owns the user
@@ -268,43 +285,25 @@ export function RecycleBinProvider({ children }: { children: React.ReactNode }) 
   //   "已恢复" success toast to avoid duplication.
   // - Otherwise fall back to onUndo (most call sites only register that)
   //   and show the generic toast since the callback is silent.
-  const restore = useCallback((id: string) => {
-    // Cascade: restoring a parent also restores all its children.
-    const cascadeIds = expandCascade(id, items);
-    let usedFallback = 0;
-    cascadeIds.forEach(cid => {
-      const cb = callbacksRef.current.get(cid);
-      if (cb?.onRestore) {
-        cb.onRestore();
-      } else {
-        cb?.onUndo?.();
-        usedFallback++;
-      }
-      callbacksRef.current.delete(cid);
-    });
-    setItems(prev => prev.filter(it => !cascadeIds.includes(it.id)));
-    if (usedFallback > 0) {
-      const childCount = cascadeIds.length - 1;
-      toast.success(childCount > 0 ? `已恢复（含 ${childCount} 个子项）` : '已恢复');
+  const restore = useCallback((id: string, options?: { silent?: boolean }) => {
+    const cb = callbacksRef.current.get(id);
+    if (cb?.onRestore) {
+      cb.onRestore();
+    } else {
+      cb?.onUndo?.();
+      if (!options?.silent) toast.success('已恢复');
     }
-  }, [items, expandCascade]);
+    removeFromBin(id);
+  }, [removeFromBin]);
 
   const permanentDelete = useCallback((id: string) => {
-    const cascadeIds = expandCascade(id, items);
-    cascadeIds.forEach(cid => callbacksRef.current.delete(cid));
-    setItems(prev => prev.filter(it => !cascadeIds.includes(it.id)));
-    const childCount = cascadeIds.length - 1;
-    toast.success(childCount > 0 ? `已永久删除（含 ${childCount} 个子项）` : '已永久删除');
-  }, [items, expandCascade]);
+    removeFromBin(id);
+    toast.success('已永久删除');
+  }, [removeFromBin]);
 
   const restoreMany = useCallback((ids: string[]) => {
-    // Expand each id to include its children, then de-dup.
-    const allIds = new Set<string>();
-    ids.forEach(id => expandCascade(id, items).forEach(cid => allIds.add(cid)));
-    const expandedIds = Array.from(allIds);
-
     let usedFallback = 0;
-    expandedIds.forEach(id => {
+    ids.forEach(id => {
       const cb = callbacksRef.current.get(id);
       if (cb?.onRestore) {
         cb.onRestore();
@@ -314,20 +313,17 @@ export function RecycleBinProvider({ children }: { children: React.ReactNode }) 
       }
       callbacksRef.current.delete(id);
     });
-    setItems(prev => prev.filter(it => !expandedIds.includes(it.id)));
+    setItems(prev => prev.filter(it => !ids.includes(it.id)));
     if (usedFallback > 0) {
-      toast.success(`已恢复 ${expandedIds.length} 项`);
+      toast.success(`已恢复 ${ids.length} 项`);
     }
-  }, [items, expandCascade]);
+  }, []);
 
   const permanentDeleteMany = useCallback((ids: string[]) => {
-    const allIds = new Set<string>();
-    ids.forEach(id => expandCascade(id, items).forEach(cid => allIds.add(cid)));
-    const expandedIds = Array.from(allIds);
-    expandedIds.forEach(id => callbacksRef.current.delete(id));
-    setItems(prev => prev.filter(it => !expandedIds.includes(it.id)));
-    toast.success(`已永久删除 ${expandedIds.length} 项`);
-  }, [items, expandCascade]);
+    ids.forEach(id => callbacksRef.current.delete(id));
+    setItems(prev => prev.filter(it => !ids.includes(it.id)));
+    toast.success(`已永久删除 ${ids.length} 项`);
+  }, []);
 
   const empty = useCallback(() => {
     const count = items.length;
@@ -339,18 +335,14 @@ export function RecycleBinProvider({ children }: { children: React.ReactNode }) 
   const value = useMemo<RecycleBinContextValue>(() => ({
     items,
     retentionDays,
-    skipTopicConfirm,
-    skipSessionConfirm,
     setRetentionDays,
-    setSkipTopicConfirm,
-    setSkipSessionConfirm,
     moveToBin,
     restore,
     permanentDelete,
     restoreMany,
     permanentDeleteMany,
     empty,
-  }), [items, retentionDays, skipTopicConfirm, skipSessionConfirm, moveToBin, restore, permanentDelete, restoreMany, permanentDeleteMany, empty]);
+  }), [items, retentionDays, moveToBin, restore, permanentDelete, restoreMany, permanentDeleteMany, empty]);
 
   return <RecycleBinContext.Provider value={value}>{children}</RecycleBinContext.Provider>;
 }

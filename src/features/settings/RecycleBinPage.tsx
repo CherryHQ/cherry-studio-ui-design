@@ -1,83 +1,74 @@
 import React, { useState, useMemo } from 'react';
+import { toast } from 'sonner';
 import {
   Trash2, ArchiveRestore, MessageSquare, Bot, Layers,
-  Settings2, AlertTriangle, FileText, Play, ChevronDown, Clock,
-  Sparkles, Terminal, MousePointerClick, Network, BookOpen, Plug,
+  Settings2, AlertTriangle, FileText, Play, ChevronDown,
+  Sparkles, MousePointerClick, Network, BookOpen, Palette,
 } from 'lucide-react';
 import {
-  Button, SearchInput, EmptyState, Typography, Checkbox,
+  Button, EmptyState, Typography, Checkbox,
   Popover, PopoverTrigger, PopoverContent,
   Dialog, DialogContent,
 } from '@cherry-studio/ui';
-import { Tooltip } from '@/app/components/Tooltip';
-import { useRecycleBin, type RecycleBinItem, type RecycleBinItemType } from '@/app/context/RecycleBinContext';
+import {
+  useRecycleBin,
+  FALLBACK_PARENTS_BY_TYPE,
+  type RecycleBinItem,
+  type RecycleBinItemType,
+} from '@/app/context/RecycleBinContext';
 
 // ===========================
 // Type config
 // ===========================
-// Icons aligned with MarketPage's KIND_ICON so users see a consistent
-// visual language across 市场 / 资源库 / 回收站.
 const TYPE_ICON: Record<RecycleBinItemType, React.ComponentType<{ size?: number; className?: string }>> = {
   topic: MessageSquare,
   session: Play,
+  painting: Palette,
   skill: Sparkles,
-  cli: Terminal,
   assistant: MousePointerClick,
   agent: Bot,
   mcp: Network,
   prompt: FileText,
   kb: BookOpen,
-  integration: Plug,
 };
 
 const TYPE_LABEL: Record<RecycleBinItemType, string> = {
   topic: '聊天话题',
   session: 'Agent 会话',
+  painting: '绘图',
   skill: 'Skill',
-  cli: 'CLI',
   assistant: '助手',
   agent: 'Agent',
   mcp: 'MCP',
   prompt: 'Prompt',
   kb: '知识库',
-  integration: '集成',
 };
 
-// Type filter groups, rendered as two sections with sub-headers in the
-// sidebar. Keeps the long list readable.
 const TYPE_FILTER_GROUPS: { title: string | null; items: { id: 'all' | RecycleBinItemType; label: string }[] }[] = [
   {
     title: null,
     items: [{ id: 'all', label: '全部' }],
   },
   {
-    title: '对话记录',
+    title: '历史记录',
     items: [
-      { id: 'topic',   label: '聊天话题' },
-      { id: 'session', label: 'Agent 会话' },
+      { id: 'topic',    label: '聊天话题' },
+      { id: 'session',  label: 'Agent 会话' },
+      { id: 'painting', label: '绘图' },
     ],
   },
   {
     title: '自定义资源',
     items: [
-      { id: 'skill',       label: 'Skill' },
-      { id: 'cli',         label: 'CLI' },
-      { id: 'assistant',   label: '助手' },
-      { id: 'agent',       label: 'Agent' },
-      { id: 'mcp',         label: 'MCP' },
-      { id: 'prompt',      label: 'Prompt' },
-      { id: 'kb',          label: '知识库' },
-      { id: 'integration', label: '集成' },
+      { id: 'skill',     label: 'Skill' },
+      { id: 'assistant', label: '助手' },
+      { id: 'agent',     label: 'Agent' },
+      { id: 'mcp',       label: 'MCP' },
+      { id: 'prompt',    label: 'Prompt' },
+      { id: 'kb',        label: '知识库' },
     ],
   },
 ];
-
-const TIME_FILTERS = [
-  { id: 'all', label: '全部时间' },
-  { id: 'today', label: '今天' },
-  { id: '7d', label: '7 天内' },
-  { id: '30d', label: '30 天内' },
-] as const;
 
 const RETENTION_OPTIONS = [
   { value: 7, label: '7 天' },
@@ -97,10 +88,6 @@ function formatRelativeDelete(ts: number): string {
   return `${Math.floor(days / 30)} 个月前`;
 }
 
-function remainingDays(expiresAt: number): number {
-  return Math.max(0, Math.ceil((expiresAt - Date.now()) / MS_PER_DAY));
-}
-
 // ===========================
 // Page
 // ===========================
@@ -111,37 +98,15 @@ export function RecycleBinPage() {
   } = useRecycleBin();
 
   const [typeFilter, setTypeFilter] = useState<'all' | RecycleBinItemType>('all');
-  const [timeFilter, setTimeFilter] = useState<typeof TIME_FILTERS[number]['id']>('all');
-  const [search, setSearch] = useState('');
   const [selected, setSelected] = useState<Set<string>>(new Set());
-  const [emptyConfirmOpen, setEmptyConfirmOpen] = useState(false);
+  // Pending state for the 4 iOS-style confirm dialogs (per-row delete,
+  // batch delete, empty bin, retention shortening). Toast-based versions
+  // felt out of place; we revert to small modal alerts for consistency
+  // with the move-to-bin confirm dialog.
   const [permanentDeletePending, setPermanentDeletePending] = useState<RecycleBinItem | null>(null);
   const [batchDeleteConfirmOpen, setBatchDeleteConfirmOpen] = useState(false);
-  const [retentionWarnPending, setRetentionWarnPending] = useState<{ next: number; affectedCount: number } | null>(null);
-
-  // When the user shortens retention, count items that would expire within
-  // 7 days under the new policy. If any, prompt before applying.
-  const handleRetentionChange = (next: number) => {
-    if (next < retentionDays) {
-      const sevenDaysMs = 7 * MS_PER_DAY;
-      const affected = items.filter(it => {
-        const expiresUnderNew = it.deletedAt + next * MS_PER_DAY;
-        return expiresUnderNew - Date.now() <= sevenDaysMs;
-      }).length;
-      if (affected > 0) {
-        setRetentionWarnPending({ next, affectedCount: affected });
-        return;
-      }
-    }
-    setRetentionDays(next);
-  };
-
-  const confirmRetentionChange = () => {
-    if (retentionWarnPending) {
-      setRetentionDays(retentionWarnPending.next);
-      setRetentionWarnPending(null);
-    }
-  };
+  const [emptyConfirmOpen, setEmptyConfirmOpen] = useState(false);
+  const [retentionWarnPending, setRetentionWarnPending] = useState<{ next: number; immediateCount: number; soonCount: number } | null>(null);
 
   // Counts per type
   const typeCounts = useMemo(() => {
@@ -150,62 +115,11 @@ export function RecycleBinPage() {
     return acc;
   }, [items]);
 
-  // Cascade helpers: find direct children of a parent and look up a
-  // child's parent (for the locked-child tooltip — uses the parent's
-  // actual type label like "助手" / "Agent" so users get a natural
-  // sentence instead of a technical "父级" word).
-  const getChildren = (parentId: string) => items.filter(it => it.parentId === parentId);
-  const getParentLabel = (childItem: RecycleBinItem): string | undefined => {
-    if (!childItem.parentId) return undefined;
-    const parent = items.find(it => it.id === childItem.parentId);
-    if (!parent) return undefined;
-    return `${TYPE_LABEL[parent.type]} 「${parent.name}」`;
-  };
-
-  const isFiltering = typeFilter !== 'all' || timeFilter !== 'all' || !!search;
-
-  // Filtered list. In the no-filter "All" view, we re-order so children
-  // appear immediately after their parent (group rendering). In any
-  // filtered view, items render flat by deletedAt — children may show
-  // without their parent context, but their lock state is preserved.
   const filtered = useMemo(() => {
-    const matched = items.filter(it => {
-      if (typeFilter !== 'all' && it.type !== typeFilter) return false;
-      if (timeFilter !== 'all') {
-        const ageMs = Date.now() - it.deletedAt;
-        if (timeFilter === 'today' && ageMs > MS_PER_DAY) return false;
-        if (timeFilter === '7d' && ageMs > 7 * MS_PER_DAY) return false;
-        if (timeFilter === '30d' && ageMs > 30 * MS_PER_DAY) return false;
-      }
-      if (search) {
-        const q = search.toLowerCase();
-        if (!it.name.toLowerCase().includes(q) && !(it.meta?.toLowerCase().includes(q))) return false;
-      }
-      return true;
-    });
-    const byDeletedAt = (a: RecycleBinItem, b: RecycleBinItem) => b.deletedAt - a.deletedAt;
-
-    if (isFiltering) {
-      return matched.sort(byDeletedAt);
-    }
-
-    // Group ordering: parents (no parentId) sorted by deletedAt, with
-    // their matched children inlined immediately after each parent.
-    const matchedSet = new Set(matched.map(it => it.id));
-    const parents = matched.filter(it => !it.parentId).sort(byDeletedAt);
-    const childrenInMatched = matched.filter(it => it.parentId && matchedSet.has(it.parentId));
-    const orphansInView = matched.filter(it => it.parentId && !matchedSet.has(it.parentId)).sort(byDeletedAt);
-
-    const ordered: RecycleBinItem[] = [];
-    parents.forEach(p => {
-      ordered.push(p);
-      childrenInMatched.filter(c => c.parentId === p.id).forEach(c => ordered.push(c));
-    });
-    // Children whose parent didn't pass the filter (shouldn't happen with
-    // current logic since unfiltered view includes all items, but safety):
-    ordered.push(...orphansInView);
-    return ordered;
-  }, [items, typeFilter, timeFilter, search, isFiltering]);
+    return items
+      .filter(it => typeFilter === 'all' || it.type === typeFilter)
+      .sort((a, b) => b.deletedAt - a.deletedAt);
+  }, [items, typeFilter]);
 
   const allFilteredSelected = filtered.length > 0 && filtered.every(it => selected.has(it.id));
   const someSelected = selected.size > 0;
@@ -219,39 +133,54 @@ export function RecycleBinPage() {
   };
 
   const toggleSelectAll = () => {
-    if (allFilteredSelected) {
-      setSelected(new Set());
+    if (allFilteredSelected) setSelected(new Set());
+    else setSelected(new Set(filtered.map(it => it.id)));
+  };
+
+  // Restore. For orphan items the row passes a fallback parent name —
+  // we show a context-rich toast and call restore in silent mode (the
+  // context's generic "已恢复" is suppressed to avoid double toasts).
+  const handleSingleRestore = (item: RecycleBinItem, fallbackName?: string) => {
+    if (fallbackName) {
+      toast.success(`「${item.name}」已恢复`, {
+        description: `归属到 ${fallbackName}`,
+      });
+      restore(item.id, { silent: true });
     } else {
-      setSelected(new Set(filtered.map(it => it.id)));
+      restore(item.id);
     }
   };
 
   const handleBatchRestore = () => {
-    restoreMany(Array.from(selected));
+    const ids = Array.from(selected);
+    restoreMany(ids);
     setSelected(new Set());
   };
 
-  const handleBatchDelete = () => {
-    setBatchDeleteConfirmOpen(true);
-  };
+  const handleSinglePermanentDelete = (item: RecycleBinItem) => setPermanentDeletePending(item);
+  const handleBatchDelete = () => setBatchDeleteConfirmOpen(true);
+  const handleEmptyBin = () => setEmptyConfirmOpen(true);
 
-  const confirmBatchDelete = () => {
-    permanentDeleteMany(Array.from(selected));
-    setSelected(new Set());
-    setBatchDeleteConfirmOpen(false);
-  };
-
-  const confirmPermanentDelete = () => {
-    if (permanentDeletePending) {
-      permanentDelete(permanentDeletePending.id);
-      setPermanentDeletePending(null);
+  const handleRetentionChange = (next: number) => {
+    if (next < retentionDays) {
+      const now = Date.now();
+      const sevenDaysMs = 7 * MS_PER_DAY;
+      // Split affected items into two buckets so the warning can clearly
+      // tell the user how many will be purged immediately (already past
+      // the new expiry) vs. how many will expire within the next 7 days.
+      let immediateCount = 0;
+      let soonCount = 0;
+      items.forEach(it => {
+        const expiresUnderNew = it.deletedAt + next * MS_PER_DAY;
+        if (expiresUnderNew <= now) immediateCount++;
+        else if (expiresUnderNew - now <= sevenDaysMs) soonCount++;
+      });
+      if (immediateCount + soonCount > 0) {
+        setRetentionWarnPending({ next, immediateCount, soonCount });
+        return;
+      }
     }
-  };
-
-  const handleEmptyConfirm = () => {
-    empty();
-    setSelected(new Set());
-    setEmptyConfirmOpen(false);
+    setRetentionDays(next);
   };
 
   return (
@@ -298,7 +227,7 @@ export function RecycleBinPage() {
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => setEmptyConfirmOpen(true)}
+                onClick={handleEmptyBin}
                 className="text-xs h-7 px-2 gap-1 text-destructive/80 hover:text-destructive hover:bg-destructive/10"
               >
                 <Trash2 size={12} />
@@ -345,411 +274,281 @@ export function RecycleBinPage() {
               </div>
             ))}
           </div>
-
         </div>
 
-        {/* Right: search + list */}
+        {/* Right: list */}
         <div className="flex-1 flex flex-col min-w-0">
-          {/* Cleanup banner — appears when bin holds many items. Demo
-              threshold is intentionally low (8) so the UI is visible
-              with seed data; real product uses 100+ per PRD. */}
-          {items.length > 8 && (
-            <div className="mx-6 mt-3 px-3 py-2 rounded-lg bg-accent-amber/8 border border-accent-amber/25 flex items-center gap-2 flex-shrink-0">
-              <AlertTriangle size={12} className="text-accent-amber flex-shrink-0" />
-              <p className="text-xs text-foreground/80 flex-1">
-                回收站已有 <span className="tabular-nums font-medium">{items.length}</span> 项，建议清理或缩短保留期。
-              </p>
+          {/* Selection-mode bar (only shows when items are checked). The
+              non-selected default shows nothing — keeps the page light. */}
+          {someSelected && (
+            <div className="flex items-center gap-2 px-6 pt-3 pb-2 flex-shrink-0 min-h-[40px]">
+              <label className="flex items-center gap-1.5 text-xs text-foreground cursor-pointer select-none">
+                <Checkbox checked={allFilteredSelected} onCheckedChange={toggleSelectAll} />
+                <span className="tabular-nums">已选 {selected.size} 项</span>
+              </label>
               <Button
                 variant="ghost"
-                size="inline"
-                onClick={() => setEmptyConfirmOpen(true)}
-                className="text-xs h-6 px-2 text-foreground/80 hover:text-foreground hover:bg-accent/40"
+                size="sm"
+                onClick={() => setSelected(new Set())}
+                className="text-xs h-7 px-2 gap-1 text-muted-foreground hover:text-foreground"
               >
-                清空回收站
+                取消选择
               </Button>
+              <div className="ml-auto flex items-center gap-1.5">
+                <Button variant="ghost" size="sm" onClick={handleBatchRestore} className="text-xs h-7 px-2 gap-1 hover:bg-accent/30">
+                  <ArchiveRestore size={11} />
+                  恢复
+                </Button>
+                <Button variant="ghost" size="sm" onClick={handleBatchDelete} className="text-xs h-7 px-2 gap-1 text-destructive/80 hover:text-destructive hover:bg-destructive/10">
+                  <Trash2 size={11} />
+                  永久删除
+                </Button>
+              </div>
             </div>
           )}
 
-          {/* Top bar — switches between "discover" mode (search + time filter)
-              and "selection" mode (batch actions) once items are checked.
-              Inspired by Gmail / 飞书邮箱: prevents cramming 6 controls on
-              one row, and matches the user's mental model — they don't
-              search while batch-operating. */}
-          <div className="flex items-center gap-2 px-6 pt-3 pb-2 flex-shrink-0 min-h-[44px]">
-            {someSelected ? (
-              <>
-                <label className="flex items-center gap-1.5 text-xs text-foreground cursor-pointer select-none">
-                  <Checkbox
-                    checked={allFilteredSelected}
-                    onCheckedChange={toggleSelectAll}
-                  />
-                  <span className="tabular-nums">已选 {selected.size} 项</span>
-                </label>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setSelected(new Set())}
-                  className="text-xs h-7 px-2 gap-1 text-muted-foreground hover:text-foreground"
-                >
-                  取消选择
-                </Button>
-
-                <div className="ml-auto flex items-center gap-1.5">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={handleBatchRestore}
-                    className="text-xs h-7 px-2 gap-1 hover:bg-accent/30"
-                  >
-                    <ArchiveRestore size={11} />
-                    恢复
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={handleBatchDelete}
-                    className="text-xs h-7 px-2 gap-1 text-destructive/80 hover:text-destructive hover:bg-destructive/10"
-                  >
-                    <Trash2 size={11} />
-                    永久删除
-                  </Button>
-                </div>
-              </>
-            ) : (
-              <>
-                <div className="flex-1 max-w-[320px]">
-                  <SearchInput
-                    value={search}
-                    onChange={setSearch}
-                    placeholder="搜索回收站..."
-                    clearable
-                  />
-                </div>
-
-                {/* 删除时间 dropdown — moved out of the left sidebar to avoid
-                    a second scrollbar when the type filter list is long. */}
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className={`text-xs h-7 px-2 gap-1 ${
-                        timeFilter !== 'all'
-                          ? 'text-foreground bg-accent/30'
-                          : 'text-muted-foreground hover:text-foreground'
-                      }`}
-                    >
-                      <Clock size={11} />
-                      <span>{TIME_FILTERS.find(f => f.id === timeFilter)?.label}</span>
-                      <ChevronDown size={11} className="opacity-60" />
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent align="end" className="w-[160px] p-1">
-                    <div className="space-y-px">
-                      {TIME_FILTERS.map(f => (
-                        <button
-                          key={f.id}
-                          onClick={() => setTimeFilter(f.id)}
-                          className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-md text-xs transition-colors ${
-                            timeFilter === f.id
-                              ? 'bg-accent text-foreground'
-                              : 'text-muted-foreground hover:bg-accent/40 hover:text-foreground'
-                          }`}
-                        >
-                          <span>{f.label}</span>
-                          {timeFilter === f.id && <span className="text-foreground/80">✓</span>}
-                        </button>
-                      ))}
-                    </div>
-                  </PopoverContent>
-                </Popover>
-
-                {filtered.length > 0 && (
-                  <label className="flex items-center gap-1.5 text-xs text-muted-foreground cursor-pointer select-none">
-                    <Checkbox
-                      checked={allFilteredSelected}
-                      onCheckedChange={toggleSelectAll}
-                    />
-                    全选
-                  </label>
-                )}
-              </>
-            )}
-          </div>
-
           {/* List */}
-          <div className="flex-1 overflow-y-auto px-6 pb-4 scrollbar-thin">
+          <div className="flex-1 overflow-y-auto px-6 pt-3 pb-4 scrollbar-thin">
             {filtered.length === 0 ? (
               <EmptyState
                 preset="no-result"
-                title={search || typeFilter !== 'all' || timeFilter !== 'all' ? '未找到匹配的项目' : '回收站是空的'}
-                description={search || typeFilter !== 'all' || timeFilter !== 'all' ? undefined : '删除的话题、助手、Agent、Skill 会暂存在这里。'}
+                title={typeFilter !== 'all' ? '该类型暂无已删除项' : '回收站是空的'}
+                description={typeFilter !== 'all' ? undefined : '删除的话题、助手、Agent、Skill 会暂存在这里。'}
                 compact
               />
             ) : (
               <div className="space-y-px">
-                {filtered.map(item => {
-                  const childCount = item.parentId ? 0 : getChildren(item.id).length;
-                  const parentLabel = getParentLabel(item);
-                  return (
-                    <RecycleBinRow
-                      key={item.id}
-                      item={item}
-                      selected={selected.has(item.id)}
-                      isChild={!!item.parentId}
-                      childCount={childCount}
-                      parentLabel={parentLabel}
-                      flattenChildVisual={isFiltering}
-                      onToggleSelect={() => toggleSelect(item.id)}
-                      onRestore={() => restore(item.id)}
-                      onDelete={() => setPermanentDeletePending(item)}
-                    />
-                  );
-                })}
+                {filtered.map(item => (
+                  <RecycleBinRow
+                    key={item.id}
+                    item={item}
+                    selected={selected.has(item.id)}
+                    onToggleSelect={() => toggleSelect(item.id)}
+                    onRestore={(fallbackName?: string) => handleSingleRestore(item, fallbackName)}
+                    onDelete={() => handleSinglePermanentDelete(item)}
+                  />
+                ))}
               </div>
             )}
           </div>
         </div>
       </div>
 
-      {/* Per-row permanent delete confirmation */}
-      <Dialog open={!!permanentDeletePending} onOpenChange={(open) => { if (!open) setPermanentDeletePending(null); }}>
-        <DialogContent className="w-[380px] p-5" showCloseButton={false}>
-          {permanentDeletePending && (() => {
-            const pendingChildCount = getChildren(permanentDeletePending.id).length;
-            return (
-              <>
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="w-9 h-9 rounded-lg bg-destructive/15 flex items-center justify-center flex-shrink-0">
-                    <Trash2 size={18} className="text-destructive" />
-                  </div>
-                  <div>
-                    <h3 className="text-sm text-foreground">
-                      {pendingChildCount > 0
-                        ? `永久删除「${permanentDeletePending.name}」及其 ${pendingChildCount} 个子项？`
-                        : '永久删除？'}
-                    </h3>
-                    <p className="text-xs text-muted-foreground mt-0.5">此操作无法撤销，不会再进入回收站。</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-accent/40 mb-4">
-                  {permanentDeletePending.icon && <span className="text-sm flex-shrink-0">{permanentDeletePending.icon}</span>}
-                  <span className="text-xs text-foreground truncate">{permanentDeletePending.name}</span>
-                  <span className="ml-auto text-[10px] px-1.5 py-px rounded border border-border/40 text-muted-foreground/70 flex-shrink-0">
-                    {TYPE_LABEL[permanentDeletePending.type]}
-                  </span>
-                </div>
-                {pendingChildCount > 0 && (
-                  <p className="text-[11px] text-muted-foreground/75 mb-4 -mt-2 px-1">
-                    级联删除：归属其下的 <span className="text-foreground/80 tabular-nums">{pendingChildCount}</span> 个子项会一并永久消失。
-                  </p>
-                )}
-                <div className="flex justify-end gap-2">
-                  <Button variant="ghost" size="sm" onClick={() => setPermanentDeletePending(null)} className="px-3 rounded-lg text-xs text-muted-foreground hover:bg-accent">
-                    取消
-                  </Button>
-                  <Button variant="destructive" size="sm" onClick={confirmPermanentDelete} className="px-3 rounded-lg text-xs">
-                    永久删除
-                  </Button>
-                </div>
-              </>
-            );
-          })()}
-        </DialogContent>
-      </Dialog>
-
-      {/* Batch permanent delete confirmation */}
-      <Dialog open={batchDeleteConfirmOpen} onOpenChange={setBatchDeleteConfirmOpen}>
-        <DialogContent className="w-[380px] p-5" showCloseButton={false}>
-          <div className="flex items-center gap-3 mb-3">
-            <div className="w-9 h-9 rounded-lg bg-destructive/15 flex items-center justify-center flex-shrink-0">
-              <Trash2 size={18} className="text-destructive" />
-            </div>
-            <div>
-              <h3 className="text-sm text-foreground">永久删除 {selected.size} 项？</h3>
-              <p className="text-xs text-muted-foreground mt-0.5">此操作无法撤销。</p>
-            </div>
-          </div>
-          <div className="flex justify-end gap-2">
-            <Button variant="ghost" size="sm" onClick={() => setBatchDeleteConfirmOpen(false)} className="px-3 rounded-lg text-xs text-muted-foreground hover:bg-accent">
-              取消
-            </Button>
-            <Button variant="destructive" size="sm" onClick={confirmBatchDelete} className="px-3 rounded-lg text-xs">
-              永久删除
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* Retention-shortening warning */}
-      <Dialog open={!!retentionWarnPending} onOpenChange={(open) => { if (!open) setRetentionWarnPending(null); }}>
-        <DialogContent className="w-[380px] p-5" showCloseButton={false}>
-          {retentionWarnPending && (
-            <>
-              <div className="flex items-center gap-3 mb-3">
-                <div className="w-9 h-9 rounded-lg bg-accent-amber/15 flex items-center justify-center flex-shrink-0">
-                  <AlertTriangle size={18} className="text-accent-amber" />
-                </div>
-                <div>
-                  <h3 className="text-sm text-foreground">缩短保留期？</h3>
-                  <p className="text-xs text-muted-foreground mt-0.5">
-                    将有 <span className="text-foreground/80 tabular-nums font-medium">{retentionWarnPending.affectedCount}</span> 项在 7 天内到期被自动清理。
-                  </p>
-                </div>
-              </div>
-              <p className="text-[11px] text-muted-foreground/75 mb-4 px-1">
-                现有项的剩余天数会按新保留期重新计算（删除时间 + 新保留期）。如有需要保留的项，请先恢复或导出。
-              </p>
-              <div className="flex justify-end gap-2">
-                <Button variant="ghost" size="sm" onClick={() => setRetentionWarnPending(null)} className="px-3 rounded-lg text-xs text-muted-foreground hover:bg-accent">
-                  取消
-                </Button>
-                <Button variant="destructive" size="sm" onClick={confirmRetentionChange} className="px-3 rounded-lg text-xs">
-                  仍然缩短
-                </Button>
-              </div>
-            </>
-          )}
-        </DialogContent>
-      </Dialog>
-
-      {/* Empty-recycle-bin confirmation */}
-      <Dialog open={emptyConfirmOpen} onOpenChange={setEmptyConfirmOpen}>
-        <DialogContent className="w-[360px] p-5" showCloseButton={false}>
-          <div className="flex items-center gap-3 mb-3">
-            <div className="w-9 h-9 rounded-lg bg-destructive/15 flex items-center justify-center flex-shrink-0">
-              <AlertTriangle size={18} className="text-destructive" />
-            </div>
-            <div>
-              <h3 className="text-sm text-foreground">清空回收站？</h3>
-              <p className="text-xs text-muted-foreground mt-0.5">将永久删除回收站中的所有 {items.length} 项，操作不可撤销。</p>
-            </div>
-          </div>
-          <div className="flex justify-end gap-2">
-            <Button variant="ghost" size="sm" onClick={() => setEmptyConfirmOpen(false)} className="px-3 rounded-lg text-xs text-muted-foreground hover:bg-accent">
-              取消
-            </Button>
-            <Button variant="destructive" size="sm" onClick={handleEmptyConfirm} className="px-3 rounded-lg text-xs">
-              清空
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+      {/* iOS-style confirm alerts for destructive actions. Same visual
+          pattern as the move-to-bin RecycleBinConfirmDialog. */}
+      <ConfirmAlert
+        open={!!permanentDeletePending}
+        onOpenChange={(o) => { if (!o) setPermanentDeletePending(null); }}
+        title="确认永久删除？"
+        actionLabel="永久删除"
+        onConfirm={() => permanentDeletePending && permanentDelete(permanentDeletePending.id)}
+      />
+      <ConfirmAlert
+        open={batchDeleteConfirmOpen}
+        onOpenChange={setBatchDeleteConfirmOpen}
+        title={`确认永久删除 ${selected.size} 项？`}
+        actionLabel="永久删除"
+        onConfirm={() => {
+          permanentDeleteMany(Array.from(selected));
+          setSelected(new Set());
+        }}
+      />
+      <ConfirmAlert
+        open={emptyConfirmOpen}
+        onOpenChange={setEmptyConfirmOpen}
+        title="清空回收站？"
+        description={`全部 ${items.length} 项将被永久删除`}
+        actionLabel="清空"
+        onConfirm={() => {
+          empty();
+          setSelected(new Set());
+        }}
+      />
+      <ConfirmAlert
+        open={!!retentionWarnPending}
+        onOpenChange={(o) => { if (!o) setRetentionWarnPending(null); }}
+        icon="warning"
+        title="缩短保留期？"
+        description={(() => {
+          if (!retentionWarnPending) return undefined;
+          const { immediateCount: imm, soonCount: soon } = retentionWarnPending;
+          if (imm > 0 && soon > 0) return `${imm} 项立即清理，${soon} 项 7 天内到期`;
+          if (imm > 0) return `${imm} 项将被立即清理`;
+          return `${soon} 项将在 7 天内到期`;
+        })()}
+        actionLabel="仍然缩短"
+        onConfirm={() => retentionWarnPending && setRetentionDays(retentionWarnPending.next)}
+      />
     </div>
   );
 }
 
 // ===========================
-// Row
+// Local iOS-style confirm alert — used by all 4 destructive confirms.
+// Matches the visual style of RecycleBinConfirmDialog (icon + title +
+// optional subtext + 2 side-by-side buttons).
+// ===========================
+function ConfirmAlert({
+  open, onOpenChange, icon = 'delete', title, description, actionLabel, onConfirm,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  icon?: 'delete' | 'warning';
+  title: string;
+  description?: string;
+  actionLabel: string;
+  onConfirm: () => void;
+}) {
+  const Icon = icon === 'warning' ? AlertTriangle : Trash2;
+  const tintBg = icon === 'warning' ? 'bg-accent-amber/15' : 'bg-destructive/12';
+  const tintFg = icon === 'warning' ? 'text-accent-amber' : 'text-destructive';
+  const actionCls = icon === 'warning' ? 'text-accent-amber hover:bg-accent-amber/12' : 'text-destructive hover:bg-destructive/8';
+  const handleConfirm = () => {
+    onConfirm();
+    onOpenChange(false);
+  };
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="w-[260px] p-0 overflow-hidden" showCloseButton={false}>
+        <div className="px-5 pt-5 pb-4 flex flex-col items-center text-center">
+          <div className={`rounded-[14px] ${tintBg} flex items-center justify-center mb-2.5`} style={{ width: 44, height: 44 }}>
+            <Icon size={20} className={tintFg} />
+          </div>
+          <h3 className="text-[15px] font-medium text-foreground">{title}</h3>
+          {description && (
+            <p className="text-xs text-muted-foreground mt-1 leading-relaxed">{description}</p>
+          )}
+        </div>
+        <div className="grid grid-cols-2 border-t border-border/30">
+          <Button
+            variant="ghost"
+            onClick={() => onOpenChange(false)}
+            className="h-11 rounded-none text-sm text-muted-foreground hover:bg-accent/40 hover:text-foreground border-r border-border/30"
+          >
+            取消
+          </Button>
+          <Button
+            variant="ghost"
+            onClick={handleConfirm}
+            className={`h-11 rounded-none text-sm ${actionCls}`}
+          >
+            {actionLabel}
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+// ===========================
+// Row — flat list, with an inline orphan-restore popover for items
+// whose original parent assistant/agent has been deleted.
 // ===========================
 function RecycleBinRow({
-  item, selected, isChild, childCount, parentLabel, flattenChildVisual,
-  onToggleSelect, onRestore, onDelete,
+  item, selected, onToggleSelect, onRestore, onDelete,
 }: {
   item: RecycleBinItem;
   selected: boolean;
-  isChild: boolean;
-  childCount: number;
-  /** Localized parent label like "助手 「Translator」" / "Agent 「周报生成 Agent」"
-      — used in the locked-child tooltip. */
-  parentLabel?: string;
-  /** When true (filter active), drop the indent/border styling on
-      children since their parent isn't visible. Lock semantics stay. */
-  flattenChildVisual?: boolean;
   onToggleSelect: () => void;
-  onRestore: () => void;
+  /** For non-orphan items, called with no arg → direct restore.
+      For orphan items, called with the picked fallback parent name
+      so the page can surface it in the success toast. */
+  onRestore: (fallbackName?: string) => void;
   onDelete: () => void;
 }) {
-  const remaining = remainingDays(item.expiresAt);
-  const badgeCls =
-    remaining <= 3 ? 'text-destructive bg-destructive/10' :
-    remaining <= 7 ? 'text-accent-amber bg-accent-amber/12' :
-    'text-muted-foreground bg-muted/40';
-  const lockedTooltip = isChild && parentLabel ? `请先恢复${parentLabel}` : undefined;
-  const renderIndented = isChild && !flattenChildVisual;
+  const isOrphan = !!item.originalParentMissing;
+  const fallbackOptions = FALLBACK_PARENTS_BY_TYPE[item.type] ?? [];
 
+  // When the popover is open, we force-keep the actions container visible
+  // even if the cursor has left the row's hover area. Without this, the
+  // action div collapses (display:none), which detaches the popover
+  // trigger and Radix dismisses the popover the moment the user tries
+  // to click an option.
+  const [popoverOpen, setPopoverOpen] = useState(false);
   return (
     <div
       className={`group flex items-center gap-3 px-2.5 py-2 rounded-lg transition-colors ${
         selected ? 'bg-accent/40' : 'hover:bg-accent/20'
-      } ${renderIndented ? 'pl-9 border-l-2 border-border/20 ml-3 rounded-l-none' : ''}`}
+      }`}
     >
-      <Checkbox
-        checked={selected}
-        onCheckedChange={isChild ? undefined : onToggleSelect}
-        disabled={isChild}
-        title={lockedTooltip}
-        className="flex-shrink-0"
-      />
+      <Checkbox checked={selected} onCheckedChange={onToggleSelect} className="flex-shrink-0" />
 
-      {/* Icon */}
-      <div className="w-7 h-7 rounded-md bg-muted/40 flex items-center justify-center flex-shrink-0 text-sm">
-        {item.icon ?? '📄'}
-      </div>
-
-      {/* Name + meta */}
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2">
-          <span className="text-sm text-foreground truncate">{item.name}</span>
-          <span className="text-[10px] px-1.5 py-px rounded border border-border/40 text-muted-foreground/70 flex-shrink-0">
-            {TYPE_LABEL[item.type]}
+      {/* Title + chips — single line, truncates name on overflow */}
+      <div className="flex-1 min-w-0 flex items-center gap-2">
+        <span className="text-sm text-foreground truncate">{item.name}</span>
+        <span className="text-[10px] px-1.5 py-px rounded border border-border/40 text-muted-foreground/70 flex-shrink-0">
+          {TYPE_LABEL[item.type]}
+        </span>
+        {item.fromArchived && (
+          <span className="text-[10px] px-1.5 py-px rounded bg-muted/50 text-muted-foreground/75 flex-shrink-0">
+            曾归档
           </span>
-          {item.fromArchived && (
-            <span className="text-[10px] px-1.5 py-px rounded bg-muted/50 text-muted-foreground/75 flex-shrink-0">
-              曾归档
-            </span>
-          )}
-          {isChild && (
-            <span className="text-[10px] px-1.5 py-px rounded bg-muted/40 text-muted-foreground/65 flex-shrink-0">
-              子项
-            </span>
-          )}
-          {childCount > 0 && (
-            <span className="text-[10px] px-1.5 py-px rounded bg-accent/40 text-foreground/75 flex-shrink-0">
-              含 {childCount} 个子项
-            </span>
-          )}
-        </div>
-        <div className="flex items-center gap-2 text-xs text-muted-foreground/70 mt-0.5">
-          {item.meta && <span className="truncate">{item.meta}</span>}
-          {item.meta && <span className="text-muted-foreground/40">·</span>}
-          <span>删除于 {formatRelativeDelete(item.deletedAt)}</span>
-        </div>
+        )}
       </div>
 
-      {/* Remaining badge */}
-      <span className={`text-[10px] px-1.5 py-0.5 rounded tabular-nums flex-shrink-0 group-hover:hidden ${badgeCls}`}>
-        {remaining === 0 ? '即将清理' : `剩 ${remaining} 天`}
+      {/* Right side: relative time (hidden on hover, replaced by actions) */}
+      <span className="text-xs text-muted-foreground/55 tabular-nums flex-shrink-0 group-hover:hidden">
+        {formatRelativeDelete(item.deletedAt)}
       </span>
-
-      {/* Hover actions */}
-      <div className="hidden group-hover:flex items-center gap-1 flex-shrink-0">
-        <Tooltip content={lockedTooltip ?? ''} side="top">
+      <div className={`items-center gap-1 flex-shrink-0 ${popoverOpen ? 'flex' : 'hidden group-hover:flex'}`}>
+        {isOrphan ? (
+          <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
+            <PopoverTrigger asChild>
+              <Button
+                variant="ghost"
+                size="inline"
+                className="px-2 py-[2px] text-xs gap-1 text-foreground hover:bg-accent/30"
+                title={item.originalParentName ? `原${item.type === 'topic' ? '助手' : 'Agent'} 「${item.originalParentName}」 已删除` : undefined}
+              >
+                <ArchiveRestore size={11} />
+                <span>恢复</span>
+                <ChevronDown size={10} className="opacity-60" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent align="end" className="w-[200px] p-1">
+              <p className="text-[11px] text-muted-foreground/70 px-2 pt-1.5 pb-1">
+                原{item.type === 'topic' ? '助手' : 'Agent'}已删除，选新归属：
+              </p>
+              <div className="space-y-px">
+                {fallbackOptions.map(opt => (
+                  <button
+                    key={opt.id}
+                    onClick={() => {
+                      setPopoverOpen(false);
+                      onRestore(opt.name);
+                    }}
+                    className="w-full flex items-center justify-between gap-2 px-2.5 py-1.5 rounded-md text-xs text-foreground hover:bg-accent/40 transition-colors"
+                  >
+                    <span className="truncate">{opt.name}</span>
+                    {opt.isDefault && (
+                      <span className="text-[10px] px-1 py-px rounded bg-muted/50 text-muted-foreground/75 flex-shrink-0">
+                        默认
+                      </span>
+                    )}
+                  </button>
+                ))}
+              </div>
+            </PopoverContent>
+          </Popover>
+        ) : (
           <Button
             variant="ghost"
             size="inline"
-            onClick={isChild ? () => {} : onRestore}
-            aria-disabled={isChild}
-            className={`px-2 py-[2px] text-xs gap-1 ${
-              isChild
-                ? 'text-muted-foreground/40 cursor-not-allowed hover:bg-transparent'
-                : 'text-foreground hover:bg-accent/30'
-            }`}
+            onClick={() => onRestore()}
+            className="px-2 py-[2px] text-xs gap-1 text-foreground hover:bg-accent/30"
           >
             <ArchiveRestore size={11} />
             <span>恢复</span>
           </Button>
-        </Tooltip>
-        <Tooltip content={isChild ? '永久删除此子项（不影响父级和其他子项）' : ''} side="top">
-          <Button
-            variant="ghost"
-            size="inline"
-            onClick={onDelete}
-            className="px-2 py-[2px] text-xs gap-1 text-destructive/70 hover:bg-destructive/10"
-          >
-            <Trash2 size={11} />
-          </Button>
-        </Tooltip>
+        )}
+        <Button
+          variant="ghost"
+          size="inline"
+          onClick={onDelete}
+          className="px-2 py-[2px] text-xs gap-1 text-destructive/70 hover:bg-destructive/10"
+        >
+          <Trash2 size={11} />
+        </Button>
       </div>
     </div>
   );

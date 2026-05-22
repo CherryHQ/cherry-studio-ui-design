@@ -55,25 +55,12 @@ export function ArchiveManagePage() {
         fromArchived: true,
       },
       {
-        // Two different "come back" semantics:
-        //
-        //   onUndo  = the 5-second toast button. User just clicked delete,
-        //             intent is "reverse that action" → goes back to archive
-        //             (the immediate previous state).
-        //
-        //   onRestore = the 「恢复」 button inside the Recycle Bin, days later.
-        //             Intent is "I want it again" → goes to active state,
-        //             NOT back to archive (Plan A — drop the archived status).
-        //             The active list (chat sidebar / Agent runs) lives in
-        //             other pages whose state we can't reach from here, so
-        //             we just remove from archive and toast where to find it.
+        // Both the 5-second undo and the later "恢复" inside the recycle
+        // bin put the item back into the archive list. The user already
+        // intentionally archived this item before deleting it; restoring
+        // should respect that prior state. To return it to active use,
+        // they can un-archive from the archive page afterwards.
         onUndo: () => setSessions(prev => [session, ...prev]),
-        onRestore: () => {
-          const target = session.type === 'agent' ? 'Agent 运行历史' : '聊天列表';
-          toast.info(`「${session.title}」已恢复`, {
-            description: `可在${target}中查看（不再回到归档）。`,
-          });
-        },
       },
     );
   };

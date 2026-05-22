@@ -1823,7 +1823,7 @@ export function AssistantRunPage() {
     });
   }, []);
 
-  const { moveToBin, skipTopicConfirm, setSkipTopicConfirm, retentionDays } = useRecycleBin();
+  const { moveToBin, retentionDays } = useRecycleBin();
   const [pendingDeleteTopic, setPendingDeleteTopic] = useState<AssistantTopic | null>(null);
 
   const sendTopicToBin = useCallback((topic: AssistantTopic) => {
@@ -1847,12 +1847,8 @@ export function AssistantRunPage() {
   const handleDeleteTopic = useCallback((id: string) => {
     const topic = topics.find(t => t.id === id);
     if (!topic) return;
-    if (skipTopicConfirm) {
-      sendTopicToBin(topic);
-    } else {
-      setPendingDeleteTopic(topic);
-    }
-  }, [topics, skipTopicConfirm, sendTopicToBin]);
+    setPendingDeleteTopic(topic);
+  }, [topics]);
 
   const handleUpdateTopic = useCallback((id: string, updates: Partial<AssistantTopic>) => {
     setTopics(prev => prev.map(t => t.id === id ? { ...t, ...updates } : t));
@@ -2981,19 +2977,12 @@ export function AssistantRunPage() {
       <RecycleBinConfirmDialog
         open={!!pendingDeleteTopic}
         onOpenChange={(open) => { if (!open) setPendingDeleteTopic(null); }}
-        itemName={pendingDeleteTopic?.title ?? ''}
-        itemIcon="💬"
-        itemTypeLabel="话题"
         retentionDays={retentionDays}
-        allowSkip
-        onConfirm={(skipNextTime) => {
-          if (pendingDeleteTopic) {
-            if (skipNextTime) setSkipTopicConfirm(true);
-            sendTopicToBin(pendingDeleteTopic);
-          }
-          setPendingDeleteTopic(null);
+        onConfirm={() => {
+          if (pendingDeleteTopic) sendTopicToBin(pendingDeleteTopic);
         }}
       />
+
       </div>
     </div>
   );

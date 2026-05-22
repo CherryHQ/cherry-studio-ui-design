@@ -252,8 +252,8 @@ export function MarketPage() {
   const [heroIndex, setHeroIndex] = useState(0);
 
   // Recycle-bin wiring for custom resources (assistant / agent / skill).
-  // Custom items are user-authored and unrebuildable, so deleting one
-  // always shows a confirm dialog and goes through the recycle bin.
+  // Deleting a custom resource fires a lightweight confirm dialog and,
+  // on confirm, moves the item into the bin via moveToBin.
   const { moveToBin, retentionDays } = useRecycleBin();
   const [hiddenCustomIds, setHiddenCustomIds] = useState<Set<string>>(new Set());
   const [pendingDeleteCustom, setPendingDeleteCustom] = useState<MarketItem | null>(null);
@@ -341,27 +341,17 @@ export function MarketPage() {
     [installed, hiddenCustomIds],
   );
 
-  // Every custom kind in the 新建自定义资源 dialog maps to a recycle-bin type.
-  // ResourceKind and RecycleBinItemType share the same string keys for the
-  // overlapping set, so this is a straight pass-through with a typed guard.
+  // Recycle-bin scope: 6 kinds of custom resources go to the bin. CLI and
+  // integration kinds still exist in the Market catalog but their deletion
+  // is a one-shot hide (not recoverable) since they're typically system
+  // tools that don't carry user-authored state.
   const recycleKind = (kind: ResourceKind): RecycleBinItemType | null => {
-    if (kind === 'skill')       return 'skill';
-    if (kind === 'cli')         return 'cli';
-    if (kind === 'assistant')   return 'assistant';
-    if (kind === 'agent')       return 'agent';
-    if (kind === 'mcp')         return 'mcp';
-    if (kind === 'prompt')      return 'prompt';
-    if (kind === 'kb')          return 'kb';
-    if (kind === 'integration') return 'integration';
-    return null;
-  };
-
-  // Mock cascade scope for parent-type resources. In the real product these
-  // would be queried from topic / session tables; for the prototype demo we
-  // fake a fixed count so the cascade UX is visible end-to-end.
-  const getCascadeInfo = (item: MarketItem): { count: number; typeLabel: string; childType: 'topic' | 'session' } | null => {
-    if (item.kind === 'assistant') return { count: 3, typeLabel: '子话题',   childType: 'topic'   };
-    if (item.kind === 'agent')     return { count: 2, typeLabel: '子会话',   childType: 'session' };
+    if (kind === 'skill')     return 'skill';
+    if (kind === 'assistant') return 'assistant';
+    if (kind === 'agent')     return 'agent';
+    if (kind === 'mcp')       return 'mcp';
+    if (kind === 'prompt')    return 'prompt';
+    if (kind === 'kb')        return 'kb';
     return null;
   };
 
@@ -374,10 +364,9 @@ export function MarketPage() {
     }
     setHiddenCustomIds(prev => new Set(prev).add(item.id));
 
-    const parentBinId = `bin-${type}-${item.id}-${Date.now()}`;
     moveToBin(
       {
-        id: parentBinId,
+        id: `bin-${type}-${item.id}-${Date.now()}`,
         type,
         name: item.name,
         icon: item.avatar,
@@ -392,36 +381,14 @@ export function MarketPage() {
         }),
       },
     );
-
-    // Cascade: seed mock children alongside the parent so the bin reflects
-    // the group view promised by the confirm dialog. Each child carries
-    // parentId = parent's bin id so the bin's restore/permanent-delete
-    // cascade logic picks them up automatically.
-    const cascade = getCascadeInfo(item);
-    if (cascade) {
-      Array.from({ length: cascade.count }).forEach((_, i) => {
-        moveToBin(
-          {
-            id: `${parentBinId}-child-${i}`,
-            type: cascade.childType,
-            name: cascade.childType === 'topic'
-              ? `${item.name} 对话 ${i + 1}`
-              : `${item.name} 运行 ${i + 1}`,
-            icon: cascade.childType === 'topic' ? '💬' : '▶️',
-            meta: item.name,
-            source: 'manual',
-            parentId: parentBinId,
-          },
-          { toast: false },
-        );
-      });
-    }
+    // Decoupled model: deleting an assistant/agent only moves the resource
+    // itself. Its associated topics/sessions live independently in the bin
+    // (if they were already deleted) or stay in the active world.
   };
 
   const handleUninstallOrDelete = (id: string) => {
     const item = CATALOG.find(c => c.id === id);
     if (item?.custom) {
-      // Custom resources get the confirm dialog + recycle bin path.
       setPendingDeleteCustom(item);
     } else {
       // Installed-from-market items: direct uninstall (user can reinstall any time).
@@ -434,6 +401,17 @@ export function MarketPage() {
   // When 管理 is active, replace the market home with the full-page
   // manage view. Detail / submit / create-custom dialogs remain
   // available on top of it.
+  const recycleBinConfirm = (
+    <RecycleBinConfirmDialog
+      open={!!pendingDeleteCustom}
+      onOpenChange={(open) => { if (!open) setPendingDeleteCustom(null); }}
+      retentionDays={retentionDays}
+      onConfirm={() => {
+        if (pendingDeleteCustom) sendCustomToBin(pendingDeleteCustom);
+      }}
+    />
+  );
+
   if (manageOpen) {
     return (
       <>
@@ -450,6 +428,7 @@ export function MarketPage() {
           onToggleInstall={(id) => toggleInstall(id)}
         />
         <SubmitResourceDialog open={newCustomOpen} onOpenChange={setNewCustomOpen} mode="custom" />
+        {recycleBinConfirm}
       </>
     );
   }
@@ -665,28 +644,7 @@ export function MarketPage() {
       />
       <SubmitResourceDialog open={submitOpen} onOpenChange={setSubmitOpen} />
       <SubmitResourceDialog open={newCustomOpen} onOpenChange={setNewCustomOpen} mode="custom" />
-      {/* Recycle-bin confirm for custom resources. Mounts here at the
-          MarketPage root so it overlays both the public market view and
-          the full-page manage view. */}
-      {(() => {
-        const cascadeInfo = pendingDeleteCustom ? getCascadeInfo(pendingDeleteCustom) : null;
-        return (
-          <RecycleBinConfirmDialog
-            open={!!pendingDeleteCustom}
-            onOpenChange={(open) => { if (!open) setPendingDeleteCustom(null); }}
-            itemName={pendingDeleteCustom?.name ?? ''}
-            itemIcon={pendingDeleteCustom?.avatar}
-            itemTypeLabel={pendingDeleteCustom ? `自定义 ${KIND_LABEL[pendingDeleteCustom.kind]}` : '自定义资源'}
-            retentionDays={retentionDays}
-            childCount={cascadeInfo?.count ?? 0}
-            childTypeLabel={cascadeInfo?.typeLabel}
-            onConfirm={() => {
-              if (pendingDeleteCustom) sendCustomToBin(pendingDeleteCustom);
-              setPendingDeleteCustom(null);
-            }}
-          />
-        );
-      })()}
+      {recycleBinConfirm}
     </div>
   );
 }

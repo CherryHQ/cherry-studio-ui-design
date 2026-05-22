@@ -18,8 +18,8 @@ import { SkillPluginImportModal } from './SkillPluginImportModal';
 import { SkillPluginDetail } from './SkillPluginDetail';
 import { AssistantConfig } from '@/features/assistant/AssistantConfig';
 import { AgentConfig } from '@/features/agent/AgentConfig';
-import { RecycleBinConfirmDialog } from '@/app/components/shared/RecycleBinConfirmDialog';
 import { useRecycleBin, type RecycleBinItemType } from '@/app/context/RecycleBinContext';
+import { RecycleBinConfirmDialog } from '@/app/components/shared/RecycleBinConfirmDialog';
 
 // ===========================
 // Template Banner (shown at top for assistant / skill views)
@@ -926,37 +926,12 @@ export function LibraryPage() {
         onClose={() => setSpImportOpen(false)} onImportComplete={handleImportComplete}
       />
 
-      {(() => {
-        // Mock cascade scope so the parent-delete dialog shows blast radius
-        // per PRD. Real product would query topic/session tables.
-        const cascadeInfo =
-          deleteConfirm?.type === 'assistant' ? { count: 3, typeLabel: '子话题' as const } :
-          deleteConfirm?.type === 'agent'     ? { count: 2, typeLabel: '子会话' as const } :
-          null;
-        return (
-          <RecycleBinConfirmDialog
-            open={!!deleteConfirm}
-            onOpenChange={(open) => { if (!open) setDeleteConfirm(null); }}
-            itemName={deleteConfirm?.name ?? ''}
-            itemIcon={deleteConfirm?.avatar}
-            itemTypeLabel={
-              deleteConfirm
-                ? ({
-                    agent: 'Agent',
-                    assistant: '助手',
-                    skill: 'Skill',
-                    plugin: '插件',
-                    prompt: '提示词',
-                  } as Record<ResourceType, string>)[deleteConfirm.type] ?? '资源'
-                : '资源'
-            }
-            retentionDays={recycleRetentionDays}
-            childCount={cascadeInfo?.count ?? 0}
-            childTypeLabel={cascadeInfo?.typeLabel}
-            onConfirm={() => confirmDelete()}
-          />
-        );
-      })()}
+      <RecycleBinConfirmDialog
+        open={!!deleteConfirm}
+        onOpenChange={(open) => { if (!open) setDeleteConfirm(null); }}
+        retentionDays={recycleRetentionDays}
+        onConfirm={() => confirmDelete()}
+      />
     </div>
   );
 }
