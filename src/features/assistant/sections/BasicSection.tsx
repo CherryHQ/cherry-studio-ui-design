@@ -9,6 +9,7 @@ import { Switch } from '@cherrystudio/ui/components/primitives/switch';
 import { Input as Textarea } from '@cherrystudio/ui/components/primitives/textarea';
 import { Badge } from '@cherrystudio/ui/components/primitives/badge';
 import { Popover, PopoverTrigger, PopoverContent } from '@cherrystudio/ui/components/primitives/popover';
+import { Combobox } from '@cherrystudio/ui/components/primitives/combobox';
 import {
   Select, SelectTrigger, SelectValue, SelectContent, SelectItem,
 } from '@cherrystudio/ui/components/primitives/select';
@@ -208,47 +209,20 @@ export function BasicSection({ resource }: Props) {
 
       {/* Tags — full width */}
       <FieldGroup label="标签">
-        <Popover>
-          <PopoverTrigger asChild>
-            <button type="button"
-              className="w-full min-h-[36px] px-2.5 py-1.5 rounded-xl border border-border/20 bg-accent/15 flex flex-wrap items-center gap-1.5 text-left hover:border-border/40 transition-colors">
-              {tags.length === 0 ? (
-                <span className="text-xs text-muted-foreground/60">选择标签…</span>
-              ) : tags.map(tag => (
-                <Badge key={tag} variant="outline"
-                  className={`gap-1 px-1.5 py-[2px] rounded-md ${getTagColor(tag)}`}>
-                  {tag}
-                  <Button variant="ghost" size="icon-xs"
-                    onClick={(e) => { e.stopPropagation(); removeTag(tag); }}
-                    className="ml-0.5 text-current opacity-40 hover:opacity-100 transition-opacity w-auto h-auto p-0">
-                    <X size={7} />
-                  </Button>
-                </Badge>
-              ))}
-              <span className="flex-1" />
-              <ChevronDown size={11} className="text-muted-foreground/40 flex-shrink-0" />
-            </button>
-          </PopoverTrigger>
-          <PopoverContent align="start" sideOffset={4} className="w-[var(--radix-popover-trigger-width)] p-1.5 max-h-[260px] overflow-y-auto">
-            {TAG_PRESETS.map(preset => {
-              const selected = tags.includes(preset.tag);
-              return (
-                <button key={preset.tag} type="button"
-                  onClick={() => togglePresetTag(preset.tag)}
-                  className={`w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-xs text-left transition-colors ${
-                    selected ? 'bg-accent/40 text-foreground' : 'text-muted-foreground/80 hover:bg-accent/30 hover:text-foreground'
-                  }`}>
-                  <span className={`w-3.5 h-3.5 rounded-[4px] border flex items-center justify-center flex-shrink-0 ${
-                    selected ? 'bg-primary border-primary text-primary-foreground' : 'border-border/60'
-                  }`}>
-                    {selected && <Check size={9} />}
-                  </span>
-                  <span className={`px-1.5 py-[1px] rounded-md text-xs border ${preset.color}`}>{preset.tag}</span>
-                </button>
-              );
-            })}
-          </PopoverContent>
-        </Popover>
+        <Combobox
+          multiple
+          searchable
+          value={tags}
+          onChange={(v) => setTags(Array.isArray(v) ? v : [v])}
+          options={TAG_PRESETS.map(p => ({ value: p.tag, label: p.tag }))}
+          placeholder="选择标签…"
+          searchPlaceholder="搜索标签…"
+          emptyText="没有匹配标签"
+          renderOption={(opt) => {
+            const preset = TAG_PRESETS.find(p => p.tag === opt.value);
+            return <span className={`px-1.5 py-[1px] rounded-md text-xs border ${preset?.color ?? ''}`}>{opt.label}</span>;
+          }}
+        />
       </FieldGroup>
 
     </div>

@@ -16,6 +16,7 @@ import {
   Popover, PopoverTrigger, PopoverContent,
 } from '@cherrystudio/ui/components/primitives/popover';
 import { Switch } from '@cherrystudio/ui/components/primitives/switch';
+import { Combobox } from '@cherrystudio/ui/components/primitives/combobox';
 import { SearchInput, Typography, SYSTEM_VARIABLES, type VariableDef } from '@cherry-studio/ui';
 import { skills as discoverSkills, assistants as discoverAssistants } from '@/features/explore/ExploreData';
 import { useGlobalActions } from '@/app/context/GlobalActionContext';
@@ -401,63 +402,20 @@ function PromptEditPage({ resource, onBack, onSave, inModal = false }: {
       </div>
       <div>
         <p className="text-xs text-muted-foreground/60 mb-2 font-medium">标签</p>
-        <Popover>
-          <PopoverTrigger asChild>
-            <button
-              type="button"
-              className="w-full min-h-[36px] px-2.5 py-1.5 rounded-xl border border-border/40 bg-muted/30 flex flex-wrap items-center gap-1.5 text-left hover:border-border/60 transition-colors"
-            >
-              {tags.length === 0 ? (
-                <span className="text-xs text-muted-foreground/55">选择标签…</span>
-              ) : tags.map(tag => {
-                const c = TAG_COLORS[tag] || DEFAULT_TAG_COLOR;
-                return (
-                  <span key={tag} className={`inline-flex items-center gap-1 px-1.5 py-[2px] rounded-md text-[11px] border ${c.badge}`}>
-                    <span className={`w-1.5 h-1.5 rounded-full ${c.dot}`} />
-                    {tag}
-                    <button
-                      type="button"
-                      onClick={(e) => { e.stopPropagation(); removeTag(tag); }}
-                      aria-label={`移除 ${tag}`}
-                      className="ml-0.5 opacity-50 hover:opacity-100 transition-opacity"
-                    >
-                      <X size={9} />
-                    </button>
-                  </span>
-                );
-              })}
-              <span className="flex-1" />
-              <ChevronDown size={12} className="text-muted-foreground/45 flex-shrink-0" />
-            </button>
-          </PopoverTrigger>
-          <PopoverContent
-            align="start"
-            sideOffset={4}
-            className="w-[var(--radix-popover-trigger-width)] p-1.5 max-h-[260px] overflow-y-auto"
-          >
-            {Object.keys(TAG_COLORS).map(preset => {
-              const selected = tags.includes(preset);
-              const c = TAG_COLORS[preset];
-              return (
-                <button
-                  key={preset}
-                  type="button"
-                  onClick={() => selected ? removeTag(preset) : addTag(preset)}
-                  className={`w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-xs text-left transition-colors ${
-                    selected ? 'bg-accent/40 text-foreground' : 'text-muted-foreground/80 hover:bg-accent/30 hover:text-foreground'
-                  }`}
-                >
-                  <span className={`w-3.5 h-3.5 rounded-[4px] border flex items-center justify-center flex-shrink-0 ${
-                    selected ? 'bg-foreground border-foreground text-background' : 'border-border/60'
-                  }`}>
-                    {selected && <Check size={9} />}
-                  </span>
-                  <span className={`px-1.5 py-[1px] rounded-md text-xs border ${c.badge}`}>{preset}</span>
-                </button>
-              );
-            })}
-          </PopoverContent>
-        </Popover>
+        <Combobox
+          multiple
+          searchable
+          value={tags}
+          onChange={(v) => setTags(Array.isArray(v) ? v : [v])}
+          options={Object.keys(TAG_COLORS).map(t => ({ value: t, label: t }))}
+          placeholder="选择标签…"
+          searchPlaceholder="搜索标签…"
+          emptyText="没有匹配标签"
+          renderOption={(opt) => {
+            const c = TAG_COLORS[opt.value] || DEFAULT_TAG_COLOR;
+            return <span className={`px-1.5 py-[1px] rounded-md text-xs border ${c.badge}`}>{opt.label}</span>;
+          }}
+        />
       </div>
     </div>
   );
