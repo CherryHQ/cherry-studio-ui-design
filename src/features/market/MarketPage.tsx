@@ -10,7 +10,6 @@ import {
   Button, Input, Textarea, SearchInput, Typography, Badge, Slider,
   Popover, PopoverTrigger, PopoverContent,
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
-  Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetFooter,
 } from '@cherry-studio/ui';
 
 // ===========================
@@ -1027,260 +1026,363 @@ function ResourceEditDrawer({
   const [baseUrl, setBaseUrl]               = useState(() => item?.baseUrl ?? '');
   const [installCmd, setInstallCmd]         = useState(() => item?.installCmd ?? '');
 
+  // Sidebar nav inside the modal — sections per kind, derived from
+  // the V2 library editor (assistant/agent/prompt) plus light
+  // analogues for the kinds V2 doesn't have a dedicated editor for.
+  const sections: { id: string; label: string }[] = (() => {
+    if (!item) return [];
+    switch (item.kind) {
+      case 'assistant':
+        return [
+          { id: 'basic',  label: '基础信息' },
+          { id: 'prompt', label: '系统提示词' },
+          { id: 'model',  label: '模型与参数' },
+        ];
+      case 'agent':
+        return [
+          { id: 'basic',      label: '基础信息' },
+          { id: 'prompt',     label: '系统提示词' },
+          { id: 'model',      label: '模型' },
+          { id: 'permission', label: '权限与执行' },
+        ];
+      case 'prompt':
+        return [
+          { id: 'basic',   label: '基础信息' },
+          { id: 'content', label: '内容' },
+        ];
+      case 'mcp':
+        return [
+          { id: 'basic',  label: '基础信息' },
+          { id: 'config', label: 'MCP 配置' },
+        ];
+      case 'cli':
+        return [
+          { id: 'basic',   label: '基础信息' },
+          { id: 'install', label: '安装' },
+        ];
+      default: // kb / integration / skill
+        return [
+          { id: 'basic',       label: '基础信息' },
+          { id: 'description', label: item.kind === 'skill' ? '说明' : '描述' },
+        ];
+    }
+  })();
+
+  const [activeSection, setActiveSection] = useState(() => sections[0]?.id ?? 'basic');
+
   if (!item) return (
-    <Sheet open={false} onOpenChange={onOpenChange}>
-      <SheetContent />
-    </Sheet>
+    <Dialog open={false} onOpenChange={onOpenChange}>
+      <DialogContent />
+    </Dialog>
   );
 
   const KIcon = KIND_ICON[item.kind];
 
+  // Field renderers per section id — written as inline JSX blocks below.
+  const renderBasic = (
+    <FieldSection title="基础信息">
+      <Field label={item.kind === 'prompt' ? '标题' : '名称'}>
+        <Input value={name} onChange={e => setName(e.target.value)} className="h-9 text-sm" />
+      </Field>
+      {item.kind !== 'prompt' && (
+        <Field label="一句话简介">
+          <Input value={tagline} onChange={e => setTagline(e.target.value)} className="h-9 text-sm" />
+        </Field>
+      )}
+      {item.kind !== 'prompt' && (
+        <Field label="分类">
+          <Input value={category} onChange={e => setCategory(e.target.value)} className="h-9 text-sm" />
+        </Field>
+      )}
+    </FieldSection>
+  );
+
+  const sectionContent: React.ReactNode = (() => {
+    if (activeSection === 'basic') return renderBasic;
+
+    if (item.kind === 'assistant') {
+      if (activeSection === 'prompt') {
+        return (
+          <FieldSection title="系统提示词" hint="支持 {{date}} / {{model_name}} 等变量">
+            <Textarea
+              value={body}
+              onChange={e => setBody(e.target.value)}
+              rows={16}
+              placeholder="在这里输入系统提示词…"
+              className="text-xs leading-relaxed resize-none font-mono"
+            />
+          </FieldSection>
+        );
+      }
+      if (activeSection === 'model') {
+        return (
+          <FieldSection title="模型与参数">
+            <Field label="默认模型">
+              <Input
+                value={model}
+                onChange={e => setModel(e.target.value)}
+                placeholder="例如 claude-sonnet-4-6"
+                className="h-9 text-sm font-mono"
+              />
+            </Field>
+            <Field label={`温度 (${temperature.toFixed(2)})`} hint="0 = 精确，2 = 创意">
+              <Slider
+                value={[temperature]}
+                onValueChange={([v]) => setTemperature(v)}
+                min={0}
+                max={2}
+                step={0.05}
+                className="py-1"
+              />
+            </Field>
+          </FieldSection>
+        );
+      }
+    }
+
+    if (item.kind === 'agent') {
+      if (activeSection === 'prompt') {
+        return (
+          <FieldSection title="系统提示词" hint="告诉 Agent 它是谁、它能做什么">
+            <Textarea
+              value={body}
+              onChange={e => setBody(e.target.value)}
+              rows={16}
+              placeholder="例如：你是一个谨慎的研究助手，遇到不确定的信息先搜索…"
+              className="text-xs leading-relaxed resize-none font-mono"
+            />
+          </FieldSection>
+        );
+      }
+      if (activeSection === 'model') {
+        return (
+          <FieldSection title="模型">
+            <Field label="主模型">
+              <Input
+                value={model}
+                onChange={e => setModel(e.target.value)}
+                placeholder="例如 claude-opus-4-7"
+                className="h-9 text-sm font-mono"
+              />
+            </Field>
+          </FieldSection>
+        );
+      }
+      if (activeSection === 'permission') {
+        return (
+          <FieldSection title="权限与执行">
+            <Field label="权限模式">
+              <div className="inline-flex items-center gap-0 rounded-md border border-border/40 bg-muted/15 p-0.5">
+                {([
+                  { id: 'default',           label: '默认' },
+                  { id: 'plan',              label: 'Plan' },
+                  { id: 'acceptEdits',       label: '接受编辑' },
+                  { id: 'bypassPermissions', label: '绕过' },
+                ] as const).map(opt => {
+                  const active = permissionMode === opt.id;
+                  return (
+                    <button
+                      key={opt.id}
+                      type="button"
+                      onClick={() => setPermissionMode(opt.id)}
+                      className={`px-2.5 h-7 rounded text-xs transition-colors ${
+                        active
+                          ? 'bg-background text-foreground shadow-xs'
+                          : 'text-muted-foreground/75 hover:text-foreground'
+                      }`}
+                    >
+                      {opt.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </Field>
+            <Field label="最大对话轮数" hint="0 表示使用默认值">
+              <Input
+                type="number"
+                min={0}
+                max={100}
+                value={maxTurns}
+                onChange={e => setMaxTurns(parseInt(e.target.value, 10) || 0)}
+                className="h-9 text-sm w-32"
+              />
+            </Field>
+          </FieldSection>
+        );
+      }
+    }
+
+    if (item.kind === 'prompt' && activeSection === 'content') {
+      return (
+        <FieldSection title="内容" hint='可在文本中用 ${variable} 插入变量'>
+          <Textarea
+            value={body}
+            onChange={e => setBody(e.target.value)}
+            rows={18}
+            placeholder="在这里输入 prompt 模板…"
+            className="text-xs leading-relaxed resize-none font-mono"
+          />
+        </FieldSection>
+      );
+    }
+
+    if (item.kind === 'mcp' && activeSection === 'config') {
+      return (
+        <FieldSection title="MCP 配置">
+          <Field label="服务地址">
+            <Input
+              value={baseUrl}
+              onChange={e => setBaseUrl(e.target.value)}
+              placeholder="stdio://… 或 https://…"
+              className="h-9 text-sm font-mono"
+            />
+          </Field>
+        </FieldSection>
+      );
+    }
+
+    if (item.kind === 'cli' && activeSection === 'install') {
+      return (
+        <FieldSection title="安装">
+          <Field label="安装命令">
+            <Input
+              value={installCmd}
+              onChange={e => setInstallCmd(e.target.value)}
+              placeholder="npm i -g ... / brew install ..."
+              className="h-9 text-sm font-mono"
+            />
+          </Field>
+        </FieldSection>
+      );
+    }
+
+    if ((item.kind === 'kb' || item.kind === 'integration' || item.kind === 'skill') && activeSection === 'description') {
+      return (
+        <FieldSection title={item.kind === 'skill' ? '说明' : '描述'}>
+          <Textarea
+            value={body}
+            onChange={e => setBody(e.target.value)}
+            rows={12}
+            placeholder={
+              item.kind === 'kb' ? '知识库的内容范围、来源、更新频率…'
+              : item.kind === 'integration' ? '该集成的功能、授权范围、限制…'
+              : '说明这个 Skill 做什么 / 如何调用…'
+            }
+            className="text-xs leading-relaxed resize-none"
+          />
+        </FieldSection>
+      );
+    }
+
+    return null;
+  })();
+
   return (
-    <Sheet open={!!item} onOpenChange={onOpenChange}>
-      <SheetContent
-        side="right"
+    <Dialog open={!!item} onOpenChange={onOpenChange}>
+      <DialogContent
         showCloseButton={false}
-        className="!max-w-[480px] sm:!max-w-[480px] w-full p-0 flex flex-col"
+        className="max-w-[900px] !rounded-2xl p-0 overflow-hidden border border-border/20"
       >
-        <SheetHeader className="px-5 pt-5 pb-3 border-b border-border/25">
-          <div className="flex items-start gap-3">
-            <Avatar item={item} size={40} />
-            <div className="flex-1 min-w-0">
-              <SheetTitle className="text-base font-semibold truncate">
+        {/* Header */}
+        <div className="flex items-center justify-between gap-4 px-5 py-4 border-b border-border/15">
+          <div className="flex items-center gap-3 min-w-0 flex-1">
+            <Avatar item={item} size={36} />
+            <div className="min-w-0">
+              <div className="text-sm font-semibold text-foreground truncate flex items-center gap-2">
                 {item.name}
-              </SheetTitle>
-              <SheetDescription className="text-[11px] text-muted-foreground/60 flex items-center gap-1.5 mt-1">
+                <span className="px-1.5 py-px rounded text-[10px] leading-none border border-border/30 bg-muted/40 text-muted-foreground/75 font-normal">
+                  {KIND_LABEL[item.kind]}
+                </span>
+                {item.custom && (
+                  <span className="px-1.5 py-px rounded text-[10px] leading-none border border-border/30 bg-muted/40 text-muted-foreground/75 font-normal">
+                    自定义
+                  </span>
+                )}
+                <span className="inline-flex items-center gap-1 text-[11px] text-success font-normal">
+                  <span className={`w-1.5 h-1.5 rounded-full ${enabled ? 'bg-success' : 'bg-muted-foreground/40'}`} />
+                  {enabled ? '已启用' : '已禁用'}
+                </span>
+              </div>
+              <div className="text-[11px] text-muted-foreground/60 flex items-center gap-1.5 mt-0.5">
                 <KIcon size={10} />
-                <span>{KIND_LABEL[item.kind]}</span>
+                <span>{item.category}</span>
                 <span className="text-muted-foreground/30">·</span>
                 <span>{item.author}</span>
-                {item.custom && (
-                  <>
-                    <span className="text-muted-foreground/30">·</span>
-                    <span>自定义</span>
-                  </>
-                )}
-              </SheetDescription>
-            </div>
-            <button
-              type="button"
-              onClick={() => onOpenChange(false)}
-              aria-label="关闭"
-              className="h-7 w-7 inline-flex items-center justify-center rounded-md text-muted-foreground/60 hover:text-foreground hover:bg-muted/40 transition-colors flex-shrink-0"
-            >
-              <X size={14} />
-            </button>
-          </div>
-        </SheetHeader>
-
-        <div className="flex-1 overflow-y-auto scrollbar-thin px-5 py-4 space-y-4">
-          {/* Enabled toggle */}
-          <div className="flex items-center justify-between gap-3 px-3 py-2.5 rounded-lg border border-border/20 bg-muted/15">
-            <div className="min-w-0">
-              <div className="text-sm text-foreground">启用</div>
-              <div className="text-[11px] text-muted-foreground/60">
-                禁用后该资源不会被对话/工具调用
               </div>
             </div>
-            <button
-              type="button"
-              onClick={() => onToggleEnabled(item.id)}
-              aria-label={enabled ? '已启用' : '已禁用'}
-              className={`relative inline-flex h-5 w-9 flex-shrink-0 items-center rounded-full transition-colors ${
-                enabled ? 'bg-foreground' : 'bg-muted-foreground/25'
-              }`}
-            >
-              <span
-                className={`inline-block h-4 w-4 transform rounded-full bg-background transition-transform ${
-                  enabled ? 'translate-x-[18px]' : 'translate-x-0.5'
-                }`}
-              />
-            </button>
           </div>
+          <button
+            type="button"
+            onClick={() => onOpenChange(false)}
+            aria-label="关闭"
+            className="h-8 w-8 inline-flex items-center justify-center rounded-md text-muted-foreground/60 hover:text-foreground hover:bg-muted/40 transition-colors flex-shrink-0"
+          >
+            <X size={14} />
+          </button>
+        </div>
 
-          {/* ── 基础信息 (common across kinds, with one exception:
-                 Prompt uses 标题 / 内容 instead of 名称 / 简介 since
-                 that's how V2's PromptConfigPage shapes it.) */}
-          <FieldSection title="基础信息">
-            <Field label={item.kind === 'prompt' ? '标题' : '名称'}>
-              <Input value={name} onChange={e => setName(e.target.value)} className="h-9 text-sm" />
-            </Field>
-            {item.kind !== 'prompt' && (
-              <Field label="一句话简介">
-                <Input value={tagline} onChange={e => setTagline(e.target.value)} className="h-9 text-sm" />
-              </Field>
-            )}
-            {item.kind !== 'prompt' && (
-              <Field label="分类">
-                <Input value={category} onChange={e => setCategory(e.target.value)} className="h-9 text-sm" />
-              </Field>
-            )}
-          </FieldSection>
+        {/* Body: sidebar + content */}
+        <div className="flex h-[480px]">
+          {/* Sidebar */}
+          <aside className="w-[180px] flex-shrink-0 border-r border-border/15 px-3 py-4 space-y-0.5">
+            {sections.map(s => {
+              const active = activeSection === s.id;
+              return (
+                <button
+                  key={s.id}
+                  type="button"
+                  onClick={() => setActiveSection(s.id)}
+                  className={`w-full flex items-center px-2.5 py-2 rounded-lg text-sm text-left transition-colors ${
+                    active
+                      ? 'bg-accent/50 text-foreground'
+                      : 'text-muted-foreground/75 hover:text-foreground hover:bg-muted/40'
+                  }`}
+                >
+                  {s.label}
+                </button>
+              );
+            })}
 
-          {/* ── Kind-specific sections — mirror V2 library editor schemas */}
-          {item.kind === 'assistant' && (
-            <>
-              <FieldSection title="系统提示词" hint="支持 {{date}} / {{model_name}} 等变量">
-                <Textarea
-                  value={body}
-                  onChange={e => setBody(e.target.value)}
-                  rows={10}
-                  placeholder="在这里输入系统提示词…"
-                  className="text-xs leading-relaxed resize-none font-mono"
-                />
-              </FieldSection>
-              <FieldSection title="模型与参数">
-                <Field label="默认模型">
-                  <Input
-                    value={model}
-                    onChange={e => setModel(e.target.value)}
-                    placeholder="例如 claude-sonnet-4-6"
-                    className="h-9 text-sm font-mono"
+            {/* Enable / disable affordance at the bottom of the sidebar */}
+            <div className="pt-3 mt-3 border-t border-border/15">
+              <button
+                type="button"
+                onClick={() => onToggleEnabled(item.id)}
+                className="w-full flex items-center justify-between gap-2 px-2.5 py-2 rounded-lg text-sm text-muted-foreground/75 hover:text-foreground hover:bg-muted/40 transition-colors"
+              >
+                <span>启用</span>
+                <span
+                  aria-label={enabled ? '已启用' : '已禁用'}
+                  className={`relative inline-flex h-4 w-7 flex-shrink-0 items-center rounded-full transition-colors ${
+                    enabled ? 'bg-foreground' : 'bg-muted-foreground/25'
+                  }`}
+                >
+                  <span
+                    className={`inline-block h-3 w-3 transform rounded-full bg-background transition-transform ${
+                      enabled ? 'translate-x-[14px]' : 'translate-x-0.5'
+                    }`}
                   />
-                </Field>
-                <Field label={`温度 (${temperature.toFixed(2)})`} hint="0 = 精确，2 = 创意">
-                  <Slider
-                    value={[temperature]}
-                    onValueChange={([v]) => setTemperature(v)}
-                    min={0}
-                    max={2}
-                    step={0.05}
-                    className="py-1"
-                  />
-                </Field>
-              </FieldSection>
-            </>
-          )}
+                </span>
+              </button>
+            </div>
+          </aside>
 
-          {item.kind === 'agent' && (
-            <>
-              <FieldSection title="系统提示词" hint="告诉 Agent 它是谁、它能做什么">
-                <Textarea
-                  value={body}
-                  onChange={e => setBody(e.target.value)}
-                  rows={10}
-                  placeholder="例如：你是一个谨慎的研究助手，遇到不确定的信息先搜索…"
-                  className="text-xs leading-relaxed resize-none font-mono"
-                />
-              </FieldSection>
-              <FieldSection title="模型">
-                <Field label="主模型">
-                  <Input
-                    value={model}
-                    onChange={e => setModel(e.target.value)}
-                    placeholder="例如 claude-opus-4-7"
-                    className="h-9 text-sm font-mono"
-                  />
-                </Field>
-              </FieldSection>
-              <FieldSection title="权限与执行">
-                <Field label="权限模式">
-                  <div className="inline-flex items-center gap-0 rounded-md border border-border/40 bg-muted/15 p-0.5">
-                    {([
-                      { id: 'default',          label: '默认' },
-                      { id: 'plan',             label: 'Plan' },
-                      { id: 'acceptEdits',      label: '接受编辑' },
-                      { id: 'bypassPermissions', label: '绕过' },
-                    ] as const).map(opt => {
-                      const active = permissionMode === opt.id;
-                      return (
-                        <button
-                          key={opt.id}
-                          type="button"
-                          onClick={() => setPermissionMode(opt.id)}
-                          className={`px-2.5 h-7 rounded text-xs transition-colors ${
-                            active
-                              ? 'bg-background text-foreground shadow-xs'
-                              : 'text-muted-foreground/75 hover:text-foreground'
-                          }`}
-                        >
-                          {opt.label}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </Field>
-                <Field label="最大对话轮数" hint="0 表示使用默认值">
-                  <Input
-                    type="number"
-                    min={0}
-                    max={100}
-                    value={maxTurns}
-                    onChange={e => setMaxTurns(parseInt(e.target.value, 10) || 0)}
-                    className="h-9 text-sm w-32"
-                  />
-                </Field>
-              </FieldSection>
-            </>
-          )}
-
-          {item.kind === 'prompt' && (
-            <FieldSection title="内容" hint='可在文本中用 ${variable} 插入变量'>
-              <Textarea
-                value={body}
-                onChange={e => setBody(e.target.value)}
-                rows={14}
-                placeholder="在这里输入 prompt 模板…"
-                className="text-xs leading-relaxed resize-none font-mono"
-              />
-            </FieldSection>
-          )}
-
-          {item.kind === 'mcp' && (
-            <FieldSection title="MCP 配置">
-              <Field label="服务地址">
-                <Input
-                  value={baseUrl}
-                  onChange={e => setBaseUrl(e.target.value)}
-                  placeholder="stdio://… 或 https://…"
-                  className="h-9 text-sm font-mono"
-                />
-              </Field>
-            </FieldSection>
-          )}
-
-          {item.kind === 'cli' && (
-            <FieldSection title="安装">
-              <Field label="安装命令">
-                <Input
-                  value={installCmd}
-                  onChange={e => setInstallCmd(e.target.value)}
-                  placeholder="npm i -g ... / brew install ..."
-                  className="h-9 text-sm font-mono"
-                />
-              </Field>
-            </FieldSection>
-          )}
-
-          {(item.kind === 'kb' || item.kind === 'integration' || item.kind === 'skill') && (
-            <FieldSection title={item.kind === 'skill' ? '说明' : '描述'}>
-              <Textarea
-                value={body}
-                onChange={e => setBody(e.target.value)}
-                rows={6}
-                placeholder={
-                  item.kind === 'kb' ? '知识库的内容范围、来源、更新频率…'
-                  : item.kind === 'integration' ? '该集成的功能、授权范围、限制…'
-                  : '说明这个 Skill 做什么 / 如何调用…'
-                }
-                className="text-xs leading-relaxed resize-none"
-              />
-            </FieldSection>
-          )}
-
-          <div className="pt-2">
-            <button
-              type="button"
-              onClick={() => onDelete(item.id)}
-              className="text-[11px] text-destructive/85 hover:text-destructive transition-colors"
-            >
-              {item.custom ? '删除这条自定义资源' : '从我的资源中卸载'}
-            </button>
+          {/* Content */}
+          <div className="flex-1 min-w-0 overflow-y-auto scrollbar-thin px-6 py-5">
+            {sectionContent}
           </div>
         </div>
 
-        <SheetFooter className="px-5 py-3 border-t border-border/25 bg-muted/15">
-          <div className="flex items-center justify-end gap-2 w-full">
+        {/* Footer */}
+        <div className="flex items-center justify-between gap-3 px-5 py-3 border-t border-border/15 bg-muted/15">
+          <button
+            type="button"
+            onClick={() => onDelete(item.id)}
+            className="text-[11px] text-destructive/85 hover:text-destructive transition-colors"
+          >
+            {item.custom ? '删除这条自定义资源' : '从我的资源中卸载'}
+          </button>
+          <div className="flex items-center gap-2">
             <Button variant="ghost" size="sm" onClick={() => onOpenChange(false)} className="h-8">
               取消
             </Button>
@@ -1311,7 +1413,6 @@ function ResourceEditDrawer({
                 } else if (item.kind === 'cli') {
                   patch.installCmd = installCmd;
                 } else {
-                  // kb / integration / skill — carry the description body
                   patch.body = body;
                 }
                 onSave(item.id, patch);
@@ -1321,9 +1422,9 @@ function ResourceEditDrawer({
               保存
             </Button>
           </div>
-        </SheetFooter>
-      </SheetContent>
-    </Sheet>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 
