@@ -422,7 +422,7 @@ function PromptEditPage({ resource, onBack, onSave, inModal = false }: {
   if (inModal) {
     return (
       <div className="flex-1 flex min-h-0">
-        <aside className="w-[140px] flex-shrink-0 border-r border-border/15 p-2.5 space-y-0.5">
+        <aside className="w-[132px] flex-shrink-0 border-r border-border/15 p-2 space-y-0.5">
           {([
             { id: 'basic', label: '基础信息' },
             { id: 'content', label: '内容' },
@@ -444,7 +444,7 @@ function PromptEditPage({ resource, onBack, onSave, inModal = false }: {
             );
           })}
         </aside>
-        <div className="flex-1 min-w-0 overflow-y-auto scrollbar-thin px-6 py-5">
+        <div className="flex-1 min-w-0 overflow-y-auto scrollbar-thin px-5 py-4">
           {activeSection === 'basic' ? BasicSection : ContentSection}
         </div>
       </div>
@@ -913,9 +913,9 @@ export function LibraryPage() {
           // the flex column + min-w-0 lets the embedded editors
           // flow naturally inside.
           // Compact in-app modal — fits inside the app shell with
-          // ~5% margin on each side and a slightly taller content
-          // area for the dense Assistant / Agent editors.
-          className="!max-w-[740px] sm:!max-w-[740px] !w-[min(740px,84vw)] !h-[min(540px,74vh)] !max-h-[74vh] !rounded-2xl !p-0 !gap-0 !grid-cols-1 overflow-hidden border border-border/20 shadow-xl flex flex-col"
+          // generous margin and prefers width slightly over height so
+          // the dense Assistant / Agent forms breathe.
+          className="!max-w-[760px] sm:!max-w-[760px] !w-[min(760px,84vw)] !h-[min(520px,72vh)] !max-h-[72vh] !rounded-2xl !p-0 !gap-0 !grid-cols-1 overflow-hidden border border-border/20 shadow-xl flex flex-col"
         >
           {configView.type !== 'list' && (() => {
             const r = configView.resource;

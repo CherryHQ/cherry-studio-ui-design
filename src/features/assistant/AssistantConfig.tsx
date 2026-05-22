@@ -54,20 +54,20 @@ export function AssistantConfig({ resource, onBack, inModal = false }: Props) {
         </div>
       )}
       <div className="flex flex-1 min-h-0">
-        <div className="w-[140px] flex-shrink-0 border-r border-border/15 p-2.5">
+        <div className="w-[132px] flex-shrink-0 border-r border-border/15 p-2">
           {sections.map(s => {
             const Icon = s.icon; const active = activeSection === s.id;
             return (
               <Button key={s.id} variant="ghost" size="inline"
                 onClick={() => setActiveSection(s.id)}
-                className={`flex items-center justify-start gap-2.5 w-full px-2.5 py-2 rounded-lg text-left mb-0.5 ${active ? 'bg-accent/50 text-foreground' : 'text-muted-foreground/65 hover:text-foreground'}`}>
+                className={`flex items-center justify-start gap-2 w-full px-2.5 py-2 rounded-lg text-left mb-0.5 ${active ? 'bg-accent/50 text-foreground' : 'text-muted-foreground/65 hover:text-foreground'}`}>
                 <Icon size={13} strokeWidth={1.6} className="flex-shrink-0" />
                 <span className="text-sm">{s.label}</span>
               </Button>
             );
           })}
         </div>
-        <div className="flex-1 overflow-y-auto p-5 scrollbar-thin">
+        <div className="flex-1 overflow-y-auto px-5 py-4 scrollbar-thin">
           <AnimatePresence mode="wait">
             <motion.div key={activeSection} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.2 }}>
               {activeSection === 'basic' && <BasicSection resource={resource} />}

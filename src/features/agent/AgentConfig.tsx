@@ -70,20 +70,20 @@ export function AgentConfig({ resource, onBack, inModal = false }: Props) {
         </div>
       )}
       <div className="flex flex-1 min-h-0">
-        <div className="w-[140px] flex-shrink-0 border-r border-border/15 p-2.5 overflow-y-auto">
+        <div className="w-[132px] flex-shrink-0 border-r border-border/15 p-2 overflow-y-auto">
           {sections.map(s => {
             const active = activeSection === s.id;
             const Icon = s.icon;
             return (
               <Button variant="ghost" key={s.id} onClick={() => setActiveSection(s.id)}
-                className={`w-full justify-start gap-2.5 px-2.5 py-2 font-normal mb-0.5 rounded-lg ${active ? 'bg-accent/50 text-foreground' : 'text-muted-foreground/65 hover:text-foreground hover:bg-accent/50'}`}>
+                className={`w-full justify-start gap-2 px-2.5 py-2 font-normal mb-0.5 rounded-lg ${active ? 'bg-accent/50 text-foreground' : 'text-muted-foreground/65 hover:text-foreground hover:bg-accent/50'}`}>
                 <Icon size={13} strokeWidth={1.5} className={`flex-shrink-0 ${active ? 'text-muted-foreground' : 'text-muted-foreground/40'}`} />
                 <span className="text-sm">{s.label}</span>
               </Button>
             );
           })}
         </div>
-        <div className="flex-1 overflow-y-auto p-5 scrollbar-thin">
+        <div className="flex-1 overflow-y-auto px-5 py-4 scrollbar-thin">
           <AnimatePresence mode="wait">
             <motion.div key={activeSection} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.2 }}>
               {activeSection === 'basic' && <AgentBasicSection resource={resource} />}

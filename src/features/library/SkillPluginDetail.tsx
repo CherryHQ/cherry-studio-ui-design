@@ -93,7 +93,7 @@ export function SkillPluginDetail({ resource, onBack, onToggle, onDelete, inModa
 
       {inModal ? (
         <div className="flex-1 flex min-h-0">
-          <aside className="w-[160px] flex-shrink-0 border-r border-border/15 p-3 space-y-0.5">
+          <aside className="w-[132px] flex-shrink-0 border-r border-border/15 p-2 space-y-0.5">
             {([
               { id: 'basic',  label: '基础信息' },
               { id: 'source', label: '源文件' },
@@ -123,7 +123,7 @@ export function SkillPluginDetail({ resource, onBack, onToggle, onDelete, inModa
               <Switch size="sm" checked={resource.enabled} onCheckedChange={() => onToggle(resource.id)} />
             </div>
           </aside>
-          <div className="flex-1 min-w-0 overflow-y-auto scrollbar-thin px-6 py-5 space-y-6">
+          <div className="flex-1 min-w-0 overflow-y-auto scrollbar-thin px-5 py-4 space-y-6">
             {activeSection === 'basic' && (
               <>
                 <div>
