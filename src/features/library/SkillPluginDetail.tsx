@@ -12,6 +12,7 @@ import { Input } from '@cherrystudio/ui/components/primitives/input';
 import { Switch } from '@cherrystudio/ui/components/primitives/switch';
 import { Input as Textarea } from '@cherrystudio/ui/components/primitives/textarea';
 import { Combobox } from '@cherrystudio/ui/components/primitives/combobox';
+import { Field, FieldContent, FieldLabel } from '@cherrystudio/ui/components/primitives/field';
 
 interface Props {
   resource: ResourceItem;
@@ -122,38 +123,42 @@ export function SkillPluginDetail({ resource, onBack, onToggle, onDelete, inModa
           <div className="flex-1 min-w-0 overflow-y-auto scrollbar-thin px-5 py-4 space-y-6">
             {activeSection === 'basic' && (
               <>
-                <div>
-                  <label className="text-xs text-muted-foreground/60 mb-1.5 block font-medium">描述</label>
-                  <Textarea
-                    value={description}
-                    onChange={e => setDescription(e.target.value)}
-                    rows={3}
-                    placeholder="为这个资源写一段简短描述"
-                    className="input-accent resize-none"
-                  />
-                </div>
-                <div>
-                  <label className="text-xs text-muted-foreground/60 mb-1.5 block font-medium flex items-center gap-1"><Tag size={9} /> 标签</label>
-                  <Combobox
-                    multiple
-                    searchable
-                    value={tags}
-                    onChange={(v) => setTags(Array.isArray(v) ? v : [v])}
-                    options={Object.keys(TAG_COLORS).map(t => ({ value: t, label: t }))}
-                    placeholder="选择标签…"
-                    searchPlaceholder="搜索标签…"
-                    emptyText="没有匹配标签"
-                    renderOption={(opt) => {
-                      const c = TAG_COLORS[opt.value] || DEFAULT_TAG_COLOR;
-                      return (
-                        <span className="inline-flex items-center gap-1">
-                          <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${c.dot}`} />
-                          <span className={`px-1.5 py-[1px] rounded-md text-xs border ${c.badge}`}>{opt.label}</span>
-                        </span>
-                      );
-                    }}
-                  />
-                </div>
+                <Field>
+                  <FieldLabel>描述</FieldLabel>
+                  <FieldContent>
+                    <Textarea
+                      value={description}
+                      onChange={e => setDescription(e.target.value)}
+                      rows={3}
+                      placeholder="为这个资源写一段简短描述"
+                      className="input-accent resize-none"
+                    />
+                  </FieldContent>
+                </Field>
+                <Field>
+                  <FieldLabel className="flex items-center gap-1"><Tag size={9} /> 标签</FieldLabel>
+                  <FieldContent>
+                    <Combobox
+                      multiple
+                      searchable
+                      value={tags}
+                      onChange={(v) => setTags(Array.isArray(v) ? v : [v])}
+                      options={Object.keys(TAG_COLORS).map(t => ({ value: t, label: t }))}
+                      placeholder="选择标签…"
+                      searchPlaceholder="搜索标签…"
+                      emptyText="没有匹配标签"
+                      renderOption={(opt) => {
+                        const c = TAG_COLORS[opt.value] || DEFAULT_TAG_COLOR;
+                        return (
+                          <span className="inline-flex items-center gap-1">
+                            <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${c.dot}`} />
+                            <span className={`px-1.5 py-[1px] rounded-md text-xs border ${c.badge}`}>{opt.label}</span>
+                          </span>
+                        );
+                      }}
+                    />
+                  </FieldContent>
+                </Field>
 
                 {/* Metadata — folded into 基础信息 so it doesn't need
                     its own sidebar tab. Compact 2-column grid. */}

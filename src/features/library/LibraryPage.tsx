@@ -17,6 +17,8 @@ import {
 } from '@cherrystudio/ui/components/primitives/popover';
 import { Switch } from '@cherrystudio/ui/components/primitives/switch';
 import { Combobox } from '@cherrystudio/ui/components/primitives/combobox';
+import { Field, FieldContent, FieldLabel } from '@cherrystudio/ui/components/primitives/field';
+import { ConfirmDialog } from '@cherrystudio/ui/components/composites/ConfirmDialog';
 import { SearchInput, Typography, SYSTEM_VARIABLES, type VariableDef } from '@cherry-studio/ui';
 import { skills as discoverSkills, assistants as discoverAssistants } from '@/features/explore/ExploreData';
 import { useGlobalActions } from '@/app/context/GlobalActionContext';
@@ -394,29 +396,33 @@ function PromptEditPage({ resource, onBack, onSave, inModal = false }: {
   const BasicSection = (
     <div className="space-y-4">
       <h3 className="text-sm font-semibold text-foreground mb-1">基础信息</h3>
-      <div>
-        <p className="text-xs text-muted-foreground/60 mb-2 font-medium">名称</p>
-        <Input value={name} onChange={e => setName(e.target.value)}
-          className="w-full bg-muted/30 border border-border/40 px-3.5 py-2.5 text-sm text-foreground rounded-xl"
-          placeholder="Prompt 名称" />
-      </div>
-      <div>
-        <p className="text-xs text-muted-foreground/60 mb-2 font-medium">标签</p>
-        <Combobox
-          multiple
-          searchable
-          value={tags}
-          onChange={(v) => setTags(Array.isArray(v) ? v : [v])}
-          options={Object.keys(TAG_COLORS).map(t => ({ value: t, label: t }))}
-          placeholder="选择标签…"
-          searchPlaceholder="搜索标签…"
-          emptyText="没有匹配标签"
-          renderOption={(opt) => {
-            const c = TAG_COLORS[opt.value] || DEFAULT_TAG_COLOR;
-            return <span className={`px-1.5 py-[1px] rounded-md text-xs border ${c.badge}`}>{opt.label}</span>;
-          }}
-        />
-      </div>
+      <Field>
+        <FieldLabel>名称</FieldLabel>
+        <FieldContent>
+          <Input value={name} onChange={e => setName(e.target.value)}
+            className="w-full bg-muted/30 border border-border/40 px-3.5 py-2.5 text-sm text-foreground rounded-xl"
+            placeholder="Prompt 名称" />
+        </FieldContent>
+      </Field>
+      <Field>
+        <FieldLabel>标签</FieldLabel>
+        <FieldContent>
+          <Combobox
+            multiple
+            searchable
+            value={tags}
+            onChange={(v) => setTags(Array.isArray(v) ? v : [v])}
+            options={Object.keys(TAG_COLORS).map(t => ({ value: t, label: t }))}
+            placeholder="选择标签…"
+            searchPlaceholder="搜索标签…"
+            emptyText="没有匹配标签"
+            renderOption={(opt) => {
+              const c = TAG_COLORS[opt.value] || DEFAULT_TAG_COLOR;
+              return <span className={`px-1.5 py-[1px] rounded-md text-xs border ${c.badge}`}>{opt.label}</span>;
+            }}
+          />
+        </FieldContent>
+      </Field>
     </div>
   );
   const ContentSection = (
@@ -923,18 +929,16 @@ export function LibraryPage() {
         onClose={() => setSpImportOpen(false)} onImportComplete={handleImportComplete}
       />
 
-      <Dialog open={!!deleteConfirm} onOpenChange={v => { if (!v) setDeleteConfirm(null); }}>
-        <DialogContent className="w-[320px]">
-          <DialogHeader>
-            <DialogTitle>确认删除</DialogTitle>
-          </DialogHeader>
-          <p className="text-xs text-muted-foreground/60 mb-4">确定要删除「{deleteConfirm?.name}」吗？此操作无法撤销。</p>
-          <DialogFooter>
-            <Button variant="ghost" size="sm" onClick={() => setDeleteConfirm(null)}>取消</Button>
-            <Button variant="destructive" size="sm" onClick={confirmDelete}>删除</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <ConfirmDialog
+        open={!!deleteConfirm}
+        onOpenChange={v => { if (!v) setDeleteConfirm(null); }}
+        title="确认删除"
+        description={deleteConfirm ? `确定要删除「${deleteConfirm.name}」吗？此操作无法撤销。` : ''}
+        confirmText="删除"
+        cancelText="取消"
+        destructive
+        onConfirm={confirmDelete}
+      />
 
       {/* Resource config modal — sized to sit inside the app shell
           (not full viewport). Provides the unified avatar + name +
