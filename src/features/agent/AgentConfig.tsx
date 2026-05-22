@@ -13,7 +13,19 @@ import {
   Upload, Link2,
   Send, MessageCircle, Github, Info,
 } from 'lucide-react';
-import { Button, Input, Slider, Textarea, Popover, PopoverTrigger, PopoverContent, EmptyState, SearchInput, Typography, Switch, Checkbox, Badge, Select, SelectTrigger, SelectValue, SelectContent, SelectItem, SimpleTooltip } from '@cherry-studio/ui';
+import { Button } from '@cherrystudio/ui/components/primitives/button';
+import { Input } from '@cherrystudio/ui/components/primitives/input';
+import { Slider } from '@cherrystudio/ui/components/primitives/slider';
+import { Input as Textarea } from '@cherrystudio/ui/components/primitives/textarea';
+import { Popover, PopoverTrigger, PopoverContent } from '@cherrystudio/ui/components/primitives/popover';
+import { Switch } from '@cherrystudio/ui/components/primitives/switch';
+import { Checkbox } from '@cherrystudio/ui/components/primitives/checkbox';
+import { Badge } from '@cherrystudio/ui/components/primitives/badge';
+import {
+  Select, SelectTrigger, SelectValue, SelectContent, SelectItem,
+} from '@cherrystudio/ui/components/primitives/select';
+// V2 doesn't ship SearchInput / Typography / EmptyState / SimpleTooltip
+import { EmptyState, SearchInput, Typography, SimpleTooltip } from '@cherry-studio/ui';
 import { motion, AnimatePresence } from 'motion/react';
 import type { ResourceItem, MCPServerStatus } from '@/app/types';
 import { PromptSection } from '@/features/assistant/sections/PromptSection';
@@ -250,62 +262,58 @@ function AgentBasicSection({ resource }: { resource: ResourceItem }) {
       <div className="space-y-3"><div className="flex items-center gap-2 mb-1"><span className="text-sm text-muted-foreground/60">{"模型配置"}</span><div className="flex-1 h-px bg-border/30" /></div><ModelSelector label="规划模型" value={planningModel} onChange={setPlanningModel} hint="负责任务拆解和决策" /><ModelSelector label="常规模型" value={regularModel} onChange={setRegularModel} hint="负责主要推理和执行" /><ModelSelector label="快速模型" value={fastModel} onChange={setFastModel} hint="负责简单判断和格式化" /></div>
       <FieldGroup label="简介"><Textarea value={description} onChange={e => setDescription(e.target.value)} rows={2} className="input-accent resize-none" /></FieldGroup>
       <FieldGroup label="标签">
-        <div className="min-h-[36px] px-2.5 py-2 rounded-xl border border-border/20 bg-accent/15 flex flex-wrap items-center gap-1.5">
-          {tags.map(tag => (
-            <Badge key={tag} variant="outline" className={`gap-1 px-1.5 py-[2px] rounded-md ${getTagColor(tag)}`}>
-              {tag}
-              <Button variant="ghost" size="icon-xs" onClick={() => removeTag(tag)} className="ml-0.5 text-current opacity-40 hover:opacity-100 hover:bg-transparent">
-                <X size={7} />
-              </Button>
-            </Badge>
-          ))}
-          <Input
-            ref={tagInputRef}
-            value={tagInput}
-            onChange={e => setTagInput(e.target.value)}
-            onKeyDown={e => {
-              if (e.key === 'Enter' && tagInput.trim()) { e.preventDefault(); addTag(tagInput); }
-              if (e.key === 'Backspace' && !tagInput && tags.length > 0) removeTag(tags[tags.length - 1]);
-            }}
-            placeholder={tags.length === 0 ? '输入标签，回车添加' : ''}
-            className="flex-1 min-w-[80px] h-auto border-0 bg-transparent shadow-none focus-visible:ring-0 focus-visible:border-transparent text-sm text-foreground placeholder:text-muted-foreground/60 py-0 px-0 rounded-none"
-          />
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                variant="ghost"
-                size="xs"
-                className="h-6 px-1.5 gap-1 text-xs text-muted-foreground/65 hover:text-foreground"
-              >
-                <Plus size={10} />
-                <span>预设</span>
-                <ChevronDown size={9} className="opacity-60" />
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent align="end" sideOffset={6} className="w-[180px] p-1">
-              {TAG_PRESETS.map(preset => {
-                const selected = tags.includes(preset.tag);
-                return (
-                  <button
-                    key={preset.tag}
-                    type="button"
-                    onClick={() => togglePresetTag(preset.tag)}
-                    className={`w-full flex items-center justify-between gap-2 px-2 py-1.5 rounded-md text-sm text-left transition-colors ${
-                      selected
-                        ? 'bg-accent/60 text-foreground'
-                        : 'text-foreground/80 hover:bg-muted/40'
-                    }`}
+        <Popover>
+          <PopoverTrigger asChild>
+            <button
+              type="button"
+              className="w-full min-h-[36px] px-2.5 py-1.5 rounded-xl border border-border/20 bg-accent/15 flex flex-wrap items-center gap-1.5 text-left hover:border-border/40 transition-colors"
+            >
+              {tags.length === 0 ? (
+                <span className="text-xs text-muted-foreground/60">选择标签…</span>
+              ) : tags.map(tag => (
+                <Badge key={tag} variant="outline" className={`gap-1 px-1.5 py-[2px] rounded-md ${getTagColor(tag)}`}>
+                  {tag}
+                  <Button
+                    variant="ghost"
+                    size="icon-xs"
+                    onClick={(e) => { e.stopPropagation(); removeTag(tag); }}
+                    className="ml-0.5 text-current opacity-40 hover:opacity-100 hover:bg-transparent"
                   >
-                    <span className="flex items-center gap-1.5">
-                      <span className={`px-1.5 py-px rounded text-[11px] leading-none border ${preset.color}`}>{preset.tag}</span>
-                    </span>
-                    {selected && <Check size={11} className="text-foreground/70" />}
-                  </button>
-                );
-              })}
-            </PopoverContent>
-          </Popover>
-        </div>
+                    <X size={7} />
+                  </Button>
+                </Badge>
+              ))}
+              <span className="flex-1" />
+              <ChevronDown size={11} className="text-muted-foreground/40 flex-shrink-0" />
+            </button>
+          </PopoverTrigger>
+          <PopoverContent
+            align="start"
+            sideOffset={4}
+            className="w-[var(--radix-popover-trigger-width)] p-1.5 max-h-[260px] overflow-y-auto"
+          >
+            {TAG_PRESETS.map(preset => {
+              const selected = tags.includes(preset.tag);
+              return (
+                <button
+                  key={preset.tag}
+                  type="button"
+                  onClick={() => togglePresetTag(preset.tag)}
+                  className={`w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-xs text-left transition-colors ${
+                    selected ? 'bg-accent/40 text-foreground' : 'text-muted-foreground/80 hover:bg-accent/30 hover:text-foreground'
+                  }`}
+                >
+                  <span className={`w-3.5 h-3.5 rounded-[4px] border flex items-center justify-center flex-shrink-0 ${
+                    selected ? 'bg-foreground border-foreground text-background' : 'border-border/60'
+                  }`}>
+                    {selected && <Check size={9} />}
+                  </span>
+                  <span className={`px-1.5 py-[1px] rounded-md text-xs border ${preset.color}`}>{preset.tag}</span>
+                </button>
+              );
+            })}
+          </PopoverContent>
+        </Popover>
       </FieldGroup>
     </div>
   );

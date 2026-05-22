@@ -8,9 +8,11 @@ import {
   BookOpen, Wrench, FileText, Database, Code, Image,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { Button } from '@cherrystudio/ui/components/primitives/button';
+import { Input as Textarea } from '@cherrystudio/ui/components/primitives/textarea';
+import { Popover, PopoverTrigger, PopoverContent } from '@cherrystudio/ui/components/primitives/popover';
 import {
-  Button, Textarea, SYSTEM_VARIABLES, SYSTEM_VAR_ICONS, VAR_TYPE_CONFIG, Typography,
-  Popover, PopoverTrigger, PopoverContent, SearchInput,
+  SYSTEM_VARIABLES, SYSTEM_VAR_ICONS, VAR_TYPE_CONFIG, Typography, SearchInput,
   type VariableDef, type VarType,
 } from '@cherry-studio/ui';
 

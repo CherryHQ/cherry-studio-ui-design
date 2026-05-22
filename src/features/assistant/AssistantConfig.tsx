@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { ArrowLeft, Save, Settings, FileText, BookOpen, ChevronRight, Wrench, Zap, SlidersHorizontal } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Button } from '@cherry-studio/ui';
+import { Button } from '@cherrystudio/ui/components/primitives/button';
 import type { ResourceItem } from '@/app/types';
 import { BasicSection } from './sections/BasicSection';
 import { ModelSection } from './sections/ModelSection';

@@ -1,10 +1,13 @@
 import React, { useState } from 'react';
 import { Plus, Trash2, RotateCcw, Info } from 'lucide-react';
+import { Button } from '@cherrystudio/ui/components/primitives/button';
+import { Input } from '@cherrystudio/ui/components/primitives/input';
+import { Slider } from '@cherrystudio/ui/components/primitives/slider';
+import { Switch } from '@cherrystudio/ui/components/primitives/switch';
 import {
-  Button, Input, Slider, Switch, Typography,
   Select, SelectTrigger, SelectValue, SelectContent, SelectItem,
-  SimpleTooltip,
-} from '@cherry-studio/ui';
+} from '@cherrystudio/ui/components/primitives/select';
+import { Typography, SimpleTooltip } from '@cherry-studio/ui';
 
 // ===========================
 // 模型设置 (Model Settings) section
