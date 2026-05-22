@@ -9,7 +9,9 @@ import type { ResourceItem } from '@/app/types';
 import { RESOURCE_TYPE_CONFIG, TAG_COLORS, DEFAULT_TAG_COLOR } from '@/app/config/constants';
 import { Button } from '@cherrystudio/ui/components/primitives/button';
 import { Input } from '@cherrystudio/ui/components/primitives/input';
-import { Switch } from '@cherrystudio/ui/components/primitives/switch';
+// Switch stays on legacy `@cherry-studio/ui` — v2's is visually
+// inferior (per the user).
+import { Switch } from '@cherry-studio/ui';
 import { Input as Textarea } from '@cherrystudio/ui/components/primitives/textarea';
 import { Combobox } from '@cherrystudio/ui/components/primitives/combobox';
 import { Field, FieldContent, FieldLabel } from '@cherrystudio/ui/components/primitives/field';

@@ -15,7 +15,10 @@ import { Input } from '@cherrystudio/ui/components/primitives/input';
 import {
   Popover, PopoverTrigger, PopoverContent,
 } from '@cherrystudio/ui/components/primitives/popover';
-import { Switch } from '@cherrystudio/ui/components/primitives/switch';
+// Switch stays on legacy `@cherry-studio/ui` — v2's is visually
+// inferior (per the user) and is the only legacy primitive still
+// pulled inside the library modal.
+import { Switch } from '@cherry-studio/ui';
 import { Combobox } from '@cherrystudio/ui/components/primitives/combobox';
 import { Field, FieldContent, FieldLabel } from '@cherrystudio/ui/components/primitives/field';
 import { ConfirmDialog } from '@cherrystudio/ui/components/composites/ConfirmDialog';
