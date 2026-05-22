@@ -183,18 +183,6 @@ const SIDEBAR_KINDS: (ResourceKind | 'all')[] = [
   'all', 'skill', 'mcp', 'cli', 'agent', 'assistant', 'prompt', 'kb', 'integration',
 ];
 
-// Quote-style copy for the hero carousel — pairs an existing CATALOG
-// item with a "in-action" snippet, mirroring the reference UI.
-const FEATURED_QUOTES: { itemId: string; quote: string }[] = [
-  { itemId: 'm-25', quote: '为每封我还没来得及回复的邮件起草回复' },
-  { itemId: 'm-32', quote: '在终端里把一段 stack trace 定位到具体代码并提出修复' },
-  { itemId: 'm-51', quote: '把会议笔记里的事件描述自动转成时序图' },
-  { itemId: 'm-5',  quote: '把仓库刚提的 issue 整理成可以直接派给 AI 的 PR 描述' },
-  { itemId: 'm-11', quote: '在你提问时拉取最新框架文档帮 LLM 引用' },
-  { itemId: 'm-46', quote: '把这段聊天里的产品决策同步到对应的需求文档' },
-];
-
-
 // ─── Page component ───────────────────────────────────────────────────
 
 export function MarketPage() {
@@ -212,8 +200,6 @@ export function MarketPage() {
   const [onboardOpen, setOnboardOpen] = useState(false);
   const [detailItem, setDetailItem] = useState<MarketItem | null>(null);
   const [submitOpen, setSubmitOpen] = useState(false);
-  // Hero carousel auto-rotate
-  const [heroIndex, setHeroIndex] = useState(0);
 
   // Defensive: Radix Dialog occasionally leaves body.style.pointerEvents
   // set to 'none' after closing, blocking all clicks. Flush it whenever
@@ -230,19 +216,6 @@ export function MarketPage() {
       return next;
     });
   };
-
-  // Hero carousel slides — resolve item ids against the catalog
-  const heroSlides = useMemo(() => FEATURED_QUOTES
-    .map(q => ({ item: CATALOG.find(c => c.id === q.itemId), quote: q.quote }))
-    .filter((s): s is { item: MarketItem; quote: string } => !!s.item),
-  []);
-
-  // Auto-advance the hero every 6s
-  useEffect(() => {
-    if (heroSlides.length <= 1) return;
-    const id = setInterval(() => setHeroIndex(i => (i + 1) % heroSlides.length), 6000);
-    return () => clearInterval(id);
-  }, [heroSlides.length]);
 
   // Public 市场 view: hides 自定义 (those live in 管理).
   const filtered = useMemo(() => {
@@ -292,8 +265,6 @@ export function MarketPage() {
       }))
       .sort((a, b) => b.items.length - a.items.length || a.label.localeCompare(b.label));
   }, [filtered, featured, search, kind]);
-
-  const currentSlide = heroSlides[heroIndex];
 
   return (
     <div className="flex flex-col h-full bg-background">
@@ -378,47 +349,6 @@ export function MarketPage() {
             </div>
             <PublisherFilterDropdown />
           </div>
-
-          {/* Hero carousel — gradient bg, cycling quote card, dot rail on the right */}
-          {currentSlide && (
-            <div className="relative h-[230px] sm:h-[260px] rounded-2xl overflow-hidden bg-gradient-to-br from-[#ece5f8] via-[#f1deea] to-[#dde2f4] mb-8">
-              <div aria-hidden="true" className="absolute -top-16 -left-16 w-[280px] h-[280px] rounded-full bg-[#d5c2eb]/45 blur-3xl pointer-events-none" />
-              <div aria-hidden="true" className="absolute -bottom-16 -right-16 w-[280px] h-[280px] rounded-full bg-[#e8c8d8]/45 blur-3xl pointer-events-none" />
-
-              <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 px-6">
-                <div className="bg-white/80 backdrop-blur-md rounded-xl px-3.5 py-2.5 max-w-[460px] shadow-sm border border-border/15 flex items-center gap-2.5">
-                  <span className="text-base flex-shrink-0">{currentSlide.item.avatar}</span>
-                  <div className="text-sm leading-snug min-w-0">
-                    <span className="font-semibold text-foreground">{currentSlide.item.name}</span>
-                    <span className="text-foreground/75"> {currentSlide.quote}</span>
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setDetailItem(currentSlide.item)}
-                  className="inline-flex items-center gap-1.5 h-9 px-4 rounded-full bg-foreground text-background text-sm hover:bg-foreground/90 transition-colors"
-                >
-                  <MousePointerClick size={12} />
-                  在对话中试用
-                </button>
-              </div>
-
-              {/* Dot indicators (right side, vertical) */}
-              <div className="absolute right-3 top-1/2 -translate-y-1/2 flex flex-col gap-1.5">
-                {heroSlides.map((_, i) => (
-                  <button
-                    key={i}
-                    type="button"
-                    onClick={() => setHeroIndex(i)}
-                    aria-label={`第 ${i + 1} 项`}
-                    className={`w-1.5 h-1.5 rounded-full transition-colors ${
-                      i === heroIndex ? 'bg-foreground/75' : 'bg-foreground/20 hover:bg-foreground/40'
-                    }`}
-                  />
-                ))}
-              </div>
-            </div>
-          )}
 
           {/* Featured section */}
           {featured.length > 0 && (
@@ -697,14 +627,6 @@ function MarketDetailDialog({
               查看源仓库
             </Button>
             <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => onOpenChange(false)}
-                className="h-8"
-              >
-                关闭
-              </Button>
               <Button
                 variant={installed ? 'outline' : 'default'}
                 size="sm"
