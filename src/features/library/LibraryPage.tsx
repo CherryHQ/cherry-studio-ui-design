@@ -794,58 +794,10 @@ export function LibraryPage() {
     );
   }
 
-  if (configView.type === 'prompt-edit') {
-    return (
-      <AnimatePresence mode="wait">
-        <motion.div key="prompt-edit" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="flex-1 flex flex-col min-h-0 bg-background">
-          <PromptEditPage
-            resource={configView.resource}
-            onBack={handleConfigBack}
-            onSave={(updates) => {
-              setResources(prev => prev.map(r => r.id === configView.resource.id ? { ...r, ...updates } : r));
-              setConfigView({ type: 'list' });
-            }}
-          />
-        </motion.div>
-      </AnimatePresence>
-    );
-  }
-
-  if (configView.type === 'assistant-config') {
-    return (
-      <AnimatePresence mode="wait">
-        <motion.div key="assistant" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="flex-1 flex flex-col min-h-0 bg-background">
-          <AssistantConfig resource={configView.resource} onBack={handleConfigBack} />
-        </motion.div>
-      </AnimatePresence>
-    );
-  }
-
-  if (configView.type === 'agent-config') {
-    return (
-      <AnimatePresence mode="wait">
-        <motion.div key="agent" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="flex-1 flex flex-col min-h-0 bg-background">
-          <AgentConfig resource={configView.resource} onBack={handleConfigBack} />
-        </motion.div>
-      </AnimatePresence>
-    );
-  }
-
-  if (configView.type === 'skill-plugin-detail') {
-    return (
-      <AnimatePresence mode="wait">
-        <motion.div key="sp-detail" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="flex-1 flex flex-col min-h-0 bg-background">
-          <SkillPluginDetail
-            resource={configView.resource}
-            onBack={handleConfigBack}
-            onToggle={handleToggle}
-            onDelete={handleDelete}
-          />
-        </motion.div>
-      </AnimatePresence>
-    );
-  }
-
+  // All resource config pages render inside a single centered modal
+  // (Dialog) overlaying the library list. The list view stays mounted
+  // underneath so closing the modal returns straight to the same
+  // browsing state. See `ConfigDialog` below.
   return (
     <div className="flex-1 flex min-h-0 bg-background">
       <LibrarySidebar
@@ -905,6 +857,56 @@ export function LibraryPage() {
             <Button variant="ghost" size="sm" onClick={() => setDeleteConfirm(null)}>取消</Button>
             <Button variant="destructive" size="sm" onClick={confirmDelete}>删除</Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Resource config modal — wraps each per-kind editor inside a
+          centered card. The inner editor keeps its existing layout +
+          back affordance; closing via the X also calls handleConfigBack. */}
+      <Dialog
+        open={configView.type !== 'list'}
+        onOpenChange={(open) => { if (!open) handleConfigBack(); }}
+      >
+        <DialogContent
+          showCloseButton={false}
+          className="max-w-[960px] !w-[92vw] h-[80vh] !rounded-2xl p-0 overflow-hidden border border-border/20 flex flex-col"
+        >
+          {/* Reuse a fresh mount per resource so internal local state
+              seeds from the resource's current values. */}
+          {configView.type === 'prompt-edit' && (
+            <PromptEditPage
+              key={configView.resource.id}
+              resource={configView.resource}
+              onBack={handleConfigBack}
+              onSave={(updates) => {
+                setResources(prev => prev.map(r => r.id === configView.resource.id ? { ...r, ...updates } : r));
+                setConfigView({ type: 'list' });
+              }}
+            />
+          )}
+          {configView.type === 'assistant-config' && (
+            <AssistantConfig
+              key={configView.resource.id}
+              resource={configView.resource}
+              onBack={handleConfigBack}
+            />
+          )}
+          {configView.type === 'agent-config' && (
+            <AgentConfig
+              key={configView.resource.id}
+              resource={configView.resource}
+              onBack={handleConfigBack}
+            />
+          )}
+          {configView.type === 'skill-plugin-detail' && (
+            <SkillPluginDetail
+              key={configView.resource.id}
+              resource={configView.resource}
+              onBack={handleConfigBack}
+              onToggle={handleToggle}
+              onDelete={handleDelete}
+            />
+          )}
         </DialogContent>
       </Dialog>
     </div>
