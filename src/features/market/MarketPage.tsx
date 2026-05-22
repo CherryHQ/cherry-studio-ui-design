@@ -183,6 +183,14 @@ const SIDEBAR_KINDS: (ResourceKind | 'all')[] = [
   'all', 'skill', 'mcp', 'agent', 'assistant', 'prompt', 'kb', 'integration',
 ];
 
+// Built-in subscription feeds — the user can add more via the "+" button.
+const BUILTIN_FEEDS: { id: string; label: string }[] = [
+  { id: 'cherry',      label: 'Cherry 精选' },
+  { id: 'skill-hub',   label: 'Skill Hub' },
+  { id: 'claude',      label: 'Claude Skill' },
+  { id: 'awesome-mcp', label: 'Awesome MCP' },
+];
+
 // ─── Page component ───────────────────────────────────────────────────
 
 export function MarketPage() {
@@ -201,13 +209,34 @@ export function MarketPage() {
   const [detailItem, setDetailItem] = useState<MarketItem | null>(null);
   const [submitOpen, setSubmitOpen] = useState(false);
 
+  // Subscription feeds — the strip below the search bar. 'cherry' is the
+  // default; users can add custom feeds (label derived from the URL host).
+  const [feedId, setFeedId] = useState<string>('cherry');
+  const [customFeeds, setCustomFeeds] = useState<{ id: string; label: string; url: string }[]>([]);
+  const [feedDialogOpen, setFeedDialogOpen] = useState(false);
+  const [feedUrl, setFeedUrl] = useState('');
+
+  const addCustomFeed = () => {
+    const url = feedUrl.trim();
+    if (!url) return;
+    let label = url;
+    try {
+      label = new URL(url.startsWith('http') ? url : `https://${url}`).hostname.replace(/^www\./, '');
+    } catch { /* keep raw url as label */ }
+    const id = `custom-${Date.now()}`;
+    setCustomFeeds(prev => [...prev, { id, label, url }]);
+    setFeedId(id);
+    setFeedUrl('');
+    setFeedDialogOpen(false);
+  };
+
   // Defensive: Radix Dialog occasionally leaves body.style.pointerEvents
   // set to 'none' after closing, blocking all clicks. Flush it whenever
   // every dialog is closed.
   useEffect(() => {
-    const anyOpen = onboardOpen || detailItem !== null || submitOpen;
+    const anyOpen = onboardOpen || detailItem !== null || submitOpen || feedDialogOpen;
     if (!anyOpen) document.body.style.pointerEvents = '';
-  }, [onboardOpen, detailItem, submitOpen]);
+  }, [onboardOpen, detailItem, submitOpen, feedDialogOpen]);
 
   const toggleInstall = (id: string) => {
     setInstalled(prev => {
@@ -337,7 +366,7 @@ export function MarketPage() {
           </h1>
 
           {/* Search bar + publisher dropdown (sub-kind moved to left rail) */}
-          <div className="flex items-center gap-2 mb-5">
+          <div className="flex items-center gap-2 mb-3">
             <div className="flex-1">
               <SearchInput
                 value={search}
@@ -348,6 +377,36 @@ export function MarketPage() {
               />
             </div>
             <PublisherFilterDropdown />
+          </div>
+
+          {/* Feed tabs — built-in sources + user-added subscriptions */}
+          <div className="flex items-center gap-1.5 mb-5 flex-wrap">
+            {[...BUILTIN_FEEDS, ...customFeeds].map(feed => {
+              const active = feedId === feed.id;
+              return (
+                <button
+                  key={feed.id}
+                  type="button"
+                  onClick={() => setFeedId(feed.id)}
+                  className={`inline-flex items-center h-7 px-3 rounded-full text-xs transition-colors ${
+                    active
+                      ? 'bg-foreground text-background'
+                      : 'border border-border/40 text-muted-foreground/85 hover:border-border/70 hover:bg-muted/30 hover:text-foreground'
+                  }`}
+                >
+                  {feed.label}
+                </button>
+              );
+            })}
+            <button
+              type="button"
+              onClick={() => setFeedDialogOpen(true)}
+              aria-label="添加订阅源"
+              title="添加订阅源"
+              className="inline-flex items-center justify-center h-7 w-7 rounded-full border border-dashed border-border/45 text-muted-foreground/70 hover:border-border/80 hover:text-foreground hover:bg-muted/25 transition-colors"
+            >
+              <Plus size={13} strokeWidth={1.8} />
+            </button>
           </div>
 
           {/* Featured section */}
@@ -418,6 +477,33 @@ export function MarketPage() {
         onToggleInstall={(id) => toggleInstall(id)}
       />
       <SubmitResourceDialog open={submitOpen} onOpenChange={setSubmitOpen} />
+
+      {/* Add-feed dialog — opens from the "+" button in the feed tab strip */}
+      <Dialog open={feedDialogOpen} onOpenChange={setFeedDialogOpen}>
+        <DialogContent className="max-w-[440px]">
+          <DialogHeader>
+            <DialogTitle>添加订阅源</DialogTitle>
+            <DialogDescription>
+              粘贴一个 RSS / JSON Feed / GitHub 仓库链接，Cherry 会订阅它的新资源更新。
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-1.5 py-1">
+            <label className="text-xs text-muted-foreground/70">订阅链接</label>
+            <Input
+              autoFocus
+              value={feedUrl}
+              onChange={e => setFeedUrl(e.target.value)}
+              onKeyDown={e => { if (e.key === 'Enter') addCustomFeed(); }}
+              placeholder="https://example.com/feed.json"
+              className="h-9"
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" size="sm" onClick={() => setFeedDialogOpen(false)}>取消</Button>
+            <Button size="sm" disabled={!feedUrl.trim()} onClick={addCustomFeed}>添加</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
