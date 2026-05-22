@@ -1,21 +1,27 @@
 import { useEffect, useRef, useState } from "react"
 import { createPortal } from "react-dom"
-import { CheckCircle2, Circle, Filter, Trash2, X, AlertTriangle } from "lucide-react"
+import { CheckCircle2, Circle, Copy, Filter, Search, Trash2, X, AlertTriangle } from "lucide-react"
 import { Button } from "../button"
 import { Badge } from "../badge"
-import { cn } from "../../../lib/utils"
 import { useAnnotationContext } from "./annotation-provider"
-import type { AnnotationCategory } from "./types"
+import { copyJSON, generateSingleAnnotationPrompt } from "./utils"
+import type { AnnotationCategory, AnnotationMessages } from "./types"
 
-const FILTER_CATEGORIES: { value: AnnotationCategory | "all"; label: string }[] = [
-  { value: "all", label: "All" },
-  { value: "bug", label: "Bug" },
-  { value: "style", label: "Style" },
-  { value: "layout", label: "Layout" },
-  { value: "interaction", label: "Inter." },
-  { value: "content", label: "Content" },
-  { value: "other", label: "Other" },
+const FILTER_VALUES: (AnnotationCategory | "all")[] = [
+  "all", "bug", "style", "layout", "interaction", "content", "other",
 ]
+
+function filterLabel(v: AnnotationCategory | "all", m: AnnotationMessages): string {
+  switch (v) {
+    case "all": return m.categoryAll
+    case "bug": return m.categoryBug
+    case "style": return m.categoryStyle
+    case "layout": return m.categoryLayout
+    case "interaction": return m.categoryInteractionShort
+    case "content": return m.categoryContent
+    case "other": return m.categoryOther
+  }
+}
 
 interface AnnotationListProps {
   open: boolean
@@ -28,11 +34,17 @@ export function AnnotationList({ open, onClose }: AnnotationListProps) {
     resolveAnnotation,
     removeAnnotation,
     page,
+    portalContainer,
+    messages,
   } = useAnnotationContext()
 
   const containerRef = useRef<HTMLDivElement>(null)
   const [filterCategory, setFilterCategory] = useState<AnnotationCategory | "all">("all")
   const [showFilters, setShowFilters] = useState(false)
+  const [search, setSearch] = useState("")
+  /** Selection set for batch ops; reset whenever the list closes */
+  const [selected, setSelected] = useState<Set<string>>(() => new Set())
+  useEffect(() => { if (!open) setSelected(new Set()) }, [open])
 
   // Protect from Radix Dialog's inert/aria-hidden
   useEffect(() => {
@@ -49,12 +61,53 @@ export function AnnotationList({ open, onClose }: AnnotationListProps) {
 
   if (!open) return null
 
-  const filtered = filterCategory === "all"
+  const byCategory = filterCategory === "all"
     ? annotations
     : annotations.filter((a) => a.category === filterCategory)
-  const visible = filtered.filter((a) => !a.orphaned)
-  const active = visible.filter((a) => !a.resolved)
-  const resolved = visible.filter((a) => a.resolved)
+  const q = search.trim().toLowerCase()
+  const filtered = q
+    ? byCategory.filter((a) =>
+        a.comment.toLowerCase().includes(q) ||
+        a.elementLabel.toLowerCase().includes(q) ||
+        a.breadcrumb.toLowerCase().includes(q) ||
+        (a.className || "").toLowerCase().includes(q) ||
+        (a.sourceHint || "").toLowerCase().includes(q),
+      )
+    : byCategory
+
+  // Show ALL annotations (including orphaned) — the orphaned badge on each
+  // item makes the state visible without losing entries from the list.
+  const active = filtered.filter((a) => !a.resolved)
+  const resolved = filtered.filter((a) => a.resolved)
+
+  const toggleSelect = (id: string) => {
+    setSelected((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
+  // Plain const — `useMemo` here would be called conditionally (after the
+  // `if (!open) return null` early-return above), violating React rules of
+  // hooks and crashing the panel on toggle.
+  const selectedAnnotations = filtered.filter((a) => selected.has(a.id))
+
+  const handleBatchResolve = () => {
+    for (const ann of selectedAnnotations) {
+      if (!ann.resolved) resolveAnnotation(ann.id)
+    }
+    setSelected(new Set())
+  }
+  const handleBatchDelete = () => {
+    if (!confirm(messages.confirmBatchDelete(selected.size))) return
+    for (const ann of selectedAnnotations) removeAnnotation(ann.id)
+    setSelected(new Set())
+  }
+  const handleBatchCopyPrompt = async () => {
+    const text = selectedAnnotations.map(generateSingleAnnotationPrompt).join("\n\n---\n\n")
+    await copyJSON(text)
+  }
 
   const scrollToElement = (selector: string) => {
     try {
@@ -84,16 +137,16 @@ export function AnnotationList({ open, onClose }: AnnotationListProps) {
       {/* Header */}
       <div className="flex items-center justify-between px-3 py-2.5 border-b border-border">
         <div className="flex items-center gap-2">
-          <span className="text-[length:var(--fs-sm)] font-medium">Annotations</span>
+          <span className="text-[length:var(--fs-sm)] font-medium">{messages.listTitle}</span>
           <Badge variant="secondary">{page}</Badge>
-          <Badge variant="outline" className="text-[length:var(--fs-xs)]">{visible.length}</Badge>
+          <Badge variant="outline" className="text-[length:var(--fs-xs)]">{filtered.length}</Badge>
         </div>
         <div className="flex items-center gap-0.5">
           <Button
             variant={showFilters ? "default" : "ghost"}
             size="icon-xs"
             onClick={() => setShowFilters(!showFilters)}
-            title="Filter"
+            title={messages.filterTooltip}
           >
             <Filter className="size-3.5" />
           </Button>
@@ -103,23 +156,62 @@ export function AnnotationList({ open, onClose }: AnnotationListProps) {
         </div>
       </div>
 
+      {/* Search */}
+      <div className="px-3 py-2 border-b border-border/50 flex items-center gap-2">
+        <Search className="size-3.5 text-muted-foreground shrink-0" />
+        <input
+          type="text"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder={messages.searchPlaceholder}
+          className="flex-1 bg-transparent text-[length:var(--fs-sm)] outline-none placeholder:text-muted-foreground"
+        />
+        {search && (
+          <Button variant="ghost" size="icon-xs" onClick={() => setSearch("")}>
+            <X className="size-3" />
+          </Button>
+        )}
+      </div>
+
+      {/* Batch actions bar — appears only when at least one annotation is selected */}
+      {selected.size > 0 && (
+        <div className="px-3 py-2 border-b border-border/50 bg-primary/5 flex items-center justify-between gap-2">
+          <span className="text-[length:var(--fs-xs)] font-medium">
+            {messages.selectedCount(selected.size)}
+          </span>
+          <div className="flex gap-1">
+            <Button variant="outline" size="xs" onClick={handleBatchCopyPrompt} title={messages.batchCopyPrompts}>
+              <Copy className="size-3" />
+            </Button>
+            <Button variant="outline" size="xs" onClick={handleBatchResolve} title={messages.batchResolve}>
+              <CheckCircle2 className="size-3" />
+            </Button>
+            <Button variant="outline" size="xs" onClick={handleBatchDelete} title={messages.batchDelete} className="text-destructive">
+              <Trash2 className="size-3" />
+            </Button>
+            <Button variant="ghost" size="xs" onClick={() => setSelected(new Set())}>
+              <X className="size-3" />
+            </Button>
+          </div>
+        </div>
+      )}
+
       {/* Filter bar */}
       {showFilters && (
         <div className="flex flex-wrap gap-1 px-3 py-2 border-b border-border/50 bg-muted/30">
-          {FILTER_CATEGORIES.map((cat) => {
-            const nonOrphaned = annotations.filter((a) => !a.orphaned)
-            const count = cat.value === "all"
-              ? nonOrphaned.length
-              : nonOrphaned.filter((a) => a.category === cat.value).length
+          {FILTER_VALUES.map((value) => {
+            const count = value === "all"
+              ? annotations.length
+              : annotations.filter((a) => a.category === value).length
             return (
               <Button
-                key={cat.value}
-                variant={filterCategory === cat.value ? "default" : "outline"}
+                key={value}
+                variant={filterCategory === value ? "default" : "outline"}
                 size="inline"
-                onClick={() => setFilterCategory(cat.value)}
+                onClick={() => setFilterCategory(value)}
                 className="text-[length:var(--fs-xs)]"
               >
-                {cat.label}
+                {filterLabel(value, messages)}
                 {count > 0 && <span className="ml-0.5 opacity-60">{count}</span>}
               </Button>
             )
@@ -129,15 +221,15 @@ export function AnnotationList({ open, onClose }: AnnotationListProps) {
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto min-h-0">
-        {visible.length === 0 ? (
+        {filtered.length === 0 ? (
           <div className="p-4 text-center text-[length:var(--fs-sm)] text-muted-foreground">
             {filterCategory !== "all" ? (
-              <>No {filterCategory} annotations on this page.</>
+              <>{messages.listEmptyFiltered(filterLabel(filterCategory, messages))}</>
             ) : (
               <>
-                No annotations on this page yet.
+                {messages.listEmpty}
                 <br />
-                <span className="text-[length:var(--fs-xs)]">Enable annotation mode (⌘⇧X) and click on elements to add comments.</span>
+                <span className="text-[length:var(--fs-xs)]">{messages.listEmptyHint}</span>
               </>
             )}
           </div>
@@ -147,11 +239,21 @@ export function AnnotationList({ open, onClose }: AnnotationListProps) {
             {active.map((ann, i) => (
               <div
                 key={ann.id}
-                className="flex items-start gap-2 px-3 py-2 border-b border-border/50 hover:bg-muted/50 cursor-pointer group"
+                className={`flex items-start gap-2 px-3 py-2 border-b border-border/50 hover:bg-muted/50 cursor-pointer group ${
+                  selected.has(ann.id) ? "bg-primary/5" : ""
+                }`}
                 onClick={() => scrollToElement(ann.selector)}
               >
+                <input
+                  type="checkbox"
+                  checked={selected.has(ann.id)}
+                  onChange={() => toggleSelect(ann.id)}
+                  onClick={(e) => e.stopPropagation()}
+                  className="mt-1 size-3.5 cursor-pointer accent-primary"
+                  aria-label={messages.selectForBatch}
+                />
                 <div className="flex-shrink-0 mt-0.5">
-                  <Badge className="min-w-5 h-5 rounded-full px-1 text-[length:var(--fs-xs)] font-bold justify-center">
+                  <Badge className="min-w-5 h-5 rounded-full px-1 text-[length:var(--fs-xs)] font-bold justify-center bg-primary text-primary-foreground border-transparent">
                     {i + 1}
                   </Badge>
                 </div>
@@ -160,12 +262,12 @@ export function AnnotationList({ open, onClose }: AnnotationListProps) {
                     {ann.orphaned && (
                       <Badge variant="destructive" className="text-[length:var(--fs-xs)] px-1 py-0">
                         <AlertTriangle className="size-2.5 mr-0.5" />
-                        orphaned
+                        {messages.orphaned}
                       </Badge>
                     )}
                     {ann.category && (
                       <Badge variant="outline" className="text-[length:var(--fs-xs)] px-1 py-0">
-                        {ann.category}
+                        {filterLabel(ann.category, messages)}
                       </Badge>
                     )}
                     {ann.sourceHint && (
@@ -184,7 +286,7 @@ export function AnnotationList({ open, onClose }: AnnotationListProps) {
                     variant="ghost"
                     size="icon-xs"
                     onClick={(e) => { e.stopPropagation(); resolveAnnotation(ann.id) }}
-                    title="Resolve"
+                    title={messages.resolve}
                   >
                     <Circle className="size-3" />
                   </Button>
@@ -192,7 +294,7 @@ export function AnnotationList({ open, onClose }: AnnotationListProps) {
                     variant="ghost"
                     size="icon-xs"
                     onClick={(e) => { e.stopPropagation(); removeAnnotation(ann.id) }}
-                    title="Delete"
+                    title={messages.delete}
                   >
                     <Trash2 className="size-3 text-destructive" />
                   </Button>
@@ -204,14 +306,24 @@ export function AnnotationList({ open, onClose }: AnnotationListProps) {
             {resolved.length > 0 && (
               <>
                 <div className="px-3 py-1.5 text-[length:var(--fs-xs)] font-medium text-muted-foreground uppercase tracking-wider bg-muted/30">
-                  Resolved ({resolved.length})
+                  {messages.resolvedHeader(resolved.length)}
                 </div>
                 {resolved.map((ann) => (
                   <div
                     key={ann.id}
-                    className="flex items-start gap-2 px-3 py-2 border-b border-border/50 hover:bg-muted/50 cursor-pointer group opacity-60"
+                    className={`flex items-start gap-2 px-3 py-2 border-b border-border/50 hover:bg-muted/50 cursor-pointer group opacity-60 ${
+                      selected.has(ann.id) ? "bg-primary/5 opacity-100" : ""
+                    }`}
                     onClick={() => scrollToElement(ann.selector)}
                   >
+                    <input
+                      type="checkbox"
+                      checked={selected.has(ann.id)}
+                      onChange={() => toggleSelect(ann.id)}
+                      onClick={(e) => e.stopPropagation()}
+                      className="mt-1 size-3.5 cursor-pointer accent-primary"
+                      aria-label={messages.selectForBatch}
+                    />
                     <CheckCircle2 className="size-4 text-success mt-0.5 flex-shrink-0" />
                     <div className="flex-1 min-w-0">
                       <p className="text-[length:var(--fs-sm)] line-through line-clamp-2">{ann.comment}</p>
@@ -221,7 +333,7 @@ export function AnnotationList({ open, onClose }: AnnotationListProps) {
                         variant="ghost"
                         size="icon-xs"
                         onClick={(e) => { e.stopPropagation(); resolveAnnotation(ann.id) }}
-                        title="Unresolve"
+                        title={messages.unresolve}
                       >
                         <AlertTriangle className="size-3" />
                       </Button>
@@ -229,7 +341,7 @@ export function AnnotationList({ open, onClose }: AnnotationListProps) {
                         variant="ghost"
                         size="icon-xs"
                         onClick={(e) => { e.stopPropagation(); removeAnnotation(ann.id) }}
-                        title="Delete"
+                        title={messages.delete}
                       >
                         <Trash2 className="size-3 text-destructive" />
                       </Button>
@@ -242,6 +354,6 @@ export function AnnotationList({ open, onClose }: AnnotationListProps) {
         )}
       </div>
     </div>,
-    document.body,
+    portalContainer || document.body,
   )
 }

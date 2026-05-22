@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { Puzzle, Layers } from 'lucide-react';
+import { Puzzle, Layers, Database } from 'lucide-react';
 import { Sidebar } from './layout/Sidebar';
 import { TabBar } from './layout/TabBar';
 import { TabContextMenu, FloatingWindow, NewTabDialog, SearchDialog, DragGhost, AnnotationProvider, AnnotationOverlay, AnnotationToggle, AnnotationList } from '@cherry-studio/ui';
@@ -19,6 +19,7 @@ import type { GlobalActions } from '@/app/context/GlobalActionContext';
 import { RecycleBinProvider } from '@/app/context/RecycleBinContext';
 import { ArchiveProvider } from '@/app/context/ArchiveContext';
 import { Toaster } from 'sonner';
+import { DataMigrationOverlay } from './DataMigrationOverlay';
 import { initGlobalErrorHandler } from '@/app/services/errorHandler';
 import { useTabs } from '@/app/hooks/useTabs';
 import { useFloatingWindows } from '@/app/hooks/useFloatingWindows';
@@ -43,6 +44,7 @@ function CherryStudioInner() {
   const [hiddenApps, setHiddenApps] = useState<Set<string>>(new Set(['explore', 'library', 'knowledge', 'file', 'code', 'note', 'extensions']));
   const [appOrder, setAppOrder] = useState<string[]>(() => dialogAppIcons.map(a => a.id));
   const [annotationListOpen, setAnnotationListOpen] = useState(false);
+  const [showMigration, setShowMigration] = useState(false);
 
   const [libraryEditResourceId, setLibraryEditResourceId] = useState<string | null>(null);
   const [libraryCreateType, setLibraryCreateType] = useState<'agent' | 'assistant' | null>(null);
@@ -228,6 +230,15 @@ function CherryStudioInner() {
           <Layers size={11} />
           <span className="text-[10px] [writing-mode:vertical-rl]">Empty</span>
         </button>
+        {/* Dev: Data Migration Demo — outside app window */}
+        <button
+          onClick={() => setShowMigration(true)}
+          className="absolute right-0 top-1/2 translate-y-4 flex items-center gap-1 px-1 py-3 rounded-l-lg bg-foreground/10 border border-border/30 border-r-0 text-foreground/40 hover:text-foreground hover:bg-foreground/20 hover:px-1.5 transition-all"
+          title="Data Migration Demo"
+        >
+          <Database size={11} />
+          <span className="text-[10px] [writing-mode:vertical-rl]">Migration</span>
+        </button>
         <div id="cherry-app-root" className="flex flex-col w-full h-full max-w-[1440px] max-h-[900px] bg-sidebar text-foreground rounded-2xl border border-border overflow-hidden shadow-2xl relative">
           <TabBar
             tabs={tabs}
@@ -369,6 +380,10 @@ function CherryStudioInner() {
           listOpen={annotationListOpen}
         />
         <AnnotationList open={annotationListOpen} onClose={() => setAnnotationListOpen(false)} />
+
+        {showMigration && (
+          <DataMigrationOverlay onComplete={() => setShowMigration(false)} />
+        )}
       </div>
       </AnnotationProvider>
     </GlobalActionProvider>

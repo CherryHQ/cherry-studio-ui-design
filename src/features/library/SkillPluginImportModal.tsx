@@ -1,7 +1,10 @@
 import React, { useState, useRef, useCallback } from 'react';
 import { X, Package, FileJson, FileText, Archive, CheckCircle2, AlertCircle, Upload } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Button, Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@cherry-studio/ui';
+import { Button } from '@cherrystudio/ui/components/primitives/button';
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
+} from '@cherrystudio/ui/components/primitives/dialog';
 import type { ResourceType, ResourceItem } from '@/app/types';
 
 interface Props {

@@ -1,0 +1,66 @@
+{
+  "name": "@loupe/dev-annotator",
+  "version": "0.1.0",
+  "description": "In-app UI annotation tool for any Electron / web renderer. One-line install. Click any element, describe the issue, copy AI-ready prompt.",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    },
+    "./styles.css": "./dist/styles.css",
+    "./electron-main": {
+      "types": "./dist/electron-main.d.ts",
+      "import": "./dist/electron-main.js",
+      "require": "./dist/electron-main.cjs"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsup && pnpm build:css",
+    "build:css": "tailwindcss -i src/styles.css -o dist/styles.css",
+    "dev": "tsup --watch"
+  },
+  "keywords": [
+    "annotation",
+    "electron",
+    "react",
+    "ui-feedback",
+    "ai-prompt",
+    "design-review",
+    "loupe"
+  ],
+  "author": "Loupe",
+  "license": "MIT",
+  "peerDependencies": {
+    "react": ">=18",
+    "react-dom": ">=18"
+  },
+  "dependencies": {
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "html-to-image": "^1.11.13",
+    "lucide-react": "^0.487.0",
+    "radix-ui": "^1.4.3",
+    "tailwind-merge": "^3.0.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/cli": "^4.1.12",
+    "@types/node": "^22.13.5",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "electron": "^33.0.0",
+    "react": "19.2.5",
+    "react-dom": "19.2.5",
+    "tailwindcss": "^4.1.12",
+    "tsup": "^8",
+    "typescript": "^5"
+  }
+}

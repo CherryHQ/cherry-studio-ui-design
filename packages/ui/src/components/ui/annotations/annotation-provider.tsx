@@ -6,7 +6,8 @@ import React, {
   useRef,
   useState,
 } from "react"
-import type { Annotation, AnnotationContextValue } from "./types"
+import type { Annotation, AnnotationContextValue, AnnotationMessages } from "./types"
+import { DEFAULT_ANNOTATION_MESSAGES } from "./types"
 import {
   loadAnnotations,
   saveAnnotations,
@@ -32,6 +33,36 @@ interface AnnotationProviderProps {
   storageKey?: string
   /** App name used in export JSON */
   appName?: string
+  /**
+   * Container for portal-rendered UI (overlay, toggle, list, bubble).
+   * Defaults to document.body. In a browser extension or shadow-DOM context,
+   * pass a shadow root (or any element inside it) to keep UI scoped.
+   */
+  portalContainer?: Element | null
+  /**
+   * If true, the provider does NOT read from / write to localStorage.
+   * State lives entirely in memory; the parent app is responsible for
+   * persistence via importAnnotations + the allAnnotations field.
+   *
+   * Use when integrating with chrome.storage, IndexedDB, or a remote backend
+   * — avoids polluting host-page localStorage with annotations + screenshots.
+   */
+  disablePersistence?: boolean
+  /**
+   * If true, the page filter is treated as a no-op — annotations from any
+   * `page` value are visible. Useful when annotations are already segregated
+   * by another mechanism (e.g. per-origin in browser extensions).
+   */
+  disablePageFilter?: boolean
+  /** Optional sourceHint override — see context type for details */
+  getSourceHint?: (el: HTMLElement) => string
+  /** Custom action buttons rendered in bubble view mode */
+  bubbleActions?: import("./types").BubbleAction[]
+  /**
+   * Localized UI strings — pass overrides for any subset; missing keys fall
+   * back to {@link DEFAULT_ANNOTATION_MESSAGES} (English).
+   */
+  messages?: Partial<AnnotationMessages>
 }
 
 export function AnnotationProvider({
@@ -40,21 +71,35 @@ export function AnnotationProvider({
   boundarySelector = "#cherry-app-root",
   storageKey = "cherry-annotations",
   appName = "cherry-studio",
+  portalContainer,
+  disablePersistence = false,
+  disablePageFilter = false,
+  getSourceHint,
+  bubbleActions,
+  messages: messagesOverride,
 }: AnnotationProviderProps) {
+  // Merge once per render; cheap (~30 string copies) and stable enough for
+  // consumers that only re-read on render anyway.
+  const messages: AnnotationMessages = messagesOverride
+    ? { ...DEFAULT_ANNOTATION_MESSAGES, ...messagesOverride }
+    : DEFAULT_ANNOTATION_MESSAGES
   const [allAnnotations, setAllAnnotations] = useState<Annotation[]>(() =>
-    loadAnnotations(storageKey),
+    disablePersistence ? [] : loadAnnotations(storageKey),
   )
   const [enabled, setEnabled] = useState(false)
   const storageKeyRef = useRef(storageKey)
   storageKeyRef.current = storageKey
 
-  // Persist to localStorage on change
+  // Persist to localStorage on change (skipped when disablePersistence)
   useEffect(() => {
+    if (disablePersistence) return
     saveAnnotations(storageKeyRef.current, allAnnotations)
-  }, [allAnnotations])
+  }, [allAnnotations, disablePersistence])
 
-  // Filter by page
-  const annotations = allAnnotations.filter((a) => a.page === page)
+  // Filter by page (or show all if filter disabled)
+  const annotations = disablePageFilter
+    ? allAnnotations
+    : allAnnotations.filter((a) => a.page === page)
 
   const addAnnotation = useCallback(
     (ann: Omit<Annotation, "id" | "timestamp">) => {
@@ -113,6 +158,10 @@ export function AnnotationProvider({
     page,
     boundarySelector,
     appName,
+    portalContainer: portalContainer ?? null,
+    getSourceHint,
+    bubbleActions,
+    messages,
   }
 
   return (

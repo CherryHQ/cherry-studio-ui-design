@@ -2,8 +2,17 @@
 @import 'tailwindcss';
 @import 'tw-animate-css';
 @import '@cherry-studio/ui/theme.css';
+/* V2 ui token scale (--cs-*) — pulled from CherryHQ/cherry-studio v2.
+ * Brand was neutralized earlier (see packages/cherry-v2-ui/src/styles/
+ * tokens/colors/semantic.css). Only `tokens.css` (raw CSS vars) is
+ * imported globally. `theme.css` is NOT imported here: its `@theme`
+ * block redefines `--color-background` / `--color-foreground` / etc.
+ * to `var(--cs-*)` which would override our existing chrome colors
+ * application-wide. */
+@import '@cherrystudio/ui/styles/tokens.css';
 
 @source '../../packages/ui/src/**/*.{ts,tsx}';
+@source '../../packages/cherry-v2-ui/src/**/*.{ts,tsx}';
 
 @theme {
   --animate-accordion-down: accordion-down 0.2s ease-out;

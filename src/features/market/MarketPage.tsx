@@ -10,10 +10,7 @@ import {
   Button, Input, Textarea, SearchInput, Typography, Badge, Slider,
   Popover, PopoverTrigger, PopoverContent,
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
-  Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetFooter,
 } from '@cherry-studio/ui';
-import { useRecycleBin, type RecycleBinItemType } from '@/app/context/RecycleBinContext';
-import { RecycleBinConfirmDialog } from '@/app/components/shared/RecycleBinConfirmDialog';
 
 // ===========================
 // Market Place
@@ -54,27 +51,6 @@ interface MarketItem {
   ageLabel: string;     // 上架时间（2y / 6mo）
   installs: number;
   trending?: boolean;
-  /** User-created resource — only appears in 我的资源, never in 探索. */
-  custom?: boolean;
-  // ── Optional, kind-specific edit fields (mirrors V2 library editor
-  // schema; see DESIGN audit). Filled lazily by the 管理 drawer so
-  // existing CATALOG entries don't need to declare them up front.
-  /** Assistant: system prompt. Agent: agent instructions. Prompt: body. */
-  body?: string;
-  /** Assistant + Agent: backing model id (e.g. 'claude-sonnet-4-6'). */
-  model?: string;
-  /** Assistant: sampling temperature (0–2). */
-  temperature?: number;
-  /** Agent: permission mode. */
-  permissionMode?: 'default' | 'plan' | 'acceptEdits' | 'bypassPermissions';
-  /** Agent: max conversation turns (0 = default). */
-  maxTurns?: number;
-  /** MCP: server endpoint. */
-  baseUrl?: string;
-  /** CLI: install command. */
-  installCmd?: string;
-  /** KB / Integration: connection / status string for the readonly stat line. */
-  statusLabel?: string;
 }
 
 const KIND_LABEL: Record<ResourceKind, string> = {
@@ -196,16 +172,6 @@ const CATALOG: MarketItem[] = [
   { id: 'm-26', kind: 'integration', name: 'GitHub',            tagline: '仓库 / Issue / PR / Release 自然语言自动化',     author: '@github',       avatar: '🐙',  avatarBg: 'bg-foreground/15',    language: 'EN',  region: '全球',     category: '开发',     ageLabel: '1y',  installs: 5240                   },
   { id: 'm-27', kind: 'integration', name: 'Confluence',        tagline: '企业 Wiki 读写、模板插入、跨空间检索',         author: '@atlassian',    avatar: '🧭',  avatarBg: 'bg-info/15',          language: '多语', region: '全球',     category: '办公',     ageLabel: '5mo', installs: 312                    },
   { id: 'm-28', kind: 'integration', name: 'Outlook',           tagline: '收发邮件 + 会议邀请 + 联系人同步',             author: '@microsoft',    avatar: '📧',  avatarBg: 'bg-info/20',          language: '多语', region: '全球',     category: '办公',     ageLabel: '6mo', installs: 580                    },
-
-  // ─── User-created custom resources — only show in 我的资源 ─────
-  // 这是用户自己在本地创建 / 自定义 / 私有的资源（来自即将合并进市场
-  // 的"资源库"）。它们不进探索目录、没有 installs 概念，只属于当前用户。
-  { id: 'c-1',  kind: 'prompt',    name: '我的代码评审 Prompt',  tagline: '给定 diff，按团队规范输出可执行的 review 评语与改进建议',     author: '@me',           avatar: '✏️',  avatarBg: 'bg-accent-amber/25',  language: '中文', region: '个人',     category: '编程',     ageLabel: '12d', installs: 1, custom: true       },
-  { id: 'c-2',  kind: 'assistant', name: '客户支持助手',         tagline: '挂载我们的产品知识库，按客服话术回复 + 提取工单要点',           author: '@me',           avatar: '🎧',  avatarBg: 'bg-accent-cyan/25',   language: '中文', region: '个人',     category: '办公',     ageLabel: '8d',  installs: 1, custom: true       },
-  { id: 'c-3',  kind: 'agent',     name: '周报生成 Agent',        tagline: '抓取我本周的 GitHub PR + Linear 任务 + 飞书文档，整理成结构化周报', author: '@me',           avatar: '🗓',  avatarBg: 'bg-accent-indigo/25', language: '中文', region: '个人',     category: '办公',     ageLabel: '5d',  installs: 1, custom: true       },
-  { id: 'c-4',  kind: 'kb',        name: '团队 Wiki',             tagline: '从 Notion / Confluence 同步的内部文档全文索引（私有，仅自己可见）', author: '@me',           avatar: '📚',  avatarBg: 'bg-success/15',       language: '中文', region: '个人',     category: '研究',     ageLabel: '1mo', installs: 1, custom: true       },
-  { id: 'c-5',  kind: 'mcp',       name: '内部 SQL Gateway',      tagline: '本地起的 MCP，连我们数据仓库的只读副本，做 BI 查询用',         author: '@me',           avatar: '🔌',  avatarBg: 'bg-info/15',          language: '中文', region: '个人',     category: '数据',     ageLabel: '20d', installs: 1, custom: true       },
-  { id: 'c-6',  kind: 'skill',     name: '合同条款检查',           tagline: '上传合同 PDF，自动比对模板 / 标出风险条款 / 输出修订建议',     author: '@me',           avatar: '⚖',   avatarBg: 'bg-accent-violet/25', language: '中文', region: '个人',     category: '法务',     ageLabel: '6d',  installs: 1, custom: true       },
 ];
 
 // ─── Sidebar kind list ────────────────────────────────────────────────
@@ -246,25 +212,16 @@ export function MarketPage() {
   const [onboardOpen, setOnboardOpen] = useState(false);
   const [detailItem, setDetailItem] = useState<MarketItem | null>(null);
   const [submitOpen, setSubmitOpen] = useState(false);
-  const [manageOpen, setManageOpen] = useState(false);
-  const [newCustomOpen, setNewCustomOpen] = useState(false);
   // Hero carousel auto-rotate
   const [heroIndex, setHeroIndex] = useState(0);
-
-  // Recycle-bin wiring for custom resources (assistant / agent / skill).
-  // Deleting a custom resource fires a lightweight confirm dialog and,
-  // on confirm, moves the item into the bin via moveToBin.
-  const { moveToBin, retentionDays } = useRecycleBin();
-  const [hiddenCustomIds, setHiddenCustomIds] = useState<Set<string>>(new Set());
-  const [pendingDeleteCustom, setPendingDeleteCustom] = useState<MarketItem | null>(null);
 
   // Defensive: Radix Dialog occasionally leaves body.style.pointerEvents
   // set to 'none' after closing, blocking all clicks. Flush it whenever
   // every dialog is closed.
   useEffect(() => {
-    const anyOpen = onboardOpen || detailItem !== null || submitOpen || newCustomOpen;
+    const anyOpen = onboardOpen || detailItem !== null || submitOpen;
     if (!anyOpen) document.body.style.pointerEvents = '';
-  }, [onboardOpen, detailItem, submitOpen, newCustomOpen]);
+  }, [onboardOpen, detailItem, submitOpen]);
 
   const toggleInstall = (id: string) => {
     setInstalled(prev => {
@@ -289,7 +246,7 @@ export function MarketPage() {
 
   // Public 市场 view: hides 自定义 (those live in 管理).
   const filtered = useMemo(() => {
-    let list = CATALOG.filter(it => !it.custom);
+    let list = CATALOG.slice();
     if (kind !== 'all') list = list.filter(it => it.kind === kind);
     const q = search.trim().toLowerCase();
     if (q) list = list.filter(it =>
@@ -336,135 +293,23 @@ export function MarketPage() {
       .sort((a, b) => b.items.length - a.items.length || a.label.localeCompare(b.label));
   }, [filtered, featured, search, kind]);
 
-  const myResources = useMemo(
-    () => CATALOG.filter(it => (it.custom || installed.has(it.id)) && !hiddenCustomIds.has(it.id)),
-    [installed, hiddenCustomIds],
-  );
-
-  // Recycle-bin scope: 6 kinds of custom resources go to the bin. CLI and
-  // integration kinds still exist in the Market catalog but their deletion
-  // is a one-shot hide (not recoverable) since they're typically system
-  // tools that don't carry user-authored state.
-  const recycleKind = (kind: ResourceKind): RecycleBinItemType | null => {
-    if (kind === 'skill')     return 'skill';
-    if (kind === 'assistant') return 'assistant';
-    if (kind === 'agent')     return 'agent';
-    if (kind === 'mcp')       return 'mcp';
-    if (kind === 'prompt')    return 'prompt';
-    if (kind === 'kb')        return 'kb';
-    return null;
-  };
-
-  const sendCustomToBin = (item: MarketItem) => {
-    const type = recycleKind(item.kind);
-    if (!type) {
-      // Unsupported custom kind: just hide (no recycle bin entry).
-      setHiddenCustomIds(prev => new Set(prev).add(item.id));
-      return;
-    }
-    setHiddenCustomIds(prev => new Set(prev).add(item.id));
-
-    moveToBin(
-      {
-        id: `bin-${type}-${item.id}-${Date.now()}`,
-        type,
-        name: item.name,
-        icon: item.avatar,
-        meta: '自定义',
-        source: 'manual',
-      },
-      {
-        onUndo: () => setHiddenCustomIds(prev => {
-          const next = new Set(prev);
-          next.delete(item.id);
-          return next;
-        }),
-      },
-    );
-    // Decoupled model: deleting an assistant/agent only moves the resource
-    // itself. Its associated topics/sessions live independently in the bin
-    // (if they were already deleted) or stay in the active world.
-  };
-
-  const handleUninstallOrDelete = (id: string) => {
-    const item = CATALOG.find(c => c.id === id);
-    if (item?.custom) {
-      setPendingDeleteCustom(item);
-    } else {
-      // Installed-from-market items: direct uninstall (user can reinstall any time).
-      toggleInstall(id);
-    }
-  };
-
   const currentSlide = heroSlides[heroIndex];
-
-  // When 管理 is active, replace the market home with the full-page
-  // manage view. Detail / submit / create-custom dialogs remain
-  // available on top of it.
-  const recycleBinConfirm = (
-    <RecycleBinConfirmDialog
-      open={!!pendingDeleteCustom}
-      onOpenChange={(open) => { if (!open) setPendingDeleteCustom(null); }}
-      retentionDays={retentionDays}
-      onConfirm={() => {
-        if (pendingDeleteCustom) sendCustomToBin(pendingDeleteCustom);
-      }}
-    />
-  );
-
-  if (manageOpen) {
-    return (
-      <>
-        <MyResourcesManageView
-          items={myResources}
-          onBack={() => setManageOpen(false)}
-          onUninstall={handleUninstallOrDelete}
-          onCreateCustom={() => setNewCustomOpen(true)}
-        />
-        <MarketDetailDialog
-          item={detailItem}
-          onOpenChange={(open) => { if (!open) setDetailItem(null); }}
-          installed={detailItem ? installed.has(detailItem.id) : false}
-          onToggleInstall={(id) => toggleInstall(id)}
-        />
-        <SubmitResourceDialog open={newCustomOpen} onOpenChange={setNewCustomOpen} mode="custom" />
-        {recycleBinConfirm}
-      </>
-    );
-  }
 
   return (
     <div className="flex flex-col h-full bg-background">
-      {/* Top bar — action cluster only (top pill tabs were dropped;
-          the sidebar now lists every kind in a single flat list) */}
+      {/* Top bar — submit-resource action only. Resource management
+          (my resources, edit, custom create) lives in the Library
+          (资源库) page, not here. */}
       <div className="flex-shrink-0 px-6 pt-5">
         <div className="max-w-[1120px] mx-auto flex items-center justify-end gap-1">
           <Button
             variant="outline"
             size="xs"
-            onClick={() => setManageOpen(true)}
-            className="h-8 px-2.5 gap-1 text-xs"
-          >
-            <Wrench size={12} />
-            管理
-          </Button>
-          <Button
-            variant="outline"
-            size="xs"
-            onClick={() => setNewCustomOpen(true)}
+            onClick={() => setSubmitOpen(true)}
             className="h-8 px-2.5 gap-1 text-xs"
           >
             <Plus size={12} />
-            创建
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon-sm"
-            onClick={() => setSubmitOpen(true)}
-            className="h-8 w-8"
-            title="提交到公开市场"
-          >
-            <MoreHorizontal size={14} />
+            提交资源
           </Button>
         </div>
       </div>
@@ -487,8 +332,8 @@ export function MarketPage() {
                     const Icon = isAll ? Sparkles : KIND_ICON[k];
                     const label = isAll ? '全部' : KIND_LABEL[k];
                     const count = isAll
-                      ? CATALOG.filter(it => !it.custom).length
-                      : CATALOG.filter(it => !it.custom && it.kind === k).length;
+                      ? CATALOG.length
+                      : CATALOG.filter(it => it.kind === k).length;
                     return (
                       <button
                         key={k}
@@ -643,8 +488,6 @@ export function MarketPage() {
         onToggleInstall={(id) => toggleInstall(id)}
       />
       <SubmitResourceDialog open={submitOpen} onOpenChange={setSubmitOpen} />
-      <SubmitResourceDialog open={newCustomOpen} onOpenChange={setNewCustomOpen} mode="custom" />
-      {recycleBinConfirm}
     </div>
   );
 }
@@ -743,666 +586,6 @@ function PublisherFilterDropdown() {
   );
 }
 
-// ─── 我的资源 → 管理 view (full-page) ────────────────────────────────
-
-function MyResourcesManageView({
-  items, onBack, onUninstall, onCreateCustom,
-}: {
-  items: MarketItem[];
-  onBack: () => void;
-  onUninstall: (id: string) => void;
-  onCreateCustom: () => void;
-}) {
-  // Items default to enabled. Don't sync against `items` changes beyond
-  // adding newcomers, so the user's deliberate disable choices stick.
-  const [enabled, setEnabled] = useState<Set<string>>(() => new Set(items.map(it => it.id)));
-  const [filter, setFilter] = useState<'all' | 'installed' | 'custom'>('all');
-  // Sidebar narrowing — mirrors the market homepage. 'all' = show every
-  // kind grouped into sections; a specific kind = flat list of that kind.
-  const [kindFilter, setKindFilter] = useState<ResourceKind | 'all'>('all');
-  // Edit drawer — opens when a row is clicked. The drawer slides in
-  // from the right and exposes the resource's editable fields.
-  const [editItem, setEditItem] = useState<MarketItem | null>(null);
-  // Per-item field overrides (CATALOG is a const, so edits live here).
-  // Saving from the drawer merges into this map; rows apply the override
-  // before rendering so edits stick visually after the drawer closes.
-  const [overrides, setOverrides] = useState<Record<string, Partial<MarketItem>>>({});
-  const applyOverride = (it: MarketItem): MarketItem => {
-    const patch = overrides[it.id];
-    return patch ? { ...it, ...patch } : it;
-  };
-
-  useEffect(() => {
-    setEnabled(prev => {
-      let changed = false;
-      const next = new Set(prev);
-      items.forEach(it => { if (!next.has(it.id)) { next.add(it.id); changed = true; } });
-      return changed ? next : prev;
-    });
-  }, [items]);
-
-  const toggleEnabled = (id: string) => {
-    setEnabled(prev => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id); else next.add(id);
-      return next;
-    });
-  };
-
-  // After the top filter pills (全部 / 从市场安装 / 自定义). Apply
-  // per-item overrides so edits made via the drawer are visible.
-  const afterPills = useMemo(() => {
-    const base = items.map(applyOverride);
-    if (filter === 'installed') return base.filter(it => !it.custom);
-    if (filter === 'custom')    return base.filter(it => it.custom);
-    return base;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [items, filter, overrides]);
-
-  // After both pills + sidebar narrowing — what actually renders.
-  const visible = useMemo(() => {
-    if (kindFilter === 'all') return afterPills;
-    return afterPills.filter(it => it.kind === kindFilter);
-  }, [afterPills, kindFilter]);
-
-  // When showing 全部 we group by kind; when a kind is pinned the list
-  // is flat (single implicit group covering that one kind).
-  const kindGroups = useMemo(() => {
-    const byKind = new Map<ResourceKind, MarketItem[]>();
-    visible.forEach(it => {
-      const arr = byKind.get(it.kind) ?? [];
-      arr.push(it);
-      byKind.set(it.kind, arr);
-    });
-    return SIDEBAR_KINDS
-      .filter((k): k is ResourceKind => k !== 'all')
-      .map(k => ({ kind: k, items: byKind.get(k) ?? [] }))
-      .filter(g => g.items.length > 0);
-  }, [visible]);
-
-  const installedCount = items.filter(it => !it.custom).length;
-  const customCount    = items.filter(it => it.custom).length;
-
-  return (
-    <div className="flex flex-col h-full bg-background">
-      {/* Top bar — back + title + 新建 */}
-      <div className="flex-shrink-0 px-6 pt-5">
-        <div className="max-w-[1120px] mx-auto flex items-center justify-between gap-4">
-          <button
-            type="button"
-            onClick={onBack}
-            className="inline-flex items-center gap-1.5 h-8 px-2 -ml-2 rounded-md text-sm text-muted-foreground/75 hover:text-foreground hover:bg-muted/40 transition-colors"
-          >
-            <ChevronLeft size={14} />
-            返回市场
-          </button>
-          <Button
-            variant="default"
-            size="xs"
-            onClick={onCreateCustom}
-            className="h-8 px-2.5 gap-1 text-xs bg-foreground text-background hover:bg-foreground/90"
-          >
-            <Plus size={12} />
-            新建资源
-          </Button>
-        </div>
-      </div>
-
-      <div className="flex-1 overflow-y-auto scrollbar-thin">
-        <div className="max-w-[1120px] mx-auto px-6 pt-6 pb-10">
-          <div className="flex gap-8">
-
-            {/* Left rail — kind sub-filter (matches market homepage) */}
-            <aside className="hidden md:flex flex-shrink-0 w-[176px] flex-col">
-              <div className="sticky top-0 pt-2">
-                <div className="text-[10px] uppercase tracking-wide text-muted-foreground/45 px-2 pb-2">
-                  资源类型
-                </div>
-                <div className="space-y-0.5">
-                  {SIDEBAR_KINDS.map(k => {
-                    const active = kindFilter === k;
-                    const isAll = k === 'all';
-                    const Icon = isAll ? Sparkles : KIND_ICON[k];
-                    const label = isAll ? '全部' : KIND_LABEL[k];
-                    const count = isAll
-                      ? afterPills.length
-                      : afterPills.filter(it => it.kind === k).length;
-                    return (
-                      <button
-                        key={k}
-                        type="button"
-                        onClick={() => setKindFilter(k)}
-                        className={`w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-sm transition-colors ${
-                          active
-                            ? 'bg-accent/50 text-foreground'
-                            : 'text-muted-foreground/75 hover:text-foreground hover:bg-muted/40'
-                        }`}
-                      >
-                        <Icon size={13} strokeWidth={1.6} className="flex-shrink-0" />
-                        <span className="flex-1 text-left truncate">{label}</span>
-                        <span className={`text-[10px] tabular-nums flex-shrink-0 ${active ? 'text-muted-foreground/70' : 'text-muted-foreground/45'}`}>
-                          {count}
-                        </span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            </aside>
-
-            {/* Right main */}
-            <div className="flex-1 min-w-0">
-          {/* Title + summary */}
-          <div className="mb-5">
-            <div className="flex items-baseline gap-2">
-              <h1 className="text-xl font-semibold text-foreground">管理我的资源</h1>
-              <span className="text-xs text-muted-foreground/60 tabular-nums">{items.length}</span>
-            </div>
-            <p className="text-xs text-muted-foreground/70 mt-1">
-              统一管理已安装与自定义创建的所有资源 — 启停、编辑、卸载，所有动作即时生效。
-            </p>
-          </div>
-
-          {/* Filter pills */}
-          <div className="flex items-center gap-1.5 mb-4">
-            {([
-              { id: 'all',       label: '全部',       count: items.length    },
-              { id: 'installed', label: '从市场安装', count: installedCount  },
-              { id: 'custom',    label: '自定义',     count: customCount     },
-            ] as const).map(f => {
-              const active = filter === f.id;
-              return (
-                <button
-                  key={f.id}
-                  type="button"
-                  onClick={() => setFilter(f.id)}
-                  className={`px-3 h-8 rounded-md text-xs inline-flex items-center gap-1.5 transition-colors ${
-                    active
-                      ? 'bg-foreground text-background'
-                      : 'text-muted-foreground/75 hover:text-foreground hover:bg-muted/40'
-                  }`}
-                >
-                  {f.label}
-                  <span className={`tabular-nums text-[10px] ${active ? 'opacity-75' : 'opacity-55'}`}>{f.count}</span>
-                </button>
-              );
-            })}
-          </div>
-
-          {visible.length === 0 ? (
-            <div className="border border-dashed border-border/30 rounded-xl py-12 flex flex-col items-center text-muted-foreground/55">
-              <Sparkles size={20} strokeWidth={1.3} className="mb-2 text-muted-foreground/30" />
-              <p className="text-xs">这个分类下还没有资源</p>
-            </div>
-          ) : (
-            <div className="space-y-8">
-              {kindGroups.map(({ kind, items: kindItems }) => {
-                const KindIcon = KIND_ICON[kind];
-                return (
-                  <section key={kind}>
-                    <div className="flex items-center gap-2 mb-3">
-                      <KindIcon size={13} strokeWidth={1.6} className="text-muted-foreground/60" />
-                      <h2 className="text-sm font-medium text-foreground">{KIND_LABEL[kind]}</h2>
-                      <span className="text-[11px] text-muted-foreground/55 tabular-nums">{kindItems.length}</span>
-                    </div>
-                    <div className="space-y-1.5">
-                      {kindItems.map(it => {
-                        const KIcon = KIND_ICON[it.kind];
-                        const isOn = enabled.has(it.id);
-                        return (
-                          <div
-                            key={it.id}
-                            role="button"
-                            tabIndex={0}
-                            onClick={() => setEditItem(it)}
-                            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setEditItem(it); } }}
-                            className="group flex items-center gap-3 px-3.5 py-2.5 rounded-lg border border-border/20 bg-card/40 hover:bg-card hover:border-border/40 cursor-pointer transition-colors"
-                          >
-                            <Avatar item={it} size={32} />
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-1.5">
-                                <span className="text-sm text-foreground truncate">{it.name}</span>
-                                {it.custom && (
-                                  <span className="flex-shrink-0 px-1.5 py-px rounded text-[10px] leading-none border border-border/35 bg-muted/40 text-muted-foreground/75">
-                                    自定义
-                                  </span>
-                                )}
-                              </div>
-                              <div className="text-[11px] text-muted-foreground/55 flex items-center gap-1.5 mt-px">
-                                <KIcon size={10} />
-                                <span>{it.category}</span>
-                                <span className="text-muted-foreground/30">·</span>
-                                <span>{it.author}</span>
-                              </div>
-                            </div>
-
-                            <button
-                              type="button"
-                              onClick={(e) => { e.stopPropagation(); toggleEnabled(it.id); }}
-                              aria-label={isOn ? '已启用' : '已禁用'}
-                              className={`relative inline-flex h-5 w-9 flex-shrink-0 items-center rounded-full transition-colors ${
-                                isOn ? 'bg-foreground' : 'bg-muted-foreground/25'
-                              }`}
-                            >
-                              <span
-                                className={`inline-block h-4 w-4 transform rounded-full bg-background transition-transform ${
-                                  isOn ? 'translate-x-[18px]' : 'translate-x-0.5'
-                                }`}
-                              />
-                            </button>
-
-                            <button
-                              type="button"
-                              onClick={(e) => { e.stopPropagation(); onUninstall(it.id); }}
-                              aria-label={it.custom ? '删除自定义' : '卸载'}
-                              title={it.custom ? '删除' : '卸载'}
-                              className="h-7 w-7 inline-flex items-center justify-center rounded-md text-muted-foreground/55 hover:text-destructive hover:bg-destructive/10 transition-colors opacity-0 group-hover:opacity-100"
-                            >
-                              <X size={13} />
-                            </button>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </section>
-                );
-              })}
-            </div>
-          )}
-
-          <p className="text-[11px] text-muted-foreground/55 mt-8 text-center">
-            启用 / 禁用 即刻生效，无需重启会话。
-          </p>
-
-            </div>{/* /right main */}
-          </div>{/* /flex split */}
-        </div>{/* /max-w container */}
-      </div>{/* /scroll */}
-
-      {/* Edit drawer — slides in from the right when a row is clicked.
-          `key` forces a fresh mount per item so local form state always
-          seeds from the new item's fields rather than from stale state. */}
-      <ResourceEditDrawer
-        key={editItem?.id ?? 'closed'}
-        item={editItem ? applyOverride(editItem) : null}
-        onOpenChange={(open) => { if (!open) setEditItem(null); }}
-        enabled={editItem ? enabled.has(editItem.id) : false}
-        onToggleEnabled={(id) => toggleEnabled(id)}
-        onDelete={(id) => { onUninstall(id); setEditItem(null); }}
-        onSave={(id, patch) => {
-          setOverrides(prev => ({ ...prev, [id]: { ...(prev[id] ?? {}), ...patch } }));
-          setEditItem(null);
-        }}
-      />
-    </div>
-  );
-}
-
-// ─── Resource edit drawer (slides in from the right) ─────────────────
-
-function FieldSection({
-  title, hint, children,
-}: {
-  title: string;
-  hint?: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <section className="space-y-2.5">
-      <div className="flex items-baseline justify-between gap-3">
-        <h3 className="text-xs font-medium text-foreground/75 uppercase tracking-wide">{title}</h3>
-        {hint && <span className="text-[11px] text-muted-foreground/55">{hint}</span>}
-      </div>
-      <div className="space-y-2.5">{children}</div>
-    </section>
-  );
-}
-
-function Field({
-  label, hint, children,
-}: {
-  label: string;
-  hint?: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div>
-      <div className="flex items-baseline justify-between gap-3 mb-1.5">
-        <label className="text-xs text-muted-foreground/75">{label}</label>
-        {hint && <span className="text-[10px] text-muted-foreground/50">{hint}</span>}
-      </div>
-      {children}
-    </div>
-  );
-}
-
-function ResourceEditDrawer({
-  item, onOpenChange, enabled, onToggleEnabled, onDelete, onSave,
-}: {
-  item: MarketItem | null;
-  onOpenChange: (open: boolean) => void;
-  enabled: boolean;
-  onToggleEnabled: (id: string) => void;
-  onDelete: (id: string) => void;
-  onSave: (id: string, patch: Partial<MarketItem>) => void;
-}) {
-  // Local form state, seeded once per item via lazy initializer.
-  // (Parent passes a fresh `key` whenever `item` changes, so this
-  // component remounts and the initializers re-read the new values.)
-  // Field set mirrors the V2 资源库 editor (per-kind sections; see
-  // .context/cherry-v2/src/renderer/src/pages/library/editor/…).
-  const [name, setName]                     = useState(() => item?.name ?? '');
-  const [tagline, setTagline]               = useState(() => item?.tagline ?? '');
-  const [category, setCategory]             = useState(() => item?.category ?? '');
-  const [body, setBody]                     = useState(() => item?.body ?? '');
-  const [model, setModel]                   = useState(() => item?.model ?? '');
-  const [temperature, setTemperature]       = useState(() => item?.temperature ?? 0.7);
-  const [permissionMode, setPermissionMode] = useState<NonNullable<MarketItem['permissionMode']>>(
-    () => item?.permissionMode ?? 'default',
-  );
-  const [maxTurns, setMaxTurns]             = useState(() => item?.maxTurns ?? 0);
-  const [baseUrl, setBaseUrl]               = useState(() => item?.baseUrl ?? '');
-  const [installCmd, setInstallCmd]         = useState(() => item?.installCmd ?? '');
-
-  if (!item) return (
-    <Sheet open={false} onOpenChange={onOpenChange}>
-      <SheetContent />
-    </Sheet>
-  );
-
-  const KIcon = KIND_ICON[item.kind];
-
-  return (
-    <Sheet open={!!item} onOpenChange={onOpenChange}>
-      <SheetContent
-        side="right"
-        showCloseButton={false}
-        className="!max-w-[480px] sm:!max-w-[480px] w-full p-0 flex flex-col"
-      >
-        <SheetHeader className="px-5 pt-5 pb-3 border-b border-border/25">
-          <div className="flex items-start gap-3">
-            <Avatar item={item} size={40} />
-            <div className="flex-1 min-w-0">
-              <SheetTitle className="text-base font-semibold truncate">
-                {item.name}
-              </SheetTitle>
-              <SheetDescription className="text-[11px] text-muted-foreground/60 flex items-center gap-1.5 mt-1">
-                <KIcon size={10} />
-                <span>{KIND_LABEL[item.kind]}</span>
-                <span className="text-muted-foreground/30">·</span>
-                <span>{item.author}</span>
-                {item.custom && (
-                  <>
-                    <span className="text-muted-foreground/30">·</span>
-                    <span>自定义</span>
-                  </>
-                )}
-              </SheetDescription>
-            </div>
-            <button
-              type="button"
-              onClick={() => onOpenChange(false)}
-              aria-label="关闭"
-              className="h-7 w-7 inline-flex items-center justify-center rounded-md text-muted-foreground/60 hover:text-foreground hover:bg-muted/40 transition-colors flex-shrink-0"
-            >
-              <X size={14} />
-            </button>
-          </div>
-        </SheetHeader>
-
-        <div className="flex-1 overflow-y-auto scrollbar-thin px-5 py-4 space-y-4">
-          {/* Enabled toggle */}
-          <div className="flex items-center justify-between gap-3 px-3 py-2.5 rounded-lg border border-border/20 bg-muted/15">
-            <div className="min-w-0">
-              <div className="text-sm text-foreground">启用</div>
-              <div className="text-[11px] text-muted-foreground/60">
-                禁用后该资源不会被对话/工具调用
-              </div>
-            </div>
-            <button
-              type="button"
-              onClick={() => onToggleEnabled(item.id)}
-              aria-label={enabled ? '已启用' : '已禁用'}
-              className={`relative inline-flex h-5 w-9 flex-shrink-0 items-center rounded-full transition-colors ${
-                enabled ? 'bg-foreground' : 'bg-muted-foreground/25'
-              }`}
-            >
-              <span
-                className={`inline-block h-4 w-4 transform rounded-full bg-background transition-transform ${
-                  enabled ? 'translate-x-[18px]' : 'translate-x-0.5'
-                }`}
-              />
-            </button>
-          </div>
-
-          {/* ── 基础信息 (common across kinds, with one exception:
-                 Prompt uses 标题 / 内容 instead of 名称 / 简介 since
-                 that's how V2's PromptConfigPage shapes it.) */}
-          <FieldSection title="基础信息">
-            <Field label={item.kind === 'prompt' ? '标题' : '名称'}>
-              <Input value={name} onChange={e => setName(e.target.value)} className="h-9 text-sm" />
-            </Field>
-            {item.kind !== 'prompt' && (
-              <Field label="一句话简介">
-                <Input value={tagline} onChange={e => setTagline(e.target.value)} className="h-9 text-sm" />
-              </Field>
-            )}
-            {item.kind !== 'prompt' && (
-              <Field label="分类">
-                <Input value={category} onChange={e => setCategory(e.target.value)} className="h-9 text-sm" />
-              </Field>
-            )}
-          </FieldSection>
-
-          {/* ── Kind-specific sections — mirror V2 library editor schemas */}
-          {item.kind === 'assistant' && (
-            <>
-              <FieldSection title="系统提示词" hint="支持 {{date}} / {{model_name}} 等变量">
-                <Textarea
-                  value={body}
-                  onChange={e => setBody(e.target.value)}
-                  rows={10}
-                  placeholder="在这里输入系统提示词…"
-                  className="text-xs leading-relaxed resize-none font-mono"
-                />
-              </FieldSection>
-              <FieldSection title="模型与参数">
-                <Field label="默认模型">
-                  <Input
-                    value={model}
-                    onChange={e => setModel(e.target.value)}
-                    placeholder="例如 claude-sonnet-4-6"
-                    className="h-9 text-sm font-mono"
-                  />
-                </Field>
-                <Field label={`温度 (${temperature.toFixed(2)})`} hint="0 = 精确，2 = 创意">
-                  <Slider
-                    value={[temperature]}
-                    onValueChange={([v]) => setTemperature(v)}
-                    min={0}
-                    max={2}
-                    step={0.05}
-                    className="py-1"
-                  />
-                </Field>
-              </FieldSection>
-            </>
-          )}
-
-          {item.kind === 'agent' && (
-            <>
-              <FieldSection title="系统提示词" hint="告诉 Agent 它是谁、它能做什么">
-                <Textarea
-                  value={body}
-                  onChange={e => setBody(e.target.value)}
-                  rows={10}
-                  placeholder="例如：你是一个谨慎的研究助手，遇到不确定的信息先搜索…"
-                  className="text-xs leading-relaxed resize-none font-mono"
-                />
-              </FieldSection>
-              <FieldSection title="模型">
-                <Field label="主模型">
-                  <Input
-                    value={model}
-                    onChange={e => setModel(e.target.value)}
-                    placeholder="例如 claude-opus-4-7"
-                    className="h-9 text-sm font-mono"
-                  />
-                </Field>
-              </FieldSection>
-              <FieldSection title="权限与执行">
-                <Field label="权限模式">
-                  <div className="inline-flex items-center gap-0 rounded-md border border-border/40 bg-muted/15 p-0.5">
-                    {([
-                      { id: 'default',          label: '默认' },
-                      { id: 'plan',             label: 'Plan' },
-                      { id: 'acceptEdits',      label: '接受编辑' },
-                      { id: 'bypassPermissions', label: '绕过' },
-                    ] as const).map(opt => {
-                      const active = permissionMode === opt.id;
-                      return (
-                        <button
-                          key={opt.id}
-                          type="button"
-                          onClick={() => setPermissionMode(opt.id)}
-                          className={`px-2.5 h-7 rounded text-xs transition-colors ${
-                            active
-                              ? 'bg-background text-foreground shadow-xs'
-                              : 'text-muted-foreground/75 hover:text-foreground'
-                          }`}
-                        >
-                          {opt.label}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </Field>
-                <Field label="最大对话轮数" hint="0 表示使用默认值">
-                  <Input
-                    type="number"
-                    min={0}
-                    max={100}
-                    value={maxTurns}
-                    onChange={e => setMaxTurns(parseInt(e.target.value, 10) || 0)}
-                    className="h-9 text-sm w-32"
-                  />
-                </Field>
-              </FieldSection>
-            </>
-          )}
-
-          {item.kind === 'prompt' && (
-            <FieldSection title="内容" hint='可在文本中用 ${variable} 插入变量'>
-              <Textarea
-                value={body}
-                onChange={e => setBody(e.target.value)}
-                rows={14}
-                placeholder="在这里输入 prompt 模板…"
-                className="text-xs leading-relaxed resize-none font-mono"
-              />
-            </FieldSection>
-          )}
-
-          {item.kind === 'mcp' && (
-            <FieldSection title="MCP 配置">
-              <Field label="服务地址">
-                <Input
-                  value={baseUrl}
-                  onChange={e => setBaseUrl(e.target.value)}
-                  placeholder="stdio://… 或 https://…"
-                  className="h-9 text-sm font-mono"
-                />
-              </Field>
-            </FieldSection>
-          )}
-
-          {item.kind === 'cli' && (
-            <FieldSection title="安装">
-              <Field label="安装命令">
-                <Input
-                  value={installCmd}
-                  onChange={e => setInstallCmd(e.target.value)}
-                  placeholder="npm i -g ... / brew install ..."
-                  className="h-9 text-sm font-mono"
-                />
-              </Field>
-            </FieldSection>
-          )}
-
-          {(item.kind === 'kb' || item.kind === 'integration' || item.kind === 'skill') && (
-            <FieldSection title={item.kind === 'skill' ? '说明' : '描述'}>
-              <Textarea
-                value={body}
-                onChange={e => setBody(e.target.value)}
-                rows={6}
-                placeholder={
-                  item.kind === 'kb' ? '知识库的内容范围、来源、更新频率…'
-                  : item.kind === 'integration' ? '该集成的功能、授权范围、限制…'
-                  : '说明这个 Skill 做什么 / 如何调用…'
-                }
-                className="text-xs leading-relaxed resize-none"
-              />
-            </FieldSection>
-          )}
-
-          <div className="pt-2">
-            <button
-              type="button"
-              onClick={() => onDelete(item.id)}
-              className="text-[11px] text-destructive/85 hover:text-destructive transition-colors"
-            >
-              {item.custom ? '删除这条自定义资源' : '从我的资源中卸载'}
-            </button>
-          </div>
-        </div>
-
-        <SheetFooter className="px-5 py-3 border-t border-border/25 bg-muted/15">
-          <div className="flex items-center justify-end gap-2 w-full">
-            <Button variant="ghost" size="sm" onClick={() => onOpenChange(false)} className="h-8">
-              取消
-            </Button>
-            <Button
-              variant="default"
-              size="sm"
-              onClick={() => {
-                // Build a patch that only carries fields meaningful for
-                // this kind, mirroring V2's per-kind save payloads.
-                const patch: Partial<MarketItem> = { name };
-                if (item.kind !== 'prompt') {
-                  patch.tagline = tagline;
-                  patch.category = category;
-                }
-                if (item.kind === 'assistant') {
-                  patch.body = body;
-                  patch.model = model;
-                  patch.temperature = temperature;
-                } else if (item.kind === 'agent') {
-                  patch.body = body;
-                  patch.model = model;
-                  patch.permissionMode = permissionMode;
-                  patch.maxTurns = maxTurns;
-                } else if (item.kind === 'prompt') {
-                  patch.body = body;
-                } else if (item.kind === 'mcp') {
-                  patch.baseUrl = baseUrl;
-                } else if (item.kind === 'cli') {
-                  patch.installCmd = installCmd;
-                } else {
-                  // kb / integration / skill — carry the description body
-                  patch.body = body;
-                }
-                onSave(item.id, patch);
-              }}
-              className="h-8 bg-foreground text-background hover:bg-foreground/90"
-            >
-              保存
-            </Button>
-          </div>
-        </SheetFooter>
-      </SheetContent>
-    </Sheet>
-  );
-}
 
 // ─── Market detail dialog (二级页面) ────────────────────────────────────
 
@@ -1541,14 +724,11 @@ function MarketDetailDialog({
 // ─── Submit-resource dialog ────────────────────────────────────────────
 
 function SubmitResourceDialog({
-  open, onOpenChange, mode = 'submit',
+  open, onOpenChange,
 }: {
   open: boolean;
   onOpenChange: (v: boolean) => void;
-  /** 'submit' = 提交到公共市场；'custom' = 创建私有资源到我的资源 */
-  mode?: 'submit' | 'custom';
 }) {
-  const isCustom = mode === 'custom';
   const [kind, setKind] = useState<ResourceKind>('skill');
   const [name, setName] = useState('');
   const [tagline, setTagline] = useState('');
@@ -1570,13 +750,9 @@ function SubmitResourceDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-[560px] p-0 overflow-hidden">
         <DialogHeader className="px-5 pt-5 pb-3 border-b border-border/20">
-          <DialogTitle className="text-base">
-            {isCustom ? '新建自定义资源' : '提交资源到市场'}
-          </DialogTitle>
+          <DialogTitle className="text-base">提交资源到市场</DialogTitle>
           <DialogDescription className="text-xs">
-            {isCustom
-              ? '资源会保存到「管理」里，私有可见，可随时编辑 / 启停 / 卸载。'
-              : '提交的资源会在 24 小时内由社区审核员审阅。审核通过后才会出现在公开目录中。'}
+            提交的资源会在 24 小时内由社区审核员审阅。审核通过后才会出现在公开目录中。
           </DialogDescription>
         </DialogHeader>
 
@@ -1638,15 +814,13 @@ function SubmitResourceDialog({
               />
             </div>
             <div>
-              <label className="text-xs text-muted-foreground/70 mb-1.5 block">
-                {isCustom ? '源文件 / 入口（可选）' : '源仓库 / 安装地址'}
-              </label>
+              <label className="text-xs text-muted-foreground/70 mb-1.5 block">源仓库 / 安装地址</label>
               <div className="relative">
                 <Link2 size={12} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground/45" />
                 <Input
                   value={sourceUrl}
                   onChange={e => setSourceUrl(e.target.value)}
-                  placeholder={isCustom ? '~/skills/my-skill 或 https://…（可留空）' : 'https://github.com/your-org/your-skill'}
+                  placeholder="https://github.com/your-org/your-skill"
                   className="h-9 pl-8 text-sm font-mono"
                 />
               </div>
@@ -1680,9 +854,7 @@ function SubmitResourceDialog({
           <div className="flex items-start gap-2 px-3 py-2.5 rounded-lg border border-dashed border-border/30 bg-muted/15">
             <Upload size={13} className="text-muted-foreground/55 flex-shrink-0 mt-0.5" />
             <p className="text-[11px] text-muted-foreground/70 leading-relaxed">
-              {isCustom
-                ? <>仅你自己可见。如需将这条资源分享到公开市场，可以在「管理」里点「<span className="text-foreground/80">分享到市场</span>」走审核流程。</>
-                : <>如果你的资源需要附带文件，请将仓库根目录的 <span className="font-mono text-foreground/80">cherry.json</span> + 资源主体一起打包推送到上述地址，审核员会自动拉取。</>}
+              如果你的资源需要附带文件，请将仓库根目录的 <span className="font-mono text-foreground/80">cherry.json</span> + 资源主体一起打包推送到上述地址，审核员会自动拉取。
             </p>
           </div>
         </div>
@@ -1698,7 +870,7 @@ function SubmitResourceDialog({
               className="h-8 gap-1.5 bg-foreground text-background hover:bg-foreground/90 disabled:opacity-40"
             >
               <Plus size={12} />
-              {isCustom ? '创建' : '提交审核'}
+              提交审核
             </Button>
           </div>
         </DialogFooter>

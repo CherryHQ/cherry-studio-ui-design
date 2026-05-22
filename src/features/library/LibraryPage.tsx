@@ -1,16 +1,31 @@
 import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, ArrowRight, ChevronLeft, Plus, Check, Download, Variable, Save } from 'lucide-react';
+import { X, ArrowRight, ChevronLeft, ChevronDown, Plus, Check, Download, Variable, Save, Trash2 } from 'lucide-react';
+// Primitives now sourced from the v2 component library
+// (`packages/cherry-v2-ui/src/components/primitives/*`). Deep-imported
+// so the package's barrel index — which drags in deps we don't
+// install (@dnd-kit/core, react-table, etc.) — never gets loaded.
+// Cherry-only composites (SearchInput, Typography, SYSTEM_VARIABLES)
+// stay on `@cherry-studio/ui` because v2 doesn't ship them.
+import { Button } from '@cherrystudio/ui/components/primitives/button';
 import {
-  Button, Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, SearchInput, Input, Typography,
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
+} from '@cherrystudio/ui/components/primitives/dialog';
+import {
   Popover, PopoverTrigger, PopoverContent,
-  SYSTEM_VARIABLES, type VariableDef,
-} from '@cherry-studio/ui';
+} from '@cherrystudio/ui/components/primitives/popover';
+// Switch stays on legacy `@cherry-studio/ui` — v2's is visually
+// inferior (per the user) and is the only legacy primitive still
+// pulled inside the library modal.
+import { Switch } from '@cherry-studio/ui';
+import { Combobox } from '@cherrystudio/ui/components/primitives/combobox';
+import { Field, FieldContent, FieldLabel } from '@cherrystudio/ui/components/primitives/field';
+import { Input, SearchInput, Typography, SYSTEM_VARIABLES, type VariableDef } from '@cherry-studio/ui';
 import { skills as discoverSkills, assistants as discoverAssistants } from '@/features/explore/ExploreData';
 import { useGlobalActions } from '@/app/context/GlobalActionContext';
 import type { ResourceItem, FolderNode, TagItem, LibrarySidebarFilter, LibraryConfigView, ResourceType } from '@/app/types';
 import type { ViewMode, SortKey } from '@/app/types';
-import { MOCK_RESOURCES, MOCK_FOLDERS, TAG_COLORS, DEFAULT_TAG_COLOR } from '@/app/config/constants';
+import { MOCK_RESOURCES, MOCK_FOLDERS, TAG_COLORS, DEFAULT_TAG_COLOR, RESOURCE_TYPE_CONFIG } from '@/app/config/constants';
 import { LibrarySidebar } from './LibrarySidebar';
 import { ResourceGrid } from './ResourceGrid';
 import { ImportModal } from './ImportModal';
@@ -345,21 +360,26 @@ function PromptRichEditor({ value, onChange, onSlashCommand, placeholder }: {
   );
 }
 
-function PromptEditPage({ resource, onBack, onSave }: {
+function PromptEditPage({ resource, onBack, onSave, inModal = false }: {
   resource: ResourceItem;
   onBack: () => void;
   onSave: (updates: Partial<ResourceItem>) => void;
+  inModal?: boolean;
 }) {
   const [name, setName] = useState(resource.name);
   const [content, setContent] = useState(resource.content || '');
+  const [tags, setTags] = useState<string[]>(resource.tags || []);
+  const [tagInput, setTagInput] = useState('');
   const [showVarPanel, setShowVarPanel] = useState(false);
+  const [activeSection, setActiveSection] = useState<'basic' | 'content'>('basic');
 
   const vars = extractVars(content);
-  const hasChanges = name !== resource.name || content !== (resource.content || '');
+  const tagsChanged = tags.join('|') !== (resource.tags || []).join('|');
+  const hasChanges = name !== resource.name || content !== (resource.content || '') || tagsChanged;
 
   const handleSave = () => {
     if (!name.trim()) return;
-    onSave({ name: name.trim(), content, description: content.slice(0, 60).replace(/\n/g, ' '), updatedAt: new Date().toISOString() });
+    onSave({ name: name.trim(), content, tags, description: content.slice(0, 60).replace(/\n/g, ' '), updatedAt: new Date().toISOString() });
   };
 
   const handleInsertVar = (varName: string) => {
@@ -367,9 +387,146 @@ function PromptEditPage({ resource, onBack, onSave }: {
     setShowVarPanel(false);
   };
 
+  const addTag = (raw: string) => {
+    const t = raw.trim();
+    if (!t || tags.includes(t)) return;
+    setTags(prev => [...prev, t]);
+    setTagInput('');
+  };
+  const removeTag = (t: string) => setTags(prev => prev.filter(x => x !== t));
+
+  // ── Section bodies, reused below ──────────────────────────────
+  const BasicSection = (
+    <div className="space-y-4">
+      <h3 className="text-sm font-semibold text-foreground mb-1">基础信息</h3>
+      <Field>
+        <FieldLabel>名称</FieldLabel>
+        <FieldContent>
+          <Input value={name} onChange={e => setName(e.target.value)}
+            className="w-full bg-muted/30 border border-border/40 px-3.5 py-2.5 text-sm text-foreground rounded-xl"
+            placeholder="Prompt 名称" />
+        </FieldContent>
+      </Field>
+      <Field>
+        <FieldLabel>标签</FieldLabel>
+        <FieldContent>
+          <Combobox
+            multiple
+            searchable
+            value={tags}
+            onChange={(v) => setTags(Array.isArray(v) ? v : [v])}
+            options={Object.keys(TAG_COLORS).map(t => ({ value: t, label: t }))}
+            placeholder="选择标签…"
+            searchPlaceholder="搜索标签…"
+            emptyText="没有匹配标签"
+            renderOption={(opt) => {
+              const c = TAG_COLORS[opt.value] || DEFAULT_TAG_COLOR;
+              return <span className={`px-1.5 py-[1px] rounded-md text-xs border ${c.badge}`}>{opt.label}</span>;
+            }}
+            renderValue={(val) => {
+              const selected = Array.isArray(val) ? val : (val ? [val] : []);
+              if (selected.length === 0) return null;
+              return (
+                <div className="flex flex-wrap gap-1 flex-1 min-w-0">
+                  {selected.map(t => {
+                    const c = TAG_COLORS[t] || DEFAULT_TAG_COLOR;
+                    return (
+                      <span key={t} className={`inline-flex items-center gap-1 px-1.5 py-[2px] rounded-md text-[11px] border ${c.badge}`}>
+                        <span className={`w-1.5 h-1.5 rounded-full ${c.dot}`} />
+                        {t}
+                        <button
+                          type="button"
+                          onClick={(e) => { e.stopPropagation(); setTags(prev => prev.filter(x => x !== t)); }}
+                          aria-label={`移除 ${t}`}
+                          className="ml-0.5 opacity-50 hover:opacity-100 transition-opacity"
+                        >
+                          <X size={9} />
+                        </button>
+                      </span>
+                    );
+                  })}
+                </div>
+              );
+            }}
+          />
+        </FieldContent>
+      </Field>
+    </div>
+  );
+  const ContentSection = (
+    <div className="space-y-4">
+      <div>
+        <div className="flex items-center justify-between mb-2">
+          <p className="text-xs text-muted-foreground/60 font-medium">内容</p>
+          <Popover open={showVarPanel} onOpenChange={setShowVarPanel}>
+            <PopoverTrigger asChild>
+              <Button variant="ghost" size="xs"
+                className="flex items-center gap-1 px-2 text-accent-violet/70 hover:text-accent-violet hover:bg-accent-violet/[0.06]">
+                <Variable size={10} /><span>使用变量</span>
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent align="end" sideOffset={4} className="w-[280px] p-0 overflow-hidden">
+              <VarPickerPopover systemVars={SYSTEM_VARIABLES} onInsert={handleInsertVar} />
+            </PopoverContent>
+          </Popover>
+        </div>
+        <PromptRichEditor
+          value={content}
+          onChange={setContent}
+          onSlashCommand={() => setShowVarPanel(true)}
+          placeholder="输入 Prompt 内容，使用 / 快速插入变量..."
+        />
+        <p className="text-xs text-muted-foreground/40 mt-1.5">输入 / 或点击「使用变量」插入变量</p>
+      </div>
+      {vars.length > 0 && (
+        <div>
+          <p className="text-xs text-muted-foreground/60 mb-2 font-medium">已引用变量</p>
+          <div className="flex flex-wrap gap-1.5">
+            {vars.map(v => (
+              <span key={v} className="text-xs text-accent-violet/70 bg-accent-violet/[0.08] px-2.5 py-[3px] rounded-md font-mono font-medium">
+                {'${' + v + '}'}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+
+  if (inModal) {
+    return (
+      <div className="flex-1 flex min-h-0">
+        <aside className="w-[132px] flex-shrink-0 border-r border-border/15 p-2 space-y-0.5">
+          {([
+            { id: 'basic', label: '基础信息' },
+            { id: 'content', label: '内容' },
+          ] as const).map(s => {
+            const active = activeSection === s.id;
+            return (
+              <button
+                key={s.id}
+                type="button"
+                onClick={() => setActiveSection(s.id)}
+                className={`w-full flex items-center justify-start px-2.5 py-2 rounded-lg text-sm text-left transition-colors ${
+                  active
+                    ? 'bg-accent/50 text-foreground'
+                    : 'text-muted-foreground/75 hover:text-foreground hover:bg-muted/40'
+                }`}
+              >
+                {s.label}
+              </button>
+            );
+          })}
+        </aside>
+        <div className="flex-1 min-w-0 overflow-y-auto scrollbar-thin px-5 py-4">
+          {activeSection === 'basic' ? BasicSection : ContentSection}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex-1 flex flex-col min-h-0 bg-background">
-      {/* Header */}
       <div className="flex items-center justify-between px-6 pt-5 pb-4 flex-shrink-0 border-b border-border/20">
         <div className="flex items-center gap-3">
           <button onClick={onBack} className="text-muted-foreground/50 hover:text-foreground transition-colors">
@@ -383,59 +540,10 @@ function PromptEditPage({ resource, onBack, onSave }: {
           <span>保存</span>
         </Button>
       </div>
-
-      {/* Content */}
       <div className="flex-1 overflow-y-auto scrollbar-thin">
         <div className="max-w-[640px] mx-auto px-6 py-6 space-y-5">
-          {/* Name */}
-          <div>
-            <p className="text-xs text-muted-foreground/60 mb-2 font-medium">名称</p>
-            <Input value={name} onChange={e => setName(e.target.value)}
-              className="w-full bg-muted/30 border border-border/40 px-3.5 py-2.5 text-sm text-foreground rounded-xl"
-              placeholder="Prompt 名称" />
-          </div>
-
-          {/* Content — rich editor with variable tags */}
-          <div>
-            <div className="flex items-center justify-between mb-2">
-              <p className="text-xs text-muted-foreground/60 font-medium">内容</p>
-              <Popover open={showVarPanel} onOpenChange={setShowVarPanel}>
-                <PopoverTrigger asChild>
-                  <Button variant="ghost" size="xs"
-                    className="flex items-center gap-1 px-2 text-accent-violet/70 hover:text-accent-violet hover:bg-accent-violet/[0.06]">
-                    <Variable size={10} /><span>使用变量</span>
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent align="end" sideOffset={4} className="w-[280px] p-0 overflow-hidden">
-                  <VarPickerPopover
-                    systemVars={SYSTEM_VARIABLES}
-                    onInsert={handleInsertVar}
-                  />
-                </PopoverContent>
-              </Popover>
-            </div>
-            <PromptRichEditor
-              value={content}
-              onChange={setContent}
-              onSlashCommand={() => setShowVarPanel(true)}
-              placeholder="输入 Prompt 内容，使用 / 快速插入变量..."
-            />
-            <p className="text-xs text-muted-foreground/40 mt-1.5">输入 / 或点击「使用变量」插入变量</p>
-          </div>
-
-          {/* Referenced variables */}
-          {vars.length > 0 && (
-            <div>
-              <p className="text-xs text-muted-foreground/60 mb-2 font-medium">已引用变量</p>
-              <div className="flex flex-wrap gap-1.5">
-                {vars.map(v => (
-                  <span key={v} className="text-xs text-accent-violet/70 bg-accent-violet/[0.08] px-2.5 py-[3px] rounded-md font-mono font-medium">
-                    {'${' + v + '}'}
-                  </span>
-                ))}
-              </div>
-            </div>
-          )}
+          {BasicSection}
+          {ContentSection}
         </div>
       </div>
     </div>
@@ -825,58 +933,10 @@ export function LibraryPage() {
     );
   }
 
-  if (configView.type === 'prompt-edit') {
-    return (
-      <AnimatePresence mode="wait">
-        <motion.div key="prompt-edit" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="flex-1 flex flex-col min-h-0 bg-background">
-          <PromptEditPage
-            resource={configView.resource}
-            onBack={handleConfigBack}
-            onSave={(updates) => {
-              setResources(prev => prev.map(r => r.id === configView.resource.id ? { ...r, ...updates } : r));
-              setConfigView({ type: 'list' });
-            }}
-          />
-        </motion.div>
-      </AnimatePresence>
-    );
-  }
-
-  if (configView.type === 'assistant-config') {
-    return (
-      <AnimatePresence mode="wait">
-        <motion.div key="assistant" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="flex-1 flex flex-col min-h-0 bg-background">
-          <AssistantConfig resource={configView.resource} onBack={handleConfigBack} />
-        </motion.div>
-      </AnimatePresence>
-    );
-  }
-
-  if (configView.type === 'agent-config') {
-    return (
-      <AnimatePresence mode="wait">
-        <motion.div key="agent" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="flex-1 flex flex-col min-h-0 bg-background">
-          <AgentConfig resource={configView.resource} onBack={handleConfigBack} />
-        </motion.div>
-      </AnimatePresence>
-    );
-  }
-
-  if (configView.type === 'skill-plugin-detail') {
-    return (
-      <AnimatePresence mode="wait">
-        <motion.div key="sp-detail" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="flex-1 flex flex-col min-h-0 bg-background">
-          <SkillPluginDetail
-            resource={configView.resource}
-            onBack={handleConfigBack}
-            onToggle={handleToggle}
-            onDelete={handleDelete}
-          />
-        </motion.div>
-      </AnimatePresence>
-    );
-  }
-
+  // All resource config pages render inside a single centered modal
+  // (Dialog) overlaying the library list. The list view stays mounted
+  // underneath so closing the modal returns straight to the same
+  // browsing state. See `ConfigDialog` below.
   return (
     <div className="flex-1 flex min-h-0 bg-background">
       <LibrarySidebar
@@ -926,12 +986,131 @@ export function LibraryPage() {
         onClose={() => setSpImportOpen(false)} onImportComplete={handleImportComplete}
       />
 
+      {/* Move-to-recycle-bin confirm — iOS-style minimal alert. */}
       <RecycleBinConfirmDialog
         open={!!deleteConfirm}
         onOpenChange={(open) => { if (!open) setDeleteConfirm(null); }}
         retentionDays={recycleRetentionDays}
         onConfirm={() => confirmDelete()}
       />
+
+      {/* Resource config modal — sized to sit inside the app shell
+          (not full viewport). Provides the unified avatar + name +
+          close-X header on top; the embedded editor renders inside
+          with `inModal={true}` so it strips its own redundant
+          breadcrumb / back / cancel chrome. The 两栏 (sidebar +
+          content) layout comes from the editors themselves. */}
+      <Dialog
+        open={configView.type !== 'list'}
+        onOpenChange={(open) => { if (!open) handleConfigBack(); }}
+      >
+        <DialogContent
+          showCloseButton={false}
+          // Defaults shipped by DialogContent (`sm:max-w-lg`, `p-6`,
+          // `grid gap-4`) all need explicit `!` overrides to lose;
+          // the flex column + min-w-0 lets the embedded editors
+          // flow naturally inside.
+          // Compact in-app modal — fits inside the app shell with
+          // generous margin and prefers width slightly over height so
+          // the dense Assistant / Agent forms breathe.
+          className="!max-w-[760px] sm:!max-w-[760px] !w-[min(760px,84vw)] !h-[min(520px,72vh)] !max-h-[72vh] !rounded-2xl !p-0 !gap-0 !grid-cols-1 overflow-hidden border border-border/20 shadow-xl flex flex-col"
+        >
+          {configView.type !== 'list' && (() => {
+            const r = configView.resource;
+            const cfg = RESOURCE_TYPE_CONFIG[r.type];
+            const TypeIcon = cfg.icon;
+            return (
+              <div className="flex items-center gap-3 px-5 h-14 border-b border-border/15 flex-shrink-0">
+                <div className={`w-9 h-9 rounded-xl flex items-center justify-center text-lg flex-shrink-0 ${cfg.color}`}>
+                  {r.avatar}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span className="text-sm font-semibold text-foreground truncate">{r.name}</span>
+                    <span className="inline-flex items-center gap-1 flex-shrink-0 px-1.5 py-px rounded text-[10px] leading-none border border-border/30 bg-muted/40 text-muted-foreground/75 font-normal">
+                      <TypeIcon size={9} />
+                      {cfg.label}
+                    </span>
+                    <span className="inline-flex items-center gap-1 flex-shrink-0 text-[11px] text-muted-foreground/65 font-normal">
+                      <span className={`w-1.5 h-1.5 rounded-full ${r.enabled ? 'bg-success' : 'bg-muted-foreground/40'}`} />
+                      {r.enabled ? '已启用' : '已禁用'}
+                    </span>
+                  </div>
+                </div>
+                {configView.type === 'skill-plugin-detail' && (
+                  <>
+                    <Switch
+                      size="sm"
+                      checked={r.enabled}
+                      onCheckedChange={() => handleToggle(r.id)}
+                      aria-label={r.enabled ? '已启用' : '已禁用'}
+                      className="flex-shrink-0"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => handleDelete(r)}
+                      aria-label="删除"
+                      title={`删除${cfg.label}`}
+                      className="h-8 w-8 inline-flex items-center justify-center rounded-md text-muted-foreground/55 hover:text-destructive hover:bg-destructive/10 transition-colors flex-shrink-0"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </>
+                )}
+                <button
+                  type="button"
+                  onClick={handleConfigBack}
+                  aria-label="关闭"
+                  className="h-8 w-8 inline-flex items-center justify-center rounded-md text-muted-foreground/55 hover:text-foreground hover:bg-muted/40 transition-colors flex-shrink-0"
+                >
+                  <X size={14} />
+                </button>
+              </div>
+            );
+          })()}
+
+          <div className="flex-1 min-h-0 flex">
+            {configView.type === 'prompt-edit' && (
+              <PromptEditPage
+                key={configView.resource.id}
+                resource={configView.resource}
+                onBack={handleConfigBack}
+                inModal
+                onSave={(updates) => {
+                  setResources(prev => prev.map(r => r.id === configView.resource.id ? { ...r, ...updates } : r));
+                  setConfigView({ type: 'list' });
+                }}
+              />
+            )}
+            {configView.type === 'assistant-config' && (
+              <AssistantConfig
+                key={configView.resource.id}
+                resource={configView.resource}
+                onBack={handleConfigBack}
+                inModal
+              />
+            )}
+            {configView.type === 'agent-config' && (
+              <AgentConfig
+                key={configView.resource.id}
+                resource={configView.resource}
+                onBack={handleConfigBack}
+                inModal
+              />
+            )}
+            {configView.type === 'skill-plugin-detail' && (
+              <SkillPluginDetail
+                key={configView.resource.id}
+                resource={configView.resource}
+                onBack={handleConfigBack}
+                onToggle={handleToggle}
+                onDelete={handleDelete}
+                inModal
+              />
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

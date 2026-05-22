@@ -43,7 +43,7 @@ type SettingsSection =
   | 'models' | 'default-model' | 'mcp' | 'search' | 'documents'
   | 'quick-assistant' | 'selection-assistant'
   | 'channels' | 'scheduled-tasks'
-  | 'dependencies';
+  | 'dependencies' | 'integrations';
 
 interface NavGroup {
   label: string;
@@ -88,7 +88,8 @@ const NAV_GROUPS: NavGroup[] = [
       { id: 'mcp', label: 'MCP 服务', icon: Plug },
       { id: 'search', label: '网络搜索', icon: Globe2 },
       { id: 'documents', label: '文档解析', icon: FileScan },
-      { id: 'data-settings', label: '集成', icon: Link2 },
+      { id: 'integrations', label: '集成', icon: Link2 },
+      { id: 'data-settings', label: '数据备份', icon: Database },
       { id: 'dependencies', label: '环境依赖', icon: HardDrive },
     ],
   },
@@ -956,6 +957,7 @@ export function SettingsPage({ open, onClose, initialSection }: { open: boolean;
                 : activeSection === 'dashboard' ? <DashboardPage />
                 : activeSection === 'channels' ? <ChannelsPage />
                 : activeSection === 'scheduled-tasks' ? <ScheduledTasksPage />
+                : activeSection === 'integrations' ? <DataSettingsPage />
                 : activeSection === 'dependencies' ? <DependenciesPage />
                 : <MCPServicePage />
             ) : (

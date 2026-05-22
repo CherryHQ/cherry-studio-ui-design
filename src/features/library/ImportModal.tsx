@@ -4,7 +4,9 @@ import {
   CheckCircle2, AlertCircle, File,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Button, Input, Textarea, Dialog, DialogContent, DialogTitle } from '@cherry-studio/ui';
+import { Button } from '@cherrystudio/ui/components/primitives/button';
+import { Input, Textarea } from '@cherry-studio/ui';
+import { Dialog, DialogContent, DialogTitle } from '@cherrystudio/ui/components/primitives/dialog';
 
 interface Props {
   open: boolean;
