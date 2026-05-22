@@ -11,6 +11,7 @@ import { Button } from '@cherrystudio/ui/components/primitives/button';
 import { Input } from '@cherrystudio/ui/components/primitives/input';
 import { Switch } from '@cherrystudio/ui/components/primitives/switch';
 import { Input as Textarea } from '@cherrystudio/ui/components/primitives/textarea';
+import { Combobox } from '@cherrystudio/ui/components/primitives/combobox';
 
 interface Props {
   resource: ResourceItem;
@@ -123,29 +124,35 @@ export function SkillPluginDetail({ resource, onBack, onToggle, onDelete, inModa
               <>
                 <div>
                   <label className="text-xs text-muted-foreground/60 mb-1.5 block font-medium">描述</label>
-                  {editingDesc ? (
-                    <Textarea value={description} onChange={e => setDescription(e.target.value)} onBlur={() => setEditingDesc(false)} autoFocus rows={3}
-                      className="input-accent resize-none" />
-                  ) : (
-                    <p onClick={() => setEditingDesc(true)} className="text-xs text-muted-foreground/70 leading-relaxed px-3 py-2 rounded-xl border border-transparent hover:border-border/15 hover:bg-accent/15 cursor-text transition-all">
-                      {description || '点击添加描述...'}
-                    </p>
-                  )}
+                  <Textarea
+                    value={description}
+                    onChange={e => setDescription(e.target.value)}
+                    rows={3}
+                    placeholder="为这个资源写一段简短描述"
+                    className="input-accent resize-none"
+                  />
                 </div>
                 <div>
                   <label className="text-xs text-muted-foreground/60 mb-1.5 block font-medium flex items-center gap-1"><Tag size={9} /> 标签</label>
-                  <div className="flex flex-wrap items-center gap-1.5">
-                    {tags.map(tag => (
-                      <span key={tag} className="flex items-center gap-1 text-xs px-2 py-0.5 rounded-full border border-border/15 text-muted-foreground/70 group">
-                        <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${(TAG_COLORS[tag] || DEFAULT_TAG_COLOR).dot}`} />
-                        {tag}
-                        <Button variant="ghost" onClick={() => removeTag(tag)} size="inline" className="text-muted-foreground/50 hover:text-destructive transition-colors ml-0.5 w-auto p-0">&times;</Button>
-                      </span>
-                    ))}
-                    <Input value={newTag} onChange={e => setNewTag(e.target.value)} onKeyDown={e => e.key === 'Enter' && addTag()}
-                      placeholder="添加标签..."
-                      className="w-[110px] text-xs px-2 py-0.5 h-auto rounded-full border border-border/15 bg-transparent" />
-                  </div>
+                  <Combobox
+                    multiple
+                    searchable
+                    value={tags}
+                    onChange={(v) => setTags(Array.isArray(v) ? v : [v])}
+                    options={Object.keys(TAG_COLORS).map(t => ({ value: t, label: t }))}
+                    placeholder="选择标签…"
+                    searchPlaceholder="搜索标签…"
+                    emptyText="没有匹配标签"
+                    renderOption={(opt) => {
+                      const c = TAG_COLORS[opt.value] || DEFAULT_TAG_COLOR;
+                      return (
+                        <span className="inline-flex items-center gap-1">
+                          <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${c.dot}`} />
+                          <span className={`px-1.5 py-[1px] rounded-md text-xs border ${c.badge}`}>{opt.label}</span>
+                        </span>
+                      );
+                    }}
+                  />
                 </div>
 
                 {/* Metadata — folded into 基础信息 so it doesn't need
