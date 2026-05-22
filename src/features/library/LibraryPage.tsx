@@ -420,6 +420,31 @@ function PromptEditPage({ resource, onBack, onSave, inModal = false }: {
               const c = TAG_COLORS[opt.value] || DEFAULT_TAG_COLOR;
               return <span className={`px-1.5 py-[1px] rounded-md text-xs border ${c.badge}`}>{opt.label}</span>;
             }}
+            renderValue={(val) => {
+              const selected = Array.isArray(val) ? val : (val ? [val] : []);
+              if (selected.length === 0) return null;
+              return (
+                <div className="flex flex-wrap gap-1 flex-1 min-w-0">
+                  {selected.map(t => {
+                    const c = TAG_COLORS[t] || DEFAULT_TAG_COLOR;
+                    return (
+                      <span key={t} className={`inline-flex items-center gap-1 px-1.5 py-[2px] rounded-md text-[11px] border ${c.badge}`}>
+                        <span className={`w-1.5 h-1.5 rounded-full ${c.dot}`} />
+                        {t}
+                        <button
+                          type="button"
+                          onClick={(e) => { e.stopPropagation(); setTags(prev => prev.filter(x => x !== t)); }}
+                          aria-label={`移除 ${t}`}
+                          className="ml-0.5 opacity-50 hover:opacity-100 transition-opacity"
+                        >
+                          <X size={9} />
+                        </button>
+                      </span>
+                    );
+                  })}
+                </div>
+              );
+            }}
           />
         </FieldContent>
       </Field>
