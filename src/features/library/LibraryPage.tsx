@@ -922,7 +922,11 @@ export function LibraryPage() {
           // `grid gap-4`) all need explicit `!` overrides to lose;
           // the flex column + min-w-0 lets the embedded editors
           // flow naturally inside.
-          className="!max-w-[820px] sm:!max-w-[820px] !w-[76vw] !h-[600px] !max-h-[78vh] !rounded-2xl !p-0 !gap-0 !grid-cols-1 overflow-hidden border border-border/20 shadow-xl flex flex-col"
+          // Compact in-app modal — sized so it sits well within the
+          // app shell on any reasonable viewport and never feels like
+          // it takes over the whole screen. Use fixed pixels for both
+          // axes with vw/vh caps as fallbacks for very small windows.
+          className="!max-w-[680px] sm:!max-w-[680px] !w-[min(680px,82vw)] !h-[min(520px,72vh)] !max-h-[72vh] !rounded-2xl !p-0 !gap-0 !grid-cols-1 overflow-hidden border border-border/20 shadow-xl flex flex-col"
         >
           {configView.type !== 'list' && (() => {
             const r = configView.resource;
