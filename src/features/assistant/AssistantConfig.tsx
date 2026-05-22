@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { ArrowLeft, Save, Settings, FileText, BookOpen, ChevronRight, Wrench, Zap } from 'lucide-react';
+import { ArrowLeft, Save, Settings, FileText, BookOpen, ChevronRight, Wrench, Zap, SlidersHorizontal } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Button } from '@cherry-studio/ui';
 import type { ResourceItem } from '@/app/types';
 import { BasicSection } from './sections/BasicSection';
+import { ModelSection } from './sections/ModelSection';
 import { PromptSection } from './sections/PromptSection';
 import { KnowledgeSection } from './sections/KnowledgeSection';
 import { ToolSection } from './sections/ToolSection';
@@ -19,14 +20,15 @@ interface Props {
   inModal?: boolean;
 }
 
-type Section = 'basic' | 'prompt' | 'phrases' | 'knowledge' | 'tools';
+type Section = 'basic' | 'model' | 'prompt' | 'phrases' | 'knowledge' | 'tools';
 
 const sections: { id: Section; label: string; icon: React.ElementType }[] = [
-  { id: 'basic', label: '基础设置', icon: Settings },
-  { id: 'prompt', label: '提示词', icon: FileText },
-  { id: 'phrases', label: '快捷短语', icon: Zap },
-  { id: 'knowledge', label: '知识库', icon: BookOpen },
-  { id: 'tools', label: '工具', icon: Wrench },
+  { id: 'basic',     label: '基础设置', icon: Settings },
+  { id: 'model',     label: '模型设置', icon: SlidersHorizontal },
+  { id: 'prompt',    label: '提示词',   icon: FileText },
+  { id: 'phrases',   label: '快捷短语', icon: Zap },
+  { id: 'knowledge', label: '知识库',   icon: BookOpen },
+  { id: 'tools',     label: '工具',     icon: Wrench },
 ];
 
 export function AssistantConfig({ resource, onBack, inModal = false }: Props) {
@@ -71,6 +73,7 @@ export function AssistantConfig({ resource, onBack, inModal = false }: Props) {
           <AnimatePresence mode="wait">
             <motion.div key={activeSection} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.2 }}>
               {activeSection === 'basic' && <BasicSection resource={resource} />}
+              {activeSection === 'model' && <ModelSection />}
               {activeSection === 'prompt' && <PromptSection />}
               {activeSection === 'phrases' && <PhrasesSection />}
               {activeSection === 'knowledge' && <KnowledgeSection />}
