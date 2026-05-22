@@ -16,6 +16,8 @@ import { SettingsPage } from '@/features/settings/SettingsPage';
 import { SettingsProvider, useSettings } from '@/app/context/SettingsContext';
 import { GlobalActionProvider } from '@/app/context/GlobalActionContext';
 import type { GlobalActions } from '@/app/context/GlobalActionContext';
+import { RecycleBinProvider } from '@/app/context/RecycleBinContext';
+import { ArchiveProvider } from '@/app/context/ArchiveContext';
 import { Toaster } from 'sonner';
 import { initGlobalErrorHandler } from '@/app/services/errorHandler';
 import { useTabs } from '@/app/hooks/useTabs';
@@ -380,8 +382,22 @@ export function CherryStudio() {
 
   return (
     <SettingsProvider>
-      <CherryStudioInner />
-      <Toaster position="bottom-right" richColors closeButton />
+      <RecycleBinProvider>
+        <ArchiveProvider>
+          <CherryStudioInner />
+          {/* Radix Dialog sets body { pointer-events: none } while open;
+              Sonner's portal-rendered toast inherits that and becomes
+              visible-but-unclickable. Force pointer-events back on at the
+              container + each toast so undo actions work inside Settings. */}
+          <Toaster
+            position="bottom-right"
+            richColors
+            closeButton
+            className="pointer-events-auto"
+            toastOptions={{ className: 'pointer-events-auto' }}
+          />
+        </ArchiveProvider>
+      </RecycleBinProvider>
     </SettingsProvider>
   );
 }

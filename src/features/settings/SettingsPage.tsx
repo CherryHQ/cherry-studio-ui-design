@@ -5,7 +5,7 @@ import {
   Plug, RefreshCw,
   X,
   Globe2, Command,
-  Cloud, FileScan, BrainCircuit, Database, Server, Sparkles, Info, MousePointer, Archive, HardDrive, Link2,
+  Cloud, FileScan, BrainCircuit, Database, Server, Sparkles, Info, MousePointer, Archive, Trash2, HardDrive, Link2,
   Home, Zap, MessageSquareText, Radio, CalendarClock,
   HelpCircle, Rss, MessageSquare, Building2, Mail, Users, Bug, Github,
   Loader2, CheckCircle2, Calendar, ArrowUpRight,
@@ -25,6 +25,7 @@ import { GeneralSettingsPage } from './GeneralSettingsPage';
 import { MCPServicePage } from './MCPServicePage';
 import { DashboardPage } from './DashboardPage';
 import { ArchiveManagePage } from './ArchiveManagePage';
+import { RecycleBinPage } from './RecycleBinPage';
 import { DefaultModelSettingsPage } from './DefaultModelSettingsPage';
 import { ChannelsPage } from './ChannelsPage';
 import { ScheduledTasksPage } from './ScheduledTasksPage';
@@ -38,7 +39,7 @@ import { Button, Dialog, DialogContent, Typography, Switch, Card, CardContent, T
 // ===========================
 type SettingsSection =
   | 'home'
-  | 'general' | 'data-settings' | 'archive' | 'api-gateway' | 'shortcuts' | 'about' | 'dashboard'
+  | 'general' | 'data-settings' | 'archive' | 'recycle-bin' | 'api-gateway' | 'shortcuts' | 'about' | 'dashboard'
   | 'models' | 'default-model' | 'mcp' | 'search' | 'documents'
   | 'quick-assistant' | 'selection-assistant'
   | 'channels' | 'scheduled-tasks'
@@ -96,6 +97,7 @@ const NAV_GROUPS: NavGroup[] = [
     items: [
       { id: 'general', label: '通用设置', icon: Settings2 },
       { id: 'archive', label: '归档管理', icon: Archive },
+      { id: 'recycle-bin', label: '回收站', icon: Trash2 },
     ],
   },
   {
@@ -938,13 +940,14 @@ export function SettingsPage({ open, onClose, initialSection }: { open: boolean;
 
           {/* Content Area */}
           <div className="flex-1 flex flex-col min-w-0 overflow-hidden mr-2 mb-2 mt-2 ml-0 bg-content-bg border border-content-border rounded-2xl">
-            {activeSection === 'models' || activeSection === 'default-model' || activeSection === 'search' || activeSection === 'documents' || activeSection === 'data-settings' || activeSection === 'archive' || activeSection === 'api-gateway' || activeSection === 'shortcuts' || activeSection === 'selection-assistant' || activeSection === 'quick-assistant' || activeSection === 'general' || activeSection === 'mcp' || activeSection === 'dashboard' || activeSection === 'channels' || activeSection === 'scheduled-tasks' || activeSection === 'dependencies' ? (
+            {activeSection === 'models' || activeSection === 'default-model' || activeSection === 'search' || activeSection === 'documents' || activeSection === 'data-settings' || activeSection === 'archive' || activeSection === 'recycle-bin' || activeSection === 'api-gateway' || activeSection === 'shortcuts' || activeSection === 'selection-assistant' || activeSection === 'quick-assistant' || activeSection === 'general' || activeSection === 'mcp' || activeSection === 'dashboard' || activeSection === 'channels' || activeSection === 'scheduled-tasks' || activeSection === 'dependencies' ? (
               activeSection === 'models' ? <ModelServicePage />
                 : activeSection === 'default-model' ? <DefaultModelSettingsPage />
                 : activeSection === 'search' ? <WebSearchPage />
                 : activeSection === 'documents' ? <DocumentServicePage />
                 : activeSection === 'data-settings' ? <DataSettingsPage />
                 : activeSection === 'archive' ? <ArchiveManagePage />
+                : activeSection === 'recycle-bin' ? <RecycleBinPage />
                 : activeSection === 'api-gateway' ? <ApiGatewayPage />
                 : activeSection === 'shortcuts' ? <ShortcutsPage />
                 : activeSection === 'selection-assistant' ? <SelectionAssistantPage />

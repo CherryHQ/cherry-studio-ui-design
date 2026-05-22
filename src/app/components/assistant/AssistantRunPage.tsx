@@ -77,6 +77,8 @@ import { ModelPickerPanel } from '@/app/components/shared/ModelPickerPanel';
 import { AssistantPickerPanel } from '@/app/components/shared/AssistantPickerPanel';
 import { CreateEntityDialog } from '@/app/components/shared/CreateEntityDialog';
 import { HistorySidebar } from '@/app/components/shared/HistorySidebar';
+import { RecycleBinConfirmDialog } from '@/app/components/shared/RecycleBinConfirmDialog';
+import { useRecycleBin } from '@/app/context/RecycleBinContext';
 import { useHistorySidebar } from '@/app/hooks/useHistorySidebar';
 
 // Syntax highlighting, file icons, animations, and shared message components
@@ -1821,10 +1823,36 @@ export function AssistantRunPage() {
     });
   }, []);
 
+  const { moveToBin, skipTopicConfirm, setSkipTopicConfirm, retentionDays } = useRecycleBin();
+  const [pendingDeleteTopic, setPendingDeleteTopic] = useState<AssistantTopic | null>(null);
+
+  const sendTopicToBin = useCallback((topic: AssistantTopic) => {
+    setTopics(prev => prev.filter(t => t.id !== topic.id));
+    if (activeTopicId === topic.id) handleNewTopic();
+    moveToBin(
+      {
+        id: `bin-topic-${topic.id}-${Date.now()}`,
+        type: 'topic',
+        name: topic.title,
+        icon: '💬',
+        meta: topic.assistantName,
+        source: 'manual',
+      },
+      {
+        onUndo: () => setTopics(prev => [topic, ...prev]),
+      },
+    );
+  }, [activeTopicId, handleNewTopic, moveToBin]);
+
   const handleDeleteTopic = useCallback((id: string) => {
-    setTopics(prev => prev.filter(t => t.id !== id));
-    if (activeTopicId === id) handleNewTopic();
-  }, [activeTopicId, handleNewTopic]);
+    const topic = topics.find(t => t.id === id);
+    if (!topic) return;
+    if (skipTopicConfirm) {
+      sendTopicToBin(topic);
+    } else {
+      setPendingDeleteTopic(topic);
+    }
+  }, [topics, skipTopicConfirm, sendTopicToBin]);
 
   const handleUpdateTopic = useCallback((id: string, updates: Partial<AssistantTopic>) => {
     setTopics(prev => prev.map(t => t.id === id ? { ...t, ...updates } : t));
@@ -2947,6 +2975,24 @@ export function AssistantRunPage() {
         open={showCreateAssistant}
         onOpenChange={setShowCreateAssistant}
         variant="assistant"
+      />
+
+      {/* ===== Recycle Bin: delete-topic confirmation ===== */}
+      <RecycleBinConfirmDialog
+        open={!!pendingDeleteTopic}
+        onOpenChange={(open) => { if (!open) setPendingDeleteTopic(null); }}
+        itemName={pendingDeleteTopic?.title ?? ''}
+        itemIcon="💬"
+        itemTypeLabel="话题"
+        retentionDays={retentionDays}
+        allowSkip
+        onConfirm={(skipNextTime) => {
+          if (pendingDeleteTopic) {
+            if (skipNextTime) setSkipTopicConfirm(true);
+            sendTopicToBin(pendingDeleteTopic);
+          }
+          setPendingDeleteTopic(null);
+        }}
       />
       </div>
     </div>
