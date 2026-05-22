@@ -3,9 +3,10 @@ import { X, Check, ChevronDown, Upload, Link2, Plus, Trash2, RotateCcw, Info } f
 import type { ResourceItem } from '@/app/types';
 import { AVATAR_OPTIONS } from '@/app/config/constants';
 import { Button } from '@cherrystudio/ui/components/primitives/button';
-// Input + Textarea — back on legacy @cherry-studio/ui. V2's are
-// `border-input` 1-px on transparent, almost invisible on the card.
-import { Input, Textarea, Switch } from '@cherry-studio/ui';
+// Name input now on V2 — bg-accent/15 override defeats V2's invisible
+// transparent default. Textarea + Switch stay on legacy for now.
+import { Input } from '@cherrystudio/ui/components/primitives/input';
+import { Textarea, Switch } from '@cherry-studio/ui';
 import { Slider } from '@cherrystudio/ui/components/primitives/slider';
 import { Badge } from '@cherrystudio/ui/components/primitives/badge';
 import { Popover, PopoverTrigger, PopoverContent } from '@cherrystudio/ui/components/primitives/popover';
@@ -218,6 +219,7 @@ export function BasicSection({ resource }: Props) {
           placeholder="选择标签…"
           searchPlaceholder="搜索标签…"
           emptyText="没有匹配标签"
+          className="h-11 rounded-xl border-border/20 bg-accent/15 text-xs hover:bg-accent/20"
           renderOption={(opt) => {
             const preset = TAG_PRESETS.find(p => p.tag === opt.value);
             return <span className={`px-1.5 py-[1px] rounded-md text-xs border ${preset?.color ?? ''}`}>{opt.label}</span>;

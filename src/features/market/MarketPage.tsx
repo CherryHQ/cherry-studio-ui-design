@@ -3,7 +3,7 @@ import {
   Plus, Search, Filter, ArrowUpDown, ChevronRight, ChevronLeft, ChevronDown,
   Check, Download, X, MoreHorizontal, Terminal, FileText,
   Wrench, Sparkles, MousePointerClick, BookOpen, Network, Plug,
-  CheckCircle2, Zap, Compass, Star, ExternalLink, Shield,
+  CheckCircle2, Zap, Compass, Star, ExternalLink,
   Upload, Link2, Bot,
 } from 'lucide-react';
 import {
@@ -533,20 +533,11 @@ function MarketDetailDialog({
     </Dialog>
   );
   const KIcon = KIND_ICON[item.kind];
-  // Mocked extended fields — production data would carry these natively.
-  const featureBullets = [
-    '即开即用，无需手动配置',
-    '与其它已安装资源自动协同',
-    '由社区维护，每月发布新版',
-  ];
-  const permissions = item.kind === 'integration'
-    ? ['读取你的账号基础信息', '读取与写入指定空间内容', '通过 OAuth 授权，可随时撤销']
-    : item.kind === 'mcp'
-      ? ['启动本地 / 远端 MCP 进程', '读取上下文中的会话历史', '调用注册的 MCP 工具集']
-      : item.kind === 'agent'
-        ? ['在 tool-call 循环中自主调用挂载的工具', '可读写工作区中的文件与运行命令', '每次敏感动作前会请求人工确认']
-        : ['仅在被显式调用时执行', '不主动读取剪贴板或外部文件'];
   const installsLabel = item.installs >= 10000 ? `${(item.installs / 1000).toFixed(1)}K` : item.installs.toLocaleString();
+  // Derive a plausible source URL from the author handle + resource name.
+  // Production data would carry this natively; the footer "查看源仓库" button
+  // also wires to the same URL pattern.
+  const sourceUrl = `https://github.com/${item.author.replace(/^@/, '')}/${item.name.replace(/\s+/g, '-')}`;
   return (
     <Dialog open={!!item} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-[680px] p-0 overflow-hidden">
@@ -591,30 +582,47 @@ function MarketDetailDialog({
             </div>
 
             <div>
-              <h4 className="text-xs text-foreground font-medium mb-2">功能亮点</h4>
-              <ul className="space-y-1.5">
-                {featureBullets.map((b, i) => (
-                  <li key={i} className="flex items-start gap-2 text-xs text-foreground/80">
-                    <CheckCircle2 size={12} className="text-success mt-0.5 flex-shrink-0" />
-                    <span>{b}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
+              <h4 className="text-xs text-foreground font-medium mb-2">来源与作者</h4>
+              <dl className="grid grid-cols-[64px_1fr] gap-y-1.5 text-xs">
+                <dt className="text-muted-foreground/55">作者</dt>
+                <dd className="text-foreground/90">{item.author}</dd>
 
-            <div>
-              <h4 className="text-xs text-foreground font-medium mb-2 flex items-center gap-1.5">
-                <Shield size={11} className="text-muted-foreground/60" />
-                需要的权限
-              </h4>
-              <ul className="space-y-1.5">
-                {permissions.map((p, i) => (
-                  <li key={i} className="text-xs text-muted-foreground/80 pl-4 relative">
-                    <span className="absolute left-0 top-2 w-1 h-1 rounded-full bg-muted-foreground/40" />
-                    {p}
-                  </li>
-                ))}
-              </ul>
+                <dt className="text-muted-foreground/55">类型</dt>
+                <dd className="text-foreground/90">{KIND_LABEL[item.kind]}</dd>
+
+                <dt className="text-muted-foreground/55">分类</dt>
+                <dd className="text-foreground/90">{item.category}</dd>
+
+                {item.language && (
+                  <>
+                    <dt className="text-muted-foreground/55">语言</dt>
+                    <dd className="text-foreground/90">{item.language}</dd>
+                  </>
+                )}
+
+                {item.region && (
+                  <>
+                    <dt className="text-muted-foreground/55">地区</dt>
+                    <dd className="text-foreground/90">{item.region}</dd>
+                  </>
+                )}
+
+                <dt className="text-muted-foreground/55">上架</dt>
+                <dd className="text-foreground/90">{item.ageLabel} 前</dd>
+
+                <dt className="text-muted-foreground/55">源仓库</dt>
+                <dd className="min-w-0">
+                  <a
+                    href={sourceUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center gap-1 text-foreground/90 hover:text-foreground transition-colors truncate"
+                  >
+                    <span className="truncate">{sourceUrl.replace(/^https?:\/\//, '')}</span>
+                    <ExternalLink size={10} className="opacity-60 flex-shrink-0" />
+                  </a>
+                </dd>
+              </dl>
             </div>
           </div>
         </div>
