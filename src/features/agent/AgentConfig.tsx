@@ -251,10 +251,61 @@ function AgentBasicSection({ resource }: { resource: ResourceItem }) {
       <FieldGroup label="简介"><Textarea value={description} onChange={e => setDescription(e.target.value)} rows={2} className="input-accent resize-none" /></FieldGroup>
       <FieldGroup label="标签">
         <div className="min-h-[36px] px-2.5 py-2 rounded-xl border border-border/20 bg-accent/15 flex flex-wrap items-center gap-1.5">
-          {tags.map(tag => (<Badge key={tag} variant="outline" className={`gap-1 px-1.5 py-[2px] rounded-md ${getTagColor(tag)}`}>{tag}<Button variant="ghost" size="icon-xs" onClick={() => removeTag(tag)} className="ml-0.5 text-current opacity-40 hover:opacity-100 hover:bg-transparent"><X size={7} /></Button></Badge>))}
-          <Input ref={tagInputRef} value={tagInput} onChange={e => setTagInput(e.target.value)} onKeyDown={e => { if (e.key === 'Enter' && tagInput.trim()) { e.preventDefault(); addTag(tagInput); } if (e.key === 'Backspace' && !tagInput && tags.length > 0) removeTag(tags[tags.length - 1]); }} placeholder={tags.length === 0 ? '输入标签，回车添加' : ''} className="flex-1 min-w-[80px] h-auto border-0 bg-transparent shadow-none focus-visible:ring-0 focus-visible:border-transparent text-sm text-foreground placeholder:text-muted-foreground/60 py-0 px-0 rounded-none" />
+          {tags.map(tag => (
+            <Badge key={tag} variant="outline" className={`gap-1 px-1.5 py-[2px] rounded-md ${getTagColor(tag)}`}>
+              {tag}
+              <Button variant="ghost" size="icon-xs" onClick={() => removeTag(tag)} className="ml-0.5 text-current opacity-40 hover:opacity-100 hover:bg-transparent">
+                <X size={7} />
+              </Button>
+            </Badge>
+          ))}
+          <Input
+            ref={tagInputRef}
+            value={tagInput}
+            onChange={e => setTagInput(e.target.value)}
+            onKeyDown={e => {
+              if (e.key === 'Enter' && tagInput.trim()) { e.preventDefault(); addTag(tagInput); }
+              if (e.key === 'Backspace' && !tagInput && tags.length > 0) removeTag(tags[tags.length - 1]);
+            }}
+            placeholder={tags.length === 0 ? '输入标签，回车添加' : ''}
+            className="flex-1 min-w-[80px] h-auto border-0 bg-transparent shadow-none focus-visible:ring-0 focus-visible:border-transparent text-sm text-foreground placeholder:text-muted-foreground/60 py-0 px-0 rounded-none"
+          />
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant="ghost"
+                size="xs"
+                className="h-6 px-1.5 gap-1 text-xs text-muted-foreground/65 hover:text-foreground"
+              >
+                <Plus size={10} />
+                <span>预设</span>
+                <ChevronDown size={9} className="opacity-60" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent align="end" sideOffset={6} className="w-[180px] p-1">
+              {TAG_PRESETS.map(preset => {
+                const selected = tags.includes(preset.tag);
+                return (
+                  <button
+                    key={preset.tag}
+                    type="button"
+                    onClick={() => togglePresetTag(preset.tag)}
+                    className={`w-full flex items-center justify-between gap-2 px-2 py-1.5 rounded-md text-sm text-left transition-colors ${
+                      selected
+                        ? 'bg-accent/60 text-foreground'
+                        : 'text-foreground/80 hover:bg-muted/40'
+                    }`}
+                  >
+                    <span className="flex items-center gap-1.5">
+                      <span className={`px-1.5 py-px rounded text-[11px] leading-none border ${preset.color}`}>{preset.tag}</span>
+                    </span>
+                    {selected && <Check size={11} className="text-foreground/70" />}
+                  </button>
+                );
+              })}
+            </PopoverContent>
+          </Popover>
         </div>
-        <div className="flex flex-wrap gap-1 mt-2">{TAG_PRESETS.map(preset => { const selected = tags.includes(preset.tag); return (<Button variant="outline" size="xs" key={preset.tag} onClick={() => togglePresetTag(preset.tag)} className={`px-1.5 text-xs gap-0.5 ${preset.color} ${selected ? 'ring-1 ring-ring/10' : 'opacity-50 hover:opacity-80'}`}>{selected && <Check size={7} className="text-current" />}{preset.tag}</Button>); })}</div>
       </FieldGroup>
     </div>
   );
