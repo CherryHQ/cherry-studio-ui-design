@@ -370,6 +370,7 @@ function PromptEditPage({ resource, onBack, onSave, inModal = false }: {
   // ── Section bodies, reused below ──────────────────────────────
   const BasicSection = (
     <div className="space-y-4">
+      <h3 className="text-sm font-semibold text-foreground mb-1">基础信息</h3>
       <div>
         <p className="text-xs text-muted-foreground/60 mb-2 font-medium">名称</p>
         <Input value={name} onChange={e => setName(e.target.value)}
@@ -421,7 +422,7 @@ function PromptEditPage({ resource, onBack, onSave, inModal = false }: {
   if (inModal) {
     return (
       <div className="flex-1 flex min-h-0">
-        <aside className="w-[160px] flex-shrink-0 border-r border-border/15 p-3 space-y-0.5">
+        <aside className="w-[140px] flex-shrink-0 border-r border-border/15 p-2.5 space-y-0.5">
           {([
             { id: 'basic', label: '基础信息' },
             { id: 'content', label: '内容' },
@@ -432,7 +433,7 @@ function PromptEditPage({ resource, onBack, onSave, inModal = false }: {
                 key={s.id}
                 type="button"
                 onClick={() => setActiveSection(s.id)}
-                className={`w-full flex items-center px-2.5 py-2 rounded-lg text-sm text-left transition-colors ${
+                className={`w-full flex items-center justify-start px-2.5 py-2 rounded-lg text-sm text-left transition-colors ${
                   active
                     ? 'bg-accent/50 text-foreground'
                     : 'text-muted-foreground/75 hover:text-foreground hover:bg-muted/40'
@@ -442,17 +443,6 @@ function PromptEditPage({ resource, onBack, onSave, inModal = false }: {
               </button>
             );
           })}
-          <div className="pt-3 mt-3 border-t border-border/15">
-            <Button
-              variant="default"
-              size="xs"
-              onClick={handleSave}
-              disabled={!name.trim() || !hasChanges}
-              className="w-full h-8 gap-1.5 text-xs"
-            >
-              <Save size={11} /><span>保存</span>
-            </Button>
-          </div>
         </aside>
         <div className="flex-1 min-w-0 overflow-y-auto scrollbar-thin px-6 py-5">
           {activeSection === 'basic' ? BasicSection : ContentSection}
@@ -922,11 +912,10 @@ export function LibraryPage() {
           // `grid gap-4`) all need explicit `!` overrides to lose;
           // the flex column + min-w-0 lets the embedded editors
           // flow naturally inside.
-          // Compact in-app modal — sized so it sits well within the
-          // app shell on any reasonable viewport and never feels like
-          // it takes over the whole screen. Use fixed pixels for both
-          // axes with vw/vh caps as fallbacks for very small windows.
-          className="!max-w-[680px] sm:!max-w-[680px] !w-[min(680px,82vw)] !h-[min(520px,72vh)] !max-h-[72vh] !rounded-2xl !p-0 !gap-0 !grid-cols-1 overflow-hidden border border-border/20 shadow-xl flex flex-col"
+          // Compact in-app modal — fits inside the app shell with
+          // ~5% margin on each side and a slightly taller content
+          // area for the dense Assistant / Agent editors.
+          className="!max-w-[740px] sm:!max-w-[740px] !w-[min(740px,84vw)] !h-[min(540px,74vh)] !max-h-[74vh] !rounded-2xl !p-0 !gap-0 !grid-cols-1 overflow-hidden border border-border/20 shadow-xl flex flex-col"
         >
           {configView.type !== 'list' && (() => {
             const r = configView.resource;
