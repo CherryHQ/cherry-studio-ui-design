@@ -40,7 +40,7 @@ export function SkillPluginDetail({ resource, onBack, onToggle, onDelete, inModa
   const [newTag, setNewTag] = useState('');
   const [saved, setSaved] = useState(false);
   const [editingDesc, setEditingDesc] = useState(false);
-  const [activeSection, setActiveSection] = useState<'basic' | 'source' | 'meta'>('basic');
+  const [activeSection, setActiveSection] = useState<'basic' | 'source'>('basic');
 
   const cfg = RESOURCE_TYPE_CONFIG[resource.type];
   const Icon = cfg.icon;
@@ -100,7 +100,6 @@ export function SkillPluginDetail({ resource, onBack, onToggle, onDelete, inModa
             {([
               { id: 'basic',  label: '基础信息' },
               { id: 'source', label: '源文件' },
-              { id: 'meta',   label: '元数据' },
             ] as const).map(s => {
               const active = activeSection === s.id;
               return (
@@ -148,6 +147,39 @@ export function SkillPluginDetail({ resource, onBack, onToggle, onDelete, inModa
                       className="w-[110px] text-xs px-2 py-0.5 h-auto rounded-full border border-border/15 bg-transparent" />
                   </div>
                 </div>
+
+                {/* Metadata — folded into 基础信息 so it doesn't need
+                    its own sidebar tab. Compact 2-column grid. */}
+                <div className="grid grid-cols-2 gap-x-6 gap-y-3 pt-4 border-t border-border/15">
+                  <div>
+                    <label className="text-[11px] text-muted-foreground/55 mb-1 block">创建时间</label>
+                    <div className="flex items-center gap-1.5 text-xs text-muted-foreground/70">
+                      <Clock size={9} />
+                      <span>{new Date(resource.createdAt).toLocaleDateString('zh-CN')}</span>
+                      <span className="text-muted-foreground/45">({timeAgo(resource.createdAt)})</span>
+                    </div>
+                  </div>
+                  <div>
+                    <label className="text-[11px] text-muted-foreground/55 mb-1 block">最近更新</label>
+                    <div className="flex items-center gap-1.5 text-xs text-muted-foreground/70">
+                      <Clock size={9} />
+                      <span>{new Date(resource.updatedAt).toLocaleDateString('zh-CN')}</span>
+                      <span className="text-muted-foreground/45">({timeAgo(resource.updatedAt)})</span>
+                    </div>
+                  </div>
+                  {resource.version && (
+                    <div>
+                      <label className="text-[11px] text-muted-foreground/55 mb-1 block">版本</label>
+                      <div className="text-xs text-muted-foreground/70">v{resource.version}{resource.hasUpdate && <span className="ml-2 text-accent-orange">有新版本</span>}</div>
+                    </div>
+                  )}
+                  {resource.author && (
+                    <div>
+                      <label className="text-[11px] text-muted-foreground/55 mb-1 block">作者</label>
+                      <div className="text-xs text-muted-foreground/70 flex items-center gap-1"><User size={9} />{resource.author}</div>
+                    </div>
+                  )}
+                </div>
               </>
             )}
             {activeSection === 'source' && (
@@ -188,38 +220,6 @@ export function SkillPluginDetail({ resource, onBack, onToggle, onDelete, inModa
                   </div>
                 </div>
               </>
-            )}
-            {activeSection === 'meta' && (
-              <div className="grid grid-cols-1 gap-4">
-                <div>
-                  <label className="text-xs text-muted-foreground/55 mb-1 block">创建时间</label>
-                  <div className="flex items-center gap-1.5 text-xs text-muted-foreground/70">
-                    <Clock size={9} />
-                    <span>{new Date(resource.createdAt).toLocaleDateString('zh-CN')}</span>
-                    <span className="text-muted-foreground/45">({timeAgo(resource.createdAt)})</span>
-                  </div>
-                </div>
-                <div>
-                  <label className="text-xs text-muted-foreground/55 mb-1 block">最近更新</label>
-                  <div className="flex items-center gap-1.5 text-xs text-muted-foreground/70">
-                    <Clock size={9} />
-                    <span>{new Date(resource.updatedAt).toLocaleDateString('zh-CN')}</span>
-                    <span className="text-muted-foreground/45">({timeAgo(resource.updatedAt)})</span>
-                  </div>
-                </div>
-                {resource.version && (
-                  <div>
-                    <label className="text-xs text-muted-foreground/55 mb-1 block">版本</label>
-                    <div className="text-xs text-muted-foreground/70">v{resource.version}{resource.hasUpdate && <span className="ml-2 text-accent-orange">有新版本</span>}</div>
-                  </div>
-                )}
-                {resource.author && (
-                  <div>
-                    <label className="text-xs text-muted-foreground/55 mb-1 block">作者</label>
-                    <div className="text-xs text-muted-foreground/70 flex items-center gap-1"><User size={9} />{resource.author}</div>
-                  </div>
-                )}
-              </div>
             )}
           </div>
         </div>
