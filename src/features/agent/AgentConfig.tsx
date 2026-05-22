@@ -14,9 +14,8 @@ import {
   Send, MessageCircle, Github, Info,
 } from 'lucide-react';
 import { Button } from '@cherrystudio/ui/components/primitives/button';
-import { Input } from '@cherrystudio/ui/components/primitives/input';
 import { Slider } from '@cherrystudio/ui/components/primitives/slider';
-import { Input as Textarea } from '@cherrystudio/ui/components/primitives/textarea';
+// Input + Textarea kept on legacy — v2's are too faint on the modal card.
 import { Popover, PopoverTrigger, PopoverContent } from '@cherrystudio/ui/components/primitives/popover';
 import { Combobox } from '@cherrystudio/ui/components/primitives/combobox';
 import { Switch } from '@cherrystudio/ui/components/primitives/switch';
@@ -26,7 +25,7 @@ import {
   Select, SelectTrigger, SelectValue, SelectContent, SelectItem,
 } from '@cherrystudio/ui/components/primitives/select';
 // V2 doesn't ship SearchInput / Typography / EmptyState / SimpleTooltip
-import { EmptyState, SearchInput, Typography, SimpleTooltip } from '@cherry-studio/ui';
+import { Input, Textarea, EmptyState, SearchInput, Typography, SimpleTooltip } from '@cherry-studio/ui';
 import { motion, AnimatePresence } from 'motion/react';
 import type { ResourceItem, MCPServerStatus } from '@/app/types';
 import { PromptSection } from '@/features/assistant/sections/PromptSection';

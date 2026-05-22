@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Plus, Trash2, RotateCcw, Info } from 'lucide-react';
 import { Button } from '@cherrystudio/ui/components/primitives/button';
-import { Input } from '@cherrystudio/ui/components/primitives/input';
+import { Input } from '@cherry-studio/ui';
 import { Slider } from '@cherrystudio/ui/components/primitives/slider';
 import { Switch } from '@cherrystudio/ui/components/primitives/switch';
 import {

@@ -11,7 +11,6 @@ import { Button } from '@cherrystudio/ui/components/primitives/button';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from '@cherrystudio/ui/components/primitives/dialog';
-import { Input } from '@cherrystudio/ui/components/primitives/input';
 import {
   Popover, PopoverTrigger, PopoverContent,
 } from '@cherrystudio/ui/components/primitives/popover';
@@ -22,7 +21,7 @@ import { Switch } from '@cherry-studio/ui';
 import { Combobox } from '@cherrystudio/ui/components/primitives/combobox';
 import { Field, FieldContent, FieldLabel } from '@cherrystudio/ui/components/primitives/field';
 import { ConfirmDialog } from '@cherrystudio/ui/components/composites/ConfirmDialog';
-import { SearchInput, Typography, SYSTEM_VARIABLES, type VariableDef } from '@cherry-studio/ui';
+import { Input, SearchInput, Typography, SYSTEM_VARIABLES, type VariableDef } from '@cherry-studio/ui';
 import { skills as discoverSkills, assistants as discoverAssistants } from '@/features/explore/ExploreData';
 import { useGlobalActions } from '@/app/context/GlobalActionContext';
 import type { ResourceItem, FolderNode, TagItem, LibrarySidebarFilter, LibraryConfigView, ResourceType } from '@/app/types';

@@ -3,10 +3,11 @@ import { X, Check, ChevronDown, Upload, Link2, Plus, Trash2, RotateCcw, Info } f
 import type { ResourceItem } from '@/app/types';
 import { AVATAR_OPTIONS } from '@/app/config/constants';
 import { Button } from '@cherrystudio/ui/components/primitives/button';
-import { Input } from '@cherrystudio/ui/components/primitives/input';
+// Input + Textarea — back on legacy @cherry-studio/ui. V2's are
+// `border-input` 1-px on transparent, almost invisible on the card.
+import { Input, Textarea } from '@cherry-studio/ui';
 import { Slider } from '@cherrystudio/ui/components/primitives/slider';
 import { Switch } from '@cherrystudio/ui/components/primitives/switch';
-import { Input as Textarea } from '@cherrystudio/ui/components/primitives/textarea';
 import { Badge } from '@cherrystudio/ui/components/primitives/badge';
 import { Popover, PopoverTrigger, PopoverContent } from '@cherrystudio/ui/components/primitives/popover';
 import { Combobox } from '@cherrystudio/ui/components/primitives/combobox';

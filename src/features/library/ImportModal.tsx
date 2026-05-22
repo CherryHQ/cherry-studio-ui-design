@@ -5,9 +5,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Button } from '@cherrystudio/ui/components/primitives/button';
-import { Input } from '@cherrystudio/ui/components/primitives/input';
-// V2's textarea module exports the component as `Input` (TextareaInput)
-import { Input as Textarea } from '@cherrystudio/ui/components/primitives/textarea';
+import { Input, Textarea } from '@cherry-studio/ui';
 import { Dialog, DialogContent, DialogTitle } from '@cherrystudio/ui/components/primitives/dialog';
 
 interface Props {
