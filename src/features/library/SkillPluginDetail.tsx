@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import {
   ArrowLeft, ChevronRight, Save, Trash2,
   FileJson, FileText, Archive, ExternalLink,
-  Tag, Clock, User, Package, RefreshCw,
+  Tag, Clock, User, Package, RefreshCw, X,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import type { ResourceItem } from '@/app/types';
