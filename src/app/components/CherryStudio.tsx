@@ -41,7 +41,12 @@ function CherryStudioInner() {
   const [newTabSearch, setNewTabSearch] = useState('');
   const [newTabManageMode, setNewTabManageMode] = useState(false);
   const [searchDialogOpen, setSearchDialogOpen] = useState(false);
-  const [hiddenApps, setHiddenApps] = useState<Set<string>>(new Set(['explore', 'library', 'knowledge', 'file', 'code', 'note', 'extensions']));
+  // Library is intentionally NOT hidden — it's now the home of custom
+  // resource management (assistants / agents / skills / prompts / etc.)
+  // after main moved "管理我的资源" out of the Market page. Without a
+  // visible Library entry in the sidebar, users have no way to reach
+  // their resources and the recycle-bin delete flow is unreachable.
+  const [hiddenApps, setHiddenApps] = useState<Set<string>>(new Set(['explore', 'knowledge', 'file', 'code', 'note', 'extensions']));
   const [appOrder, setAppOrder] = useState<string[]>(() => dialogAppIcons.map(a => a.id));
   const [annotationListOpen, setAnnotationListOpen] = useState(false);
   const [showMigration, setShowMigration] = useState(false);
