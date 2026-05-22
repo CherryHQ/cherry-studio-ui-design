@@ -869,7 +869,12 @@ export function LibraryPage() {
       >
         <DialogContent
           showCloseButton={false}
-          className="max-w-[960px] !w-[92vw] h-[80vh] !rounded-2xl p-0 overflow-hidden border border-border/20 flex flex-col"
+          // The base DialogContent locks in `sm:max-w-lg` + `p-6` +
+          // `grid gap-4`, all of which crush this config modal into a
+          // narrow column. Force-override with `!` so the embedded
+          // AssistantConfig / AgentConfig editors get the full width
+          // they're designed for.
+          className="!max-w-[1100px] sm:!max-w-[1100px] !w-[92vw] !h-[82vh] !rounded-2xl !p-0 !gap-0 !grid-cols-1 overflow-hidden border border-border/20 flex flex-col"
         >
           {/* Reuse a fresh mount per resource so internal local state
               seeds from the resource's current values. */}
