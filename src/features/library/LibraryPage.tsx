@@ -352,6 +352,7 @@ function PromptEditPage({ resource, onBack, onSave, inModal = false }: {
   const [name, setName] = useState(resource.name);
   const [content, setContent] = useState(resource.content || '');
   const [showVarPanel, setShowVarPanel] = useState(false);
+  const [activeSection, setActiveSection] = useState<'basic' | 'content'>('basic');
 
   const vars = extractVars(content);
   const hasChanges = name !== resource.name || content !== (resource.content || '');
@@ -366,76 +367,119 @@ function PromptEditPage({ resource, onBack, onSave, inModal = false }: {
     setShowVarPanel(false);
   };
 
-  return (
-    <div className="flex-1 flex flex-col min-h-0 bg-background">
-      {!inModal && (
-        <div className="flex items-center justify-between px-6 pt-5 pb-4 flex-shrink-0 border-b border-border/20">
-          <div className="flex items-center gap-3">
-            <button onClick={onBack} className="text-muted-foreground/50 hover:text-foreground transition-colors">
-              <ChevronLeft size={18} />
-            </button>
-            <Typography variant="subtitle">编辑 Prompt</Typography>
+  // ── Section bodies, reused below ──────────────────────────────
+  const BasicSection = (
+    <div className="space-y-4">
+      <div>
+        <p className="text-xs text-muted-foreground/60 mb-2 font-medium">名称</p>
+        <Input value={name} onChange={e => setName(e.target.value)}
+          className="w-full bg-muted/30 border border-border/40 px-3.5 py-2.5 text-sm text-foreground rounded-xl"
+          placeholder="Prompt 名称" />
+      </div>
+    </div>
+  );
+  const ContentSection = (
+    <div className="space-y-4">
+      <div>
+        <div className="flex items-center justify-between mb-2">
+          <p className="text-xs text-muted-foreground/60 font-medium">内容</p>
+          <Popover open={showVarPanel} onOpenChange={setShowVarPanel}>
+            <PopoverTrigger asChild>
+              <Button variant="ghost" size="xs"
+                className="flex items-center gap-1 px-2 text-accent-violet/70 hover:text-accent-violet hover:bg-accent-violet/[0.06]">
+                <Variable size={10} /><span>使用变量</span>
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent align="end" sideOffset={4} className="w-[280px] p-0 overflow-hidden">
+              <VarPickerPopover systemVars={SYSTEM_VARIABLES} onInsert={handleInsertVar} />
+            </PopoverContent>
+          </Popover>
+        </div>
+        <PromptRichEditor
+          value={content}
+          onChange={setContent}
+          onSlashCommand={() => setShowVarPanel(true)}
+          placeholder="输入 Prompt 内容，使用 / 快速插入变量..."
+        />
+        <p className="text-xs text-muted-foreground/40 mt-1.5">输入 / 或点击「使用变量」插入变量</p>
+      </div>
+      {vars.length > 0 && (
+        <div>
+          <p className="text-xs text-muted-foreground/60 mb-2 font-medium">已引用变量</p>
+          <div className="flex flex-wrap gap-1.5">
+            {vars.map(v => (
+              <span key={v} className="text-xs text-accent-violet/70 bg-accent-violet/[0.08] px-2.5 py-[3px] rounded-md font-mono font-medium">
+                {'${' + v + '}'}
+              </span>
+            ))}
           </div>
-          <Button variant="default" size="xs" onClick={handleSave} disabled={!name.trim() || !hasChanges}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs">
-            <Save size={11} />
-            <span>保存</span>
-          </Button>
         </div>
       )}
+    </div>
+  );
 
-      {/* Content */}
+  if (inModal) {
+    return (
+      <div className="flex-1 flex min-h-0">
+        <aside className="w-[160px] flex-shrink-0 border-r border-border/15 p-3 space-y-0.5">
+          {([
+            { id: 'basic', label: '基础信息' },
+            { id: 'content', label: '内容' },
+          ] as const).map(s => {
+            const active = activeSection === s.id;
+            return (
+              <button
+                key={s.id}
+                type="button"
+                onClick={() => setActiveSection(s.id)}
+                className={`w-full flex items-center px-2.5 py-2 rounded-lg text-sm text-left transition-colors ${
+                  active
+                    ? 'bg-accent/50 text-foreground'
+                    : 'text-muted-foreground/75 hover:text-foreground hover:bg-muted/40'
+                }`}
+              >
+                {s.label}
+              </button>
+            );
+          })}
+          <div className="pt-3 mt-3 border-t border-border/15">
+            <Button
+              variant="default"
+              size="xs"
+              onClick={handleSave}
+              disabled={!name.trim() || !hasChanges}
+              className="w-full h-8 gap-1.5 text-xs"
+            >
+              <Save size={11} /><span>保存</span>
+            </Button>
+          </div>
+        </aside>
+        <div className="flex-1 min-w-0 overflow-y-auto scrollbar-thin px-6 py-5">
+          {activeSection === 'basic' ? BasicSection : ContentSection}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex-1 flex flex-col min-h-0 bg-background">
+      <div className="flex items-center justify-between px-6 pt-5 pb-4 flex-shrink-0 border-b border-border/20">
+        <div className="flex items-center gap-3">
+          <button onClick={onBack} className="text-muted-foreground/50 hover:text-foreground transition-colors">
+            <ChevronLeft size={18} />
+          </button>
+          <Typography variant="subtitle">编辑 Prompt</Typography>
+        </div>
+        <Button variant="default" size="xs" onClick={handleSave} disabled={!name.trim() || !hasChanges}
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs">
+          <Save size={11} />
+          <span>保存</span>
+        </Button>
+      </div>
       <div className="flex-1 overflow-y-auto scrollbar-thin">
         <div className="max-w-[640px] mx-auto px-6 py-6 space-y-5">
-          {/* Name */}
-          <div>
-            <p className="text-xs text-muted-foreground/60 mb-2 font-medium">名称</p>
-            <Input value={name} onChange={e => setName(e.target.value)}
-              className="w-full bg-muted/30 border border-border/40 px-3.5 py-2.5 text-sm text-foreground rounded-xl"
-              placeholder="Prompt 名称" />
-          </div>
-
-          {/* Content — rich editor with variable tags */}
-          <div>
-            <div className="flex items-center justify-between mb-2">
-              <p className="text-xs text-muted-foreground/60 font-medium">内容</p>
-              <Popover open={showVarPanel} onOpenChange={setShowVarPanel}>
-                <PopoverTrigger asChild>
-                  <Button variant="ghost" size="xs"
-                    className="flex items-center gap-1 px-2 text-accent-violet/70 hover:text-accent-violet hover:bg-accent-violet/[0.06]">
-                    <Variable size={10} /><span>使用变量</span>
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent align="end" sideOffset={4} className="w-[280px] p-0 overflow-hidden">
-                  <VarPickerPopover
-                    systemVars={SYSTEM_VARIABLES}
-                    onInsert={handleInsertVar}
-                  />
-                </PopoverContent>
-              </Popover>
-            </div>
-            <PromptRichEditor
-              value={content}
-              onChange={setContent}
-              onSlashCommand={() => setShowVarPanel(true)}
-              placeholder="输入 Prompt 内容，使用 / 快速插入变量..."
-            />
-            <p className="text-xs text-muted-foreground/40 mt-1.5">输入 / 或点击「使用变量」插入变量</p>
-          </div>
-
-          {/* Referenced variables */}
-          {vars.length > 0 && (
-            <div>
-              <p className="text-xs text-muted-foreground/60 mb-2 font-medium">已引用变量</p>
-              <div className="flex flex-wrap gap-1.5">
-                {vars.map(v => (
-                  <span key={v} className="text-xs text-accent-violet/70 bg-accent-violet/[0.08] px-2.5 py-[3px] rounded-md font-mono font-medium">
-                    {'${' + v + '}'}
-                  </span>
-                ))}
-              </div>
-            </div>
-          )}
+          {BasicSection}
+          {ContentSection}
         </div>
       </div>
     </div>
@@ -878,7 +922,7 @@ export function LibraryPage() {
           // `grid gap-4`) all need explicit `!` overrides to lose;
           // the flex column + min-w-0 lets the embedded editors
           // flow naturally inside.
-          className="!max-w-[920px] sm:!max-w-[920px] !w-[80vw] !h-[76vh] !rounded-2xl !p-0 !gap-0 !grid-cols-1 overflow-hidden border border-border/20 shadow-xl flex flex-col"
+          className="!max-w-[820px] sm:!max-w-[820px] !w-[76vw] !h-[600px] !max-h-[78vh] !rounded-2xl !p-0 !gap-0 !grid-cols-1 overflow-hidden border border-border/20 shadow-xl flex flex-col"
         >
           {configView.type !== 'list' && (() => {
             const r = configView.resource;

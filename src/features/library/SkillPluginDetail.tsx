@@ -37,6 +37,7 @@ export function SkillPluginDetail({ resource, onBack, onToggle, onDelete, inModa
   const [newTag, setNewTag] = useState('');
   const [saved, setSaved] = useState(false);
   const [editingDesc, setEditingDesc] = useState(false);
+  const [activeSection, setActiveSection] = useState<'basic' | 'source' | 'meta' | 'danger'>('basic');
 
   const cfg = RESOURCE_TYPE_CONFIG[resource.type];
   const Icon = cfg.icon;
@@ -90,7 +91,152 @@ export function SkillPluginDetail({ resource, onBack, onToggle, onDelete, inModa
         </div>
       )}
 
-      {/* Main */}
+      {inModal ? (
+        <div className="flex-1 flex min-h-0">
+          <aside className="w-[160px] flex-shrink-0 border-r border-border/15 p-3 space-y-0.5">
+            {([
+              { id: 'basic',  label: '基础信息' },
+              { id: 'source', label: '源文件' },
+              { id: 'meta',   label: '元数据' },
+              { id: 'danger', label: '删除' },
+            ] as const).map(s => {
+              const active = activeSection === s.id;
+              return (
+                <button
+                  key={s.id}
+                  type="button"
+                  onClick={() => setActiveSection(s.id)}
+                  className={`w-full flex items-center px-2.5 py-2 rounded-lg text-sm text-left transition-colors ${
+                    active
+                      ? 'bg-accent/50 text-foreground'
+                      : s.id === 'danger'
+                        ? 'text-destructive/75 hover:text-destructive hover:bg-destructive/10'
+                        : 'text-muted-foreground/75 hover:text-foreground hover:bg-muted/40'
+                  }`}
+                >
+                  {s.label}
+                </button>
+              );
+            })}
+            <div className="pt-3 mt-3 border-t border-border/15 flex items-center justify-between px-2.5 text-xs">
+              <span className="text-muted-foreground/60">启用</span>
+              <Switch size="sm" checked={resource.enabled} onCheckedChange={() => onToggle(resource.id)} />
+            </div>
+          </aside>
+          <div className="flex-1 min-w-0 overflow-y-auto scrollbar-thin px-6 py-5 space-y-6">
+            {activeSection === 'basic' && (
+              <>
+                <div>
+                  <label className="text-xs text-muted-foreground/60 mb-1.5 block font-medium">描述</label>
+                  {editingDesc ? (
+                    <Textarea value={description} onChange={e => setDescription(e.target.value)} onBlur={() => setEditingDesc(false)} autoFocus rows={3}
+                      className="input-accent resize-none" />
+                  ) : (
+                    <p onClick={() => setEditingDesc(true)} className="text-xs text-muted-foreground/70 leading-relaxed px-3 py-2 rounded-xl border border-transparent hover:border-border/15 hover:bg-accent/15 cursor-text transition-all">
+                      {description || '点击添加描述...'}
+                    </p>
+                  )}
+                </div>
+                <div>
+                  <label className="text-xs text-muted-foreground/60 mb-1.5 block font-medium flex items-center gap-1"><Tag size={9} /> 标签</label>
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    {tags.map(tag => (
+                      <span key={tag} className="flex items-center gap-1 text-xs px-2 py-0.5 rounded-full border border-border/15 text-muted-foreground/70 group">
+                        <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${(TAG_COLORS[tag] || DEFAULT_TAG_COLOR).dot}`} />
+                        {tag}
+                        <Button variant="ghost" onClick={() => removeTag(tag)} size="inline" className="text-muted-foreground/50 hover:text-destructive transition-colors ml-0.5 w-auto p-0">&times;</Button>
+                      </span>
+                    ))}
+                    <Input value={newTag} onChange={e => setNewTag(e.target.value)} onKeyDown={e => e.key === 'Enter' && addTag()}
+                      placeholder="添加标签..."
+                      className="w-[110px] text-xs px-2 py-0.5 h-auto rounded-full border border-border/15 bg-transparent" />
+                  </div>
+                </div>
+              </>
+            )}
+            {activeSection === 'source' && (
+              <>
+                <div>
+                  <label className="text-xs text-muted-foreground/60 mb-1.5 block font-medium">源文件</label>
+                  <div className="flex items-center gap-3 px-4 py-3.5 rounded-xl border border-border/15 bg-accent/5">
+                    <div className="w-10 h-10 rounded-xl bg-accent/50 flex items-center justify-center flex-shrink-0">
+                      <FileIcon size={18} strokeWidth={1.3} className="text-muted-foreground/50" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs text-foreground truncate font-mono">{resource.fileName || '未知文件'}</p>
+                      <div className="flex items-center gap-3 mt-0.5 text-xs text-muted-foreground/45">
+                        {resource.fileSize && <span>{resource.fileSize}</span>}
+                        {resource.fileType && <span className="px-1.5 py-px rounded-full bg-accent/50 text-muted-foreground/55 uppercase">{resource.fileType}</span>}
+                      </div>
+                    </div>
+                    {resource.homepage && (
+                      <a href={resource.homepage} target="_blank" rel="noopener noreferrer"
+                        className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs text-muted-foreground/55 hover:text-foreground hover:bg-accent/50 border border-border/15 transition-colors flex-shrink-0">
+                        <ExternalLink size={9} /> 主页
+                      </a>
+                    )}
+                  </div>
+                </div>
+                <div>
+                  <label className="text-xs text-muted-foreground/60 mb-1.5 block font-medium">
+                    {resource.fileType === 'zip' ? '包内容' : '文件预览'}
+                  </label>
+                  <div className="rounded-xl border border-border/15 bg-foreground/[0.03] dark:bg-foreground/[0.06] overflow-hidden">
+                    <div className="flex items-center gap-2 px-3 py-2 border-b border-border/15 bg-accent/5">
+                      <FileIcon size={10} className="text-muted-foreground/40" />
+                      <span className="text-xs text-muted-foreground/55 font-mono">{resource.fileName || 'preview'}</span>
+                    </div>
+                    <pre className="p-4 text-xs text-muted-foreground/65 leading-relaxed overflow-x-auto font-mono scrollbar-thin">
+                      {mockContentPreview}
+                    </pre>
+                  </div>
+                </div>
+              </>
+            )}
+            {activeSection === 'meta' && (
+              <div className="grid grid-cols-1 gap-4">
+                <div>
+                  <label className="text-xs text-muted-foreground/55 mb-1 block">创建时间</label>
+                  <div className="flex items-center gap-1.5 text-xs text-muted-foreground/70">
+                    <Clock size={9} />
+                    <span>{new Date(resource.createdAt).toLocaleDateString('zh-CN')}</span>
+                    <span className="text-muted-foreground/45">({timeAgo(resource.createdAt)})</span>
+                  </div>
+                </div>
+                <div>
+                  <label className="text-xs text-muted-foreground/55 mb-1 block">最近更新</label>
+                  <div className="flex items-center gap-1.5 text-xs text-muted-foreground/70">
+                    <Clock size={9} />
+                    <span>{new Date(resource.updatedAt).toLocaleDateString('zh-CN')}</span>
+                    <span className="text-muted-foreground/45">({timeAgo(resource.updatedAt)})</span>
+                  </div>
+                </div>
+                {resource.version && (
+                  <div>
+                    <label className="text-xs text-muted-foreground/55 mb-1 block">版本</label>
+                    <div className="text-xs text-muted-foreground/70">v{resource.version}{resource.hasUpdate && <span className="ml-2 text-accent-orange">有新版本</span>}</div>
+                  </div>
+                )}
+                {resource.author && (
+                  <div>
+                    <label className="text-xs text-muted-foreground/55 mb-1 block">作者</label>
+                    <div className="text-xs text-muted-foreground/70 flex items-center gap-1"><User size={9} />{resource.author}</div>
+                  </div>
+                )}
+              </div>
+            )}
+            {activeSection === 'danger' && (
+              <div className="rounded-xl border border-destructive/20 p-4">
+                <p className="text-sm text-foreground mb-1">删除{cfg.label}</p>
+                <p className="text-xs text-muted-foreground/55 mb-4">移除此{cfg.label}及其所有配置，此操作不可恢复。</p>
+                <Button variant="destructive" size="sm" onClick={() => onDelete(resource)}>
+                  <Trash2 size={11} /> 删除{cfg.label}
+                </Button>
+              </div>
+            )}
+          </div>
+        </div>
+      ) : (
       <div className="flex-1 overflow-y-auto scrollbar-thin">
         <div className="max-w-2xl mx-auto px-8 py-8 space-y-8">
 
@@ -234,6 +380,7 @@ export function SkillPluginDetail({ resource, onBack, onToggle, onDelete, inModa
           </div>
         </div>
       </div>
+      )}
     </div>
   );
 }
