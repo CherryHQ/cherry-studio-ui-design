@@ -40,7 +40,7 @@ export function SkillPluginDetail({ resource, onBack, onToggle, onDelete, inModa
   const [newTag, setNewTag] = useState('');
   const [saved, setSaved] = useState(false);
   const [editingDesc, setEditingDesc] = useState(false);
-  const [activeSection, setActiveSection] = useState<'basic' | 'source' | 'meta' | 'danger'>('basic');
+  const [activeSection, setActiveSection] = useState<'basic' | 'source' | 'meta'>('basic');
 
   const cfg = RESOURCE_TYPE_CONFIG[resource.type];
   const Icon = cfg.icon;
@@ -101,7 +101,6 @@ export function SkillPluginDetail({ resource, onBack, onToggle, onDelete, inModa
               { id: 'basic',  label: '基础信息' },
               { id: 'source', label: '源文件' },
               { id: 'meta',   label: '元数据' },
-              { id: 'danger', label: '删除' },
             ] as const).map(s => {
               const active = activeSection === s.id;
               return (
@@ -112,19 +111,13 @@ export function SkillPluginDetail({ resource, onBack, onToggle, onDelete, inModa
                   className={`w-full flex items-center px-2.5 py-2 rounded-lg text-sm text-left transition-colors ${
                     active
                       ? 'bg-accent/50 text-foreground'
-                      : s.id === 'danger'
-                        ? 'text-destructive/75 hover:text-destructive hover:bg-destructive/10'
-                        : 'text-muted-foreground/75 hover:text-foreground hover:bg-muted/40'
+                      : 'text-muted-foreground/75 hover:text-foreground hover:bg-muted/40'
                   }`}
                 >
                   {s.label}
                 </button>
               );
             })}
-            <div className="pt-3 mt-3 border-t border-border/15 flex items-center justify-between px-2.5 text-xs">
-              <span className="text-muted-foreground/60">启用</span>
-              <Switch size="sm" checked={resource.enabled} onCheckedChange={() => onToggle(resource.id)} />
-            </div>
           </aside>
           <div className="flex-1 min-w-0 overflow-y-auto scrollbar-thin px-5 py-4 space-y-6">
             {activeSection === 'basic' && (
@@ -226,15 +219,6 @@ export function SkillPluginDetail({ resource, onBack, onToggle, onDelete, inModa
                     <div className="text-xs text-muted-foreground/70 flex items-center gap-1"><User size={9} />{resource.author}</div>
                   </div>
                 )}
-              </div>
-            )}
-            {activeSection === 'danger' && (
-              <div className="rounded-xl border border-destructive/20 p-4">
-                <p className="text-sm text-foreground mb-1">删除{cfg.label}</p>
-                <p className="text-xs text-muted-foreground/55 mb-4">移除此{cfg.label}及其所有配置，此操作不可恢复。</p>
-                <Button variant="destructive" size="sm" onClick={() => onDelete(resource)}>
-                  <Trash2 size={11} /> 删除{cfg.label}
-                </Button>
               </div>
             )}
           </div>

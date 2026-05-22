@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, ArrowRight, ChevronLeft, Plus, Check, Download, Variable, Save } from 'lucide-react';
+import { X, ArrowRight, ChevronLeft, Plus, Check, Download, Variable, Save, Trash2 } from 'lucide-react';
 // Primitives now sourced from the v2 component library
 // (`packages/cherry-v2-ui/src/components/primitives/*`). Deep-imported
 // so the package's barrel index — which drags in deps we don't
@@ -15,6 +15,7 @@ import { Input } from '@cherrystudio/ui/components/primitives/input';
 import {
   Popover, PopoverTrigger, PopoverContent,
 } from '@cherrystudio/ui/components/primitives/popover';
+import { Switch } from '@cherrystudio/ui/components/primitives/switch';
 import { SearchInput, Typography, SYSTEM_VARIABLES, type VariableDef } from '@cherry-studio/ui';
 import { skills as discoverSkills, assistants as discoverAssistants } from '@/features/explore/ExploreData';
 import { useGlobalActions } from '@/app/context/GlobalActionContext';
@@ -949,6 +950,26 @@ export function LibraryPage() {
                     </span>
                   </div>
                 </div>
+                {configView.type === 'skill-plugin-detail' && (
+                  <>
+                    <Switch
+                      size="sm"
+                      checked={r.enabled}
+                      onCheckedChange={() => handleToggle(r.id)}
+                      aria-label={r.enabled ? '已启用' : '已禁用'}
+                      className="flex-shrink-0"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => handleDelete(r)}
+                      aria-label="删除"
+                      title={`删除${cfg.label}`}
+                      className="h-8 w-8 inline-flex items-center justify-center rounded-md text-muted-foreground/55 hover:text-destructive hover:bg-destructive/10 transition-colors flex-shrink-0"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </>
+                )}
                 <button
                   type="button"
                   onClick={handleConfigBack}
