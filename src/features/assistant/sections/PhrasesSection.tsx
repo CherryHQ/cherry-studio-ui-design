@@ -1,8 +1,9 @@
 import React, { useMemo, useState } from 'react';
 import { Plus, Trash2, FileText, Copy, Check, Eye } from 'lucide-react';
-import { Button } from '@cherrystudio/ui/components/primitives/button';
-import { Popover, PopoverTrigger, PopoverContent } from '@cherrystudio/ui/components/primitives/popover';
-import { SearchInput, Typography } from '@cherry-studio/ui';
+import {
+  Button, SearchInput, Typography,
+  Popover, PopoverTrigger, PopoverContent,
+} from '@cherry-studio/ui';
 import { MOCK_RESOURCES } from '@/app/config/constants';
 import type { ResourceItem } from '@/app/types';
 

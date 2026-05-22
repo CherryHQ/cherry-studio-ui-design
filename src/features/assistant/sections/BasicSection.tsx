@@ -2,17 +2,11 @@ import React, { useState, useRef } from 'react';
 import { X, Check, ChevronDown, Upload, Link2, Plus, Trash2, RotateCcw, Info } from 'lucide-react';
 import type { ResourceItem } from '@/app/types';
 import { AVATAR_OPTIONS } from '@/app/config/constants';
-import { Button } from '@cherrystudio/ui/components/primitives/button';
-import { Input } from '@cherrystudio/ui/components/primitives/input';
-import { Slider } from '@cherrystudio/ui/components/primitives/slider';
-import { Switch } from '@cherrystudio/ui/components/primitives/switch';
-import { Input as Textarea } from '@cherrystudio/ui/components/primitives/textarea';
-import { Badge } from '@cherrystudio/ui/components/primitives/badge';
-import { Popover, PopoverTrigger, PopoverContent } from '@cherrystudio/ui/components/primitives/popover';
 import {
+  Button, Input, Slider, Switch, Textarea, Typography, Badge, Popover, PopoverTrigger, PopoverContent,
   Select, SelectTrigger, SelectValue, SelectContent, SelectItem,
-} from '@cherrystudio/ui/components/primitives/select';
-import { Typography, SimpleTooltip } from '@cherry-studio/ui';
+  SimpleTooltip,
+} from '@cherry-studio/ui';
 import { ModelPickerPanel } from '@/app/components/shared/ModelPickerPanel';
 import { ASSISTANT_MODELS } from '@/app/config/models';
 
