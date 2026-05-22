@@ -18,14 +18,13 @@ import { Slider } from '@cherrystudio/ui/components/primitives/slider';
 // Input + Textarea kept on legacy — v2's are too faint on the modal card.
 import { Popover, PopoverTrigger, PopoverContent } from '@cherrystudio/ui/components/primitives/popover';
 import { Combobox } from '@cherrystudio/ui/components/primitives/combobox';
-import { Switch } from '@cherrystudio/ui/components/primitives/switch';
 import { Checkbox } from '@cherrystudio/ui/components/primitives/checkbox';
 import { Badge } from '@cherrystudio/ui/components/primitives/badge';
 import {
   Select, SelectTrigger, SelectValue, SelectContent, SelectItem,
 } from '@cherrystudio/ui/components/primitives/select';
-// V2 doesn't ship SearchInput / Typography / EmptyState / SimpleTooltip
-import { Input, Textarea, EmptyState, SearchInput, Typography, SimpleTooltip } from '@cherry-studio/ui';
+// V2 doesn't ship SearchInput / Typography / EmptyState / SimpleTooltip / Switch
+import { Input, Textarea, EmptyState, SearchInput, Typography, SimpleTooltip, Switch } from '@cherry-studio/ui';
 import { motion, AnimatePresence } from 'motion/react';
 import type { ResourceItem, MCPServerStatus } from '@/app/types';
 import { PromptSection } from '@/features/assistant/sections/PromptSection';

@@ -5,9 +5,8 @@ import { AVATAR_OPTIONS } from '@/app/config/constants';
 import { Button } from '@cherrystudio/ui/components/primitives/button';
 // Input + Textarea — back on legacy @cherry-studio/ui. V2's are
 // `border-input` 1-px on transparent, almost invisible on the card.
-import { Input, Textarea } from '@cherry-studio/ui';
+import { Input, Textarea, Switch } from '@cherry-studio/ui';
 import { Slider } from '@cherrystudio/ui/components/primitives/slider';
-import { Switch } from '@cherrystudio/ui/components/primitives/switch';
 import { Badge } from '@cherrystudio/ui/components/primitives/badge';
 import { Popover, PopoverTrigger, PopoverContent } from '@cherrystudio/ui/components/primitives/popover';
 import { Combobox } from '@cherrystudio/ui/components/primitives/combobox';

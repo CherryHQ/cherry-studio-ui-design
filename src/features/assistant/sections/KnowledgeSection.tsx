@@ -1,9 +1,8 @@
 import React, { useState } from 'react';
 import { Plus, Trash2, Database, Info } from 'lucide-react';
 import { Button } from '@cherrystudio/ui/components/primitives/button';
-import { Switch } from '@cherrystudio/ui/components/primitives/switch';
 import { Popover, PopoverTrigger, PopoverContent } from '@cherrystudio/ui/components/primitives/popover';
-import { SearchInput, Typography, SimpleTooltip } from '@cherry-studio/ui';
+import { SearchInput, Typography, SimpleTooltip, Switch } from '@cherry-studio/ui';
 import { MOCK_KNOWLEDGE_BASES } from '@/app/config/constants';
 
 // ===========================

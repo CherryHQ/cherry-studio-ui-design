@@ -1,7 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { Info, Plug } from 'lucide-react';
-import { Switch } from '@cherrystudio/ui/components/primitives/switch';
-import { Typography, SimpleTooltip } from '@cherry-studio/ui';
+import { Typography, SimpleTooltip, Switch } from '@cherry-studio/ui';
 
 // ===========================
 // Assistant MCP Settings
