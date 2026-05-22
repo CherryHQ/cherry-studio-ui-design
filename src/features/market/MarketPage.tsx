@@ -180,7 +180,7 @@ const CATALOG: MarketItem[] = [
 // pill tabs, no plugin/skill grouping. Reorder to put the most common
 // kinds first.
 const SIDEBAR_KINDS: (ResourceKind | 'all')[] = [
-  'all', 'skill', 'mcp', 'cli', 'agent', 'assistant', 'prompt', 'kb', 'integration',
+  'all', 'skill', 'mcp', 'agent', 'assistant', 'prompt', 'kb', 'integration',
 ];
 
 // ─── Page component ───────────────────────────────────────────────────
