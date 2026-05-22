@@ -4,16 +4,23 @@ import { Button } from "../button"
 import { Badge } from "../badge"
 import { cn } from "../../../lib/utils"
 import { generateSingleAnnotationPrompt, computeStyleDiff, copyJSON } from "./utils"
-import type { Annotation, AnnotationCategory } from "./types"
+import type { Annotation, AnnotationCategory, AnnotationMessages } from "./types"
+import { useAnnotationContext } from "./annotation-provider"
 
-const CATEGORIES: { value: AnnotationCategory; label: string }[] = [
-  { value: "style", label: "Style" },
-  { value: "layout", label: "Layout" },
-  { value: "interaction", label: "Interaction" },
-  { value: "content", label: "Content" },
-  { value: "bug", label: "Bug" },
-  { value: "other", label: "Other" },
+const CATEGORY_VALUES: AnnotationCategory[] = [
+  "style", "layout", "interaction", "content", "bug", "other",
 ]
+
+function categoryLabel(value: AnnotationCategory, m: AnnotationMessages): string {
+  switch (value) {
+    case "style": return m.categoryStyle
+    case "layout": return m.categoryLayout
+    case "interaction": return m.categoryInteraction
+    case "content": return m.categoryContent
+    case "bug": return m.categoryBug
+    case "other": return m.categoryOther
+  }
+}
 
 const PRESETS: Record<AnnotationCategory, { label: string; prompt: string }[]> = {
   style: [
@@ -74,6 +81,8 @@ interface AnnotationBubbleProps {
   onClose: () => void
   elementLabel?: string
   breadcrumb?: string
+  /** Custom action buttons (rendered before built-in Edit/Resolve/Delete) */
+  customActions?: import("./types").BubbleAction[]
 }
 
 export function AnnotationBubble({
@@ -86,7 +95,9 @@ export function AnnotationBubble({
   onClose,
   elementLabel,
   breadcrumb,
+  customActions,
 }: AnnotationBubbleProps) {
+  const { messages } = useAnnotationContext()
   const isCreate = !annotation
   const [comment, setComment] = useState(annotation?.comment || "")
   const [category, setCategory] = useState<AnnotationCategory>(annotation?.category || "style")
@@ -95,6 +106,38 @@ export function AnnotationBubble({
   const [showPresets, setShowPresets] = useState(isCreate)
   const [copiedPrompt, setCopiedPrompt] = useState(false)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
+
+  // ─── Drag-to-reposition ──────────────────────────────────────────────
+  // Header acts as the drag handle. Once the user has dragged, posStyle
+  // (the parent-controlled position) is ignored in favor of dragOffset
+  // until the bubble is unmounted.
+  const [dragOffset, setDragOffset] = useState<{ top: number; left: number } | null>(null)
+  const dragRef = useRef<{ startX: number; startY: number; baseTop: number; baseLeft: number } | null>(null)
+  const handleHeaderPointerDown = (e: React.PointerEvent) => {
+    // Don't drag when clicking the close button (or any nested button)
+    if ((e.target as HTMLElement).closest("button")) return
+    const el = e.currentTarget.closest("[data-bubble-root]") as HTMLElement | null
+    if (!el) return
+    const rect = el.getBoundingClientRect()
+    dragRef.current = {
+      startX: e.clientX,
+      startY: e.clientY,
+      baseTop: rect.top,
+      baseLeft: rect.left,
+    }
+    el.setPointerCapture?.(e.pointerId)
+    e.preventDefault()
+  }
+  const handleHeaderPointerMove = (e: React.PointerEvent) => {
+    if (!dragRef.current) return
+    const { startX, startY, baseTop, baseLeft } = dragRef.current
+    const nextLeft = Math.max(0, Math.min(window.innerWidth - 320, baseLeft + (e.clientX - startX)))
+    const nextTop = Math.max(0, Math.min(window.innerHeight - 80, baseTop + (e.clientY - startY)))
+    setDragOffset({ top: nextTop, left: nextLeft })
+  }
+  const handleHeaderPointerUp = () => {
+    dragRef.current = null
+  }
 
   // Style diff: compare saved vs current computed styles
   const styleDiff = useMemo(() => {
@@ -204,22 +247,33 @@ export function AnnotationBubble({
     requestAnimationFrame(() => textareaRef.current?.focus())
   }
 
-  const catMeta = CATEGORIES.find((c) => c.value === (annotation?.category || category))
+  const activeCategory = annotation?.category || category
   const presets = PRESETS[category] || []
 
   return (
     <div
       data-annotation-ui
+      data-bubble-root
       className="fixed w-80 rounded-[var(--radius-card)] border border-border bg-popover text-popover-foreground shadow-popover animate-in fade-in-0 zoom-in-95 pointer-events-auto"
-      style={{ ...posStyle, zIndex: 99999 }}
+      style={{ ...posStyle, ...(dragOffset || {}), zIndex: 99999 }}
       onClick={(e) => e.stopPropagation()}
       onMouseDown={(e) => e.stopPropagation()}
       onPointerDown={(e) => e.stopPropagation()}
     >
-      {/* Header */}
-      <div className="flex items-center justify-between px-3 py-2 border-b border-border">
+      {/* Header — also serves as drag handle */}
+      <div
+        className="flex items-center justify-between px-3 py-2 border-b border-border cursor-grab active:cursor-grabbing select-none"
+        onPointerDown={handleHeaderPointerDown}
+        onPointerMove={handleHeaderPointerMove}
+        onPointerUp={handleHeaderPointerUp}
+        onPointerCancel={handleHeaderPointerUp}
+      >
         <Badge variant="outline" className="text-[length:var(--fs-xs)] px-1.5 py-0">
-          {isCreate ? "Add Annotation" : annotation.resolved ? "Resolved" : catMeta?.label || "Annotation"}
+          {isCreate
+            ? messages.addAnnotation
+            : annotation.resolved
+              ? messages.resolved
+              : categoryLabel(activeCategory, messages) || messages.annotation}
         </Badge>
         <Button variant="ghost" size="icon-xs" onClick={onClose}>
           <X className="size-3.5" />
@@ -239,10 +293,10 @@ export function AnnotationBubble({
         {editing ? (
           <>
             <div className="flex flex-wrap gap-1 mb-2">
-              {CATEGORIES.map((cat) => (
-                <Button key={cat.value} variant={category === cat.value ? "default" : "outline"} size="inline"
-                  onClick={() => { setCategory(cat.value); if (isCreate && !comment) setShowPresets(true) }}>
-                  {cat.label}
+              {CATEGORY_VALUES.map((cat) => (
+                <Button key={cat} variant={category === cat ? "default" : "outline"} size="inline"
+                  onClick={() => { setCategory(cat); if (isCreate && !comment) setShowPresets(true) }}>
+                  {categoryLabel(cat, messages)}
                 </Button>
               ))}
             </div>
@@ -251,7 +305,7 @@ export function AnnotationBubble({
               <div className="mb-2 grid grid-cols-2 gap-1">
                 {presets.map((p) => (
                   <Button key={p.label} variant="outline" size="inline" className="justify-start truncate"
-                    onClick={() => handlePresetClick(p.prompt)} title={p.prompt || "自定义输入"}>
+                    onClick={() => handlePresetClick(p.prompt)} title={p.prompt || messages.customInputTitle}>
                     <Zap className="size-2.5" />{p.label}
                   </Button>
                 ))}
@@ -260,7 +314,7 @@ export function AnnotationBubble({
 
             {!showPresets && isCreate && (
               <Button variant="ghost" size="inline" className="mb-2 text-muted-foreground" onClick={() => setShowPresets(true)}>
-                <Zap className="size-2.5" />Show preset templates
+                <Zap className="size-2.5" />{messages.showPresets}
               </Button>
             )}
 
@@ -268,14 +322,14 @@ export function AnnotationBubble({
               onChange={(e) => setComment(e.target.value)}
               onKeyDown={handleKeyDown}
               onPointerDown={handleTextareaPointerDown}
-              placeholder="Describe the issue or change needed…"
+              placeholder={messages.describePlaceholder}
               className="w-full min-h-20 resize-none rounded-[var(--radius-button)] border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
             />
             <div className="flex items-center justify-between mt-2">
-              <span className="text-[length:var(--fs-xs)] text-muted-foreground">⌘+Enter to save</span>
+              <span className="text-[length:var(--fs-xs)] text-muted-foreground">{messages.saveHint}</span>
               <div className="flex gap-1.5">
-                <Button variant="outline" size="xs" onClick={onClose}>Cancel</Button>
-                <Button size="xs" onClick={handleSubmit} disabled={!comment.trim()}>Save</Button>
+                <Button variant="outline" size="xs" onClick={onClose}>{messages.cancel}</Button>
+                <Button size="xs" onClick={handleSubmit} disabled={!comment.trim()}>{messages.save}</Button>
               </div>
             </div>
           </>
@@ -285,18 +339,21 @@ export function AnnotationBubble({
             {annotation && (
               <div className="flex items-center justify-between mt-3 pt-2 border-t border-border">
                 <span className="text-[length:var(--fs-xs)] text-muted-foreground">{new Date(annotation.timestamp).toLocaleString()}</span>
-                <div className="flex gap-1">
-                  <Button variant="ghost" size="icon-xs" title="Copy as AI Prompt" onClick={async () => {
+                <div className="flex gap-1 items-center">
+                  {customActions?.map(({ id, component: Action }) => (
+                    <Action key={id} annotation={annotation} onClose={onClose} />
+                  ))}
+                  <Button variant="ghost" size="icon-xs" title={messages.copyAsPrompt} onClick={async () => {
                     const ok = await copyJSON(generateSingleAnnotationPrompt(annotation))
                     if (ok) { setCopiedPrompt(true); setTimeout(() => setCopiedPrompt(false), 1500) }
                   }}>
                     {copiedPrompt ? <Check className="size-3 text-success" /> : <Clipboard className="size-3" />}
                   </Button>
-                  <Button variant="ghost" size="icon-xs" onClick={() => setEditing(true)} title="Edit"><Pencil className="size-3" /></Button>
-                  <Button variant="ghost" size="icon-xs" onClick={() => onResolve?.(annotation.id)} title={annotation.resolved ? "Unresolve" : "Resolve"} className={annotation.resolved ? "text-success" : ""}>
+                  <Button variant="ghost" size="icon-xs" onClick={() => setEditing(true)} title={messages.edit}><Pencil className="size-3" /></Button>
+                  <Button variant="ghost" size="icon-xs" onClick={() => onResolve?.(annotation.id)} title={annotation.resolved ? messages.unresolve : messages.resolve} className={annotation.resolved ? "text-success" : ""}>
                     {annotation.resolved ? <CheckCircle2 className="size-3" /> : <Check className="size-3" />}
                   </Button>
-                  <Button variant="ghost" size="icon-xs" onClick={() => onDelete?.(annotation.id)} title="Delete"><Trash2 className="size-3 text-destructive" /></Button>
+                  <Button variant="ghost" size="icon-xs" onClick={() => onDelete?.(annotation.id)} title={messages.delete}><Trash2 className="size-3 text-destructive" /></Button>
                 </div>
               </div>
             )}
@@ -313,7 +370,7 @@ export function AnnotationBubble({
           {annotation.computedStyles && (
             <div>
               <button onClick={() => setShowStyles(!showStyles)} className="text-[length:var(--fs-xs)] text-muted-foreground hover:text-foreground underline">
-                {showStyles ? "Hide styles" : "Show style diff"}
+                {showStyles ? messages.hideStyles : messages.showStyleDiff}
               </button>
               {showStyles && styleDiff && (
                 <div className="mt-1 p-1.5 bg-muted rounded-[var(--radius-dot)] text-[length:var(--fs-xs)] font-mono space-y-0.5 max-h-40 overflow-y-auto">
@@ -333,7 +390,7 @@ export function AnnotationBubble({
                   ))}
                   {styleDiff.some((d) => d.changed) && (
                     <div className="mt-1 pt-1 border-t border-border/50 text-muted-foreground">
-                      {styleDiff.filter((d) => d.changed).length} changed
+                      {messages.changedCount(styleDiff.filter((d) => d.changed).length)}
                     </div>
                   )}
                 </div>

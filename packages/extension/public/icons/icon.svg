@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+  <!-- Rounded black canvas -->
+  <rect width="128" height="128" rx="28" fill="#000"/>
+
+  <!-- Classic mouse cursor — universal "pointer" symbol.
+       Sized to fill ~70% of the canvas so it remains a clear arrow even at 16px.
+       Geometry: triangle head + tilted tail, single closed path for crisp scaling.
+       Top vertex (35,35) → vertical left edge → notch (59,82) → tail tip (70,107)
+       → tail right (81,102) → up to triangle right base (70,76)
+       → right vertex (96,76) → close back to top via diagonal right edge. -->
+  <path
+    d="M 35 35 L 35 102 L 59 82 L 70 107 L 81 102 L 70 76 L 96 76 Z"
+    fill="#fff"
+    stroke="#fff"
+    stroke-width="2"
+    stroke-linejoin="round"
+  />
+</svg>

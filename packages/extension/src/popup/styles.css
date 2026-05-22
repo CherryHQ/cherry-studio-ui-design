@@ -1,0 +1,42 @@
+@import "tailwindcss";
+@import "@cherry-studio/ui/theme.css";
+@import "@cherry-studio/ui/globals.css";
+
+@source "../**/*.{ts,tsx}";
+@source "../../../ui/src/components/ui/**/*.{ts,tsx}";
+
+html,
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, sans-serif;
+}
+
+/* Popup mode (default): Chrome auto-sizes the window to the body, so we
+   constrain to a fixed popup-sized column. */
+html[data-mode="popup"],
+html[data-mode="popup"] body,
+html[data-mode="popup"] #root {
+  width: 360px;
+  min-height: 480px;
+  max-height: 600px;
+}
+
+/* Tab mode: when opened via chrome.tabs.create (e.g. the welcome page's
+   "Open Settings" link) the viewport is full-size. Center a card. */
+html[data-mode="tab"] body {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  padding: 32px 16px;
+  box-sizing: border-box;
+}
+
+html[data-mode="tab"] #root {
+  width: 100%;
+  max-width: 480px;
+  min-height: 0;
+  border: 1px solid hsl(var(--border));
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.04), 0 4px 12px rgb(0 0 0 / 0.04);
+}

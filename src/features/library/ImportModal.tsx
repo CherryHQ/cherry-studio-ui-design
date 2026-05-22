@@ -4,7 +4,11 @@ import {
   CheckCircle2, AlertCircle, File,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Button, Input, Textarea, Dialog, DialogContent, DialogTitle } from '@cherry-studio/ui';
+import { Button } from '@cherrystudio/ui/components/primitives/button';
+import { Input } from '@cherrystudio/ui/components/primitives/input';
+// V2's textarea module exports the component as `Input` (TextareaInput)
+import { Input as Textarea } from '@cherrystudio/ui/components/primitives/textarea';
+import { Dialog, DialogContent, DialogTitle } from '@cherrystudio/ui/components/primitives/dialog';
 
 interface Props {
   open: boolean;

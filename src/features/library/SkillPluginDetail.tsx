@@ -7,7 +7,10 @@ import {
 import { motion, AnimatePresence } from 'motion/react';
 import type { ResourceItem } from '@/app/types';
 import { RESOURCE_TYPE_CONFIG, TAG_COLORS, DEFAULT_TAG_COLOR } from '@/app/config/constants';
-import { Button, Input, Switch, Textarea } from '@cherry-studio/ui';
+import { Button } from '@cherrystudio/ui/components/primitives/button';
+import { Input } from '@cherrystudio/ui/components/primitives/input';
+import { Switch } from '@cherrystudio/ui/components/primitives/switch';
+import { Input as Textarea } from '@cherrystudio/ui/components/primitives/textarea';
 
 interface Props {
   resource: ResourceItem;

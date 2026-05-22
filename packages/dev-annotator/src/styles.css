@@ -1,0 +1,22 @@
+@import "tailwindcss";
+@import "./internal/globals.css";
+
+/* Vendored components are local — Tailwind picks them up automatically since
+   they live under our own src tree. */
+
+:host {
+  all: initial;
+  font-family: system-ui, -apple-system, sans-serif;
+  color: hsl(var(--foreground));
+  cursor: default;
+}
+
+:host * {
+  box-sizing: border-box;
+}
+
+:host button,
+:host [role="button"],
+:host a {
+  cursor: pointer;
+}

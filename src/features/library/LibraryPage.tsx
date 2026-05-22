@@ -1,11 +1,21 @@
 import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, ArrowRight, ChevronLeft, Plus, Check, Download, Variable, Save } from 'lucide-react';
+// Primitives now sourced from the v2 component library
+// (`packages/cherry-v2-ui/src/components/primitives/*`). Deep-imported
+// so the package's barrel index — which drags in deps we don't
+// install (@dnd-kit/core, react-table, etc.) — never gets loaded.
+// Cherry-only composites (SearchInput, Typography, SYSTEM_VARIABLES)
+// stay on `@cherry-studio/ui` because v2 doesn't ship them.
+import { Button } from '@cherrystudio/ui/components/primitives/button';
 import {
-  Button, Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, SearchInput, Input, Typography,
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
+} from '@cherrystudio/ui/components/primitives/dialog';
+import { Input } from '@cherrystudio/ui/components/primitives/input';
+import {
   Popover, PopoverTrigger, PopoverContent,
-  SYSTEM_VARIABLES, type VariableDef,
-} from '@cherry-studio/ui';
+} from '@cherrystudio/ui/components/primitives/popover';
+import { SearchInput, Typography, SYSTEM_VARIABLES, type VariableDef } from '@cherry-studio/ui';
 import { skills as discoverSkills, assistants as discoverAssistants } from '@/features/explore/ExploreData';
 import { useGlobalActions } from '@/app/context/GlobalActionContext';
 import type { ResourceItem, FolderNode, TagItem, LibrarySidebarFilter, LibraryConfigView, ResourceType } from '@/app/types';

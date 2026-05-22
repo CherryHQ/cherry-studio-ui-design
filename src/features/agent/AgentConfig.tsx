@@ -13,7 +13,20 @@ import {
   Upload, Link2,
   Send, MessageCircle, Github, Info,
 } from 'lucide-react';
-import { Button, Input, Slider, Textarea, Popover, PopoverTrigger, PopoverContent, EmptyState, SearchInput, Typography, Switch, Checkbox, Badge, Select, SelectTrigger, SelectValue, SelectContent, SelectItem, SimpleTooltip } from '@cherry-studio/ui';
+import { Button } from '@cherrystudio/ui/components/primitives/button';
+import { Input } from '@cherrystudio/ui/components/primitives/input';
+import { Slider } from '@cherrystudio/ui/components/primitives/slider';
+import { Input as Textarea } from '@cherrystudio/ui/components/primitives/textarea';
+import { Popover, PopoverTrigger, PopoverContent } from '@cherrystudio/ui/components/primitives/popover';
+import { Switch } from '@cherrystudio/ui/components/primitives/switch';
+import { Checkbox } from '@cherrystudio/ui/components/primitives/checkbox';
+import { Badge } from '@cherrystudio/ui/components/primitives/badge';
+import {
+  Select, SelectTrigger, SelectValue, SelectContent, SelectItem,
+} from '@cherrystudio/ui/components/primitives/select';
+// V2 doesn't ship SearchInput / Typography / EmptyState / SimpleTooltip
+// → keep them on the legacy package
+import { EmptyState, SearchInput, Typography, SimpleTooltip } from '@cherry-studio/ui';
 import { motion, AnimatePresence } from 'motion/react';
 import type { ResourceItem, MCPServerStatus } from '@/app/types';
 import { PromptSection } from '@/features/assistant/sections/PromptSection';

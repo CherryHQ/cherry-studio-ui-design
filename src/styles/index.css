@@ -2,8 +2,16 @@
 @import 'tailwindcss';
 @import 'tw-animate-css';
 @import '@cherry-studio/ui/theme.css';
+/* V2 ui token scale (--cs-*) — pulled from CherryHQ/cherry-studio v2.
+ * Brand was neutralized earlier (see packages/cherry-v2-ui/src/styles/
+ * tokens/colors/semantic.css). theme.css bridges --cs-* to extra
+ * Tailwind utility classes (bg-background-subtle, text-foreground-
+ * secondary, etc.) used by V2 components. */
+@import '@cherrystudio/ui/styles/tokens.css';
+@import '@cherrystudio/ui/styles/theme.css';
 
 @source '../../packages/ui/src/**/*.{ts,tsx}';
+@source '../../packages/cherry-v2-ui/src/**/*.{ts,tsx}';
 
 @theme {
   --animate-accordion-down: accordion-down 0.2s ease-out;

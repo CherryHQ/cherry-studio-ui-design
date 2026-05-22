@@ -4,7 +4,11 @@ import { Layers, ChevronDown, ChevronRight, FolderPlus, Import, Rss, Pencil, Tra
 import { Tooltip } from '@/app/components/Tooltip';
 import type { FolderNode, LibrarySidebarFilter } from '@/app/types';
 import { RESOURCE_TYPES_LIST } from '@/app/config/constants';
-import { Button, Input, ContextMenu, ContextMenuTrigger, ContextMenuContent, ContextMenuItem, ContextMenuSeparator } from '@cherry-studio/ui';
+import { Button } from '@cherrystudio/ui/components/primitives/button';
+import { Input } from '@cherrystudio/ui/components/primitives/input';
+import {
+  ContextMenu, ContextMenuTrigger, ContextMenuContent, ContextMenuItem, ContextMenuSeparator,
+} from '@cherrystudio/ui/components/primitives/context-menu';
 
 interface Props {
   filter: LibrarySidebarFilter;

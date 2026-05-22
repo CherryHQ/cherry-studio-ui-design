@@ -7,7 +7,13 @@ import {
   Check,
   Filter, Sparkles,
 } from 'lucide-react';
-import { Button, Input, Popover, PopoverTrigger, PopoverContent, SearchInput, EmptyState, Badge, Switch } from '@cherry-studio/ui';
+import { Button } from '@cherrystudio/ui/components/primitives/button';
+import { Input } from '@cherrystudio/ui/components/primitives/input';
+import { Popover, PopoverTrigger, PopoverContent } from '@cherrystudio/ui/components/primitives/popover';
+import { Badge } from '@cherrystudio/ui/components/primitives/badge';
+import { Switch } from '@cherrystudio/ui/components/primitives/switch';
+// SearchInput + EmptyState aren't in v2 — keep on the legacy package
+import { SearchInput, EmptyState } from '@cherry-studio/ui';
 import { motion, AnimatePresence } from 'motion/react';
 import type { ResourceItem, ResourceType, ViewMode, SortKey, FolderNode, TagItem } from '@/app/types';
 import { RESOURCE_TYPE_CONFIG, RESOURCE_TYPES_LIST, SORT_LABELS, TAG_COLORS, DEFAULT_TAG_COLOR } from '@/app/config/constants';

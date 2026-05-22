@@ -1,0 +1,113 @@
+@import "tailwindcss";
+@import "@cherry-studio/ui/theme.css";
+@import "@cherry-studio/ui/globals.css";
+
+/* Tailwind v4 source detection — scan all source files used at runtime so
+   utility classes from @cherry-studio/ui's annotation components actually get
+   generated in the output bundle. */
+@source "../**/*.{ts,tsx}";
+@source "../../../ui/src/components/ui/annotations/**/*.{ts,tsx}";
+@source "../../../ui/src/components/ui/button.tsx";
+@source "../../../ui/src/components/ui/badge.tsx";
+@source "../../../ui/src/components/ui/dropdown-menu.tsx";
+@source "../../../ui/src/components/ui/tabs.tsx";
+@source "../../../ui/src/components/ui/switch.tsx";
+
+/* Constrain Tailwind's preflight to within the shadow root by relying on
+   shadow boundary to isolate. The shadow root is a separate DOM scope so
+   :host applies. */
+
+:host {
+  all: initial;
+  font-family: system-ui, -apple-system, sans-serif;
+  color: hsl(var(--foreground));
+  /* Reset cursor — host page sets body { cursor: crosshair } in annotate mode,
+     which would otherwise inherit into our UI through the shadow boundary. */
+  cursor: default;
+}
+
+/* Don't let any host page styles leak into our root */
+:host * {
+  box-sizing: border-box;
+}
+
+/* Buttons / interactive UI inside shadow always show pointer cursor */
+:host button,
+:host [role="button"],
+:host a {
+  cursor: pointer;
+}
+
+/* Overlay's hover highlight uses crosshair to signal "click to annotate" */
+:host [data-annotation-overlay-cursor="crosshair"] {
+  cursor: crosshair;
+}
+
+/* FAB visibility: AnnotationToggle renders two circular buttons in the
+   bottom-right corner. With just the default `outline` button variant they
+   visually disappear on neutral / white host pages. Wrap them in a contrasty
+   pill so the toolbar reads against any background. */
+:host [data-annotation-ui].fixed.bottom-6.right-6 > .flex {
+  background: #ffffff;
+  border: 1px solid #d4d4d4;
+  border-radius: 9999px;
+  padding: 4px;
+  box-shadow:
+    0 4px 16px rgb(0 0 0 / 0.12),
+    0 1px 3px rgb(0 0 0 / 0.08);
+}
+
+/* ────────────────────────────────────────────────────────────────────────
+   Loupe palette — flat, deterministic, decoupled from theme.css cascade.
+
+   Rationale: the @cherry-studio/ui Button "default" variant uses a
+   gradient driven by `--btn-primary-from` → `var(--primary)`. That chain
+   sometimes fails to propagate cleanly across the shadow boundary, leaving
+   the bubble's "Save" and selected category buttons rendered as invisible
+   transparent rectangles. The user reported "浅色 button 都不见了".
+
+   These overrides force flat fills with hard-coded colors — guaranteed
+   visible on any host page, regardless of var-chain propagation. They
+   target the buttons via attributes that only @cherry-studio/ui sets
+   (data-slot=button), so non-button host markup is unaffected.
+   ──────────────────────────────────────────────────────────────────── */
+
+/* Filled "primary" buttons: Save, selected category, etc. */
+:host [data-annotation-ui] [data-slot="button"][class*="from-[var(--btn-primary-from)]"] {
+  background-image: none;
+  background-color: #323232;
+  color: #fcfcfc;
+  border: 1px solid #1a1a1a;
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.15);
+}
+:host [data-annotation-ui] [data-slot="button"][class*="from-[var(--btn-primary-from)]"]:hover {
+  background-color: #1f1f1f;
+}
+:host [data-annotation-ui] [data-slot="button"][class*="from-[var(--btn-primary-from)]"]::before {
+  display: none;
+}
+
+/* Outline buttons: ensure the border is visible on the bubble's near-white
+   bg and on the host page. */
+:host [data-annotation-ui] [data-slot="button"][class*="bg-background"][class*="shadow-button"] {
+  border-color: #d0d0d0;
+}
+
+/* All Loupe floating cards — Bubble (create / view), List, and Dropdown.
+   Force a deterministic visible boundary on white host pages where the
+   var-driven `--popover` (~#fcfcfc) and `--border` (~#ececec) blend in.
+   `!important` because Tailwind's `border-border` / `shadow-popover`
+   utilities re-apply via the same selector specificity through the
+   build pipeline; `!important` guarantees the override always wins. */
+:host [data-annotation-ui][class*="bg-popover"],
+:host [data-radix-popper-content-wrapper] [data-slot="dropdown-menu-content"] {
+  background-color: #ffffff !important;
+  color: #121212 !important;
+  border: 1px solid #c4c4c4 !important;
+  border-radius: 12px !important;
+  box-shadow:
+    0 1px 2px rgb(0 0 0 / 0.08),
+    0 6px 16px rgb(0 0 0 / 0.10),
+    0 16px 40px rgb(0 0 0 / 0.08) !important;
+}
+
