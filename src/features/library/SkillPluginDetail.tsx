@@ -14,6 +14,10 @@ interface Props {
   onBack: () => void;
   onToggle: (id: string) => void;
   onDelete: (resource: ResourceItem) => void;
+  /** When true, hosted inside the library config modal — drop the
+   * internal breadcrumb/back/cancel chrome (the modal frame supplies
+   * the avatar header + close X). */
+  inModal?: boolean;
 }
 
 function timeAgo(dateStr: string) {
@@ -27,7 +31,7 @@ function timeAgo(dateStr: string) {
   return `${Math.floor(days / 30)} 个月前`;
 }
 
-export function SkillPluginDetail({ resource, onBack, onToggle, onDelete }: Props) {
+export function SkillPluginDetail({ resource, onBack, onToggle, onDelete, inModal = false }: Props) {
   const [description, setDescription] = useState(resource.description);
   const [tags, setTags] = useState(resource.tags);
   const [newTag, setNewTag] = useState('');
@@ -64,26 +68,27 @@ export function SkillPluginDetail({ resource, onBack, onToggle, onDelete }: Prop
 
   return (
     <div className="flex-1 flex flex-col min-h-0 bg-background">
-      {/* Header */}
-      <div className="flex items-center gap-3 px-5 py-3 border-b border-border/15 flex-shrink-0">
-        <Button variant="ghost" size="icon" onClick={onBack} className="w-7 h-7 rounded-lg flex items-center justify-center text-muted-foreground/40 hover:text-foreground hover:bg-accent/50 transition-colors">
-          <ArrowLeft size={14} />
-        </Button>
-        <div className="flex items-center gap-1 text-xs text-muted-foreground/50">
-          <span className="hover:text-foreground cursor-pointer transition-colors" onClick={onBack}>资源库</span>
-          <ChevronRight size={9} />
-          <span className="text-foreground">{resource.name}</span>
-          <span className="text-muted-foreground/50 ml-1">({cfg.label})</span>
+      {!inModal && (
+        <div className="flex items-center gap-3 px-5 py-3 border-b border-border/15 flex-shrink-0">
+          <Button variant="ghost" size="icon" onClick={onBack} className="w-7 h-7 rounded-lg flex items-center justify-center text-muted-foreground/40 hover:text-foreground hover:bg-accent/50 transition-colors">
+            <ArrowLeft size={14} />
+          </Button>
+          <div className="flex items-center gap-1 text-xs text-muted-foreground/50">
+            <span className="hover:text-foreground cursor-pointer transition-colors" onClick={onBack}>资源库</span>
+            <ChevronRight size={9} />
+            <span className="text-foreground">{resource.name}</span>
+            <span className="text-muted-foreground/50 ml-1">({cfg.label})</span>
+          </div>
+          <div className="flex-1" />
+          <AnimatePresence>
+            {saved && <motion.span initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0 }} className="text-xs text-cherry-primary">已保存</motion.span>}
+          </AnimatePresence>
+          <Button variant="outline" size="sm" onClick={onBack} className="px-3 rounded-lg text-xs text-muted-foreground/50 hover:text-foreground hover:bg-accent/50 border border-border/20 transition-all">取消</Button>
+          <Button variant="default" size="sm" onClick={handleSave} className="flex items-center gap-1.5 px-3 rounded-lg text-xs transition-colors active:scale-[0.97]">
+            <Save size={10} /><span>保存</span>
+          </Button>
         </div>
-        <div className="flex-1" />
-        <AnimatePresence>
-          {saved && <motion.span initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0 }} className="text-xs text-cherry-primary">已保存</motion.span>}
-        </AnimatePresence>
-        <Button variant="outline" size="sm" onClick={onBack} className="px-3 rounded-lg text-xs text-muted-foreground/50 hover:text-foreground hover:bg-accent/50 border border-border/20 transition-all">取消</Button>
-        <Button variant="default" size="sm" onClick={handleSave} className="flex items-center gap-1.5 px-3 rounded-lg text-xs transition-colors active:scale-[0.97]">
-          <Save size={10} /><span>保存</span>
-        </Button>
-      </div>
+      )}
 
       {/* Main */}
       <div className="flex-1 overflow-y-auto scrollbar-thin">

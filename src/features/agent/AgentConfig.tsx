@@ -21,7 +21,7 @@ import { AVATAR_OPTIONS } from '@/app/config/constants';
 import { ModelPickerPanel } from '@/app/components/shared/ModelPickerPanel';
 import { ASSISTANT_MODELS } from '@/app/config/models';
 
-interface Props { resource: ResourceItem; onBack: () => void }
+interface Props { resource: ResourceItem; onBack: () => void; inModal?: boolean }
 type Section = 'basic' | 'prompt' | 'knowledge' | 'toolchain' | 'advanced';
 const sections: { id: Section; label: string; icon: React.ElementType }[] = [
   { id: 'basic', label: '基础设置', icon: Settings },
@@ -47,26 +47,28 @@ function getTagColor(tag: string): string {
 // ===========================
 // Main Component
 // ===========================
-export function AgentConfig({ resource, onBack }: Props) {
+export function AgentConfig({ resource, onBack, inModal = false }: Props) {
   const [activeSection, setActiveSection] = useState<Section>('basic');
   const [saved, setSaved] = useState(false);
   const handleSave = () => { setSaved(true); setTimeout(() => setSaved(false), 2000); };
   return (
     <div className="flex-1 flex flex-col min-h-0">
-      <div className="flex items-center gap-3 px-5 py-3 border-b border-border/15 flex-shrink-0">
-        <Button variant="ghost" size="icon-xs" onClick={onBack} className="text-muted-foreground/40"><ArrowLeft size={14} /></Button>
-        <div className="flex items-center gap-1 text-sm text-muted-foreground/50">
-          <span className="hover:text-foreground cursor-pointer transition-colors" onClick={onBack}>{"资源库"}</span>
-          <ChevronRight size={9} /><span className="text-foreground">{resource.name}</span>
-          <span className="text-muted-foreground/50 ml-1">{"(智能体)"}</span>
+      {!inModal && (
+        <div className="flex items-center gap-3 px-5 py-3 border-b border-border/15 flex-shrink-0">
+          <Button variant="ghost" size="icon-xs" onClick={onBack} className="text-muted-foreground/40"><ArrowLeft size={14} /></Button>
+          <div className="flex items-center gap-1 text-sm text-muted-foreground/50">
+            <span className="hover:text-foreground cursor-pointer transition-colors" onClick={onBack}>{"资源库"}</span>
+            <ChevronRight size={9} /><span className="text-foreground">{resource.name}</span>
+            <span className="text-muted-foreground/50 ml-1">{"(智能体)"}</span>
+          </div>
+          <div className="flex-1" />
+          <AnimatePresence>
+            {saved && <motion.span initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0 }} className="text-xs text-cherry-primary">{"已保存"}</motion.span>}
+          </AnimatePresence>
+          <Button variant="outline" size="sm" onClick={onBack} className="text-muted-foreground/50 hover:text-foreground hover:bg-accent/50 border-border/20">{"取消"}</Button>
+          <Button size="sm" onClick={handleSave} className="active:scale-[0.97]"><Save size={10} /><span>{"保存"}</span></Button>
         </div>
-        <div className="flex-1" />
-        <AnimatePresence>
-          {saved && <motion.span initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0 }} className="text-xs text-cherry-primary">{"已保存"}</motion.span>}
-        </AnimatePresence>
-        <Button variant="outline" size="sm" onClick={onBack} className="text-muted-foreground/50 hover:text-foreground hover:bg-accent/50 border-border/20">{"取消"}</Button>
-        <Button size="sm" onClick={handleSave} className="active:scale-[0.97]"><Save size={10} /><span>{"保存"}</span></Button>
-      </div>
+      )}
       <div className="flex flex-1 min-h-0">
         <div className="w-[180px] flex-shrink-0 border-r border-border/15 p-3 overflow-y-auto">
           {sections.map(s => {

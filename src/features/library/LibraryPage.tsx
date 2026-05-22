@@ -10,7 +10,7 @@ import { skills as discoverSkills, assistants as discoverAssistants } from '@/fe
 import { useGlobalActions } from '@/app/context/GlobalActionContext';
 import type { ResourceItem, FolderNode, TagItem, LibrarySidebarFilter, LibraryConfigView, ResourceType } from '@/app/types';
 import type { ViewMode, SortKey } from '@/app/types';
-import { MOCK_RESOURCES, MOCK_FOLDERS, TAG_COLORS, DEFAULT_TAG_COLOR } from '@/app/config/constants';
+import { MOCK_RESOURCES, MOCK_FOLDERS, TAG_COLORS, DEFAULT_TAG_COLOR, RESOURCE_TYPE_CONFIG } from '@/app/config/constants';
 import { LibrarySidebar } from './LibrarySidebar';
 import { ResourceGrid } from './ResourceGrid';
 import { ImportModal } from './ImportModal';
@@ -343,10 +343,11 @@ function PromptRichEditor({ value, onChange, onSlashCommand, placeholder }: {
   );
 }
 
-function PromptEditPage({ resource, onBack, onSave }: {
+function PromptEditPage({ resource, onBack, onSave, inModal = false }: {
   resource: ResourceItem;
   onBack: () => void;
   onSave: (updates: Partial<ResourceItem>) => void;
+  inModal?: boolean;
 }) {
   const [name, setName] = useState(resource.name);
   const [content, setContent] = useState(resource.content || '');
@@ -367,20 +368,21 @@ function PromptEditPage({ resource, onBack, onSave }: {
 
   return (
     <div className="flex-1 flex flex-col min-h-0 bg-background">
-      {/* Header */}
-      <div className="flex items-center justify-between px-6 pt-5 pb-4 flex-shrink-0 border-b border-border/20">
-        <div className="flex items-center gap-3">
-          <button onClick={onBack} className="text-muted-foreground/50 hover:text-foreground transition-colors">
-            <ChevronLeft size={18} />
-          </button>
-          <Typography variant="subtitle">编辑 Prompt</Typography>
+      {!inModal && (
+        <div className="flex items-center justify-between px-6 pt-5 pb-4 flex-shrink-0 border-b border-border/20">
+          <div className="flex items-center gap-3">
+            <button onClick={onBack} className="text-muted-foreground/50 hover:text-foreground transition-colors">
+              <ChevronLeft size={18} />
+            </button>
+            <Typography variant="subtitle">编辑 Prompt</Typography>
+          </div>
+          <Button variant="default" size="xs" onClick={handleSave} disabled={!name.trim() || !hasChanges}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs">
+            <Save size={11} />
+            <span>保存</span>
+          </Button>
         </div>
-        <Button variant="default" size="xs" onClick={handleSave} disabled={!name.trim() || !hasChanges}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs">
-          <Save size={11} />
-          <span>保存</span>
-        </Button>
-      </div>
+      )}
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto scrollbar-thin">
@@ -860,58 +862,98 @@ export function LibraryPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Resource config modal — wraps each per-kind editor inside a
-          centered card. The inner editor keeps its existing layout +
-          back affordance; closing via the X also calls handleConfigBack. */}
+      {/* Resource config modal — sized to sit inside the app shell
+          (not full viewport). Provides the unified avatar + name +
+          close-X header on top; the embedded editor renders inside
+          with `inModal={true}` so it strips its own redundant
+          breadcrumb / back / cancel chrome. The 两栏 (sidebar +
+          content) layout comes from the editors themselves. */}
       <Dialog
         open={configView.type !== 'list'}
         onOpenChange={(open) => { if (!open) handleConfigBack(); }}
       >
         <DialogContent
           showCloseButton={false}
-          // The base DialogContent locks in `sm:max-w-lg` + `p-6` +
-          // `grid gap-4`, all of which crush this config modal into a
-          // narrow column. Force-override with `!` so the embedded
-          // AssistantConfig / AgentConfig editors get the full width
-          // they're designed for.
-          className="!max-w-[1100px] sm:!max-w-[1100px] !w-[92vw] !h-[82vh] !rounded-2xl !p-0 !gap-0 !grid-cols-1 overflow-hidden border border-border/20 flex flex-col"
+          // Defaults shipped by DialogContent (`sm:max-w-lg`, `p-6`,
+          // `grid gap-4`) all need explicit `!` overrides to lose;
+          // the flex column + min-w-0 lets the embedded editors
+          // flow naturally inside.
+          className="!max-w-[920px] sm:!max-w-[920px] !w-[80vw] !h-[76vh] !rounded-2xl !p-0 !gap-0 !grid-cols-1 overflow-hidden border border-border/20 shadow-xl flex flex-col"
         >
-          {/* Reuse a fresh mount per resource so internal local state
-              seeds from the resource's current values. */}
-          {configView.type === 'prompt-edit' && (
-            <PromptEditPage
-              key={configView.resource.id}
-              resource={configView.resource}
-              onBack={handleConfigBack}
-              onSave={(updates) => {
-                setResources(prev => prev.map(r => r.id === configView.resource.id ? { ...r, ...updates } : r));
-                setConfigView({ type: 'list' });
-              }}
-            />
-          )}
-          {configView.type === 'assistant-config' && (
-            <AssistantConfig
-              key={configView.resource.id}
-              resource={configView.resource}
-              onBack={handleConfigBack}
-            />
-          )}
-          {configView.type === 'agent-config' && (
-            <AgentConfig
-              key={configView.resource.id}
-              resource={configView.resource}
-              onBack={handleConfigBack}
-            />
-          )}
-          {configView.type === 'skill-plugin-detail' && (
-            <SkillPluginDetail
-              key={configView.resource.id}
-              resource={configView.resource}
-              onBack={handleConfigBack}
-              onToggle={handleToggle}
-              onDelete={handleDelete}
-            />
-          )}
+          {configView.type !== 'list' && (() => {
+            const r = configView.resource;
+            const cfg = RESOURCE_TYPE_CONFIG[r.type];
+            const TypeIcon = cfg.icon;
+            return (
+              <div className="flex items-center gap-3 px-5 h-14 border-b border-border/15 flex-shrink-0">
+                <div className={`w-9 h-9 rounded-xl flex items-center justify-center text-lg flex-shrink-0 ${cfg.color}`}>
+                  {r.avatar}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span className="text-sm font-semibold text-foreground truncate">{r.name}</span>
+                    <span className="inline-flex items-center gap-1 flex-shrink-0 px-1.5 py-px rounded text-[10px] leading-none border border-border/30 bg-muted/40 text-muted-foreground/75 font-normal">
+                      <TypeIcon size={9} />
+                      {cfg.label}
+                    </span>
+                    <span className="inline-flex items-center gap-1 flex-shrink-0 text-[11px] text-muted-foreground/65 font-normal">
+                      <span className={`w-1.5 h-1.5 rounded-full ${r.enabled ? 'bg-success' : 'bg-muted-foreground/40'}`} />
+                      {r.enabled ? '已启用' : '已禁用'}
+                    </span>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleConfigBack}
+                  aria-label="关闭"
+                  className="h-8 w-8 inline-flex items-center justify-center rounded-md text-muted-foreground/55 hover:text-foreground hover:bg-muted/40 transition-colors flex-shrink-0"
+                >
+                  <X size={14} />
+                </button>
+              </div>
+            );
+          })()}
+
+          <div className="flex-1 min-h-0 flex">
+            {configView.type === 'prompt-edit' && (
+              <PromptEditPage
+                key={configView.resource.id}
+                resource={configView.resource}
+                onBack={handleConfigBack}
+                inModal
+                onSave={(updates) => {
+                  setResources(prev => prev.map(r => r.id === configView.resource.id ? { ...r, ...updates } : r));
+                  setConfigView({ type: 'list' });
+                }}
+              />
+            )}
+            {configView.type === 'assistant-config' && (
+              <AssistantConfig
+                key={configView.resource.id}
+                resource={configView.resource}
+                onBack={handleConfigBack}
+                inModal
+              />
+            )}
+            {configView.type === 'agent-config' && (
+              <AgentConfig
+                key={configView.resource.id}
+                resource={configView.resource}
+                onBack={handleConfigBack}
+                inModal
+              />
+            )}
+            {configView.type === 'skill-plugin-detail' && (
+              <SkillPluginDetail
+                key={configView.resource.id}
+                resource={configView.resource}
+                onBack={handleConfigBack}
+                onToggle={handleToggle}
+                onDelete={handleDelete}
+                inModal
+              />
+            )}
+          </div>
         </DialogContent>
       </Dialog>
     </div>
