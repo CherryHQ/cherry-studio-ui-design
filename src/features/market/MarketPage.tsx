@@ -179,21 +179,21 @@ const CATALOG: MarketItem[] = [
 // The sidebar lists every resource kind in a single flat list — no top
 // pill tabs, no plugin/skill grouping. Reorder to put the most common
 // kinds first.
-// Note: 'integration' is intentionally absent — 集成 lives only in the
-// top feed strip (logo-grid layout), so users have one place to find it.
+// Sidebar lists every resource kind. 集成 has a special logo-first
+// rendering when selected (see the kind === 'integration' branch below);
+// the top feed strip is a separate axis (source channel, not kind).
 const SIDEBAR_KINDS: (ResourceKind | 'all')[] = [
-  'all', 'skill', 'mcp', 'agent', 'assistant', 'prompt', 'kb',
+  'all', 'skill', 'mcp', 'agent', 'assistant', 'prompt', 'kb', 'integration',
 ];
 
-// Built-in subscription feeds — the user can add more via the "+" button.
-// 'integrations' is special: it switches the catalog into a logo-first
-// grid of first-party connectors (GitHub / Gmail / Google Calendar …).
+// Built-in subscription feeds (source channels). The user can add more
+// via the "+" button. This is orthogonal to the sidebar kind filter —
+// kind = what type of resource, feed = where it came from.
 const BUILTIN_FEEDS: { id: string; label: string }[] = [
-  { id: 'cherry',       label: 'Cherry 精选' },
-  { id: 'skill-hub',    label: 'Skill Hub' },
-  { id: 'claude',       label: 'Claude Skill' },
-  { id: 'awesome-mcp',  label: 'Awesome MCP' },
-  { id: 'integrations', label: '集成' },
+  { id: 'cherry',      label: 'Cherry 精选' },
+  { id: 'skill-hub',   label: 'Skill Hub' },
+  { id: 'claude',      label: 'Claude Skill' },
+  { id: 'awesome-mcp', label: 'Awesome MCP' },
 ];
 
 // Per-integration product logo — sourced from the Simple Icons CDN with
@@ -430,8 +430,8 @@ export function MarketPage() {
             </button>
           </div>
 
-          {/* Integrations feed — logo-first grid of first-party connectors */}
-          {feedId === 'integrations' ? (
+          {/* Integrations kind — logo-first grid of first-party connectors */}
+          {kind === 'integration' ? (
             <section>
               <h2 className="text-sm font-medium text-foreground mb-3">集成</h2>
               <IntegrationsCatalog
