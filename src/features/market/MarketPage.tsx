@@ -561,7 +561,7 @@ export function MarketPage() {
               className="h-9"
             />
           </div>
-          <DialogFooter>
+          <DialogFooter className="bg-transparent">
             <Button variant="outline" size="sm" onClick={() => setFeedDialogOpen(false)}>取消</Button>
             <Button size="sm" disabled={!feedUrl.trim()} onClick={addCustomFeed}>添加</Button>
           </DialogFooter>
