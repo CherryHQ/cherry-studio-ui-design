@@ -370,7 +370,6 @@ function PromptEditPage({ resource, onBack, onSave, inModal = false }: {
   const [tags, setTags] = useState<string[]>(resource.tags || []);
   const [tagInput, setTagInput] = useState('');
   const [showVarPanel, setShowVarPanel] = useState(false);
-  const [activeSection, setActiveSection] = useState<'basic' | 'content'>('basic');
 
   const vars = extractVars(content);
   const tagsChanged = tags.join('|') !== (resource.tags || []).join('|');
@@ -494,33 +493,11 @@ function PromptEditPage({ resource, onBack, onSave, inModal = false }: {
 
   if (inModal) {
     return (
-      <div className="flex-1 flex min-h-0">
-        <aside className="w-[150px] flex-shrink-0 border-r border-border/15 p-2 space-y-0.5">
-          {([
-            { id: 'basic', label: '基础信息' },
-            { id: 'content', label: '内容' },
-          ] as const).map(s => {
-            const active = activeSection === s.id;
-            return (
-              <button
-                key={s.id}
-                type="button"
-                onClick={() => setActiveSection(s.id)}
-                className={`relative w-full flex items-center justify-start px-3 py-2 rounded-lg text-sm text-left transition-colors ${
-                  active
-                    ? 'bg-accent/50 text-foreground font-medium'
-                    : 'text-muted-foreground/75 hover:text-foreground hover:bg-muted/40'
-                }`}
-              >
-                {active && <span aria-hidden className="absolute left-0 top-1/2 -translate-y-1/2 w-[2px] h-4 rounded-r-full bg-foreground" />}
-                {s.label}
-              </button>
-            );
-          })}
-        </aside>
-        <div className="flex-1 min-w-0 overflow-y-auto scrollbar-thin px-5 py-4">
-          {activeSection === 'basic' ? BasicSection : ContentSection}
-        </div>
+      <div className="flex-1 min-w-0 overflow-y-auto scrollbar-thin px-5 py-4 space-y-6">
+        {/* Single-page layout — basic info, then content. */}
+        {BasicSection}
+        <div className="pt-2 border-t border-border/15" />
+        {ContentSection}
       </div>
     );
   }
