@@ -395,13 +395,13 @@ function PromptEditPage({ resource, onBack, onSave, inModal = false }: {
 
   // ── Section bodies, reused below ──────────────────────────────
   const BasicSection = (
-    <div className="space-y-4">
-      <h3 className="text-sm font-semibold text-foreground mb-1">基础信息</h3>
+    <div className="space-y-5">
+      <Typography variant="subtitle">基础信息</Typography>
       <Field>
         <FieldLabel>名称</FieldLabel>
         <FieldContent>
           <Input value={name} onChange={e => setName(e.target.value)}
-            className="w-full bg-muted/30 border border-border/40 px-3.5 py-2.5 text-sm text-foreground rounded-xl"
+            className="h-8 text-sm"
             placeholder="Prompt 名称" />
         </FieldContent>
       </Field>
@@ -452,10 +452,10 @@ function PromptEditPage({ resource, onBack, onSave, inModal = false }: {
     </div>
   );
   const ContentSection = (
-    <div className="space-y-4">
+    <div className="space-y-5">
       <div>
         <div className="flex items-center justify-between mb-2">
-          <p className="text-xs text-muted-foreground/60 font-medium">内容</p>
+          <Typography variant="subtitle">内容</Typography>
           <Popover open={showVarPanel} onOpenChange={setShowVarPanel}>
             <PopoverTrigger asChild>
               <Button variant="ghost" size="xs"

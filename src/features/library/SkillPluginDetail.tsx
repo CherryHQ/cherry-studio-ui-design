@@ -8,7 +8,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import type { ResourceItem } from '@/app/types';
 import { RESOURCE_TYPE_CONFIG, TAG_COLORS, DEFAULT_TAG_COLOR } from '@/app/config/constants';
 import { Button } from '@cherrystudio/ui/components/primitives/button';
-import { Input, Textarea } from '@cherry-studio/ui';
+import { Input, Textarea, Typography } from '@cherry-studio/ui';
 // Switch stays on legacy `@cherry-studio/ui` — v2's is visually
 // inferior (per the user).
 import { Switch } from '@cherry-studio/ui';
@@ -97,8 +97,9 @@ export function SkillPluginDetail({ resource, onBack, onToggle, onDelete, inModa
       )}
 
       {inModal ? (
-        <div className="flex-1 min-w-0 overflow-y-auto scrollbar-thin px-5 py-4 space-y-6">
+        <div className="flex-1 min-w-0 overflow-y-auto scrollbar-thin px-5 py-4 space-y-5">
           {/* Single-page layout — no tabs. Basic info → metadata → 源文件 → 文件预览. */}
+          <Typography variant="subtitle">基础信息</Typography>
           <Field>
             <FieldLabel>描述</FieldLabel>
             <FieldContent>
@@ -107,7 +108,7 @@ export function SkillPluginDetail({ resource, onBack, onToggle, onDelete, inModa
                 onChange={e => setDescription(e.target.value)}
                 rows={3}
                 placeholder="为这个资源写一段简短描述"
-                className="input-accent resize-none"
+                className="text-sm resize-none"
               />
             </FieldContent>
           </Field>
@@ -162,7 +163,9 @@ export function SkillPluginDetail({ resource, onBack, onToggle, onDelete, inModa
           </Field>
 
           {/* Metadata — compact 2-column grid */}
-          <div className="grid grid-cols-2 gap-x-6 gap-y-3 pt-4 border-t border-border/15">
+          <div className="pt-4 border-t border-border/15 space-y-3">
+            <Typography variant="subtitle">元数据</Typography>
+            <div className="grid grid-cols-2 gap-x-6 gap-y-3">
             <div>
               <label className="text-[11px] text-muted-foreground/55 mb-1 block">创建时间</label>
               <div className="flex items-center gap-1.5 text-xs text-muted-foreground/70">
@@ -191,12 +194,14 @@ export function SkillPluginDetail({ resource, onBack, onToggle, onDelete, inModa
                 <div className="text-xs text-muted-foreground/70 flex items-center gap-1"><User size={9} />{resource.author}</div>
               </div>
             )}
+            </div>
           </div>
 
           {/* 源文件 + 文件预览 — same content as the old 源文件 tab */}
-          <div className="pt-4 border-t border-border/15 space-y-6">
+          <div className="pt-4 border-t border-border/15 space-y-5">
             <div>
-              <label className="text-xs text-muted-foreground/60 mb-1.5 block font-medium">源文件</label>
+              <Typography variant="subtitle">源文件</Typography>
+              <div className="h-2" />
               <div className="flex items-center gap-3 px-4 py-3.5 rounded-xl border border-border/15 bg-accent/5">
                 <div className="w-10 h-10 rounded-xl bg-accent/50 flex items-center justify-center flex-shrink-0">
                   <FileIcon size={18} strokeWidth={1.3} className="text-muted-foreground/50" />
@@ -217,9 +222,8 @@ export function SkillPluginDetail({ resource, onBack, onToggle, onDelete, inModa
               </div>
             </div>
             <div>
-              <label className="text-xs text-muted-foreground/60 mb-1.5 block font-medium">
-                {resource.fileType === 'zip' ? '包内容' : '文件预览'}
-              </label>
+              <Typography variant="subtitle">{resource.fileType === 'zip' ? '包内容' : '文件预览'}</Typography>
+              <div className="h-2" />
               <div className="rounded-xl border border-border/15 bg-foreground/[0.03] dark:bg-foreground/[0.06] overflow-hidden">
                 <div className="flex items-center gap-2 px-3 py-2 border-b border-border/15 bg-accent/5">
                   <FileIcon size={10} className="text-muted-foreground/40" />

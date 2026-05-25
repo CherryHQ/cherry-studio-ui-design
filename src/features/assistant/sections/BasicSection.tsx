@@ -205,7 +205,7 @@ export function BasicSection({ resource }: Props) {
       {/* Row 2: 简介 (full width) */}
       <FieldGroup label="简介">
         <Textarea value={description} onChange={e => setDescription(e.target.value)} rows={3}
-          className="input-accent resize-none" />
+          className="text-sm resize-none" />
       </FieldGroup>
 
       {/* Tags — full width */}
