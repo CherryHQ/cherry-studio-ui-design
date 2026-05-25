@@ -43,7 +43,6 @@ export function SkillPluginDetail({ resource, onBack, onToggle, onDelete, inModa
   const [newTag, setNewTag] = useState('');
   const [saved, setSaved] = useState(false);
   const [editingDesc, setEditingDesc] = useState(false);
-  const [activeSection, setActiveSection] = useState<'basic' | 'source'>('basic');
 
   const cfg = RESOURCE_TYPE_CONFIG[resource.type];
   const Icon = cfg.icon;
@@ -98,168 +97,139 @@ export function SkillPluginDetail({ resource, onBack, onToggle, onDelete, inModa
       )}
 
       {inModal ? (
-        <div className="flex-1 flex min-h-0">
-          <aside className="w-[150px] flex-shrink-0 border-r border-border/15 p-2 space-y-0.5">
-            {([
-              { id: 'basic',  label: '基础信息' },
-              { id: 'source', label: '源文件' },
-            ] as const).map(s => {
-              const active = activeSection === s.id;
-              return (
-                <button
-                  key={s.id}
-                  type="button"
-                  onClick={() => setActiveSection(s.id)}
-                  className={`relative w-full flex items-center px-3 py-2 rounded-lg text-sm text-left transition-colors ${
-                    active
-                      ? 'bg-accent/50 text-foreground font-medium'
-                      : 'text-muted-foreground/75 hover:text-foreground hover:bg-muted/40'
-                  }`}
-                >
-                  {active && <span aria-hidden className="absolute left-0 top-1/2 -translate-y-1/2 w-[2px] h-4 rounded-r-full bg-foreground" />}
-                  {s.label}
-                </button>
-              );
-            })}
-          </aside>
-          <div className="flex-1 min-w-0 overflow-y-auto scrollbar-thin px-5 py-4 space-y-6">
-            {activeSection === 'basic' && (
-              <>
-                <Field>
-                  <FieldLabel>描述</FieldLabel>
-                  <FieldContent>
-                    <Textarea
-                      value={description}
-                      onChange={e => setDescription(e.target.value)}
-                      rows={3}
-                      placeholder="为这个资源写一段简短描述"
-                      className="input-accent resize-none"
-                    />
-                  </FieldContent>
-                </Field>
-                <Field>
-                  <FieldLabel className="flex items-center gap-1"><Tag size={9} /> 标签</FieldLabel>
-                  <FieldContent>
-                    <Combobox
-                      multiple
-                      searchable
-                      value={tags}
-                      onChange={(v) => setTags(Array.isArray(v) ? v : [v])}
-                      options={Object.keys(TAG_COLORS).map(t => ({ value: t, label: t }))}
-                      placeholder="选择标签…"
-                      searchPlaceholder="搜索标签…"
-                      emptyText="没有匹配标签"
-                      renderOption={(opt) => {
-                        const c = TAG_COLORS[opt.value] || DEFAULT_TAG_COLOR;
+        <div className="flex-1 min-w-0 overflow-y-auto scrollbar-thin px-5 py-4 space-y-6">
+          {/* Single-page layout — no tabs. Basic info → metadata → 源文件 → 文件预览. */}
+          <Field>
+            <FieldLabel>描述</FieldLabel>
+            <FieldContent>
+              <Textarea
+                value={description}
+                onChange={e => setDescription(e.target.value)}
+                rows={3}
+                placeholder="为这个资源写一段简短描述"
+                className="input-accent resize-none"
+              />
+            </FieldContent>
+          </Field>
+          <Field>
+            <FieldLabel className="flex items-center gap-1"><Tag size={9} /> 标签</FieldLabel>
+            <FieldContent>
+              <Combobox
+                multiple
+                searchable
+                value={tags}
+                onChange={(v) => setTags(Array.isArray(v) ? v : [v])}
+                options={Object.keys(TAG_COLORS).map(t => ({ value: t, label: t }))}
+                placeholder="选择标签…"
+                searchPlaceholder="搜索标签…"
+                emptyText="没有匹配标签"
+                renderOption={(opt) => {
+                  const c = TAG_COLORS[opt.value] || DEFAULT_TAG_COLOR;
+                  return (
+                    <span className="inline-flex items-center gap-1">
+                      <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${c.dot}`} />
+                      <span className={`px-1.5 py-[1px] rounded-md text-xs border ${c.badge}`}>{opt.label}</span>
+                    </span>
+                  );
+                }}
+                renderValue={(val) => {
+                  const selected = Array.isArray(val) ? val : (val ? [val] : []);
+                  if (selected.length === 0) return null;
+                  return (
+                    <div className="flex flex-wrap gap-1 flex-1 min-w-0">
+                      {selected.map(t => {
+                        const c = TAG_COLORS[t] || DEFAULT_TAG_COLOR;
                         return (
-                          <span className="inline-flex items-center gap-1">
-                            <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${c.dot}`} />
-                            <span className={`px-1.5 py-[1px] rounded-md text-xs border ${c.badge}`}>{opt.label}</span>
+                          <span key={t} className={`inline-flex items-center gap-1 px-1.5 py-[2px] rounded-md text-[11px] border ${c.badge}`}>
+                            <span className={`w-1.5 h-1.5 rounded-full ${c.dot}`} />
+                            {t}
+                            <button
+                              type="button"
+                              onClick={(e) => { e.stopPropagation(); setTags(prev => prev.filter(x => x !== t)); }}
+                              aria-label={`移除 ${t}`}
+                              className="ml-0.5 opacity-50 hover:opacity-100 transition-opacity"
+                            >
+                              <X size={9} />
+                            </button>
                           </span>
                         );
-                      }}
-                      renderValue={(val) => {
-                        const selected = Array.isArray(val) ? val : (val ? [val] : []);
-                        if (selected.length === 0) return null;
-                        return (
-                          <div className="flex flex-wrap gap-1 flex-1 min-w-0">
-                            {selected.map(t => {
-                              const c = TAG_COLORS[t] || DEFAULT_TAG_COLOR;
-                              return (
-                                <span key={t} className={`inline-flex items-center gap-1 px-1.5 py-[2px] rounded-md text-[11px] border ${c.badge}`}>
-                                  <span className={`w-1.5 h-1.5 rounded-full ${c.dot}`} />
-                                  {t}
-                                  <button
-                                    type="button"
-                                    onClick={(e) => { e.stopPropagation(); setTags(prev => prev.filter(x => x !== t)); }}
-                                    aria-label={`移除 ${t}`}
-                                    className="ml-0.5 opacity-50 hover:opacity-100 transition-opacity"
-                                  >
-                                    <X size={9} />
-                                  </button>
-                                </span>
-                              );
-                            })}
-                          </div>
-                        );
-                      }}
-                    />
-                  </FieldContent>
-                </Field>
+                      })}
+                    </div>
+                  );
+                }}
+              />
+            </FieldContent>
+          </Field>
 
-                {/* Metadata — folded into 基础信息 so it doesn't need
-                    its own sidebar tab. Compact 2-column grid. */}
-                <div className="grid grid-cols-2 gap-x-6 gap-y-3 pt-4 border-t border-border/15">
-                  <div>
-                    <label className="text-[11px] text-muted-foreground/55 mb-1 block">创建时间</label>
-                    <div className="flex items-center gap-1.5 text-xs text-muted-foreground/70">
-                      <Clock size={9} />
-                      <span>{new Date(resource.createdAt).toLocaleDateString('zh-CN')}</span>
-                      <span className="text-muted-foreground/45">({timeAgo(resource.createdAt)})</span>
-                    </div>
-                  </div>
-                  <div>
-                    <label className="text-[11px] text-muted-foreground/55 mb-1 block">最近更新</label>
-                    <div className="flex items-center gap-1.5 text-xs text-muted-foreground/70">
-                      <Clock size={9} />
-                      <span>{new Date(resource.updatedAt).toLocaleDateString('zh-CN')}</span>
-                      <span className="text-muted-foreground/45">({timeAgo(resource.updatedAt)})</span>
-                    </div>
-                  </div>
-                  {resource.version && (
-                    <div>
-                      <label className="text-[11px] text-muted-foreground/55 mb-1 block">版本</label>
-                      <div className="text-xs text-muted-foreground/70">v{resource.version}{resource.hasUpdate && <span className="ml-2 text-accent-orange">有新版本</span>}</div>
-                    </div>
-                  )}
-                  {resource.author && (
-                    <div>
-                      <label className="text-[11px] text-muted-foreground/55 mb-1 block">作者</label>
-                      <div className="text-xs text-muted-foreground/70 flex items-center gap-1"><User size={9} />{resource.author}</div>
-                    </div>
-                  )}
-                </div>
-              </>
+          {/* Metadata — compact 2-column grid */}
+          <div className="grid grid-cols-2 gap-x-6 gap-y-3 pt-4 border-t border-border/15">
+            <div>
+              <label className="text-[11px] text-muted-foreground/55 mb-1 block">创建时间</label>
+              <div className="flex items-center gap-1.5 text-xs text-muted-foreground/70">
+                <Clock size={9} />
+                <span>{new Date(resource.createdAt).toLocaleDateString('zh-CN')}</span>
+                <span className="text-muted-foreground/45">({timeAgo(resource.createdAt)})</span>
+              </div>
+            </div>
+            <div>
+              <label className="text-[11px] text-muted-foreground/55 mb-1 block">最近更新</label>
+              <div className="flex items-center gap-1.5 text-xs text-muted-foreground/70">
+                <Clock size={9} />
+                <span>{new Date(resource.updatedAt).toLocaleDateString('zh-CN')}</span>
+                <span className="text-muted-foreground/45">({timeAgo(resource.updatedAt)})</span>
+              </div>
+            </div>
+            {resource.version && (
+              <div>
+                <label className="text-[11px] text-muted-foreground/55 mb-1 block">版本</label>
+                <div className="text-xs text-muted-foreground/70">v{resource.version}{resource.hasUpdate && <span className="ml-2 text-accent-orange">有新版本</span>}</div>
+              </div>
             )}
-            {activeSection === 'source' && (
-              <>
-                <div>
-                  <label className="text-xs text-muted-foreground/60 mb-1.5 block font-medium">源文件</label>
-                  <div className="flex items-center gap-3 px-4 py-3.5 rounded-xl border border-border/15 bg-accent/5">
-                    <div className="w-10 h-10 rounded-xl bg-accent/50 flex items-center justify-center flex-shrink-0">
-                      <FileIcon size={18} strokeWidth={1.3} className="text-muted-foreground/50" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs text-foreground truncate font-mono">{resource.fileName || '未知文件'}</p>
-                      <div className="flex items-center gap-3 mt-0.5 text-xs text-muted-foreground/45">
-                        {resource.fileSize && <span>{resource.fileSize}</span>}
-                        {resource.fileType && <span className="px-1.5 py-px rounded-full bg-accent/50 text-muted-foreground/55 uppercase">{resource.fileType}</span>}
-                      </div>
-                    </div>
-                    {resource.homepage && (
-                      <a href={resource.homepage} target="_blank" rel="noopener noreferrer"
-                        className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs text-muted-foreground/55 hover:text-foreground hover:bg-accent/50 border border-border/15 transition-colors flex-shrink-0">
-                        <ExternalLink size={9} /> 主页
-                      </a>
-                    )}
-                  </div>
-                </div>
-                <div>
-                  <label className="text-xs text-muted-foreground/60 mb-1.5 block font-medium">
-                    {resource.fileType === 'zip' ? '包内容' : '文件预览'}
-                  </label>
-                  <div className="rounded-xl border border-border/15 bg-foreground/[0.03] dark:bg-foreground/[0.06] overflow-hidden">
-                    <div className="flex items-center gap-2 px-3 py-2 border-b border-border/15 bg-accent/5">
-                      <FileIcon size={10} className="text-muted-foreground/40" />
-                      <span className="text-xs text-muted-foreground/55 font-mono">{resource.fileName || 'preview'}</span>
-                    </div>
-                    <pre className="p-4 text-xs text-muted-foreground/65 leading-relaxed overflow-x-auto font-mono scrollbar-thin">
-                      {mockContentPreview}
-                    </pre>
-                  </div>
-                </div>
-              </>
+            {resource.author && (
+              <div>
+                <label className="text-[11px] text-muted-foreground/55 mb-1 block">作者</label>
+                <div className="text-xs text-muted-foreground/70 flex items-center gap-1"><User size={9} />{resource.author}</div>
+              </div>
             )}
+          </div>
+
+          {/* 源文件 + 文件预览 — same content as the old 源文件 tab */}
+          <div className="pt-4 border-t border-border/15 space-y-6">
+            <div>
+              <label className="text-xs text-muted-foreground/60 mb-1.5 block font-medium">源文件</label>
+              <div className="flex items-center gap-3 px-4 py-3.5 rounded-xl border border-border/15 bg-accent/5">
+                <div className="w-10 h-10 rounded-xl bg-accent/50 flex items-center justify-center flex-shrink-0">
+                  <FileIcon size={18} strokeWidth={1.3} className="text-muted-foreground/50" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs text-foreground truncate font-mono">{resource.fileName || '未知文件'}</p>
+                  <div className="flex items-center gap-3 mt-0.5 text-xs text-muted-foreground/45">
+                    {resource.fileSize && <span>{resource.fileSize}</span>}
+                    {resource.fileType && <span className="px-1.5 py-px rounded-full bg-accent/50 text-muted-foreground/55 uppercase">{resource.fileType}</span>}
+                  </div>
+                </div>
+                {resource.homepage && (
+                  <a href={resource.homepage} target="_blank" rel="noopener noreferrer"
+                    className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs text-muted-foreground/55 hover:text-foreground hover:bg-accent/50 border border-border/15 transition-colors flex-shrink-0">
+                    <ExternalLink size={9} /> 主页
+                  </a>
+                )}
+              </div>
+            </div>
+            <div>
+              <label className="text-xs text-muted-foreground/60 mb-1.5 block font-medium">
+                {resource.fileType === 'zip' ? '包内容' : '文件预览'}
+              </label>
+              <div className="rounded-xl border border-border/15 bg-foreground/[0.03] dark:bg-foreground/[0.06] overflow-hidden">
+                <div className="flex items-center gap-2 px-3 py-2 border-b border-border/15 bg-accent/5">
+                  <FileIcon size={10} className="text-muted-foreground/40" />
+                  <span className="text-xs text-muted-foreground/55 font-mono">{resource.fileName || 'preview'}</span>
+                </div>
+                <pre className="p-4 text-xs text-muted-foreground/65 leading-relaxed overflow-x-auto font-mono scrollbar-thin">
+                  {mockContentPreview}
+                </pre>
+              </div>
+            </div>
           </div>
         </div>
       ) : (
