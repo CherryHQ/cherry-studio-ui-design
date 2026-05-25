@@ -120,7 +120,7 @@ export function ModelSection() {
         >
           <Input type="number" min={0} step={100} value={maxTokens}
             onChange={e => setMaxTokens(parseInt(e.target.value) || 0)}
-            className="w-full px-3 py-2 rounded-xl border-border/20 bg-accent/15 text-xs text-foreground focus:border-border/40 focus:bg-accent/15 transition-all tabular-nums" />
+            className="h-8 text-xs tabular-nums" />
         </ParamRow>
 
         <ToggleRow
@@ -138,7 +138,7 @@ export function ModelSection() {
         >
           <Input type="number" min={1} max={100} step={1} value={maxToolCalls}
             onChange={e => setMaxToolCalls(parseInt(e.target.value) || 1)}
-            className="w-full px-3 py-2 rounded-xl border-border/20 bg-accent/15 text-xs text-foreground focus:border-border/40 focus:bg-accent/15 transition-all tabular-nums" />
+            className="h-8 text-xs tabular-nums" />
         </ParamRow>
 
         {/* 自定义参数 — dynamic list with name + type + value + delete */}

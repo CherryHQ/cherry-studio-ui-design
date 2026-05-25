@@ -81,13 +81,14 @@ export function AgentConfig({ resource, onBack, inModal = false }: Props) {
         </div>
       )}
       <div className="flex flex-1 min-h-0">
-        <div className="w-[132px] flex-shrink-0 border-r border-border/15 p-2 overflow-y-auto">
+        <div className="w-[150px] flex-shrink-0 border-r border-border/15 p-2 overflow-y-auto">
           {sections.map(s => {
             const active = activeSection === s.id;
             const Icon = s.icon;
             return (
               <Button variant="ghost" key={s.id} onClick={() => setActiveSection(s.id)}
-                className={`w-full justify-start gap-2 px-2.5 py-2 font-normal mb-0.5 rounded-lg ${active ? 'bg-accent/50 text-foreground' : 'text-muted-foreground/65 hover:text-foreground hover:bg-accent/50'}`}>
+                className={`relative w-full justify-start gap-2 px-3 py-2 mb-0.5 rounded-lg transition-colors ${active ? 'bg-accent/50 text-foreground font-medium' : 'font-normal text-muted-foreground/65 hover:text-foreground hover:bg-muted/40'}`}>
+                {active && <span aria-hidden className="absolute left-0 top-1/2 -translate-y-1/2 w-[2px] h-4 rounded-r-full bg-foreground" />}
                 <Icon size={13} strokeWidth={1.5} className={`flex-shrink-0 ${active ? 'text-muted-foreground' : 'text-muted-foreground/40'}`} />
                 <span className="text-sm">{s.label}</span>
               </Button>

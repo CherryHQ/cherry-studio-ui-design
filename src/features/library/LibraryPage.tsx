@@ -495,7 +495,7 @@ function PromptEditPage({ resource, onBack, onSave, inModal = false }: {
   if (inModal) {
     return (
       <div className="flex-1 flex min-h-0">
-        <aside className="w-[132px] flex-shrink-0 border-r border-border/15 p-2 space-y-0.5">
+        <aside className="w-[150px] flex-shrink-0 border-r border-border/15 p-2 space-y-0.5">
           {([
             { id: 'basic', label: '基础信息' },
             { id: 'content', label: '内容' },
@@ -506,12 +506,13 @@ function PromptEditPage({ resource, onBack, onSave, inModal = false }: {
                 key={s.id}
                 type="button"
                 onClick={() => setActiveSection(s.id)}
-                className={`w-full flex items-center justify-start px-2.5 py-2 rounded-lg text-sm text-left transition-colors ${
+                className={`relative w-full flex items-center justify-start px-3 py-2 rounded-lg text-sm text-left transition-colors ${
                   active
-                    ? 'bg-accent/50 text-foreground'
+                    ? 'bg-accent/50 text-foreground font-medium'
                     : 'text-muted-foreground/75 hover:text-foreground hover:bg-muted/40'
                 }`}
               >
+                {active && <span aria-hidden className="absolute left-0 top-1/2 -translate-y-1/2 w-[2px] h-4 rounded-r-full bg-foreground" />}
                 {s.label}
               </button>
             );
