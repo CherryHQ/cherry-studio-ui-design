@@ -11,6 +11,28 @@ import {
   searchFilterTabs, searchRecentItems, searchFileItems, searchQuickActions,
   MOCK_RESOURCES,
 } from '@/app/config/constants';
+import { AVAILABLE_AGENTS } from '@/app/config/agentTools';
+
+// User-created agents appear as additional launcher tiles in the
+// NewTabDialog grid. We map the emoji avatar to a tiny inline component
+// so it satisfies AppIconItem.icon (React.ElementType) without changing
+// the dialog's render contract.
+function makeEmojiIcon(emoji: string): React.ElementType {
+  const C: React.FC = () => <span className="text-[16px] leading-none">{emoji}</span>;
+  C.displayName = `EmojiIcon(${emoji})`;
+  return C;
+}
+
+const dialogAppIconsWithAgents = [
+  ...dialogAppIcons,
+  ...AVAILABLE_AGENTS.map(a => ({
+    id: `agent:${a.id}`,
+    label: a.name,
+    icon: makeEmojiIcon(a.avatar),
+    color: 'text-foreground',
+    bg: 'bg-accent/40',
+  })),
+];
 import type { Tab, MenuItem, ContextMenuState } from '@/app/types';
 import { SettingsPage } from '@/features/settings/SettingsPage';
 import { SettingsProvider, useSettings } from '@/app/context/SettingsContext';
@@ -40,7 +62,7 @@ function CherryStudioInner() {
   const [newTabManageMode, setNewTabManageMode] = useState(false);
   const [searchDialogOpen, setSearchDialogOpen] = useState(false);
   const [hiddenApps, setHiddenApps] = useState<Set<string>>(new Set(['explore', 'library', 'knowledge', 'file', 'code', 'note', 'extensions']));
-  const [appOrder, setAppOrder] = useState<string[]>(() => dialogAppIcons.map(a => a.id));
+  const [appOrder, setAppOrder] = useState<string[]>(() => dialogAppIconsWithAgents.map(a => a.id));
   const [annotationListOpen, setAnnotationListOpen] = useState(false);
   const [showMigration, setShowMigration] = useState(false);
 
@@ -155,6 +177,10 @@ function CherryStudioInner() {
   }, [tabs, createTabForMenuItem]);
 
   const handleDialogCreateTab = (menuItemId: string) => {
+    // 'agent:<id>' tiles are user-created agent shortcuts — open the
+    // agent tab. (Pre-selecting the specific agent would need extra
+    // plumbing; routing to the agent surface is the design intent.)
+    if (menuItemId.startsWith('agent:')) menuItemId = 'agent';
     setActiveItem(menuItemId);
     const existing = tabs.find(t => t.menuItemId === menuItemId);
     if (existing && !['chat', 'agent'].includes(menuItemId)) {
@@ -349,7 +375,7 @@ function CherryStudioInner() {
           setHiddenApps={setHiddenApps}
           appOrder={appOrder}
           setAppOrder={setAppOrder}
-          dialogAppIcons={dialogAppIcons}
+          dialogAppIcons={dialogAppIconsWithAgents}
           dialogFilterTabs={dialogFilterTabs}
           newTabHistoryItems={newTabHistoryItems}
           newTabFileItems={newTabFileItems}
