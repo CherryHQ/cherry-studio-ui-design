@@ -430,11 +430,12 @@ export function MarketPage() {
             </button>
           </div>
 
-          {/* Integrations kind — logo-first grid of first-party connectors */}
+          {/* Integrations kind — same row layout as other kinds, just with
+              brand logos for avatars and the install dialog as the action. */}
           {kind === 'integration' ? (
             <section>
               <h2 className="text-sm font-medium text-foreground mb-3">集成</h2>
-              <IntegrationsCatalog
+              <MarketRowGrid
                 items={CATALOG.filter(it => it.kind === 'integration')}
                 installed={installed}
                 onSelect={setInstallItem}
@@ -601,109 +602,6 @@ function MarketRowGrid({
           </div>
         );
       })}
-    </div>
-  );
-}
-
-// ─── Integrations catalog (集成 tab) ────────────────────────────────
-//
-// Logo-first grid of first-party connectors. Each card shows the real
-// product logo (Simple Icons CDN) instead of the catalog's avatar emoji.
-
-function IntegrationLogo({ itemId, size = 36 }: { itemId: string; size?: number }) {
-  const meta = INTEGRATION_LOGO[itemId];
-  if (!meta) return null;
-  return (
-    <div
-      className="flex items-center justify-center rounded-lg bg-muted/30 border border-border/20 flex-shrink-0 overflow-hidden"
-      style={{ width: size, height: size }}
-    >
-      <img
-        src={`https://cdn.simpleicons.org/${meta.slug}/${meta.color}`}
-        alt=""
-        width={Math.round(size * 0.55)}
-        height={Math.round(size * 0.55)}
-        loading="lazy"
-        draggable={false}
-        className="block"
-      />
-    </div>
-  );
-}
-
-function IntegrationCard({
-  item, installed, onSelect, onToggleInstall,
-}: {
-  item: MarketItem;
-  installed: boolean;
-  onSelect: () => void;
-  onToggleInstall: () => void;
-}) {
-  return (
-    <div
-      role="button"
-      tabIndex={0}
-      onClick={onSelect}
-      onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSelect(); } }}
-      className="group flex flex-col gap-3 p-4 border border-border/25 rounded-xl bg-background hover:border-border/55 hover:shadow-sm cursor-pointer transition-all"
-    >
-      <div className="flex items-start gap-3 min-w-0">
-        <IntegrationLogo itemId={item.id} size={40} />
-        <div className="min-w-0 flex-1">
-          <div className="text-sm font-medium text-foreground truncate">{item.name}</div>
-          <div className="text-[11px] text-muted-foreground/55 mt-0.5 truncate">{item.author}</div>
-        </div>
-      </div>
-      <p className="text-xs text-muted-foreground/75 leading-relaxed line-clamp-2 min-h-[32px]">
-        {item.tagline}
-      </p>
-      <div className="flex items-center justify-between pt-0.5">
-        <span className="text-[11px] text-muted-foreground/50 tabular-nums">
-          {item.installs.toLocaleString()} 次安装
-        </span>
-        <button
-          type="button"
-          onClick={e => { e.stopPropagation(); onToggleInstall(); }}
-          className={`inline-flex items-center gap-1 h-7 px-3 rounded-md text-[11px] transition-colors ${
-            installed
-              ? 'border border-border/40 text-muted-foreground/85 hover:bg-muted/30'
-              : 'bg-foreground text-background hover:bg-foreground/90'
-          }`}
-        >
-          {installed ? <><Check size={11} />已安装</> : '安装'}
-        </button>
-      </div>
-    </div>
-  );
-}
-
-function IntegrationsCatalog({
-  items, installed, onSelect, onToggleInstall,
-}: {
-  items: MarketItem[];
-  installed: Set<string>;
-  onSelect: (item: MarketItem) => void;
-  onToggleInstall: (id: string) => void;
-}) {
-  if (items.length === 0) {
-    return (
-      <div className="border border-dashed border-border/30 rounded-xl py-12 flex flex-col items-center text-muted-foreground/55">
-        <Plug size={20} strokeWidth={1.3} className="mb-2 text-muted-foreground/30" />
-        <p className="text-xs">暂无集成</p>
-      </div>
-    );
-  }
-  return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-      {items.map(it => (
-        <IntegrationCard
-          key={it.id}
-          item={it}
-          installed={installed.has(it.id)}
-          onSelect={() => onSelect(it)}
-          onToggleInstall={() => onToggleInstall(it.id)}
-        />
-      ))}
     </div>
   );
 }
@@ -1225,6 +1123,25 @@ function MarketOnboardingModal({ open, onOpenChange }: { open: boolean; onOpenCh
 // ─── Sub-components ───────────────────────────────────────────────────
 
 function Avatar({ item, size = 36 }: { item: MarketItem; size?: number }) {
+  const logoMeta = INTEGRATION_LOGO[item.id];
+  if (logoMeta) {
+    return (
+      <div
+        className="rounded-md bg-muted/30 border border-border/20 flex items-center justify-center flex-shrink-0 overflow-hidden"
+        style={{ width: size, height: size }}
+      >
+        <img
+          src={`https://cdn.simpleicons.org/${logoMeta.slug}/${logoMeta.color}`}
+          alt=""
+          width={Math.round(size * 0.6)}
+          height={Math.round(size * 0.6)}
+          loading="lazy"
+          draggable={false}
+          className="block"
+        />
+      </div>
+    );
+  }
   return (
     <div
       className={`rounded-md ${item.avatarBg} flex items-center justify-center flex-shrink-0 text-base`}
