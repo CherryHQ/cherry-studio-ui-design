@@ -1,14 +1,15 @@
 import React, { useState, useMemo } from 'react';
 import {
   Monitor, Code2, RotateCw, Smartphone, Tablet,
-  Copy, Check, ChevronRight, Eye,
+  Copy, Check, ChevronRight, ChevronDown, Eye,
   FolderOpen, X,
   Maximize2, Minimize2,
   Share2, Link as LinkIcon, Layers,
+  FileText, Globe, MousePointer2, TerminalSquare, ExternalLink,
 } from 'lucide-react';
 import {
   Button, EmptyState,
-  DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem,
+  DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator,
 } from '@cherry-studio/ui';
 import { motion, AnimatePresence } from 'motion/react';
 import { copyToClipboard } from '@/app/utils/clipboard';
@@ -213,14 +214,59 @@ export function ArtifactViewer({ fileContent, fileName, previewUrl, hasArtifact,
             </Button>
           )}
 
-          {/* Open in Finder — quick reveal of the artifact file on disk */}
-          <div className="w-px h-3 bg-border/30 mx-1" />
-          <Tooltip content="在 Finder 中打开" side="bottom"><Button variant="ghost" size="icon-xs"
-            className="text-muted-foreground hover:text-foreground">
-            <FinderIcon size={12} />
-          </Button></Tooltip>
+          {/* Open with — split button: Finder primary action + dropdown of local apps */}
+          <div className="flex items-center">
+            <div className="w-px h-3 bg-border/30 mx-1" />
+            <Tooltip content="在 Finder 中打开" side="bottom"><Button variant="ghost" size="icon-xs"
+              className="text-muted-foreground hover:text-foreground">
+              <FinderIcon size={12} />
+            </Button></Tooltip>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon-xs"
+                  className="text-muted-foreground hover:text-foreground -ml-0.5"
+                  title="选择应用打开">
+                  <ChevronDown size={9} />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" side="bottom" className="w-[170px]">
+                <div className="px-2 py-1 text-xs text-muted-foreground/60">使用应用打开</div>
+                <DropdownMenuItem className="gap-2 px-2 py-[5px] text-xs">
+                  <Eye size={12} className="text-muted-foreground/70 flex-shrink-0" />
+                  <span className="flex-1">预览</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem className="gap-2 px-2 py-[5px] text-xs">
+                  <FileText size={12} className="text-info flex-shrink-0" />
+                  <span className="flex-1">WPS Office</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem className="gap-2 px-2 py-[5px] text-xs">
+                  <FileText size={12} className="text-accent-orange flex-shrink-0" />
+                  <span className="flex-1">Microsoft Word</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem className="gap-2 px-2 py-[5px] text-xs">
+                  <Globe size={12} className="text-accent-violet flex-shrink-0" />
+                  <span className="flex-1">浏览器</span>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem className="gap-2 px-2 py-[5px] text-xs">
+                  <MousePointer2 size={12} className="text-foreground flex-shrink-0" />
+                  <span className="flex-1">Cursor</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem className="gap-2 px-2 py-[5px] text-xs">
+                  <TerminalSquare size={12} className="text-muted-foreground/70 flex-shrink-0" />
+                  <span className="flex-1">Terminal</span>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem className="gap-2 px-2 py-[5px] text-xs">
+                  <ExternalLink size={12} className="text-muted-foreground/70 flex-shrink-0" />
+                  <span className="flex-1">其他应用…</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
 
           {/* Share — dropdown with workspace + link share targets */}
+          <div className="w-px h-3 bg-border/30 mx-1" />
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon-xs"
