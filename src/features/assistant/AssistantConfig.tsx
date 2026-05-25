@@ -62,8 +62,7 @@ export function AssistantConfig({ resource, onBack, inModal = false }: Props) {
             return (
               <Button key={s.id} variant="ghost" size="inline"
                 onClick={() => setActiveSection(s.id)}
-                className={`relative flex items-center justify-start gap-2 w-full px-3 py-2 rounded-lg text-left mb-0.5 transition-colors ${active ? 'bg-accent/50 text-foreground font-medium' : 'text-muted-foreground/65 hover:text-foreground hover:bg-muted/40'}`}>
-                {active && <span aria-hidden className="absolute left-0 top-1/2 -translate-y-1/2 w-[2px] h-4 rounded-r-full bg-foreground" />}
+                className={`flex items-center justify-start gap-2 w-full px-3 py-2 rounded-lg text-left mb-0.5 transition-colors ${active ? 'bg-accent/50 text-foreground font-medium' : 'text-muted-foreground/65 hover:text-foreground hover:bg-muted/40'}`}>
                 <Icon size={13} strokeWidth={1.6} className="flex-shrink-0" />
                 <span className="text-sm">{s.label}</span>
               </Button>
