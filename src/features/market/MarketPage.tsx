@@ -4,13 +4,14 @@ import {
   Check, Download, X, MoreHorizontal, Terminal, FileText,
   Wrench, Sparkles, MousePointerClick, BookOpen, Network, Plug,
   CheckCircle2, Zap, Compass, Star, ExternalLink,
-  Upload, Link2, Bot,
+  Upload, Link2, Bot, FolderCog,
 } from 'lucide-react';
 import {
   Button, Input, Textarea, SearchInput, Typography, Badge, Slider, Switch,
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
 } from '@cherry-studio/ui';
 import cherryLogoImg from '@/assets/cherry-icon.png';
+import { useGlobalActions } from '@/app/context/GlobalActionContext';
 
 // ===========================
 // Market Place
@@ -215,6 +216,7 @@ const INTEGRATION_LOGO: Record<string, { slug: string; color: string }> = {
 // ─── Page component ───────────────────────────────────────────────────
 
 export function MarketPage() {
+  const { navigateToLibrary } = useGlobalActions();
   const [search, setSearch] = useState('');
   // Which kind the sidebar has narrowed to. 'all' = no filter.
   const [kind, setKind] = useState<ResourceKind | 'all'>('all');
@@ -326,6 +328,16 @@ export function MarketPage() {
           (资源库) page, not here. */}
       <div className="flex-shrink-0 px-6 pt-5">
         <div className="max-w-[1120px] mx-auto flex items-center justify-end gap-1">
+          <Button
+            variant="outline"
+            size="xs"
+            onClick={() => navigateToLibrary()}
+            className="h-8 px-2.5 gap-1 text-xs"
+            title="打开资源库"
+          >
+            <FolderCog size={12} />
+            管理
+          </Button>
           <Button
             variant="outline"
             size="xs"
