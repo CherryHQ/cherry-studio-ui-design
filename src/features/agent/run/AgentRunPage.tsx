@@ -294,10 +294,10 @@ function AgentPicker({
 // Compact Input Bar — used when artifact is fullscreen-maximized
 // ===========================
 
-function CompactInputBar({ onSendMessage, agentName }: { onSendMessage: (text: string) => void; agentName?: string }) {
+function CompactInputBar({ onSendMessage, agentName, headerControls }: { onSendMessage: (text: string) => void; agentName?: string; headerControls?: React.ReactNode }) {
   return (
     <div className="flex-shrink-0 px-3 pb-3 pt-1.5">
-      <CodexStyleInput onSendMessage={onSendMessage} placeholder={`继续与 ${agentName || '智能体'} 对话...`} />
+      <CodexStyleInput onSendMessage={onSendMessage} placeholder={`继续与 ${agentName || '智能体'} 对话...`} headerControls={headerControls} />
     </div>
   );
 }
@@ -338,10 +338,12 @@ const CSI_MENTIONS: { id: string; label: string; desc: string; icon: React.Compo
   { id: 'mcp-search', label: 'web-search', desc: 'MCP', icon: Globe },
 ];
 
-function CodexStyleInput({ onSendMessage, autoFocus = false, placeholder }: {
+function CodexStyleInput({ onSendMessage, autoFocus = false, placeholder, headerControls }: {
   onSendMessage: (text: string) => void;
   autoFocus?: boolean;
   placeholder?: string;
+  /** Same as ChatPanel.headerControls — agent + model pickers, etc. */
+  headerControls?: React.ReactNode;
 }) {
   const [input, setInput] = useState('');
   const [activeMode, setActiveMode] = useState('normal');
@@ -479,6 +481,7 @@ function CodexStyleInput({ onSendMessage, autoFocus = false, placeholder }: {
         <div className="px-2 pb-2 flex items-center justify-between gap-2">
           {/* Left */}
           <div className="flex items-center gap-0.5 min-w-0">
+            {headerControls}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon-sm" className="p-[5px] w-auto h-auto text-muted-foreground/70 hover:text-foreground hover:bg-accent/50">
@@ -763,7 +766,7 @@ function CodexStyleInput({ onSendMessage, autoFocus = false, placeholder }: {
   );
 }
 
-function NewSessionEmpty({ onSendMessage, agentName }: { onSendMessage: (text: string) => void; agentName?: string }) {
+function NewSessionEmpty({ onSendMessage, agentName, headerControls }: { onSendMessage: (text: string) => void; agentName?: string; headerControls?: React.ReactNode }) {
   return (
     <div className="flex flex-col h-full w-full">
       {/* Centered empty state */}
@@ -782,7 +785,7 @@ function NewSessionEmpty({ onSendMessage, agentName }: { onSendMessage: (text: s
 
       {/* Input bar at bottom */}
       <div className="flex-shrink-0 px-4 pb-3 pt-2">
-        <CodexStyleInput onSendMessage={onSendMessage} autoFocus />
+        <CodexStyleInput onSendMessage={onSendMessage} autoFocus headerControls={headerControls} />
       </div>
     </div>
   );
@@ -1596,6 +1599,50 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
     );
   }
 
+  // Agent + Model picker pair — moved out of the page header into the
+  // composer toolbar. Built once here so it stays in scope of state.
+  const composerHeaderControls = (
+    <>
+      <AgentPicker
+        selectedAgent={selectedAgent}
+        onSelectAgent={setSelectedAgent}
+        onCreateNew={() => setShowCreateAgent(true)}
+        onAvatarClick={() => setShowAgentInfo(true)}
+        onConfigureAgent={(agent) => editAssistantInLibrary(agent.name)}
+        pinnedIds={pinnedAgentIds}
+        onTogglePin={togglePinAgent}
+      />
+      <div className="w-px h-3.5 bg-border/30 mx-0.5" />
+      <Popover open={showModelPicker} onOpenChange={setShowModelPicker}>
+        <PopoverTrigger asChild>
+          <Button variant="ghost" size="inline"
+            className={`gap-1 px-1.5 py-[3px] text-xs ${
+            showModelPicker
+              ? 'bg-accent/25 text-foreground'
+              : 'text-muted-foreground hover:text-foreground hover:bg-accent/15'
+          }`}>
+            <BrandLogo id={selectedModel.provider.toLowerCase()} fallbackLetter={selectedModel.provider[0]} size={14} className="shrink-0" />
+            <span>{selectedModel.name}</span>
+            <ChevronDown size={7} className={`text-muted-foreground/50 transition-transform duration-100 ${showModelPicker ? 'rotate-180' : ''}`} />
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent align="start" side="top" className="p-0 w-[480px]">
+          <ModelPickerPanel
+            models={MODELS}
+            selectedModels={[selectedModel.id]}
+            onSelectModel={(id) => { const m = MODELS.find(m => m.id === id); if (m) setSelectedModel(m); }}
+            multiModel={false}
+            onToggleMultiModel={() => {}}
+            showMultiModelToggle={false}
+            providerColors={AGENT_PROVIDER_COLORS}
+            onClose={() => setShowModelPicker(false)}
+          />
+        </PopoverContent>
+      </Popover>
+      <div className="w-px h-3.5 bg-border/30 mx-0.5" />
+    </>
+  );
+
   // Extract header into reusable JSX so it can render in both normal and maximized layouts
   const headerJSX = (
     <header className="flex items-center justify-between px-3 border-b border-transparent flex-shrink-0 h-[40px]">
@@ -1614,46 +1661,6 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
             {historySidebar.isCompact ? <PanelLeftClose size={13} /> : <PanelLeftOpen size={13} />}
           </Button>
         </Tooltip>
-
-        {/* Agent picker */}
-        <AgentPicker
-          selectedAgent={selectedAgent}
-          onSelectAgent={setSelectedAgent}
-          onCreateNew={() => setShowCreateAgent(true)}
-          onAvatarClick={() => setShowAgentInfo(true)}
-          onConfigureAgent={(agent) => editAssistantInLibrary(agent.name)}
-          pinnedIds={pinnedAgentIds}
-          onTogglePin={togglePinAgent}
-        />
-
-        {/* Model picker */}
-        <div className="w-px h-3.5 bg-border/30" />
-        <Popover open={showModelPicker} onOpenChange={setShowModelPicker}>
-          <PopoverTrigger asChild>
-            <Button variant="ghost" size="inline"
-              className={`gap-1 px-1.5 py-[3px] text-xs ${
-              showModelPicker
-                ? 'bg-accent/25 text-foreground'
-                : 'text-muted-foreground hover:text-foreground hover:bg-accent/15'
-            }`}>
-              <BrandLogo id={selectedModel.provider.toLowerCase()} fallbackLetter={selectedModel.provider[0]} size={14} className="shrink-0" />
-              <span>{selectedModel.name}</span>
-              <ChevronDown size={7} className={`text-muted-foreground/50 transition-transform duration-100 ${showModelPicker ? 'rotate-180' : ''}`} />
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent align="start" className="p-0 w-[480px]">
-            <ModelPickerPanel
-              models={MODELS}
-              selectedModels={[selectedModel.id]}
-              onSelectModel={(id) => { const m = MODELS.find(m => m.id === id); if (m) setSelectedModel(m); }}
-              multiModel={false}
-              onToggleMultiModel={() => {}}
-              showMultiModelToggle={false}
-              providerColors={AGENT_PROVIDER_COLORS}
-              onClose={() => setShowModelPicker(false)}
-            />
-          </PopoverContent>
-        </Popover>
 
       </div>
 
@@ -1751,7 +1758,7 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
         </motion.div>
 
         {/* Compact input bar at the bottom */}
-        <CompactInputBar onSendMessage={handleSendMessage} agentName={selectedAgent.name} />
+        <CompactInputBar onSendMessage={handleSendMessage} agentName={selectedAgent.name} headerControls={composerHeaderControls} />
 
         {/* Agent Info Overlay */}
         <AnimatePresence>
@@ -1827,7 +1834,7 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
       <div className="flex flex-1 min-h-0 pl-2 min-w-0">
         <div className="min-h-0 h-full flex-1 min-w-0">
           {!hasMessages ? (
-            <NewSessionEmpty onSendMessage={handleSendMessage} agentName={selectedAgent.name} />
+            <NewSessionEmpty onSendMessage={handleSendMessage} agentName={selectedAgent.name} headerControls={composerHeaderControls} />
           ) : (
             <ChatPanel
               messages={messages}
@@ -1836,6 +1843,7 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
               onResolveUI={handleResolveUI}
               onAvatarClick={() => setShowAgentInfo(true)}
               onOpenArtifact={handleOpenArtifact}
+              headerControls={composerHeaderControls}
             />
           )}
         </div>
