@@ -7,10 +7,11 @@ import {
   Upload, Link2, Bot,
 } from 'lucide-react';
 import {
-  Button, Input, Textarea, SearchInput, Typography, Badge, Slider,
+  Button, Input, Textarea, SearchInput, Typography, Badge, Slider, Switch,
   Popover, PopoverTrigger, PopoverContent,
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
 } from '@cherry-studio/ui';
+import cherryLogoImg from '@/assets/cherry-icon.png';
 
 // ===========================
 // Market Place
@@ -234,6 +235,9 @@ export function MarketPage() {
   const [customFeeds, setCustomFeeds] = useState<{ id: string; label: string; url: string }[]>([]);
   const [feedDialogOpen, setFeedDialogOpen] = useState(false);
   const [feedUrl, setFeedUrl] = useState('');
+  // 集成 install confirmation dialog — opened when the user clicks an
+  // integration card or its "连接" button.
+  const [installItem, setInstallItem] = useState<MarketItem | null>(null);
 
   const addCustomFeed = () => {
     const url = feedUrl.trim();
@@ -253,9 +257,9 @@ export function MarketPage() {
   // set to 'none' after closing, blocking all clicks. Flush it whenever
   // every dialog is closed.
   useEffect(() => {
-    const anyOpen = onboardOpen || detailItem !== null || submitOpen || feedDialogOpen;
+    const anyOpen = onboardOpen || detailItem !== null || submitOpen || feedDialogOpen || installItem !== null;
     if (!anyOpen) document.body.style.pointerEvents = '';
-  }, [onboardOpen, detailItem, submitOpen, feedDialogOpen]);
+  }, [onboardOpen, detailItem, submitOpen, feedDialogOpen, installItem]);
 
   const toggleInstall = (id: string) => {
     setInstalled(prev => {
@@ -435,8 +439,11 @@ export function MarketPage() {
               <IntegrationsCatalog
                 items={CATALOG.filter(it => it.kind === 'integration')}
                 installed={installed}
-                onSelect={setDetailItem}
-                onToggleInstall={toggleInstall}
+                onSelect={setInstallItem}
+                onToggleInstall={(id) => {
+                  const it = CATALOG.find(c => c.id === id);
+                  if (it) setInstallItem(it);
+                }}
               />
             </section>
           ) : (
@@ -511,6 +518,17 @@ export function MarketPage() {
         onToggleInstall={(id) => toggleInstall(id)}
       />
       <SubmitResourceDialog open={submitOpen} onOpenChange={setSubmitOpen} />
+
+      {/* 集成 install confirmation — opens from clicking an integration card */}
+      <InstallIntegrationDialog
+        item={installItem}
+        installed={installItem ? installed.has(installItem.id) : false}
+        onOpenChange={(open) => { if (!open) setInstallItem(null); }}
+        onConfirm={() => {
+          if (installItem && !installed.has(installItem.id)) toggleInstall(installItem.id);
+          setInstallItem(null);
+        }}
+      />
 
       {/* Add-feed dialog — opens from the "+" button in the feed tab strip */}
       <Dialog open={feedDialogOpen} onOpenChange={setFeedDialogOpen}>
@@ -690,6 +708,140 @@ function IntegrationsCatalog({
         />
       ))}
     </div>
+  );
+}
+
+// ─── Install integration dialog (集成 confirmation flow) ───────────
+//
+// Mirrors ChatGPT's connector-install sheet: paired logos at the top,
+// the connector name + publisher, a stack of permission rows (one with
+// a memory toggle), and a single primary CTA at the bottom.
+
+function PermissionRow({
+  title, description, withToggle, value, onChange, linkLabel,
+}: {
+  title: string;
+  description: string;
+  withToggle?: boolean;
+  value?: boolean;
+  onChange?: (v: boolean) => void;
+  linkLabel?: string;
+}) {
+  return (
+    <div className="flex items-start gap-3">
+      <div className="flex-1 min-w-0">
+        <div className="text-[13px] font-medium text-foreground">{title}</div>
+        <p className="text-xs text-muted-foreground/75 leading-relaxed mt-1">
+          {description}
+          {linkLabel && (
+            <>
+              {' '}
+              <a href="#" onClick={e => e.preventDefault()} className="text-foreground underline underline-offset-2 hover:text-foreground/80">
+                {linkLabel}
+              </a>
+            </>
+          )}
+        </p>
+      </div>
+      {withToggle && (
+        <div className="pt-0.5 flex-shrink-0">
+          <Switch checked={value} onCheckedChange={onChange} />
+        </div>
+      )}
+    </div>
+  );
+}
+
+function InstallIntegrationDialog({
+  item, installed, onOpenChange, onConfirm,
+}: {
+  item: MarketItem | null;
+  installed: boolean;
+  onOpenChange: (open: boolean) => void;
+  onConfirm: () => void;
+}) {
+  const [memoryOn, setMemoryOn] = useState(true);
+  if (!item) {
+    return (
+      <Dialog open={false} onOpenChange={onOpenChange}>
+        <DialogContent />
+      </Dialog>
+    );
+  }
+  const publisher = 'Cherry';
+  return (
+    <Dialog open={!!item} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-[400px] p-0 overflow-hidden rounded-2xl gap-0">
+        {/* Header — paired logos + title */}
+        <div className="px-6 pt-7 pb-3 flex flex-col items-center">
+          <div className="flex items-center gap-2.5">
+            <div className="w-12 h-12 rounded-2xl bg-foreground flex items-center justify-center overflow-hidden">
+              <img src={cherryLogoImg} alt="" className="w-8 h-8 object-contain" />
+            </div>
+            <div className="flex items-center gap-1 text-muted-foreground/40">
+              <span className="block w-1 h-1 rounded-full bg-current" />
+              <span className="block w-1 h-1 rounded-full bg-current" />
+              <span className="block w-1 h-1 rounded-full bg-current" />
+            </div>
+            <div className="w-12 h-12 rounded-2xl bg-muted/30 border border-border/20 flex items-center justify-center overflow-hidden">
+              {INTEGRATION_LOGO[item.id] ? (
+                <img
+                  src={`https://cdn.simpleicons.org/${INTEGRATION_LOGO[item.id].slug}/${INTEGRATION_LOGO[item.id].color}`}
+                  alt=""
+                  className="w-7 h-7"
+                  draggable={false}
+                />
+              ) : (
+                <span className="text-2xl">{item.avatar}</span>
+              )}
+            </div>
+          </div>
+          <DialogTitle className="text-base font-semibold mt-4">
+            安装 {item.name}
+          </DialogTitle>
+          <DialogDescription className="text-xs text-muted-foreground/60 mt-1">
+            由 {publisher} 开发
+          </DialogDescription>
+        </div>
+
+        {/* Permission rows */}
+        <div className="px-6 py-4 space-y-4 max-h-[420px] overflow-y-auto scrollbar-thin border-t border-border/15">
+          <PermissionRow
+            title="参考记忆和对话"
+            description={`允许 Cherry 在与 "${item.name}" 共享数据时参考相关记忆和对话，以提供更精准的回复。`}
+            withToggle
+            value={memoryOn}
+            onChange={setMemoryOn}
+          />
+          <PermissionRow
+            title="始终请求授权"
+            description="连接器在每次访问外部数据前都会向您请求确认，您可随时撤销已授予的权限。"
+          />
+          <PermissionRow
+            title={`Cherry 如何使用 ${item.name} 数据`}
+            description={`您与 Cherry 的对话默认不会用于训练模型。但我们可能会处理 "${item.name}" 中的数据以便协助您完成与其相关的任务。`}
+            linkLabel="了解更多"
+          />
+          <PermissionRow
+            title="连接器可能引入风险"
+            description="连接器需充分了解后再使用。在执行任务时它代表您行使一定权限，建议仅在受信任的场景下启用。"
+            linkLabel="了解如何保障安全"
+          />
+        </div>
+
+        {/* Footer CTA */}
+        <div className="px-6 pb-5 pt-3 border-t border-border/15">
+          <Button
+            size="lg"
+            disabled={installed}
+            onClick={onConfirm}
+            className="w-full h-10 rounded-xl bg-foreground text-background hover:bg-foreground/90 disabled:opacity-50"
+          >
+            {installed ? `${item.name} 已安装` : `安装 ${item.name}`}
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 
