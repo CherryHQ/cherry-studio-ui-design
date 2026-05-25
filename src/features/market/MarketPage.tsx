@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import {
-  Plus, Search, Filter, ArrowUpDown, ChevronRight, ChevronLeft, ChevronDown,
+  Plus, Search, Filter, ArrowUpDown, ChevronRight, ChevronLeft,
   Check, Download, X, MoreHorizontal, Terminal, FileText,
   Wrench, Sparkles, MousePointerClick, BookOpen, Network, Plug,
   CheckCircle2, Zap, Compass, Star, ExternalLink,
@@ -8,7 +8,6 @@ import {
 } from 'lucide-react';
 import {
   Button, Input, Textarea, SearchInput, Typography, Badge, Slider, Switch,
-  Popover, PopoverTrigger, PopoverContent,
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
 } from '@cherry-studio/ui';
 import cherryLogoImg from '@/assets/cherry-icon.png';
@@ -180,8 +179,10 @@ const CATALOG: MarketItem[] = [
 // The sidebar lists every resource kind in a single flat list — no top
 // pill tabs, no plugin/skill grouping. Reorder to put the most common
 // kinds first.
+// Note: 'integration' is intentionally absent — 集成 lives only in the
+// top feed strip (logo-grid layout), so users have one place to find it.
 const SIDEBAR_KINDS: (ResourceKind | 'all')[] = [
-  'all', 'skill', 'mcp', 'agent', 'assistant', 'prompt', 'kb', 'integration',
+  'all', 'skill', 'mcp', 'agent', 'assistant', 'prompt', 'kb',
 ];
 
 // Built-in subscription feeds — the user can add more via the "+" button.
@@ -388,18 +389,15 @@ export function MarketPage() {
             让 Cherry 按你的方式工作
           </h1>
 
-          {/* Search bar + publisher dropdown (sub-kind moved to left rail) */}
-          <div className="flex items-center gap-2 mb-3">
-            <div className="flex-1">
-              <SearchInput
-                value={search}
-                onChange={setSearch}
-                placeholder="搜索资源"
-                clearable
-                wrapperClassName="flex items-center gap-2 px-3 h-10 rounded-md border border-border/40 bg-background hover:border-border/60 focus-within:border-foreground/70 transition-colors"
-              />
-            </div>
-            <PublisherFilterDropdown />
+          {/* Search bar — sub-kind lives on the left rail, source on the feed strip below */}
+          <div className="mb-3">
+            <SearchInput
+              value={search}
+              onChange={setSearch}
+              placeholder="搜索资源"
+              clearable
+              wrapperClassName="flex items-center gap-2 px-3 h-10 rounded-md border border-border/40 bg-background hover:border-border/60 focus-within:border-foreground/70 transition-colors"
+            />
           </div>
 
           {/* Feed tabs — built-in sources + user-added subscriptions */}
@@ -591,15 +589,14 @@ function MarketRowGrid({
             <button
               type="button"
               onClick={(e) => { e.stopPropagation(); onToggleInstall(it.id); }}
-              aria-label={isInstalled ? '已安装' : '安装'}
               title={isInstalled ? '已安装 — 点击卸载' : '安装'}
-              className={`h-8 w-8 inline-flex items-center justify-center rounded-md transition-colors flex-shrink-0 ${
+              className={`inline-flex items-center gap-1 h-7 px-3 rounded-md text-[11px] transition-colors flex-shrink-0 ${
                 isInstalled
-                  ? 'text-success hover:text-destructive hover:bg-destructive/10'
-                  : 'text-muted-foreground/55 hover:text-foreground hover:bg-muted/50'
+                  ? 'border border-border/40 text-muted-foreground/85 hover:bg-muted/30'
+                  : 'bg-foreground text-background hover:bg-foreground/90'
               }`}
             >
-              {isInstalled ? <Check size={14} /> : <Plus size={14} />}
+              {isInstalled ? <><Check size={11} />已安装</> : '安装'}
             </button>
           </div>
         );
@@ -662,7 +659,7 @@ function IntegrationCard({
       </p>
       <div className="flex items-center justify-between pt-0.5">
         <span className="text-[11px] text-muted-foreground/50 tabular-nums">
-          {item.installs.toLocaleString()} 次连接
+          {item.installs.toLocaleString()} 次安装
         </span>
         <button
           type="button"
@@ -673,7 +670,7 @@ function IntegrationCard({
               : 'bg-foreground text-background hover:bg-foreground/90'
           }`}
         >
-          {installed ? <><Check size={11} />已连接</> : '连接'}
+          {installed ? <><Check size={11} />已安装</> : '安装'}
         </button>
       </div>
     </div>
@@ -844,53 +841,6 @@ function InstallIntegrationDialog({
     </Dialog>
   );
 }
-
-// ─── Publisher filter dropdown (next to search) ─────────────────────
-
-function PublisherFilterDropdown() {
-  const [open, setOpen] = useState(false);
-  const [value, setValue] = useState<'all' | 'official' | 'community'>('all');
-  const label = value === 'all' ? '全部' : value === 'official' ? '官方' : '社区';
-  const options: { id: typeof value; label: string }[] = [
-    { id: 'all',       label: '全部来源' },
-    { id: 'official',  label: '官方' },
-    { id: 'community', label: '社区' },
-  ];
-  return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <button
-          type="button"
-          className="inline-flex items-center gap-1.5 h-10 px-3 rounded-md border border-border/40 text-sm text-foreground/85 hover:border-border/60 hover:bg-muted/15 transition-colors"
-        >
-          <span>{label}</span>
-          <ChevronDown size={12} className="text-muted-foreground/55" />
-        </button>
-      </PopoverTrigger>
-      <PopoverContent align="end" className="w-[160px] p-1">
-        {options.map(opt => {
-          const active = value === opt.id;
-          return (
-            <button
-              key={opt.id}
-              type="button"
-              onClick={() => { setValue(opt.id); setOpen(false); }}
-              className={`w-full text-left px-2.5 py-1.5 rounded text-sm transition-colors flex items-center justify-between ${
-                active
-                  ? 'bg-muted/60 text-foreground'
-                  : 'text-foreground/80 hover:bg-muted/40'
-              }`}
-            >
-              <span>{opt.label}</span>
-              {active && <Check size={12} className="text-foreground/70" />}
-            </button>
-          );
-        })}
-      </PopoverContent>
-    </Popover>
-  );
-}
-
 
 // ─── Market detail dialog (二级页面) ────────────────────────────────────
 
