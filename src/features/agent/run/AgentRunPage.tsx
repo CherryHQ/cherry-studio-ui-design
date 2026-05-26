@@ -25,6 +25,7 @@ import { usePinnedAgents } from '@/app/hooks/usePinnedAgents';
 import { FileExplorer } from './FileExplorer';
 import { ArtifactViewer } from './ArtifactViewer';
 import { ChatPanel } from './ChatPanel';
+import { SaveAsSkillDialog } from './SaveAsSkillDialog';
 import { WorkflowPanel } from './WorkflowPanel';
 import type { AgentChatMessage, AgentSession, AgentSessionData } from '@/app/types/agent';
 import { SessionHistoryPage, type SessionDisplayMode } from './SessionHistoryPage';
@@ -1407,6 +1408,7 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
   const [showAgentInfo, setShowAgentInfo] = useState(false);
   const [showPlan, setShowPlan] = useState(false);
   const [showCreateAgent, setShowCreateAgent] = useState(false);
+  const [showSaveAsSkill, setShowSaveAsSkill] = useState(false);
 
   const sessionData: SessionData = useMemo(() => {
     if (!activeSessionId) return EMPTY_SESSION_DATA;
@@ -1665,6 +1667,23 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
       </div>
 
       <div className="flex items-center gap-0.5">
+        {/* Save the conversation as a reusable Skill — visible once
+            the chat has any messages so users can sediment a working
+            SOP into the resource library. */}
+        {hasMessages && (
+          <>
+            <Tooltip content="将本次对话沉淀成可复用的 Skill" side="bottom">
+              <Button variant="ghost" size="xs"
+                onClick={() => setShowSaveAsSkill(true)}
+                className="gap-1.5 px-2 py-[3px] text-xs text-muted-foreground hover:text-foreground hover:bg-accent/15">
+                <Sparkles size={11} className="text-accent-violet" />
+                <span>保存为 Skill</span>
+              </Button>
+            </Tooltip>
+            <div className="w-px h-3.5 bg-border/30 mx-0.5" />
+          </>
+        )}
+
         {/* Plan toggle — only when there are workflow steps. Opens floating card. */}
         {sessionData.steps.length > 0 && (
           <Popover open={showPlan} onOpenChange={setShowPlan}>
@@ -1955,6 +1974,14 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
         open={showCreateAgent}
         onOpenChange={setShowCreateAgent}
         variant="agent"
+      />
+
+      {/* ===== Save current conversation as Skill ===== */}
+      <SaveAsSkillDialog
+        open={showSaveAsSkill}
+        onOpenChange={setShowSaveAsSkill}
+        agent={selectedAgent}
+        messages={messages}
       />
     </div>
   );

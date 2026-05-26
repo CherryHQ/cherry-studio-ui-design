@@ -27,6 +27,7 @@ import { useGlobalActions } from '@/app/context/GlobalActionContext';
 import type { ResourceItem, FolderNode, TagItem, LibrarySidebarFilter, LibraryConfigView, ResourceType } from '@/app/types';
 import type { ViewMode, SortKey } from '@/app/types';
 import { MOCK_RESOURCES, MOCK_FOLDERS, TAG_COLORS, DEFAULT_TAG_COLOR, RESOURCE_TYPE_CONFIG } from '@/app/config/constants';
+import { getUserSkills, useUserSkills } from '@/app/stores/userSkillsStore';
 import { LibrarySidebar } from './LibrarySidebar';
 import { ResourceGrid } from './ResourceGrid';
 import { ImportModal } from './ImportModal';
@@ -622,7 +623,21 @@ function deleteFolderFromTree(nodes: FolderNode[], id: string): FolderNode[] {
 
 export function LibraryPage() {
   const { libraryEditResourceId: initialEditResourceId, libraryCreateType: initialCreateType, libraryReturn: onReturn } = useGlobalActions();
-  const [resources, setResources] = useState<ResourceItem[]>(() => MOCK_RESOURCES.filter(r => r.type !== 'plugin'));
+  const userSkills = useUserSkills();
+  const [resources, setResources] = useState<ResourceItem[]>(() => {
+    const seed = MOCK_RESOURCES.filter(r => r.type !== 'plugin');
+    return [...getUserSkills(), ...seed];
+  });
+
+  // Merge in any user skills created while the library was unmounted
+  // (e.g. via the agent's "保存为 Skill" flow). De-dupes by id.
+  useEffect(() => {
+    setResources(prev => {
+      const known = new Set(prev.map(r => r.id));
+      const newOnes = userSkills.filter(s => !known.has(s.id));
+      return newOnes.length === 0 ? prev : [...newOnes, ...prev];
+    });
+  }, [userSkills]);
   const [folders, setFolders] = useState<FolderNode[]>(MOCK_FOLDERS);
 
   const [configView, setConfigView] = useState<LibraryConfigView>({ type: 'list' });
