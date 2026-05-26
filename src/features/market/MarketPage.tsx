@@ -817,66 +817,68 @@ function MarketDetailDialog({
 
         {/* Body */}
         <div className="max-h-[60vh] overflow-y-auto scrollbar-thin">
-          <div className="px-5 py-4 space-y-5">
-            {/* Stats strip */}
-            <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-xs text-muted-foreground/75">
-              <span className="inline-flex items-center gap-1"><Download size={11} />{installsLabel} 次安装</span>
-              <span className="inline-flex items-center gap-1"><Star size={11} />社区评分 4.6</span>
-              <span className="inline-flex items-center gap-1"><KIcon size={11} />{item.category}</span>
-              {item.language && <span className="text-muted-foreground/55">· {item.language}</span>}
-              {item.region && <span className="text-muted-foreground/55">· {item.region}</span>}
+          <div className="px-5 py-4 space-y-4">
+            {/* Stat tiles — 3 prominent numbers in a row */}
+            <div className="grid grid-cols-3 gap-2">
+              <div className="flex flex-col items-start gap-0.5 px-3 py-2 rounded-lg bg-muted/30 border border-border/15">
+                <div className="flex items-center gap-1 text-[10px] uppercase tracking-wide text-muted-foreground/60">
+                  <Download size={9} /> 安装
+                </div>
+                <div className="text-base font-medium text-foreground tabular-nums">{installsLabel}</div>
+              </div>
+              <div className="flex flex-col items-start gap-0.5 px-3 py-2 rounded-lg bg-muted/30 border border-border/15">
+                <div className="flex items-center gap-1 text-[10px] uppercase tracking-wide text-muted-foreground/60">
+                  <Star size={9} /> 评分
+                </div>
+                <div className="text-base font-medium text-foreground tabular-nums">4.6</div>
+              </div>
+              <div className="flex flex-col items-start gap-0.5 px-3 py-2 rounded-lg bg-muted/30 border border-border/15">
+                <div className="flex items-center gap-1 text-[10px] uppercase tracking-wide text-muted-foreground/60">
+                  <KIcon size={9} /> 分类
+                </div>
+                <div className="text-sm font-medium text-foreground truncate w-full">{item.category}</div>
+              </div>
             </div>
 
-            <div>
-              <h4 className="text-xs text-foreground font-medium mb-1.5">描述</h4>
-              <p className="text-sm text-foreground/85 leading-relaxed">
-                {item.tagline}
-              </p>
+            {/* Description — plain paragraph, no heading */}
+            <p className="text-[13px] text-foreground/85 leading-relaxed">
+              {item.tagline}
+            </p>
+
+            {/* Meta — compact 2-col key/value, only non-redundant fields */}
+            <div className="grid grid-cols-2 gap-x-6 gap-y-1.5 text-xs pt-3 border-t border-border/15">
+              <div className="flex items-baseline gap-2">
+                <span className="text-muted-foreground/55 w-12 flex-shrink-0">作者</span>
+                <span className="text-foreground/90 truncate">{item.author}</span>
+              </div>
+              <div className="flex items-baseline gap-2">
+                <span className="text-muted-foreground/55 w-12 flex-shrink-0">上架</span>
+                <span className="text-foreground/90">{item.ageLabel} 前</span>
+              </div>
+              {(item.language || item.region) && (
+                <div className="flex items-baseline gap-2">
+                  <span className="text-muted-foreground/55 w-12 flex-shrink-0">语言</span>
+                  <span className="text-foreground/90">
+                    {[item.language, item.region].filter(Boolean).join(' · ')}
+                  </span>
+                </div>
+              )}
+              <div className="flex items-baseline gap-2">
+                <span className="text-muted-foreground/55 w-12 flex-shrink-0">类型</span>
+                <span className="text-foreground/90">{KIND_LABEL[item.kind]}</span>
+              </div>
             </div>
 
-            <div>
-              <h4 className="text-xs text-foreground font-medium mb-2">来源与作者</h4>
-              <dl className="grid grid-cols-[64px_1fr] gap-y-1.5 text-xs">
-                <dt className="text-muted-foreground/55">作者</dt>
-                <dd className="text-foreground/90">{item.author}</dd>
-
-                <dt className="text-muted-foreground/55">类型</dt>
-                <dd className="text-foreground/90">{KIND_LABEL[item.kind]}</dd>
-
-                <dt className="text-muted-foreground/55">分类</dt>
-                <dd className="text-foreground/90">{item.category}</dd>
-
-                {item.language && (
-                  <>
-                    <dt className="text-muted-foreground/55">语言</dt>
-                    <dd className="text-foreground/90">{item.language}</dd>
-                  </>
-                )}
-
-                {item.region && (
-                  <>
-                    <dt className="text-muted-foreground/55">地区</dt>
-                    <dd className="text-foreground/90">{item.region}</dd>
-                  </>
-                )}
-
-                <dt className="text-muted-foreground/55">上架</dt>
-                <dd className="text-foreground/90">{item.ageLabel} 前</dd>
-
-                <dt className="text-muted-foreground/55">源仓库</dt>
-                <dd className="min-w-0">
-                  <a
-                    href={sourceUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="inline-flex items-center gap-1 text-foreground/90 hover:text-foreground transition-colors truncate"
-                  >
-                    <span className="truncate">{sourceUrl.replace(/^https?:\/\//, '')}</span>
-                    <ExternalLink size={10} className="opacity-60 flex-shrink-0" />
-                  </a>
-                </dd>
-              </dl>
-            </div>
+            {/* Source repo — as its own chip */}
+            <a
+              href={sourceUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-1.5 px-2.5 h-7 rounded-md border border-border/30 text-xs text-foreground/75 hover:text-foreground hover:bg-muted/30 transition-colors max-w-full"
+            >
+              <ExternalLink size={11} className="text-muted-foreground/60 flex-shrink-0" />
+              <span className="font-mono truncate">{sourceUrl.replace(/^https?:\/\//, '')}</span>
+            </a>
           </div>
         </div>
 
