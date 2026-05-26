@@ -35,7 +35,50 @@ export function KnowledgeSection() {
     <div className="max-w-3xl space-y-5">
       {/* Linked KBs */}
       <div>
-        <label className="text-sm text-foreground/85 mb-2 block">已引用知识库</label>
+        <div className="flex items-center justify-between mb-2">
+          <label className="text-sm text-foreground/85">已引用知识库</label>
+          <Popover open={showKBPicker} onOpenChange={(v) => { setShowKBPicker(v); if (!v) setKbSearch(''); }}>
+            <PopoverTrigger asChild>
+              <Button variant="outline" size="xs"
+                className="flex items-center gap-1 h-7 px-2.5 rounded-md text-xs text-muted-foreground/70 hover:text-foreground hover:bg-accent/15 border border-border/30">
+                <Plus size={10} /> 引用知识库
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent align="end" className="w-[280px] p-2">
+              <div className="mb-2">
+                <SearchInput
+                  value={kbSearch}
+                  onChange={setKbSearch}
+                  placeholder="搜索知识库…"
+                  clearable
+                  wrapperClassName="flex items-center gap-1.5 px-2 h-7 rounded-md bg-muted/30 border border-border/25"
+                />
+              </div>
+              <div className="max-h-[260px] overflow-y-auto scrollbar-thin space-y-1">
+                {unlinkedItems.length === 0 ? (
+                  <p className="text-xs text-muted-foreground/40 px-2 py-3 text-center">
+                    {kbSearch ? '未找到匹配的知识库' : '资源库中没有更多知识库'}
+                  </p>
+                ) : (
+                  unlinkedItems.map(kb => (
+                    <button
+                      type="button"
+                      key={kb.id}
+                      onClick={() => { toggleLink(kb.id); setShowKBPicker(false); setKbSearch(''); }}
+                      className="w-full flex items-center gap-2 px-2 py-2 rounded-lg text-left hover:bg-accent/50 transition-colors"
+                    >
+                      <span className="text-sm">{kb.icon}</span>
+                      <div className="flex-1 min-w-0">
+                        <div className="text-xs text-foreground truncate">{kb.name}</div>
+                        <div className="text-xs text-muted-foreground/50">{kb.docCount} 文档</div>
+                      </div>
+                    </button>
+                  ))
+                )}
+              </div>
+            </PopoverContent>
+          </Popover>
+        </div>
         {linkedItems.length === 0 ? (
           <div className="border border-dashed border-border/20 rounded-xl p-6 flex flex-col items-center">
             <Database size={20} strokeWidth={1.2} className="text-muted-foreground/40 mb-2" />
@@ -62,47 +105,6 @@ export function KnowledgeSection() {
           </div>
         )}
 
-        <Popover open={showKBPicker} onOpenChange={(v) => { setShowKBPicker(v); if (!v) setKbSearch(''); }}>
-          <PopoverTrigger asChild>
-            <Button variant="outline" size="xs"
-              className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs text-muted-foreground/50 hover:text-foreground hover:bg-accent/50 transition-colors border border-border/15 hover:border-border/30 mt-2">
-              <Plus size={10} /> 引用知识库
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent align="start" className="w-[280px] p-2">
-            <div className="mb-2">
-              <SearchInput
-                value={kbSearch}
-                onChange={setKbSearch}
-                placeholder="搜索知识库…"
-                clearable
-                wrapperClassName="flex items-center gap-1.5 px-2 h-7 rounded-md bg-muted/30 border border-border/25"
-              />
-            </div>
-            <div className="max-h-[260px] overflow-y-auto scrollbar-thin space-y-1">
-              {unlinkedItems.length === 0 ? (
-                <p className="text-xs text-muted-foreground/40 px-2 py-3 text-center">
-                  {kbSearch ? '未找到匹配的知识库' : '资源库中没有更多知识库'}
-                </p>
-              ) : (
-                unlinkedItems.map(kb => (
-                  <button
-                    type="button"
-                    key={kb.id}
-                    onClick={() => { toggleLink(kb.id); setShowKBPicker(false); setKbSearch(''); }}
-                    className="w-full flex items-center gap-2 px-2 py-2 rounded-lg text-left hover:bg-accent/50 transition-colors"
-                  >
-                    <span className="text-sm">{kb.icon}</span>
-                    <div className="flex-1 min-w-0">
-                      <div className="text-xs text-foreground truncate">{kb.name}</div>
-                      <div className="text-xs text-muted-foreground/50">{kb.docCount} 文档</div>
-                    </div>
-                  </button>
-                ))
-              )}
-            </div>
-          </PopoverContent>
-        </Popover>
       </div>
 
       {/* 知识库识别 — single Switch matching the rest of the assistant config */}

@@ -66,7 +66,50 @@ export function PhrasesSection() {
     <div className="max-w-3xl space-y-5">
 
       <div>
-        <label className="text-sm text-foreground/85 mb-2 block">已引用 Prompt</label>
+        <div className="flex items-center justify-between mb-2">
+          <label className="text-sm text-foreground/85">已引用 Prompt</label>
+          <Popover open={showPicker} onOpenChange={(v) => { setShowPicker(v); if (!v) setPickerSearch(''); }}>
+            <PopoverTrigger asChild>
+              <Button variant="outline" size="xs"
+                className="flex items-center gap-1 h-7 px-2.5 rounded-md text-xs text-muted-foreground/70 hover:text-foreground hover:bg-accent/15 border border-border/30">
+                <Plus size={10} /> 引用 Prompt
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent align="end" className="w-[300px] p-2">
+              <div className="mb-2">
+                <SearchInput
+                  value={pickerSearch}
+                  onChange={setPickerSearch}
+                  placeholder="搜索 Prompt…"
+                  clearable
+                  wrapperClassName="flex items-center gap-1.5 px-2 h-7 rounded-md bg-muted/30 border border-border/25"
+                />
+              </div>
+              <div className="max-h-[260px] overflow-y-auto scrollbar-thin space-y-1">
+                {unlinkedItems.length === 0 ? (
+                  <p className="text-xs text-muted-foreground/40 px-2 py-3 text-center">
+                    {pickerSearch ? '未找到匹配的 Prompt' : '资源库中没有更多 Prompt'}
+                  </p>
+                ) : (
+                  unlinkedItems.map(p => (
+                    <button
+                      type="button"
+                      key={p.id}
+                      onClick={() => { toggleLink(p.id); setShowPicker(false); setPickerSearch(''); }}
+                      className="w-full flex items-center gap-2 px-2 py-2 rounded-lg text-left hover:bg-accent/50 transition-colors"
+                    >
+                      <span className="text-sm">{p.avatar}</span>
+                      <div className="flex-1 min-w-0">
+                        <div className="text-xs text-foreground truncate">{p.name}</div>
+                        <div className="text-[11px] text-muted-foreground/55 truncate">{p.description}</div>
+                      </div>
+                    </button>
+                  ))
+                )}
+              </div>
+            </PopoverContent>
+          </Popover>
+        </div>
         {linkedItems.length === 0 ? (
           <div className="border border-dashed border-border/20 rounded-xl p-6 flex flex-col items-center">
             <FileText size={20} strokeWidth={1.2} className="text-muted-foreground/40 mb-2" />
@@ -123,47 +166,6 @@ export function PhrasesSection() {
           </div>
         )}
 
-        <Popover open={showPicker} onOpenChange={(v) => { setShowPicker(v); if (!v) setPickerSearch(''); }}>
-          <PopoverTrigger asChild>
-            <Button variant="outline" size="xs"
-              className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs text-muted-foreground/50 hover:text-foreground hover:bg-accent/50 transition-colors border border-border/15 hover:border-border/30 mt-2">
-              <Plus size={10} /> 引用 Prompt
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent align="start" className="w-[300px] p-2">
-            <div className="mb-2">
-              <SearchInput
-                value={pickerSearch}
-                onChange={setPickerSearch}
-                placeholder="搜索 Prompt…"
-                clearable
-                wrapperClassName="flex items-center gap-1.5 px-2 h-7 rounded-md bg-muted/30 border border-border/25"
-              />
-            </div>
-            <div className="max-h-[280px] overflow-y-auto scrollbar-thin space-y-1">
-              {unlinkedItems.length === 0 ? (
-                <p className="text-xs text-muted-foreground/40 px-2 py-3 text-center">
-                  {pickerSearch ? '未找到匹配的 Prompt' : '资源库中没有更多 Prompt'}
-                </p>
-              ) : (
-                unlinkedItems.map(p => (
-                  <button
-                    type="button"
-                    key={p.id}
-                    onClick={() => { toggleLink(p.id); setShowPicker(false); setPickerSearch(''); }}
-                    className="w-full flex items-center gap-2 px-2 py-2 rounded-lg text-left hover:bg-accent/50 transition-colors"
-                  >
-                    <span className="text-sm flex-shrink-0">{p.avatar}</span>
-                    <div className="flex-1 min-w-0">
-                      <div className="text-xs text-foreground truncate">{p.name}</div>
-                      <div className="text-[11px] text-muted-foreground/55 truncate">{p.description}</div>
-                    </div>
-                  </button>
-                ))
-              )}
-            </div>
-          </PopoverContent>
-        </Popover>
       </div>
     </div>
   );

@@ -971,7 +971,49 @@ function KnowledgeBaseSection() {
     <div className="max-w-3xl space-y-5">
       {/* Linked knowledge bases */}
       <div>
-        <div className="text-xs text-muted-foreground/50 mb-2.5">{"已关联知识库"}</div>
+        <div className="flex items-center justify-between mb-2">
+          <label className="text-sm text-foreground/85">已关联知识库</label>
+          <Popover open={showAddPanel} onOpenChange={(v) => { setShowAddPanel(v); if (v) { setAddSearch(''); setAddGroupFilter('全部'); } }}>
+            <PopoverTrigger asChild>
+              <Button variant="outline" size="xs"
+                className="flex items-center gap-1 h-7 px-2.5 rounded-md text-xs text-muted-foreground/70 hover:text-foreground hover:bg-accent/15 border border-border/30">
+                <Plus size={11} /><span>添加知识库</span>
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent align="end" className="p-0 w-[340px] overflow-hidden">
+              <div className="px-3 pt-3 pb-2">
+                <SearchInput value={addSearch} onChange={setAddSearch} placeholder="搜索知识库..." clearable wrapperClassName="flex items-center gap-1.5 px-2.5 py-[6px] rounded-lg bg-accent/15 border border-border/12" autoFocus />
+              </div>
+              <div className="px-3 pb-2 flex flex-wrap gap-1">
+                {KB_GROUPS.map(g => (
+                  <Button variant="ghost" size="xs" key={g} onClick={() => setAddGroupFilter(g)}
+                    className={`px-1.5 py-[2px] rounded-full text-xs ${addGroupFilter === g ? 'bg-accent/50 border border-border/30 text-foreground' : 'border border-transparent text-muted-foreground/50 hover:text-foreground'}`}>{g}</Button>
+                ))}
+              </div>
+              <div className="max-h-[240px] overflow-y-auto px-1.5 pb-2 scrollbar-thin">
+                {filteredCatalog.length === 0 ? (
+                  <EmptyState preset="no-result" title="无匹配知识库" compact />
+                ) : (
+                  <div className="space-y-0.5">
+                    {filteredCatalog.map(kb => (
+                      <div key={kb.id} onClick={() => addKB(kb)}
+                        className="flex items-center gap-2.5 px-2.5 py-[7px] rounded-lg hover:bg-accent/15 transition-colors cursor-pointer group">
+                        <div className={`w-6 h-6 rounded ${kb.iconColor} flex items-center justify-center flex-shrink-0`}>
+                          <FolderOpen size={11} className="text-white/90" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="text-sm text-foreground truncate">{kb.name}</div>
+                          <div className="text-xs text-muted-foreground/50">{kb.docCount} {"文档"}</div>
+                        </div>
+                        <Plus size={10} className="text-muted-foreground/40 group-hover:text-cherry-primary transition-colors flex-shrink-0" />
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </PopoverContent>
+          </Popover>
+        </div>
         {linkedKBs.length === 0 ? (
           <EmptyState
             preset="no-knowledge"
@@ -997,54 +1039,6 @@ function KnowledgeBaseSection() {
           </div>
         )}
 
-        {/* Add button + dropdown */}
-        <div className="mt-3">
-          <Popover open={showAddPanel} onOpenChange={(v) => { setShowAddPanel(v); if (v) { setAddSearch(''); setAddGroupFilter('全部'); } }}>
-            <PopoverTrigger asChild>
-              <Button variant="ghost" size="xs"
-                className="text-muted-foreground/50 hover:text-foreground">
-                <Plus size={11} /><span>{"添加知识库"}</span>
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent align="start" className="p-0 w-[340px] overflow-hidden">
-              {/* Search */}
-              <div className="px-3 pt-3 pb-2">
-                <SearchInput value={addSearch} onChange={setAddSearch} placeholder="搜索知识库..." clearable wrapperClassName="flex items-center gap-1.5 px-2.5 py-[6px] rounded-lg bg-accent/15 border border-border/12" autoFocus />
-              </div>
-
-              {/* Group filter pills */}
-              <div className="px-3 pb-2 flex flex-wrap gap-1">
-                {KB_GROUPS.map(g => (
-                  <Button variant="ghost" size="xs" key={g} onClick={() => setAddGroupFilter(g)}
-                    className={`px-1.5 py-[2px] rounded-full text-xs ${addGroupFilter === g ? 'bg-accent/50 border border-border/30 text-foreground' : 'border border-transparent text-muted-foreground/50 hover:text-foreground'}`}>{g}</Button>
-                ))}
-              </div>
-
-              {/* KB list */}
-              <div className="max-h-[240px] overflow-y-auto px-1.5 pb-2 scrollbar-thin">
-                {filteredCatalog.length === 0 ? (
-                  <EmptyState preset="no-result" title="无匹配知识库" compact />
-                ) : (
-                  <div className="space-y-0.5">
-                    {filteredCatalog.map(kb => (
-                      <div key={kb.id} onClick={() => addKB(kb)}
-                        className="flex items-center gap-2.5 px-2.5 py-[7px] rounded-lg hover:bg-accent/15 transition-colors cursor-pointer group">
-                        <div className={`w-6 h-6 rounded ${kb.iconColor} flex items-center justify-center flex-shrink-0`}>
-                          <FolderOpen size={11} className="text-white/90" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="text-sm text-foreground truncate">{kb.name}</div>
-                          <div className="text-xs text-muted-foreground/50">{kb.docCount} {"文档"}</div>
-                        </div>
-                        <Plus size={10} className="text-muted-foreground/40 group-hover:text-cherry-primary transition-colors flex-shrink-0" />
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </PopoverContent>
-          </Popover>
-        </div>
       </div>
 
       {/* 知识库识别 — Switch row, matches Cherry Studio source pattern

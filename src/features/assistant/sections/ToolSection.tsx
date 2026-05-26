@@ -109,7 +109,7 @@ export function ToolSection() {
               <p className="text-xs text-muted-foreground/50">请先在「设置 → MCP」中连接服务</p>
             </div>
           ) : (
-            <div className="space-y-0.5">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-3 gap-y-0.5">
               {MOCK_MCP_SERVERS.map(server => {
                 const enabled = selectedIds.includes(server.id);
                 const switchEl = (
