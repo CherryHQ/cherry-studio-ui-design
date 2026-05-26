@@ -1,7 +1,9 @@
 import React, { useState, useMemo } from 'react';
 import { Info, Plug } from 'lucide-react';
-import { Switch } from '@cherrystudio/ui/components/primitives/switch';
-import { Typography, SimpleTooltip } from '@cherry-studio/ui';
+import { Typography, SimpleTooltip, Switch, EmptyState } from '@cherry-studio/ui';
+import {
+  Select, SelectTrigger, SelectValue, SelectContent, SelectItem,
+} from '@cherrystudio/ui/components/primitives/select';
 
 // ===========================
 // Assistant MCP Settings
@@ -58,61 +60,48 @@ export function ToolSection() {
   );
 
   return (
-    <div className="max-w-3xl space-y-6">
-      <div>
-        <div className="flex items-center gap-1.5 mb-1">
-          <Typography variant="subtitle">MCP</Typography>
-          <SimpleTooltip
-            content="选择允许该助手调用的 MCP 服务。MCP 服务的连接与配置在全局「设置 → MCP」里完成。"
-            side="top"
-            sideOffset={6}
-          >
-            <button
-              type="button"
-              tabIndex={-1}
-              className="inline-flex items-center text-muted-foreground/40 hover:text-muted-foreground cursor-help"
-              aria-label="什么是 MCP"
-            >
-              <Info size={13} />
-            </button>
-          </SimpleTooltip>
+    <div className="max-w-3xl space-y-5">
+      {/* MCP enable Switch + 调用方式 Select. Reads as two standard
+          form rows instead of a floating segmented chip — clearer
+          affordance + the description sits under the Select where
+          users naturally look for field hints. */}
+      <div className="space-y-3">
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-1.5">
+            <label className="text-sm text-foreground/85">启用 MCP</label>
+            <SimpleTooltip content="关闭后助手不会调用任何 MCP 工具" side="top" sideOffset={6}>
+              <button type="button" tabIndex={-1}
+                className="inline-flex items-center text-muted-foreground/40 hover:text-muted-foreground cursor-help">
+                <Info size={12} />
+              </button>
+            </SimpleTooltip>
+          </div>
+          <Switch
+            checked={mode !== 'disabled'}
+            onCheckedChange={(v) => setMode(v ? 'auto' : 'disabled')}
+            className="flex-shrink-0"
+          />
         </div>
-      </div>
 
-      {/* Mode selector — vertical radio cards matching source's
-          Radio.Group with Radio.Button items */}
-      <div className="flex flex-col gap-2" role="radiogroup" aria-label="MCP 模式">
-        {MODE_OPTIONS.map(opt => {
-          const active = mode === opt.id;
-          return (
-            <button
-              key={opt.id}
-              type="button"
-              role="radio"
-              aria-checked={active}
-              onClick={() => setMode(opt.id)}
-              className={`text-left px-4 py-3 rounded-xl border transition-colors flex items-start gap-3 ${
-                active
-                  ? 'border-border bg-accent/30'
-                  : 'border-border/25 bg-card/30 hover:border-border/50 hover:bg-accent/15'
-              }`}
-            >
-              <span
-                className={`flex items-center justify-center w-4 h-4 rounded-full border mt-0.5 flex-shrink-0 transition-colors ${
-                  active ? 'border-primary' : 'border-border/50'
-                }`}
-              >
-                {active && <span className="w-2 h-2 rounded-full bg-primary" />}
-              </span>
-              <div className="flex-1 min-w-0">
-                <div className={`text-sm font-medium ${active ? 'text-foreground' : 'text-foreground/85'}`}>
-                  {opt.label}
-                </div>
-                <div className="text-xs text-muted-foreground/60 mt-0.5">{opt.description}</div>
-              </div>
-            </button>
-          );
-        })}
+        {mode !== 'disabled' && (
+          <div className="flex items-center justify-between gap-3">
+            <label className="text-sm text-foreground/85">调用方式</label>
+            <div className="flex flex-col items-end gap-1">
+              <Select value={mode} onValueChange={(v) => setMode(v as McpMode)}>
+                <SelectTrigger className="h-8 w-[140px] text-sm border-border/40 bg-muted/30 hover:bg-muted/40 rounded-lg">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="auto">自动</SelectItem>
+                  <SelectItem value="manual">手动</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-[11px] text-muted-foreground/55 text-right max-w-[280px]">
+                {MODE_OPTIONS.find(o => o.id === mode)?.description}
+              </p>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Manual mode: server list */}
@@ -124,13 +113,10 @@ export function ToolSection() {
             </div>
           )}
           {MOCK_MCP_SERVERS.length === 0 ? (
-            <div className="border border-dashed border-border/20 rounded-xl p-8 flex flex-col items-center">
-              <Plug size={22} strokeWidth={1.2} className="text-muted-foreground/40 mb-2" />
-              <p className="text-xs text-muted-foreground/40 mb-1">没有可用的 MCP 服务</p>
-              <p className="text-xs text-muted-foreground/50">请先在「设置 → MCP」中连接服务</p>
-            </div>
+            <EmptyState preset="no-resource" title="没有可用的 MCP 服务"
+              description="请先在「设置 → MCP」中连接服务" compact />
           ) : (
-            <div className="space-y-1.5">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-3 gap-y-0.5">
               {MOCK_MCP_SERVERS.map(server => {
                 const enabled = selectedIds.includes(server.id);
                 const switchEl = (
@@ -141,20 +127,19 @@ export function ToolSection() {
                     className="flex-shrink-0"
                   />
                 );
-                return (
+                const rowTooltip = server.baseUrl;
+                const row = (
                   <div
                     key={server.id}
-                    className={`flex items-center gap-3 px-3 py-2.5 rounded-xl border border-border/15 bg-accent/12 transition-opacity ${
+                    title={rowTooltip}
+                    className={`flex items-center gap-3 px-2.5 py-1.5 rounded-md hover:bg-accent/15 transition-colors ${
                       server.isActive ? '' : 'opacity-60'
                     }`}
                   >
                     <div className="flex-1 min-w-0">
-                      <div className="text-sm text-foreground truncate">{server.name}</div>
+                      <div className="text-[13px] text-foreground truncate leading-tight">{server.name}</div>
                       {server.description && (
-                        <div className="text-xs text-muted-foreground/55 truncate mt-0.5">{server.description}</div>
-                      )}
-                      {server.baseUrl && (
-                        <div className="text-[11px] text-muted-foreground/40 font-mono truncate mt-0.5">{server.baseUrl}</div>
+                        <div className="text-[11px] text-muted-foreground/55 truncate mt-0.5 leading-snug">{server.description}</div>
                       )}
                     </div>
                     {server.isActive ? (
@@ -166,6 +151,7 @@ export function ToolSection() {
                     )}
                   </div>
                 );
+                return row;
               })}
             </div>
           )}

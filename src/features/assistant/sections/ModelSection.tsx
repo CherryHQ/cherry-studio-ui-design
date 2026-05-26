@@ -3,11 +3,10 @@ import { Plus, Trash2, RotateCcw, Info } from 'lucide-react';
 import { Button } from '@cherrystudio/ui/components/primitives/button';
 import { Input } from '@cherry-studio/ui';
 import { Slider } from '@cherrystudio/ui/components/primitives/slider';
-import { Switch } from '@cherrystudio/ui/components/primitives/switch';
 import {
   Select, SelectTrigger, SelectValue, SelectContent, SelectItem,
 } from '@cherrystudio/ui/components/primitives/select';
-import { Typography, SimpleTooltip } from '@cherry-studio/ui';
+import { Typography, SimpleTooltip, Switch } from '@cherry-studio/ui';
 
 // ===========================
 // 模型设置 (Model Settings) section
@@ -53,12 +52,14 @@ export function ModelSection() {
   };
 
   return (
-    <div className="max-w-3xl space-y-6">
-      <div className="flex items-center gap-1.5">
-        <Typography variant="subtitle">模型设置</Typography>
-        <InfoTip text="调整模型的采样、上下文与输出参数" />
+    <div className="max-w-3xl space-y-5">
+      <div className="flex justify-end -mb-2">
+        <Button variant="ghost" size="xs" onClick={resetParameters}
+          className="gap-1.5 text-muted-foreground/70 hover:text-foreground">
+          <RotateCcw size={11} />
+          重置
+        </Button>
       </div>
-
       <div className="space-y-1">
         <ParamRow
           label="模型温度"
@@ -90,7 +91,7 @@ export function ModelSection() {
         <div className="py-3">
           <div className="flex items-center justify-between gap-3">
             <div className="flex items-center gap-1.5 min-w-0">
-              <label className="text-sm text-muted-foreground/80">
+              <label className="text-sm text-foreground/85">
                 自动上下文
                 {!enableContextCount && (
                   <span className="text-muted-foreground/40 ml-1.5 tabular-nums">
@@ -121,7 +122,7 @@ export function ModelSection() {
         >
           <Input type="number" min={0} step={100} value={maxTokens}
             onChange={e => setMaxTokens(parseInt(e.target.value) || 0)}
-            className="w-full px-3 py-2 rounded-xl border-border/20 bg-accent/15 text-xs text-foreground focus:border-border/40 focus:bg-accent/15 transition-all tabular-nums" />
+            className="h-8 text-xs tabular-nums" />
         </ParamRow>
 
         <ToggleRow
@@ -139,13 +140,13 @@ export function ModelSection() {
         >
           <Input type="number" min={1} max={100} step={1} value={maxToolCalls}
             onChange={e => setMaxToolCalls(parseInt(e.target.value) || 1)}
-            className="w-full px-3 py-2 rounded-xl border-border/20 bg-accent/15 text-xs text-foreground focus:border-border/40 focus:bg-accent/15 transition-all tabular-nums" />
+            className="h-8 text-xs tabular-nums" />
         </ParamRow>
 
         {/* 自定义参数 — dynamic list with name + type + value + delete */}
         <div className="py-3 space-y-2">
           <div className="flex items-center justify-between gap-3">
-            <label className="text-sm text-muted-foreground/80">自定义参数</label>
+            <label className="text-sm text-foreground/85">自定义参数</label>
             <Button variant="outline" size="xs" onClick={addCustomParam} className="gap-1.5 h-7">
               <Plus size={11} />
               添加参数
@@ -201,18 +202,6 @@ export function ModelSection() {
             </div>
           ))}
         </div>
-
-        <div className="flex justify-end pt-4">
-          <Button
-            variant="destructive"
-            size="xs"
-            onClick={resetParameters}
-            className="gap-1.5"
-          >
-            <RotateCcw size={11} />
-            重置
-          </Button>
-        </div>
       </div>
     </div>
   );
@@ -230,7 +219,7 @@ function ToggleRow({ label, hint, checked, onCheckedChange }: {
   return (
     <div className="flex items-center justify-between gap-3 py-3">
       <div className="flex items-center gap-1.5 min-w-0">
-        <label className="text-sm text-muted-foreground/80">{label}</label>
+        <label className="text-sm text-foreground/85">{label}</label>
         {hint && <InfoTip text={hint} />}
       </div>
       <Switch checked={checked} onCheckedChange={onCheckedChange} className="flex-shrink-0" />
@@ -252,7 +241,7 @@ function ParamRow({
     <div className="py-3">
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-1.5 min-w-0">
-          <label className="text-sm text-muted-foreground/80">
+          <label className="text-sm text-foreground/85">
             {label}
             {valueLabel != null && enabled && (
               <span className="text-muted-foreground/40 ml-1.5 tabular-nums">{valueLabel}</span>

@@ -593,21 +593,33 @@ function EmptyState({
   const resolvedActionLabel = actionLabel || (onAction && config?.actionLabel?.[locale]) || (onAction && config?.actionLabel?.en) || undefined
 
   if (compact) {
+    const compactIllustration = preset ? ILLUSTRATION_MAP[preset] : null
     return (
       <div
         data-slot="empty"
         className={cn(
-          "flex flex-col items-center justify-center py-10 px-4",
+          "flex flex-col items-center justify-center py-8 px-4",
           className
         )}
         {...props}
       >
-        <div className="w-9 h-9 rounded-[var(--radius-button)] bg-muted flex items-center justify-center mb-3">
-          <Icon size={16} className="text-muted-foreground" />
-        </div>
-        <p className="text-xs text-muted-foreground mb-1">{title}</p>
+        {compactIllustration ? (
+          <div className="w-[280px] h-[180px] mb-3 flex items-center justify-center overflow-hidden">
+            <img
+              src={`/images/empty-state/${encodeURIComponent(compactIllustration)}.svg`}
+              alt=""
+              className="w-full h-full object-contain invert dark:invert-0 opacity-95"
+              draggable={false}
+            />
+          </div>
+        ) : (
+          <div className="w-9 h-9 rounded-[var(--radius-button)] bg-muted flex items-center justify-center mb-3">
+            <Icon size={16} className="text-muted-foreground" />
+          </div>
+        )}
+        <p className="text-xs text-foreground/80 mb-1">{title}</p>
         {description && (
-          <p className="text-xs text-muted-foreground/70 text-center max-w-[200px]">
+          <p className="text-xs text-muted-foreground/60 text-center max-w-[260px]">
             {description}
           </p>
         )}

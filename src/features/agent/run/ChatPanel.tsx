@@ -155,6 +155,9 @@ export interface ChatPanelProps {
   onResolveUI?: (msgId: string, value: string) => void;
   onAvatarClick?: () => void;
   onOpenArtifact?: (filePath: string) => void;
+  /** Slot rendered first inside the composer's left toolbar
+   *  (e.g. agent picker + model picker pulled in from the page header). */
+  headerControls?: React.ReactNode;
 }
 
 export function ChatPanel({
@@ -164,6 +167,7 @@ export function ChatPanel({
   onResolveUI,
   onAvatarClick,
   onOpenArtifact,
+  headerControls,
 }: ChatPanelProps) {
   const [input, setInput] = useState('');
   const [showPlusMenu, setShowPlusMenu] = useState(false);
@@ -626,6 +630,8 @@ export function ChatPanel({
                   </DropdownMenuSub>
                 </DropdownMenuContent>
               </DropdownMenu>
+
+              {headerControls}
 
               {/* Thinking effort selector */}
               <Popover open={showModelMenu} onOpenChange={setShowModelMenu}>

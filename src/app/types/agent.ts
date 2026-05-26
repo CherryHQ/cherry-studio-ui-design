@@ -51,6 +51,11 @@ export interface AgentSession {
   unread?: boolean;
   tags?: string[];
   group?: string;
+  /** 'task' = long-running structured job (renders a progress ring
+   *  when running); 'chat' = ordinary back-and-forth. Defaults to chat. */
+  kind?: 'chat' | 'task';
+  /** 0-100. Only consulted for kind === 'task' && status === 'active'. */
+  progress?: number;
 }
 
 // --- File Explorer ---
