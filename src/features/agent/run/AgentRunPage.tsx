@@ -482,7 +482,6 @@ function CodexStyleInput({ onSendMessage, autoFocus = false, placeholder, header
         <div className="px-2 pb-2 flex items-center justify-between gap-2">
           {/* Left */}
           <div className="flex items-center gap-0.5 min-w-0">
-            {headerControls}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon-sm" className="p-[5px] w-auto h-auto text-muted-foreground/70 hover:text-foreground hover:bg-accent/50">
@@ -560,6 +559,8 @@ function CodexStyleInput({ onSendMessage, autoFocus = false, placeholder, header
                 <DropdownMenuItem className="gap-2 px-2 py-[5px] text-xs"><Zap size={13} strokeWidth={1.5} className="text-muted-foreground flex-shrink-0" /><span className="flex-1 text-left">快捷短语</span></DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
+
+            {headerControls}
 
             {/* Thinking effort selector */}
             <Popover open={showModelMenu} onOpenChange={setShowModelMenu}>

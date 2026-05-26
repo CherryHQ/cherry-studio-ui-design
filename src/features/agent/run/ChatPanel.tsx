@@ -517,7 +517,6 @@ export function ChatPanel({
           <div className="px-2 pb-2 flex items-center justify-between gap-2">
             {/* Left: + menu and permission selector */}
             <div className="flex items-center gap-0.5 min-w-0">
-              {headerControls}
               {/* Plus / Insert */}
               <DropdownMenu open={showPlusMenu} onOpenChange={setShowPlusMenu}>
                 <DropdownMenuTrigger asChild>
@@ -631,6 +630,8 @@ export function ChatPanel({
                   </DropdownMenuSub>
                 </DropdownMenuContent>
               </DropdownMenu>
+
+              {headerControls}
 
               {/* Thinking effort selector */}
               <Popover open={showModelMenu} onOpenChange={setShowModelMenu}>
