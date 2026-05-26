@@ -26,6 +26,8 @@ import { FileExplorer } from './FileExplorer';
 import { ArtifactViewer } from './ArtifactViewer';
 import { ChatPanel } from './ChatPanel';
 import { SaveAsSkillDialog } from './SaveAsSkillDialog';
+import { SkillJobStatusChip } from './SkillJobStatusChip';
+import { useActiveSkillJob } from '@/app/stores/skillJobStore';
 import { WorkflowPanel } from './WorkflowPanel';
 import type { AgentChatMessage, AgentSession, AgentSessionData } from '@/app/types/agent';
 import { SessionHistoryPage, type SessionDisplayMode } from './SessionHistoryPage';
@@ -1410,6 +1412,7 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
   const [showPlan, setShowPlan] = useState(false);
   const [showCreateAgent, setShowCreateAgent] = useState(false);
   const [showSaveAsSkill, setShowSaveAsSkill] = useState(false);
+  const activeSkillJob = useActiveSkillJob();
 
   const sessionData: SessionData = useMemo(() => {
     if (!activeSessionId) return EMPTY_SESSION_DATA;
@@ -1668,22 +1671,38 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
       </div>
 
       <div className="flex items-center gap-0.5">
-        {/* Save the conversation as a reusable Skill — visible once
-            the chat has any messages so users can sediment a working
-            SOP into the resource library. */}
-        {hasMessages && (
-          <>
-            <Tooltip content="将本次对话沉淀成可复用的 Skill" side="bottom">
-              <Button variant="ghost" size="xs"
-                onClick={() => setShowSaveAsSkill(true)}
-                className="gap-1.5 px-2 py-[3px] text-xs text-muted-foreground hover:text-foreground hover:bg-accent/15">
-                <Sparkles size={11} className="text-accent-violet" />
-                <span>保存为 Skill</span>
-              </Button>
-            </Tooltip>
-            <div className="w-px h-3.5 bg-border/30 mx-0.5" />
-          </>
-        )}
+        {/* Save the conversation as a reusable Skill — only surfaced
+            when the chat has produced something worth sedimenting:
+            either the agent ran a workflow with concrete steps, or
+            the user has invested at least a few turns. While a
+            create_skill job is in flight we swap in the status chip
+            so the user can click to inspect progress. */}
+        {(() => {
+          if (activeSkillJob) {
+            return (
+              <>
+                <SkillJobStatusChip />
+                <div className="w-px h-3.5 bg-border/30 mx-0.5" />
+              </>
+            );
+          }
+          const userMsgCount = messages.filter(m => m.role === 'user').length;
+          const canSaveAsSkill = sessionData.steps.length > 0 || userMsgCount >= 3;
+          if (!canSaveAsSkill) return null;
+          return (
+            <>
+              <Tooltip content="将本次对话沉淀成可复用的 Skill" side="bottom">
+                <Button variant="ghost" size="xs"
+                  onClick={() => setShowSaveAsSkill(true)}
+                  className="gap-1.5 px-2 py-[3px] text-xs text-muted-foreground hover:text-foreground hover:bg-accent/15">
+                  <Sparkles size={11} className="text-accent-violet" />
+                  <span>保存为 Skill</span>
+                </Button>
+              </Tooltip>
+              <div className="w-px h-3.5 bg-border/30 mx-0.5" />
+            </>
+          );
+        })()}
 
         {/* Plan toggle — only when there are workflow steps. Opens floating card. */}
         {sessionData.steps.length > 0 && (
