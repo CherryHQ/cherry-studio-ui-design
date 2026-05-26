@@ -1,6 +1,6 @@
 import React, { useState, useRef, useMemo, useCallback } from 'react';
 import {
-  ArrowLeft, Save, Settings, FileText,
+  ArrowLeft, Save, Settings, Settings2, FileText,
   Wrench, SlidersHorizontal, ChevronRight, ChevronDown,
   X, Check, Plus, Trash2,
   RefreshCw, CheckCircle2, Circle, AlertTriangle,
@@ -47,11 +47,13 @@ const TOOLCHAIN_CHILDREN: { id: ToolchainTabId; label: string; icon: React.Eleme
   { id: 'integrations', label: '连接器',     icon: Plug },
 ];
 
+// 'advanced' is rendered as the last entry below the collapsible
+// 拓展 group; the other three sit at the top of the sidebar.
 const sections: { id: Section; label: string; icon: React.ElementType }[] = [
   { id: 'basic',    label: '基础设置', icon: Settings },
   { id: 'prompt',   label: '提示词',   icon: FileText },
   { id: 'knowledge', label: '知识库',  icon: BookOpen },
-  { id: 'advanced', label: '高级设置', icon: SlidersHorizontal },
+  { id: 'advanced', label: '高级设置', icon: Settings2 },
 ];
 
 
@@ -95,8 +97,9 @@ export function AgentConfig({ resource, onBack, inModal = false }: Props) {
       )}
       <div className="flex flex-1 min-h-0">
         <div className="w-[150px] flex-shrink-0 border-r border-border/15 p-2 overflow-y-auto">
-          {/* Flat entries first: 基础设置 / 提示词 / 知识库 / 高级设置 */}
-          {sections.map(s => {
+          {/* Flat entries: 基础设置 / 提示词 / 知识库 (advanced moved
+              below the 拓展 group). */}
+          {sections.filter(s => s.id !== 'advanced').map(s => {
             const active = activeSection === s.id;
             const Icon = s.icon;
             return (
@@ -152,6 +155,19 @@ export function AgentConfig({ resource, onBack, inModal = false }: Props) {
               </>
             );
           })()}
+
+          {/* 高级设置 — sits below the 拓展 group as the tail entry. */}
+          {sections.filter(s => s.id === 'advanced').map(s => {
+            const active = activeSection === s.id;
+            const Icon = s.icon;
+            return (
+              <Button variant="ghost" key={s.id} onClick={() => setActiveSection(s.id)}
+                className={`w-full justify-start gap-2 px-3 py-2 mb-0.5 rounded-lg transition-colors ${active ? 'bg-accent/50 text-foreground font-medium' : 'font-normal text-muted-foreground/65 hover:text-foreground hover:bg-muted/40'}`}>
+                <Icon size={13} strokeWidth={1.5} className={`flex-shrink-0 ${active ? 'text-muted-foreground' : 'text-muted-foreground/40'}`} />
+                <span className="text-sm">{s.label}</span>
+              </Button>
+            );
+          })}
         </div>
         <div className="flex-1 overflow-y-auto px-5 py-4 scrollbar-thin">
           <AnimatePresence mode="wait">

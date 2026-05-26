@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ArrowLeft, Save, Settings, FileText, BookOpen, ChevronRight, Wrench, Zap, SlidersHorizontal, CheckCircle2 } from 'lucide-react';
+import { ArrowLeft, Save, Settings, FileText, BookOpen, ChevronRight, Wrench, Zap, SlidersHorizontal, CheckCircle2, Blocks, ChevronDown } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Button } from '@cherrystudio/ui/components/primitives/button';
 import type { ResourceItem } from '@/app/types';
@@ -20,19 +20,27 @@ interface Props {
   inModal?: boolean;
 }
 
-type Section = 'basic' | 'model' | 'prompt' | 'phrases' | 'knowledge' | 'tools';
+// Flat sidebar items at the top + a 拓展 group whose children are
+// 知识库 and 工具(MCP). Mirrors the Agent's sidebar shape so the two
+// configs feel structurally identical.
+type ExtensionId = 'knowledge' | 'tools';
+type Section = 'basic' | 'model' | 'prompt' | 'phrases' | `extensions:${ExtensionId}`;
 
-const sections: { id: Section; label: string; icon: React.ElementType }[] = [
-  { id: 'basic',     label: '基础设置', icon: Settings },
-  { id: 'model',     label: '模型设置', icon: SlidersHorizontal },
-  { id: 'prompt',    label: '提示词',   icon: FileText },
-  { id: 'phrases',   label: '快捷短语', icon: Zap },
-  { id: 'knowledge', label: '知识库',   icon: BookOpen },
-  { id: 'tools',     label: '工具',     icon: Wrench },
+const sections: { id: Exclude<Section, `extensions:${string}`>; label: string; icon: React.ElementType }[] = [
+  { id: 'basic',   label: '基础设置', icon: Settings },
+  { id: 'model',   label: '模型设置', icon: SlidersHorizontal },
+  { id: 'prompt',  label: '提示词',   icon: FileText },
+  { id: 'phrases', label: '快捷短语', icon: Zap },
+];
+
+const EXTENSION_CHILDREN: { id: ExtensionId; label: string; icon: React.ElementType }[] = [
+  { id: 'knowledge', label: '知识库', icon: BookOpen },
+  { id: 'tools',     label: 'MCP',    icon: Wrench },
 ];
 
 export function AssistantConfig({ resource, onBack, inModal = false }: Props) {
   const [activeSection, setActiveSection] = useState<Section>('basic');
+  const [extensionsExpanded, setExtensionsExpanded] = useState(true);
   const [saved, setSaved] = useState(false);
 
   const handleSave = () => { setSaved(true); setTimeout(() => setSaved(false), 2000); };
@@ -68,6 +76,50 @@ export function AssistantConfig({ resource, onBack, inModal = false }: Props) {
               </Button>
             );
           })}
+
+          {/* 拓展 group — collapsible parent containing 知识库 + MCP.
+              Mirrors the Agent sidebar's 拓展 treatment. */}
+          {(() => {
+            const childActive = typeof activeSection === 'string' && activeSection.startsWith('extensions:');
+            return (
+              <>
+                <Button variant="ghost" size="inline"
+                  onClick={() => setExtensionsExpanded(v => !v)}
+                  className={`flex items-center justify-start gap-2 w-full px-3 py-2 rounded-lg text-left mb-0.5 transition-colors ${childActive ? 'bg-accent/50 text-foreground font-medium' : 'text-muted-foreground/65 hover:text-foreground hover:bg-muted/40'}`}>
+                  <Blocks size={13} strokeWidth={1.6} className={`flex-shrink-0 ${childActive ? 'text-muted-foreground' : 'text-muted-foreground/40'}`} />
+                  <span className="text-sm flex-1">拓展</span>
+                  <ChevronDown size={11} className={`flex-shrink-0 text-muted-foreground/40 transition-transform ${extensionsExpanded ? '' : '-rotate-90'}`} />
+                </Button>
+                <AnimatePresence initial={false}>
+                  {extensionsExpanded && (
+                    <motion.div key="extensions-children"
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: 'auto', opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.15 }}
+                      className="overflow-hidden"
+                    >
+                      <div className="space-y-0.5">
+                        {EXTENSION_CHILDREN.map(c => {
+                          const sid: Section = `extensions:${c.id}`;
+                          const isActive = activeSection === sid;
+                          const CIcon = c.icon;
+                          return (
+                            <Button key={c.id} variant="ghost" size="inline"
+                              onClick={() => setActiveSection(sid)}
+                              className={`flex items-center justify-start gap-2 w-full px-3 py-1.5 rounded-lg text-left mb-0.5 transition-colors ${isActive ? 'bg-accent/50 text-foreground font-medium' : 'text-muted-foreground/65 hover:text-foreground hover:bg-muted/40'}`}>
+                              <CIcon size={11} strokeWidth={1.5} className={`flex-shrink-0 ${isActive ? 'text-muted-foreground' : 'text-muted-foreground/40'}`} />
+                              <span className="text-[13px]">{c.label}</span>
+                            </Button>
+                          );
+                        })}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </>
+            );
+          })()}
         </div>
         <div className="flex-1 overflow-y-auto px-5 py-4 scrollbar-thin">
           <AnimatePresence mode="wait">
@@ -76,8 +128,8 @@ export function AssistantConfig({ resource, onBack, inModal = false }: Props) {
               {activeSection === 'model' && <ModelSection />}
               {activeSection === 'prompt' && <PromptSection />}
               {activeSection === 'phrases' && <PhrasesSection />}
-              {activeSection === 'knowledge' && <KnowledgeSection />}
-              {activeSection === 'tools' && <ToolSection />}
+              {activeSection === 'extensions:knowledge' && <KnowledgeSection />}
+              {activeSection === 'extensions:tools' && <ToolSection />}
             </motion.div>
           </AnimatePresence>
         </div>
