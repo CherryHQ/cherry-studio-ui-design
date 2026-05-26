@@ -625,9 +625,9 @@ function MCPServerCard({ server, onToggleConnect, onRemove, onToggleTool, onTogg
   const allEnabled = enabledCount === server.tools.length;
 
   return (
-    <div className="rounded-xl border border-border/12 bg-accent/5 overflow-hidden transition-all">
+    <div className="rounded-xl border border-border/12 bg-accent/15 overflow-hidden transition-all">
       {/* Header row */}
-      <div className="flex items-center gap-2.5 px-3 py-2.5 cursor-pointer hover:bg-accent/15 transition-colors" onClick={() => isConnected && setExpanded(!expanded)}>
+      <div className="flex items-center gap-2.5 px-3 py-2.5 cursor-pointer hover:bg-accent/25 transition-colors" onClick={() => isConnected && setExpanded(!expanded)}>
         <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${isConnected ? 'bg-cherry-primary' : server.status === 'error' ? 'bg-destructive' : 'bg-muted-foreground/20'}`} />
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
@@ -793,6 +793,11 @@ function ToolchainSection({ onExplore, controlledTab }: { onExplore: () => void;
             <Plus size={11} />
             <span>添加</span>
           </Button>
+          <Button variant="ghost" size="xs" onClick={onExplore}
+            className="gap-1 h-7 px-2.5 rounded-md text-xs border border-border/30 text-muted-foreground/70 hover:text-foreground hover:bg-accent/15">
+            <ExternalLink size={11} />
+            <span>去市场浏览</span>
+          </Button>
         </div>
         {!controlledTab && (
           <div className="flex items-center border-b border-border/15">
@@ -824,7 +829,7 @@ function ToolchainSection({ onExplore, controlledTab }: { onExplore: () => void;
                     {filteredTools.map(tool => { const Icon = tool.icon; return (
                       <div key={tool.id}
                         onClick={() => toggleTool(tool.id)}
-                        className={`flex items-center gap-3 px-3 py-2.5 rounded-xl border border-border/12 bg-accent/5 hover:bg-accent/15 transition-all cursor-pointer ${tool.enabled ? '' : 'opacity-55'}`}>
+                        className={`flex items-center gap-3 px-3 py-2.5 rounded-xl border border-border/12 bg-accent/15 hover:bg-accent/25 transition-all cursor-pointer ${tool.enabled ? '' : 'opacity-55'}`}>
                         <Icon size={15} strokeWidth={1.5} className={tool.enabled ? 'text-muted-foreground flex-shrink-0' : 'text-muted-foreground/40 flex-shrink-0'} />
                         <div className="flex-1 min-w-0">
                           <div className="text-sm text-foreground truncate">{tool.name}</div>
@@ -835,7 +840,6 @@ function ToolchainSection({ onExplore, controlledTab }: { onExplore: () => void;
                     ); })}
                   </div>
                   {filteredTools.length === 0 && <EmptyState preset="no-result" title={search ? '未找到匹配结果' : '该分类下无工具'} compact />}
-                  <div className="pt-3 flex items-center gap-2"><Button variant="ghost" size="xs" onClick={() => setShowAddPanel(true)} className="text-muted-foreground/50 hover:text-foreground hover:bg-accent/15"><Plus size={10} /> {"继续添加"}</Button><Button variant="link" size="xs" onClick={onExplore} className="text-cherry-text-muted hover:text-cherry-primary-dark"><ExternalLink size={9} /> {"去探索浏览"}</Button></div>
                 </div>
               ))}
 
@@ -856,7 +860,6 @@ function ToolchainSection({ onExplore, controlledTab }: { onExplore: () => void;
                     ))}
                     {filteredMCP.length === 0 && <EmptyState preset="no-result" title={search ? '未找到匹配结果' : '该分类下无 Server'} compact />}
                   </div>
-                  <div className="pt-3 flex items-center gap-2"><Button variant="ghost" size="xs" onClick={() => setShowAddPanel(true)} className="text-muted-foreground/50 hover:text-foreground hover:bg-accent/15"><Plus size={10} /> {"继续添加"}</Button><Button variant="link" size="xs" onClick={onExplore} className="text-cherry-text-muted hover:text-cherry-primary-dark"><ExternalLink size={9} /> {"去探索浏览"}</Button></div>
                 </div>
               ))}
 
@@ -867,7 +870,7 @@ function ToolchainSection({ onExplore, controlledTab }: { onExplore: () => void;
                     {filteredIntegrations.map(integ => { const Icon = integ.icon; return (
                       <div key={integ.id}
                         onClick={() => toggleIntegration(integ.id)}
-                        className={`flex items-center gap-3 px-3 py-2.5 rounded-xl border border-border/12 bg-accent/5 hover:bg-accent/15 transition-all cursor-pointer ${integ.enabled ? '' : 'opacity-55'}`}>
+                        className={`flex items-center gap-3 px-3 py-2.5 rounded-xl border border-border/12 bg-accent/15 hover:bg-accent/25 transition-all cursor-pointer ${integ.enabled ? '' : 'opacity-55'}`}>
                         <Icon size={15} strokeWidth={1.5} className={integ.enabled ? `${integ.tintCls} flex-shrink-0` : 'text-muted-foreground/40 flex-shrink-0'} />
                         <div className="flex-1 min-w-0">
                           <div className="text-sm text-foreground truncate">{integ.name}</div>
@@ -878,7 +881,6 @@ function ToolchainSection({ onExplore, controlledTab }: { onExplore: () => void;
                     ); })}
                   </div>
                   {filteredIntegrations.length === 0 && <EmptyState preset="no-result" title={search ? '未找到匹配结果' : '暂无集成'} compact />}
-                  <div className="pt-3 flex items-center gap-2"><Button variant="ghost" size="xs" onClick={() => setShowAddPanel(true)} className="text-muted-foreground/50 hover:text-foreground hover:bg-accent/15"><Plus size={10} /> {"继续添加"}</Button><Button variant="link" size="xs" onClick={onExplore} className="text-cherry-text-muted hover:text-cherry-primary-dark"><ExternalLink size={9} /> {"去探索浏览"}</Button></div>
                 </div>
               ))}
 
@@ -890,7 +892,7 @@ function ToolchainSection({ onExplore, controlledTab }: { onExplore: () => void;
                     {filteredSkills.map(skill => { const Icon = skill.icon; return (
                       <div key={skill.id}
                         onClick={() => toggleSkill(skill.id)}
-                        className={`flex items-center gap-3 px-3 py-2.5 rounded-xl border border-border/12 bg-accent/5 hover:bg-accent/15 transition-all cursor-pointer ${skill.enabled ? '' : 'opacity-55'}`}>
+                        className={`flex items-center gap-3 px-3 py-2.5 rounded-xl border border-border/12 bg-accent/15 hover:bg-accent/25 transition-all cursor-pointer ${skill.enabled ? '' : 'opacity-55'}`}>
                         <Icon size={15} strokeWidth={1.5} className={skill.enabled ? 'text-muted-foreground flex-shrink-0' : 'text-muted-foreground/40 flex-shrink-0'} />
                         <div className="flex-1 min-w-0">
                           <div className="text-sm text-foreground truncate">{skill.name}</div>
@@ -901,7 +903,6 @@ function ToolchainSection({ onExplore, controlledTab }: { onExplore: () => void;
                     ); })}
                   </div>
                   {filteredSkills.length === 0 && <EmptyState preset="no-result" title={search ? '未找到匹配结果' : '该分类下无 Skill'} compact />}
-                  <div className="pt-3 flex items-center gap-2"><Button variant="ghost" size="xs" onClick={() => setShowAddPanel(true)} className="text-muted-foreground/50 hover:text-foreground hover:bg-accent/15"><Plus size={10} /> {"继续添加"}</Button><Button variant="link" size="xs" onClick={onExplore} className="text-cherry-text-muted hover:text-cherry-primary-dark"><ExternalLink size={9} /> {"去探索浏览"}</Button></div>
                 </div>
               ))}
 
@@ -982,7 +983,7 @@ function KnowledgeBaseSection() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
             {linkedKBs.map(kb => (
               <motion.div key={kb.id} layout initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}
-                className="flex items-center gap-3 px-4 py-3 rounded-xl border border-border/12 bg-accent/4 hover:bg-accent/15 transition-all group">
+                className="flex items-center gap-3 px-4 py-3 rounded-xl border border-border/12 bg-accent/15 hover:bg-accent/25 transition-all group">
                 <div className={`w-8 h-8 rounded-lg ${kb.iconColor} flex items-center justify-center flex-shrink-0`}>
                   <FolderOpen size={14} className="text-white/90" />
                 </div>
