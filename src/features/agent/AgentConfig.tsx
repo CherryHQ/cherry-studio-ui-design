@@ -95,8 +95,8 @@ export function AgentConfig({ resource, onBack, inModal = false }: Props) {
       )}
       <div className="flex flex-1 min-h-0">
         <div className="w-[150px] flex-shrink-0 border-r border-border/15 p-2 overflow-y-auto">
-          {/* Flat entries: 基础设置 / 提示词 / 知识库 */}
-          {sections.filter(s => s.id !== 'advanced').map(s => {
+          {/* Flat entries first: 基础设置 / 提示词 / 知识库 / 高级设置 */}
+          {sections.map(s => {
             const active = activeSection === s.id;
             const Icon = s.icon;
             return (
@@ -108,9 +108,9 @@ export function AgentConfig({ resource, onBack, inModal = false }: Props) {
             );
           })}
 
-          {/* 工具 group — collapsible parent that expands into the four
-              toolchain sub-tabs. The active state on the parent reflects
-              "any child active" so it still highlights when collapsed. */}
+          {/* 工具拓展 group — collapsible parent that expands into the
+              four toolchain sub-tabs. Sits at the bottom of the sidebar
+              since its children form a longer secondary nav. */}
           {(() => {
             const childActive = typeof activeSection === 'string' && activeSection.startsWith('toolchain:');
             return (
@@ -119,7 +119,7 @@ export function AgentConfig({ resource, onBack, inModal = false }: Props) {
                   onClick={() => setToolchainExpanded(v => !v)}
                   className={`w-full justify-start gap-2 px-3 py-2 mb-0.5 rounded-lg transition-colors ${childActive ? 'bg-accent/50 text-foreground font-medium' : 'font-normal text-muted-foreground/65 hover:text-foreground hover:bg-muted/40'}`}>
                   <Wrench size={13} strokeWidth={1.5} className={`flex-shrink-0 ${childActive ? 'text-muted-foreground' : 'text-muted-foreground/40'}`} />
-                  <span className="text-sm flex-1 text-left">工具</span>
+                  <span className="text-sm flex-1 text-left">工具拓展</span>
                   <ChevronDown size={11} className={`flex-shrink-0 text-muted-foreground/40 transition-transform ${toolchainExpanded ? '' : '-rotate-90'}`} />
                 </Button>
                 <AnimatePresence initial={false}>
@@ -152,19 +152,6 @@ export function AgentConfig({ resource, onBack, inModal = false }: Props) {
               </>
             );
           })()}
-
-          {/* 高级设置 — flat entry below the group */}
-          {sections.filter(s => s.id === 'advanced').map(s => {
-            const active = activeSection === s.id;
-            const Icon = s.icon;
-            return (
-              <Button variant="ghost" key={s.id} onClick={() => setActiveSection(s.id)}
-                className={`w-full justify-start gap-2 px-3 py-2 mb-0.5 rounded-lg transition-colors ${active ? 'bg-accent/50 text-foreground font-medium' : 'font-normal text-muted-foreground/65 hover:text-foreground hover:bg-muted/40'}`}>
-                <Icon size={13} strokeWidth={1.5} className={`flex-shrink-0 ${active ? 'text-muted-foreground' : 'text-muted-foreground/40'}`} />
-                <span className="text-sm">{s.label}</span>
-              </Button>
-            );
-          })}
         </div>
         <div className="flex-1 overflow-y-auto px-5 py-4 scrollbar-thin">
           <AnimatePresence mode="wait">
@@ -247,8 +234,8 @@ function AgentBasicSection({ resource }: { resource: ResourceItem }) {
     <div className="max-w-3xl space-y-5">
       <div>
         <div className="flex items-center justify-between gap-3 mb-1.5">
-          <label className="text-sm text-muted-foreground/70">头像与名称</label>
-          <label className="text-sm text-muted-foreground/70 w-[160px] flex-shrink-0">类型</label>
+          <label className="text-sm text-foreground/85">头像与名称</label>
+          <label className="text-sm text-foreground/85 w-[160px] flex-shrink-0">类型</label>
         </div>
         <div className="flex items-center gap-3">
           <Popover>
