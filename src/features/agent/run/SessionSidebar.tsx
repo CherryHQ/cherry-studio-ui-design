@@ -79,6 +79,33 @@ function SessionContextMenu({ x, y, onClose, onDelete, onPin, isPinned }: {
 }
 
 // ===========================
+// Task Progress Ring — small donut for Task-kind sessions in flight
+// ===========================
+function TaskProgressRing({ progress, size = 14 }: { progress: number; size?: number }) {
+  const stroke = 1.5;
+  const r = (size - stroke) / 2;
+  const c = 2 * Math.PI * r;
+  const pct = Math.min(Math.max(progress, 0), 100);
+  const offset = c * (1 - pct / 100);
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox={`0 0 ${size} ${size}`}
+      className="-rotate-90 flex-shrink-0"
+      aria-label={`任务进度 ${Math.round(pct)}%`}
+      role="img"
+    >
+      <circle cx={size / 2} cy={size / 2} r={r} fill="none"
+        className="stroke-muted-foreground/25" strokeWidth={stroke} />
+      <circle cx={size / 2} cy={size / 2} r={r} fill="none"
+        className="stroke-cherry-primary" strokeWidth={stroke}
+        strokeDasharray={c} strokeDashoffset={offset} strokeLinecap="round" />
+    </svg>
+  );
+}
+
+// ===========================
 // Session Item
 // ===========================
 
@@ -117,6 +144,9 @@ function SessionItem({ session, isActive, onClick, onContextMenu }: {
         <span className="text-xs text-muted-foreground/50 flex-shrink-0 tabular-nums">
           {session.timestamp}
         </span>
+        {session.kind === 'task' && session.status === 'active' && typeof session.progress === 'number' && (
+          <TaskProgressRing progress={session.progress} />
+        )}
       </div>
 
       {/* Title */}
