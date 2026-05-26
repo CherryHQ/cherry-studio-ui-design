@@ -119,7 +119,7 @@ function ModelSelector({ label, value, onChange, hint }: { label: string; value:
   return (
     <div>
       <div className="flex items-center justify-between mb-1.5">
-        <label className="text-sm text-muted-foreground/60">{label}</label>
+        <label className="text-sm text-muted-foreground/70">{label}</label>
         <span className="text-xs text-muted-foreground/50">{hint}</span>
       </div>
       <Popover open={open} onOpenChange={setOpen}>
@@ -167,12 +167,12 @@ function AgentBasicSection({ resource }: { resource: ResourceItem }) {
   const removeTag = (tag: string) => setTags(prev => prev.filter(t => t !== tag));
   const togglePresetTag = (tag: string) => { if (tags.includes(tag)) removeTag(tag); else setTags(prev => [...prev, tag]); };
   return (
-    <div className="max-w-3xl space-y-6">
+    <div className="max-w-3xl space-y-5">
       <div><Typography variant="subtitle" className="mb-1">{"基础设置"}</Typography><p className="text-xs text-muted-foreground/60">{"配置智能体的身份信息和模型"}</p></div>
       <div>
         <div className="flex items-center justify-between gap-3 mb-1.5">
-          <label className="text-sm text-muted-foreground/60">头像与名称</label>
-          <label className="text-sm text-muted-foreground/60 w-[160px] flex-shrink-0">类型</label>
+          <label className="text-sm text-muted-foreground/70">头像与名称</label>
+          <label className="text-sm text-muted-foreground/70 w-[160px] flex-shrink-0">类型</label>
         </div>
         <div className="flex items-center gap-3">
           <Popover>
@@ -258,7 +258,7 @@ function AgentBasicSection({ resource }: { resource: ResourceItem }) {
           </Select>
         </div>
       </div>
-      <div className="space-y-3"><div className="flex items-center gap-2 mb-1"><span className="text-sm text-muted-foreground/60">{"模型配置"}</span><div className="flex-1 h-px bg-border/30" /></div><ModelSelector label="规划模型" value={planningModel} onChange={setPlanningModel} hint="负责任务拆解和决策" /><ModelSelector label="常规模型" value={regularModel} onChange={setRegularModel} hint="负责主要推理和执行" /><ModelSelector label="快速模型" value={fastModel} onChange={setFastModel} hint="负责简单判断和格式化" /></div>
+      <div className="space-y-3"><div className="flex items-center gap-2 mb-1"><span className="text-sm text-muted-foreground/70">{"模型配置"}</span><div className="flex-1 h-px bg-border/30" /></div><ModelSelector label="规划模型" value={planningModel} onChange={setPlanningModel} hint="负责任务拆解和决策" /><ModelSelector label="常规模型" value={regularModel} onChange={setRegularModel} hint="负责主要推理和执行" /><ModelSelector label="快速模型" value={fastModel} onChange={setFastModel} hint="负责简单判断和格式化" /></div>
       <FieldGroup label="简介"><Textarea value={description} onChange={e => setDescription(e.target.value)} rows={2} className="input-accent resize-none" /></FieldGroup>
       <FieldGroup label="标签">
         <Combobox
@@ -906,7 +906,7 @@ function KnowledgeBaseSection() {
 
 
   return (
-    <div className="max-w-3xl space-y-6">
+    <div className="max-w-3xl space-y-5">
       <div>
         <Typography variant="subtitle" className="mb-1">{"知识库关联"}</Typography>
         <p className="text-xs text-muted-foreground/60">{"选择知识库并配置检索参数"}</p>
@@ -997,7 +997,7 @@ function KnowledgeBaseSection() {
           knowledge base itself, configured in 资源库 → 知识库. */}
       <div className="flex items-center justify-between gap-3 py-3 border-t border-border/15">
         <div className="flex items-center gap-1.5 min-w-0">
-          <label className="text-sm text-muted-foreground/80">知识库识别</label>
+          <label className="text-sm text-muted-foreground/70">知识库识别</label>
           <SimpleTooltip
             content="开启后助手自动判断是否需要检索已引用的知识库；关闭则每条消息都强制检索。"
             side="top"
@@ -1026,10 +1026,10 @@ function KnowledgeBaseSection() {
 function AgentAdvancedSection() {
   const [maxRounds, setMaxRounds] = useState(10);
   return (
-    <div className="max-w-3xl space-y-6">
+    <div className="max-w-3xl space-y-5">
       <div><Typography variant="subtitle" className="mb-1">{"高级设置"}</Typography><p className="text-xs text-muted-foreground/60">{"配置智能体的执行限制"}</p></div>
       <div>
-        <label className="text-sm text-muted-foreground/60 mb-1.5 block">{"最大执行轮次"} <span className="text-muted-foreground/50 ml-1">{maxRounds}</span></label>
+        <label className="text-sm text-muted-foreground/70 mb-1.5 block">{"最大执行轮次"} <span className="text-muted-foreground/50 ml-1">{maxRounds}</span></label>
         <Slider min={1} max={50} step={1} value={[maxRounds]} onValueChange={([v]) => setMaxRounds(v)} />
         <div className="flex justify-between mt-1"><span className="text-xs text-muted-foreground/50">1</span><span className="text-xs text-muted-foreground/50">50</span></div>
         <p className="text-xs text-muted-foreground/50 mt-2">{"每次会话中智能体与工具交互的最大轮次数。达到上限后将停止执行并返回当前结果。"}</p>
@@ -1039,5 +1039,5 @@ function AgentAdvancedSection() {
 }
 
 function FieldGroup({ label, children }: { label: React.ReactNode; children: React.ReactNode }) {
-  return (<div><label className="text-sm text-muted-foreground/60 mb-1.5 block">{label}</label>{children}</div>);
+  return (<div><label className="text-sm text-muted-foreground/70 mb-1.5 block">{label}</label>{children}</div>);
 }

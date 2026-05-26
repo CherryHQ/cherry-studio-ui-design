@@ -57,7 +57,7 @@ export function ToolSection() {
   );
 
   return (
-    <div className="max-w-3xl space-y-6">
+    <div className="max-w-3xl space-y-5">
       <div>
         <div className="flex items-center gap-1.5 mb-1">
           <Typography variant="subtitle">MCP</Typography>

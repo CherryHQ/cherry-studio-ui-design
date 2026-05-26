@@ -79,7 +79,7 @@ export function BasicSection({ resource }: Props) {
   };
 
   return (
-    <div className="max-w-3xl space-y-6">
+    <div className="max-w-3xl space-y-5">
       <div className="flex items-center gap-1.5">
         <Typography variant="subtitle">基础设置</Typography>
         <InfoTip text="配置助手的身份信息和模型参数" />
@@ -88,8 +88,8 @@ export function BasicSection({ resource }: Props) {
       {/* Row 1: 头像与名称 + 模型 — two-row form with aligned label band */}
       <div>
         <div className="flex items-center justify-between gap-3 mb-1.5">
-          <label className="text-sm text-muted-foreground/60">头像与名称</label>
-          <label className="text-sm text-muted-foreground/60 w-[220px] flex-shrink-0">模型</label>
+          <label className="text-sm text-muted-foreground/70">头像与名称</label>
+          <label className="text-sm text-muted-foreground/70 w-[220px] flex-shrink-0">模型</label>
         </div>
         <div className="flex items-center gap-3">
           <Popover>
@@ -235,7 +235,7 @@ export function BasicSection({ resource }: Props) {
 function FieldGroup({ label, children }: { label: React.ReactNode; children: React.ReactNode }) {
   return (
     <div>
-      <label className="text-sm text-muted-foreground/60 mb-1.5 block">{label}</label>
+      <label className="text-sm text-muted-foreground/70 mb-1.5 block">{label}</label>
       {children}
     </div>
   );
@@ -250,7 +250,7 @@ function ToggleRow({ label, hint, checked, onCheckedChange }: {
   return (
     <div className="flex items-center justify-between gap-3 py-3">
       <div className="flex items-center gap-1.5 min-w-0">
-        <label className="text-sm text-muted-foreground/80">{label}</label>
+        <label className="text-sm text-muted-foreground/70">{label}</label>
         {hint && <InfoTip text={hint} />}
       </div>
       <Switch checked={checked} onCheckedChange={onCheckedChange} className="flex-shrink-0" />
@@ -275,7 +275,7 @@ function ParamRow({
     <div className="py-3">
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-1.5 min-w-0">
-          <label className="text-sm text-muted-foreground/80">
+          <label className="text-sm text-muted-foreground/70">
             {label}
             {valueLabel != null && enabled && (
               <span className="text-muted-foreground/40 ml-1.5 tabular-nums">{valueLabel}</span>

@@ -63,7 +63,7 @@ export function PhrasesSection() {
   };
 
   return (
-    <div className="max-w-3xl space-y-6">
+    <div className="max-w-3xl space-y-5">
       <div>
         <Typography variant="subtitle" className="mb-1">快捷短语</Typography>
         <p className="text-xs text-muted-foreground/60">
@@ -74,7 +74,7 @@ export function PhrasesSection() {
       </div>
 
       <div>
-        <label className="text-sm text-muted-foreground/60 mb-2 block">已引用 Prompt</label>
+        <label className="text-sm text-muted-foreground/70 mb-2 block">已引用 Prompt</label>
         {linkedItems.length === 0 ? (
           <div className="border border-dashed border-border/20 rounded-xl p-6 flex flex-col items-center">
             <FileText size={20} strokeWidth={1.2} className="text-muted-foreground/40 mb-2" />
