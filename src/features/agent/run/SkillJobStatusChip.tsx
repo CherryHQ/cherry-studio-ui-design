@@ -42,8 +42,6 @@ export function SkillJobStatusChip() {
 
   if (!job) return null;
 
-  const currentStepLabel = CREATE_SKILL_STEPS[job.currentStep]?.label ?? '收尾';
-
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
@@ -58,12 +56,16 @@ export function SkillJobStatusChip() {
           {job.status === 'running' ? (
             <>
               <Loader2 size={11} className="text-accent-violet animate-spin flex-shrink-0" />
-              <span className="truncate max-w-[180px]">创建 Skill · {currentStepLabel}</span>
+              <span className="truncate max-w-[200px]">
+                创建 <span className="font-mono">{job.name}</span>
+              </span>
             </>
           ) : (
             <>
               <CheckCircle2 size={11} className="text-success flex-shrink-0" />
-              <span className="truncate max-w-[180px]">Skill 已加入资源库</span>
+              <span className="truncate max-w-[200px]">
+                <span className="font-mono">{job.name}</span> 已加入资源库
+              </span>
             </>
           )}
         </Button>
@@ -85,8 +87,8 @@ export function SkillJobStatusChip() {
         {/* Meta */}
         <div className="px-3 py-2.5 space-y-1.5 border-b border-border/15">
           <div className="flex items-baseline gap-2">
-            <span className="text-[10px] uppercase tracking-wide text-muted-foreground/45 w-10 flex-shrink-0">名称</span>
-            <span className="text-xs text-foreground truncate">{job.name}</span>
+            <span className="text-[10px] uppercase tracking-wide text-muted-foreground/45 w-10 flex-shrink-0">工具名</span>
+            <span className="text-xs text-foreground truncate font-mono">{job.name}</span>
           </div>
           <div className="flex items-baseline gap-2">
             <span className="text-[10px] uppercase tracking-wide text-muted-foreground/45 w-10 flex-shrink-0">来源</span>

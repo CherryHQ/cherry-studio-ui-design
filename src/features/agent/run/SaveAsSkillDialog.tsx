@@ -29,10 +29,48 @@ interface Props {
   messages: AnyMsg[];
 }
 
+// Map of well-known agent names → snake_case identifier stem. Skills
+// are tools — they need identifier-style names, not human titles.
+const AGENT_SLUG: Record<string, string> = {
+  '全栈工程师': 'fullstack',
+  '调研分析师': 'research',
+  '后端工程师': 'backend',
+  '运维工程师': 'devops',
+  '数据分析师': 'data',
+};
+
+// Keyword → identifier matcher applied to the first user message so the
+// auto-generated name reads as a real tool (e.g. `code_review_workflow`).
+const KEYWORD_TO_SLUG: { match: RegExp; slug: string }[] = [
+  { match: /审查|review/i,          slug: 'code_review' },
+  { match: /调试|debug|栈追踪|trace/i, slug: 'debug_workflow' },
+  { match: /部署|deploy|发布|release/i, slug: 'deploy_workflow' },
+  { match: /组件|component|scaffold/i, slug: 'component_scaffolder' },
+  { match: /api|接口|endpoint/i,    slug: 'api_builder' },
+  { match: /测试|test/i,            slug: 'test_runner' },
+  { match: /数据|分析|data|analy/i,   slug: 'data_pipeline' },
+  { match: /翻译|translate/i,       slug: 'translator' },
+  { match: /写作|文档|doc|write/i,    slug: 'doc_writer' },
+  { match: /sql|查询|query/i,       slug: 'sql_query' },
+  { match: /日程|会议|schedule|meeting/i, slug: 'schedule_helper' },
+];
+
+function sanitizeIdentifier(raw: string): string {
+  // snake_case: lowercase alphanumerics + underscore, collapse runs.
+  return raw
+    .toLowerCase()
+    .replace(/[^a-z0-9_]+/g, '_')
+    .replace(/^_+|_+$/g, '')
+    .replace(/_+/g, '_')
+    .slice(0, 40);
+}
+
 function deriveName(agentName: string | undefined, firstUserMsg: string | undefined): string {
-  const base = (firstUserMsg ?? '').trim().slice(0, 16);
-  if (base) return `${base} · SOP`;
-  return `${agentName || '智能体'} 工作流`;
+  const msg = (firstUserMsg ?? '').trim();
+  const hit = KEYWORD_TO_SLUG.find(k => k.match.test(msg));
+  if (hit) return hit.slug;
+  const agentSlug = (agentName && AGENT_SLUG[agentName]) || 'agent';
+  return `${agentSlug}_sop`;
 }
 
 function deriveDescription(agentName: string | undefined): string {
@@ -123,14 +161,18 @@ export function SaveAsSkillDialog({ open, onOpenChange, agent, messages }: Props
         {/* Body — confirm form */}
         <div className="px-6 py-4 border-t border-border/15 space-y-4">
           <Field>
-            <FieldLabel>名称</FieldLabel>
+            <FieldLabel>工具名</FieldLabel>
             <FieldContent>
               <Input
                 value={name}
-                onChange={e => setName(e.target.value)}
-                placeholder="给这个 Skill 起个名字"
-                className="h-8 text-sm"
+                onChange={e => setName(sanitizeIdentifier(e.target.value))}
+                placeholder="code_review_workflow"
+                className="h-8 text-sm font-mono"
+                spellCheck={false}
               />
+              <p className="text-[11px] text-muted-foreground/55 mt-1">
+                小写字母 + 下划线，作为 Skill 在工具列表中的标识
+              </p>
             </FieldContent>
           </Field>
 
