@@ -1,16 +1,18 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import {
-  Plus, Search, Filter, ArrowUpDown, ChevronRight, ChevronLeft, ChevronDown,
+  Plus, Search, Filter, ArrowUpDown, ChevronRight, ChevronLeft,
   Check, Download, X, MoreHorizontal, Terminal, FileText,
   Wrench, Sparkles, MousePointerClick, BookOpen, Network, Plug,
-  CheckCircle2, Zap, Compass, Star, ExternalLink, Shield,
-  Upload, Link2, Bot,
+  CheckCircle2, Zap, Compass, Star, ExternalLink,
+  Upload, Link2, Bot, FolderCog,
+  ArrowLeftRight, Settings, Lock, ShieldCheck,
 } from 'lucide-react';
 import {
-  Button, Input, Textarea, SearchInput, Typography, Badge, Slider,
-  Popover, PopoverTrigger, PopoverContent,
+  Button, Input, Textarea, SearchInput, Typography, Badge, Slider, Switch,
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
 } from '@cherry-studio/ui';
+import cherryLogoImg from '@/assets/cherry-icon.png';
+import { useGlobalActions } from '@/app/context/GlobalActionContext';
 
 // ===========================
 // Market Place
@@ -55,7 +57,7 @@ interface MarketItem {
 
 const KIND_LABEL: Record<ResourceKind, string> = {
   skill: 'Skill', cli: 'CLI', assistant: 'Assistant', agent: 'Agent',
-  mcp: 'MCP', prompt: 'Prompt', kb: '知识库', integration: '集成',
+  mcp: 'MCP', prompt: 'Prompt', kb: '知识库', integration: '连接器',
 };
 
 const KIND_ICON: Record<ResourceKind, React.ComponentType<{ size?: number; className?: string; strokeWidth?: number }>> = {
@@ -179,25 +181,43 @@ const CATALOG: MarketItem[] = [
 // The sidebar lists every resource kind in a single flat list — no top
 // pill tabs, no plugin/skill grouping. Reorder to put the most common
 // kinds first.
+// Sidebar lists every resource kind. 集成 has a special logo-first
+// rendering when selected (see the kind === 'integration' branch below);
+// the top feed strip is a separate axis (source channel, not kind).
 const SIDEBAR_KINDS: (ResourceKind | 'all')[] = [
-  'all', 'skill', 'mcp', 'cli', 'agent', 'assistant', 'prompt', 'kb', 'integration',
+  'all', 'skill', 'mcp', 'agent', 'assistant', 'prompt', 'kb', 'integration',
 ];
 
-// Quote-style copy for the hero carousel — pairs an existing CATALOG
-// item with a "in-action" snippet, mirroring the reference UI.
-const FEATURED_QUOTES: { itemId: string; quote: string }[] = [
-  { itemId: 'm-25', quote: '为每封我还没来得及回复的邮件起草回复' },
-  { itemId: 'm-32', quote: '在终端里把一段 stack trace 定位到具体代码并提出修复' },
-  { itemId: 'm-51', quote: '把会议笔记里的事件描述自动转成时序图' },
-  { itemId: 'm-5',  quote: '把仓库刚提的 issue 整理成可以直接派给 AI 的 PR 描述' },
-  { itemId: 'm-11', quote: '在你提问时拉取最新框架文档帮 LLM 引用' },
-  { itemId: 'm-46', quote: '把这段聊天里的产品决策同步到对应的需求文档' },
+// Built-in subscription feeds (source channels). The user can add more
+// via the "+" button. This is orthogonal to the sidebar kind filter —
+// kind = what type of resource, feed = where it came from.
+const BUILTIN_FEEDS: { id: string; label: string }[] = [
+  { id: 'cherry',      label: 'Cherry 精选' },
+  { id: 'skill-hub',   label: 'Skill Hub' },
+  { id: 'claude',      label: 'Claude Skill' },
+  { id: 'awesome-mcp', label: 'Awesome MCP' },
 ];
 
+// Per-integration product logo — sourced from the Simple Icons CDN with
+// the brand's official hex color. Falls back to the catalog avatar emoji
+// when an id isn't mapped (so adding a new integration row still works).
+const INTEGRATION_LOGO: Record<string, { slug: string; color: string }> = {
+  'm-19': { slug: 'notion',           color: '000000' }, // Notion
+  'm-20': { slug: 'yuque',            color: '25B864' }, // 语雀
+  'm-21': { slug: 'googlecalendar',   color: '4285F4' }, // Google Calendar
+  'm-22': { slug: 'larksuite',        color: '00D6B9' }, // 飞书 / Lark
+  'm-23': { slug: 'slack',            color: '4A154B' }, // Slack
+  'm-24': { slug: 'linear',           color: '5E6AD2' }, // Linear
+  'm-25': { slug: 'gmail',            color: 'EA4335' }, // Gmail
+  'm-26': { slug: 'github',           color: '181717' }, // GitHub
+  'm-27': { slug: 'confluence',       color: '172B4D' }, // Confluence
+  'm-28': { slug: 'microsoftoutlook', color: '0078D4' }, // Outlook
+};
 
 // ─── Page component ───────────────────────────────────────────────────
 
 export function MarketPage() {
+  const { navigateToLibrary } = useGlobalActions();
   const [search, setSearch] = useState('');
   // Which kind the sidebar has narrowed to. 'all' = no filter.
   const [kind, setKind] = useState<ResourceKind | 'all'>('all');
@@ -212,16 +232,38 @@ export function MarketPage() {
   const [onboardOpen, setOnboardOpen] = useState(false);
   const [detailItem, setDetailItem] = useState<MarketItem | null>(null);
   const [submitOpen, setSubmitOpen] = useState(false);
-  // Hero carousel auto-rotate
-  const [heroIndex, setHeroIndex] = useState(0);
+
+  // Subscription feeds — the strip below the search bar. 'cherry' is the
+  // default; users can add custom feeds (label derived from the URL host).
+  const [feedId, setFeedId] = useState<string>('cherry');
+  const [customFeeds, setCustomFeeds] = useState<{ id: string; label: string; url: string }[]>([]);
+  const [feedDialogOpen, setFeedDialogOpen] = useState(false);
+  const [feedUrl, setFeedUrl] = useState('');
+  // 集成 install confirmation dialog — opened when the user clicks an
+  // integration card or its "连接" button.
+  const [installItem, setInstallItem] = useState<MarketItem | null>(null);
+
+  const addCustomFeed = () => {
+    const url = feedUrl.trim();
+    if (!url) return;
+    let label = url;
+    try {
+      label = new URL(url.startsWith('http') ? url : `https://${url}`).hostname.replace(/^www\./, '');
+    } catch { /* keep raw url as label */ }
+    const id = `custom-${Date.now()}`;
+    setCustomFeeds(prev => [...prev, { id, label, url }]);
+    setFeedId(id);
+    setFeedUrl('');
+    setFeedDialogOpen(false);
+  };
 
   // Defensive: Radix Dialog occasionally leaves body.style.pointerEvents
   // set to 'none' after closing, blocking all clicks. Flush it whenever
   // every dialog is closed.
   useEffect(() => {
-    const anyOpen = onboardOpen || detailItem !== null || submitOpen;
+    const anyOpen = onboardOpen || detailItem !== null || submitOpen || feedDialogOpen || installItem !== null;
     if (!anyOpen) document.body.style.pointerEvents = '';
-  }, [onboardOpen, detailItem, submitOpen]);
+  }, [onboardOpen, detailItem, submitOpen, feedDialogOpen, installItem]);
 
   const toggleInstall = (id: string) => {
     setInstalled(prev => {
@@ -230,19 +272,6 @@ export function MarketPage() {
       return next;
     });
   };
-
-  // Hero carousel slides — resolve item ids against the catalog
-  const heroSlides = useMemo(() => FEATURED_QUOTES
-    .map(q => ({ item: CATALOG.find(c => c.id === q.itemId), quote: q.quote }))
-    .filter((s): s is { item: MarketItem; quote: string } => !!s.item),
-  []);
-
-  // Auto-advance the hero every 6s
-  useEffect(() => {
-    if (heroSlides.length <= 1) return;
-    const id = setInterval(() => setHeroIndex(i => (i + 1) % heroSlides.length), 6000);
-    return () => clearInterval(id);
-  }, [heroSlides.length]);
 
   // Public 市场 view: hides 自定义 (those live in 管理).
   const filtered = useMemo(() => {
@@ -293,8 +322,6 @@ export function MarketPage() {
       .sort((a, b) => b.items.length - a.items.length || a.label.localeCompare(b.label));
   }, [filtered, featured, search, kind]);
 
-  const currentSlide = heroSlides[heroIndex];
-
   return (
     <div className="flex flex-col h-full bg-background">
       {/* Top bar — submit-resource action only. Resource management
@@ -302,6 +329,16 @@ export function MarketPage() {
           (资源库) page, not here. */}
       <div className="flex-shrink-0 px-6 pt-5">
         <div className="max-w-[1120px] mx-auto flex items-center justify-end gap-1">
+          <Button
+            variant="outline"
+            size="xs"
+            onClick={() => navigateToLibrary()}
+            className="h-8 px-2.5 gap-1 text-xs"
+            title="打开资源库"
+          >
+            <FolderCog size={12} />
+            管理
+          </Button>
           <Button
             variant="outline"
             size="xs"
@@ -365,61 +402,81 @@ export function MarketPage() {
             让 Cherry 按你的方式工作
           </h1>
 
-          {/* Search bar + publisher dropdown (sub-kind moved to left rail) */}
-          <div className="flex items-center gap-2 mb-5">
-            <div className="flex-1">
-              <SearchInput
-                value={search}
-                onChange={setSearch}
-                placeholder="搜索资源"
-                clearable
-                wrapperClassName="flex items-center gap-2 px-3 h-10 rounded-md border border-border/40 bg-background hover:border-border/60 focus-within:border-foreground/70 transition-colors"
-              />
-            </div>
-            <PublisherFilterDropdown />
+          {/* Search bar — sub-kind lives on the left rail, source on the feed strip below */}
+          <div className="mb-3">
+            <SearchInput
+              value={search}
+              onChange={setSearch}
+              placeholder="搜索资源"
+              clearable
+              wrapperClassName="flex items-center gap-2 px-3 h-10 rounded-md border border-border/40 bg-background hover:border-border/60 focus-within:border-foreground/70 transition-colors"
+            />
           </div>
 
-          {/* Hero carousel — gradient bg, cycling quote card, dot rail on the right */}
-          {currentSlide && (
-            <div className="relative h-[230px] sm:h-[260px] rounded-2xl overflow-hidden bg-gradient-to-br from-[#ece5f8] via-[#f1deea] to-[#dde2f4] mb-8">
-              <div aria-hidden="true" className="absolute -top-16 -left-16 w-[280px] h-[280px] rounded-full bg-[#d5c2eb]/45 blur-3xl pointer-events-none" />
-              <div aria-hidden="true" className="absolute -bottom-16 -right-16 w-[280px] h-[280px] rounded-full bg-[#e8c8d8]/45 blur-3xl pointer-events-none" />
-
-              <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 px-6">
-                <div className="bg-white/80 backdrop-blur-md rounded-xl px-3.5 py-2.5 max-w-[460px] shadow-sm border border-border/15 flex items-center gap-2.5">
-                  <span className="text-base flex-shrink-0">{currentSlide.item.avatar}</span>
-                  <div className="text-sm leading-snug min-w-0">
-                    <span className="font-semibold text-foreground">{currentSlide.item.name}</span>
-                    <span className="text-foreground/75"> {currentSlide.quote}</span>
-                  </div>
-                </div>
+          {/* Feed tabs — built-in sources + user-added subscriptions */}
+          <div className="flex items-center gap-1.5 mb-5 flex-wrap">
+            {[...BUILTIN_FEEDS, ...customFeeds].map(feed => {
+              const active = feedId === feed.id;
+              return (
                 <button
+                  key={feed.id}
                   type="button"
-                  onClick={() => setDetailItem(currentSlide.item)}
-                  className="inline-flex items-center gap-1.5 h-9 px-4 rounded-full bg-foreground text-background text-sm hover:bg-foreground/90 transition-colors"
+                  onClick={() => setFeedId(feed.id)}
+                  className={`inline-flex items-center h-7 px-3 rounded-full text-xs transition-colors ${
+                    active
+                      ? 'bg-foreground text-background'
+                      : 'border border-border/40 text-muted-foreground/85 hover:border-border/70 hover:bg-muted/30 hover:text-foreground'
+                  }`}
                 >
-                  <MousePointerClick size={12} />
-                  在对话中试用
+                  {feed.label}
                 </button>
-              </div>
+              );
+            })}
+            <button
+              type="button"
+              onClick={() => setFeedDialogOpen(true)}
+              aria-label="添加订阅源"
+              title="添加订阅源"
+              className="inline-flex items-center justify-center h-7 w-7 rounded-full border border-dashed border-border/45 text-muted-foreground/70 hover:border-border/80 hover:text-foreground hover:bg-muted/25 transition-colors"
+            >
+              <Plus size={13} strokeWidth={1.8} />
+            </button>
+          </div>
 
-              {/* Dot indicators (right side, vertical) */}
-              <div className="absolute right-3 top-1/2 -translate-y-1/2 flex flex-col gap-1.5">
-                {heroSlides.map((_, i) => (
-                  <button
-                    key={i}
-                    type="button"
-                    onClick={() => setHeroIndex(i)}
-                    aria-label={`第 ${i + 1} 项`}
-                    className={`w-1.5 h-1.5 rounded-full transition-colors ${
-                      i === heroIndex ? 'bg-foreground/75' : 'bg-foreground/20 hover:bg-foreground/40'
-                    }`}
-                  />
-                ))}
+          {/* Connectors kind — same row layout as other kinds, just with
+              brand logos for avatars and the install dialog as the action.
+              Page header gets a 自定义连接器 entry button for users who
+              need to plug in their own service. */}
+          {kind === 'integration' ? (
+            <section>
+              <div className="flex items-start justify-between gap-3 mb-3">
+                <div className="min-w-0">
+                  <h2 className="text-sm font-medium text-foreground">连接器管理</h2>
+                  <p className="text-[11px] text-muted-foreground/55 mt-0.5">连接外部服务，扩展 AI 能力</p>
+                </div>
+                <Button
+                  variant="outline"
+                  size="xs"
+                  onClick={() => setSubmitOpen(true)}
+                  className="h-7 gap-1 px-2.5 text-xs flex-shrink-0"
+                  title="提交自定义连接器配置"
+                >
+                  <Plus size={11} />
+                  自定义连接器
+                </Button>
               </div>
-            </div>
-          )}
-
+              <MarketRowGrid
+                items={CATALOG.filter(it => it.kind === 'integration')}
+                installed={installed}
+                onSelect={setInstallItem}
+                onToggleInstall={(id) => {
+                  const it = CATALOG.find(c => c.id === id);
+                  if (it) setInstallItem(it);
+                }}
+              />
+            </section>
+          ) : (
+          <>
           {/* Featured section */}
           {featured.length > 0 && (
             <section className="mb-8">
@@ -473,6 +530,8 @@ export function MarketPage() {
               ))
             )
           )}
+          </>
+          )}
 
             </div>{/* /right main */}
           </div>{/* /flex split */}
@@ -488,6 +547,44 @@ export function MarketPage() {
         onToggleInstall={(id) => toggleInstall(id)}
       />
       <SubmitResourceDialog open={submitOpen} onOpenChange={setSubmitOpen} />
+
+      {/* 集成 install confirmation — opens from clicking an integration card */}
+      <InstallIntegrationDialog
+        item={installItem}
+        installed={installItem ? installed.has(installItem.id) : false}
+        onOpenChange={(open) => { if (!open) setInstallItem(null); }}
+        onConfirm={() => {
+          if (installItem && !installed.has(installItem.id)) toggleInstall(installItem.id);
+          setInstallItem(null);
+        }}
+      />
+
+      {/* Add-feed dialog — opens from the "+" button in the feed tab strip */}
+      <Dialog open={feedDialogOpen} onOpenChange={setFeedDialogOpen}>
+        <DialogContent className="max-w-[440px]">
+          <DialogHeader>
+            <DialogTitle>添加订阅源</DialogTitle>
+            <DialogDescription>
+              粘贴一个 RSS / JSON Feed / GitHub 仓库链接，Cherry 会订阅它的新资源更新。
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-1.5 py-1">
+            <label className="text-xs text-muted-foreground/70">订阅链接</label>
+            <Input
+              autoFocus
+              value={feedUrl}
+              onChange={e => setFeedUrl(e.target.value)}
+              onKeyDown={e => { if (e.key === 'Enter') addCustomFeed(); }}
+              placeholder="https://example.com/feed.json"
+              className="h-9"
+            />
+          </div>
+          <DialogFooter className="bg-transparent">
+            <Button variant="outline" size="sm" onClick={() => setFeedDialogOpen(false)}>取消</Button>
+            <Button size="sm" disabled={!feedUrl.trim()} onClick={addCustomFeed}>添加</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
@@ -503,7 +600,7 @@ function MarketRowGrid({
   onToggleInstall: (id: string) => void;
 }) {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-1">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-2">
       {items.map(it => {
         const isInstalled = installed.has(it.id);
         return (
@@ -513,7 +610,7 @@ function MarketRowGrid({
             tabIndex={0}
             onClick={() => onSelect(it)}
             onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSelect(it); } }}
-            className="group flex items-center gap-3 py-2.5 border-b border-border/15 last:border-b-0 hover:bg-muted/15 -mx-2 px-2 rounded-md cursor-pointer transition-colors"
+            className="group flex items-center gap-3 px-3 py-2.5 rounded-xl border border-border/15 bg-card/40 hover:bg-accent/20 hover:border-border/30 cursor-pointer transition-colors"
           >
             <Avatar item={it} size={36} />
             <div className="flex-1 min-w-0 pr-2">
@@ -525,13 +622,13 @@ function MarketRowGrid({
               onClick={(e) => { e.stopPropagation(); onToggleInstall(it.id); }}
               aria-label={isInstalled ? '已安装' : '安装'}
               title={isInstalled ? '已安装 — 点击卸载' : '安装'}
-              className={`h-8 w-8 inline-flex items-center justify-center rounded-md transition-colors flex-shrink-0 ${
+              className={`inline-flex items-center justify-center w-6 h-6 rounded-md transition-colors flex-shrink-0 ${
                 isInstalled
-                  ? 'text-success hover:text-destructive hover:bg-destructive/10'
-                  : 'text-muted-foreground/55 hover:text-foreground hover:bg-muted/50'
+                  ? 'text-muted-foreground/55 hover:text-destructive/80 hover:bg-destructive/10'
+                  : 'bg-muted/50 text-foreground/75 hover:bg-foreground/10 hover:text-foreground'
               }`}
             >
-              {isInstalled ? <Check size={14} /> : <Plus size={14} />}
+              {isInstalled ? <Check size={14} strokeWidth={2} /> : <Plus size={14} strokeWidth={2.2} />}
             </button>
           </div>
         );
@@ -540,52 +637,118 @@ function MarketRowGrid({
   );
 }
 
-// ─── Publisher filter dropdown (next to search) ─────────────────────
+// ─── Install integration dialog (集成 confirmation flow) ───────────
+//
+// Mirrors ChatGPT's connector-install sheet: paired logos at the top,
+// the connector name + publisher, a stack of permission rows (one with
+// a memory toggle), and a single primary CTA at the bottom.
 
-function PublisherFilterDropdown() {
-  const [open, setOpen] = useState(false);
-  const [value, setValue] = useState<'all' | 'official' | 'community'>('all');
-  const label = value === 'all' ? '全部' : value === 'official' ? '官方' : '社区';
-  const options: { id: typeof value; label: string }[] = [
-    { id: 'all',       label: '全部来源' },
-    { id: 'official',  label: '官方' },
-    { id: 'community', label: '社区' },
-  ];
+function PolicyRow({
+  Icon, title, description,
+}: {
+  Icon: React.ComponentType<{ size?: number; className?: string; strokeWidth?: number }>;
+  title: string;
+  description: string;
+}) {
   return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <button
-          type="button"
-          className="inline-flex items-center gap-1.5 h-10 px-3 rounded-md border border-border/40 text-sm text-foreground/85 hover:border-border/60 hover:bg-muted/15 transition-colors"
-        >
-          <span>{label}</span>
-          <ChevronDown size={12} className="text-muted-foreground/55" />
-        </button>
-      </PopoverTrigger>
-      <PopoverContent align="end" className="w-[160px] p-1">
-        {options.map(opt => {
-          const active = value === opt.id;
-          return (
-            <button
-              key={opt.id}
-              type="button"
-              onClick={() => { setValue(opt.id); setOpen(false); }}
-              className={`w-full text-left px-2.5 py-1.5 rounded text-sm transition-colors flex items-center justify-between ${
-                active
-                  ? 'bg-muted/60 text-foreground'
-                  : 'text-foreground/80 hover:bg-muted/40'
-              }`}
-            >
-              <span>{opt.label}</span>
-              {active && <Check size={12} className="text-foreground/70" />}
-            </button>
-          );
-        })}
-      </PopoverContent>
-    </Popover>
+    <div className="flex items-start gap-3">
+      <Icon size={15} strokeWidth={1.5} className="text-muted-foreground/70 flex-shrink-0 mt-[2px]" />
+      <div className="flex-1 min-w-0">
+        <div className="text-[13px] font-semibold text-foreground leading-tight">{title}</div>
+        <p className="text-xs text-muted-foreground/70 leading-relaxed mt-1">{description}</p>
+      </div>
+    </div>
   );
 }
 
+function InstallIntegrationDialog({
+  item, installed, onOpenChange, onConfirm,
+}: {
+  item: MarketItem | null;
+  installed: boolean;
+  onOpenChange: (open: boolean) => void;
+  onConfirm: () => void;
+}) {
+  if (!item) {
+    return (
+      <Dialog open={false} onOpenChange={onOpenChange}>
+        <DialogContent />
+      </Dialog>
+    );
+  }
+  return (
+    <Dialog open={!!item} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-[440px] p-0 overflow-hidden rounded-2xl gap-0">
+        {/* Header — paired logos joined by swap arrows + connect title */}
+        <div className="px-7 pt-8 pb-4 flex flex-col items-center text-center">
+          <div className="flex items-center gap-3">
+            <div className="w-11 h-11 rounded-xl bg-foreground flex items-center justify-center overflow-hidden">
+              <img src={cherryLogoImg} alt="" className="w-7 h-7 object-contain" />
+            </div>
+            <ArrowLeftRight size={16} strokeWidth={1.5} className="text-muted-foreground/45" />
+            <div className="w-11 h-11 rounded-xl bg-muted/40 border border-border/20 flex items-center justify-center overflow-hidden">
+              {INTEGRATION_LOGO[item.id] ? (
+                <img
+                  src={`https://cdn.simpleicons.org/${INTEGRATION_LOGO[item.id].slug}/${INTEGRATION_LOGO[item.id].color}`}
+                  alt=""
+                  className="w-6 h-6"
+                  draggable={false}
+                />
+              ) : (
+                <span className="text-2xl">{item.avatar}</span>
+              )}
+            </div>
+          </div>
+          <DialogTitle className="text-lg font-semibold mt-5">
+            连接 Cherry 与 {item.name}
+          </DialogTitle>
+          <DialogDescription className="text-sm text-muted-foreground/65 mt-1.5 max-w-[320px]">
+            在 Cherry 中搜索并使用 {item.name} 的数据与操作
+          </DialogDescription>
+        </div>
+
+        {/* Policy card — three info rows, no toggles */}
+        <div className="mx-6 mb-5 rounded-xl border border-border/20 bg-muted/15 px-5 py-4 space-y-4">
+          <PolicyRow
+            Icon={Settings}
+            title={`你掌控 Cherry 可访问的 ${item.name} 数据`}
+            description="选择 Cherry 可访问哪些信息，并随时调整这些设置"
+          />
+          <PolicyRow
+            Icon={ShieldCheck}
+            title={`Cherry 严格遵循 ${item.name} 的权限`}
+            description={`只能查看你在 ${item.name} 中已授权访问的内容`}
+          />
+          <PolicyRow
+            Icon={Lock}
+            title={`Cherry 不会用你的 ${item.name} 数据训练模型`}
+            description="你的数据安全是首要原则"
+          />
+        </div>
+
+        {/* Footer — primary 继续 + secondary 阅读分步指南 */}
+        <div className="px-6 pb-6 pt-1 space-y-2">
+          <Button
+            size="lg"
+            disabled={installed}
+            onClick={onConfirm}
+            className="w-full h-10 rounded-xl bg-foreground text-background hover:bg-foreground/90 disabled:opacity-50 font-medium"
+          >
+            {installed ? `已连接 ${item.name}` : '继续'}
+          </Button>
+          <Button
+            variant="outline"
+            size="lg"
+            className="w-full h-10 rounded-xl gap-1.5 font-normal text-muted-foreground/85 hover:text-foreground"
+          >
+            <BookOpen size={13} />
+            阅读分步指南
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
 
 // ─── Market detail dialog (二级页面) ────────────────────────────────────
 
@@ -603,20 +766,11 @@ function MarketDetailDialog({
     </Dialog>
   );
   const KIcon = KIND_ICON[item.kind];
-  // Mocked extended fields — production data would carry these natively.
-  const featureBullets = [
-    '即开即用，无需手动配置',
-    '与其它已安装资源自动协同',
-    '由社区维护，每月发布新版',
-  ];
-  const permissions = item.kind === 'integration'
-    ? ['读取你的账号基础信息', '读取与写入指定空间内容', '通过 OAuth 授权，可随时撤销']
-    : item.kind === 'mcp'
-      ? ['启动本地 / 远端 MCP 进程', '读取上下文中的会话历史', '调用注册的 MCP 工具集']
-      : item.kind === 'agent'
-        ? ['在 tool-call 循环中自主调用挂载的工具', '可读写工作区中的文件与运行命令', '每次敏感动作前会请求人工确认']
-        : ['仅在被显式调用时执行', '不主动读取剪贴板或外部文件'];
   const installsLabel = item.installs >= 10000 ? `${(item.installs / 1000).toFixed(1)}K` : item.installs.toLocaleString();
+  // Derive a plausible source URL from the author handle + resource name.
+  // Production data would carry this natively; the footer "查看源仓库" button
+  // also wires to the same URL pattern.
+  const sourceUrl = `https://github.com/${item.author.replace(/^@/, '')}/${item.name.replace(/\s+/g, '-')}`;
   return (
     <Dialog open={!!item} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-[680px] p-0 overflow-hidden">
@@ -643,49 +797,68 @@ function MarketDetailDialog({
 
         {/* Body */}
         <div className="max-h-[60vh] overflow-y-auto scrollbar-thin">
-          <div className="px-5 py-4 space-y-5">
-            {/* Stats strip */}
-            <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-xs text-muted-foreground/75">
-              <span className="inline-flex items-center gap-1"><Download size={11} />{installsLabel} 次安装</span>
-              <span className="inline-flex items-center gap-1"><Star size={11} />社区评分 4.6</span>
-              <span className="inline-flex items-center gap-1"><KIcon size={11} />{item.category}</span>
-              {item.language && <span className="text-muted-foreground/55">· {item.language}</span>}
-              {item.region && <span className="text-muted-foreground/55">· {item.region}</span>}
+          <div className="px-5 py-4 space-y-4">
+            {/* Stat tiles — 3 prominent numbers in a row */}
+            <div className="grid grid-cols-3 gap-2">
+              <div className="flex flex-col items-start gap-0.5 px-3 py-2 rounded-lg bg-muted/30 border border-border/15">
+                <div className="flex items-center gap-1 text-[10px] uppercase tracking-wide text-muted-foreground/60">
+                  <Download size={9} /> 安装
+                </div>
+                <div className="text-base font-medium text-foreground tabular-nums">{installsLabel}</div>
+              </div>
+              <div className="flex flex-col items-start gap-0.5 px-3 py-2 rounded-lg bg-muted/30 border border-border/15">
+                <div className="flex items-center gap-1 text-[10px] uppercase tracking-wide text-muted-foreground/60">
+                  <Star size={9} /> 评分
+                </div>
+                <div className="text-base font-medium text-foreground tabular-nums">4.6</div>
+              </div>
+              <div className="flex flex-col items-start gap-0.5 px-3 py-2 rounded-lg bg-muted/30 border border-border/15">
+                <div className="flex items-center gap-1 text-[10px] uppercase tracking-wide text-muted-foreground/60">
+                  <KIcon size={9} /> 分类
+                </div>
+                <div className="text-sm font-medium text-foreground truncate w-full">{item.category}</div>
+              </div>
             </div>
 
-            <div>
-              <h4 className="text-xs text-foreground font-medium mb-1.5">描述</h4>
-              <p className="text-sm text-foreground/85 leading-relaxed">
-                {item.tagline}
-              </p>
+            {/* Description — plain paragraph, no heading */}
+            <p className="text-[13px] text-foreground/85 leading-relaxed">
+              {item.tagline}
+            </p>
+
+            {/* Meta — compact 2-col key/value, only non-redundant fields */}
+            <div className="grid grid-cols-2 gap-x-6 gap-y-1.5 text-xs pt-3 border-t border-border/15">
+              <div className="flex items-baseline gap-2">
+                <span className="text-muted-foreground/55 w-12 flex-shrink-0">作者</span>
+                <span className="text-foreground/90 truncate">{item.author}</span>
+              </div>
+              <div className="flex items-baseline gap-2">
+                <span className="text-muted-foreground/55 w-12 flex-shrink-0">上架</span>
+                <span className="text-foreground/90">{item.ageLabel} 前</span>
+              </div>
+              {(item.language || item.region) && (
+                <div className="flex items-baseline gap-2">
+                  <span className="text-muted-foreground/55 w-12 flex-shrink-0">语言</span>
+                  <span className="text-foreground/90">
+                    {[item.language, item.region].filter(Boolean).join(' · ')}
+                  </span>
+                </div>
+              )}
+              <div className="flex items-baseline gap-2">
+                <span className="text-muted-foreground/55 w-12 flex-shrink-0">类型</span>
+                <span className="text-foreground/90">{KIND_LABEL[item.kind]}</span>
+              </div>
             </div>
 
-            <div>
-              <h4 className="text-xs text-foreground font-medium mb-2">功能亮点</h4>
-              <ul className="space-y-1.5">
-                {featureBullets.map((b, i) => (
-                  <li key={i} className="flex items-start gap-2 text-xs text-foreground/80">
-                    <CheckCircle2 size={12} className="text-success mt-0.5 flex-shrink-0" />
-                    <span>{b}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            <div>
-              <h4 className="text-xs text-foreground font-medium mb-2 flex items-center gap-1.5">
-                <Shield size={11} className="text-muted-foreground/60" />
-                需要的权限
-              </h4>
-              <ul className="space-y-1.5">
-                {permissions.map((p, i) => (
-                  <li key={i} className="text-xs text-muted-foreground/80 pl-4 relative">
-                    <span className="absolute left-0 top-2 w-1 h-1 rounded-full bg-muted-foreground/40" />
-                    {p}
-                  </li>
-                ))}
-              </ul>
-            </div>
+            {/* Source repo — as its own chip */}
+            <a
+              href={sourceUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-1.5 px-2.5 h-7 rounded-md border border-border/30 text-xs text-foreground/75 hover:text-foreground hover:bg-muted/30 transition-colors max-w-full"
+            >
+              <ExternalLink size={11} className="text-muted-foreground/60 flex-shrink-0" />
+              <span className="font-mono truncate">{sourceUrl.replace(/^https?:\/\//, '')}</span>
+            </a>
           </div>
         </div>
 
@@ -697,14 +870,6 @@ function MarketDetailDialog({
               查看源仓库
             </Button>
             <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => onOpenChange(false)}
-                className="h-8"
-              >
-                关闭
-              </Button>
               <Button
                 variant={installed ? 'outline' : 'default'}
                 size="sm"
@@ -884,7 +1049,7 @@ function SubmitResourceDialog({
 function MarketOnboardingModal({ open, onOpenChange }: { open: boolean; onOpenChange: (v: boolean) => void }) {
   const bullets: { Icon: React.ComponentType<{ size?: number; className?: string; strokeWidth?: number }>; text: string }[] = [
     { Icon: Zap,           text: '一键安装社区精心打磨的 Skill / MCP / Prompt 模板' },
-    { Icon: Plug,          text: '直接对接 Notion / 语雀 / Google Calendar 等集成' },
+    { Icon: Plug,          text: '直接对接 Notion / 语雀 / Google Calendar 等连接器' },
     { Icon: CheckCircle2,  text: '右上角「管理」统一管理已安装与自定义资源，启停 / 编辑 / 卸载一目了然' },
   ];
   return (
@@ -970,6 +1135,25 @@ function MarketOnboardingModal({ open, onOpenChange }: { open: boolean; onOpenCh
 // ─── Sub-components ───────────────────────────────────────────────────
 
 function Avatar({ item, size = 36 }: { item: MarketItem; size?: number }) {
+  const logoMeta = INTEGRATION_LOGO[item.id];
+  if (logoMeta) {
+    return (
+      <div
+        className="rounded-md bg-muted/30 border border-border/20 flex items-center justify-center flex-shrink-0 overflow-hidden"
+        style={{ width: size, height: size }}
+      >
+        <img
+          src={`https://cdn.simpleicons.org/${logoMeta.slug}/${logoMeta.color}`}
+          alt=""
+          width={Math.round(size * 0.6)}
+          height={Math.round(size * 0.6)}
+          loading="lazy"
+          draggable={false}
+          className="block"
+        />
+      </div>
+    );
+  }
   return (
     <div
       className={`rounded-md ${item.avatarBg} flex items-center justify-center flex-shrink-0 text-base`}

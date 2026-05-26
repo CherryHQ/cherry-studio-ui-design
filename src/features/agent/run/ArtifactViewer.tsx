@@ -1,10 +1,11 @@
 import React, { useState, useMemo } from 'react';
 import {
-  Monitor, Code2, RotateCw, ExternalLink, Smartphone, Tablet,
-  Copy, Check, ChevronDown, ChevronRight, Eye,
+  Monitor, Code2, RotateCw, Smartphone, Tablet,
+  Copy, Check, ChevronRight, ChevronDown, Eye,
   FolderOpen, X,
   Maximize2, Minimize2,
-  MousePointer2, TerminalSquare, FileText, Globe,
+  Share2, Link as LinkIcon, Layers,
+  FileText, Globe, MousePointer2, TerminalSquare, ExternalLink,
 } from 'lucide-react';
 import {
   Button, EmptyState,
@@ -25,12 +26,9 @@ function FinderIcon({ size = 12 }: { size?: number }) {
         </linearGradient>
       </defs>
       <rect x="0.5" y="0.5" width="15" height="15" rx="3.5" fill="url(#finderBg)" stroke="rgba(0,0,0,0.08)" strokeWidth="0.5" />
-      {/* Vertical split line */}
       <line x1="8" y1="2" x2="8" y2="14" stroke="rgba(255,255,255,0.35)" strokeWidth="0.5" />
-      {/* Eyes (two small dark slits) */}
       <rect x="4.5" y="5" width="1" height="2.5" rx="0.4" fill="#0a2f5c" />
       <rect x="10.5" y="5" width="1" height="2.5" rx="0.4" fill="#0a2f5c" />
-      {/* Smile */}
       <path d="M4.5 10.5 Q 8 12.5 11.5 10.5" stroke="#0a2f5c" strokeWidth="0.8" fill="none" strokeLinecap="round" />
     </svg>
   );
@@ -182,22 +180,16 @@ export function ArtifactViewer({ fileContent, fileName, previewUrl, hasArtifact,
             </Button></Tooltip>
           )}
 
-          <div className="flex items-center gap-0.5">
-            <Tooltip content="预览" side="bottom"><Button variant="ghost" size="icon-xs"
-              onClick={() => setActiveTab('preview')}
-              className={`p-1.5 w-auto h-auto rounded-md ${
-                activeTab === 'preview' ? 'bg-accent/25 text-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-accent/15'
-              }`}>
-              <Eye className="h-3.5 w-3.5" />
-            </Button></Tooltip>
-            <Tooltip content="代码" side="bottom"><Button variant="ghost" size="icon-xs"
-              onClick={() => setActiveTab('code')}
-              className={`p-1.5 w-auto h-auto rounded-md ${
-                activeTab === 'code' ? 'bg-accent/25 text-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-accent/15'
-              }`}>
-              <Code2 className="h-3.5 w-3.5" />
-            </Button></Tooltip>
-          </div>
+          {/* Mode toggle — single button showing current mode, click to flip */}
+          <Tooltip content={activeTab === 'preview' ? '切换到代码' : '切换到预览'} side="bottom">
+            <Button variant="ghost" size="xs"
+              onClick={() => setActiveTab(activeTab === 'preview' ? 'code' : 'preview')}
+              className="gap-1.5 px-2 text-foreground hover:bg-accent/15">
+              {activeTab === 'preview'
+                ? <><Eye className="h-3.5 w-3.5" />预览</>
+                : <><Code2 className="h-3.5 w-3.5" />代码</>}
+            </Button>
+          </Tooltip>
           {activeTab === 'code' && fileName && (
             <span className="text-xs text-muted-foreground/50 ml-1 max-w-[100px] truncate">
               {fileName.split('/').pop()}
@@ -222,10 +214,10 @@ export function ArtifactViewer({ fileContent, fileName, previewUrl, hasArtifact,
             </Button>
           )}
 
-          {/* Open with — split button: Finder + dropdown of local tools */}
+          {/* Open with — split button: Finder primary action + dropdown of local apps */}
           <div className="flex items-center">
             <div className="w-px h-3 bg-border/30 mx-1" />
-            <Tooltip content="在 Finder 中显示" side="bottom"><Button variant="ghost" size="icon-xs"
+            <Tooltip content="在 Finder 中打开" side="bottom"><Button variant="ghost" size="icon-xs"
               className="text-muted-foreground hover:text-foreground">
               <FinderIcon size={12} />
             </Button></Tooltip>
@@ -272,6 +264,28 @@ export function ArtifactViewer({ fileContent, fileName, previewUrl, hasArtifact,
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
+
+          {/* Share — dropdown with workspace + link share targets */}
+          <div className="w-px h-3 bg-border/30 mx-1" />
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon-xs"
+                className="text-muted-foreground hover:text-foreground"
+                title="分享">
+                <Share2 size={11} />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" side="bottom" className="w-[170px]">
+              <DropdownMenuItem className="gap-2 px-2 py-[5px] text-xs">
+                <Layers size={12} className="text-muted-foreground/70 flex-shrink-0" />
+                <span className="flex-1">分享到工作台</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem className="gap-2 px-2 py-[5px] text-xs">
+                <LinkIcon size={12} className="text-muted-foreground/70 flex-shrink-0" />
+                <span className="flex-1">分享链接</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
 
           {/* Maximize toggle */}
           {onToggleMaximize && (

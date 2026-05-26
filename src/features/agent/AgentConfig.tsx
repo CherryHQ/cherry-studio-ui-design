@@ -1,6 +1,6 @@
 import React, { useState, useRef, useMemo, useCallback } from 'react';
 import {
-  ArrowLeft, Save, Settings, FileText,
+  ArrowLeft, Save, Settings, Settings2, FileText,
   Wrench, SlidersHorizontal, ChevronRight, ChevronDown,
   X, Check, Plus, Trash2,
   RefreshCw, CheckCircle2, Circle, AlertTriangle,
@@ -12,20 +12,20 @@ import {
   Layers, Sparkles, BookOpen, FolderOpen,
   Upload, Link2,
   Send, MessageCircle, Github, Info,
+  Cable, Plug, LayoutGrid, Blocks,
 } from 'lucide-react';
 import { Button } from '@cherrystudio/ui/components/primitives/button';
 import { Slider } from '@cherrystudio/ui/components/primitives/slider';
 // Input + Textarea kept on legacy — v2's are too faint on the modal card.
 import { Popover, PopoverTrigger, PopoverContent } from '@cherrystudio/ui/components/primitives/popover';
 import { Combobox } from '@cherrystudio/ui/components/primitives/combobox';
-import { Switch } from '@cherrystudio/ui/components/primitives/switch';
 import { Checkbox } from '@cherrystudio/ui/components/primitives/checkbox';
 import { Badge } from '@cherrystudio/ui/components/primitives/badge';
 import {
   Select, SelectTrigger, SelectValue, SelectContent, SelectItem,
 } from '@cherrystudio/ui/components/primitives/select';
-// V2 doesn't ship SearchInput / Typography / EmptyState / SimpleTooltip
-import { Input, Textarea, EmptyState, SearchInput, Typography, SimpleTooltip } from '@cherry-studio/ui';
+// V2 doesn't ship SearchInput / Typography / EmptyState / SimpleTooltip / Switch
+import { Input, Textarea, EmptyState, SearchInput, Typography, SimpleTooltip, Switch } from '@cherry-studio/ui';
 import { motion, AnimatePresence } from 'motion/react';
 import type { ResourceItem, MCPServerStatus } from '@/app/types';
 import { PromptSection } from '@/features/assistant/sections/PromptSection';
@@ -34,13 +34,26 @@ import { ModelPickerPanel } from '@/app/components/shared/ModelPickerPanel';
 import { ASSISTANT_MODELS } from '@/app/config/models';
 
 interface Props { resource: ResourceItem; onBack: () => void; inModal?: boolean }
-type Section = 'basic' | 'prompt' | 'knowledge' | 'toolchain' | 'advanced';
+// The 工具 sidebar entry is a collapsible group: the four toolchain
+// sub-tabs each become a separate sidebar item under it. Other entries
+// stay flat.
+type ToolchainTabId = 'tools' | 'mcp' | 'skills' | 'integrations';
+type Section = 'basic' | 'prompt' | 'knowledge' | 'advanced' | `toolchain:${ToolchainTabId}`;
+
+const TOOLCHAIN_CHILDREN: { id: ToolchainTabId; label: string; icon: React.ElementType }[] = [
+  { id: 'tools',        label: '内置工具',   icon: Wrench },
+  { id: 'mcp',          label: 'MCP Server', icon: Cable },
+  { id: 'skills',       label: 'Skills',     icon: Sparkles },
+  { id: 'integrations', label: '连接器',     icon: Plug },
+];
+
+// 'advanced' is rendered as the last entry below the collapsible
+// 拓展 group; the other three sit at the top of the sidebar.
 const sections: { id: Section; label: string; icon: React.ElementType }[] = [
-  { id: 'basic', label: '基础设置', icon: Settings },
-  { id: 'prompt', label: '提示词', icon: FileText },
-  { id: 'knowledge', label: '知识库', icon: BookOpen },
-  { id: 'toolchain', label: '工具', icon: Wrench },
-  { id: 'advanced', label: '高级设置', icon: SlidersHorizontal },
+  { id: 'basic',    label: '基础设置', icon: Settings },
+  { id: 'prompt',   label: '提示词',   icon: FileText },
+  { id: 'knowledge', label: '知识库',  icon: BookOpen },
+  { id: 'advanced', label: '高级设置', icon: Settings2 },
 ];
 
 
@@ -61,6 +74,7 @@ function getTagColor(tag: string): string {
 // ===========================
 export function AgentConfig({ resource, onBack, inModal = false }: Props) {
   const [activeSection, setActiveSection] = useState<Section>('basic');
+  const [toolchainExpanded, setToolchainExpanded] = useState(true);
   const [saved, setSaved] = useState(false);
   const handleSave = () => { setSaved(true); setTimeout(() => setSaved(false), 2000); };
   return (
@@ -82,13 +96,73 @@ export function AgentConfig({ resource, onBack, inModal = false }: Props) {
         </div>
       )}
       <div className="flex flex-1 min-h-0">
-        <div className="w-[132px] flex-shrink-0 border-r border-border/15 p-2 overflow-y-auto">
-          {sections.map(s => {
+        <div className="w-[150px] flex-shrink-0 border-r border-border/15 p-2 overflow-y-auto">
+          {/* Flat entries: 基础设置 / 提示词 / 知识库 (advanced moved
+              below the 拓展 group). */}
+          {sections.filter(s => s.id !== 'advanced').map(s => {
             const active = activeSection === s.id;
             const Icon = s.icon;
             return (
               <Button variant="ghost" key={s.id} onClick={() => setActiveSection(s.id)}
-                className={`w-full justify-start gap-2 px-2.5 py-2 font-normal mb-0.5 rounded-lg ${active ? 'bg-accent/50 text-foreground' : 'text-muted-foreground/65 hover:text-foreground hover:bg-accent/50'}`}>
+                className={`w-full justify-start gap-2 px-3 py-2 mb-0.5 rounded-lg transition-colors ${active ? 'bg-accent/50 text-foreground font-medium' : 'font-normal text-muted-foreground/65 hover:text-foreground hover:bg-muted/40'}`}>
+                <Icon size={13} strokeWidth={1.5} className={`flex-shrink-0 ${active ? 'text-muted-foreground' : 'text-muted-foreground/40'}`} />
+                <span className="text-sm">{s.label}</span>
+              </Button>
+            );
+          })}
+
+          {/* 工具拓展 group — collapsible parent that expands into the
+              four toolchain sub-tabs. Sits at the bottom of the sidebar
+              since its children form a longer secondary nav. */}
+          {(() => {
+            const childActive = typeof activeSection === 'string' && activeSection.startsWith('toolchain:');
+            return (
+              <>
+                <Button variant="ghost"
+                  onClick={() => setToolchainExpanded(v => !v)}
+                  className={`w-full justify-start gap-2 px-3 py-2 mb-0.5 rounded-lg transition-colors ${childActive ? 'bg-accent/50 text-foreground font-medium' : 'font-normal text-muted-foreground/65 hover:text-foreground hover:bg-muted/40'}`}>
+                  <Blocks size={13} strokeWidth={1.5} className={`flex-shrink-0 ${childActive ? 'text-muted-foreground' : 'text-muted-foreground/40'}`} />
+                  <span className="text-sm flex-1 text-left">拓展</span>
+                  <ChevronDown size={11} className={`flex-shrink-0 text-muted-foreground/40 transition-transform ${toolchainExpanded ? '' : '-rotate-90'}`} />
+                </Button>
+                <AnimatePresence initial={false}>
+                  {toolchainExpanded && (
+                    <motion.div
+                      key="toolchain-children"
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: 'auto', opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.15 }}
+                      className="overflow-hidden"
+                    >
+                      <div className="space-y-0.5">
+                        {TOOLCHAIN_CHILDREN.map(c => {
+                          const sid: Section = `toolchain:${c.id}`;
+                          const isActive = activeSection === sid;
+                          const CIcon = c.icon;
+                          return (
+                            <Button variant="ghost" key={c.id} onClick={() => setActiveSection(sid)}
+                              className={`w-full justify-start gap-2 px-3 py-1.5 mb-0.5 rounded-lg transition-colors ${isActive ? 'bg-accent/50 text-foreground font-medium' : 'font-normal text-muted-foreground/65 hover:text-foreground hover:bg-muted/40'}`}>
+                              <CIcon size={11} strokeWidth={1.5} className={`flex-shrink-0 ${isActive ? 'text-muted-foreground' : 'text-muted-foreground/40'}`} />
+                              <span className="text-[13px]">{c.label}</span>
+                            </Button>
+                          );
+                        })}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </>
+            );
+          })()}
+
+          {/* 高级设置 — sits below the 拓展 group as the tail entry. */}
+          {sections.filter(s => s.id === 'advanced').map(s => {
+            const active = activeSection === s.id;
+            const Icon = s.icon;
+            return (
+              <Button variant="ghost" key={s.id} onClick={() => setActiveSection(s.id)}
+                className={`w-full justify-start gap-2 px-3 py-2 mb-0.5 rounded-lg transition-colors ${active ? 'bg-accent/50 text-foreground font-medium' : 'font-normal text-muted-foreground/65 hover:text-foreground hover:bg-muted/40'}`}>
                 <Icon size={13} strokeWidth={1.5} className={`flex-shrink-0 ${active ? 'text-muted-foreground' : 'text-muted-foreground/40'}`} />
                 <span className="text-sm">{s.label}</span>
               </Button>
@@ -101,12 +175,28 @@ export function AgentConfig({ resource, onBack, inModal = false }: Props) {
               {activeSection === 'basic' && <AgentBasicSection resource={resource} />}
               {activeSection === 'prompt' && <AgentPromptSection />}
               {activeSection === 'knowledge' && <KnowledgeBaseSection />}
-              {activeSection === 'toolchain' && <ToolchainSection onExplore={onBack} />}
+              {typeof activeSection === 'string' && activeSection.startsWith('toolchain:') && (
+                <ToolchainSection
+                  onExplore={onBack}
+                  controlledTab={activeSection.slice('toolchain:'.length) as ToolchainTabId}
+                />
+              )}
               {activeSection === 'advanced' && <AgentAdvancedSection />}
             </motion.div>
           </AnimatePresence>
         </div>
       </div>
+      {inModal && (
+        <div className="flex-shrink-0 flex items-center justify-end gap-2 px-4 py-2.5 border-t border-border/15 bg-background/95 backdrop-blur-sm">
+          <AnimatePresence>
+            {saved
+              ? <motion.span key="saved" initial={{ opacity: 0, x: 6 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0 }} className="text-xs text-cherry-primary mr-auto flex items-center gap-1"><CheckCircle2 size={11} />已保存</motion.span>
+              : <motion.span key="dirty" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="text-xs text-muted-foreground/55 mr-auto">有未保存的更改</motion.span>}
+          </AnimatePresence>
+          <Button variant="outline" size="xs" onClick={onBack} className="h-7 px-3 text-xs">取消</Button>
+          <Button size="xs" onClick={handleSave} className="h-7 px-3 text-xs gap-1.5"><Save size={11} />保存</Button>
+        </div>
+      )}
     </div>
   );
 }
@@ -120,12 +210,12 @@ function ModelSelector({ label, value, onChange, hint }: { label: string; value:
   return (
     <div>
       <div className="flex items-center justify-between mb-1.5">
-        <label className="text-sm text-muted-foreground/60">{label}</label>
-        <span className="text-xs text-muted-foreground/50">{hint}</span>
+        <label className="text-sm text-foreground/85">{label}</label>
+        <span className="text-[11px] text-muted-foreground/55">{hint}</span>
       </div>
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
-          <Button variant="outline" className="w-full justify-between px-3 py-2 border-border/20 bg-accent/15 text-sm text-foreground hover:border-border/40">
+          <Button variant="outline" className="w-full justify-between px-3 py-2 border-border/40 bg-muted/30 text-sm text-foreground hover:border-border/60 hover:bg-muted/40">
             <span className="truncate">{selected?.name || value}</span><ChevronDown size={10} className="text-muted-foreground/40 flex-shrink-0" />
           </Button>
         </PopoverTrigger>
@@ -168,12 +258,11 @@ function AgentBasicSection({ resource }: { resource: ResourceItem }) {
   const removeTag = (tag: string) => setTags(prev => prev.filter(t => t !== tag));
   const togglePresetTag = (tag: string) => { if (tags.includes(tag)) removeTag(tag); else setTags(prev => [...prev, tag]); };
   return (
-    <div className="max-w-3xl space-y-6">
-      <div><Typography variant="subtitle" className="mb-1">{"基础设置"}</Typography><p className="text-xs text-muted-foreground/60">{"配置智能体的身份信息和模型"}</p></div>
+    <div className="max-w-3xl space-y-5">
       <div>
         <div className="flex items-center justify-between gap-3 mb-1.5">
-          <label className="text-sm text-muted-foreground/60">头像与名称</label>
-          <label className="text-sm text-muted-foreground/60 w-[160px] flex-shrink-0">类型</label>
+          <label className="text-sm text-foreground/85">头像与名称</label>
+          <label className="text-sm text-foreground/85 w-[160px] flex-shrink-0">类型</label>
         </div>
         <div className="flex items-center gap-3">
           <Popover>
@@ -246,9 +335,9 @@ function AgentBasicSection({ resource }: { resource: ResourceItem }) {
             </PopoverContent>
           </Popover>
           <Input value={name} onChange={e => setName(e.target.value)} placeholder="智能体名称"
-            className="flex-1 min-w-0 h-11 px-3 border-border/20 bg-accent/15 text-sm text-foreground focus-visible:border-border/40 focus-visible:ring-0 shadow-none" />
+            className="flex-1 min-w-0 h-11 px-3 border-border/40 bg-muted/30 text-sm text-foreground focus-visible:border-border/60 focus-visible:ring-0 shadow-none" />
           <Select value={agentType} onValueChange={(v) => setAgentType(v as typeof agentType)}>
-            <SelectTrigger className="w-[160px] flex-shrink-0 !h-11 px-3 text-sm border-border/20 bg-accent/15 hover:bg-accent/25 rounded-xl">
+            <SelectTrigger className="w-[160px] flex-shrink-0 !h-11 px-3 text-sm border-border/40 bg-muted/30 hover:bg-muted/40 rounded-xl">
               <SelectValue placeholder="类型" />
             </SelectTrigger>
             <SelectContent>
@@ -259,7 +348,17 @@ function AgentBasicSection({ resource }: { resource: ResourceItem }) {
           </Select>
         </div>
       </div>
-      <div className="space-y-3"><div className="flex items-center gap-2 mb-1"><span className="text-sm text-muted-foreground/60">{"模型配置"}</span><div className="flex-1 h-px bg-border/30" /></div><ModelSelector label="规划模型" value={planningModel} onChange={setPlanningModel} hint="负责任务拆解和决策" /><ModelSelector label="常规模型" value={regularModel} onChange={setRegularModel} hint="负责主要推理和执行" /><ModelSelector label="快速模型" value={fastModel} onChange={setFastModel} hint="负责简单判断和格式化" /></div>
+      <div>
+        <div className="flex items-center gap-2 mb-2.5">
+          <span className="text-sm text-foreground/85">模型配置</span>
+          <div className="flex-1 h-px bg-border/30" />
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-3 gap-y-3">
+          <ModelSelector label="规划模型" value={planningModel} onChange={setPlanningModel} hint="负责任务拆解和决策" />
+          <ModelSelector label="常规模型" value={regularModel} onChange={setRegularModel} hint="负责主要推理和执行" />
+          <ModelSelector label="快速模型" value={fastModel} onChange={setFastModel} hint="负责简单判断和格式化" />
+        </div>
+      </div>
       <FieldGroup label="简介"><Textarea value={description} onChange={e => setDescription(e.target.value)} rows={2} className="input-accent resize-none" /></FieldGroup>
       <FieldGroup label="标签">
         <Combobox
@@ -482,8 +581,7 @@ function AddResourcePanel({ activeTab, addedIds, onAdd, onClose, onExplore }: { 
     const I = item.icon; return <I size={11} strokeWidth={1.5} className="text-warning/50" />;
   };
   return (
-    <motion.div initial={{ x: 20, opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: 20, opacity: 0 }} transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-      className="w-[240px] flex-shrink-0 bg-background rounded-2xl border border-border/20 shadow-2xl flex flex-col overflow-hidden self-start" style={{ maxHeight: 'min(580px, calc(100vh - 140px))' }}>
+    <div className="flex flex-col overflow-hidden" style={{ maxHeight: 'min(480px, calc(100vh - 200px))' }}>
       <div className="flex items-center justify-between px-3.5 h-[36px] flex-shrink-0 border-b border-border/15">
         <span className="text-sm text-foreground">{"添加"}{tabLabel}</span>
         <Button variant="ghost" size="icon-xs" onClick={onClose} className="text-muted-foreground/40"><X size={11} /></Button>
@@ -545,7 +643,7 @@ function AddResourcePanel({ activeTab, addedIds, onAdd, onClose, onExplore }: { 
           <Button variant="ghost" size="xs" onClick={() => setShowManualForm(!showManualForm)} className={`w-full justify-start gap-2 ${showManualForm ? 'text-foreground bg-accent/15' : 'text-muted-foreground/60 hover:text-foreground hover:bg-accent/15'}`}><Plus size={9} className="text-muted-foreground/40" /><span>{"手动添加"}</span></Button>
         </div>
       </div>
-    </motion.div>
+    </div>
   );
 }
 
@@ -563,9 +661,9 @@ function MCPServerCard({ server, onToggleConnect, onRemove, onToggleTool, onTogg
   const allEnabled = enabledCount === server.tools.length;
 
   return (
-    <div className="rounded-xl border border-border/12 bg-accent/5 overflow-hidden transition-all">
+    <div className="rounded-xl border border-border/12 bg-accent/15 overflow-hidden transition-all">
       {/* Header row */}
-      <div className="flex items-center gap-2.5 px-3 py-2.5 cursor-pointer hover:bg-accent/15 transition-colors" onClick={() => isConnected && setExpanded(!expanded)}>
+      <div className="flex items-center gap-2.5 px-3 py-2.5 cursor-pointer hover:bg-accent/25 transition-colors" onClick={() => isConnected && setExpanded(!expanded)}>
         <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${isConnected ? 'bg-cherry-primary' : server.status === 'error' ? 'bg-destructive' : 'bg-muted-foreground/20'}`} />
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
@@ -618,7 +716,7 @@ function MCPServerCard({ server, onToggleConnect, onRemove, onToggleTool, onTogg
 
 
 
-function ToolchainSection({ onExplore }: { onExplore: () => void }) {
+function ToolchainSection({ onExplore, controlledTab }: { onExplore: () => void; controlledTab?: ToolchainTab }) {
   const [tools, setTools] = useState<ToolItem[]>(() => ALL_TOOLS_CATALOG.map(t => ({ ...t })));
   const [mcpServers, setMcpServers] = useState<MCPServerLocal[]>([]);
   const [skills, setSkills] = useState<SkillItem[]>([]);
@@ -626,7 +724,9 @@ function ToolchainSection({ onExplore }: { onExplore: () => void }) {
     ALL_INTEGRATIONS_CATALOG.slice(0, 3).map(i => ({ ...i, enabled: true })),
   );
   const [search, setSearch] = useState('');
-  const [activeTab, setActiveTab] = useState<ToolchainTab>('tools');
+  const [internalTab, setInternalTab] = useState<ToolchainTab>('tools');
+  const activeTab = controlledTab ?? internalTab;
+  const setActiveTab = (t: ToolchainTab) => { if (!controlledTab) setInternalTab(t); };
   const [showAddPanel, setShowAddPanel] = useState(false);
   const [mcpTagFilter, setMcpTagFilter] = useState<string | null>(null);
   const [skillTagFilter, setSkillTagFilter] = useState<string | null>(null);
@@ -711,47 +811,55 @@ function ToolchainSection({ onExplore }: { onExplore: () => void }) {
     { id: 'tools' as const, label: '内置工具', count: `${enabledToolsCount}/${tools.length}` },
     { id: 'mcp' as const, label: 'MCP Server', count: `${connectedMCPCount}/${mcpServers.length}` },
     { id: 'skills' as const, label: 'Skills', count: `${enabledSkillsCount}/${skills.length}` },
-    { id: 'integrations' as const, label: '集成', count: `${enabledIntegrationsCount}/${integrations.length}` },
+    { id: 'integrations' as const, label: '连接器', count: `${enabledIntegrationsCount}/${integrations.length}` },
   ];
 
   return (
-    <div className="flex gap-4">
-      <div className="flex-1 min-w-0 space-y-6 max-w-3xl">
-        {/* Header — title on left, search + add on right */}
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <Typography variant="subtitle" className="mb-1">能力扩展</Typography>
-            <p className="text-xs text-muted-foreground/60">配置智能体可使用的工具和 MCP Server</p>
-          </div>
-          <div className="flex items-center gap-2 flex-shrink-0 pt-1">
-            <SearchInput value={search} onChange={setSearch} placeholder="搜索…"
-              wrapperClassName="w-[180px] flex items-center gap-1.5 px-2 h-7 rounded-md bg-muted/30 border border-border/20" />
-            <Button variant="ghost" size="xs" onClick={() => setShowAddPanel(!showAddPanel)}
-              className={`gap-1 h-7 px-2.5 rounded-md text-xs border border-border/30 ${
-                showAddPanel ? 'text-foreground bg-accent/25 border-border/50' : 'text-muted-foreground/70 hover:text-foreground hover:bg-accent/15'
-              }`}>
-              <Plus size={11} />
-              <span>添加</span>
-            </Button>
-          </div>
+    <div>
+      <div className="space-y-6 max-w-3xl">
+        {/* Header — search + add. Section title and tab bar are owned
+            by the sidebar when controlledTab is set, so we drop them. */}
+        <div className="flex items-center justify-end gap-2">
+          <SearchInput value={search} onChange={setSearch} placeholder="搜索…"
+            wrapperClassName="w-[200px] flex items-center gap-1.5 px-2 h-7 rounded-md bg-muted/30 border border-border/20" />
+          <Popover open={showAddPanel} onOpenChange={setShowAddPanel}>
+            <PopoverTrigger asChild>
+              <Button variant="ghost" size="xs"
+                className={`gap-1 h-7 px-2.5 rounded-md text-xs border border-border/30 ${
+                  showAddPanel ? 'text-foreground bg-accent/25 border-border/50' : 'text-muted-foreground/70 hover:text-foreground hover:bg-accent/15'
+                }`}>
+                <Plus size={11} />
+                <span>添加</span>
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent align="end" side="bottom" sideOffset={6} className="p-0 w-[280px] overflow-hidden">
+              <AddResourcePanel activeTab={activeTab} addedIds={addedIds} onAdd={handleAdd} onClose={() => setShowAddPanel(false)} onExplore={onExplore} />
+            </PopoverContent>
+          </Popover>
+          <Button variant="ghost" size="xs" onClick={onExplore}
+            className="gap-1 h-7 px-2.5 rounded-md text-xs border border-border/30 text-muted-foreground/70 hover:text-foreground hover:bg-accent/15">
+            <ExternalLink size={11} />
+            <span>去市场浏览</span>
+          </Button>
         </div>
-        {/* Tab bar across full width */}
-        <div className="flex items-center border-b border-border/15">
-          {tabs.map(tab => (
-            <Button variant="ghost" key={tab.id} onClick={() => setActiveTab(tab.id)}
-              className={`relative px-3 py-1.5 font-normal rounded-none ${
-                activeTab === tab.id ? 'text-foreground hover:bg-transparent' : 'text-muted-foreground/40 hover:text-foreground hover:bg-transparent'
-              }`}>
-              {tab.label}
-              <span className={`ml-1.5 text-xs tabular-nums ${activeTab === tab.id ? 'text-muted-foreground/60' : 'text-muted-foreground/40'}`}>
-                {tab.count}
-              </span>
-              {activeTab === tab.id && (
-                <motion.div layoutId="toolchain-tab" className="absolute bottom-0 left-0 right-0 h-[2px] bg-foreground/70 rounded-t" />
-              )}
-            </Button>
-          ))}
-        </div>
+        {!controlledTab && (
+          <div className="flex items-center border-b border-border/15">
+            {tabs.map(tab => (
+              <Button variant="ghost" key={tab.id} onClick={() => setActiveTab(tab.id)}
+                className={`relative px-3 py-1.5 font-normal rounded-none ${
+                  activeTab === tab.id ? 'text-foreground hover:bg-transparent' : 'text-muted-foreground/40 hover:text-foreground hover:bg-transparent'
+                }`}>
+                {tab.label}
+                <span className={`ml-1.5 text-xs tabular-nums ${activeTab === tab.id ? 'text-muted-foreground/60' : 'text-muted-foreground/40'}`}>
+                  {tab.count}
+                </span>
+                {activeTab === tab.id && (
+                  <motion.div layoutId="toolchain-tab" className="absolute bottom-0 left-0 right-0 h-[2px] bg-foreground/70 rounded-t" />
+                )}
+              </Button>
+            ))}
+          </div>
+        )}
         <div>
           <AnimatePresence mode="wait">
             <motion.div key={activeTab} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} transition={{ duration: 0.15 }}>
@@ -760,11 +868,11 @@ function ToolchainSection({ onExplore }: { onExplore: () => void }) {
               {activeTab === 'tools' && (tools.length === 0 ? <TabEmptyState preset="no-code-tool" label="内置工具" onAdd={() => setShowAddPanel(true)} /> : (
                 <div>
                   <TagFilter tags={TOOL_CATEGORIES} selected={toolTagFilter} onToggle={setToolTagFilter} />
-                  <div className="space-y-2">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                     {filteredTools.map(tool => { const Icon = tool.icon; return (
                       <div key={tool.id}
                         onClick={() => toggleTool(tool.id)}
-                        className={`flex items-center gap-3 px-3 py-2.5 rounded-xl border border-border/12 bg-accent/5 hover:bg-accent/15 transition-all cursor-pointer ${tool.enabled ? '' : 'opacity-55'}`}>
+                        className={`flex items-center gap-3 px-3 py-2.5 rounded-xl border border-border/12 bg-accent/15 hover:bg-accent/25 transition-all cursor-pointer ${tool.enabled ? '' : 'opacity-55'}`}>
                         <Icon size={15} strokeWidth={1.5} className={tool.enabled ? 'text-muted-foreground flex-shrink-0' : 'text-muted-foreground/40 flex-shrink-0'} />
                         <div className="flex-1 min-w-0">
                           <div className="text-sm text-foreground truncate">{tool.name}</div>
@@ -775,7 +883,6 @@ function ToolchainSection({ onExplore }: { onExplore: () => void }) {
                     ); })}
                   </div>
                   {filteredTools.length === 0 && <EmptyState preset="no-result" title={search ? '未找到匹配结果' : '该分类下无工具'} compact />}
-                  <div className="pt-3 flex items-center gap-2"><Button variant="ghost" size="xs" onClick={() => setShowAddPanel(true)} className="text-muted-foreground/50 hover:text-foreground hover:bg-accent/15"><Plus size={10} /> {"继续添加"}</Button><Button variant="link" size="xs" onClick={onExplore} className="text-cherry-text-muted hover:text-cherry-primary-dark"><ExternalLink size={9} /> {"去探索浏览"}</Button></div>
                 </div>
               ))}
 
@@ -783,7 +890,7 @@ function ToolchainSection({ onExplore }: { onExplore: () => void }) {
               {activeTab === 'mcp' && (mcpServers.length === 0 ? <TabEmptyState preset="no-resource" label="MCP Server" onAdd={() => setShowAddPanel(true)} /> : (
                 <div>
                   <TagFilter tags={MCP_TAGS} selected={mcpTagFilter} onToggle={setMcpTagFilter} />
-                  <div className="space-y-2">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2 items-start">
                     {filteredMCP.map(server => (
                       <MCPServerCard
                         key={server.id}
@@ -796,18 +903,17 @@ function ToolchainSection({ onExplore }: { onExplore: () => void }) {
                     ))}
                     {filteredMCP.length === 0 && <EmptyState preset="no-result" title={search ? '未找到匹配结果' : '该分类下无 Server'} compact />}
                   </div>
-                  <div className="pt-3 flex items-center gap-2"><Button variant="ghost" size="xs" onClick={() => setShowAddPanel(true)} className="text-muted-foreground/50 hover:text-foreground hover:bg-accent/15"><Plus size={10} /> {"继续添加"}</Button><Button variant="link" size="xs" onClick={onExplore} className="text-cherry-text-muted hover:text-cherry-primary-dark"><ExternalLink size={9} /> {"去探索浏览"}</Button></div>
                 </div>
               ))}
 
               {/* === Integrations === */}
               {activeTab === 'integrations' && (integrations.length === 0 ? <TabEmptyState preset="no-resource" label="集成" onAdd={() => setShowAddPanel(true)} /> : (
                 <div>
-                  <div className="space-y-2">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                     {filteredIntegrations.map(integ => { const Icon = integ.icon; return (
                       <div key={integ.id}
                         onClick={() => toggleIntegration(integ.id)}
-                        className={`flex items-center gap-3 px-3 py-2.5 rounded-xl border border-border/12 bg-accent/5 hover:bg-accent/15 transition-all cursor-pointer ${integ.enabled ? '' : 'opacity-55'}`}>
+                        className={`flex items-center gap-3 px-3 py-2.5 rounded-xl border border-border/12 bg-accent/15 hover:bg-accent/25 transition-all cursor-pointer ${integ.enabled ? '' : 'opacity-55'}`}>
                         <Icon size={15} strokeWidth={1.5} className={integ.enabled ? `${integ.tintCls} flex-shrink-0` : 'text-muted-foreground/40 flex-shrink-0'} />
                         <div className="flex-1 min-w-0">
                           <div className="text-sm text-foreground truncate">{integ.name}</div>
@@ -818,7 +924,6 @@ function ToolchainSection({ onExplore }: { onExplore: () => void }) {
                     ); })}
                   </div>
                   {filteredIntegrations.length === 0 && <EmptyState preset="no-result" title={search ? '未找到匹配结果' : '暂无集成'} compact />}
-                  <div className="pt-3 flex items-center gap-2"><Button variant="ghost" size="xs" onClick={() => setShowAddPanel(true)} className="text-muted-foreground/50 hover:text-foreground hover:bg-accent/15"><Plus size={10} /> {"继续添加"}</Button><Button variant="link" size="xs" onClick={onExplore} className="text-cherry-text-muted hover:text-cherry-primary-dark"><ExternalLink size={9} /> {"去探索浏览"}</Button></div>
                 </div>
               ))}
 
@@ -826,11 +931,11 @@ function ToolchainSection({ onExplore }: { onExplore: () => void }) {
               {activeTab === 'skills' && (skills.length === 0 ? <TabEmptyState preset="no-resource" label="Skill" onAdd={() => setShowAddPanel(true)} /> : (
                 <div>
                   <TagFilter tags={SKILL_TAGS} selected={skillTagFilter} onToggle={setSkillTagFilter} />
-                  <div className="space-y-2">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                     {filteredSkills.map(skill => { const Icon = skill.icon; return (
                       <div key={skill.id}
                         onClick={() => toggleSkill(skill.id)}
-                        className={`flex items-center gap-3 px-3 py-2.5 rounded-xl border border-border/12 bg-accent/5 hover:bg-accent/15 transition-all cursor-pointer ${skill.enabled ? '' : 'opacity-55'}`}>
+                        className={`flex items-center gap-3 px-3 py-2.5 rounded-xl border border-border/12 bg-accent/15 hover:bg-accent/25 transition-all cursor-pointer ${skill.enabled ? '' : 'opacity-55'}`}>
                         <Icon size={15} strokeWidth={1.5} className={skill.enabled ? 'text-muted-foreground flex-shrink-0' : 'text-muted-foreground/40 flex-shrink-0'} />
                         <div className="flex-1 min-w-0">
                           <div className="text-sm text-foreground truncate">{skill.name}</div>
@@ -841,7 +946,6 @@ function ToolchainSection({ onExplore }: { onExplore: () => void }) {
                     ); })}
                   </div>
                   {filteredSkills.length === 0 && <EmptyState preset="no-result" title={search ? '未找到匹配结果' : '该分类下无 Skill'} compact />}
-                  <div className="pt-3 flex items-center gap-2"><Button variant="ghost" size="xs" onClick={() => setShowAddPanel(true)} className="text-muted-foreground/50 hover:text-foreground hover:bg-accent/15"><Plus size={10} /> {"继续添加"}</Button><Button variant="link" size="xs" onClick={onExplore} className="text-cherry-text-muted hover:text-cherry-primary-dark"><ExternalLink size={9} /> {"去探索浏览"}</Button></div>
                 </div>
               ))}
 
@@ -849,9 +953,6 @@ function ToolchainSection({ onExplore }: { onExplore: () => void }) {
           </AnimatePresence>
         </div>
       </div>
-      <AnimatePresence>
-        {showAddPanel && <AddResourcePanel activeTab={activeTab} addedIds={addedIds} onAdd={handleAdd} onClose={() => setShowAddPanel(false)} onExplore={onExplore} />}
-      </AnimatePresence>
     </div>
   );
 }
@@ -907,64 +1008,28 @@ function KnowledgeBaseSection() {
 
 
   return (
-    <div className="max-w-3xl space-y-6">
-      <div>
-        <Typography variant="subtitle" className="mb-1">{"知识库关联"}</Typography>
-        <p className="text-xs text-muted-foreground/60">{"选择知识库并配置检索参数"}</p>
-      </div>
-
+    <div className="max-w-3xl space-y-5">
       {/* Linked knowledge bases */}
       <div>
-        <div className="text-xs text-muted-foreground/50 mb-2.5">{"已关联知识库"}</div>
-        {linkedKBs.length === 0 ? (
-          <EmptyState
-            preset="no-knowledge"
-            title="尚未关联任何知识库"
-            description="关联知识库后，智能体可检索其中的内容来回答问题"
-            compact
-          />
-        ) : (
-          <div className="space-y-2">
-            {linkedKBs.map(kb => (
-              <motion.div key={kb.id} layout initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}
-                className="flex items-center gap-3 px-4 py-3 rounded-xl border border-border/12 bg-accent/4 hover:bg-accent/15 transition-all group">
-                <div className={`w-8 h-8 rounded-lg ${kb.iconColor} flex items-center justify-center flex-shrink-0`}>
-                  <FolderOpen size={14} className="text-white/90" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="text-sm text-foreground">{kb.name}</div>
-                  <div className="text-xs text-muted-foreground/50">{kb.docCount} {"文档"} · {kb.size}</div>
-                </div>
-                <Button variant="ghost" size="icon-xs" onClick={() => removeKB(kb.id)} className="text-muted-foreground/40 hover:text-destructive hover:bg-destructive/8 opacity-0 group-hover:opacity-100"><Trash2 size={11} /></Button>
-              </motion.div>
-            ))}
-          </div>
-        )}
-
-        {/* Add button + dropdown */}
-        <div className="mt-3">
+        <div className="flex items-center justify-between mb-2">
+          <label className="text-sm text-foreground/85">已关联知识库</label>
           <Popover open={showAddPanel} onOpenChange={(v) => { setShowAddPanel(v); if (v) { setAddSearch(''); setAddGroupFilter('全部'); } }}>
             <PopoverTrigger asChild>
-              <Button variant="ghost" size="xs"
-                className="text-muted-foreground/50 hover:text-foreground">
-                <Plus size={11} /><span>{"添加知识库"}</span>
+              <Button variant="outline" size="xs"
+                className="flex items-center gap-1 h-7 px-2.5 rounded-md text-xs text-muted-foreground/70 hover:text-foreground hover:bg-accent/15 border border-border/30">
+                <Plus size={11} /><span>添加知识库</span>
               </Button>
             </PopoverTrigger>
-            <PopoverContent align="start" className="p-0 w-[340px] overflow-hidden">
-              {/* Search */}
+            <PopoverContent align="end" className="p-0 w-[340px] overflow-hidden">
               <div className="px-3 pt-3 pb-2">
                 <SearchInput value={addSearch} onChange={setAddSearch} placeholder="搜索知识库..." clearable wrapperClassName="flex items-center gap-1.5 px-2.5 py-[6px] rounded-lg bg-accent/15 border border-border/12" autoFocus />
               </div>
-
-              {/* Group filter pills */}
               <div className="px-3 pb-2 flex flex-wrap gap-1">
                 {KB_GROUPS.map(g => (
                   <Button variant="ghost" size="xs" key={g} onClick={() => setAddGroupFilter(g)}
                     className={`px-1.5 py-[2px] rounded-full text-xs ${addGroupFilter === g ? 'bg-accent/50 border border-border/30 text-foreground' : 'border border-transparent text-muted-foreground/50 hover:text-foreground'}`}>{g}</Button>
                 ))}
               </div>
-
-              {/* KB list */}
               <div className="max-h-[240px] overflow-y-auto px-1.5 pb-2 scrollbar-thin">
                 {filteredCatalog.length === 0 ? (
                   <EmptyState preset="no-result" title="无匹配知识库" compact />
@@ -989,6 +1054,31 @@ function KnowledgeBaseSection() {
             </PopoverContent>
           </Popover>
         </div>
+        {linkedKBs.length === 0 ? (
+          <EmptyState
+            preset="no-knowledge"
+            title="尚未关联任何知识库"
+            description="关联知识库后，智能体可检索其中的内容来回答问题"
+            compact
+          />
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+            {linkedKBs.map(kb => (
+              <motion.div key={kb.id} layout initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}
+                className="flex items-center gap-3 px-4 py-3 rounded-xl border border-border/12 bg-accent/15 hover:bg-accent/25 transition-all group">
+                <div className={`w-8 h-8 rounded-lg ${kb.iconColor} flex items-center justify-center flex-shrink-0`}>
+                  <FolderOpen size={14} className="text-white/90" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm text-foreground">{kb.name}</div>
+                  <div className="text-xs text-muted-foreground/50">{kb.docCount} {"文档"} · {kb.size}</div>
+                </div>
+                <Button variant="ghost" size="icon-xs" onClick={() => removeKB(kb.id)} className="text-muted-foreground/40 hover:text-destructive hover:bg-destructive/8 opacity-0 group-hover:opacity-100"><Trash2 size={11} /></Button>
+              </motion.div>
+            ))}
+          </div>
+        )}
+
       </div>
 
       {/* 知识库识别 — Switch row, matches Cherry Studio source pattern
@@ -998,7 +1088,7 @@ function KnowledgeBaseSection() {
           knowledge base itself, configured in 资源库 → 知识库. */}
       <div className="flex items-center justify-between gap-3 py-3 border-t border-border/15">
         <div className="flex items-center gap-1.5 min-w-0">
-          <label className="text-sm text-muted-foreground/80">知识库识别</label>
+          <label className="text-sm text-foreground/85">知识库识别</label>
           <SimpleTooltip
             content="开启后助手自动判断是否需要检索已引用的知识库；关闭则每条消息都强制检索。"
             side="top"
@@ -1027,10 +1117,9 @@ function KnowledgeBaseSection() {
 function AgentAdvancedSection() {
   const [maxRounds, setMaxRounds] = useState(10);
   return (
-    <div className="max-w-3xl space-y-6">
-      <div><Typography variant="subtitle" className="mb-1">{"高级设置"}</Typography><p className="text-xs text-muted-foreground/60">{"配置智能体的执行限制"}</p></div>
+    <div className="max-w-3xl space-y-5">
       <div>
-        <label className="text-sm text-muted-foreground/60 mb-1.5 block">{"最大执行轮次"} <span className="text-muted-foreground/50 ml-1">{maxRounds}</span></label>
+        <label className="text-sm text-foreground/85 mb-1.5 block">{"最大执行轮次"} <span className="text-muted-foreground/50 ml-1">{maxRounds}</span></label>
         <Slider min={1} max={50} step={1} value={[maxRounds]} onValueChange={([v]) => setMaxRounds(v)} />
         <div className="flex justify-between mt-1"><span className="text-xs text-muted-foreground/50">1</span><span className="text-xs text-muted-foreground/50">50</span></div>
         <p className="text-xs text-muted-foreground/50 mt-2">{"每次会话中智能体与工具交互的最大轮次数。达到上限后将停止执行并返回当前结果。"}</p>
@@ -1040,5 +1129,5 @@ function AgentAdvancedSection() {
 }
 
 function FieldGroup({ label, children }: { label: React.ReactNode; children: React.ReactNode }) {
-  return (<div><label className="text-sm text-muted-foreground/60 mb-1.5 block">{label}</label>{children}</div>);
+  return (<div><label className="text-sm text-foreground/85 mb-1.5 block">{label}</label>{children}</div>);
 }

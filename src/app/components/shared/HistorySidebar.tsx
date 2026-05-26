@@ -24,6 +24,10 @@ export interface HistoryItem {
   archived?: boolean;
   assistantName?: string;
   tags?: string[];
+  /** Optional: when 'task' + status === 'active' + progress is a number,
+   *  the row renders a small progress ring at the right edge. */
+  kind?: 'chat' | 'task';
+  progress?: number;
 }
 
 type GroupByMode = 'none' | 'status' | 'group' | 'time' | 'custom' | 'assistant' | 'tag';
@@ -197,6 +201,32 @@ const STATUS_DOT_COLORS: Record<string, { className: string; animate?: boolean }
   paused:    { className: 'bg-muted-foreground/40' },
 };
 
+// Small donut for Task-kind items in flight. Track at /25, arc at
+// cherry-primary, -rotate-90 so 0% starts at 12 o'clock.
+function TaskProgressRing({ progress, size = 13 }: { progress: number; size?: number }) {
+  const stroke = 1.5;
+  const r = (size - stroke) / 2;
+  const c = 2 * Math.PI * r;
+  const pct = Math.min(Math.max(progress, 0), 100);
+  const offset = c * (1 - pct / 100);
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox={`0 0 ${size} ${size}`}
+      className="-rotate-90 flex-shrink-0"
+      aria-label={`任务进度 ${Math.round(pct)}%`}
+      role="img"
+    >
+      <circle cx={size / 2} cy={size / 2} r={r} fill="none"
+        className="stroke-muted-foreground/25" strokeWidth={stroke} />
+      <circle cx={size / 2} cy={size / 2} r={r} fill="none"
+        className="stroke-cherry-primary" strokeWidth={stroke}
+        strokeDasharray={c} strokeDashoffset={offset} strokeLinecap="round" />
+    </svg>
+  );
+}
+
 function SidebarItem<T extends HistoryItem>({ item, isActive, isEditing, onClick, onContextMenu, onCommitEdit, onArchive, showStatusDot, onDragStart, onDragOver, onDrop }: {
   item: T;
   isActive: boolean;
@@ -268,9 +298,11 @@ function SidebarItem<T extends HistoryItem>({ item, isActive, isEditing, onClick
         <span className="text-sm truncate flex-1 text-left">
           {item.title}
         </span>
-        {statusCfg && item.unread && !isActive && (
+        {item.kind === 'task' && item.status === 'active' && typeof item.progress === 'number' ? (
+          <TaskProgressRing progress={item.progress} />
+        ) : (statusCfg && item.unread && !isActive && (
           <span className={`w-[5px] h-[5px] rounded-full flex-shrink-0 ${statusCfg.className} ${statusCfg.animate ? 'animate-pulse' : ''}`} />
-        )}
+        ))}
       </Button>
       {onArchive && (
         <button

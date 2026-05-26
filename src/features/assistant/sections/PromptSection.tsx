@@ -541,16 +541,11 @@ export function PromptSection({ hideFewShot }: { hideFewShot?: boolean } = {}) {
   const refTotal = highlightedCount + kbCount + mcpCount;
 
   return (
-    <div className="max-w-3xl space-y-6">
-      <div>
-        <Typography variant="subtitle" className="mb-1">提示词配置</Typography>
-        <p className="text-xs text-muted-foreground/60">{hideFewShot ? '定义 System Prompt 和变量' : '定义 System Prompt、变量和对话样本'}</p>
-      </div>
-
+    <div className="max-w-3xl space-y-5">
       {/* System Prompt */}
       <div>
         <div className="flex items-center justify-between mb-1.5">
-          <label className="text-xs text-foreground">系统提示词</label>
+          <label className="text-sm text-foreground/85">系统提示词</label>
           <Popover>
             <PopoverTrigger asChild>
               <Button size="inline" variant="ghost"
