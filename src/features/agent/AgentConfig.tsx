@@ -12,7 +12,7 @@ import {
   Layers, Sparkles, BookOpen, FolderOpen,
   Upload, Link2,
   Send, MessageCircle, Github, Info,
-  Cable, Plug, LayoutGrid,
+  Cable, Plug, LayoutGrid, Blocks,
 } from 'lucide-react';
 import { Button } from '@cherrystudio/ui/components/primitives/button';
 import { Slider } from '@cherrystudio/ui/components/primitives/slider';
@@ -118,8 +118,8 @@ export function AgentConfig({ resource, onBack, inModal = false }: Props) {
                 <Button variant="ghost"
                   onClick={() => setToolchainExpanded(v => !v)}
                   className={`w-full justify-start gap-2 px-3 py-2 mb-0.5 rounded-lg transition-colors ${childActive ? 'bg-accent/50 text-foreground font-medium' : 'font-normal text-muted-foreground/65 hover:text-foreground hover:bg-muted/40'}`}>
-                  <Wrench size={13} strokeWidth={1.5} className={`flex-shrink-0 ${childActive ? 'text-muted-foreground' : 'text-muted-foreground/40'}`} />
-                  <span className="text-sm flex-1 text-left">工具拓展</span>
+                  <Blocks size={13} strokeWidth={1.5} className={`flex-shrink-0 ${childActive ? 'text-muted-foreground' : 'text-muted-foreground/40'}`} />
+                  <span className="text-sm flex-1 text-left">拓展</span>
                   <ChevronDown size={11} className={`flex-shrink-0 text-muted-foreground/40 transition-transform ${toolchainExpanded ? '' : '-rotate-90'}`} />
                 </Button>
                 <AnimatePresence initial={false}>
