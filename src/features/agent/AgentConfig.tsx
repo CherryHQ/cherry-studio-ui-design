@@ -820,7 +820,7 @@ function ToolchainSection({ onExplore, controlledTab }: { onExplore: () => void;
               {activeTab === 'tools' && (tools.length === 0 ? <TabEmptyState preset="no-code-tool" label="内置工具" onAdd={() => setShowAddPanel(true)} /> : (
                 <div>
                   <TagFilter tags={TOOL_CATEGORIES} selected={toolTagFilter} onToggle={setToolTagFilter} />
-                  <div className="space-y-2">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                     {filteredTools.map(tool => { const Icon = tool.icon; return (
                       <div key={tool.id}
                         onClick={() => toggleTool(tool.id)}
@@ -843,7 +843,7 @@ function ToolchainSection({ onExplore, controlledTab }: { onExplore: () => void;
               {activeTab === 'mcp' && (mcpServers.length === 0 ? <TabEmptyState preset="no-resource" label="MCP Server" onAdd={() => setShowAddPanel(true)} /> : (
                 <div>
                   <TagFilter tags={MCP_TAGS} selected={mcpTagFilter} onToggle={setMcpTagFilter} />
-                  <div className="space-y-2">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2 items-start">
                     {filteredMCP.map(server => (
                       <MCPServerCard
                         key={server.id}
@@ -863,7 +863,7 @@ function ToolchainSection({ onExplore, controlledTab }: { onExplore: () => void;
               {/* === Integrations === */}
               {activeTab === 'integrations' && (integrations.length === 0 ? <TabEmptyState preset="no-resource" label="集成" onAdd={() => setShowAddPanel(true)} /> : (
                 <div>
-                  <div className="space-y-2">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                     {filteredIntegrations.map(integ => { const Icon = integ.icon; return (
                       <div key={integ.id}
                         onClick={() => toggleIntegration(integ.id)}
@@ -886,7 +886,7 @@ function ToolchainSection({ onExplore, controlledTab }: { onExplore: () => void;
               {activeTab === 'skills' && (skills.length === 0 ? <TabEmptyState preset="no-resource" label="Skill" onAdd={() => setShowAddPanel(true)} /> : (
                 <div>
                   <TagFilter tags={SKILL_TAGS} selected={skillTagFilter} onToggle={setSkillTagFilter} />
-                  <div className="space-y-2">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                     {filteredSkills.map(skill => { const Icon = skill.icon; return (
                       <div key={skill.id}
                         onClick={() => toggleSkill(skill.id)}
@@ -979,7 +979,7 @@ function KnowledgeBaseSection() {
             compact
           />
         ) : (
-          <div className="space-y-2">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
             {linkedKBs.map(kb => (
               <motion.div key={kb.id} layout initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}
                 className="flex items-center gap-3 px-4 py-3 rounded-xl border border-border/12 bg-accent/4 hover:bg-accent/15 transition-all group">
