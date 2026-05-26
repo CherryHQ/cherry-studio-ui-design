@@ -1654,6 +1654,48 @@ export const SESSION_DATA_MAP: Record<string, SessionData> = {
     previewHtml: SESSION_6_PREVIEW,
     workDir: '~/projects/api-optimization',
   },
+  // ─── Task-kind sessions — running, surface a progress ring in the
+  //     sidebar (kind: 'task' + progress on AgentSession).
+  'session-11': {
+    messages: [
+      { id: 's11-m1', role: 'user', content: '帮我调研一下桌面端 Agent 产品，重点是定位、形态和盈利模型，最后给一个 12 个竞品的对比表。', timestamp: '10:14' },
+      { id: 's11-m2', role: 'agent', thinking: '先列出要调研的竞品清单，把它们按"通用 / 编程 / 办公 / 创作"四类分桶。每类拿 3 个代表跑功能矩阵，最后汇总成表。', timestamp: '10:15' },
+      { id: 's11-m3', role: 'agent', content: '已完成竞品清单（12 个）。正在并行抓取每家产品的官网定价页和文档导航，整理功能矩阵。', toolCall: { name: 'web.scrape · batch=12', status: 'running', duration: '6.2s' }, timestamp: '10:22' },
+      { id: 's11-m4', role: 'agent', content: '已抓取 7/12，剩余 5 个还在排队（部分站点 rate-limited，等待中）。', toolCall: { name: 'fs.write · matrix.draft.md', status: 'done', duration: '0.3s' }, timestamp: '10:31' },
+    ],
+    steps: [
+      { id: 's11-s1', icon: 'search',  label: '列出 12 个竞品清单',           status: 'done' },
+      { id: 's11-s2', icon: 'search',  label: '抓取官网定价与文档导航',         status: 'running', description: '7/12 已完成' },
+      { id: 's11-s3', icon: 'review',  label: '生成功能矩阵 (草稿)',            status: 'pending' },
+      { id: 's11-s4', icon: 'write',   label: '撰写定位与盈利模型分析',         status: 'pending' },
+      { id: 's11-s5', icon: 'finish',  label: '导出对比表 + 总结报告',          status: 'pending' },
+    ],
+    files: DEFAULT_INITIAL_FILES,
+    outputFiles: [
+      { id: 'o11-1', name: 'competitor-matrix.draft.md', format: 'md', size: '6 KB', status: 'generating', timestamp: '' },
+    ],
+    fileContents: {},
+    workDir: '~/research/desktop-agents',
+  },
+  'session-13': {
+    messages: [
+      { id: 's13-m1', role: 'user', content: '帮我搭一个实时协作白板，CRDT 引擎 + 自由画布 + 多光标，需要能在 4 个人同时编辑下不打架。', timestamp: '16:02' },
+      { id: 's13-m2', role: 'agent', thinking: 'Yjs 作为 CRDT 引擎成熟稳定，配合 y-websocket 起一个本地 dev server，前端用 Canvas 画板 + 自定义 Awareness 协议传光标。', timestamp: '16:02' },
+      { id: 's13-m3', role: 'agent', content: '基座搭好了：Yjs + y-websocket + React 画布。光标 / 选区 / 形状的 awareness 协议跑通，正在做笔触延迟优化。', toolCall: { name: 'vite dev --port 3010', status: 'running' }, timestamp: '16:18' },
+      { id: 's13-m4', role: 'agent', content: '本地多人测试：4 个浏览器同时画线，无冲突，但延迟在 80-120ms 之间，目标 < 60ms。在加节流 + 批量同步。', timestamp: '16:38' },
+    ],
+    steps: [
+      { id: 's13-s1', icon: 'install', label: '安装 Yjs / y-websocket',         status: 'done' },
+      { id: 's13-s2', icon: 'code',    label: '画布组件 + 工具栏',              status: 'done' },
+      { id: 's13-s3', icon: 'code',    label: 'Awareness 协议（光标 / 选区）',  status: 'done' },
+      { id: 's13-s4', icon: 'build',   label: '笔触延迟优化',                   status: 'running', description: '当前 92ms · 目标 < 60ms' },
+      { id: 's13-s5', icon: 'finish',  label: '部署到 staging',                 status: 'pending' },
+    ],
+    files: DEFAULT_INITIAL_FILES,
+    outputFiles: [],
+    fileContents: {},
+    workDir: '~/projects/collab-whiteboard',
+  },
 };
 
 // Default initial file tree for new sessions
