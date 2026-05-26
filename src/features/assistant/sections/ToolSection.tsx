@@ -1,6 +1,9 @@
 import React, { useState, useMemo } from 'react';
 import { Info, Plug } from 'lucide-react';
 import { Typography, SimpleTooltip, Switch, EmptyState } from '@cherry-studio/ui';
+import {
+  Select, SelectTrigger, SelectValue, SelectContent, SelectItem,
+} from '@cherrystudio/ui/components/primitives/select';
 
 // ===========================
 // Assistant MCP Settings
@@ -58,34 +61,47 @@ export function ToolSection() {
 
   return (
     <div className="max-w-3xl space-y-5">
-      {/* Mode selector — compact segmented control. The active option's
-          description renders below as a single line so users still get
-          the explanation without the bulky 3-card stack. */}
-      <div>
-        <div className="inline-flex items-center gap-0.5 p-0.5 rounded-md bg-muted/40 border border-border/15" role="radiogroup" aria-label="MCP 模式">
-          {MODE_OPTIONS.map(opt => {
-            const active = mode === opt.id;
-            return (
-              <button
-                key={opt.id}
-                type="button"
-                role="radio"
-                aria-checked={active}
-                onClick={() => setMode(opt.id)}
-                className={`px-3 h-7 rounded text-[13px] transition-colors ${
-                  active
-                    ? 'bg-background text-foreground shadow-sm'
-                    : 'text-muted-foreground/70 hover:text-foreground'
-                }`}
-              >
-                {opt.label}
+      {/* MCP enable Switch + 调用方式 Select. Reads as two standard
+          form rows instead of a floating segmented chip — clearer
+          affordance + the description sits under the Select where
+          users naturally look for field hints. */}
+      <div className="space-y-3">
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-1.5">
+            <label className="text-sm text-foreground/85">启用 MCP</label>
+            <SimpleTooltip content="关闭后助手不会调用任何 MCP 工具" side="top" sideOffset={6}>
+              <button type="button" tabIndex={-1}
+                className="inline-flex items-center text-muted-foreground/40 hover:text-muted-foreground cursor-help">
+                <Info size={12} />
               </button>
-            );
-          })}
+            </SimpleTooltip>
+          </div>
+          <Switch
+            checked={mode !== 'disabled'}
+            onCheckedChange={(v) => setMode(v ? 'auto' : 'disabled')}
+            className="flex-shrink-0"
+          />
         </div>
-        <p className="text-[11px] text-muted-foreground/55 mt-2">
-          {MODE_OPTIONS.find(o => o.id === mode)?.description}
-        </p>
+
+        {mode !== 'disabled' && (
+          <div className="flex items-center justify-between gap-3">
+            <label className="text-sm text-foreground/85">调用方式</label>
+            <div className="flex flex-col items-end gap-1">
+              <Select value={mode} onValueChange={(v) => setMode(v as McpMode)}>
+                <SelectTrigger className="h-8 w-[140px] text-sm border-border/40 bg-muted/30 hover:bg-muted/40 rounded-lg">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="auto">自动</SelectItem>
+                  <SelectItem value="manual">手动</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-[11px] text-muted-foreground/55 text-right max-w-[280px]">
+                {MODE_OPTIONS.find(o => o.id === mode)?.description}
+              </p>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Manual mode: server list */}
