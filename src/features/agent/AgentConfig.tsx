@@ -566,7 +566,7 @@ function AddResourcePanel({ activeTab, addedIds, onAdd, onClose, onExplore }: { 
   };
   return (
     <motion.div initial={{ x: 20, opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: 20, opacity: 0 }} transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-      className="w-[240px] flex-shrink-0 bg-background rounded-2xl border border-border/20 shadow-2xl flex flex-col overflow-hidden self-start" style={{ maxHeight: 'min(580px, calc(100vh - 140px))' }}>
+      className="absolute top-10 right-0 z-10 w-[260px] bg-background rounded-2xl border border-border/30 shadow-2xl flex flex-col overflow-hidden" style={{ maxHeight: 'min(520px, calc(100vh - 200px))' }}>
       <div className="flex items-center justify-between px-3.5 h-[36px] flex-shrink-0 border-b border-border/15">
         <span className="text-sm text-foreground">{"添加"}{tabLabel}</span>
         <Button variant="ghost" size="icon-xs" onClick={onClose} className="text-muted-foreground/40"><X size={11} /></Button>
@@ -800,8 +800,8 @@ function ToolchainSection({ onExplore, controlledTab }: { onExplore: () => void;
   ];
 
   return (
-    <div className="flex gap-4">
-      <div className="flex-1 min-w-0 space-y-6 max-w-3xl">
+    <div className="relative">
+      <div className="space-y-6 max-w-3xl">
         {/* Header — search + add. Section title and tab bar are owned
             by the sidebar when controlledTab is set, so we drop them. */}
         <div className="flex items-center justify-end gap-2">
