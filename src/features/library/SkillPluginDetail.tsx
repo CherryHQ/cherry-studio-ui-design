@@ -269,7 +269,7 @@ export function SkillPluginDetail({ resource, onBack, onToggle, onDelete, inModa
 
           {/* Description */}
           <div>
-            <label className="text-sm text-muted-foreground/70 mb-1.5 block">描述</label>
+            <label className="text-sm text-foreground/85 mb-1.5 block">描述</label>
             {editingDesc ? (
               <Textarea value={description} onChange={e => setDescription(e.target.value)} onBlur={() => setEditingDesc(false)} autoFocus rows={3}
                 className="input-accent resize-none" />
@@ -284,7 +284,7 @@ export function SkillPluginDetail({ resource, onBack, onToggle, onDelete, inModa
 
           {/* File Info */}
           <div>
-            <label className="text-sm text-muted-foreground/70 mb-2 block">源文件</label>
+            <label className="text-sm text-foreground/85 mb-2 block">源文件</label>
             <div className="flex items-center gap-3 px-4 py-3.5 rounded-xl border border-border/15 bg-accent/5">
               <div className="w-10 h-10 rounded-xl bg-accent/50 flex items-center justify-center flex-shrink-0">
                 <FileIcon size={18} strokeWidth={1.3} className="text-muted-foreground/50" />
@@ -307,7 +307,7 @@ export function SkillPluginDetail({ resource, onBack, onToggle, onDelete, inModa
 
           {/* Content Preview */}
           <div>
-            <label className="text-sm text-muted-foreground/70 mb-2 block">
+            <label className="text-sm text-foreground/85 mb-2 block">
               {resource.fileType === 'zip' ? '包内容' : '文件预览'}
             </label>
             <div className="rounded-xl border border-border/15 bg-foreground/[0.03] dark:bg-foreground/[0.06] overflow-hidden">
@@ -325,7 +325,7 @@ export function SkillPluginDetail({ resource, onBack, onToggle, onDelete, inModa
 
           {/* Tags */}
           <div>
-            <label className="text-sm text-muted-foreground/70 mb-2 block flex items-center gap-1"><Tag size={9} /> 标签</label>
+            <label className="text-sm text-foreground/85 mb-2 block flex items-center gap-1"><Tag size={9} /> 标签</label>
             <div className="flex flex-wrap items-center gap-1.5 mb-2">
               {tags.map(tag => (
                 <span key={tag} className="flex items-center gap-1 text-xs px-2 py-0.5 rounded-full border border-border/15 text-muted-foreground/60 hover:border-border/30 transition-colors group">

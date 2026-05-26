@@ -545,7 +545,7 @@ export function PromptSection({ hideFewShot }: { hideFewShot?: boolean } = {}) {
       {/* System Prompt */}
       <div>
         <div className="flex items-center justify-between mb-1.5">
-          <label className="text-xs text-foreground">系统提示词</label>
+          <label className="text-sm text-foreground/85">系统提示词</label>
           <Popover>
             <PopoverTrigger asChild>
               <Button size="inline" variant="ghost"

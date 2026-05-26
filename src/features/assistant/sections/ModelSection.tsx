@@ -84,7 +84,7 @@ export function ModelSection() {
         <div className="py-3">
           <div className="flex items-center justify-between gap-3">
             <div className="flex items-center gap-1.5 min-w-0">
-              <label className="text-sm text-muted-foreground/70">
+              <label className="text-sm text-foreground/85">
                 自动上下文
                 {!enableContextCount && (
                   <span className="text-muted-foreground/40 ml-1.5 tabular-nums">
@@ -139,7 +139,7 @@ export function ModelSection() {
         {/* 自定义参数 — dynamic list with name + type + value + delete */}
         <div className="py-3 space-y-2">
           <div className="flex items-center justify-between gap-3">
-            <label className="text-sm text-muted-foreground/70">自定义参数</label>
+            <label className="text-sm text-foreground/85">自定义参数</label>
             <Button variant="outline" size="xs" onClick={addCustomParam} className="gap-1.5 h-7">
               <Plus size={11} />
               添加参数
@@ -224,7 +224,7 @@ function ToggleRow({ label, hint, checked, onCheckedChange }: {
   return (
     <div className="flex items-center justify-between gap-3 py-3">
       <div className="flex items-center gap-1.5 min-w-0">
-        <label className="text-sm text-muted-foreground/70">{label}</label>
+        <label className="text-sm text-foreground/85">{label}</label>
         {hint && <InfoTip text={hint} />}
       </div>
       <Switch checked={checked} onCheckedChange={onCheckedChange} className="flex-shrink-0" />
@@ -246,7 +246,7 @@ function ParamRow({
     <div className="py-3">
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-1.5 min-w-0">
-          <label className="text-sm text-muted-foreground/70">
+          <label className="text-sm text-foreground/85">
             {label}
             {valueLabel != null && enabled && (
               <span className="text-muted-foreground/40 ml-1.5 tabular-nums">{valueLabel}</span>

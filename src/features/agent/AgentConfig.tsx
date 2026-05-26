@@ -183,7 +183,7 @@ function ModelSelector({ label, value, onChange, hint }: { label: string; value:
   return (
     <div>
       <div className="flex items-center justify-between mb-1.5">
-        <label className="text-sm text-muted-foreground/70">{label}</label>
+        <label className="text-sm text-foreground/85">{label}</label>
         <span className="text-xs text-muted-foreground/50">{hint}</span>
       </div>
       <Popover open={open} onOpenChange={setOpen}>
@@ -1053,7 +1053,7 @@ function KnowledgeBaseSection() {
           knowledge base itself, configured in 资源库 → 知识库. */}
       <div className="flex items-center justify-between gap-3 py-3 border-t border-border/15">
         <div className="flex items-center gap-1.5 min-w-0">
-          <label className="text-sm text-muted-foreground/70">知识库识别</label>
+          <label className="text-sm text-foreground/85">知识库识别</label>
           <SimpleTooltip
             content="开启后助手自动判断是否需要检索已引用的知识库；关闭则每条消息都强制检索。"
             side="top"
@@ -1084,7 +1084,7 @@ function AgentAdvancedSection() {
   return (
     <div className="max-w-3xl space-y-5">
       <div>
-        <label className="text-sm text-muted-foreground/70 mb-1.5 block">{"最大执行轮次"} <span className="text-muted-foreground/50 ml-1">{maxRounds}</span></label>
+        <label className="text-sm text-foreground/85 mb-1.5 block">{"最大执行轮次"} <span className="text-muted-foreground/50 ml-1">{maxRounds}</span></label>
         <Slider min={1} max={50} step={1} value={[maxRounds]} onValueChange={([v]) => setMaxRounds(v)} />
         <div className="flex justify-between mt-1"><span className="text-xs text-muted-foreground/50">1</span><span className="text-xs text-muted-foreground/50">50</span></div>
         <p className="text-xs text-muted-foreground/50 mt-2">{"每次会话中智能体与工具交互的最大轮次数。达到上限后将停止执行并返回当前结果。"}</p>
@@ -1094,5 +1094,5 @@ function AgentAdvancedSection() {
 }
 
 function FieldGroup({ label, children }: { label: React.ReactNode; children: React.ReactNode }) {
-  return (<div><label className="text-sm text-muted-foreground/70 mb-1.5 block">{label}</label>{children}</div>);
+  return (<div><label className="text-sm text-foreground/85 mb-1.5 block">{label}</label>{children}</div>);
 }

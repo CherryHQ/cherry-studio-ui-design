@@ -35,7 +35,7 @@ export function KnowledgeSection() {
     <div className="max-w-3xl space-y-5">
       {/* Linked KBs */}
       <div>
-        <label className="text-sm text-muted-foreground/70 mb-2 block">已引用知识库</label>
+        <label className="text-sm text-foreground/85 mb-2 block">已引用知识库</label>
         {linkedItems.length === 0 ? (
           <div className="border border-dashed border-border/20 rounded-xl p-6 flex flex-col items-center">
             <Database size={20} strokeWidth={1.2} className="text-muted-foreground/40 mb-2" />
@@ -108,7 +108,7 @@ export function KnowledgeSection() {
       {/* 知识库识别 — single Switch matching the rest of the assistant config */}
       <div className="flex items-center justify-between gap-3 py-3 border-t border-border/15">
         <div className="flex items-center gap-1.5 min-w-0">
-          <label className="text-sm text-muted-foreground/70">知识库识别</label>
+          <label className="text-sm text-foreground/85">知识库识别</label>
           <SimpleTooltip
             content="开启后助手自动判断是否需要检索已引用的知识库；关闭则每条消息都强制检索。"
             side="top"
