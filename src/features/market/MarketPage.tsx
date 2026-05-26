@@ -592,7 +592,7 @@ function MarketRowGrid({
             tabIndex={0}
             onClick={() => onSelect(it)}
             onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSelect(it); } }}
-            className="group flex items-center gap-3 py-2.5 border-b border-border/15 last:border-b-0 hover:bg-muted/15 -mx-2 px-2 rounded-md cursor-pointer transition-colors"
+            className="group flex items-center gap-3 py-2 hover:bg-muted/15 -mx-2 px-2 rounded-md cursor-pointer transition-colors"
           >
             <Avatar item={it} size={36} />
             <div className="flex-1 min-w-0 pr-2">
@@ -602,14 +602,15 @@ function MarketRowGrid({
             <button
               type="button"
               onClick={(e) => { e.stopPropagation(); onToggleInstall(it.id); }}
+              aria-label={isInstalled ? '已安装' : '安装'}
               title={isInstalled ? '已安装 — 点击卸载' : '安装'}
-              className={`inline-flex items-center gap-1 h-7 px-3 rounded-md text-[11px] transition-colors flex-shrink-0 ${
+              className={`inline-flex items-center justify-center w-6 h-6 rounded-md transition-colors flex-shrink-0 ${
                 isInstalled
-                  ? 'border border-border/40 text-muted-foreground/85 hover:bg-muted/30'
-                  : 'bg-foreground text-background hover:bg-foreground/90'
+                  ? 'text-muted-foreground/45 hover:text-destructive hover:bg-destructive/10'
+                  : 'text-muted-foreground/55 hover:text-foreground hover:bg-muted/50'
               }`}
             >
-              {isInstalled ? <><Check size={11} />已安装</> : '安装'}
+              {isInstalled ? <Check size={13} strokeWidth={1.8} /> : <Plus size={13} strokeWidth={1.8} />}
             </button>
           </div>
         );
