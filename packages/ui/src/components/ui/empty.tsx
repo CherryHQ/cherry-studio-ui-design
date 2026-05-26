@@ -604,11 +604,11 @@ function EmptyState({
         {...props}
       >
         {compactIllustration ? (
-          <div className="w-[200px] h-[130px] mb-3 flex items-center justify-center overflow-hidden">
+          <div className="w-[280px] h-[180px] mb-3 flex items-center justify-center overflow-hidden">
             <img
               src={`/images/empty-state/${encodeURIComponent(compactIllustration)}.svg`}
               alt=""
-              className="w-full h-full object-contain invert dark:invert-0 opacity-90"
+              className="w-full h-full object-contain invert dark:invert-0 opacity-95"
               draggable={false}
             />
           </div>
