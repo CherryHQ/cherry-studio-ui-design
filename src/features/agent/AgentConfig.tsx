@@ -321,7 +321,17 @@ function AgentBasicSection({ resource }: { resource: ResourceItem }) {
           </Select>
         </div>
       </div>
-      <div className="space-y-3"><div className="flex items-center gap-2 mb-1"><span className="text-sm text-muted-foreground/70">{"模型配置"}</span><div className="flex-1 h-px bg-border/30" /></div><ModelSelector label="规划模型" value={planningModel} onChange={setPlanningModel} hint="负责任务拆解和决策" /><ModelSelector label="常规模型" value={regularModel} onChange={setRegularModel} hint="负责主要推理和执行" /><ModelSelector label="快速模型" value={fastModel} onChange={setFastModel} hint="负责简单判断和格式化" /></div>
+      <div>
+        <div className="flex items-center gap-2 mb-2.5">
+          <span className="text-sm text-foreground/85">模型配置</span>
+          <div className="flex-1 h-px bg-border/30" />
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-3 gap-y-3">
+          <ModelSelector label="规划模型" value={planningModel} onChange={setPlanningModel} hint="负责任务拆解和决策" />
+          <ModelSelector label="常规模型" value={regularModel} onChange={setRegularModel} hint="负责主要推理和执行" />
+          <ModelSelector label="快速模型" value={fastModel} onChange={setFastModel} hint="负责简单判断和格式化" />
+        </div>
+      </div>
       <FieldGroup label="简介"><Textarea value={description} onChange={e => setDescription(e.target.value)} rows={2} className="input-accent resize-none" /></FieldGroup>
       <FieldGroup label="标签">
         <Combobox
