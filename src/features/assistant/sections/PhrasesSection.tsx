@@ -64,14 +64,6 @@ export function PhrasesSection() {
 
   return (
     <div className="max-w-3xl space-y-5">
-      <div>
-        <Typography variant="subtitle" className="mb-1">快捷短语</Typography>
-        <p className="text-xs text-muted-foreground/60">
-          引用资源库中的 Prompt，对话中按 <span className="font-mono text-muted-foreground/80">/</span> 即可快速插入。短语的编辑与新建请在
-          <span className="text-foreground/80"> 资源库 → Prompt </span>
-          里完成。
-        </p>
-      </div>
 
       <div>
         <label className="text-sm text-muted-foreground/70 mb-2 block">已引用 Prompt</label>

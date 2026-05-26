@@ -53,11 +53,6 @@ export function ModelSection() {
 
   return (
     <div className="max-w-3xl space-y-5">
-      <div className="flex items-center gap-1.5">
-        <Typography variant="subtitle">模型设置</Typography>
-        <InfoTip text="调整模型的采样、上下文与输出参数" />
-      </div>
-
       <div className="space-y-1">
         <ParamRow
           label="模型温度"

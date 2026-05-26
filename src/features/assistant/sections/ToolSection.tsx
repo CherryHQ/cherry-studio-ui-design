@@ -58,26 +58,6 @@ export function ToolSection() {
 
   return (
     <div className="max-w-3xl space-y-5">
-      <div>
-        <div className="flex items-center gap-1.5 mb-1">
-          <Typography variant="subtitle">MCP</Typography>
-          <SimpleTooltip
-            content="选择允许该助手调用的 MCP 服务。MCP 服务的连接与配置在全局「设置 → MCP」里完成。"
-            side="top"
-            sideOffset={6}
-          >
-            <button
-              type="button"
-              tabIndex={-1}
-              className="inline-flex items-center text-muted-foreground/40 hover:text-muted-foreground cursor-help"
-              aria-label="什么是 MCP"
-            >
-              <Info size={13} />
-            </button>
-          </SimpleTooltip>
-        </div>
-      </div>
-
       {/* Mode selector — vertical radio cards matching source's
           Radio.Group with Radio.Button items */}
       <div className="flex flex-col gap-1.5" role="radiogroup" aria-label="MCP 模式">

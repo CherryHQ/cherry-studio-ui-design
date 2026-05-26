@@ -33,14 +33,6 @@ export function KnowledgeSection() {
 
   return (
     <div className="max-w-3xl space-y-5">
-      <div>
-        <Typography variant="subtitle" className="mb-1">知识库</Typography>
-        <p className="text-xs text-muted-foreground/60">
-          引用 <span className="text-foreground/80">资源库 → 知识库</span> 中的内容。
-          短语的新建与索引设置（Top-K、相似度阈值等）请在知识库本身配置。
-        </p>
-      </div>
-
       {/* Linked KBs */}
       <div>
         <label className="text-sm text-muted-foreground/70 mb-2 block">已引用知识库</label>

@@ -12,6 +12,7 @@ import {
   Layers, Sparkles, BookOpen, FolderOpen,
   Upload, Link2,
   Send, MessageCircle, Github, Info,
+  Cable, Plug, LayoutGrid,
 } from 'lucide-react';
 import { Button } from '@cherrystudio/ui/components/primitives/button';
 import { Slider } from '@cherrystudio/ui/components/primitives/slider';
@@ -33,12 +34,23 @@ import { ModelPickerPanel } from '@/app/components/shared/ModelPickerPanel';
 import { ASSISTANT_MODELS } from '@/app/config/models';
 
 interface Props { resource: ResourceItem; onBack: () => void; inModal?: boolean }
-type Section = 'basic' | 'prompt' | 'knowledge' | 'toolchain' | 'advanced';
+// The 工具 sidebar entry is a collapsible group: the four toolchain
+// sub-tabs each become a separate sidebar item under it. Other entries
+// stay flat.
+type ToolchainTabId = 'tools' | 'mcp' | 'skills' | 'integrations';
+type Section = 'basic' | 'prompt' | 'knowledge' | 'advanced' | `toolchain:${ToolchainTabId}`;
+
+const TOOLCHAIN_CHILDREN: { id: ToolchainTabId; label: string; icon: React.ElementType }[] = [
+  { id: 'tools',        label: '内置工具',   icon: Wrench },
+  { id: 'mcp',          label: 'MCP Server', icon: Cable },
+  { id: 'skills',       label: 'Skills',     icon: Sparkles },
+  { id: 'integrations', label: '连接器',     icon: Plug },
+];
+
 const sections: { id: Section; label: string; icon: React.ElementType }[] = [
-  { id: 'basic', label: '基础设置', icon: Settings },
-  { id: 'prompt', label: '提示词', icon: FileText },
-  { id: 'knowledge', label: '知识库', icon: BookOpen },
-  { id: 'toolchain', label: '工具', icon: Wrench },
+  { id: 'basic',    label: '基础设置', icon: Settings },
+  { id: 'prompt',   label: '提示词',   icon: FileText },
+  { id: 'knowledge', label: '知识库',  icon: BookOpen },
   { id: 'advanced', label: '高级设置', icon: SlidersHorizontal },
 ];
 
@@ -60,6 +72,7 @@ function getTagColor(tag: string): string {
 // ===========================
 export function AgentConfig({ resource, onBack, inModal = false }: Props) {
   const [activeSection, setActiveSection] = useState<Section>('basic');
+  const [toolchainExpanded, setToolchainExpanded] = useState(true);
   const [saved, setSaved] = useState(false);
   const handleSave = () => { setSaved(true); setTimeout(() => setSaved(false), 2000); };
   return (
@@ -82,7 +95,66 @@ export function AgentConfig({ resource, onBack, inModal = false }: Props) {
       )}
       <div className="flex flex-1 min-h-0">
         <div className="w-[150px] flex-shrink-0 border-r border-border/15 p-2 overflow-y-auto">
-          {sections.map(s => {
+          {/* Flat entries: 基础设置 / 提示词 / 知识库 */}
+          {sections.filter(s => s.id !== 'advanced').map(s => {
+            const active = activeSection === s.id;
+            const Icon = s.icon;
+            return (
+              <Button variant="ghost" key={s.id} onClick={() => setActiveSection(s.id)}
+                className={`w-full justify-start gap-2 px-3 py-2 mb-0.5 rounded-lg transition-colors ${active ? 'bg-accent/50 text-foreground font-medium' : 'font-normal text-muted-foreground/65 hover:text-foreground hover:bg-muted/40'}`}>
+                <Icon size={13} strokeWidth={1.5} className={`flex-shrink-0 ${active ? 'text-muted-foreground' : 'text-muted-foreground/40'}`} />
+                <span className="text-sm">{s.label}</span>
+              </Button>
+            );
+          })}
+
+          {/* 工具 group — collapsible parent that expands into the four
+              toolchain sub-tabs. The active state on the parent reflects
+              "any child active" so it still highlights when collapsed. */}
+          {(() => {
+            const childActive = typeof activeSection === 'string' && activeSection.startsWith('toolchain:');
+            return (
+              <>
+                <Button variant="ghost"
+                  onClick={() => setToolchainExpanded(v => !v)}
+                  className={`w-full justify-start gap-2 px-3 py-2 mb-0.5 rounded-lg transition-colors ${childActive ? 'bg-accent/50 text-foreground font-medium' : 'font-normal text-muted-foreground/65 hover:text-foreground hover:bg-muted/40'}`}>
+                  <Wrench size={13} strokeWidth={1.5} className={`flex-shrink-0 ${childActive ? 'text-muted-foreground' : 'text-muted-foreground/40'}`} />
+                  <span className="text-sm flex-1 text-left">工具</span>
+                  <ChevronDown size={11} className={`flex-shrink-0 text-muted-foreground/40 transition-transform ${toolchainExpanded ? '' : '-rotate-90'}`} />
+                </Button>
+                <AnimatePresence initial={false}>
+                  {toolchainExpanded && (
+                    <motion.div
+                      key="toolchain-children"
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: 'auto', opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.15 }}
+                      className="overflow-hidden"
+                    >
+                      <div className="pl-3 space-y-0.5">
+                        {TOOLCHAIN_CHILDREN.map(c => {
+                          const sid: Section = `toolchain:${c.id}`;
+                          const isActive = activeSection === sid;
+                          const CIcon = c.icon;
+                          return (
+                            <Button variant="ghost" key={c.id} onClick={() => setActiveSection(sid)}
+                              className={`w-full justify-start gap-2 px-3 py-1.5 mb-0.5 rounded-lg transition-colors ${isActive ? 'bg-accent/50 text-foreground font-medium' : 'font-normal text-muted-foreground/65 hover:text-foreground hover:bg-muted/40'}`}>
+                              <CIcon size={11} strokeWidth={1.5} className={`flex-shrink-0 ${isActive ? 'text-muted-foreground' : 'text-muted-foreground/40'}`} />
+                              <span className="text-[13px]">{c.label}</span>
+                            </Button>
+                          );
+                        })}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </>
+            );
+          })()}
+
+          {/* 高级设置 — flat entry below the group */}
+          {sections.filter(s => s.id === 'advanced').map(s => {
             const active = activeSection === s.id;
             const Icon = s.icon;
             return (
@@ -100,7 +172,12 @@ export function AgentConfig({ resource, onBack, inModal = false }: Props) {
               {activeSection === 'basic' && <AgentBasicSection resource={resource} />}
               {activeSection === 'prompt' && <AgentPromptSection />}
               {activeSection === 'knowledge' && <KnowledgeBaseSection />}
-              {activeSection === 'toolchain' && <ToolchainSection onExplore={onBack} />}
+              {typeof activeSection === 'string' && activeSection.startsWith('toolchain:') && (
+                <ToolchainSection
+                  onExplore={onBack}
+                  controlledTab={activeSection.slice('toolchain:'.length) as ToolchainTabId}
+                />
+              )}
               {activeSection === 'advanced' && <AgentAdvancedSection />}
             </motion.div>
           </AnimatePresence>
@@ -168,7 +245,6 @@ function AgentBasicSection({ resource }: { resource: ResourceItem }) {
   const togglePresetTag = (tag: string) => { if (tags.includes(tag)) removeTag(tag); else setTags(prev => [...prev, tag]); };
   return (
     <div className="max-w-3xl space-y-5">
-      <div><Typography variant="subtitle" className="mb-1">{"基础设置"}</Typography><p className="text-xs text-muted-foreground/60">{"配置智能体的身份信息和模型"}</p></div>
       <div>
         <div className="flex items-center justify-between gap-3 mb-1.5">
           <label className="text-sm text-muted-foreground/70">头像与名称</label>
@@ -617,7 +693,7 @@ function MCPServerCard({ server, onToggleConnect, onRemove, onToggleTool, onTogg
 
 
 
-function ToolchainSection({ onExplore }: { onExplore: () => void }) {
+function ToolchainSection({ onExplore, controlledTab }: { onExplore: () => void; controlledTab?: ToolchainTab }) {
   const [tools, setTools] = useState<ToolItem[]>(() => ALL_TOOLS_CATALOG.map(t => ({ ...t })));
   const [mcpServers, setMcpServers] = useState<MCPServerLocal[]>([]);
   const [skills, setSkills] = useState<SkillItem[]>([]);
@@ -625,7 +701,9 @@ function ToolchainSection({ onExplore }: { onExplore: () => void }) {
     ALL_INTEGRATIONS_CATALOG.slice(0, 3).map(i => ({ ...i, enabled: true })),
   );
   const [search, setSearch] = useState('');
-  const [activeTab, setActiveTab] = useState<ToolchainTab>('tools');
+  const [internalTab, setInternalTab] = useState<ToolchainTab>('tools');
+  const activeTab = controlledTab ?? internalTab;
+  const setActiveTab = (t: ToolchainTab) => { if (!controlledTab) setInternalTab(t); };
   const [showAddPanel, setShowAddPanel] = useState(false);
   const [mcpTagFilter, setMcpTagFilter] = useState<string | null>(null);
   const [skillTagFilter, setSkillTagFilter] = useState<string | null>(null);
@@ -710,47 +788,43 @@ function ToolchainSection({ onExplore }: { onExplore: () => void }) {
     { id: 'tools' as const, label: '内置工具', count: `${enabledToolsCount}/${tools.length}` },
     { id: 'mcp' as const, label: 'MCP Server', count: `${connectedMCPCount}/${mcpServers.length}` },
     { id: 'skills' as const, label: 'Skills', count: `${enabledSkillsCount}/${skills.length}` },
-    { id: 'integrations' as const, label: '集成', count: `${enabledIntegrationsCount}/${integrations.length}` },
+    { id: 'integrations' as const, label: '连接器', count: `${enabledIntegrationsCount}/${integrations.length}` },
   ];
 
   return (
     <div className="flex gap-4">
       <div className="flex-1 min-w-0 space-y-6 max-w-3xl">
-        {/* Header — title on left, search + add on right */}
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <Typography variant="subtitle" className="mb-1">能力扩展</Typography>
-            <p className="text-xs text-muted-foreground/60">配置智能体可使用的工具和 MCP Server</p>
-          </div>
-          <div className="flex items-center gap-2 flex-shrink-0 pt-1">
-            <SearchInput value={search} onChange={setSearch} placeholder="搜索…"
-              wrapperClassName="w-[180px] flex items-center gap-1.5 px-2 h-7 rounded-md bg-muted/30 border border-border/20" />
-            <Button variant="ghost" size="xs" onClick={() => setShowAddPanel(!showAddPanel)}
-              className={`gap-1 h-7 px-2.5 rounded-md text-xs border border-border/30 ${
-                showAddPanel ? 'text-foreground bg-accent/25 border-border/50' : 'text-muted-foreground/70 hover:text-foreground hover:bg-accent/15'
-              }`}>
-              <Plus size={11} />
-              <span>添加</span>
-            </Button>
-          </div>
+        {/* Header — search + add. Section title and tab bar are owned
+            by the sidebar when controlledTab is set, so we drop them. */}
+        <div className="flex items-center justify-end gap-2">
+          <SearchInput value={search} onChange={setSearch} placeholder="搜索…"
+            wrapperClassName="w-[200px] flex items-center gap-1.5 px-2 h-7 rounded-md bg-muted/30 border border-border/20" />
+          <Button variant="ghost" size="xs" onClick={() => setShowAddPanel(!showAddPanel)}
+            className={`gap-1 h-7 px-2.5 rounded-md text-xs border border-border/30 ${
+              showAddPanel ? 'text-foreground bg-accent/25 border-border/50' : 'text-muted-foreground/70 hover:text-foreground hover:bg-accent/15'
+            }`}>
+            <Plus size={11} />
+            <span>添加</span>
+          </Button>
         </div>
-        {/* Tab bar across full width */}
-        <div className="flex items-center border-b border-border/15">
-          {tabs.map(tab => (
-            <Button variant="ghost" key={tab.id} onClick={() => setActiveTab(tab.id)}
-              className={`relative px-3 py-1.5 font-normal rounded-none ${
-                activeTab === tab.id ? 'text-foreground hover:bg-transparent' : 'text-muted-foreground/40 hover:text-foreground hover:bg-transparent'
-              }`}>
-              {tab.label}
-              <span className={`ml-1.5 text-xs tabular-nums ${activeTab === tab.id ? 'text-muted-foreground/60' : 'text-muted-foreground/40'}`}>
-                {tab.count}
-              </span>
-              {activeTab === tab.id && (
-                <motion.div layoutId="toolchain-tab" className="absolute bottom-0 left-0 right-0 h-[2px] bg-foreground/70 rounded-t" />
-              )}
-            </Button>
-          ))}
-        </div>
+        {!controlledTab && (
+          <div className="flex items-center border-b border-border/15">
+            {tabs.map(tab => (
+              <Button variant="ghost" key={tab.id} onClick={() => setActiveTab(tab.id)}
+                className={`relative px-3 py-1.5 font-normal rounded-none ${
+                  activeTab === tab.id ? 'text-foreground hover:bg-transparent' : 'text-muted-foreground/40 hover:text-foreground hover:bg-transparent'
+                }`}>
+                {tab.label}
+                <span className={`ml-1.5 text-xs tabular-nums ${activeTab === tab.id ? 'text-muted-foreground/60' : 'text-muted-foreground/40'}`}>
+                  {tab.count}
+                </span>
+                {activeTab === tab.id && (
+                  <motion.div layoutId="toolchain-tab" className="absolute bottom-0 left-0 right-0 h-[2px] bg-foreground/70 rounded-t" />
+                )}
+              </Button>
+            ))}
+          </div>
+        )}
         <div>
           <AnimatePresence mode="wait">
             <motion.div key={activeTab} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} transition={{ duration: 0.15 }}>
@@ -907,11 +981,6 @@ function KnowledgeBaseSection() {
 
   return (
     <div className="max-w-3xl space-y-5">
-      <div>
-        <Typography variant="subtitle" className="mb-1">{"知识库关联"}</Typography>
-        <p className="text-xs text-muted-foreground/60">{"选择知识库并配置检索参数"}</p>
-      </div>
-
       {/* Linked knowledge bases */}
       <div>
         <div className="text-xs text-muted-foreground/50 mb-2.5">{"已关联知识库"}</div>
@@ -1027,7 +1096,6 @@ function AgentAdvancedSection() {
   const [maxRounds, setMaxRounds] = useState(10);
   return (
     <div className="max-w-3xl space-y-5">
-      <div><Typography variant="subtitle" className="mb-1">{"高级设置"}</Typography><p className="text-xs text-muted-foreground/60">{"配置智能体的执行限制"}</p></div>
       <div>
         <label className="text-sm text-muted-foreground/70 mb-1.5 block">{"最大执行轮次"} <span className="text-muted-foreground/50 ml-1">{maxRounds}</span></label>
         <Slider min={1} max={50} step={1} value={[maxRounds]} onValueChange={([v]) => setMaxRounds(v)} />

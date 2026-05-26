@@ -80,16 +80,11 @@ export function BasicSection({ resource }: Props) {
 
   return (
     <div className="max-w-3xl space-y-5">
-      <div className="flex items-center gap-1.5">
-        <Typography variant="subtitle">基础设置</Typography>
-        <InfoTip text="配置助手的身份信息和模型参数" />
-      </div>
-
       {/* Row 1: 头像与名称 + 模型 — two-row form with aligned label band */}
       <div>
         <div className="flex items-center justify-between gap-3 mb-1.5">
-          <label className="text-sm text-muted-foreground/70">头像与名称</label>
-          <label className="text-sm text-muted-foreground/70 w-[220px] flex-shrink-0">模型</label>
+          <label className="text-sm text-foreground/85">头像与名称</label>
+          <label className="text-sm text-foreground/85 w-[220px] flex-shrink-0">模型</label>
         </div>
         <div className="flex items-center gap-3">
           <Popover>
