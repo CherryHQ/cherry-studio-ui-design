@@ -184,11 +184,11 @@ function ModelSelector({ label, value, onChange, hint }: { label: string; value:
     <div>
       <div className="flex items-center justify-between mb-1.5">
         <label className="text-sm text-foreground/85">{label}</label>
-        <span className="text-xs text-muted-foreground/50">{hint}</span>
+        <span className="text-[11px] text-muted-foreground/55">{hint}</span>
       </div>
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
-          <Button variant="outline" className="w-full justify-between px-3 py-2 border-border/20 bg-accent/15 text-sm text-foreground hover:border-border/40">
+          <Button variant="outline" className="w-full justify-between px-3 py-2 border-border/40 bg-muted/30 text-sm text-foreground hover:border-border/60 hover:bg-muted/40">
             <span className="truncate">{selected?.name || value}</span><ChevronDown size={10} className="text-muted-foreground/40 flex-shrink-0" />
           </Button>
         </PopoverTrigger>
@@ -308,9 +308,9 @@ function AgentBasicSection({ resource }: { resource: ResourceItem }) {
             </PopoverContent>
           </Popover>
           <Input value={name} onChange={e => setName(e.target.value)} placeholder="智能体名称"
-            className="flex-1 min-w-0 h-11 px-3 border-border/20 bg-accent/15 text-sm text-foreground focus-visible:border-border/40 focus-visible:ring-0 shadow-none" />
+            className="flex-1 min-w-0 h-11 px-3 border-border/40 bg-muted/30 text-sm text-foreground focus-visible:border-border/60 focus-visible:ring-0 shadow-none" />
           <Select value={agentType} onValueChange={(v) => setAgentType(v as typeof agentType)}>
-            <SelectTrigger className="w-[160px] flex-shrink-0 !h-11 px-3 text-sm border-border/20 bg-accent/15 hover:bg-accent/25 rounded-xl">
+            <SelectTrigger className="w-[160px] flex-shrink-0 !h-11 px-3 text-sm border-border/40 bg-muted/30 hover:bg-muted/40 rounded-xl">
               <SelectValue placeholder="类型" />
             </SelectTrigger>
             <SelectContent>

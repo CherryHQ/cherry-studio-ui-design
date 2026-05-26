@@ -61,7 +61,7 @@
 
   /* Custom accent textarea / input */
   .input-accent {
-    @apply w-full px-3 py-2 rounded-xl border border-border/20 bg-accent/15 text-xs text-foreground outline-none focus:border-border/40 focus:bg-accent/15 transition-all;
+    @apply w-full px-3 py-2 rounded-xl border border-border/40 bg-muted/30 text-sm text-foreground outline-none focus:border-border/60 focus:bg-muted/40 transition-all;
   }
 
   /* Settings edit panel (right side, bg-background) */
