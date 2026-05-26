@@ -56,7 +56,7 @@ interface MarketItem {
 
 const KIND_LABEL: Record<ResourceKind, string> = {
   skill: 'Skill', cli: 'CLI', assistant: 'Assistant', agent: 'Agent',
-  mcp: 'MCP', prompt: 'Prompt', kb: '知识库', integration: '集成',
+  mcp: 'MCP', prompt: 'Prompt', kb: '知识库', integration: '连接器',
 };
 
 const KIND_ICON: Record<ResourceKind, React.ComponentType<{ size?: number; className?: string; strokeWidth?: number }>> = {
@@ -442,11 +442,28 @@ export function MarketPage() {
             </button>
           </div>
 
-          {/* Integrations kind — same row layout as other kinds, just with
-              brand logos for avatars and the install dialog as the action. */}
+          {/* Connectors kind — same row layout as other kinds, just with
+              brand logos for avatars and the install dialog as the action.
+              Page header gets a 自定义连接器 entry button for users who
+              need to plug in their own service. */}
           {kind === 'integration' ? (
             <section>
-              <h2 className="text-sm font-medium text-foreground mb-3">集成</h2>
+              <div className="flex items-start justify-between gap-3 mb-3">
+                <div className="min-w-0">
+                  <h2 className="text-sm font-medium text-foreground">连接器管理</h2>
+                  <p className="text-[11px] text-muted-foreground/55 mt-0.5">连接外部服务，扩展 AI 能力</p>
+                </div>
+                <Button
+                  variant="outline"
+                  size="xs"
+                  onClick={() => setSubmitOpen(true)}
+                  className="h-7 gap-1 px-2.5 text-xs flex-shrink-0"
+                  title="提交自定义连接器配置"
+                >
+                  <Plus size={11} />
+                  自定义连接器
+                </Button>
+              </div>
               <MarketRowGrid
                 items={CATALOG.filter(it => it.kind === 'integration')}
                 installed={installed}
@@ -1050,7 +1067,7 @@ function SubmitResourceDialog({
 function MarketOnboardingModal({ open, onOpenChange }: { open: boolean; onOpenChange: (v: boolean) => void }) {
   const bullets: { Icon: React.ComponentType<{ size?: number; className?: string; strokeWidth?: number }>; text: string }[] = [
     { Icon: Zap,           text: '一键安装社区精心打磨的 Skill / MCP / Prompt 模板' },
-    { Icon: Plug,          text: '直接对接 Notion / 语雀 / Google Calendar 等集成' },
+    { Icon: Plug,          text: '直接对接 Notion / 语雀 / Google Calendar 等连接器' },
     { Icon: CheckCircle2,  text: '右上角「管理」统一管理已安装与自定义资源，启停 / 编辑 / 卸载一目了然' },
   ];
   return (
