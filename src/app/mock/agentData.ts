@@ -1563,6 +1563,30 @@ const SHOWCASE_FILES: FileNode[] = [
   ]},
 ];
 
+// Default initial file tree for new sessions — declared before
+// SESSION_DATA_MAP because some entries below reference it.
+export const DEFAULT_INITIAL_FILES: FileNode[] = [
+  {
+    name: 'src', type: 'folder', children: [
+      { name: 'components', type: 'folder', children: [] },
+      { name: 'hooks', type: 'folder', children: [] },
+      { name: 'utils', type: 'folder', children: [] },
+      { name: 'App.tsx', type: 'file' },
+      { name: 'main.tsx', type: 'file' },
+    ],
+  },
+  {
+    name: 'public', type: 'folder', children: [
+      { name: 'favicon.ico', type: 'file' },
+    ],
+  },
+  { name: 'package.json', type: 'file' },
+  { name: 'tsconfig.json', type: 'file' },
+  { name: 'vite.config.ts', type: 'file' },
+  { name: '.gitignore', type: 'file' },
+  { name: 'index.html', type: 'file' },
+];
+
 export const SESSION_DATA_MAP: Record<string, SessionData> = {
   'session-pdf': {
     messages: SESSION_PDF_MESSAGES,
@@ -1697,35 +1721,6 @@ export const SESSION_DATA_MAP: Record<string, SessionData> = {
     workDir: '~/projects/collab-whiteboard',
   },
 };
-
-// Default initial file tree for new sessions
-export const DEFAULT_INITIAL_FILES: FileNode[] = [
-  {
-    name: 'src', type: 'folder', children: [
-      {
-        name: 'components', type: 'folder', children: []
-      },
-      {
-        name: 'hooks', type: 'folder', children: []
-      },
-      {
-        name: 'utils', type: 'folder', children: []
-      },
-      { name: 'App.tsx', type: 'file' },
-      { name: 'main.tsx', type: 'file' },
-    ]
-  },
-  {
-    name: 'public', type: 'folder', children: [
-      { name: 'favicon.ico', type: 'file' },
-    ]
-  },
-  { name: 'package.json', type: 'file' },
-  { name: 'tsconfig.json', type: 'file' },
-  { name: 'vite.config.ts', type: 'file' },
-  { name: '.gitignore', type: 'file' },
-  { name: 'index.html', type: 'file' },
-];
 
 // Empty session data
 export const EMPTY_SESSION_DATA: SessionData = {
