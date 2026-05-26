@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { Info, Plug } from 'lucide-react';
-import { Typography, SimpleTooltip, Switch } from '@cherry-studio/ui';
+import { Typography, SimpleTooltip, Switch, EmptyState } from '@cherry-studio/ui';
 
 // ===========================
 // Assistant MCP Settings
@@ -103,11 +103,8 @@ export function ToolSection() {
             </div>
           )}
           {MOCK_MCP_SERVERS.length === 0 ? (
-            <div className="border border-dashed border-border/20 rounded-xl p-8 flex flex-col items-center">
-              <Plug size={22} strokeWidth={1.2} className="text-muted-foreground/40 mb-2" />
-              <p className="text-xs text-muted-foreground/40 mb-1">没有可用的 MCP 服务</p>
-              <p className="text-xs text-muted-foreground/50">请先在「设置 → MCP」中连接服务</p>
-            </div>
+            <EmptyState preset="no-resource" title="没有可用的 MCP 服务"
+              description="请先在「设置 → MCP」中连接服务" compact />
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-3 gap-y-0.5">
               {MOCK_MCP_SERVERS.map(server => {

@@ -2,7 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { Plus, Trash2, FileText, Copy, Check, Eye } from 'lucide-react';
 import { Button } from '@cherrystudio/ui/components/primitives/button';
 import { Popover, PopoverTrigger, PopoverContent } from '@cherrystudio/ui/components/primitives/popover';
-import { SearchInput, Typography } from '@cherry-studio/ui';
+import { SearchInput, Typography, EmptyState } from '@cherry-studio/ui';
 import { MOCK_RESOURCES } from '@/app/config/constants';
 import type { ResourceItem } from '@/app/types';
 
@@ -111,11 +111,8 @@ export function PhrasesSection() {
           </Popover>
         </div>
         {linkedItems.length === 0 ? (
-          <div className="border border-dashed border-border/20 rounded-xl p-6 flex flex-col items-center">
-            <FileText size={20} strokeWidth={1.2} className="text-muted-foreground/40 mb-2" />
-            <p className="text-xs text-muted-foreground/40 mb-1">尚未引用任何 Prompt</p>
-            <p className="text-xs text-muted-foreground/50">从资源库挑选模板，让用户在对话中一键调用</p>
-          </div>
+          <EmptyState preset="no-phrase" title="尚未引用任何 Prompt"
+            description="从资源库挑选模板，让用户在对话中一键调用" compact />
         ) : (
           <div className="space-y-1.5">
             {linkedItems.map(p => (
