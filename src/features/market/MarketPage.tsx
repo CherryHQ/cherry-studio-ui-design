@@ -606,11 +606,11 @@ function MarketRowGrid({
               title={isInstalled ? '已安装 — 点击卸载' : '安装'}
               className={`inline-flex items-center justify-center w-6 h-6 rounded-md transition-colors flex-shrink-0 ${
                 isInstalled
-                  ? 'text-muted-foreground/45 hover:text-destructive hover:bg-destructive/10'
-                  : 'text-muted-foreground/55 hover:text-foreground hover:bg-muted/50'
+                  ? 'text-foreground/75 hover:text-destructive hover:bg-destructive/10'
+                  : 'bg-muted/50 text-foreground/75 hover:bg-foreground/10 hover:text-foreground'
               }`}
             >
-              {isInstalled ? <Check size={13} strokeWidth={1.8} /> : <Plus size={13} strokeWidth={1.8} />}
+              {isInstalled ? <Check size={14} strokeWidth={2.2} /> : <Plus size={14} strokeWidth={2.2} />}
             </button>
           </div>
         );
