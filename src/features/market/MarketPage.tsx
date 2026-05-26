@@ -582,7 +582,7 @@ function MarketRowGrid({
   onToggleInstall: (id: string) => void;
 }) {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-1">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-2">
       {items.map(it => {
         const isInstalled = installed.has(it.id);
         return (
@@ -592,7 +592,7 @@ function MarketRowGrid({
             tabIndex={0}
             onClick={() => onSelect(it)}
             onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSelect(it); } }}
-            className="group flex items-center gap-3 py-2 hover:bg-muted/15 -mx-2 px-2 rounded-md cursor-pointer transition-colors"
+            className="group flex items-center gap-3 px-3 py-2.5 rounded-xl border border-border/15 bg-card/40 hover:bg-accent/20 hover:border-border/30 cursor-pointer transition-colors"
           >
             <Avatar item={it} size={36} />
             <div className="flex-1 min-w-0 pr-2">
