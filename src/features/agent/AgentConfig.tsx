@@ -40,11 +40,14 @@ interface Props { resource: ResourceItem; onBack: () => void; inModal?: boolean 
 type ToolchainTabId = 'tools' | 'mcp' | 'skills' | 'integrations';
 type Section = 'basic' | 'prompt' | 'knowledge' | 'advanced' | `toolchain:${ToolchainTabId}`;
 
-const TOOLCHAIN_CHILDREN: { id: ToolchainTabId; label: string; icon: React.ElementType }[] = [
-  { id: 'tools',        label: '内置工具',   icon: Wrench },
-  { id: 'mcp',          label: 'MCP Server', icon: Cable },
-  { id: 'skills',       label: 'Skills',     icon: Sparkles },
-  { id: 'integrations', label: '连接器',     icon: Plug },
+const TOOLCHAIN_CHILDREN: { id: ToolchainTabId; label: string; icon: React.ElementType; count: string }[] = [
+  // Counts are mock — would normally derive from the agent's actual
+  // toolchain state. Sidebar shows "enabled/total" so users know what
+  // a tab contains before clicking.
+  { id: 'tools',        label: '内置工具',   icon: Wrench,   count: '8 / 24' },
+  { id: 'mcp',          label: 'MCP Server', icon: Cable,    count: '3 / 5' },
+  { id: 'skills',       label: 'Skills',     icon: Sparkles, count: '5 / 12' },
+  { id: 'integrations', label: '连接器',     icon: Plug,     count: '3 / 10' },
 ];
 
 const sections: { id: Section; label: string; icon: React.ElementType }[] = [
@@ -141,7 +144,8 @@ export function AgentConfig({ resource, onBack, inModal = false }: Props) {
                             <Button variant="ghost" key={c.id} onClick={() => setActiveSection(sid)}
                               className={`w-full justify-start gap-2 px-3 py-1.5 mb-0.5 rounded-lg transition-colors ${isActive ? 'bg-accent/50 text-foreground font-medium' : 'font-normal text-muted-foreground/65 hover:text-foreground hover:bg-muted/40'}`}>
                               <CIcon size={11} strokeWidth={1.5} className={`flex-shrink-0 ${isActive ? 'text-muted-foreground' : 'text-muted-foreground/40'}`} />
-                              <span className="text-[13px]">{c.label}</span>
+                              <span className="text-[13px] flex-1 text-left">{c.label}</span>
+                              <span className={`text-[10px] tabular-nums flex-shrink-0 ${isActive ? 'text-muted-foreground/65' : 'text-muted-foreground/35'}`}>{c.count}</span>
                             </Button>
                           );
                         })}
@@ -170,6 +174,17 @@ export function AgentConfig({ resource, onBack, inModal = false }: Props) {
           </AnimatePresence>
         </div>
       </div>
+      {inModal && (
+        <div className="flex-shrink-0 flex items-center justify-end gap-2 px-4 py-2.5 border-t border-border/15 bg-background/95 backdrop-blur-sm">
+          <AnimatePresence>
+            {saved
+              ? <motion.span key="saved" initial={{ opacity: 0, x: 6 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0 }} className="text-xs text-cherry-primary mr-auto flex items-center gap-1"><CheckCircle2 size={11} />已保存</motion.span>
+              : <motion.span key="dirty" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="text-xs text-muted-foreground/55 mr-auto">有未保存的更改</motion.span>}
+          </AnimatePresence>
+          <Button variant="outline" size="xs" onClick={onBack} className="h-7 px-3 text-xs">取消</Button>
+          <Button size="xs" onClick={handleSave} className="h-7 px-3 text-xs gap-1.5"><Save size={11} />保存</Button>
+        </div>
+      )}
     </div>
   );
 }
