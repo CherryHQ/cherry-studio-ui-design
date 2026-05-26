@@ -83,14 +83,14 @@ export function KnowledgeSection() {
           <EmptyState preset="no-knowledge" title="尚未引用任何知识库"
             description="引用后助手可以基于文档内容回答问题" compact />
         ) : (
-          <div className="space-y-1.5">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
             {linkedItems.map(kb => (
               <div key={kb.id}
-                className="flex items-center gap-3 px-3 py-2.5 rounded-xl border border-border/15 bg-accent/15 group hover:border-border/30 transition-colors">
-                <div className="w-8 h-8 rounded-lg bg-accent/50 flex items-center justify-center text-sm flex-shrink-0">{kb.icon}</div>
+                className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg border border-border/15 bg-accent/15 group hover:border-border/30 transition-colors min-w-0">
+                <div className="w-7 h-7 rounded-md bg-accent/50 flex items-center justify-center text-xs flex-shrink-0">{kb.icon}</div>
                 <div className="flex-1 min-w-0">
-                  <div className="text-xs text-foreground truncate">{kb.name}</div>
-                  <div className="text-xs text-muted-foreground/50">{kb.docCount} 文档 · {kb.size}</div>
+                  <div className="text-[13px] text-foreground truncate leading-tight">{kb.name}</div>
+                  <div className="text-[11px] text-muted-foreground/55 truncate mt-0.5">{kb.docCount} 文档 · {kb.size}</div>
                 </div>
                 <Button variant="ghost" size="icon-xs" onClick={() => toggleLink(kb.id)}
                   title="取消引用"

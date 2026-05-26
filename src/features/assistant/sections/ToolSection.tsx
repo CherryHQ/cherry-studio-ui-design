@@ -58,40 +58,34 @@ export function ToolSection() {
 
   return (
     <div className="max-w-3xl space-y-5">
-      {/* Mode selector — vertical radio cards matching source's
-          Radio.Group with Radio.Button items */}
-      <div className="flex flex-col gap-1.5" role="radiogroup" aria-label="MCP 模式">
-        {MODE_OPTIONS.map(opt => {
-          const active = mode === opt.id;
-          return (
-            <button
-              key={opt.id}
-              type="button"
-              role="radio"
-              aria-checked={active}
-              onClick={() => setMode(opt.id)}
-              className={`text-left px-3 py-2 rounded-lg border transition-colors flex items-start gap-2.5 ${
-                active
-                  ? 'border-border bg-accent/30'
-                  : 'border-border/25 bg-card/30 hover:border-border/50 hover:bg-accent/15'
-              }`}
-            >
-              <span
-                className={`flex items-center justify-center w-3.5 h-3.5 rounded-full border mt-[3px] flex-shrink-0 transition-colors ${
-                  active ? 'border-primary' : 'border-border/50'
+      {/* Mode selector — compact segmented control. The active option's
+          description renders below as a single line so users still get
+          the explanation without the bulky 3-card stack. */}
+      <div>
+        <div className="inline-flex items-center gap-0.5 p-0.5 rounded-md bg-muted/40 border border-border/15" role="radiogroup" aria-label="MCP 模式">
+          {MODE_OPTIONS.map(opt => {
+            const active = mode === opt.id;
+            return (
+              <button
+                key={opt.id}
+                type="button"
+                role="radio"
+                aria-checked={active}
+                onClick={() => setMode(opt.id)}
+                className={`px-3 h-7 rounded text-[13px] transition-colors ${
+                  active
+                    ? 'bg-background text-foreground shadow-sm'
+                    : 'text-muted-foreground/70 hover:text-foreground'
                 }`}
               >
-                {active && <span className="w-[7px] h-[7px] rounded-full bg-primary" />}
-              </span>
-              <div className="flex-1 min-w-0">
-                <div className={`text-[13px] font-medium ${active ? 'text-foreground' : 'text-foreground/85'}`}>
-                  {opt.label}
-                </div>
-                <div className="text-[11px] text-muted-foreground/60 mt-0.5 leading-snug">{opt.description}</div>
-              </div>
-            </button>
-          );
-        })}
+                {opt.label}
+              </button>
+            );
+          })}
+        </div>
+        <p className="text-[11px] text-muted-foreground/55 mt-2">
+          {MODE_OPTIONS.find(o => o.id === mode)?.description}
+        </p>
       </div>
 
       {/* Manual mode: server list */}

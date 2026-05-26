@@ -398,18 +398,19 @@ function PromptEditPage({ resource, onBack, onSave, inModal = false }: {
   const BasicSection = (
     <div className="space-y-5">
       <Typography variant="subtitle">基础信息</Typography>
-      <Field>
-        <FieldLabel>名称</FieldLabel>
-        <FieldContent>
-          <Input value={name} onChange={e => setName(e.target.value)}
-            className="h-8 text-sm"
-            placeholder="Prompt 名称" />
-        </FieldContent>
-      </Field>
-      <Field>
-        <FieldLabel>标签</FieldLabel>
-        <FieldContent>
-          <Combobox
+      <div className="grid grid-cols-[1fr_220px] gap-3">
+        <Field>
+          <FieldLabel>名称</FieldLabel>
+          <FieldContent>
+            <Input value={name} onChange={e => setName(e.target.value)}
+              className="h-8 text-sm"
+              placeholder="Prompt 名称" />
+          </FieldContent>
+        </Field>
+        <Field>
+          <FieldLabel>标签</FieldLabel>
+          <FieldContent>
+            <Combobox
             multiple
             searchable
             value={tags}
@@ -447,9 +448,10 @@ function PromptEditPage({ resource, onBack, onSave, inModal = false }: {
                 </div>
               );
             }}
-          />
-        </FieldContent>
-      </Field>
+            />
+          </FieldContent>
+        </Field>
+      </div>
     </div>
   );
   const ContentSection = (
@@ -497,7 +499,6 @@ function PromptEditPage({ resource, onBack, onSave, inModal = false }: {
       <div className="flex-1 min-w-0 overflow-y-auto scrollbar-thin px-5 py-4 space-y-6">
         {/* Single-page layout — basic info, then content. */}
         {BasicSection}
-        <div className="pt-2 border-t border-border/15" />
         {ContentSection}
       </div>
     );

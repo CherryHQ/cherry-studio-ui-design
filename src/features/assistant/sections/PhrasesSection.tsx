@@ -114,11 +114,11 @@ export function PhrasesSection() {
           <EmptyState preset="no-phrase" title="尚未引用任何 Prompt"
             description="从资源库挑选模板，让用户在对话中一键调用" compact />
         ) : (
-          <div className="space-y-1.5">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
             {linkedItems.map(p => (
               <div key={p.id}
-                className="flex items-center gap-3 px-3 py-2.5 rounded-xl border border-border/15 bg-accent/15 group hover:border-border/30 transition-colors">
-                <div className="w-8 h-8 rounded-lg bg-accent/50 flex items-center justify-center text-sm flex-shrink-0">
+                className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg border border-border/15 bg-accent/15 group hover:border-border/30 transition-colors min-w-0">
+                <div className="w-7 h-7 rounded-md bg-accent/50 flex items-center justify-center text-xs flex-shrink-0">
                   {p.avatar}
                 </div>
                 <div className="flex-1 min-w-0">

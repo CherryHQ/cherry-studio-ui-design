@@ -40,14 +40,11 @@ interface Props { resource: ResourceItem; onBack: () => void; inModal?: boolean 
 type ToolchainTabId = 'tools' | 'mcp' | 'skills' | 'integrations';
 type Section = 'basic' | 'prompt' | 'knowledge' | 'advanced' | `toolchain:${ToolchainTabId}`;
 
-const TOOLCHAIN_CHILDREN: { id: ToolchainTabId; label: string; icon: React.ElementType; count: string }[] = [
-  // Counts are mock — would normally derive from the agent's actual
-  // toolchain state. Sidebar shows "enabled/total" so users know what
-  // a tab contains before clicking.
-  { id: 'tools',        label: '内置工具',   icon: Wrench,   count: '8 / 24' },
-  { id: 'mcp',          label: 'MCP Server', icon: Cable,    count: '3 / 5' },
-  { id: 'skills',       label: 'Skills',     icon: Sparkles, count: '5 / 12' },
-  { id: 'integrations', label: '连接器',     icon: Plug,     count: '3 / 10' },
+const TOOLCHAIN_CHILDREN: { id: ToolchainTabId; label: string; icon: React.ElementType }[] = [
+  { id: 'tools',        label: '内置工具',   icon: Wrench },
+  { id: 'mcp',          label: 'MCP Server', icon: Cable },
+  { id: 'skills',       label: 'Skills',     icon: Sparkles },
+  { id: 'integrations', label: '连接器',     icon: Plug },
 ];
 
 const sections: { id: Section; label: string; icon: React.ElementType }[] = [
@@ -135,7 +132,7 @@ export function AgentConfig({ resource, onBack, inModal = false }: Props) {
                       transition={{ duration: 0.15 }}
                       className="overflow-hidden"
                     >
-                      <div className="pl-3 space-y-0.5">
+                      <div className="space-y-0.5">
                         {TOOLCHAIN_CHILDREN.map(c => {
                           const sid: Section = `toolchain:${c.id}`;
                           const isActive = activeSection === sid;
@@ -144,8 +141,7 @@ export function AgentConfig({ resource, onBack, inModal = false }: Props) {
                             <Button variant="ghost" key={c.id} onClick={() => setActiveSection(sid)}
                               className={`w-full justify-start gap-2 px-3 py-1.5 mb-0.5 rounded-lg transition-colors ${isActive ? 'bg-accent/50 text-foreground font-medium' : 'font-normal text-muted-foreground/65 hover:text-foreground hover:bg-muted/40'}`}>
                               <CIcon size={11} strokeWidth={1.5} className={`flex-shrink-0 ${isActive ? 'text-muted-foreground' : 'text-muted-foreground/40'}`} />
-                              <span className="text-[13px] flex-1 text-left">{c.label}</span>
-                              <span className={`text-[10px] tabular-nums flex-shrink-0 ${isActive ? 'text-muted-foreground/65' : 'text-muted-foreground/35'}`}>{c.count}</span>
+                              <span className="text-[13px]">{c.label}</span>
                             </Button>
                           );
                         })}

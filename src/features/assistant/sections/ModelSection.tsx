@@ -53,6 +53,13 @@ export function ModelSection() {
 
   return (
     <div className="max-w-3xl space-y-5">
+      <div className="flex justify-end -mb-2">
+        <Button variant="ghost" size="xs" onClick={resetParameters}
+          className="gap-1.5 text-muted-foreground/70 hover:text-foreground">
+          <RotateCcw size={11} />
+          重置
+        </Button>
+      </div>
       <div className="space-y-1">
         <ParamRow
           label="模型温度"
@@ -194,18 +201,6 @@ export function ModelSection() {
               </Button>
             </div>
           ))}
-        </div>
-
-        <div className="flex justify-end pt-4">
-          <Button
-            variant="destructive"
-            size="xs"
-            onClick={resetParameters}
-            className="gap-1.5"
-          >
-            <RotateCcw size={11} />
-            重置
-          </Button>
         </div>
       </div>
     </div>
