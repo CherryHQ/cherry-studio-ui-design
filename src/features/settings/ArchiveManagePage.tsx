@@ -1,44 +1,25 @@
 import React, { useState } from 'react';
 import { Archive, ArchiveRestore, Trash2 } from 'lucide-react';
 import { Button, SearchInput, EmptyState, Typography } from '@cherry-studio/ui';
-
-// ===========================
-// Mock archived sessions
-// ===========================
-
-interface ArchivedSession {
-  id: string;
-  title: string;
-  agentName: string;
-  agentIcon?: string;
-  timestamp: string;
-  group?: string;
-  type: 'chat' | 'agent';
-}
-
-const MOCK_ARCHIVED: ArchivedSession[] = [
-  { id: 'arc-1', title: '旧版认证系统重构', agentName: '后端工程师', agentIcon: '⚙️', timestamp: '2026-03-15', group: '项目开发', type: 'agent' },
-  { id: 'arc-2', title: 'Vue 2 → Vue 3 迁移评估', agentName: '调研分析师', agentIcon: '🔍', timestamp: '2026-03-10', group: '调研分析', type: 'agent' },
-  { id: 'arc-c1', title: '如何优化 React 渲染性能', agentName: 'Claude 4 Sonnet', agentIcon: '💬', timestamp: '2026-03-12', type: 'chat' },
-  { id: 'arc-3', title: 'Redis 集群部署', agentName: '运维工程师', agentIcon: '🚀', timestamp: '2026-03-08', group: '运维部署', type: 'agent' },
-  { id: 'arc-c2', title: 'TypeScript 泛型最佳实践', agentName: 'GPT-4o', agentIcon: '💬', timestamp: '2026-03-05', type: 'chat' },
-  { id: 'arc-4', title: '用户反馈分析报告 Q1', agentName: '数据分析师', agentIcon: '📈', timestamp: '2026-02-28', group: '数据分析', type: 'agent' },
-  { id: 'arc-c3', title: 'Tailwind CSS 响应式布局技巧', agentName: 'Claude 4 Sonnet', agentIcon: '💬', timestamp: '2026-02-25', type: 'chat' },
-  { id: 'arc-5', title: 'Landing Page A/B 测试', agentName: '全栈工程师', agentIcon: '🤖', timestamp: '2026-02-20', group: '项目开发', type: 'agent' },
-  { id: 'arc-c4', title: 'Docker Compose 多服务编排', agentName: 'Gemini 2.5 Pro', agentIcon: '💬', timestamp: '2026-02-18', type: 'chat' },
-  { id: 'arc-6', title: 'Nginx 反向代理优化', agentName: '运维工程师', agentIcon: '🚀', timestamp: '2026-02-15', group: '运维部署', type: 'agent' },
-  { id: 'arc-7', title: 'React 18 性能基准测试', agentName: '调研分析师', agentIcon: '🔍', timestamp: '2026-02-10', group: '调研分析', type: 'agent' },
-  { id: 'arc-c5', title: 'Git rebase 与 merge 的区别', agentName: 'GPT-4o', agentIcon: '💬', timestamp: '2026-02-05', type: 'chat' },
-  { id: 'arc-8', title: '旧版 REST API 文档整理', agentName: '后端工程师', agentIcon: '⚙️', timestamp: '2026-01-25', group: '项目开发', type: 'agent' },
-];
+import { toast } from 'sonner';
+import { useRecycleBin } from '@/app/context/RecycleBinContext';
+import { useArchive } from '@/app/context/ArchiveContext';
 
 // ===========================
 // Archive Manage Page
 // ===========================
 
 export function ArchiveManagePage() {
-  const [sessions, setSessions] = useState(MOCK_ARCHIVED);
+  // Archived sessions live in a context (not local state) so the recycle
+  // bin's undo callback can restore an archived item even if the user
+  // navigates away from this page during the 5-second toast window.
+  const { sessions, setSessions } = useArchive();
   const [searchQuery, setSearchQuery] = useState('');
+
+  // Deleting from archive sends the item to the recycle bin (industry-standard
+  // two-step deletion: archive → bin → permanent). User has already made an
+  // archive decision, so we skip the confirm dialog and rely on the undo toast.
+  const { moveToBin } = useRecycleBin();
 
   const filtered = sessions.filter(s => {
     if (searchQuery) {
@@ -49,11 +30,39 @@ export function ArchiveManagePage() {
   });
 
   const handleUnarchive = (id: string) => {
+    const session = sessions.find(s => s.id === id);
     setSessions(prev => prev.filter(s => s.id !== id));
+    if (session) {
+      const target = session.type === 'agent' ? 'Agent 运行历史' : '聊天列表';
+      toast.success('已取消归档', {
+        description: `「${session.title}」已恢复，可在${target}中查看。`,
+      });
+    }
   };
 
   const handleDelete = (id: string) => {
+    const session = sessions.find(s => s.id === id);
+    if (!session) return;
     setSessions(prev => prev.filter(s => s.id !== id));
+    moveToBin(
+      {
+        id: `bin-archived-${session.id}-${Date.now()}`,
+        type: session.type === 'agent' ? 'session' : 'topic',
+        name: session.title,
+        icon: session.agentIcon,
+        meta: session.agentName,
+        source: 'manual',
+        fromArchived: true,
+      },
+      {
+        // Both the 5-second undo and the later "恢复" inside the recycle
+        // bin put the item back into the archive list. The user already
+        // intentionally archived this item before deleting it; restoring
+        // should respect that prior state. To return it to active use,
+        // they can un-archive from the archive page afterwards.
+        onUndo: () => setSessions(prev => [session, ...prev]),
+      },
+    );
   };
 
   return (
@@ -65,7 +74,7 @@ export function ArchiveManagePage() {
           <Typography variant="subtitle">归档管理</Typography>
           <span className="text-xs text-muted-foreground tabular-nums">{sessions.length}</span>
         </div>
-        <p className="text-xs text-muted-foreground mb-3">已归档的会话记录，可随时恢复或永久删除。</p>
+        <p className="text-xs text-muted-foreground mb-3">已归档的会话记录，可随时恢复或删除（删除后会先进回收站）。</p>
         <div className="flex items-center gap-2 mb-2">
           <div className="flex-1">
             <SearchInput
@@ -117,6 +126,7 @@ export function ArchiveManagePage() {
                     variant="ghost"
                     size="inline"
                     onClick={() => handleDelete(session.id)}
+                    title="移到回收站"
                     className="px-2 py-[2px] text-xs text-destructive/70 hover:bg-destructive/8"
                   >
                     <Trash2 size={11} />

@@ -16,7 +16,7 @@ import {
   SlidersHorizontal, Filter, Star, LayoutGrid, Loader2,
   MousePointer2, Undo2, Redo2, Crop, Play, Plus,
   Share2, ArrowLeft, PanelRightClose, PanelRightOpen,
-  Image as ImageIcon, ExternalLink, AlertTriangle, RefreshCw,
+  Image as ImageIcon, ExternalLink, AlertTriangle, RefreshCw, Trash2,
 } from 'lucide-react';
 import type {
   GeneratedImage, ImageMode, AspectRatio, ImageSize, GenerationParams,
@@ -24,6 +24,7 @@ import type {
 import {
   IMAGE_MODELS, MOCK_IMAGES, RATIO_DIMENSIONS, SIZE_LABELS,
 } from './mockData';
+import { useRecycleBin } from '@/app/context/RecycleBinContext';
 
 // Adapt IMAGE_MODELS to ModelInfo for ModelPickerPanel
 const IMAGE_MODELS_AS_MODEL_INFO: ModelInfo[] = IMAGE_MODELS.map(m => ({
@@ -177,6 +178,32 @@ export function ImagePage() {
     ));
   }, []);
 
+  // Delete a painting → move to recycle bin with 5-second undo toast.
+  // Lightweight path (no confirm dialog) since paintings are easy to
+  // re-generate and the toast already gives an instant revert.
+  const { moveToBin: moveToRecycleBin } = useRecycleBin();
+  const handleDeletePainting = useCallback((img: GeneratedImage) => {
+    setImages(prev => prev.filter(i => i.id !== img.id));
+    if (selectedImage?.id === img.id) {
+      // Replacement selection — first remaining image, or undefined.
+      const remaining = images.filter(i => i.id !== img.id);
+      if (remaining.length > 0) setSelectedImage(remaining[0]);
+    }
+    moveToRecycleBin(
+      {
+        id: `bin-painting-${img.id}-${Date.now()}`,
+        type: 'painting',
+        name: img.prompt || '未命名绘图',
+        icon: '🎨',
+        meta: `${img.model} · ${img.width}×${img.height}`,
+        source: 'manual',
+      },
+      {
+        onUndo: () => setImages(prev => [img, ...prev]),
+      },
+    );
+  }, [images, selectedImage, moveToRecycleBin]);
+
   const handleImageClick = useCallback((img: GeneratedImage) => {
     setSelectedImage(img);
     setPreviewMode(true);
@@ -262,6 +289,7 @@ export function ImagePage() {
             images={images}
             onSelect={handleImageClick}
             onToggleFavorite={toggleFavorite}
+            onDelete={handleDeletePainting}
           />
         )}
       </div>
@@ -793,10 +821,11 @@ function PromptBar({ params, onChange, onGenerate, isGenerating }: {
 // Gallery Grid View
 // ===========================
 
-function GalleryGrid({ images, onSelect, onToggleFavorite }: {
+function GalleryGrid({ images, onSelect, onToggleFavorite, onDelete }: {
   images: GeneratedImage[];
   onSelect: (img: GeneratedImage) => void;
   onToggleFavorite: (id: string) => void;
+  onDelete: (img: GeneratedImage) => void;
 }) {
   const [filter, setFilter] = useState<'all' | 'favorites'>('all');
   const [ratioFilter, setRatioFilter] = useState<'all' | AspectRatio>('all');
@@ -905,14 +934,24 @@ function GalleryGrid({ images, onSelect, onToggleFavorite }: {
                 </span>
               </div>
               <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
-                <div className="absolute top-1.5 right-1.5">
+                <div className="absolute top-1.5 right-1.5 flex items-center gap-1">
                   <Button
                     variant="ghost"
                     size="icon-xs"
                     onClick={e => { e.stopPropagation(); onToggleFavorite(img.id); }}
                     className="p-1 bg-foreground/40 backdrop-blur-sm"
+                    title="收藏"
                   >
                     <Heart size={9} className={img.favorite ? 'text-accent-pink fill-accent-pink' : 'text-white/60'} />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon-xs"
+                    onClick={e => { e.stopPropagation(); onDelete(img); }}
+                    className="p-1 bg-foreground/40 backdrop-blur-sm hover:bg-destructive/60"
+                    title="移到回收站"
+                  >
+                    <Trash2 size={9} className="text-white/60" />
                   </Button>
                 </div>
                 <div className="absolute bottom-0 left-0 right-0 px-2 py-1.5">

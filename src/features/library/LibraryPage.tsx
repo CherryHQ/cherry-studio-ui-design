@@ -20,7 +20,6 @@ import {
 import { Switch } from '@cherry-studio/ui';
 import { Combobox } from '@cherrystudio/ui/components/primitives/combobox';
 import { Field, FieldContent, FieldLabel } from '@cherrystudio/ui/components/primitives/field';
-import { ConfirmDialog } from '@cherrystudio/ui/components/composites/ConfirmDialog';
 import { Input, SearchInput, Typography, SYSTEM_VARIABLES, type VariableDef } from '@cherry-studio/ui';
 import { skills as discoverSkills, assistants as discoverAssistants } from '@/features/explore/ExploreData';
 import { useGlobalActions } from '@/app/context/GlobalActionContext';
@@ -35,6 +34,8 @@ import { SkillPluginImportModal } from './SkillPluginImportModal';
 import { SkillPluginDetail } from './SkillPluginDetail';
 import { AssistantConfig } from '@/features/assistant/AssistantConfig';
 import { AgentConfig } from '@/features/agent/AgentConfig';
+import { useRecycleBin, type RecycleBinItemType } from '@/app/context/RecycleBinContext';
+import { RecycleBinConfirmDialog } from '@/app/components/shared/RecycleBinConfirmDialog';
 
 // ===========================
 // Template Banner (shown at top for assistant / skill views)
@@ -816,15 +817,44 @@ export function LibraryPage() {
     setResources(prev => [{ ...r, id: `res-dup-${Date.now()}`, name: `${r.name} (副本)`, createdAt: now, updatedAt: now }, ...prev]);
   }, []);
 
+  const { moveToBin: moveToRecycleBin, retentionDays: recycleRetentionDays } = useRecycleBin();
+
+  const resourceTypeToBinType = (t: ResourceType): RecycleBinItemType | null => {
+    if (t === 'agent') return 'agent';
+    if (t === 'assistant') return 'assistant';
+    if (t === 'skill') return 'skill';
+    if (t === 'prompt') return 'prompt';
+    // 'plugin' is a legacy ResourceType not exposed in the new product —
+    // it just gets hard-deleted without recycle bin entry.
+    return null;
+  };
+
   const handleDelete = useCallback((r: ResourceItem) => setDeleteConfirm(r), []);
 
   const confirmDelete = useCallback(() => {
-    if (deleteConfirm) {
-      setResources(prev => prev.filter(x => x.id !== deleteConfirm.id));
-      setDeleteConfirm(null);
-      if (configView.type !== 'list') setConfigView({ type: 'list' });
+    if (!deleteConfirm) return;
+    const r = deleteConfirm;
+    setResources(prev => prev.filter(x => x.id !== r.id));
+    setDeleteConfirm(null);
+    if (configView.type !== 'list') setConfigView({ type: 'list' });
+
+    const binType = resourceTypeToBinType(r.type);
+    if (binType) {
+      moveToRecycleBin(
+        {
+          id: `bin-${binType}-${r.id}-${Date.now()}`,
+          type: binType,
+          name: r.name,
+          icon: r.avatar,
+          meta: r.author ?? '资源库',
+          source: 'manual',
+        },
+        {
+          onUndo: () => setResources(prev => [r, ...prev]),
+        },
+      );
     }
-  }, [deleteConfirm, configView]);
+  }, [deleteConfirm, configView, moveToRecycleBin]);
 
   const handleToggle = useCallback((id: string) => {
     setResources(prev => prev.map(r => r.id === id ? { ...r, enabled: !r.enabled } : r));
@@ -950,15 +980,12 @@ export function LibraryPage() {
         onClose={() => setSpImportOpen(false)} onImportComplete={handleImportComplete}
       />
 
-      <ConfirmDialog
+      {/* Move-to-recycle-bin confirm — iOS-style minimal alert. */}
+      <RecycleBinConfirmDialog
         open={!!deleteConfirm}
-        onOpenChange={v => { if (!v) setDeleteConfirm(null); }}
-        title="确认删除"
-        description={deleteConfirm ? `确定要删除「${deleteConfirm.name}」吗？此操作无法撤销。` : ''}
-        confirmText="删除"
-        cancelText="取消"
-        destructive
-        onConfirm={confirmDelete}
+        onOpenChange={(open) => { if (!open) setDeleteConfirm(null); }}
+        retentionDays={recycleRetentionDays}
+        onConfirm={() => confirmDelete()}
       />
 
       {/* Resource config modal — sized to sit inside the app shell

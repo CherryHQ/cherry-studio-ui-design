@@ -33,6 +33,8 @@ import type { AgentChatMessage, AgentSession, AgentSessionData } from '@/app/typ
 import { SessionHistoryPage, type SessionDisplayMode } from './SessionHistoryPage';
 import { HistorySidebar } from '@/app/components/shared/HistorySidebar';
 import { CreateEntityDialog } from '@/app/components/shared/CreateEntityDialog';
+import { RecycleBinConfirmDialog } from '@/app/components/shared/RecycleBinConfirmDialog';
+import { useRecycleBin } from '@/app/context/RecycleBinContext';
 import { useHistorySidebar } from '@/app/hooks/useHistorySidebar';
 import {
   MOCK_SESSIONS, MODELS, SESSION_DATA_MAP, EMPTY_SESSION_DATA,
@@ -1494,15 +1496,37 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
     setSelectedFile(null);
   }, []);
 
-  const handleDeleteSession = useCallback((id: string) => {
-    setSessions(prev => prev.filter(s => s.id !== id));
-    if (activeSessionId === id) {
+  const { moveToBin: moveToRecycleBin, retentionDays: recycleRetentionDays } = useRecycleBin();
+  const [pendingDeleteSession, setPendingDeleteSession] = useState<AgentSession | null>(null);
+
+  const sendSessionToBin = useCallback((session: AgentSession) => {
+    setSessions(prev => prev.filter(s => s.id !== session.id));
+    if (activeSessionId === session.id) {
       setActiveSessionId(null);
       setShowPreview(false);
       setPreviewMaximized(false);
       setShowExplorer(false);
     }
-  }, [activeSessionId]);
+    moveToRecycleBin(
+      {
+        id: `bin-session-${session.id}-${Date.now()}`,
+        type: 'session',
+        name: session.title,
+        icon: session.agentIcon ?? '▶️',
+        meta: session.agentName,
+        source: 'manual',
+      },
+      {
+        onUndo: () => setSessions(prev => [session, ...prev]),
+      },
+    );
+  }, [activeSessionId, moveToRecycleBin]);
+
+  const handleDeleteSession = useCallback((id: string) => {
+    const session = sessions.find(s => s.id === id);
+    if (!session) return;
+    setPendingDeleteSession(session);
+  }, [sessions]);
 
   const handleRenameGroup = useCallback((oldName: string, newName: string) => {
     setSessions(prev => prev.map(s =>
@@ -1994,6 +2018,16 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
         open={showCreateAgent}
         onOpenChange={setShowCreateAgent}
         variant="agent"
+      />
+
+      {/* ===== Recycle Bin: delete-session confirmation ===== */}
+      <RecycleBinConfirmDialog
+        open={!!pendingDeleteSession}
+        onOpenChange={(open) => { if (!open) setPendingDeleteSession(null); }}
+        retentionDays={recycleRetentionDays}
+        onConfirm={() => {
+          if (pendingDeleteSession) sendSessionToBin(pendingDeleteSession);
+        }}
       />
 
       {/* ===== Save current conversation as Skill ===== */}
