@@ -565,8 +565,7 @@ function AddResourcePanel({ activeTab, addedIds, onAdd, onClose, onExplore }: { 
     const I = item.icon; return <I size={11} strokeWidth={1.5} className="text-warning/50" />;
   };
   return (
-    <motion.div initial={{ x: 20, opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: 20, opacity: 0 }} transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-      className="absolute top-10 right-0 z-10 w-[260px] bg-background rounded-2xl border border-border/30 shadow-2xl flex flex-col overflow-hidden" style={{ maxHeight: 'min(520px, calc(100vh - 200px))' }}>
+    <div className="flex flex-col overflow-hidden" style={{ maxHeight: 'min(480px, calc(100vh - 200px))' }}>
       <div className="flex items-center justify-between px-3.5 h-[36px] flex-shrink-0 border-b border-border/15">
         <span className="text-sm text-foreground">{"添加"}{tabLabel}</span>
         <Button variant="ghost" size="icon-xs" onClick={onClose} className="text-muted-foreground/40"><X size={11} /></Button>
@@ -628,7 +627,7 @@ function AddResourcePanel({ activeTab, addedIds, onAdd, onClose, onExplore }: { 
           <Button variant="ghost" size="xs" onClick={() => setShowManualForm(!showManualForm)} className={`w-full justify-start gap-2 ${showManualForm ? 'text-foreground bg-accent/15' : 'text-muted-foreground/60 hover:text-foreground hover:bg-accent/15'}`}><Plus size={9} className="text-muted-foreground/40" /><span>{"手动添加"}</span></Button>
         </div>
       </div>
-    </motion.div>
+    </div>
   );
 }
 
@@ -800,20 +799,27 @@ function ToolchainSection({ onExplore, controlledTab }: { onExplore: () => void;
   ];
 
   return (
-    <div className="relative">
+    <div>
       <div className="space-y-6 max-w-3xl">
         {/* Header — search + add. Section title and tab bar are owned
             by the sidebar when controlledTab is set, so we drop them. */}
         <div className="flex items-center justify-end gap-2">
           <SearchInput value={search} onChange={setSearch} placeholder="搜索…"
             wrapperClassName="w-[200px] flex items-center gap-1.5 px-2 h-7 rounded-md bg-muted/30 border border-border/20" />
-          <Button variant="ghost" size="xs" onClick={() => setShowAddPanel(!showAddPanel)}
-            className={`gap-1 h-7 px-2.5 rounded-md text-xs border border-border/30 ${
-              showAddPanel ? 'text-foreground bg-accent/25 border-border/50' : 'text-muted-foreground/70 hover:text-foreground hover:bg-accent/15'
-            }`}>
-            <Plus size={11} />
-            <span>添加</span>
-          </Button>
+          <Popover open={showAddPanel} onOpenChange={setShowAddPanel}>
+            <PopoverTrigger asChild>
+              <Button variant="ghost" size="xs"
+                className={`gap-1 h-7 px-2.5 rounded-md text-xs border border-border/30 ${
+                  showAddPanel ? 'text-foreground bg-accent/25 border-border/50' : 'text-muted-foreground/70 hover:text-foreground hover:bg-accent/15'
+                }`}>
+                <Plus size={11} />
+                <span>添加</span>
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent align="end" side="bottom" sideOffset={6} className="p-0 w-[280px] overflow-hidden">
+              <AddResourcePanel activeTab={activeTab} addedIds={addedIds} onAdd={handleAdd} onClose={() => setShowAddPanel(false)} onExplore={onExplore} />
+            </PopoverContent>
+          </Popover>
           <Button variant="ghost" size="xs" onClick={onExplore}
             className="gap-1 h-7 px-2.5 rounded-md text-xs border border-border/30 text-muted-foreground/70 hover:text-foreground hover:bg-accent/15">
             <ExternalLink size={11} />
@@ -931,9 +937,6 @@ function ToolchainSection({ onExplore, controlledTab }: { onExplore: () => void;
           </AnimatePresence>
         </div>
       </div>
-      <AnimatePresence>
-        {showAddPanel && <AddResourcePanel activeTab={activeTab} addedIds={addedIds} onAdd={handleAdd} onClose={() => setShowAddPanel(false)} onExplore={onExplore} />}
-      </AnimatePresence>
     </div>
   );
 }
