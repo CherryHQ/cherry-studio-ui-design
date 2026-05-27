@@ -64,7 +64,7 @@ export function HomePage() {
       <div className="flex-1 flex flex-col items-center justify-center px-6 overflow-y-auto">
         <div className="w-full max-w-[640px] flex flex-col items-center gap-4">
           {/* Input Card */}
-          <div className="w-full rounded-2xl border border-border/60 bg-background shadow-sm relative">
+          <div className="w-full rounded-2xl border border-border/50 bg-background shadow-sm relative">
             {/* Textarea */}
             <div className="px-4 pt-3.5 pb-1">
               <Textarea

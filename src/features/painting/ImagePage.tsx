@@ -333,7 +333,7 @@ function TopToolbar({ view, onViewChange }: {
         ))}
       </div>
       <div className="flex items-center gap-1">
-        <Button variant="outline" size="xs" className="gap-1.5 px-3 border-border/50 text-xs text-foreground hover:bg-muted/40">
+        <Button variant="outline" size="xs" className="gap-1.5 px-3 border-border/50 text-xs text-foreground hover:bg-accent/40">
           {'\u5bfc\u51fa'}
         </Button>
       </div>
@@ -354,7 +354,7 @@ function HistoryStrip({ images, selectedId, onSelect }: {
 
   return (
     <div className="w-[54px] shrink-0 flex flex-col items-center py-2 gap-1 bg-background overflow-y-auto scrollbar-hide">
-      <Button variant="ghost" size="icon-sm" className="rounded-full bg-muted/30 text-muted-foreground/40 hover:bg-muted/50 hover:text-foreground mb-1">
+      <Button variant="ghost" size="icon-sm" className="rounded-full bg-muted/30 text-muted-foreground/40 hover:bg-accent/40 hover:text-foreground mb-1">
         <Clock size={12} />
       </Button>
       {images.map(img => (
@@ -453,7 +453,7 @@ function ControlPanel({ params, onChange, onClose }: {
             <PopoverTrigger asChild>
               <Button size="inline"
                 variant="ghost"
-                className="w-full flex items-center justify-between gap-2 px-2.5 py-[6px] rounded-lg bg-muted/35 hover:bg-muted/50 text-xs"
+                className="w-full flex items-center justify-between gap-2 px-2.5 py-[6px] rounded-lg bg-muted/35 hover:bg-accent/40 text-xs"
               >
                 <div className="flex items-center gap-1.5 min-w-0">
                   <BrandLogo id={selectedModel?.provider?.toLowerCase() || ''} fallbackLetter={selectedModel?.provider?.[0] || '?'} size={14} className="shrink-0" />
@@ -495,7 +495,7 @@ function ControlPanel({ params, onChange, onClose }: {
                 className={`flex flex-col items-center gap-1 py-1.5 rounded-lg transition-all duration-150 ${
                   params.ratio === ratio
                     ? 'bg-cherry-active-bg text-cherry-primary-dark ring-1 ring-cherry-ring'
-                    : 'bg-muted/25 text-muted-foreground/60 hover:bg-muted/40 hover:text-foreground'
+                    : 'bg-muted/25 text-muted-foreground/60 hover:bg-accent/40 hover:text-foreground'
                 }`}
               >
                 {ratioIcons[ratio]}
@@ -513,7 +513,7 @@ function ControlPanel({ params, onChange, onClose }: {
             <PopoverTrigger asChild>
               <Button size="inline"
                 variant="ghost"
-                className="w-full flex items-center justify-between gap-2 px-2.5 py-[6px] rounded-lg bg-muted/35 hover:bg-muted/50 text-xs"
+                className="w-full flex items-center justify-between gap-2 px-2.5 py-[6px] rounded-lg bg-muted/35 hover:bg-accent/40 text-xs"
               >
                 <span className="text-foreground">{SIZE_LABELS[params.size]}</span>
                 <ChevronDown size={9} className="text-muted-foreground/40" />
@@ -528,7 +528,7 @@ function ControlPanel({ params, onChange, onClose }: {
                   className={`w-full px-3 py-[6px] text-xs transition-colors ${
                     params.size === size
                       ? 'bg-cherry-active-bg text-cherry-primary-dark'
-                      : 'text-muted-foreground hover:bg-muted/40'
+                      : 'text-muted-foreground hover:bg-accent/40'
                   }`}
                 >
                   {SIZE_LABELS[size]}
@@ -548,7 +548,7 @@ function ControlPanel({ params, onChange, onClose }: {
                 className={`flex-1 py-[5px] rounded-lg text-xs transition-all duration-150 ${
                   params.count === n
                     ? 'bg-cherry-active-bg text-cherry-primary-dark ring-1 ring-cherry-ring'
-                    : 'bg-muted/25 text-muted-foreground/40 hover:bg-muted/40 hover:text-foreground'
+                    : 'bg-muted/25 text-muted-foreground/40 hover:bg-accent/40 hover:text-foreground'
                 }`}
               >
                 {n}
@@ -701,8 +701,8 @@ function CanvasArea({ image, images, currentIndex, onNavigate, onClickImage, onS
                 onClick={() => onSelectImage(images[realIdx])}
                 className={`w-[5px] h-[5px] p-0 rounded-full transition-all duration-200 ${
                   realIdx === currentIndex
-                    ? 'bg-foreground/60 scale-125'
-                    : 'bg-muted-foreground/25 hover:bg-muted-foreground/40'
+                    ? 'bg-foreground/50 scale-125'
+                    : 'bg-muted-foreground/25 hover:bg-accent/40-foreground/40'
                 }`}
               />
             );
@@ -748,7 +748,7 @@ function PromptBar({ params, onChange, onGenerate, isGenerating }: {
         />
         <div className="flex items-center justify-between px-3.5 pb-3 pt-2.5">
           <div className="flex items-center gap-1">
-            <Button variant="ghost" size="icon-xs" className="p-1.5 text-muted-foreground/40 hover:text-foreground hover:bg-muted/40">
+            <Button variant="ghost" size="icon-xs" className="p-1.5 text-muted-foreground/40 hover:text-foreground hover:bg-accent/40">
               <Plus size={13} />
             </Button>
             <Popover>
@@ -776,7 +776,7 @@ function PromptBar({ params, onChange, onGenerate, isGenerating }: {
               <PopoverTrigger asChild>
                 <Button size="inline"
                   variant="ghost"
-                  className="gap-1 px-2 py-1 text-xs text-muted-foreground hover:bg-muted/40"
+                  className="gap-1 px-2 py-1 text-xs text-muted-foreground hover:bg-accent/40"
                 >
                   <BrandLogo id={selectedModel?.provider?.toLowerCase() || ''} fallbackLetter={selectedModel?.provider?.[0] || '?'} size={14} className="shrink-0" />
                   <span>{selectedModel?.name || 'Select Model'}</span>
@@ -892,7 +892,7 @@ function GalleryGrid({ images, onSelect, onToggleFavorite, onDelete }: {
           <Button size="inline"
             variant="ghost"
             onClick={() => setSort(s => s === 'newest' ? 'oldest' : 'newest')}
-            className="gap-1 px-2 py-[3px] text-xs text-muted-foreground/40 hover:text-foreground hover:bg-muted/40"
+            className="gap-1 px-2 py-[3px] text-xs text-muted-foreground/40 hover:text-foreground hover:bg-accent/40"
           >
             <SlidersHorizontal size={9} />
             {sort === 'newest' ? 'Newest' : 'Oldest'}
@@ -1002,7 +1002,7 @@ function PreviewPage({ images, selected, onSelect, onBack, onNavigate, onToggleF
           variant="ghost"
           size="icon-sm"
           onClick={onBack}
-          className="p-1.5 text-muted-foreground/50 hover:text-foreground hover:bg-muted/40"
+          className="p-1.5 text-muted-foreground/50 hover:text-foreground hover:bg-accent/40"
         >
           <X size={14} />
         </Button>
@@ -1029,10 +1029,10 @@ function PreviewPage({ images, selected, onSelect, onBack, onNavigate, onToggleF
         </div>
 
         <div className="flex items-center gap-1">
-          <Button variant="ghost" size="icon-xs" className="p-1.5 text-muted-foreground/40 hover:text-foreground hover:bg-muted/40">
+          <Button variant="ghost" size="icon-xs" className="p-1.5 text-muted-foreground/40 hover:text-foreground hover:bg-accent/40">
             <Download size={13} />
           </Button>
-          <Button variant="ghost" size="icon-xs" className="p-1.5 text-muted-foreground/40 hover:text-foreground hover:bg-muted/40">
+          <Button variant="ghost" size="icon-xs" className="p-1.5 text-muted-foreground/40 hover:text-foreground hover:bg-accent/40">
             <Share2 size={13} />
           </Button>
           <Button size="inline"
@@ -1246,7 +1246,7 @@ function VerticalToolHandle({ showRightPanel, onToggleRightPanel }: {
             className={`p-[7px] rounded-xl transition-all duration-150 ${
               isActive
                 ? 'bg-cherry-active-bg text-cherry-primary-dark shadow-sm'
-                : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
+                : 'text-muted-foreground hover:text-foreground hover:bg-accent/40'
             }`}
           >
             {tool.icon}

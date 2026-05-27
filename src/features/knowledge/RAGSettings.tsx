@@ -82,7 +82,7 @@ function MiniSelect({ items, selectedId, onSelect }: {
         <Button
           variant="outline"
           size="sm"
-          className={`w-full justify-between px-2.5 py-[6px] text-xs bg-transparent hover:bg-muted/20 transition-colors ${open ? 'border-cherry-primary/40 ring-1 ring-cherry-primary/15' : 'border-section-border'}`}
+          className={`w-full justify-between px-2.5 py-[6px] text-xs bg-transparent hover:bg-accent/40 transition-colors ${open ? 'border-cherry-primary/40 ring-1 ring-cherry-primary/15' : 'border-section-border'}`}
         >
           <span className="text-foreground truncate">{selected?.name || '选择...'}</span>
           <ChevronDown size={10} className={`text-muted-foreground/40 transition-transform flex-shrink-0 ml-2 ${open ? 'rotate-180' : ''}`} />

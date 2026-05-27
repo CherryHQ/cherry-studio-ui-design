@@ -8,7 +8,6 @@ import type { AssistantInfo, AssistantTopic } from '@/app/types/assistant';
 import type { Message } from '@/app/types/chat';
 
 // Backward-compatible alias used throughout this file
-type AssistantMessage = Message;
 
 // ===========================
 // Mock Assistants
@@ -470,7 +469,7 @@ const MOCK_PROCESS_JSON = `{
 // Mock Messages (rich types)
 // ===========================
 
-export const MOCK_MESSAGES: AssistantMessage[] = [
+export const MOCK_MESSAGES: Message[] = [
   // 1. User message with file attachments
   {
     id: 'msg-1',
@@ -895,7 +894,7 @@ function StatsRow() {
 // Multi-Model / Multi-Assistant Parallel Mock Messages
 // ===========================
 
-export const MOCK_PARALLEL_MESSAGES: AssistantMessage[] = [
+export const MOCK_PARALLEL_MESSAGES: Message[] = [
   {
     id: 'pm-1',
     role: 'user',
@@ -1017,7 +1016,7 @@ export const MOCK_PARALLEL_MESSAGES: AssistantMessage[] = [
 // Multi-Assistant Parallel Messages
 // ===========================
 
-export const MOCK_MULTI_ASSISTANT_MESSAGES: AssistantMessage[] = [
+export const MOCK_MULTI_ASSISTANT_MESSAGES: Message[] = [
   {
     id: 'ma-1',
     role: 'user',

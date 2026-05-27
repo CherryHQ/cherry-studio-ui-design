@@ -255,7 +255,7 @@ function CherryStudioInner() {
         {/* Dev: Empty State Preview — outside app window */}
         <button
           onClick={() => navigateToMenuTab('empty-preview')}
-          className="absolute right-0 top-1/2 -translate-y-1/2 flex items-center gap-1 px-1 py-3 rounded-l-lg bg-foreground/10 border border-border/30 border-r-0 text-foreground/40 hover:text-foreground hover:bg-foreground/20 hover:px-1.5 transition-all"
+          className="absolute right-0 top-1/2 -translate-y-1/2 flex items-center gap-1 px-1 py-3 rounded-l-lg bg-foreground/10 border border-border/30 border-r-0 text-muted-foreground/40 hover:text-foreground hover:bg-foreground/20 hover:px-1.5 transition-all"
           title="Empty State Preview"
         >
           <Layers size={11} />
@@ -264,7 +264,7 @@ function CherryStudioInner() {
         {/* Dev: Data Migration Demo — outside app window */}
         <button
           onClick={() => setShowMigration(true)}
-          className="absolute right-0 top-1/2 translate-y-4 flex items-center gap-1 px-1 py-3 rounded-l-lg bg-foreground/10 border border-border/30 border-r-0 text-foreground/40 hover:text-foreground hover:bg-foreground/20 hover:px-1.5 transition-all"
+          className="absolute right-0 top-1/2 translate-y-4 flex items-center gap-1 px-1 py-3 rounded-l-lg bg-foreground/10 border border-border/30 border-r-0 text-muted-foreground/40 hover:text-foreground hover:bg-foreground/20 hover:px-1.5 transition-all"
           title="Data Migration Demo"
         >
           <Database size={11} />

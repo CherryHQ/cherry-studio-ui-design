@@ -26,6 +26,7 @@ import {
 } from '@cherrystudio/ui/components/primitives/select';
 // V2 doesn't ship SearchInput / Typography / EmptyState / SimpleTooltip / Switch
 import { Input, Textarea, EmptyState, SearchInput, Typography, SimpleTooltip, Switch } from '@cherry-studio/ui';
+import { Separator } from "@cherry-studio/ui";
 import { motion, AnimatePresence } from 'motion/react';
 import type { ResourceItem, MCPServerStatus } from '@/app/types';
 import { PromptSection } from '@/features/assistant/sections/PromptSection';
@@ -104,7 +105,7 @@ export function AgentConfig({ resource, onBack, inModal = false }: Props) {
             const Icon = s.icon;
             return (
               <Button variant="ghost" key={s.id} onClick={() => setActiveSection(s.id)}
-                className={`w-full justify-start gap-2 px-3 py-2 mb-0.5 rounded-lg transition-colors ${active ? 'bg-accent/50 text-foreground font-medium' : 'font-normal text-muted-foreground/65 hover:text-foreground hover:bg-muted/40'}`}>
+                className={`w-full justify-start gap-2 px-3 py-2 mb-0.5 rounded-lg transition-colors ${active ? 'bg-accent/50 text-foreground font-medium' : 'font-normal text-muted-foreground/60 hover:text-foreground hover:bg-accent/40'}`}>
                 <Icon size={13} strokeWidth={1.5} className={`flex-shrink-0 ${active ? 'text-muted-foreground' : 'text-muted-foreground/40'}`} />
                 <span className="text-sm">{s.label}</span>
               </Button>
@@ -120,7 +121,7 @@ export function AgentConfig({ resource, onBack, inModal = false }: Props) {
               <>
                 <Button variant="ghost"
                   onClick={() => setToolchainExpanded(v => !v)}
-                  className={`w-full justify-start gap-2 px-3 py-2 mb-0.5 rounded-lg transition-colors ${childActive ? 'bg-accent/50 text-foreground font-medium' : 'font-normal text-muted-foreground/65 hover:text-foreground hover:bg-muted/40'}`}>
+                  className={`w-full justify-start gap-2 px-3 py-2 mb-0.5 rounded-lg transition-colors ${childActive ? 'bg-accent/50 text-foreground font-medium' : 'font-normal text-muted-foreground/60 hover:text-foreground hover:bg-accent/40'}`}>
                   <Blocks size={13} strokeWidth={1.5} className={`flex-shrink-0 ${childActive ? 'text-muted-foreground' : 'text-muted-foreground/40'}`} />
                   <span className="text-sm flex-1 text-left">拓展</span>
                   <ChevronDown size={11} className={`flex-shrink-0 text-muted-foreground/40 transition-transform ${toolchainExpanded ? '' : '-rotate-90'}`} />
@@ -142,9 +143,9 @@ export function AgentConfig({ resource, onBack, inModal = false }: Props) {
                           const CIcon = c.icon;
                           return (
                             <Button variant="ghost" key={c.id} onClick={() => setActiveSection(sid)}
-                              className={`w-full justify-start gap-2 px-3 py-1.5 mb-0.5 rounded-lg transition-colors ${isActive ? 'bg-accent/50 text-foreground font-medium' : 'font-normal text-muted-foreground/65 hover:text-foreground hover:bg-muted/40'}`}>
+                              className={`w-full justify-start gap-2 px-3 py-1.5 mb-0.5 rounded-lg transition-colors ${isActive ? 'bg-accent/50 text-foreground font-medium' : 'font-normal text-muted-foreground/60 hover:text-foreground hover:bg-accent/40'}`}>
                               <CIcon size={11} strokeWidth={1.5} className={`flex-shrink-0 ${isActive ? 'text-muted-foreground' : 'text-muted-foreground/40'}`} />
-                              <span className="text-[13px]">{c.label}</span>
+                              <span className="text-sm">{c.label}</span>
                             </Button>
                           );
                         })}
@@ -162,7 +163,7 @@ export function AgentConfig({ resource, onBack, inModal = false }: Props) {
             const Icon = s.icon;
             return (
               <Button variant="ghost" key={s.id} onClick={() => setActiveSection(s.id)}
-                className={`w-full justify-start gap-2 px-3 py-2 mb-0.5 rounded-lg transition-colors ${active ? 'bg-accent/50 text-foreground font-medium' : 'font-normal text-muted-foreground/65 hover:text-foreground hover:bg-muted/40'}`}>
+                className={`w-full justify-start gap-2 px-3 py-2 mb-0.5 rounded-lg transition-colors ${active ? 'bg-accent/50 text-foreground font-medium' : 'font-normal text-muted-foreground/60 hover:text-foreground hover:bg-accent/40'}`}>
                 <Icon size={13} strokeWidth={1.5} className={`flex-shrink-0 ${active ? 'text-muted-foreground' : 'text-muted-foreground/40'}`} />
                 <span className="text-sm">{s.label}</span>
               </Button>
@@ -191,7 +192,7 @@ export function AgentConfig({ resource, onBack, inModal = false }: Props) {
           <AnimatePresence>
             {saved
               ? <motion.span key="saved" initial={{ opacity: 0, x: 6 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0 }} className="text-xs text-cherry-primary mr-auto flex items-center gap-1"><CheckCircle2 size={11} />已保存</motion.span>
-              : <motion.span key="dirty" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="text-xs text-muted-foreground/55 mr-auto">有未保存的更改</motion.span>}
+              : <motion.span key="dirty" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="text-xs text-muted-foreground/50 mr-auto">有未保存的更改</motion.span>}
           </AnimatePresence>
           <Button variant="outline" size="xs" onClick={onBack} className="h-7 px-3 text-xs">取消</Button>
           <Button size="xs" onClick={handleSave} className="h-7 px-3 text-xs gap-1.5"><Save size={11} />保存</Button>
@@ -210,12 +211,12 @@ function ModelSelector({ label, value, onChange, hint }: { label: string; value:
   return (
     <div>
       <div className="flex items-center justify-between mb-1.5">
-        <label className="text-sm text-foreground/85">{label}</label>
-        <span className="text-[11px] text-muted-foreground/55">{hint}</span>
+        <label className="text-sm text-muted-foreground">{label}</label>
+        <span className="text-xs text-muted-foreground/50">{hint}</span>
       </div>
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
-          <Button variant="outline" className="w-full justify-between px-3 py-2 border-border/40 bg-muted/30 text-sm text-foreground hover:border-border/60 hover:bg-muted/40">
+          <Button variant="outline" className="w-full justify-between px-3 py-2 border-border/40 bg-muted/30 text-sm text-foreground hover:border-border/50 hover:bg-accent/40">
             <span className="truncate">{selected?.name || value}</span><ChevronDown size={10} className="text-muted-foreground/40 flex-shrink-0" />
           </Button>
         </PopoverTrigger>
@@ -261,8 +262,8 @@ function AgentBasicSection({ resource }: { resource: ResourceItem }) {
     <div className="max-w-3xl space-y-5">
       <div>
         <div className="flex items-center justify-between gap-3 mb-1.5">
-          <label className="text-sm text-foreground/85">头像与名称</label>
-          <label className="text-sm text-foreground/85 w-[160px] flex-shrink-0">类型</label>
+          <label className="text-sm text-muted-foreground">头像与名称</label>
+          <label className="text-sm text-muted-foreground w-[160px] flex-shrink-0">类型</label>
         </div>
         <div className="flex items-center gap-3">
           <Popover>
@@ -293,7 +294,7 @@ function AgentBasicSection({ resource }: { resource: ResourceItem }) {
                   );
                 })}
               </div>
-              <div className="h-px bg-border/30 mt-1.5" />
+              <Separator opacity={30} className="mt-1.5" />
               {avatarTab === 'emoji' && (
                 <div className="grid grid-cols-8 gap-1 p-2 max-h-[260px] overflow-y-auto scrollbar-thin">
                   {AVATAR_OPTIONS.map(a => (
@@ -335,9 +336,9 @@ function AgentBasicSection({ resource }: { resource: ResourceItem }) {
             </PopoverContent>
           </Popover>
           <Input value={name} onChange={e => setName(e.target.value)} placeholder="智能体名称"
-            className="flex-1 min-w-0 h-11 px-3 border-border/40 bg-muted/30 text-sm text-foreground focus-visible:border-border/60 focus-visible:ring-0 shadow-none" />
+            className="flex-1 min-w-0 h-11 px-3 border-border/40 bg-muted/30 text-sm text-foreground focus-visible:border-border/50 focus-visible:ring-0 shadow-none" />
           <Select value={agentType} onValueChange={(v) => setAgentType(v as typeof agentType)}>
-            <SelectTrigger className="w-[160px] flex-shrink-0 !h-11 px-3 text-sm border-border/40 bg-muted/30 hover:bg-muted/40 rounded-xl">
+            <SelectTrigger className="w-[160px] flex-shrink-0 !h-11 px-3 text-sm border-border/40 bg-muted/30 hover:bg-accent/40 rounded-xl">
               <SelectValue placeholder="类型" />
             </SelectTrigger>
             <SelectContent>
@@ -350,8 +351,8 @@ function AgentBasicSection({ resource }: { resource: ResourceItem }) {
       </div>
       <div>
         <div className="flex items-center gap-2 mb-2.5">
-          <span className="text-sm text-foreground/85">模型配置</span>
-          <div className="flex-1 h-px bg-border/30" />
+          <span className="text-sm text-muted-foreground">模型配置</span>
+          <Separator opacity={30} className="flex-1" />
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-3 gap-y-3">
           <ModelSelector label="规划模型" value={planningModel} onChange={setPlanningModel} hint="负责任务拆解和决策" />
@@ -520,9 +521,9 @@ const statusConfig: Record<MCPServerStatus, { label: string; color: string }> = 
 function TagFilter({ tags, selected, onToggle }: { tags: readonly string[]; selected: string | null; onToggle: (t: string | null) => void }) {
   return (
     <div className="flex flex-wrap gap-1 mb-3">
-      <Button variant="ghost" size="xs" onClick={() => onToggle(null)} className={`px-2 py-[3px] rounded-full text-xs ${selected === null ? 'bg-accent/50 border border-border/30 text-foreground' : 'border border-transparent text-muted-foreground/40 hover:text-foreground hover:bg-accent/15'}`}>{"全部"}</Button>
+      <Button variant="ghost" size="xs" onClick={() => onToggle(null)} className={`px-2 py-[3px] rounded-full text-xs ${selected === null ? 'bg-accent/50 border border-border/30 text-foreground' : 'border border-transparent text-muted-foreground/40 hover:text-foreground hover:bg-accent/40'}`}>{"全部"}</Button>
       {tags.map(tag => (
-        <Button variant="ghost" size="xs" key={tag} onClick={() => onToggle(selected === tag ? null : tag)} className={`px-2 py-[3px] rounded-full text-xs ${selected === tag ? 'bg-accent/50 border border-border/30 text-foreground' : 'border border-transparent text-muted-foreground/40 hover:text-foreground hover:bg-accent/15'}`}>{tag}</Button>
+        <Button variant="ghost" size="xs" key={tag} onClick={() => onToggle(selected === tag ? null : tag)} className={`px-2 py-[3px] rounded-full text-xs ${selected === tag ? 'bg-accent/50 border border-border/30 text-foreground' : 'border border-transparent text-muted-foreground/40 hover:text-foreground hover:bg-accent/40'}`}>{tag}</Button>
       ))}
     </div>
   );
@@ -587,7 +588,7 @@ function AddResourcePanel({ activeTab, addedIds, onAdd, onClose, onExplore }: { 
         <Button variant="ghost" size="icon-xs" onClick={onClose} className="text-muted-foreground/40"><X size={11} /></Button>
       </div>
       <div className="px-2.5 pt-2 pb-1.5">
-        <SearchInput ref={searchRef} value={search} onChange={setSearch} placeholder={`搜索${tabLabel}...`} clearable wrapperClassName="flex items-center gap-1.5 px-2 py-[5px] rounded-lg bg-accent/15 border border-border/12" />
+        <SearchInput ref={searchRef} value={search} onChange={setSearch} placeholder={`搜索${tabLabel}...`} clearable wrapperClassName="flex items-center gap-1.5 px-2 py-[5px] rounded-lg bg-accent/15 border border-border/15" />
       </div>
       {/* Tag filter pills in add panel */}
       {(activeTab === 'mcp' || activeTab === 'skills') && (
@@ -603,12 +604,12 @@ function AddResourcePanel({ activeTab, addedIds, onAdd, onClose, onExplore }: { 
           Array.from(groupedCatalog.entries()).map(([cat, items]) => (
             <div key={cat} className="mb-1.5">
               <div className="text-xs text-muted-foreground/50 px-2 py-1 uppercase tracking-wider">{cat}</div>
-              {items.map((item: any) => (<div key={item.id} className="flex items-center gap-2 px-2 py-[6px] rounded-md hover:bg-accent/15 transition-colors group cursor-pointer" onClick={() => onAdd(item)}><div className="w-5 h-5 rounded bg-accent/15 flex items-center justify-center flex-shrink-0">{getIcon(item)}</div><div className="flex-1 min-w-0"><div className="text-sm text-foreground truncate">{item.name}</div><div className="text-xs text-muted-foreground/50 truncate">{item.desc}</div></div><Plus size={10} className="text-muted-foreground/40 group-hover:text-cherry-primary transition-colors flex-shrink-0" /></div>))}
+              {items.map((item: any) => (<div key={item.id} className="flex items-center gap-2 px-2 py-[6px] rounded-md hover:bg-accent/40 transition-colors group cursor-pointer" onClick={() => onAdd(item)}><div className="w-5 h-5 rounded bg-accent/15 flex items-center justify-center flex-shrink-0">{getIcon(item)}</div><div className="flex-1 min-w-0"><div className="text-sm text-foreground truncate">{item.name}</div><div className="text-xs text-muted-foreground/50 truncate">{item.desc}</div></div><Plus size={10} className="text-muted-foreground/40 group-hover:text-cherry-primary transition-colors flex-shrink-0" /></div>))}
             </div>
           ))
         ) : (
           <div className="space-y-0.5">
-            {catalog.map((item: any) => (<div key={item.id} className="flex items-center gap-2 px-2 py-[6px] rounded-md hover:bg-accent/15 transition-colors group cursor-pointer" onClick={() => onAdd(item)}><div className="w-5 h-5 rounded bg-accent/15 flex items-center justify-center flex-shrink-0">{getIcon(item)}</div><div className="flex-1 min-w-0"><div className="text-sm text-foreground truncate">{item.name}</div><div className="text-xs text-muted-foreground/50 truncate">{item.author ? `@${item.author}` : item.desc}</div></div><Plus size={10} className="text-muted-foreground/40 group-hover:text-cherry-primary transition-colors flex-shrink-0" /></div>))}
+            {catalog.map((item: any) => (<div key={item.id} className="flex items-center gap-2 px-2 py-[6px] rounded-md hover:bg-accent/40 transition-colors group cursor-pointer" onClick={() => onAdd(item)}><div className="w-5 h-5 rounded bg-accent/15 flex items-center justify-center flex-shrink-0">{getIcon(item)}</div><div className="flex-1 min-w-0"><div className="text-sm text-foreground truncate">{item.name}</div><div className="text-xs text-muted-foreground/50 truncate">{item.author ? `@${item.author}` : item.desc}</div></div><Plus size={10} className="text-muted-foreground/40 group-hover:text-cherry-primary transition-colors flex-shrink-0" /></div>))}
           </div>
         )}
       </div>
@@ -616,7 +617,7 @@ function AddResourcePanel({ activeTab, addedIds, onAdd, onClose, onExplore }: { 
         <AnimatePresence>
           {showManualForm && (
             <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.2 }} className="overflow-hidden">
-              <div className="mb-2 p-2.5 rounded-lg bg-accent/5 border border-border/10 space-y-2">
+              <div className="mb-2 p-2.5 rounded-lg bg-accent/5 border border-border/15 space-y-2">
                 <div className="text-xs text-muted-foreground/50 mb-1">{activeTab === 'mcp' ? '手动添加 MCP Server' : activeTab === 'skills' ? '手动添加 Skill' : '手动添加工具'}</div>
                 <Input value={manualName} onChange={e => setManualName(e.target.value)} placeholder="名称" className="w-full px-2 py-[5px] border-border/15 bg-background text-sm text-foreground focus-visible:border-border/30 focus-visible:ring-0 shadow-none placeholder:text-muted-foreground/60" />
                 {activeTab === 'mcp' && <Input value={manualUrl} onChange={e => setManualUrl(e.target.value)} placeholder="Server URL (如 https://... 或 npx @mcp/...)" className="w-full px-2 py-[5px] border-border/15 bg-background text-sm text-foreground font-mono focus-visible:border-border/30 focus-visible:ring-0 shadow-none placeholder:text-muted-foreground/60" />}
@@ -632,15 +633,15 @@ function AddResourcePanel({ activeTab, addedIds, onAdd, onClose, onExplore }: { 
                     }
                     setManualName(''); setManualUrl(''); setManualDesc(''); setShowManualForm(false);
                   }} className="flex-1 py-[5px] rounded-md bg-cherry-primary text-primary-foreground text-xs hover:bg-cherry-primary-dark disabled:opacity-30 disabled:cursor-not-allowed transition-all">{"确认添加"}</Button>
-                  <Button variant="ghost" size="xs" onClick={() => { setShowManualForm(false); setManualName(''); setManualUrl(''); setManualDesc(''); }} className="text-muted-foreground/50 hover:text-foreground hover:bg-accent/15">{"取消"}</Button>
+                  <Button variant="ghost" size="xs" onClick={() => { setShowManualForm(false); setManualName(''); setManualUrl(''); setManualDesc(''); }} className="text-muted-foreground/50 hover:text-foreground hover:bg-accent/40">{"取消"}</Button>
                 </div>
               </div>
             </motion.div>
           )}
         </AnimatePresence>
         <div className="space-y-0.5">
-          <Button variant="ghost" size="xs" onClick={onExplore} className="w-full justify-start gap-2 text-muted-foreground/60 hover:text-foreground hover:bg-accent/15"><ExternalLink size={9} className="text-muted-foreground/40" /><span>{"去探索浏览"}</span></Button>
-          <Button variant="ghost" size="xs" onClick={() => setShowManualForm(!showManualForm)} className={`w-full justify-start gap-2 ${showManualForm ? 'text-foreground bg-accent/15' : 'text-muted-foreground/60 hover:text-foreground hover:bg-accent/15'}`}><Plus size={9} className="text-muted-foreground/40" /><span>{"手动添加"}</span></Button>
+          <Button variant="ghost" size="xs" onClick={onExplore} className="w-full justify-start gap-2 text-muted-foreground/60 hover:text-foreground hover:bg-accent/40"><ExternalLink size={9} className="text-muted-foreground/40" /><span>{"去探索浏览"}</span></Button>
+          <Button variant="ghost" size="xs" onClick={() => setShowManualForm(!showManualForm)} className={`w-full justify-start gap-2 ${showManualForm ? 'text-foreground bg-accent/15' : 'text-muted-foreground/60 hover:text-foreground hover:bg-accent/40'}`}><Plus size={9} className="text-muted-foreground/40" /><span>{"手动添加"}</span></Button>
         </div>
       </div>
     </div>
@@ -661,9 +662,9 @@ function MCPServerCard({ server, onToggleConnect, onRemove, onToggleTool, onTogg
   const allEnabled = enabledCount === server.tools.length;
 
   return (
-    <div className="rounded-xl border border-border/12 bg-accent/15 overflow-hidden transition-all">
+    <div className="rounded-xl border border-border/15 bg-accent/15 overflow-hidden transition-all">
       {/* Header row */}
-      <div className="flex items-center gap-2.5 px-3 py-2.5 cursor-pointer hover:bg-accent/25 transition-colors" onClick={() => isConnected && setExpanded(!expanded)}>
+      <div className="flex items-center gap-2.5 px-3 py-2.5 cursor-pointer hover:bg-accent/40 transition-colors" onClick={() => isConnected && setExpanded(!expanded)}>
         <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${isConnected ? 'bg-cherry-primary' : server.status === 'error' ? 'bg-destructive' : 'bg-muted-foreground/20'}`} />
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
@@ -699,7 +700,7 @@ function MCPServerCard({ server, onToggleConnect, onRemove, onToggleTool, onTogg
               </div>
               <div className="space-y-0.5 max-h-[180px] overflow-y-auto scrollbar-thin-xs">
                 {server.tools.map(tool => (
-                  <div key={tool.id} className={`flex items-center gap-2.5 px-1.5 py-[5px] rounded-md cursor-pointer transition-colors ${tool.enabled ? 'hover:bg-accent/15' : 'hover:bg-accent/15'}`} onClick={() => onToggleTool(tool.id)}>
+                  <div key={tool.id} className={`flex items-center gap-2.5 px-1.5 py-[5px] rounded-md cursor-pointer transition-colors ${tool.enabled ? 'hover:bg-accent/40' : 'hover:bg-accent/40'}`} onClick={() => onToggleTool(tool.id)}>
                     <Checkbox checked={tool.enabled} className="flex-shrink-0" />
                     <span className={`text-sm font-mono truncate flex-1 min-w-0 ${tool.enabled ? 'text-foreground' : 'text-muted-foreground/50'}`}>{tool.name}</span>
                     <span className="text-xs text-muted-foreground/50 truncate max-w-[100px] flex-shrink-0">{tool.desc}</span>
@@ -826,7 +827,7 @@ function ToolchainSection({ onExplore, controlledTab }: { onExplore: () => void;
             <PopoverTrigger asChild>
               <Button variant="ghost" size="xs"
                 className={`gap-1 h-7 px-2.5 rounded-md text-xs border border-border/30 ${
-                  showAddPanel ? 'text-foreground bg-accent/25 border-border/50' : 'text-muted-foreground/70 hover:text-foreground hover:bg-accent/15'
+                  showAddPanel ? 'text-foreground bg-accent/25 border-border/50' : 'text-muted-foreground/80 hover:text-foreground hover:bg-accent/40'
                 }`}>
                 <Plus size={11} />
                 <span>添加</span>
@@ -837,7 +838,7 @@ function ToolchainSection({ onExplore, controlledTab }: { onExplore: () => void;
             </PopoverContent>
           </Popover>
           <Button variant="ghost" size="xs" onClick={onExplore}
-            className="gap-1 h-7 px-2.5 rounded-md text-xs border border-border/30 text-muted-foreground/70 hover:text-foreground hover:bg-accent/15">
+            className="gap-1 h-7 px-2.5 rounded-md text-xs border border-border/30 text-muted-foreground/80 hover:text-foreground hover:bg-accent/40">
             <ExternalLink size={11} />
             <span>去市场浏览</span>
           </Button>
@@ -872,7 +873,7 @@ function ToolchainSection({ onExplore, controlledTab }: { onExplore: () => void;
                     {filteredTools.map(tool => { const Icon = tool.icon; return (
                       <div key={tool.id}
                         onClick={() => toggleTool(tool.id)}
-                        className={`flex items-center gap-3 px-3 py-2.5 rounded-xl border border-border/12 bg-accent/15 hover:bg-accent/25 transition-all cursor-pointer ${tool.enabled ? '' : 'opacity-55'}`}>
+                        className={`flex items-center gap-3 px-3 py-2.5 rounded-xl border border-border/15 bg-accent/15 hover:bg-accent/40 transition-all cursor-pointer ${tool.enabled ? '' : 'opacity-55'}`}>
                         <Icon size={15} strokeWidth={1.5} className={tool.enabled ? 'text-muted-foreground flex-shrink-0' : 'text-muted-foreground/40 flex-shrink-0'} />
                         <div className="flex-1 min-w-0">
                           <div className="text-sm text-foreground truncate">{tool.name}</div>
@@ -913,7 +914,7 @@ function ToolchainSection({ onExplore, controlledTab }: { onExplore: () => void;
                     {filteredIntegrations.map(integ => { const Icon = integ.icon; return (
                       <div key={integ.id}
                         onClick={() => toggleIntegration(integ.id)}
-                        className={`flex items-center gap-3 px-3 py-2.5 rounded-xl border border-border/12 bg-accent/15 hover:bg-accent/25 transition-all cursor-pointer ${integ.enabled ? '' : 'opacity-55'}`}>
+                        className={`flex items-center gap-3 px-3 py-2.5 rounded-xl border border-border/15 bg-accent/15 hover:bg-accent/40 transition-all cursor-pointer ${integ.enabled ? '' : 'opacity-55'}`}>
                         <Icon size={15} strokeWidth={1.5} className={integ.enabled ? `${integ.tintCls} flex-shrink-0` : 'text-muted-foreground/40 flex-shrink-0'} />
                         <div className="flex-1 min-w-0">
                           <div className="text-sm text-foreground truncate">{integ.name}</div>
@@ -935,7 +936,7 @@ function ToolchainSection({ onExplore, controlledTab }: { onExplore: () => void;
                     {filteredSkills.map(skill => { const Icon = skill.icon; return (
                       <div key={skill.id}
                         onClick={() => toggleSkill(skill.id)}
-                        className={`flex items-center gap-3 px-3 py-2.5 rounded-xl border border-border/12 bg-accent/15 hover:bg-accent/25 transition-all cursor-pointer ${skill.enabled ? '' : 'opacity-55'}`}>
+                        className={`flex items-center gap-3 px-3 py-2.5 rounded-xl border border-border/15 bg-accent/15 hover:bg-accent/40 transition-all cursor-pointer ${skill.enabled ? '' : 'opacity-55'}`}>
                         <Icon size={15} strokeWidth={1.5} className={skill.enabled ? 'text-muted-foreground flex-shrink-0' : 'text-muted-foreground/40 flex-shrink-0'} />
                         <div className="flex-1 min-w-0">
                           <div className="text-sm text-foreground truncate">{skill.name}</div>
@@ -1012,17 +1013,17 @@ function KnowledgeBaseSection() {
       {/* Linked knowledge bases */}
       <div>
         <div className="flex items-center justify-between mb-2">
-          <label className="text-sm text-foreground/85">已关联知识库</label>
+          <label className="text-sm text-muted-foreground">已关联知识库</label>
           <Popover open={showAddPanel} onOpenChange={(v) => { setShowAddPanel(v); if (v) { setAddSearch(''); setAddGroupFilter('全部'); } }}>
             <PopoverTrigger asChild>
               <Button variant="outline" size="xs"
-                className="flex items-center gap-1 h-7 px-2.5 rounded-md text-xs text-muted-foreground/70 hover:text-foreground hover:bg-accent/15 border border-border/30">
+                className="flex items-center gap-1 h-7 px-2.5 rounded-md text-xs text-muted-foreground/80 hover:text-foreground hover:bg-accent/40 border border-border/30">
                 <Plus size={11} /><span>添加知识库</span>
               </Button>
             </PopoverTrigger>
             <PopoverContent align="end" className="p-0 w-[340px] overflow-hidden">
               <div className="px-3 pt-3 pb-2">
-                <SearchInput value={addSearch} onChange={setAddSearch} placeholder="搜索知识库..." clearable wrapperClassName="flex items-center gap-1.5 px-2.5 py-[6px] rounded-lg bg-accent/15 border border-border/12" autoFocus />
+                <SearchInput value={addSearch} onChange={setAddSearch} placeholder="搜索知识库..." clearable wrapperClassName="flex items-center gap-1.5 px-2.5 py-[6px] rounded-lg bg-accent/15 border border-border/15" autoFocus />
               </div>
               <div className="px-3 pb-2 flex flex-wrap gap-1">
                 {KB_GROUPS.map(g => (
@@ -1037,7 +1038,7 @@ function KnowledgeBaseSection() {
                   <div className="space-y-0.5">
                     {filteredCatalog.map(kb => (
                       <div key={kb.id} onClick={() => addKB(kb)}
-                        className="flex items-center gap-2.5 px-2.5 py-[7px] rounded-lg hover:bg-accent/15 transition-colors cursor-pointer group">
+                        className="flex items-center gap-2.5 px-2.5 py-[7px] rounded-lg hover:bg-accent/40 transition-colors cursor-pointer group">
                         <div className={`w-6 h-6 rounded ${kb.iconColor} flex items-center justify-center flex-shrink-0`}>
                           <FolderOpen size={11} className="text-white/90" />
                         </div>
@@ -1065,7 +1066,7 @@ function KnowledgeBaseSection() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
             {linkedKBs.map(kb => (
               <motion.div key={kb.id} layout initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}
-                className="flex items-center gap-3 px-4 py-3 rounded-xl border border-border/12 bg-accent/15 hover:bg-accent/25 transition-all group">
+                className="flex items-center gap-3 px-4 py-3 rounded-xl border border-border/15 bg-accent/15 hover:bg-accent/40 transition-all group">
                 <div className={`w-8 h-8 rounded-lg ${kb.iconColor} flex items-center justify-center flex-shrink-0`}>
                   <FolderOpen size={14} className="text-white/90" />
                 </div>
@@ -1088,7 +1089,7 @@ function KnowledgeBaseSection() {
           knowledge base itself, configured in 资源库 → 知识库. */}
       <div className="flex items-center justify-between gap-3 py-3 border-t border-border/15">
         <div className="flex items-center gap-1.5 min-w-0">
-          <label className="text-sm text-foreground/85">知识库识别</label>
+          <label className="text-sm text-muted-foreground">知识库识别</label>
           <SimpleTooltip
             content="开启后助手自动判断是否需要检索已引用的知识库；关闭则每条消息都强制检索。"
             side="top"
@@ -1119,7 +1120,7 @@ function AgentAdvancedSection() {
   return (
     <div className="max-w-3xl space-y-5">
       <div>
-        <label className="text-sm text-foreground/85 mb-1.5 block">{"最大执行轮次"} <span className="text-muted-foreground/50 ml-1">{maxRounds}</span></label>
+        <label className="text-sm text-muted-foreground mb-1.5 block">{"最大执行轮次"} <span className="text-muted-foreground/50 ml-1">{maxRounds}</span></label>
         <Slider min={1} max={50} step={1} value={[maxRounds]} onValueChange={([v]) => setMaxRounds(v)} />
         <div className="flex justify-between mt-1"><span className="text-xs text-muted-foreground/50">1</span><span className="text-xs text-muted-foreground/50">50</span></div>
         <p className="text-xs text-muted-foreground/50 mt-2">{"每次会话中智能体与工具交互的最大轮次数。达到上限后将停止执行并返回当前结果。"}</p>
@@ -1129,5 +1130,5 @@ function AgentAdvancedSection() {
 }
 
 function FieldGroup({ label, children }: { label: React.ReactNode; children: React.ReactNode }) {
-  return (<div><label className="text-sm text-foreground/85 mb-1.5 block">{label}</label>{children}</div>);
+  return (<div><label className="text-sm text-muted-foreground mb-1.5 block">{label}</label>{children}</div>);
 }

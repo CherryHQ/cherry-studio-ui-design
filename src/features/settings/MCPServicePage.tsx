@@ -11,6 +11,7 @@ import {
   BrandLogo, SearchInput, EmptyState, Typography,
   RadioGroup, RadioGroupItem,
 } from '@cherry-studio/ui';
+import { FALLBACK_BRAND_COLOR } from '@/app/config/brand-colors';
 
 // ===========================
 // Types
@@ -1128,7 +1129,7 @@ export function MCPServicePage() {
                     <div className="absolute inset-0 rounded-xl border border-cherry-active-border pointer-events-none" />
                   )}
                   <div className="flex items-center gap-2 min-w-0 flex-1">
-                    <span className="flex-shrink-0"><BrandLogo id={provider.id} fallbackLetter={provider.icon} fallbackColor="#6b7280" size={15} /></span>
+                    <span className="flex-shrink-0"><BrandLogo id={provider.id} fallbackLetter={provider.icon} fallbackColor={FALLBACK_BRAND_COLOR} size={15} /></span>
                     <span className={`text-sm truncate ${isSelected ? 'text-foreground font-medium' : 'text-muted-foreground'}`}>{provider.name}</span>
                   </div>
                   <ChevronRight size={9} className={`flex-shrink-0 ${isSelected ? 'text-muted-foreground/40' : 'text-muted-foreground/50'}`} />

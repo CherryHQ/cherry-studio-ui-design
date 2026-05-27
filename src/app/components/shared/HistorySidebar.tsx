@@ -113,7 +113,7 @@ function ItemContextMenu({ x, y, onClose, onDelete, onPin, onEdit, onGenerate, o
           variant="ghost"
           size="inline"
           onClick={onEdit}
-          className="w-full justify-start gap-1.5 px-2 py-[3px] text-foreground hover:bg-accent/15"
+          className="w-full justify-start gap-1.5 px-2 py-[3px] text-foreground hover:bg-accent/40"
         >
           <Pencil size={10} />
           <span>编辑</span>
@@ -122,7 +122,7 @@ function ItemContextMenu({ x, y, onClose, onDelete, onPin, onEdit, onGenerate, o
           variant="ghost"
           size="inline"
           onClick={onGenerate}
-          className="w-full justify-start gap-1.5 px-2 py-[3px] text-foreground hover:bg-accent/15"
+          className="w-full justify-start gap-1.5 px-2 py-[3px] text-foreground hover:bg-accent/40"
         >
           <Sparkles size={10} />
           <span>生成话题名</span>
@@ -131,7 +131,7 @@ function ItemContextMenu({ x, y, onClose, onDelete, onPin, onEdit, onGenerate, o
           <Button
             variant="ghost"
             size="inline"
-            className="w-full justify-start gap-1.5 px-2 py-[3px] text-foreground hover:bg-accent/15"
+            className="w-full justify-start gap-1.5 px-2 py-[3px] text-foreground hover:bg-accent/40"
           >
             <Tag size={10} />
             <span>标签</span>
@@ -147,7 +147,7 @@ function ItemContextMenu({ x, y, onClose, onDelete, onPin, onEdit, onGenerate, o
                     variant="ghost"
                     size="inline"
                     onClick={() => onTag(tag)}
-                    className={`w-full justify-start gap-1.5 px-2 py-[3px] text-foreground hover:bg-accent/15 ${isSelected ? 'bg-accent/20' : ''}`}
+                    className={`w-full justify-start gap-1.5 px-2 py-[3px] text-foreground hover:bg-accent/40 ${isSelected ? 'bg-accent/20' : ''}`}
                   >
                     <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${TAG_COLORS[tag]?.split(' ')[0] || 'bg-muted-foreground/30'}`} />
                     <span className="text-xs">{tag}</span>
@@ -162,7 +162,7 @@ function ItemContextMenu({ x, y, onClose, onDelete, onPin, onEdit, onGenerate, o
           variant="ghost"
           size="inline"
           onClick={onPin}
-          className="w-full justify-start gap-1.5 px-2 py-[3px] text-foreground hover:bg-accent/15"
+          className="w-full justify-start gap-1.5 px-2 py-[3px] text-foreground hover:bg-accent/40"
         >
           <Pin size={10} className={isPinned ? '' : '-rotate-45'} />
           <span>{isPinned ? '取消置顶' : '置顶'}</span>
@@ -171,7 +171,7 @@ function ItemContextMenu({ x, y, onClose, onDelete, onPin, onEdit, onGenerate, o
           variant="ghost"
           size="inline"
           onClick={onArchive}
-          className="w-full justify-start gap-1.5 px-2 py-[3px] text-foreground hover:bg-accent/15"
+          className="w-full justify-start gap-1.5 px-2 py-[3px] text-foreground hover:bg-accent/40"
         >
           <Archive size={10} />
           <span>归档</span>
@@ -292,7 +292,7 @@ function SidebarItem<T extends HistoryItem>({ item, isActive, isEditing, onClick
         className={`flex-1 min-w-0 px-2.5 py-[5px] font-normal rounded-md justify-start gap-1.5 ${
           isActive
             ? 'bg-accent/25 text-foreground'
-            : 'text-foreground hover:bg-accent/15 hover:text-foreground'
+            : 'text-foreground hover:bg-accent/40 hover:text-foreground'
         }`}
       >
         <span className="text-sm truncate flex-1 text-left">
@@ -347,7 +347,7 @@ function QuickStartPopover({
       <PopoverTrigger asChild>
         <Button variant="ghost" size="icon-xs"
           title={`新建${entityLabel}`}
-          className="p-1 w-auto h-auto text-muted-foreground hover:text-foreground hover:bg-accent/15">
+          className="p-1 w-auto h-auto text-muted-foreground hover:text-foreground hover:bg-accent/40">
           <Plus size={11} />
         </Button>
       </PopoverTrigger>
@@ -364,7 +364,7 @@ function QuickStartPopover({
             />
           </div>
         </div>
-        <div className="px-3 pb-1 text-xs text-muted-foreground/55">选择智能体开启对话</div>
+        <div className="px-3 pb-1 text-xs text-muted-foreground/50">选择智能体开启对话</div>
         <div className="max-h-[300px] overflow-y-auto scrollbar-thin px-1.5 pb-1">
           {filtered.length === 0 ? (
             <div className="px-3 py-6 text-center text-sm text-muted-foreground/40">无匹配结果</div>
@@ -373,7 +373,7 @@ function QuickStartPopover({
               key={opt.id}
               type="button"
               onClick={() => { onSelect(opt.id); setOpen(false); }}
-              className="group w-full flex items-center gap-2.5 px-2.5 py-2 mb-0.5 text-left rounded-lg cursor-pointer text-foreground/80 hover:bg-accent/30 transition-colors"
+              className="group w-full flex items-center gap-2.5 px-2.5 py-2 mb-0.5 text-left rounded-lg cursor-pointer text-muted-foreground/80 hover:bg-accent/40 transition-colors"
             >
               {opt.avatar && <span className="text-base leading-none flex-shrink-0">{opt.avatar}</span>}
               <span className="flex-1 min-w-0">
@@ -496,7 +496,7 @@ function GroupSection<T extends HistoryItem>({
         {onRenameGroup && !isEditing && (
           <Button variant="ghost" size="icon-xs"
             onClick={(e) => { e.stopPropagation(); setEditValue(groupLabel); setIsEditing(true); }}
-            className="p-0.5 w-auto h-auto text-muted-foreground/30 hover:text-foreground hover:bg-accent/15 opacity-0 group-hover/grp:opacity-100 transition-opacity"
+            className="p-0.5 w-auto h-auto text-muted-foreground/30 hover:text-foreground hover:bg-accent/40 opacity-0 group-hover/grp:opacity-100 transition-opacity"
             title="重命名"
           >
             <Pencil size={9} />
@@ -505,7 +505,7 @@ function GroupSection<T extends HistoryItem>({
         {!hideNewButton && (
           <Button variant="ghost" size="icon-xs"
             onClick={(e) => { e.stopPropagation(); onNewItem(); }}
-            className="p-0.5 w-auto h-auto text-muted-foreground/40 hover:text-foreground hover:bg-accent/15 opacity-0 group-hover/grp:opacity-100 transition-opacity"
+            className="p-0.5 w-auto h-auto text-muted-foreground/40 hover:text-foreground hover:bg-accent/40 opacity-0 group-hover/grp:opacity-100 transition-opacity"
             title="新建"
           >
             <Plus size={10} />
@@ -769,7 +769,7 @@ export function HistorySidebar<T extends HistoryItem>({
               <Popover>
                 <PopoverTrigger asChild>
                   <Button variant="ghost" size="icon-xs"
-                    className="p-1 w-auto h-auto text-muted-foreground hover:text-foreground hover:bg-accent/15">
+                    className="p-1 w-auto h-auto text-muted-foreground hover:text-foreground hover:bg-accent/40">
                     <ListFilter size={11} />
                   </Button>
                 </PopoverTrigger>
@@ -789,7 +789,7 @@ export function HistorySidebar<T extends HistoryItem>({
             )}
             <Tooltip content="展开全部" side="bottom">
               <Button variant="ghost" size="icon-xs" onClick={onExpand}
-                className="p-1 w-auto h-auto text-muted-foreground/40 hover:text-foreground hover:bg-accent/15">
+                className="p-1 w-auto h-auto text-muted-foreground/40 hover:text-foreground hover:bg-accent/40">
                 <Maximize2 size={11} />
               </Button>
             </Tooltip>
@@ -910,7 +910,7 @@ export function HistorySidebar<T extends HistoryItem>({
                 <Button size="inline"
                   variant="ghost"
                   onClick={() => onSelectItem(item.id)}
-                  className="flex-1 min-w-0 px-2.5 py-[5px] font-normal rounded-md justify-start gap-1.5 text-muted-foreground hover:bg-accent/15 hover:text-foreground"
+                  className="flex-1 min-w-0 px-2.5 py-[5px] font-normal rounded-md justify-start gap-1.5 text-muted-foreground hover:bg-accent/40 hover:text-foreground"
                 >
                   <span className="text-sm truncate flex-1 text-left">{item.title}</span>
                 </Button>

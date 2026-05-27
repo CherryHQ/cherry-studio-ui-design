@@ -165,7 +165,7 @@ export function DataMigrationOverlay({ onComplete }: { onComplete: () => void })
                 <div key={step.id} className="px-4 py-2.5 flex items-center justify-between">
                   <div className="flex items-center gap-2.5">
                     <span className="text-muted-foreground/40">{step.icon}</span>
-                    <span className="text-sm text-foreground/80">{step.label}</span>
+                    <span className="text-sm text-muted-foreground/80">{step.label}</span>
                   </div>
                   <span className="text-xs text-muted-foreground/50 tabular-nums">{step.count!.total} 项</span>
                 </div>
@@ -231,7 +231,7 @@ export function DataMigrationOverlay({ onComplete }: { onComplete: () => void })
                     step.status === 'completed' ? 'bg-success/10 text-success' :
                     step.status === 'running' ? 'bg-primary/10 text-primary' :
                     step.status === 'error' ? 'bg-destructive/10 text-destructive' :
-                    'bg-muted/20 text-muted-foreground/25'
+                    'bg-muted/20 text-muted-foreground/30'
                   }`}>
                     {step.status === 'running' ? (
                       <Loader2 size={13} className="animate-spin" />
@@ -249,16 +249,16 @@ export function DataMigrationOverlay({ onComplete }: { onComplete: () => void })
                       step.status === 'completed' || step.status === 'running' ? 'text-foreground' : 'text-muted-foreground/40'
                     }`}>{step.label}</span>
                     {step.status === 'running' && step.detail && (
-                      <p className="text-[11px] text-muted-foreground/40 mt-0.5">{step.detail}</p>
+                      <p className="text-xs text-muted-foreground/40 mt-0.5">{step.detail}</p>
                     )}
                   </div>
 
                   <div className="flex items-center gap-2 flex-shrink-0">
                     {step.count && step.count.total > 0 && (
-                      <span className={`text-[11px] tabular-nums ${
+                      <span className={`text-xs tabular-nums ${
                         step.status === 'completed' ? 'text-success/50' :
                         step.status === 'running' ? 'text-muted-foreground/50' :
-                        'text-muted-foreground/25'
+                        'text-muted-foreground/30'
                       }`}>
                         {step.status === 'pending' ? step.count.total : `${step.count.done}/${step.count.total}`}
                       </span>
@@ -285,7 +285,7 @@ export function DataMigrationOverlay({ onComplete }: { onComplete: () => void })
                 <button
                   type="button"
                   onClick={() => setShowLog((v: boolean) => !v)}
-                  className="w-full px-4 py-2 flex items-center justify-between text-xs text-muted-foreground/40 hover:bg-muted/10 transition-colors"
+                  className="w-full px-4 py-2 flex items-center justify-between text-xs text-muted-foreground/40 hover:bg-accent/40 transition-colors"
                 >
                   <span>日志 ({logs.length})</span>
                   {showLog ? <ChevronUp size={11} /> : <ChevronDown size={11} />}
@@ -299,7 +299,7 @@ export function DataMigrationOverlay({ onComplete }: { onComplete: () => void })
                       className="overflow-hidden"
                     >
                       <div className="px-4 pb-3 max-h-[120px] overflow-y-auto scrollbar-thin-xs">
-                        <div className="font-mono text-[10px] text-muted-foreground/35 space-y-0.5">
+                        <div className="font-mono text-[10px] text-muted-foreground/40 space-y-0.5">
                           {logs.map((log: string, i: number) => (
                             <p key={i}>{log}</p>
                           ))}

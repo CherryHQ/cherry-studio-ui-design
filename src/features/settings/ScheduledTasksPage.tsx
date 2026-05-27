@@ -115,7 +115,7 @@ function DropdownSelect({ value, onChange, options, placeholder }: {
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <button
-          className="flex items-center w-full px-2.5 py-[5px] bg-muted/30 rounded-lg border border-section-border text-left hover:bg-muted/50 transition-colors"
+          className="flex items-center w-full px-2.5 py-[5px] bg-muted/30 rounded-lg border border-section-border text-left hover:bg-accent/40 transition-colors"
           type="button"
         >
           <span className={`flex-1 text-sm truncate ${selected ? 'text-foreground' : 'text-muted-foreground/50'}`}>
@@ -334,7 +334,7 @@ function TaskDetail({ task, onDelete, onUpdate }: {
               <span />
             </div>
             {filteredRuns.map(run => (
-              <div key={run.id} className="grid grid-cols-[100px_60px_60px_1fr_28px] gap-2 px-3 py-2 border-b border-section-border last:border-b-0 items-start text-xs hover:bg-muted/20 transition-colors">
+              <div key={run.id} className="grid grid-cols-[100px_60px_60px_1fr_28px] gap-2 px-3 py-2 border-b border-section-border last:border-b-0 items-start text-xs hover:bg-accent/40 transition-colors">
                 <span className="text-muted-foreground">{run.runTime}</span>
                 <span className="text-muted-foreground">{run.duration}</span>
                 <span><RunStatusBadge status={run.status} /></span>

@@ -9,8 +9,6 @@ import type { WorkflowStep } from '@/app/types/chat';
 import { AGENT_MODELS, MODEL_CAPABILITY_LABELS } from '@/app/config/models';
 
 // Backward-compatible aliases
-type ChatMessage = AgentChatMessage;
-type SessionData = AgentSessionData;
 
 // Re-export model data for backward compatibility
 export const AGENT_MODEL_CAPABILITY_LABELS = MODEL_CAPABILITY_LABELS;
@@ -639,7 +637,7 @@ const SESSION_1_STEPS: WorkflowStep[] = [
   { id: 's10', icon: 'finish', label: '完成', status: 'pending' },
 ];
 
-const SESSION_1_MESSAGES: ChatMessage[] = [
+const SESSION_1_MESSAGES: AgentChatMessage[] = [
   { id: 'm1', role: 'user', content: '帮我初始化一个 React 项目，使用 Vite + TypeScript + Tailwind CSS。', timestamp: '14:23' },
   { id: 'm2', role: 'agent', thinking: '用户需要一个使用 Vite + TypeScript + Tailwind CSS 的 React 项目。我将使用 Vite 的 React-TS 模板搭建脚手架，然后添加 Tailwind CSS。', toolCall: { name: 'npm create vite@latest -- --template react-ts', status: 'done', duration: '3.2s' }, content: '✓ Project created at ./my-react-app\n  - Template: react-ts\n  - Package manager: npm\n\nDone. Now run:\n  cd my-react-app\n  npm install\n  npm run dev', timestamp: '14:23' },
   { id: 'm3', role: 'agent', generativeUI: { type: 'selection', prompt: '请选择要使用的 CSS 框架：', items: [{ label: 'Tailwind CSS', description: '原子化 CSS 框架' }, { label: 'UnoCSS', description: '原子化 CSS 引擎' }, { label: 'Vanilla CSS', description: '无框架' }], resolved: true, resolvedValue: 'Tailwind CSS' }, timestamp: '14:23' },
@@ -757,7 +755,7 @@ const SESSION_2_STEPS: WorkflowStep[] = [
   { id: 'r6', icon: 'finish', label: '报告完成', status: 'done' },
 ];
 
-const SESSION_2_MESSAGES: ChatMessage[] = [
+const SESSION_2_MESSAGES: AgentChatMessage[] = [
   { id: 'r-m1', role: 'user', content: '帮我做一个 AI 应用开发框架的技术选型调研，需要对比主流框架，输出详细报告。', timestamp: '10:15' },
   { id: 'r-m2', role: 'agent', thinking: '用户需要一份全面的 AI 框架技术选型报告。我需要调研 LangChain, LlamaIndex, Semantic Kernel, Haystack, AutoGen, CrewAI 这些主流框架，从功能、性能、生态、成本等维度进行对比分析。', content: '明白！我将对当前主流的 AI 应用开发框架进行系统调研。调研范围包括 LangChain、LlamaIndex、Semantic Kernel、Haystack、AutoGen 和 CrewAI。', timestamp: '10:15' },
   { id: 'r-m3', role: 'agent', generativeUI: { type: 'buttons', prompt: '调研报告需要包含哪些内容？（可多选后告知）', options: [{ label: '功能对比矩阵' }, { label: '性能基准测试' }, { label: '成本分析' }, { label: '团队适配建议' }], resolved: true, resolvedValue: '功能对比矩阵' }, timestamp: '10:16' },
@@ -926,7 +924,7 @@ const SESSION_3_STEPS: WorkflowStep[] = [
   { id: 'd7', icon: 'finish', label: '看板完成', status: 'done' },
 ];
 
-const SESSION_3_MESSAGES: ChatMessage[] = [
+const SESSION_3_MESSAGES: AgentChatMessage[] = [
   { id: 'd-m1', role: 'user', content: '构建一个数据看板 Dashboard，需要有统计卡片、图表和数据表格。风格参考 Vercel/Linear 那种简洁设计。', timestamp: '09:30' },
   { id: 'd-m2', role: 'agent', thinking: 'User wants a clean dashboard. I will use Recharts for charts, create a sidebar layout similar to Vercel. Need StatCard, AreaChart, BarChart, DataTable, and ActivityFeed components.', content: '收到！我会按照 Vercel/Linear 风格构建数据看板，包含：\n\n• 4 个统计卡片（收入、用户、转化率、会话时长）\n• 面积图展示收入趋势\n• 柱状图展示流量来源\n• 数据表格展示最近订单\n• 侧边栏导航', timestamp: '09:30' },
   { id: 'd-m3', role: 'agent', generativeUI: { type: 'selection', prompt: '请选择图表库：', items: [{ label: 'Recharts', description: 'React 原生，轻量' }, { label: 'Chart.js', description: '功能全面' }, { label: 'D3.js', description: '最灵活，学习曲线高' }, { label: 'Nivo', description: '基于 D3，开箱即用' }], resolved: true, resolvedValue: 'Recharts' }, timestamp: '09:31' },
@@ -1057,7 +1055,7 @@ const SESSION_4_STEPS: WorkflowStep[] = [
   { id: 'a8', icon: 'finish', label: '认证系统完成', status: 'done' },
 ];
 
-const SESSION_4_MESSAGES: ChatMessage[] = [
+const SESSION_4_MESSAGES: AgentChatMessage[] = [
   { id: 'a-m1', role: 'user', content: '帮我实现一套完整的用户认证系统，需要支持 JWT 和 Google OAuth 登录。后端用 Express + Prisma + PostgreSQL。', timestamp: '16:00' },
   { id: 'a-m2', role: 'agent', thinking: 'Full auth system with JWT (access + refresh tokens), Google OAuth via Passport.js, Prisma ORM with PostgreSQL. Need to set up middleware, routes, token management.', content: '好的，我将构建一套完整的认证系统，包含：\n\n• JWT access token (15min) + refresh token (7d) 双令牌机制\n• Google OAuth 2.0 社交登录\n• Prisma ORM + PostgreSQL 数据层\n• 角色权限中间件 (RBAC)', timestamp: '16:00' },
   { id: 'a-m3', role: 'agent', toolCall: { name: 'npm install jsonwebtoken bcryptjs passport passport-google-oauth20', status: 'done', duration: '6.1s' }, timestamp: '16:01' },
@@ -1131,7 +1129,7 @@ const SESSION_6_STEPS: WorkflowStep[] = [
   { id: 'p6', icon: 'finish', label: '报告已交付', status: 'done' },
 ];
 
-const SESSION_6_MESSAGES: ChatMessage[] = [
+const SESSION_6_MESSAGES: AgentChatMessage[] = [
   { id: 'p-m1', role: 'user', content: '我们的 API 最近响应很慢，P99 延迟到了 2.4 秒。帮我分析一下瓶颈在哪里，给出优化方案。', timestamp: '15:00' },
   { id: 'p-m2', role: 'agent', thinking: 'API performance issue. Need to analyze: 1) Database queries 2) Caching strategy 3) Application code 4) Network/infrastructure. Will check monitoring data and run targeted load tests.', content: '了解，我来对 API 进行全面的性能诊断。我会从数据库、缓存、应用层三个维度分析。', timestamp: '15:00' },
   { id: 'p-m3', role: 'agent', toolCall: { name: 'fetch APM monitoring data (last 30 days)', status: 'done', duration: '8.2s' }, timestamp: '15:01' },
@@ -1158,7 +1156,7 @@ const SESSION_6_PREVIEW = '<!DOCTYPE html>\n<html><head><meta charset="utf-8"><s
 // Showcase Sessions — rich artifact types (PDF / Markdown / Slides)
 // ===========================
 
-const SESSION_PDF_MESSAGES: ChatMessage[] = [
+const SESSION_PDF_MESSAGES: AgentChatMessage[] = [
   { id: 'pdf-m1', role: 'user', content: '帮我整理 Q4 用户行为分析报告，要 PDF 格式，包含数据图表和关键洞察。', timestamp: '15:10' },
   { id: 'pdf-m2', role: 'agent', thinking: '需要从分析数据中提炼关键指标，按照标准报告格式生成 PDF：执行摘要、数据图表、关键发现、建议方案。', content: '我会生成一份结构化的 Q4 用户行为分析报告（PDF 格式），包含执行摘要、数据图表、关键发现和行动建议四个部分。', timestamp: '15:10' },
   { id: 'pdf-m3', role: 'agent', toolCall: { name: 'query analytics: Q4 user behavior data', status: 'done', duration: '3.4s' }, content: '数据已提取：\n• 月活跃用户 (MAU): 124,800\n• 用户留存率：D1 68%, D7 42%, D30 28%\n• 平均会话时长：4分32秒\n• 转化漏斗：访问 → 注册 → 付费 = 100% → 18% → 3.2%\n• 内容偏好 TOP3: 教程类(42%), 案例分析(28%), 行业动态(18%)', timestamp: '15:11' },
@@ -1305,7 +1303,7 @@ const SESSION_PDF_PREVIEW = `<!DOCTYPE html>
 
 </body></html>`;
 
-const SESSION_MD_MESSAGES: ChatMessage[] = [
+const SESSION_MD_MESSAGES: AgentChatMessage[] = [
   { id: 'md-m1', role: 'user', content: '为我们的内部 SDK 生成一份完整的 API 文档，要支持自动目录、代码示例。', timestamp: '13:08' },
   { id: 'md-m2', role: 'agent', thinking: '需要扫描 SDK 源码、提取注释、生成结构化的 Markdown 文档。', content: '我会先扫描 SDK 的导出 API，然后基于 JSDoc / 类型注释生成包含目录、代码示例和参数表的 Markdown 文档。', timestamp: '13:09' },
   { id: 'md-m3', role: 'agent', toolCall: { name: 'scan src/**/*.ts for exports', status: 'done', duration: '1.2s' }, content: '已发现 42 个导出 API（28 个函数、9 个类、5 个枚举）', timestamp: '13:09' },
@@ -1435,7 +1433,7 @@ pnpm add @cherry/sdk</pre>
 
 </body></html>`;
 
-const SESSION_SLIDES_MESSAGES: ChatMessage[] = [
+const SESSION_SLIDES_MESSAGES: AgentChatMessage[] = [
   { id: 'sl-m1', role: 'user', content: '帮我做一份"2026 年 AI 产品趋势"演示稿，6 页左右，要简洁现代风格。', timestamp: '16:45' },
   { id: 'sl-m2', role: 'agent', thinking: '需要规划核心叙事：现状 → 趋势 → 机会 → 行动。配色用深色背景 + 高对比强调色。', content: '我会按"现状洞察 → 三大趋势 → 落地机会 → 行动建议"四个章节组织，约 6 页幻灯片。', timestamp: '16:45' },
   { id: 'sl-m3', role: 'agent', toolCall: { name: 'research: 2026 AI product trends', status: 'done', duration: '4.8s' }, content: '已综合 28 个数据源，提炼出三大核心趋势：Agent 化、个性化模型、端侧推理。', timestamp: '16:46' },
@@ -1587,7 +1585,7 @@ export const DEFAULT_INITIAL_FILES: FileNode[] = [
   { name: 'index.html', type: 'file' },
 ];
 
-export const SESSION_DATA_MAP: Record<string, SessionData> = {
+export const SESSION_DATA_MAP: Record<string, AgentSessionData> = {
   'session-pdf': {
     messages: SESSION_PDF_MESSAGES,
     steps: SESSION_PDF_STEPS,
@@ -1723,7 +1721,7 @@ export const SESSION_DATA_MAP: Record<string, SessionData> = {
 };
 
 // Empty session data
-export const EMPTY_SESSION_DATA: SessionData = {
+export const EMPTY_SESSION_DATA: AgentSessionData = {
   messages: [],
   steps: [],
   files: [],

@@ -156,7 +156,7 @@ export function SkillPluginImportModal({ open, importType, onClose, onImportComp
                   border-2 border-dashed rounded-xl cursor-pointer transition-all
                   ${dragOver
                     ? 'border-primary/40 bg-primary/5'
-                    : 'border-border/20 hover:border-border/40 hover:bg-accent/15'
+                    : 'border-border/20 hover:border-border/40 hover:bg-accent/40'
                   }
                 `}
               >

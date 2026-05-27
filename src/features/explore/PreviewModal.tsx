@@ -140,7 +140,7 @@ export function PreviewModal({
           {isAssistant(resource, category) && (
             <div>
               <SectionLabel>角色设定</SectionLabel>
-              <div className="px-3.5 py-3 rounded-xl bg-gradient-to-r from-foreground/[0.03] to-foreground/[0.03] border border-border/10">
+              <div className="px-3.5 py-3 rounded-xl bg-gradient-to-r from-foreground/[0.03] to-foreground/[0.03] border border-border/15">
                 <p className="text-xs text-muted-foreground/50 leading-relaxed italic">"{resource.persona}"</p>
               </div>
             </div>
@@ -153,7 +153,7 @@ export function PreviewModal({
               <div className="flex flex-wrap gap-1.5">
                 {resource.integrations.map(intg => (
                   <div key={intg}
-                    className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-accent/50 border border-border/10 hover:border-border/25 transition-colors">
+                    className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-accent/50 border border-border/15 hover:border-border/20 transition-colors">
                     <span className="text-sm">{integrationIcons[intg] || '\uD83D\uDD27'}</span>
                     <span className="text-xs text-muted-foreground/50">{intg}</span>
                   </div>
@@ -166,7 +166,7 @@ export function PreviewModal({
           {(isAgent(resource, category) || isAssistant(resource, category)) && (
             <div>
               <SectionLabel>推荐模型</SectionLabel>
-              <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-accent/25 border border-border/10 w-fit">
+              <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-accent/25 border border-border/15 w-fit">
                 <div className="w-5 h-5 rounded-md bg-warning/10 flex items-center justify-center">
                   <Zap size={10} className="text-warning/60" />
                 </div>
@@ -223,10 +223,10 @@ export function PreviewModal({
             <SectionLabel>标签</SectionLabel>
             <div className="flex flex-wrap gap-1.5">
               {tags.map(tag => (
-                <span key={tag} className="text-xs px-2.5 py-1 rounded-lg bg-accent/50 text-muted-foreground/40 border border-border/8 hover:border-border/20 transition-colors cursor-default">{tag}</span>
+                <span key={tag} className="text-xs px-2.5 py-1 rounded-lg bg-accent/50 text-muted-foreground/40 border border-border/15 hover:border-border/20 transition-colors cursor-default">{tag}</span>
               ))}
               {isKB(resource, category) && (
-                <span className="text-xs px-2.5 py-1 rounded-lg bg-accent/50 text-muted-foreground/40 border border-border/8">{resource.subcategory}</span>
+                <span className="text-xs px-2.5 py-1 rounded-lg bg-accent/50 text-muted-foreground/40 border border-border/15">{resource.subcategory}</span>
               )}
             </div>
           </div>
@@ -300,7 +300,7 @@ function StatCard({ icon, label, value, color }: {
   icon: React.ReactNode; label: string; value: string; color: string;
 }) {
   return (
-    <div className="px-3 py-2.5 rounded-xl bg-accent/25 border border-border/8 hover:border-border/15 transition-colors">
+    <div className="px-3 py-2.5 rounded-xl bg-accent/25 border border-border/15 hover:border-border/15 transition-colors">
       <div className="flex items-center gap-1.5 mb-1">
         {icon}
         <span className="text-xs text-muted-foreground/50">{label}</span>

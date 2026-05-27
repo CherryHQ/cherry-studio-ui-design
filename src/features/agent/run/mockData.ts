@@ -11,8 +11,6 @@ export type { AgentSession, AgentChatMessage, AgentSessionData, FileNode, Output
 export type { WorkflowStep, ModelCapability, ModelInfo } from '@/app/types/chat';
 
 // Backward-compatible aliases
-export type ChatMessage = AgentChatMessage;
-export type SessionData = AgentSessionData;
 export type AgentModelCapability = import('@/app/types/chat').ModelCapability;
 export type AgentModel = import('@/app/types/chat').ModelInfo;
 

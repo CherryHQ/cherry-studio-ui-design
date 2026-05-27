@@ -29,7 +29,7 @@ export function AttachmentList({
               key={att.id}
               onClick={onOpen ? () => onOpen(att) : undefined}
               className={`relative group rounded-lg overflow-hidden border border-border/30 w-[80px] h-[80px] ${
-                onOpen ? 'hover:border-border/60 active:scale-[0.98] transition-all cursor-pointer' : ''
+                onOpen ? 'hover:border-border/50 active:scale-[0.97] transition-all cursor-pointer' : ''
               }`}
             >
               <img src={att.previewUrl} alt={att.name} className="w-full h-full object-cover" />
@@ -49,7 +49,7 @@ export function AttachmentList({
               key={att.id}
               onClick={onOpen ? () => onOpen(att) : undefined}
               className={`group flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-accent/50 border border-border/30 text-left ${
-                onOpen ? 'hover:bg-accent/70 hover:border-border/60 active:scale-[0.99] transition-all cursor-pointer' : ''
+                onOpen ? 'hover:bg-accent/50 hover:border-border/50 active:scale-[0.97] transition-all cursor-pointer' : ''
               }`}
               title={onOpen ? `打开 ${att.name}` : att.name}
             >

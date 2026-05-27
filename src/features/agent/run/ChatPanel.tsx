@@ -12,6 +12,7 @@ import {
   DropdownMenuSub, DropdownMenuSubTrigger, DropdownMenuSubContent,
   Popover, PopoverTrigger, PopoverContent, BrandLogo, SearchInput,
 } from '@cherry-studio/ui';
+import { Separator } from "@cherry-studio/ui";
 import { MessageList } from '@cherry-studio/ui';
 import { Tooltip } from '@/app/components/Tooltip';
 import { UserMessage, AgentMessageGroup, useGroupedMessages, PermissionApprovalCard } from './AgentMessageRenderer';
@@ -130,7 +131,7 @@ function PopupCard({
         </div>
         <div className="flex items-center justify-between px-3.5 py-2 border-t border-border/15">
           <span className="text-xs text-muted-foreground/40">{title}</span>
-          <div className="flex items-center gap-5 text-[11px] text-muted-foreground/35">
+          <div className="flex items-center gap-5 text-xs text-muted-foreground/40">
             <span>ESC 关闭</span>
             <span>▲▼ 选择</span>
             <span><span className="text-purple-400">⌘</span> + ▲▼ 翻页</span>
@@ -322,31 +323,31 @@ export function ChatPanel({
               <div className="flex items-center justify-between px-3 py-1.5 border-b border-border/30">
                 <div className="flex items-center gap-1.5">
                   <Clock size={10} className="text-muted-foreground/60" />
-                  <span className="text-[11px] text-muted-foreground">待发送队列</span>
-                  <span className="text-[11px] text-muted-foreground/60 tabular-nums">{queuedMessages.length}</span>
+                  <span className="text-xs text-muted-foreground">待发送队列</span>
+                  <span className="text-xs text-muted-foreground/60 tabular-nums">{queuedMessages.length}</span>
                 </div>
                 <button
                   type="button"
                   onClick={clearQueue}
-                  className="text-[11px] text-muted-foreground/60 hover:text-foreground transition-colors"
+                  className="text-xs text-muted-foreground/60 hover:text-foreground transition-colors"
                 >
                   清空
                 </button>
               </div>
               <div className="max-h-[140px] overflow-y-auto">
                 {queuedMessages.map((m, i) => (
-                  <div key={m.id} className="group/q flex items-center gap-2 px-3 py-1.5 hover:bg-accent/15 transition-colors border-b border-border/15 last:border-b-0">
+                  <div key={m.id} className="group/q flex items-center gap-2 px-3 py-1.5 hover:bg-accent/40 transition-colors border-b border-border/15 last:border-b-0">
                     <span className="w-4 text-[10px] text-muted-foreground/60 tabular-nums flex-shrink-0">{i + 1}</span>
                     <span className="flex-1 min-w-0 text-xs text-foreground truncate">{m.text}</span>
                     <div className="flex items-center gap-0.5 opacity-0 group-hover/q:opacity-100 transition-opacity flex-shrink-0">
                       {i > 0 && (
                         <button type="button" onClick={() => moveQueueItemUp(m.id)} title="上移"
-                          className="p-1 rounded text-muted-foreground/60 hover:text-foreground hover:bg-accent/25 transition-colors">
+                          className="p-1 rounded text-muted-foreground/60 hover:text-foreground hover:bg-accent/40 transition-colors">
                           <ArrowUp size={10} />
                         </button>
                       )}
                       <button type="button" onClick={() => editQueueItem(m.id)} title="编辑（取回到输入框）"
-                        className="p-1 rounded text-muted-foreground/60 hover:text-foreground hover:bg-accent/25 transition-colors">
+                        className="p-1 rounded text-muted-foreground/60 hover:text-foreground hover:bg-accent/40 transition-colors">
                         <Pencil size={10} />
                       </button>
                       <button type="button" onClick={() => removeQueueItem(m.id)} title="删除"
@@ -388,7 +389,7 @@ export function ChatPanel({
             </div>
           ) : (
         <div key="input" className="flex flex-col gap-1.5">
-        <div ref={containerRef} className="relative rounded-2xl border border-border/40 bg-muted/30 shadow-sm focus-within:border-border/60 transition-all duration-150">
+        <div ref={containerRef} className="relative rounded-2xl border border-border/40 bg-muted/30 shadow-sm focus-within:border-border/50 transition-all duration-150">
           {/* Popup Cards */}
           <AnimatePresence>
             {/* Slash Commands */}
@@ -643,7 +644,7 @@ export function ChatPanel({
                         : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
                     }`}
                   >
-                    <Lightbulb size={13} className="text-muted-foreground/70" strokeWidth={1.5} />
+                    <Lightbulb size={13} className="text-muted-foreground/80" strokeWidth={1.5} />
                     <span className="truncate">
                       {THINKING_EFFORTS.find(e => e.id === activeThinking)?.label ?? '默认'}
                     </span>
@@ -660,10 +661,10 @@ export function ChatPanel({
                         type="button"
                         onClick={() => { setActiveThinking(mode.id); setShowModelMenu(false); }}
                         className={`w-full flex items-center gap-2 px-2 py-[6px] rounded-md text-left text-xs transition-colors ${
-                          isActive ? 'bg-accent/40 text-foreground' : 'text-foreground/80 hover:bg-accent/25'
+                          isActive ? 'bg-accent/40 text-foreground' : 'text-muted-foreground/80 hover:bg-accent/40'
                         }`}
                       >
-                        <Lightbulb size={12} strokeWidth={1.5} className={`flex-shrink-0 ${isActive ? 'text-warning' : 'text-muted-foreground/70'}`} />
+                        <Lightbulb size={12} strokeWidth={1.5} className={`flex-shrink-0 ${isActive ? 'text-warning' : 'text-muted-foreground/80'}`} />
                         <span className="flex-1">{mode.label}</span>
                         {isActive && <Check size={11} className="text-foreground flex-shrink-0" />}
                       </button>
@@ -682,7 +683,7 @@ export function ChatPanel({
                         : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
                     }`}
                   >
-                    <LayoutGrid size={13} className="text-muted-foreground/70" strokeWidth={1.5} />
+                    <LayoutGrid size={13} className="text-muted-foreground/80" strokeWidth={1.5} />
                     <span className="truncate">技能</span>
                     <ChevronDown size={9} className={`transition-transform duration-100 ${showSkillMenu ? 'rotate-180' : ''}`} />
                   </Button>
@@ -700,24 +701,24 @@ export function ChatPanel({
                     return (
                       <button key={s.id} type="button"
                         onClick={() => setShowSkillMenu(false)}
-                        className="w-full flex items-center gap-2 px-2 py-[6px] rounded-md text-left text-xs text-foreground/80 hover:bg-accent/25 transition-colors"
+                        className="w-full flex items-center gap-2 px-2 py-[6px] rounded-md text-left text-xs text-muted-foreground/80 hover:bg-accent/40 transition-colors"
                       >
                         <Icon size={12} strokeWidth={1.5} className={`flex-shrink-0 ${s.color}`} />
                         <span className="flex-1 truncate">{s.label}</span>
                       </button>
                     );
                   })}
-                  <div className="my-1 h-px bg-border/40" />
+                  <Separator opacity={40} className="my-1" />
                   <button type="button"
                     onClick={() => setShowSkillMenu(false)}
-                    className="w-full flex items-center gap-2 px-2 py-[6px] rounded-md text-left text-xs text-muted-foreground hover:bg-accent/25 hover:text-foreground transition-colors"
+                    className="w-full flex items-center gap-2 px-2 py-[6px] rounded-md text-left text-xs text-muted-foreground hover:bg-accent/40 hover:text-foreground transition-colors"
                   >
                     <Wrench size={12} strokeWidth={1.5} className="flex-shrink-0" />
                     <span className="flex-1 truncate">管理技能…</span>
                   </button>
                   <button type="button"
                     onClick={() => setShowSkillMenu(false)}
-                    className="w-full flex items-center gap-2 px-2 py-[6px] rounded-md text-left text-xs text-muted-foreground hover:bg-accent/25 hover:text-foreground transition-colors"
+                    className="w-full flex items-center gap-2 px-2 py-[6px] rounded-md text-left text-xs text-muted-foreground hover:bg-accent/40 hover:text-foreground transition-colors"
                   >
                     <Plus size={12} strokeWidth={1.5} className="flex-shrink-0" />
                     <span className="flex-1 truncate">添加技能</span>
@@ -755,9 +756,9 @@ export function ChatPanel({
                 }`}
               >
                 {currentProject ? (
-                  <Folder size={12} className="text-muted-foreground/70" strokeWidth={1.5} />
+                  <Folder size={12} className="text-muted-foreground/80" strokeWidth={1.5} />
                 ) : (
-                  <FolderX size={12} className="text-muted-foreground/70" strokeWidth={1.5} />
+                  <FolderX size={12} className="text-muted-foreground/80" strokeWidth={1.5} />
                 )}
                 <span>{currentProject ? currentProject.label : '不使用项目'}</span>
                 <ChevronDown size={9} className={`transition-transform duration-100 ${showProjectMenu ? 'rotate-180' : ''}`} />
@@ -771,7 +772,7 @@ export function ChatPanel({
                   onChange={setProjectQuery}
                   placeholder="搜索项目"
                   iconSize={11}
-                  wrapperClassName="px-2 py-[4px] rounded-md bg-accent/15 border border-border/25"
+                  wrapperClassName="px-2 py-[4px] rounded-md bg-accent/15 border border-border/20"
                 />
               </div>
               {/* Project list */}
@@ -787,23 +788,23 @@ export function ChatPanel({
                       type="button"
                       onClick={() => { setActiveProject(p.id); setShowProjectMenu(false); }}
                       className={`w-full flex items-center gap-2 px-2 py-[6px] rounded-md text-left text-xs transition-colors ${
-                        isActive ? 'bg-accent/40 text-foreground' : 'text-foreground/80 hover:bg-accent/25'
+                        isActive ? 'bg-accent/40 text-foreground' : 'text-muted-foreground/80 hover:bg-accent/40'
                       }`}
                     >
-                      <Folder size={12} className="text-muted-foreground/70 flex-shrink-0" strokeWidth={1.5} />
+                      <Folder size={12} className="text-muted-foreground/80 flex-shrink-0" strokeWidth={1.5} />
                       <span className="flex-1 truncate">{p.label}</span>
                       {isActive && <Check size={11} className="text-foreground flex-shrink-0" />}
                     </button>
                   );
                 })}
               </div>
-              <div className="h-px bg-border/30 my-0.5" />
+              <Separator opacity={30} className="my-0.5" />
               {/* Add new project */}
               <button
                 type="button"
-                className="w-full flex items-center gap-2 px-2 py-[6px] rounded-md text-left text-xs text-foreground/80 hover:bg-accent/25 transition-colors"
+                className="w-full flex items-center gap-2 px-2 py-[6px] rounded-md text-left text-xs text-muted-foreground/80 hover:bg-accent/40 transition-colors"
               >
-                <FolderPlus size={12} className="text-muted-foreground/70 flex-shrink-0" strokeWidth={1.5} />
+                <FolderPlus size={12} className="text-muted-foreground/80 flex-shrink-0" strokeWidth={1.5} />
                 <span>添加新项目</span>
               </button>
               {/* No project */}
@@ -811,10 +812,10 @@ export function ChatPanel({
                 type="button"
                 onClick={() => { setActiveProject(null); setShowProjectMenu(false); }}
                 className={`w-full flex items-center gap-2 px-2 py-[6px] rounded-md text-left text-xs transition-colors ${
-                  activeProject === null ? 'bg-accent/40 text-foreground' : 'text-foreground/80 hover:bg-accent/25'
+                  activeProject === null ? 'bg-accent/40 text-foreground' : 'text-muted-foreground/80 hover:bg-accent/40'
                 }`}
               >
-                <FolderX size={12} className="text-muted-foreground/70 flex-shrink-0" strokeWidth={1.5} />
+                <FolderX size={12} className="text-muted-foreground/80 flex-shrink-0" strokeWidth={1.5} />
                 <span className="flex-1">不使用项目</span>
                 {activeProject === null && <Check size={11} className="text-foreground flex-shrink-0" />}
               </button>

@@ -170,7 +170,7 @@ export function SaveAsSkillDialog({ open, onOpenChange, agent, messages }: Props
                 className="h-8 text-sm font-mono"
                 spellCheck={false}
               />
-              <p className="text-[11px] text-muted-foreground/55 mt-1">
+              <p className="text-xs text-muted-foreground/50 mt-1">
                 小写字母 + 下划线，作为 Skill 在工具列表中的标识
               </p>
             </FieldContent>
@@ -218,7 +218,7 @@ export function SaveAsSkillDialog({ open, onOpenChange, agent, messages }: Props
                       {selected.map(t => {
                         const c = TAG_COLORS[t] || DEFAULT_TAG_COLOR;
                         return (
-                          <span key={t} className={`inline-flex items-center gap-1 px-1.5 py-[2px] rounded-md text-[11px] border ${c.badge}`}>
+                          <span key={t} className={`inline-flex items-center gap-1 px-1.5 py-[2px] rounded-md text-xs border ${c.badge}`}>
                             <span className={`w-1.5 h-1.5 rounded-full ${c.dot}`} />
                             {t}
                             <button

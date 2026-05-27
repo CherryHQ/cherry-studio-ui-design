@@ -21,6 +21,7 @@ import {
   type VariableDef, type VarType,
 } from '@cherry-studio/ui';
 import type { ModelCapability } from '@/app/types/shared';
+import { BRAND_COLOR } from '@/app/config/brand-colors';
 
 // ===========================
 // Types
@@ -110,26 +111,25 @@ function getModelLogo(modelName: string): { emoji: string; bg: string } {
 
 function ModelLogo({ name, size = 16 }: { name: string; size?: number }) {
   const n = name.toLowerCase();
-  // Map model name to a provider id for BrandLogo
   let brandId = '';
   let fallbackLetter = name[0]?.toUpperCase() || '?';
-  let fallbackColor = '#6b7280';
+  let fallbackColor: string = BRAND_COLOR.fallback;
   if (n.includes('gpt') || n.includes('o1') || n.includes('o3') || n.includes('o4') || n.includes('dall-e') || n.includes('whisper') || n.includes('tts') || n.includes('codex')) {
-    brandId = 'openai'; fallbackLetter = 'O'; fallbackColor = '#000000';
+    brandId = 'openai'; fallbackLetter = 'O'; fallbackColor = BRAND_COLOR.openai;
   } else if (n.includes('claude')) {
-    brandId = 'anthropic'; fallbackLetter = 'A'; fallbackColor = '#D4A27F';
+    brandId = 'anthropic'; fallbackLetter = 'A'; fallbackColor = BRAND_COLOR.anthropic;
   } else if (n.includes('gemini') || n.includes('imagen')) {
-    brandId = 'google'; fallbackLetter = 'G'; fallbackColor = '#4285f4';
+    brandId = 'google'; fallbackLetter = 'G'; fallbackColor = BRAND_COLOR.google;
   } else if (n.includes('llama')) {
-    brandId = 'meta'; fallbackLetter = 'M'; fallbackColor = '#0668E1';
+    brandId = 'meta'; fallbackLetter = 'M'; fallbackColor = BRAND_COLOR.meta;
   } else if (n.includes('qwen')) {
-    brandId = 'qwen'; fallbackLetter = 'Q'; fallbackColor = '#6366f1';
+    brandId = 'qwen'; fallbackLetter = 'Q'; fallbackColor = BRAND_COLOR.qwen;
   } else if (n.includes('deepseek')) {
-    brandId = 'deepseek'; fallbackLetter = 'D'; fallbackColor = '#4F6EF7';
+    brandId = 'deepseek'; fallbackLetter = 'D'; fallbackColor = BRAND_COLOR.deepseek;
   } else if (n.includes('cherry')) {
-    brandId = 'cherry'; fallbackLetter = '🍒'; fallbackColor = '#e74c8b';
+    brandId = 'cherry'; fallbackLetter = '🍒'; fallbackColor = BRAND_COLOR.cherry;
   } else if (n.includes('embed') || n.includes('nomic')) {
-    brandId = ''; fallbackLetter = 'E'; fallbackColor = '#06b6d4';
+    brandId = ''; fallbackLetter = 'E'; fallbackColor = BRAND_COLOR.embed;
   }
   return <BrandLogo id={brandId} fallbackLetter={fallbackLetter} fallbackColor={fallbackColor} size={size} />;
 }

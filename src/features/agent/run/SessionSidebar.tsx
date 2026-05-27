@@ -5,6 +5,7 @@ import {
   Sparkles,
 } from 'lucide-react';
 import { Button, SearchInput, EmptyState } from '@cherry-studio/ui';
+import { Separator } from "@cherry-studio/ui";
 import { motion, AnimatePresence } from 'motion/react';
 import type { AgentSession } from '@/app/types/agent';
 
@@ -55,7 +56,7 @@ function SessionContextMenu({ x, y, onClose, onDelete, onPin, isPinned }: {
       >
         {menuItems.map((item, i) => (
           'divider' in item ? (
-            <div key={i} className="h-px bg-border/30 my-1" />
+            <Separator key={i} opacity={30} className="my-1" />
           ) : (
             <Button
               variant="ghost"
@@ -65,7 +66,7 @@ function SessionContextMenu({ x, y, onClose, onDelete, onPin, isPinned }: {
               className={`w-full justify-start gap-2 ${
                 'danger' in item && item.danger
                   ? 'text-destructive/70 hover:bg-destructive/8'
-                  : 'text-muted-foreground hover:bg-accent/15'
+                  : 'text-muted-foreground hover:bg-accent/40'
               }`}
             >
               <item.icon size={11} />
@@ -123,7 +124,7 @@ function SessionItem({ session, isActive, onClick, onContextMenu }: {
       className={`flex-col items-start gap-[3px] w-full px-2.5 py-2 font-normal rounded-lg group ${
         isActive
           ? 'bg-cherry-active-bg border border-cherry-ring'
-          : 'border border-transparent hover:bg-accent/15'
+          : 'border border-transparent hover:bg-accent/40'
       }`}
     >
       {/* Top row: agent + time */}
@@ -247,7 +248,7 @@ export function SessionSidebar({ sessions, activeSessionId, onSelectSession, onN
 
       {/* Search */}
       <div className="px-2.5 py-1.5 flex-shrink-0">
-        <SearchInput value={searchQuery} onChange={setSearchQuery} placeholder="搜索会话..." wrapperClassName="flex items-center gap-1.5 px-2 py-[4px] rounded-md bg-accent/5 border border-border/8" />
+        <SearchInput value={searchQuery} onChange={setSearchQuery} placeholder="搜索会话..." wrapperClassName="flex items-center gap-1.5 px-2 py-[4px] rounded-md bg-accent/5 border border-border/15" />
       </div>
 
       {/* Session List */}

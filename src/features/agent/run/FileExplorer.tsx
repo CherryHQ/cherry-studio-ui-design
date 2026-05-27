@@ -68,7 +68,7 @@ function FileOpenWithMenu({ name }: { name: string }) {
     <ContextMenuContent className="w-[160px]">
       {previewable && (
         <ContextMenuItem className="gap-2 px-2 py-[5px] text-xs">
-          <Eye size={12} className="text-muted-foreground/70 flex-shrink-0" />
+          <Eye size={12} className="text-muted-foreground/80 flex-shrink-0" />
           <span className="flex-1">预览</span>
         </ContextMenuItem>
       )}
@@ -90,11 +90,11 @@ function FileOpenWithMenu({ name }: { name: string }) {
         <span className="flex-1">Finder</span>
       </ContextMenuItem>
       <ContextMenuItem className="gap-2 px-2 py-[5px] text-xs">
-        <TerminalSquare size={12} className="text-muted-foreground/70 flex-shrink-0" />
+        <TerminalSquare size={12} className="text-muted-foreground/80 flex-shrink-0" />
         <span className="flex-1">Terminal</span>
       </ContextMenuItem>
       <ContextMenuItem className="gap-2 px-2 py-[5px] text-xs">
-        <ExternalLink size={12} className="text-muted-foreground/70 flex-shrink-0" />
+        <ExternalLink size={12} className="text-muted-foreground/80 flex-shrink-0" />
         <span className="flex-1">复制路径</span>
       </ContextMenuItem>
     </ContextMenuContent>
@@ -239,12 +239,12 @@ export function FileExplorer({ files, outputFiles = [], selectedFile, onSelectFi
             className={`flex items-center gap-1 px-2.5 py-[3px] rounded text-xs transition-colors ${
               tab === 'output'
                 ? 'bg-background text-foreground shadow-sm'
-                : 'text-muted-foreground/70 hover:text-foreground'
+                : 'text-muted-foreground/80 hover:text-foreground'
             }`}
           >
             <span>结果</span>
             {outputFiles.length > 0 && (
-              <span className={`text-[10px] tabular-nums ${tab === 'output' ? 'text-muted-foreground/70' : 'text-muted-foreground/50'}`}>
+              <span className={`text-[10px] tabular-nums ${tab === 'output' ? 'text-muted-foreground/80' : 'text-muted-foreground/50'}`}>
                 {outputFiles.length}
               </span>
             )}
@@ -255,7 +255,7 @@ export function FileExplorer({ files, outputFiles = [], selectedFile, onSelectFi
             className={`px-2.5 py-[3px] rounded text-xs transition-colors ${
               tab === 'all'
                 ? 'bg-background text-foreground shadow-sm'
-                : 'text-muted-foreground/70 hover:text-foreground'
+                : 'text-muted-foreground/80 hover:text-foreground'
             }`}
           >
             全部文件

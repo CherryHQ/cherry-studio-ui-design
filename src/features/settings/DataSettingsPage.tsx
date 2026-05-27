@@ -10,6 +10,7 @@ import {
   ChevronRight,
 } from 'lucide-react';
 import { InlineSelect, ConfigSection, TextInput, ActionButton, PanelHeader, FormRow } from './shared';
+import { FALLBACK_BRAND_COLOR } from '@/app/config/brand-colors';
 
 // ===========================
 // Types
@@ -809,7 +810,7 @@ export function DataSettingsPage() {
                       <div className="flex items-center gap-2 min-w-0 flex-1">
                         <span className={`flex-shrink-0 ${isSelected ? 'text-foreground' : 'text-muted-foreground'}`}>
                           {item.iconType === 'brand' && item.icon ? (
-                            <BrandLogo id={item.icon} fallbackLetter={item.icon[0].toUpperCase()} fallbackColor="#6b7280" size={15} />
+                            <BrandLogo id={item.icon} fallbackLetter={item.icon[0].toUpperCase()} fallbackColor={FALLBACK_BRAND_COLOR} size={15} />
                           ) : item.lucideIcon ? item.lucideIcon : null}
                         </span>
                         <span className={`text-sm truncate ${isSelected ? 'text-foreground font-medium' : 'text-muted-foreground font-normal'}`}>

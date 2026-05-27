@@ -181,7 +181,7 @@ export function MiniAppsPage() {
                 </Button>
               ))}
               <Button variant="ghost" onClick={openAddDialog} className="flex flex-col items-center gap-1.5 group p-1" size="inline">
-                <div className="w-11 h-11 rounded-xl flex items-center justify-center border border-dashed border-border/60 text-muted-foreground/40 group-hover:border-primary/40 group-hover:text-primary/60 transition-colors"><Plus size={16} /></div>
+                <div className="w-11 h-11 rounded-xl flex items-center justify-center border border-dashed border-border/50 text-muted-foreground/40 group-hover:border-primary/40 group-hover:text-primary/60 transition-colors"><Plus size={16} /></div>
                 <span className="text-xs text-muted-foreground/40 group-hover:text-muted-foreground transition-colors">{'\u81ea\u5b9a\u4e49'}</span>
               </Button>
             </div>

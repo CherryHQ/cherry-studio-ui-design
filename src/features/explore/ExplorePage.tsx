@@ -316,7 +316,7 @@ export function ExplorePage() {
               variant="ghost"
               size="xs"
               onClick={() => setFavDrawerOpen(true)}
-              className="relative flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-border/25 text-xs text-muted-foreground/50 hover:text-foreground hover:border-border/50 hover:bg-accent/50 transition-all"
+              className="relative flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-border/20 text-xs text-muted-foreground/50 hover:text-foreground hover:border-border/50 hover:bg-accent/50 transition-all"
             >
               <Heart size={11} className={favorites.size > 0 ? 'text-destructive/70' : ''} fill={favorites.size > 0 ? 'currentColor' : 'none'} />
               <span>收藏夹</span>

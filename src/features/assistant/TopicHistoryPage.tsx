@@ -118,7 +118,7 @@ function GroupSection({ title, count, children, defaultOpen = true, icon }: {
       <Button size="inline"
         variant="ghost"
         onClick={() => setOpen(!open)}
-        className="flex items-center gap-2 w-full px-2 py-1.5 rounded-md hover:bg-accent/15 transition-colors"
+        className="flex items-center gap-2 w-full px-2 py-1.5 rounded-md hover:bg-accent/40 transition-colors"
       >
         <motion.div animate={{ rotate: open ? 0 : -90 }} transition={{ duration: 0.1 }}>
           <ChevronDown size={11} className="text-muted-foreground" />
@@ -274,7 +274,7 @@ function TopicCard({ topic, isActive, isHovered, onSelect, onEditTags, onToggleP
           className={`flex items-center gap-2.5 px-3 py-2 rounded-lg cursor-pointer transition-all duration-100 ${
             isActive
               ? 'bg-cherry-active-bg border border-cherry-ring'
-              : 'border border-transparent hover:bg-accent/15 hover:border-border/30'
+              : 'border border-transparent hover:bg-accent/40 hover:border-border/30'
           }`}
         >
           <span className="text-sm flex-shrink-0">{ASSISTANT_ICONS[topic.assistantName] || '\u{1F916}'}</span>
@@ -352,7 +352,7 @@ function TopicListRow({ topic, isActive, isHovered, onSelect, onEditTags, onTogg
           onMouseEnter={onMouseEnter}
           onMouseLeave={onMouseLeave}
           className={`flex items-center gap-2.5 px-3 py-[7px] rounded-lg cursor-pointer transition-all duration-75 group ${
-            isActive ? 'bg-cherry-active-bg' : 'hover:bg-accent/15'
+            isActive ? 'bg-cherry-active-bg' : 'hover:bg-accent/40'
           }`}
         >
           <span className="text-sm flex-shrink-0 w-5 text-center">{ASSISTANT_ICONS[topic.assistantName] || '\u{1F916}'}</span>
@@ -554,7 +554,7 @@ export function TopicHistoryPage({ topics, activeTopicId, onSelectTopic, onDelet
               onChange={setAssistantQuery}
               placeholder="搜索助手..."
               iconSize={10}
-              wrapperClassName="px-2.5 py-[5px] rounded-md bg-accent/15 border border-border/25 mb-2"
+              wrapperClassName="px-2.5 py-[5px] rounded-md bg-accent/15 border border-border/20 mb-2"
             />
             <div className="flex flex-col gap-[2px]">
               {!assistantQuery && (
@@ -562,7 +562,7 @@ export function TopicHistoryPage({ topics, activeTopicId, onSelectTopic, onDelet
                   variant="ghost"
                   onClick={() => setSelectedAssistant(null)}
                   className={`flex items-center gap-2 px-2.5 py-[5px] rounded-md text-xs transition-all duration-75 w-full justify-start ${
-                    !selectedAssistant ? 'bg-accent/50 text-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-accent/15'
+                    !selectedAssistant ? 'bg-accent/50 text-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-accent/40'
                   }`}
                 >
                   <span className="flex-1 text-left">{'\u5168\u90e8'}</span>
@@ -579,7 +579,7 @@ export function TopicHistoryPage({ topics, activeTopicId, onSelectTopic, onDelet
                     key={ast}
                     onClick={() => setSelectedAssistant(selectedAssistant === ast ? null : ast)}
                     className={`flex items-center gap-2 px-2.5 py-[5px] rounded-md text-xs transition-all duration-75 w-full justify-start ${
-                      selectedAssistant === ast ? 'bg-accent/50 text-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-accent/15'
+                      selectedAssistant === ast ? 'bg-accent/50 text-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-accent/40'
                     }`}
                   >
                     <span className="text-xs flex-shrink-0">{ASSISTANT_ICONS[ast] || '\u{1F916}'}</span>
@@ -598,7 +598,7 @@ export function TopicHistoryPage({ topics, activeTopicId, onSelectTopic, onDelet
             <Button size="inline"
               variant="outline"
               onClick={clearFilters}
-              className="flex items-center justify-center gap-1.5 px-2.5 py-[5px] rounded-md text-xs text-muted-foreground hover:text-foreground hover:bg-accent/15 transition-colors border border-dashed border-border/30 mt-auto w-full"
+              className="flex items-center justify-center gap-1.5 px-2.5 py-[5px] rounded-md text-xs text-muted-foreground hover:text-foreground hover:bg-accent/40 transition-colors border border-dashed border-border/30 mt-auto w-full"
             >
               <X size={9} />
               {'\u6e05\u9664\u6240\u6709\u7b5b\u9009'}
@@ -620,7 +620,7 @@ export function TopicHistoryPage({ topics, activeTopicId, onSelectTopic, onDelet
                     className={`flex items-center gap-1 px-2 py-[3px] rounded-md text-xs transition-all duration-100 ${
                       tagDropdownOpen || selectedTags.length > 0
                         ? 'bg-accent/50 text-foreground'
-                        : 'text-muted-foreground hover:text-foreground hover:bg-accent/15'
+                        : 'text-muted-foreground hover:text-foreground hover:bg-accent/40'
                     }`}
                   >
                     <Tag size={9} />
@@ -643,7 +643,7 @@ export function TopicHistoryPage({ topics, activeTopicId, onSelectTopic, onDelet
                                   key={tag}
                                   onClick={() => toggleTag(tag)}
                                   className={`flex items-center gap-2 w-full px-2.5 py-[5px] text-xs transition-colors rounded-none justify-start ${
-                                    isSelected ? 'bg-foreground/6 text-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-accent/15'
+                                    isSelected ? 'bg-foreground/10 text-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-accent/40'
                                   }`}
                                 >
                                   <Checkbox checked={isSelected} className="flex-shrink-0" />
@@ -655,22 +655,22 @@ export function TopicHistoryPage({ topics, activeTopicId, onSelectTopic, onDelet
                             })}
                             {selectedTags.length > 0 && (
                               <div>
-                                <div className="h-px bg-border/30 my-0.5" />
+                                <Separator opacity={30} className="my-0.5" />
                                 <Button size="inline"
                                   variant="ghost"
                                   onClick={() => setSelectedTags([])}
-                                  className="flex items-center gap-2 w-full px-2.5 py-[5px] text-xs text-muted-foreground hover:text-foreground hover:bg-accent/15 transition-colors rounded-none justify-start"
+                                  className="flex items-center gap-2 w-full px-2.5 py-[5px] text-xs text-muted-foreground hover:text-foreground hover:bg-accent/40 transition-colors rounded-none justify-start"
                                 >
                                   <X size={9} className="flex-shrink-0" />
                                   <span>{'\u6e05\u9664\u9009\u62e9'}</span>
                                 </Button>
                               </div>
                             )}
-                            <div className="h-px bg-border/30 my-0.5" />
+                            <Separator opacity={30} className="my-0.5" />
                             <Button size="inline"
                               variant="ghost"
                               onClick={() => setTagManageMode(true)}
-                              className="flex items-center gap-2 w-full px-2.5 py-[5px] text-xs text-muted-foreground hover:text-foreground hover:bg-accent/15 transition-colors rounded-none justify-start"
+                              className="flex items-center gap-2 w-full px-2.5 py-[5px] text-xs text-muted-foreground hover:text-foreground hover:bg-accent/40 transition-colors rounded-none justify-start"
                             >
                               <Edit3 size={9} className="flex-shrink-0" />
                               <span>{'\u7ba1\u7406\u6807\u7b7e'}</span>
@@ -721,7 +721,7 @@ export function TopicHistoryPage({ topics, activeTopicId, onSelectTopic, onDelet
                               return (
                                 <div
                                   key={tag}
-                                  className="flex items-center gap-2 px-2.5 py-[5px] text-xs text-foreground group/tag hover:bg-accent/15 transition-colors"
+                                  className="flex items-center gap-2 px-2.5 py-[5px] text-xs text-foreground group/tag hover:bg-accent/40 transition-colors"
                                 >
                                   <TagBadge tag={tag} size="xs" />
                                   <span className="flex-1" />
@@ -757,7 +757,7 @@ export function TopicHistoryPage({ topics, activeTopicId, onSelectTopic, onDelet
                 onChange={setSearchQuery}
                 placeholder="搜索话题..."
                 iconSize={10}
-                wrapperClassName="px-2 py-[3px] rounded-md bg-accent/15 border border-border/25 w-[160px]"
+                wrapperClassName="px-2 py-[3px] rounded-md bg-accent/15 border border-border/20 w-[160px]"
               />
               <div className="w-px h-4 bg-border/30" />
               {/* Group */}
@@ -785,7 +785,7 @@ export function TopicHistoryPage({ topics, activeTopicId, onSelectTopic, onDelet
                   else if (sortKey === 'name') setSortKey('messages');
                   else setSortKey('time');
                 }}
-                className="flex items-center gap-1 px-2 py-[3px] rounded-md text-xs text-muted-foreground hover:text-foreground hover:bg-accent/15 transition-colors"
+                className="flex items-center gap-1 px-2 py-[3px] rounded-md text-xs text-muted-foreground hover:text-foreground hover:bg-accent/40 transition-colors"
               >
                 <ArrowUpDown size={10} />
                 {sortKey === 'time' ? '\u6309\u65f6\u95f4' : sortKey === 'name' ? '\u6309\u540d\u79f0' : '\u6309\u6d88\u606f\u6570'}

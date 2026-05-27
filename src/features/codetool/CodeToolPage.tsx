@@ -96,7 +96,7 @@ function SelectDropdown<T extends { id: string }>({
       <PopoverTrigger asChild>
         <Button size="inline"
           variant="ghost"
-          className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-md border text-xs bg-transparent hover:bg-muted/30 transition-colors ${open ? 'border-primary/40 ring-1 ring-primary/15' : 'border-border/40'}`}
+          className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-md border text-xs bg-transparent hover:bg-accent/40 transition-colors ${open ? 'border-primary/40 ring-1 ring-primary/15' : 'border-border/40'}`}
         >
           <div className="flex items-center gap-2 min-w-0 flex-1 text-left">
             {selected ? renderSelected(selected) : <span className="text-muted-foreground/50">{placeholder || '请选择...'}</span>}
@@ -334,7 +334,7 @@ export function CodeToolPage() {
             {/* Scrollable config */}
             <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4 scrollbar-hide">
               {/* Tool info card */}
-              <div className="flex items-center gap-3 p-3 rounded-xl bg-accent/5 border border-border/10">
+              <div className="flex items-center gap-3 p-3 rounded-xl bg-accent/5 border border-border/15">
                 <CLIIcon tool={selectedTool} />
                 <div className="flex-1 min-w-0">
                   <div className="text-sm text-foreground">{selectedTool.name}</div>
