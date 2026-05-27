@@ -8,6 +8,7 @@ import {
   Filter, Sparkles,
 } from 'lucide-react';
 import { Button, Input, Popover, PopoverTrigger, PopoverContent, SearchInput, EmptyState, Badge, Switch } from '@cherry-studio/ui';
+import { Separator } from "@cherry-studio/ui";
 import { motion, AnimatePresence } from 'motion/react';
 import type { ResourceItem, ResourceType, ViewMode, SortKey, FolderNode, TagItem } from '@/app/types';
 import { RESOURCE_TYPE_CONFIG, RESOURCE_TYPES_LIST, SORT_LABELS, TAG_COLORS, DEFAULT_TAG_COLOR } from '@/app/config/constants';
@@ -137,7 +138,7 @@ export function ResourceGrid({
           <Popover open={showSort} onOpenChange={(v) => { setShowSort(v); if (v) { setShowCreate(false); setShowTypeFilter(false); } }}>
             <PopoverTrigger asChild>
               <Button variant="ghost" size="xs"
-                className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs border transition-all ${showSort ? 'border-primary/30 bg-accent/50 text-foreground' : 'border-border/40 text-muted-foreground/60 hover:text-foreground hover:border-border/60'}`}>
+                className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs border transition-all ${showSort ? 'border-primary/30 bg-accent/50 text-foreground' : 'border-border/40 text-muted-foreground/60 hover:text-foreground hover:border-border/50'}`}>
                 <ArrowUpDown size={10} /><span>{SORT_LABELS[sortKey]}</span>
               </Button>
             </PopoverTrigger>
@@ -155,7 +156,7 @@ export function ResourceGrid({
           <Popover open={showTypeFilter} onOpenChange={(v) => { setShowTypeFilter(v); if (v) { setShowSort(false); setShowCreate(false); } }}>
             <PopoverTrigger asChild>
               <Button variant="ghost" size="xs"
-                className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs border transition-all ${showTypeFilter ? 'border-primary/30 bg-accent/50 text-foreground' : 'border-border/40 text-muted-foreground/60 hover:text-foreground hover:border-border/60'}`}>
+                className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs border transition-all ${showTypeFilter ? 'border-primary/30 bg-accent/50 text-foreground' : 'border-border/40 text-muted-foreground/60 hover:text-foreground hover:border-border/50'}`}>
                 <Filter size={10} />
                 <span>{statusFilter === 'all' ? '全部状态' : statusFilter === 'enabled' ? '已启用' : '已禁用'}</span>
                 <ChevronDown size={9} className={`transition-transform ${showTypeFilter ? 'rotate-180' : ''}`} />
@@ -194,8 +195,7 @@ export function ResourceGrid({
             </Button>
           )}
 
-          {/* Separator */}
-          <div className="w-px h-4 bg-border/30 flex-shrink-0" />
+          <Separator orientation="vertical" opacity={30} className="!h-4 flex-shrink-0" />
 
           {/* Create */}
           <Popover open={showCreate} onOpenChange={(v) => { setShowCreate(v); if (v) { setShowSort(false); setShowTypeFilter(false); } }}>
@@ -220,7 +220,7 @@ export function ResourceGrid({
                   </Button>
                 );
               })}
-              <div className="h-px bg-border/30 my-0.5 mx-1" />
+              <Separator opacity={30} className="my-0.5 mx-1" />
               <Button variant="ghost" size="xs" onClick={() => { onCreate('skill'); setShowCreate(false); }}
                 className="flex items-center justify-start gap-2.5 w-full px-2.5 py-[6px] rounded-lg text-xs text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-colors">
                 <div className={`w-5 h-5 rounded-md flex items-center justify-center flex-shrink-0 ${RESOURCE_TYPE_CONFIG.skill.color}`}>
@@ -264,7 +264,7 @@ export function ResourceGrid({
               <Button variant="ghost" size="icon-xs" onClick={handleAddTag} className="text-muted-foreground/40 hover:text-foreground transition-colors"><Plus size={10} /></Button>
             </div>
           ) : (
-            <Button variant="ghost" size="xs" onClick={() => setShowAddTag(true)} className="flex items-center gap-0.5 px-2 py-[3px] rounded-full text-xs text-muted-foreground/40 hover:text-foreground hover:bg-accent/50 border border-dashed border-border/40 hover:border-border/60 transition-all flex-shrink-0">
+            <Button variant="ghost" size="xs" onClick={() => setShowAddTag(true)} className="flex items-center gap-0.5 px-2 py-[3px] rounded-full text-xs text-muted-foreground/40 hover:text-foreground hover:bg-accent/50 border border-dashed border-border/40 hover:border-border/50 transition-all flex-shrink-0">
               <Plus size={9} /> 标签
             </Button>
           )}
@@ -380,7 +380,7 @@ function GridCard({ resource: r, index, onEdit, onToggle, onOpenMenu }: CardItem
           )}
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-1.5">
-              <h4 className="text-[13px] text-foreground truncate leading-tight">{r.name}</h4>
+              <h4 className="text-sm text-foreground truncate leading-tight">{r.name}</h4>
               {r.hasUpdate && <Badge variant="secondary" className="text-xs px-1 py-px rounded-full bg-accent-orange-muted text-accent-orange flex-shrink-0">更新</Badge>}
             </div>
             <p className="text-xs text-muted-foreground/60 line-clamp-1 mt-0.5">{r.description}</p>
@@ -522,7 +522,7 @@ function FixedCardMenu({ x, y, resource, onClose, onEdit, onDuplicate, onDelete,
                   <Button variant="ghost" size="icon-xs" onClick={addNewTag} className="text-muted-foreground/40 hover:text-foreground transition-colors"><Plus size={10} /></Button>
                 )}
               </div>
-              <div className="h-px bg-border/30 mx-1 mb-0.5" />
+              <Separator opacity={30} className="mx-1 mb-0.5" />
               {/* Existing tags */}
               <div className="overflow-y-auto flex-1 scrollbar-thin-xs">
                 {allTagNames.length === 0 && !tagInput.trim() && (
@@ -568,7 +568,7 @@ function FixedCardMenu({ x, y, resource, onClose, onEdit, onDuplicate, onDelete,
         </div>
         <Button variant="ghost" size="xs" onClick={() => { onDuplicate(resource); onClose(); }} className="flex items-center justify-start gap-2 w-full px-2.5 py-[5px] rounded-md text-xs text-muted-foreground/60 hover:text-foreground hover:bg-accent/50 transition-colors"><Copy size={10} /> 创建副本</Button>
         <Button variant="ghost" size="xs" onClick={() => onClose()} className="flex items-center justify-start gap-2 w-full px-2.5 py-[5px] rounded-md text-xs text-muted-foreground/60 hover:text-foreground hover:bg-accent/50 transition-colors"><Download size={10} /> 导出</Button>
-        <div className="h-px bg-border/30 my-0.5 mx-1" />
+        <Separator opacity={30} className="my-0.5 mx-1" />
         <Button variant="ghost" size="xs" onClick={() => { onDelete(resource); onClose(); }} className="flex items-center justify-start gap-2 w-full px-2.5 py-[5px] rounded-md text-xs text-destructive hover:text-destructive hover:bg-destructive/10 transition-colors"><Trash2 size={10} /> 删除</Button>
       </motion.div>
     </div>

@@ -114,7 +114,7 @@ export function ImportModal({ open, onClose }: Props) {
                   onDrop={handleDrop}
                   onClick={() => fileRef.current?.click()}
                   className={`border-2 border-dashed rounded-xl p-8 flex flex-col items-center justify-center transition-all cursor-pointer ${
-                    dragOver ? 'border-primary/40 bg-primary/5' : 'border-border/20 hover:border-border/40 hover:bg-accent/15'
+                    dragOver ? 'border-primary/40 bg-primary/5' : 'border-border/20 hover:border-border/40 hover:bg-accent/40'
                   }`}
                 >
                   <Upload size={24} strokeWidth={1.2} className="text-muted-foreground/40 mb-3" />
