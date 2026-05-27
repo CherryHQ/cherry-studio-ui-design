@@ -119,7 +119,7 @@ export function FileGrid({
                   variant="ghost"
                   onClick={(e) => { e.stopPropagation(); onDelete(file.id); }}
                   title="删除"
-                  className="w-5 h-5 p-0 rounded flex items-center justify-center text-muted-foreground/35 hover:text-destructive/80 bg-background/40 backdrop-blur-[1px] transition-colors"
+                  className="w-5 h-5 p-0 rounded flex items-center justify-center text-muted-foreground/40 hover:text-destructive/80 bg-background/40 backdrop-blur-[1px] transition-colors"
                 >
                   <Trash2 size={10} />
                 </Button>

@@ -6,6 +6,7 @@ import {
   Dialog, DialogContent, DialogTitle,
   Button, Input, Textarea, Popover, PopoverTrigger, PopoverContent,
 } from '@cherry-studio/ui';
+import { Separator } from "@cherry-studio/ui";
 import { ModelPickerPanel } from '@/app/components/shared/ModelPickerPanel';
 import { ASSISTANT_MODELS } from '@/app/config/models';
 import { AVATAR_OPTIONS as AVATAR_EMOJIS } from '@/app/config/constants';
@@ -133,7 +134,7 @@ export function CreateEntityDialog({ open, onOpenChange, variant, onCreate }: Cr
             </div>
           </div>
           <Button variant="ghost" size="icon-xs" onClick={() => close(false)}
-            className="text-muted-foreground/60 hover:text-foreground hover:bg-accent/30">
+            className="text-muted-foreground/60 hover:text-foreground hover:bg-accent/40">
             <X size={14} />
           </Button>
         </div>
@@ -143,11 +144,11 @@ export function CreateEntityDialog({ open, onOpenChange, variant, onCreate }: Cr
           {/* Avatar + name */}
           <div className="flex items-end gap-3">
             <div>
-              <label className="block text-xs text-muted-foreground/70 mb-1">头像</label>
+              <label className="block text-xs text-muted-foreground/80 mb-1">头像</label>
               <Popover open={avatarOpen} onOpenChange={setAvatarOpen}>
                 <PopoverTrigger asChild>
                   <Button variant="ghost" size="inline"
-                    className="h-9 flex items-center gap-1 px-2 rounded-md border border-border/40 bg-background hover:bg-accent/30">
+                    className="h-9 flex items-center gap-1 px-2 rounded-md border border-border/40 bg-background hover:bg-accent/40">
                     <span className="w-6 h-6 rounded flex items-center justify-center overflow-hidden">
                       {avatarIsImage
                         ? <img src={avatar} alt="" className="w-full h-full object-cover" />
@@ -177,7 +178,7 @@ export function CreateEntityDialog({ open, onOpenChange, variant, onCreate }: Cr
                       );
                     })}
                   </div>
-                  <div className="h-px bg-border/30 mt-1.5" />
+                  <Separator opacity={30} className="mt-1.5" />
                   {/* Tab body */}
                   {avatarTab === 'emoji' ? (
                     <div className="grid grid-cols-8 gap-1 p-2 max-h-[260px] overflow-y-auto scrollbar-thin">
@@ -257,7 +258,7 @@ export function CreateEntityDialog({ open, onOpenChange, variant, onCreate }: Cr
               </Popover>
             </div>
             <div className="flex-1 min-w-0">
-              <label className="block text-xs text-muted-foreground/70 mb-1">名称</label>
+              <label className="block text-xs text-muted-foreground/80 mb-1">名称</label>
               <Input value={name} onChange={e => setName(e.target.value)} autoFocus
                 placeholder={isAgent ? '例如：代码助手' : '例如：写作助手'}
                 className="h-9 text-sm" />
@@ -266,11 +267,11 @@ export function CreateEntityDialog({ open, onOpenChange, variant, onCreate }: Cr
 
           {/* Model — generic ModelPickerPanel inside a popover */}
           <div>
-            <label className="block text-xs text-muted-foreground/70 mb-1">模型</label>
+            <label className="block text-xs text-muted-foreground/80 mb-1">模型</label>
             <Popover open={modelOpen} onOpenChange={setModelOpen}>
               <PopoverTrigger asChild>
                 <Button variant="ghost" size="inline"
-                  className="w-full h-9 flex items-center justify-between gap-2 px-3 rounded-md border border-border/40 bg-background hover:bg-accent/30">
+                  className="w-full h-9 flex items-center justify-between gap-2 px-3 rounded-md border border-border/40 bg-background hover:bg-accent/40">
                   <span className="flex items-center gap-2 min-w-0">
                     <Sparkles size={12} className="text-primary/60 flex-shrink-0" />
                     <span className="text-sm truncate">{currentModel?.name ?? '选择模型'}</span>
@@ -297,7 +298,7 @@ export function CreateEntityDialog({ open, onOpenChange, variant, onCreate }: Cr
 
           {/* Description */}
           <div>
-            <label className="block text-xs text-muted-foreground/70 mb-1">描述</label>
+            <label className="block text-xs text-muted-foreground/80 mb-1">描述</label>
             <Textarea value={description} onChange={e => setDescription(e.target.value)}
               placeholder={`一句话介绍这个${noun}的用途与擅长场景`}
               rows={3}

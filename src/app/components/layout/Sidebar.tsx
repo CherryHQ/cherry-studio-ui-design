@@ -159,7 +159,7 @@ function FullBottomSection({ onSettingsClick }: {
       {/* Bottom bar: settings shortcut */}
       <button
         onClick={() => onSettingsClick?.()}
-        className="flex items-center gap-2.5 w-full rounded-lg px-1.5 py-1.5 -mx-1 text-sidebar-foreground/80 hover:text-sidebar-foreground hover:bg-accent/30 transition-colors cursor-pointer"
+        className="flex items-center gap-2.5 w-full rounded-lg px-1.5 py-1.5 -mx-1 text-sidebar-foreground/80 hover:text-sidebar-foreground hover:bg-accent/40 transition-colors cursor-pointer"
         title="设置"
       >
         <Settings size={16} strokeWidth={1.6} className="flex-shrink-0" />

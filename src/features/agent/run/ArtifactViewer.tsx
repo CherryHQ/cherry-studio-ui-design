@@ -130,7 +130,7 @@ function CodeBlock({ code }: { code: string }) {
   return (
     <div className="font-mono text-xs leading-[20px]">
       {lines.map((line, i) => (
-        <div key={i} className="flex hover:bg-accent/15">
+        <div key={i} className="flex hover:bg-accent/40">
           <span
             className="text-right pr-5 text-muted-foreground/40 select-none flex-shrink-0 tabular-nums"
             style={{ width: gutterWidth, minWidth: gutterWidth }}
@@ -184,7 +184,7 @@ export function ArtifactViewer({ fileContent, fileName, previewUrl, hasArtifact,
           <Tooltip content={activeTab === 'preview' ? '切换到代码' : '切换到预览'} side="bottom">
             <Button variant="ghost" size="xs"
               onClick={() => setActiveTab(activeTab === 'preview' ? 'code' : 'preview')}
-              className="gap-1.5 px-2 text-foreground hover:bg-accent/15">
+              className="gap-1.5 px-2 text-foreground hover:bg-accent/40">
               {activeTab === 'preview'
                 ? <><Eye className="h-3.5 w-3.5" />预览</>
                 : <><Code2 className="h-3.5 w-3.5" />代码</>}
@@ -208,7 +208,7 @@ export function ArtifactViewer({ fileContent, fileName, previewUrl, hasArtifact,
 
           {activeTab === 'code' && fileContent && (
             <Button variant="ghost" size="xs" onClick={handleCopy}
-              className="gap-1 text-muted-foreground hover:text-foreground hover:bg-accent/15">
+              className="gap-1 text-muted-foreground hover:text-foreground hover:bg-accent/40">
               {copied ? <Check size={9} className="text-cherry-primary-dark" /> : <Copy size={9} />}
               {copied ? '已复制' : '复制'}
             </Button>
@@ -232,7 +232,7 @@ export function ArtifactViewer({ fileContent, fileName, previewUrl, hasArtifact,
               <DropdownMenuContent align="end" side="bottom" className="w-[170px]">
                 <div className="px-2 py-1 text-xs text-muted-foreground/60">使用应用打开</div>
                 <DropdownMenuItem className="gap-2 px-2 py-[5px] text-xs">
-                  <Eye size={12} className="text-muted-foreground/70 flex-shrink-0" />
+                  <Eye size={12} className="text-muted-foreground/80 flex-shrink-0" />
                   <span className="flex-1">预览</span>
                 </DropdownMenuItem>
                 <DropdownMenuItem className="gap-2 px-2 py-[5px] text-xs">
@@ -253,12 +253,12 @@ export function ArtifactViewer({ fileContent, fileName, previewUrl, hasArtifact,
                   <span className="flex-1">Cursor</span>
                 </DropdownMenuItem>
                 <DropdownMenuItem className="gap-2 px-2 py-[5px] text-xs">
-                  <TerminalSquare size={12} className="text-muted-foreground/70 flex-shrink-0" />
+                  <TerminalSquare size={12} className="text-muted-foreground/80 flex-shrink-0" />
                   <span className="flex-1">Terminal</span>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem className="gap-2 px-2 py-[5px] text-xs">
-                  <ExternalLink size={12} className="text-muted-foreground/70 flex-shrink-0" />
+                  <ExternalLink size={12} className="text-muted-foreground/80 flex-shrink-0" />
                   <span className="flex-1">其他应用…</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
@@ -277,11 +277,11 @@ export function ArtifactViewer({ fileContent, fileName, previewUrl, hasArtifact,
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" side="bottom" className="w-[170px]">
               <DropdownMenuItem className="gap-2 px-2 py-[5px] text-xs">
-                <Layers size={12} className="text-muted-foreground/70 flex-shrink-0" />
+                <Layers size={12} className="text-muted-foreground/80 flex-shrink-0" />
                 <span className="flex-1">分享到工作台</span>
               </DropdownMenuItem>
               <DropdownMenuItem className="gap-2 px-2 py-[5px] text-xs">
-                <LinkIcon size={12} className="text-muted-foreground/70 flex-shrink-0" />
+                <LinkIcon size={12} className="text-muted-foreground/80 flex-shrink-0" />
                 <span className="flex-1">分享链接</span>
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -303,7 +303,7 @@ export function ArtifactViewer({ fileContent, fileName, previewUrl, hasArtifact,
             <div className="flex items-center">
               <div className="w-px h-3 bg-border/30 mx-1" />
               <Tooltip content="关闭预览" side="bottom"><Button variant="ghost" size="icon-xs" onClick={onTogglePreview}
-                className="text-muted-foreground hover:text-foreground hover:bg-accent/15">
+                className="text-muted-foreground hover:text-foreground hover:bg-accent/40">
                 <X size={11} />
               </Button></Tooltip>
             </div>
@@ -329,7 +329,7 @@ export function ArtifactViewer({ fileContent, fileName, previewUrl, hasArtifact,
               {previewHtml ? (
                 <div className="h-full w-full flex justify-center" style={device !== 'desktop' ? { padding: '16px' } : undefined}>
                   <div
-                    className={`bg-background h-full overflow-hidden ${device !== 'desktop' ? 'rounded-lg shadow-lg border border-border/25' : 'w-full'}`}
+                    className={`bg-background h-full overflow-hidden ${device !== 'desktop' ? 'rounded-lg shadow-lg border border-border/20' : 'w-full'}`}
                     style={device !== 'desktop' ? { width: deviceWidth, maxWidth: '100%' } : undefined}
                   >
                     <iframe

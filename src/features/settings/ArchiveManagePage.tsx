@@ -100,7 +100,7 @@ export function ArchiveManagePage() {
             {filtered.map(session => (
               <div
                 key={session.id}
-                className="group flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-accent/15 transition-colors"
+                className="group flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-accent/40 transition-colors"
               >
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
@@ -117,7 +117,7 @@ export function ArchiveManagePage() {
                     variant="ghost"
                     size="inline"
                     onClick={() => handleUnarchive(session.id)}
-                    className="px-2 py-[2px] text-xs text-foreground hover:bg-accent/30"
+                    className="px-2 py-[2px] text-xs text-foreground hover:bg-accent/40"
                   >
                     <ArchiveRestore size={11} />
                     <span>恢复</span>

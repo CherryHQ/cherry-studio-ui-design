@@ -9,6 +9,7 @@ import {
   Popover, PopoverTrigger, PopoverContent,
 } from '@cherry-studio/ui';
 import { Tooltip } from '@/app/components/Tooltip';
+import { FALLBACK_BRAND_COLOR } from '@/app/config/brand-colors';
 
 // ===========================
 // Types
@@ -147,7 +148,7 @@ function ChannelIcon({ typeId, size = 18 }: { typeId: string; size?: number }) {
     wechat: 'wechat', discord: 'discord', slack: 'slack',
   };
   const bid = brandMap[typeId];
-  if (bid) return <BrandLogo id={bid} fallbackLetter={typeId[0].toUpperCase()} fallbackColor="#6b7280" size={size} />;
+  if (bid) return <BrandLogo id={bid} fallbackLetter={typeId[0].toUpperCase()} fallbackColor={FALLBACK_BRAND_COLOR} size={size} />;
   return <MessageSquare size={size} />;
 }
 
@@ -175,7 +176,7 @@ function DropdownSelect({ value, onChange, options, placeholder }: {
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <button
-          className="flex items-center w-full px-2.5 py-[5px] bg-muted/30 rounded-lg border border-section-border text-left hover:bg-muted/50 transition-colors"
+          className="flex items-center w-full px-2.5 py-[5px] bg-muted/30 rounded-lg border border-section-border text-left hover:bg-accent/40 transition-colors"
           type="button"
         >
           <span className={`flex-1 text-sm truncate ${selected ? 'text-foreground' : 'text-muted-foreground/50'}`}>
@@ -506,7 +507,7 @@ export function ChannelsPage() {
               {filteredInstances.map((inst: ChannelInstance) => (
                 <div
                   key={inst.id}
-                  className="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-muted/30 transition-colors group"
+                  className="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-accent/40 transition-colors group"
                 >
                   <div className="flex items-center gap-2.5 min-w-0">
                     <StatusDot status={inst.status} />

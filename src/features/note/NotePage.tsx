@@ -12,6 +12,7 @@ import {
   Braces, Table, Minus, Link, Image as ImageIcon, Eye, Search
 } from 'lucide-react';
 import { Button, Input, Textarea, Dialog, DialogContent, Popover, PopoverTrigger, PopoverContent, EmptyState, SearchInput } from '@cherry-studio/ui';
+import { Separator } from "@cherry-studio/ui";
 import { Tooltip } from '@/app/components/Tooltip';
 import type { AssistantInfo } from '@/app/types/assistant';
 import type { NoteItem, AIChatMsg, NoteQuickAction } from '@/app/types/note';
@@ -260,7 +261,7 @@ function NotePreviewRenderer({ content }: { content: string }) {
       if (match) { elements.push(<div key={i} className="flex items-start gap-2 py-0.5 ml-4 text-sm text-foreground"><span className="text-primary">{String.fromCharCode(8226)}</span><span><strong className="text-foreground">{match[1]}</strong> {match[2]}</span></div>); continue; }
     }
     if (line.startsWith('- ')) { elements.push(<div key={i} className="flex items-start gap-2 py-0.5 ml-4 text-sm text-foreground"><span className="text-primary">{String.fromCharCode(8226)}</span><span>{renderInline(line.slice(2))}</span></div>); continue; }
-    if (line.startsWith('| ---')) { elements.push(<div key={i} className="h-px bg-border/30 my-0.5" />); continue; }
+    if (line.startsWith('| ---')) { elements.push(<Separator key={i} opacity={30} className="my-0.5" />); continue; }
     if (line.startsWith('| ')) {
       const pipePattern = new RegExp('^\\|?\\s*');
       const pipeEndPattern = new RegExp('\\s*\\|?$');
@@ -394,7 +395,7 @@ function NoteEditableRenderer({ content, onChange }: { content: string; onChange
       continue;
     }
     if (line.startsWith('| ---')) {
-      elements.push(<div key={i} className="h-px bg-border/30 my-0.5" />);
+      elements.push(<Separator key={i} opacity={30} className="my-0.5" />);
       continue;
     }
 
@@ -885,13 +886,13 @@ export function NotePage() {
                 wrapperClassName="h-7 px-2.5 rounded-md bg-accent/50 border-none focus-within:ring-1 focus-within:ring-border/50"
               />
               <div className="flex items-center gap-1">
-                <Button variant="ghost" size="xs" onClick={() => setFilterStarred(!filterStarred)} className={`flex items-center gap-1 px-2 rounded-md text-xs ${filterStarred ? 'bg-accent-amber-muted text-accent-amber' : 'text-muted-foreground hover:bg-accent/15 hover:text-foreground'}`}>
+                <Button variant="ghost" size="xs" onClick={() => setFilterStarred(!filterStarred)} className={`flex items-center gap-1 px-2 rounded-md text-xs ${filterStarred ? 'bg-accent-amber-muted text-accent-amber' : 'text-muted-foreground hover:bg-accent/40 hover:text-foreground'}`}>
                   <Star size={10} className={filterStarred ? 'fill-accent-amber' : ''} /> 收藏
                 </Button>
-                <Button variant="ghost" size="xs" onClick={() => setSortBy(sortBy === 'name' ? 'date' : 'name')} className="flex items-center gap-1 px-2 rounded-md text-xs text-muted-foreground hover:bg-accent/15 hover:text-foreground">
+                <Button variant="ghost" size="xs" onClick={() => setSortBy(sortBy === 'name' ? 'date' : 'name')} className="flex items-center gap-1 px-2 rounded-md text-xs text-muted-foreground hover:bg-accent/40 hover:text-foreground">
                   <SortAsc size={10} /> {sortBy === 'name' ? '名称' : '日期'}
                 </Button>
-                <Button variant="ghost" size="xs" className="flex items-center gap-1 px-2 rounded-md text-xs text-muted-foreground hover:bg-accent/15 hover:text-foreground">
+                <Button variant="ghost" size="xs" className="flex items-center gap-1 px-2 rounded-md text-xs text-muted-foreground hover:bg-accent/40 hover:text-foreground">
                   <Filter size={10} /> 筛选
                 </Button>
               </div>
@@ -1064,7 +1065,7 @@ export function NotePage() {
             <div className="h-11 flex items-center gap-2 px-3 flex-shrink-0 relative">
               <Popover open={showAssistantPicker} onOpenChange={(open) => { setShowAssistantPicker(open); if (open) { setAstSearch(''); setAstTag(null); } }}>
                 <PopoverTrigger asChild>
-                  <Button variant="ghost" size="inline" className={`flex items-center gap-1.5 px-2 py-[4px] rounded-md text-xs ${showAssistantPicker ? 'bg-accent/25 text-foreground' : 'text-foreground hover:text-foreground hover:bg-accent/15'}`}>
+                  <Button variant="ghost" size="inline" className={`flex items-center gap-1.5 px-2 py-[4px] rounded-md text-xs ${showAssistantPicker ? 'bg-accent/25 text-foreground' : 'text-foreground hover:text-foreground hover:bg-accent/40'}`}>
                     <span className="text-sm leading-none flex-shrink-0">{selectedAssistantEmoji}</span>
                     <span className="truncate max-w-[100px]">{selectedAssistant.name}</span>
                     <ChevronDown size={8} className={`text-muted-foreground/50 flex-shrink-0 transition-transform duration-100 ${showAssistantPicker ? 'rotate-180' : ''}`} />
@@ -1086,12 +1087,12 @@ export function NotePage() {
                       <div className="flex items-center gap-1 flex-wrap">
                         <Tag size={8} className="text-muted-foreground/40 flex-shrink-0" />
                         {allAstTags.map(tag => (
-                          <Button key={tag} variant={astTag === tag ? 'secondary' : 'ghost'} size="inline" onClick={() => setAstTag(astTag === tag ? null : tag)} className={`px-1.5 py-px rounded-full text-xs ${astTag !== tag ? 'bg-accent/25 text-muted-foreground hover:bg-accent/15' : ''}`}>{tag}</Button>
+                          <Button key={tag} variant={astTag === tag ? 'secondary' : 'ghost'} size="inline" onClick={() => setAstTag(astTag === tag ? null : tag)} className={`px-1.5 py-px rounded-full text-xs ${astTag !== tag ? 'bg-accent/25 text-muted-foreground hover:bg-accent/40' : ''}`}>{tag}</Button>
                         ))}
                       </div>
                     </div>
                   )}
-                  <div className="h-px bg-border/30 mx-1" />
+                  <Separator opacity={30} className="mx-1" />
                   <div className="p-1.5 pt-1 max-h-[240px] overflow-y-auto scrollbar-thin">
                     {filteredNoteAssistants.length === 0 ? (
                       <div className="px-2.5 py-3 text-center text-xs text-muted-foreground/40">无匹配结果</div>
@@ -1128,7 +1129,7 @@ export function NotePage() {
               <div className="flex items-center px-2 pt-1.5 gap-0.5">
                 {actionCategories.map(cat => {
                   const CatIcon = cat.icon;
-                  return (<Button key={cat.id} variant="ghost" size="inline" onClick={() => setActiveActionCategory(cat.id)} className={`flex items-center gap-1 px-2 py-1 rounded-md text-xs ${activeActionCategory === cat.id ? 'bg-accent text-foreground' : 'text-muted-foreground/60 hover:text-foreground hover:bg-accent/15'}`}><CatIcon size={10} />{cat.label}</Button>);
+                  return (<Button key={cat.id} variant="ghost" size="inline" onClick={() => setActiveActionCategory(cat.id)} className={`flex items-center gap-1 px-2 py-1 rounded-md text-xs ${activeActionCategory === cat.id ? 'bg-accent text-foreground' : 'text-muted-foreground/60 hover:text-foreground hover:bg-accent/40'}`}><CatIcon size={10} />{cat.label}</Button>);
                 })}
                 <div className="flex-1" />
                 <Button variant="ghost" size="inline" onClick={() => setShowAllActions(!showAllActions)} className="text-xs text-muted-foreground/40 hover:text-foreground px-1">{showAllActions ? '收起' : '全部'}</Button>
@@ -1196,30 +1197,30 @@ export function NotePage() {
 
       {/* Context Menu */}
       {ctxMenu && (
-        <div ref={ctxRef} className="fixed z-[var(--z-dropdown)] min-w-[180px] bg-popover border border-border/60 rounded-lg shadow-xl py-1 animate-in fade-in zoom-in-95 duration-100" style={{ left: ctxMenu.x, top: ctxMenu.y }}>
+        <div ref={ctxRef} className="fixed z-[var(--z-dropdown)] min-w-[180px] bg-popover border border-border/50 rounded-lg shadow-xl py-1 animate-in fade-in zoom-in-95 duration-100" style={{ left: ctxMenu.x, top: ctxMenu.y }}>
           {ctxMenu.item.type === 'file' ? (
             <div className="contents">
               <Button onClick={() => { setSelectedNoteId(ctxMenu.item.id); setCtxMenu(null); }} variant="ghost" size="xs" className="w-full flex items-center gap-2.5 px-3 text-sm text-foreground hover:bg-accent justify-start"><FileText size={13} className="text-muted-foreground" />打开</Button>
-              <div className="h-px bg-border/30 my-0.5 mx-2" />
+              <Separator opacity={30} className="my-0.5 mx-2" />
               <Button onClick={() => startRename(ctxMenu.item)} variant="ghost" size="xs" className="w-full flex items-center gap-2.5 px-3 text-sm text-foreground hover:bg-accent justify-start"><PenLine size={13} className="text-muted-foreground" />重命名</Button>
               <Button onClick={() => duplicateItem(ctxMenu.item)} variant="ghost" size="xs" className="w-full flex items-center gap-2.5 px-3 text-sm text-foreground hover:bg-accent justify-start"><Copy size={13} className="text-muted-foreground" />创建副本</Button>
               <Button onClick={() => toggleStar(ctxMenu.item.id)} variant="ghost" size="xs" className="w-full flex items-center gap-2.5 px-3 text-sm text-foreground hover:bg-accent justify-start"><Star size={13} className={ctxMenu.item.starred ? 'text-accent-amber fill-accent-amber' : 'text-muted-foreground'} />{ctxMenu.item.starred ? '取消收藏' : '添加收藏'}</Button>
-              <div className="h-px bg-border/30 my-0.5 mx-2" />
+              <Separator opacity={30} className="my-0.5 mx-2" />
               <Button onClick={() => openMoveDialog(ctxMenu.item)} variant="ghost" size="xs" className="w-full flex items-center gap-2.5 px-3 text-sm text-foreground hover:bg-accent justify-start"><FolderOpen size={13} className="text-muted-foreground" />移动到...</Button>
-              <div className="h-px bg-border/30 my-0.5 mx-2" />
+              <Separator opacity={30} className="my-0.5 mx-2" />
               <Button onClick={() => confirmDelete(ctxMenu.item)} variant="ghost" size="xs" className="w-full flex items-center gap-2.5 px-3 text-sm text-destructive hover:bg-destructive/10 justify-start"><Trash2 size={13} />删除</Button>
             </div>
           ) : (
             <div className="contents">
               <Button onClick={() => { toggleFolder(ctxMenu.item.id); setCtxMenu(null); }} variant="ghost" size="xs" className="w-full flex items-center gap-2.5 px-3 text-sm text-foreground hover:bg-accent justify-start"><ChevronRight size={13} className="text-muted-foreground" />{expandedFolders.has(ctxMenu.item.id) ? '收起文件夹' : '展开文件夹'}</Button>
-              <div className="h-px bg-border/30 my-0.5 mx-2" />
+              <Separator opacity={30} className="my-0.5 mx-2" />
               <Button onClick={() => addNewNoteInFolder(ctxMenu.item.id)} variant="ghost" size="xs" className="w-full flex items-center gap-2.5 px-3 text-sm text-foreground hover:bg-accent justify-start"><FilePlus size={13} className="text-muted-foreground" />新建笔记</Button>
               <Button onClick={() => addNewSubfolder(ctxMenu.item.id)} variant="ghost" size="xs" className="w-full flex items-center gap-2.5 px-3 text-sm text-foreground hover:bg-accent justify-start"><FolderPlus size={13} className="text-muted-foreground" />新建子文件夹</Button>
-              <div className="h-px bg-border/30 my-0.5 mx-2" />
+              <Separator opacity={30} className="my-0.5 mx-2" />
               <Button onClick={() => startRename(ctxMenu.item)} variant="ghost" size="xs" className="w-full flex items-center gap-2.5 px-3 text-sm text-foreground hover:bg-accent justify-start"><PenLine size={13} className="text-muted-foreground" />重命名</Button>
               <Button onClick={() => openMoveDialog(ctxMenu.item)} variant="ghost" size="xs" className="w-full flex items-center gap-2.5 px-3 text-sm text-foreground hover:bg-accent justify-start"><FolderOpen size={13} className="text-muted-foreground" />移动到...</Button>
               <Button onClick={() => duplicateItem(ctxMenu.item)} variant="ghost" size="xs" className="w-full flex items-center gap-2.5 px-3 text-sm text-foreground hover:bg-accent justify-start"><Copy size={13} className="text-muted-foreground" />创建副本</Button>
-              <div className="h-px bg-border/30 my-0.5 mx-2" />
+              <Separator opacity={30} className="my-0.5 mx-2" />
               <Button onClick={() => confirmDelete(ctxMenu.item)} variant="ghost" size="xs" className="w-full flex items-center gap-2.5 px-3 text-sm text-destructive hover:bg-destructive/10 justify-start"><Trash2 size={13} />删除文件夹</Button>
             </div>
           )}

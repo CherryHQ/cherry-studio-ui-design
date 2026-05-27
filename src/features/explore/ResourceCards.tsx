@@ -124,7 +124,7 @@ export function AssistantCard({ assistant, onChat, onClick, isFavorited }: {
 
         <p className="text-xs text-muted-foreground/50 leading-relaxed line-clamp-2 mb-2">{assistant.description}</p>
 
-        <div className="px-2.5 py-1.5 rounded-lg bg-accent/25 border border-border/10 mb-3">
+        <div className="px-2.5 py-1.5 rounded-lg bg-accent/25 border border-border/15 mb-3">
           <p className="text-xs text-muted-foreground/40 leading-relaxed line-clamp-2 italic">"{assistant.persona}"</p>
         </div>
 

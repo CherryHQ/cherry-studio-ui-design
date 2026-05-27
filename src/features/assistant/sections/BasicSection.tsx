@@ -7,6 +7,7 @@ import { Button } from '@cherrystudio/ui/components/primitives/button';
 // transparent default. Textarea + Switch stay on legacy for now.
 import { Input } from '@cherrystudio/ui/components/primitives/input';
 import { Textarea, Switch } from '@cherry-studio/ui';
+import { Separator } from "@cherry-studio/ui";
 import { Slider } from '@cherrystudio/ui/components/primitives/slider';
 import { Badge } from '@cherrystudio/ui/components/primitives/badge';
 import { Popover, PopoverTrigger, PopoverContent } from '@cherrystudio/ui/components/primitives/popover';
@@ -83,8 +84,8 @@ export function BasicSection({ resource }: Props) {
       {/* Row 1: 头像与名称 + 模型 — two-row form with aligned label band */}
       <div>
         <div className="flex items-center justify-between gap-3 mb-1.5">
-          <label className="text-sm text-foreground/85">头像与名称</label>
-          <label className="text-sm text-foreground/85 w-[220px] flex-shrink-0">模型</label>
+          <label className="text-sm text-muted-foreground">头像与名称</label>
+          <label className="text-sm text-muted-foreground w-[220px] flex-shrink-0">模型</label>
         </div>
         <div className="flex items-center gap-3">
           <Popover>
@@ -116,7 +117,7 @@ export function BasicSection({ resource }: Props) {
                   );
                 })}
               </div>
-              <div className="h-px bg-border/30 mt-1.5" />
+              <Separator opacity={30} className="mt-1.5" />
               {avatarTab === 'emoji' && (
                 <div className="grid grid-cols-8 gap-1 p-2 max-h-[260px] overflow-y-auto scrollbar-thin">
                   {AVATAR_OPTIONS.map(a => (
@@ -172,7 +173,7 @@ export function BasicSection({ resource }: Props) {
             <PopoverTrigger asChild>
               <Button
                 variant="outline"
-                className="flex-shrink-0 justify-between gap-2 h-11 px-3 text-xs border-border/20 bg-accent/15 hover:bg-accent/25 w-[220px] rounded-xl"
+                className="flex-shrink-0 justify-between gap-2 h-11 px-3 text-xs border-border/20 bg-accent/15 hover:bg-accent/40 w-[220px] rounded-xl"
               >
                 <span className="truncate text-foreground">
                   {ASSISTANT_MODELS.find(m => m.id === model)?.name || model}
@@ -214,7 +215,7 @@ export function BasicSection({ resource }: Props) {
           placeholder="选择标签…"
           searchPlaceholder="搜索标签…"
           emptyText="没有匹配标签"
-          className="h-11 rounded-xl border-border/20 bg-accent/15 text-xs hover:bg-accent/20"
+          className="h-11 rounded-xl border-border/20 bg-accent/15 text-xs hover:bg-accent/40"
           renderOption={(opt) => {
             const preset = TAG_PRESETS.find(p => p.tag === opt.value);
             return <span className={`px-1.5 py-[1px] rounded-md text-xs border ${preset?.color ?? ''}`}>{opt.label}</span>;
@@ -230,7 +231,7 @@ export function BasicSection({ resource }: Props) {
 function FieldGroup({ label, children }: { label: React.ReactNode; children: React.ReactNode }) {
   return (
     <div>
-      <label className="text-sm text-foreground/85 mb-1.5 block">{label}</label>
+      <label className="text-sm text-muted-foreground mb-1.5 block">{label}</label>
       {children}
     </div>
   );
@@ -245,7 +246,7 @@ function ToggleRow({ label, hint, checked, onCheckedChange }: {
   return (
     <div className="flex items-center justify-between gap-3 py-3">
       <div className="flex items-center gap-1.5 min-w-0">
-        <label className="text-sm text-foreground/85">{label}</label>
+        <label className="text-sm text-muted-foreground">{label}</label>
         {hint && <InfoTip text={hint} />}
       </div>
       <Switch checked={checked} onCheckedChange={onCheckedChange} className="flex-shrink-0" />
@@ -270,7 +271,7 @@ function ParamRow({
     <div className="py-3">
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-1.5 min-w-0">
-          <label className="text-sm text-foreground/85">
+          <label className="text-sm text-muted-foreground">
             {label}
             {valueLabel != null && enabled && (
               <span className="text-muted-foreground/40 ml-1.5 tabular-nums">{valueLabel}</span>

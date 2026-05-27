@@ -55,7 +55,7 @@ export function ModelSection() {
     <div className="max-w-3xl space-y-5">
       <div className="flex justify-end -mb-2">
         <Button variant="ghost" size="xs" onClick={resetParameters}
-          className="gap-1.5 text-muted-foreground/70 hover:text-foreground">
+          className="gap-1.5 text-muted-foreground/80 hover:text-foreground">
           <RotateCcw size={11} />
           重置
         </Button>
@@ -91,7 +91,7 @@ export function ModelSection() {
         <div className="py-3">
           <div className="flex items-center justify-between gap-3">
             <div className="flex items-center gap-1.5 min-w-0">
-              <label className="text-sm text-foreground/85">
+              <label className="text-sm text-muted-foreground">
                 自动上下文
                 {!enableContextCount && (
                   <span className="text-muted-foreground/40 ml-1.5 tabular-nums">
@@ -146,7 +146,7 @@ export function ModelSection() {
         {/* 自定义参数 — dynamic list with name + type + value + delete */}
         <div className="py-3 space-y-2">
           <div className="flex items-center justify-between gap-3">
-            <label className="text-sm text-foreground/85">自定义参数</label>
+            <label className="text-sm text-muted-foreground">自定义参数</label>
             <Button variant="outline" size="xs" onClick={addCustomParam} className="gap-1.5 h-7">
               <Plus size={11} />
               添加参数
@@ -219,7 +219,7 @@ function ToggleRow({ label, hint, checked, onCheckedChange }: {
   return (
     <div className="flex items-center justify-between gap-3 py-3">
       <div className="flex items-center gap-1.5 min-w-0">
-        <label className="text-sm text-foreground/85">{label}</label>
+        <label className="text-sm text-muted-foreground">{label}</label>
         {hint && <InfoTip text={hint} />}
       </div>
       <Switch checked={checked} onCheckedChange={onCheckedChange} className="flex-shrink-0" />
@@ -241,7 +241,7 @@ function ParamRow({
     <div className="py-3">
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-1.5 min-w-0">
-          <label className="text-sm text-foreground/85">
+          <label className="text-sm text-muted-foreground">
             {label}
             {valueLabel != null && enabled && (
               <span className="text-muted-foreground/40 ml-1.5 tabular-nums">{valueLabel}</span>

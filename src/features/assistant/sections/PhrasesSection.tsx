@@ -67,11 +67,11 @@ export function PhrasesSection() {
 
       <div>
         <div className="flex items-center justify-between mb-2">
-          <label className="text-sm text-foreground/85">已引用 Prompt</label>
+          <label className="text-sm text-muted-foreground">已引用 Prompt</label>
           <Popover open={showPicker} onOpenChange={(v) => { setShowPicker(v); if (!v) setPickerSearch(''); }}>
             <PopoverTrigger asChild>
               <Button variant="outline" size="xs"
-                className="flex items-center gap-1 h-7 px-2.5 rounded-md text-xs text-muted-foreground/70 hover:text-foreground hover:bg-accent/15 border border-border/30">
+                className="flex items-center gap-1 h-7 px-2.5 rounded-md text-xs text-muted-foreground/80 hover:text-foreground hover:bg-accent/40 border border-border/30">
                 <Plus size={10} /> 引用 Prompt
               </Button>
             </PopoverTrigger>
@@ -82,7 +82,7 @@ export function PhrasesSection() {
                   onChange={setPickerSearch}
                   placeholder="搜索 Prompt…"
                   clearable
-                  wrapperClassName="flex items-center gap-1.5 px-2 h-7 rounded-md bg-muted/30 border border-border/25"
+                  wrapperClassName="flex items-center gap-1.5 px-2 h-7 rounded-md bg-muted/30 border border-border/20"
                 />
               </div>
               <div className="max-h-[260px] overflow-y-auto scrollbar-thin space-y-1">
@@ -101,7 +101,7 @@ export function PhrasesSection() {
                       <span className="text-sm">{p.avatar}</span>
                       <div className="flex-1 min-w-0">
                         <div className="text-xs text-foreground truncate">{p.name}</div>
-                        <div className="text-[11px] text-muted-foreground/55 truncate">{p.description}</div>
+                        <div className="text-xs text-muted-foreground/50 truncate">{p.description}</div>
                       </div>
                     </button>
                   ))
@@ -128,7 +128,7 @@ export function PhrasesSection() {
                       <span key={t} className={`text-[9px] px-1 py-px rounded border ${tagClass(t)} flex-shrink-0`}>{t}</span>
                     ))}
                   </div>
-                  <div className="text-xs text-muted-foreground/55 truncate">{p.description}</div>
+                  <div className="text-xs text-muted-foreground/50 truncate">{p.description}</div>
                 </div>
                 {/* Preview popover — shows the full Prompt body */}
                 <Popover>
@@ -149,7 +149,7 @@ export function PhrasesSection() {
                         {copiedId === p.id ? <Check size={11} className="text-primary" /> : <Copy size={11} />}
                       </Button>
                     </div>
-                    <pre className="max-h-[260px] overflow-y-auto scrollbar-thin px-3 py-2.5 text-[11px] font-mono leading-relaxed text-foreground/85 whitespace-pre-wrap break-words">
+                    <pre className="max-h-[260px] overflow-y-auto scrollbar-thin px-3 py-2.5 text-xs font-mono leading-relaxed text-muted-foreground whitespace-pre-wrap break-words">
                       {p.content || '（无正文）'}
                     </pre>
                   </PopoverContent>

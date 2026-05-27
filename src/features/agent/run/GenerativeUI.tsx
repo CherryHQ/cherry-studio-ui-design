@@ -126,7 +126,7 @@ export function GenUIOverlay({ items, onResolve }: {
         <div className="px-3 pb-3">
           <button
             onClick={() => onResolve(msgId, 'confirm')}
-            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all hover:bg-accent/60 active:scale-[0.99] group border-b border-border/10 ${
+            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all hover:bg-accent/50 active:scale-[0.97] group border-b border-border/15 ${
               data.confirmVariant === 'danger' ? 'hover:bg-destructive/8' : ''
             }`}
           >
@@ -136,7 +136,7 @@ export function GenUIOverlay({ items, onResolve }: {
           </button>
           <button
             onClick={() => onResolve(msgId, 'cancel')}
-            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all hover:bg-accent/60 active:scale-[0.99] group"
+            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all hover:bg-accent/50 active:scale-[0.97] group"
           >
             <span className="w-6 h-6 rounded-lg bg-muted flex items-center justify-center text-xs text-muted-foreground font-medium flex-shrink-0 group-hover:bg-foreground group-hover:text-background transition-colors">2</span>
             <span className="text-sm text-foreground flex-1">{data.cancelLabel || '取消'}</span>
@@ -152,7 +152,7 @@ export function GenUIOverlay({ items, onResolve }: {
                 key={i}
                 onClick={() => !opt.disabled && onResolve(msgId, opt.label)}
                 disabled={opt.disabled}
-                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all hover:bg-accent/60 active:scale-[0.99] group disabled:opacity-30 border-b border-border/10 last:border-b-0"
+                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all hover:bg-accent/50 active:scale-[0.97] group disabled:opacity-30 border-b border-border/15 last:border-b-0"
               >
                 <span className="w-6 h-6 rounded-lg bg-muted flex items-center justify-center text-xs text-muted-foreground font-medium flex-shrink-0 group-hover:bg-foreground group-hover:text-background transition-colors">
                   {i + 1}

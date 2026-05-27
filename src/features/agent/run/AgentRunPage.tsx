@@ -42,8 +42,6 @@ import {
 } from '@/app/mock';
 
 // Backward-compatible aliases
-type ChatMessage = AgentChatMessage;
-type SessionData = AgentSessionData;
 import {
   AGENT_PROVIDER_COLORS,
   RUN_MODE_LABELS, CAP_TAB_CONFIG,
@@ -126,12 +124,12 @@ function AgentPicker({
         onClick={() => { onSelectAgent(a); if (!isSelected) setOpen(false); }}
         onContextMenu={(e) => handleContextMenu(e, a.id)}
         className={`group w-full flex items-center gap-2.5 px-3 py-[5px] mb-0.5 text-left transition-all duration-[var(--duration-fast)] rounded-lg cursor-pointer ${
-          isSelected ? 'bg-accent/40 text-foreground' : 'text-foreground/80 hover:bg-accent/20'
+          isSelected ? 'bg-accent/40 text-foreground' : 'text-muted-foreground/80 hover:bg-accent/40'
         }`}
       >
         <span className="w-4 flex items-center justify-center flex-shrink-0">
           {isSelected ? (
-            <Check size={12} className="text-foreground/50" />
+            <Check size={12} className="text-muted-foreground/50" />
           ) : isPinned ? (
             <button
               onClick={(e) => { e.stopPropagation(); onTogglePin?.(a.id); }}
@@ -149,7 +147,7 @@ function AgentPicker({
         {onConfigureAgent && (
           <button
             onClick={(e) => { e.stopPropagation(); onConfigureAgent(a); setOpen(false); }}
-            className="w-5 h-5 flex items-center justify-center flex-shrink-0 text-muted-foreground/15 opacity-0 group-hover:opacity-100 hover:text-muted-foreground/40 transition-all"
+            className="w-5 h-5 flex items-center justify-center flex-shrink-0 text-muted-foreground/30 opacity-0 group-hover:opacity-100 hover:text-muted-foreground/40 transition-all"
           >
             <Bolt size={13} />
           </button>
@@ -172,7 +170,7 @@ function AgentPicker({
       <Popover open={open} onOpenChange={(v) => { if (v) handleOpen(); else setOpen(false); }}>
         <PopoverTrigger asChild>
           <Button size="inline" variant="ghost"
-            className={`gap-1 px-1.5 py-[3px] text-xs ${open ? 'bg-accent/25 text-foreground' : 'text-foreground hover:text-foreground hover:bg-accent/15'}`}
+            className={`gap-1 px-1.5 py-[3px] text-xs ${open ? 'bg-accent/25 text-foreground' : 'text-foreground hover:text-foreground hover:bg-accent/40'}`}
           >
             <span className="truncate max-w-[160px]">{selectedAgent.name}</span>
             <ChevronDown size={8} className={`text-muted-foreground/50 flex-shrink-0 transition-transform duration-100 ${open ? 'rotate-180' : ''}`} />
@@ -193,7 +191,7 @@ function AgentPicker({
               <button
                 onClick={() => setShowFilter(v => !v)}
                 className={`w-5 h-5 flex items-center justify-center rounded transition-colors flex-shrink-0 ${
-                  showFilter ? 'text-foreground/60 bg-accent/40' : 'text-muted-foreground/30 hover:text-muted-foreground/50'
+                  showFilter ? 'text-muted-foreground/60 bg-accent/40' : 'text-muted-foreground/30 hover:text-muted-foreground/50'
                 }`}
               >
                 <Filter size={12} />
@@ -209,20 +207,20 @@ function AgentPicker({
                   <button key={tag} onClick={() => setActiveTag(activeTag === tag ? null : tag)}
                     className={`px-2 py-[3px] rounded-full text-xs border transition-colors cursor-pointer ${
                       activeTag === tag
-                        ? 'bg-foreground/8 text-foreground/80 border-border/60'
-                        : 'bg-transparent text-muted-foreground/50 border-border/40 hover:bg-accent/20 hover:text-muted-foreground/70'
+                        ? 'bg-foreground/10 text-muted-foreground/80 border-border/50'
+                        : 'bg-transparent text-muted-foreground/50 border-border/40 hover:bg-accent/40 hover:text-muted-foreground/80'
                     }`}>{tag}</button>
                 ))}
               </div>
               <div className="flex items-center gap-1.5">
-                <span className="text-xs text-muted-foreground/35">排序</span>
+                <span className="text-xs text-muted-foreground/40">排序</span>
                 <button onClick={() => setSortOrder(sortOrder === 'recent' ? null : 'recent')}
                   className={`inline-flex items-center gap-1 px-2 py-[3px] rounded-full text-xs border transition-colors cursor-pointer ${
-                    sortOrder === 'recent' ? 'bg-foreground/8 text-foreground/80 border-border/60' : 'bg-transparent text-muted-foreground/50 border-border/40 hover:bg-accent/20'
+                    sortOrder === 'recent' ? 'bg-foreground/10 text-muted-foreground/80 border-border/50' : 'bg-transparent text-muted-foreground/50 border-border/40 hover:bg-accent/40'
                   }`}><ArrowDown size={10} /><span>最近</span></button>
                 <button onClick={() => setSortOrder(sortOrder === 'oldest' ? null : 'oldest')}
                   className={`inline-flex items-center gap-1 px-2 py-[3px] rounded-full text-xs border transition-colors cursor-pointer ${
-                    sortOrder === 'oldest' ? 'bg-foreground/8 text-foreground/80 border-border/60' : 'bg-transparent text-muted-foreground/50 border-border/40 hover:bg-accent/20'
+                    sortOrder === 'oldest' ? 'bg-foreground/10 text-muted-foreground/80 border-border/50' : 'bg-transparent text-muted-foreground/50 border-border/40 hover:bg-accent/40'
                   }`}><ArrowUp size={10} /><span>最早</span></button>
               </div>
             </div>
@@ -239,7 +237,7 @@ function AgentPicker({
                 <>
                   {pinned.length > 0 && (
                     <>
-                      <div className="text-xs text-muted-foreground/35 px-3 pt-2 pb-1">已固定</div>
+                      <div className="text-xs text-muted-foreground/40 px-3 pt-2 pb-1">已固定</div>
                       {pinned.map(renderAgentRow)}
                     </>
                   )}
@@ -252,7 +250,7 @@ function AgentPicker({
           <Separator className="bg-border/20" />
           <div className="px-1.5 py-1">
             <button onClick={() => { setOpen(false); onCreateNew(); }}
-              className="w-full flex items-center gap-2.5 px-3 py-[5px] text-left text-sm text-muted-foreground hover:text-foreground hover:bg-accent/20 rounded-lg transition-colors cursor-pointer">
+              className="w-full flex items-center gap-2.5 px-3 py-[5px] text-left text-sm text-muted-foreground hover:text-foreground hover:bg-accent/40 rounded-lg transition-colors cursor-pointer">
               <Plus size={14} className="flex-shrink-0" />
               <span className="flex-1">新建 Agent</span>
               <ChevronRight size={12} className="text-muted-foreground/40" />
@@ -275,7 +273,7 @@ function AgentPicker({
               if (agent && onConfigureAgent) { onConfigureAgent(agent); setOpen(false); }
               setContextMenu(null);
             }}
-              className="flex items-center gap-1.5 px-2 py-[3px] text-xs text-foreground hover:bg-accent/15 rounded-md transition-colors cursor-pointer w-full text-left">
+              className="flex items-center gap-1.5 px-2 py-[3px] text-xs text-foreground hover:bg-accent/40 rounded-md transition-colors cursor-pointer w-full text-left">
               <Pencil size={10} />
               <span>编辑</span>
             </button>
@@ -284,7 +282,7 @@ function AgentPicker({
               onTogglePin?.(contextMenu.id);
               setContextMenu(null);
             }}
-              className="flex items-center gap-1.5 px-2 py-[3px] text-xs text-foreground hover:bg-accent/15 rounded-md transition-colors cursor-pointer w-full text-left">
+              className="flex items-center gap-1.5 px-2 py-[3px] text-xs text-foreground hover:bg-accent/40 rounded-md transition-colors cursor-pointer w-full text-left">
               <Pin size={10} className={pinnedSet.has(contextMenu.id) ? 'rotate-45' : ''} />
               <span>{pinnedSet.has(contextMenu.id) ? '取消固定' : '固定'}</span>
             </button>
@@ -402,7 +400,7 @@ function CodexStyleInput({ onSendMessage, autoFocus = false, placeholder, header
 
   return (
     <div className="flex flex-col gap-1.5">
-      <div className="relative rounded-2xl border border-border/40 bg-muted/30 shadow-sm focus-within:border-border/60 transition-all duration-150">
+      <div className="relative rounded-2xl border border-border/40 bg-muted/30 shadow-sm focus-within:border-border/50 transition-all duration-150">
         {/* Slash command popup */}
         {showSlash && (
           <div className="absolute bottom-full left-0 right-0 pb-2 z-10">
@@ -457,7 +455,7 @@ function CodexStyleInput({ onSendMessage, autoFocus = false, placeholder, header
         {/* Thinking effort indicator — visible when a non-default level is chosen */}
         {thinkingEffort !== 'default' && (
           <div className="px-3 pt-2.5 flex items-center gap-1.5 flex-wrap">
-            <span className="inline-flex items-center gap-1 px-1.5 py-[2px] rounded-sm border border-success/25 bg-success/10 text-success/90 text-[11px] leading-none font-medium">
+            <span className="inline-flex items-center gap-1 px-1.5 py-[2px] rounded-sm border border-success/25 bg-success/10 text-success/90 text-xs leading-none font-medium">
               <Lightbulb size={10} strokeWidth={2} className="text-success" />
               <span>思考</span>
               <span className="opacity-60 tracking-wide">{THINKING_LABELS[thinkingEffort]}</span>
@@ -488,7 +486,7 @@ function CodexStyleInput({ onSendMessage, autoFocus = false, placeholder, header
           <div className="flex items-center gap-0.5 min-w-0">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon-sm" className="p-[5px] w-auto h-auto text-muted-foreground/70 hover:text-foreground hover:bg-accent/50">
+                <Button variant="ghost" size="icon-sm" className="p-[5px] w-auto h-auto text-muted-foreground/80 hover:text-foreground hover:bg-accent/50">
                   <Plus size={16} strokeWidth={1.5} />
                 </Button>
               </DropdownMenuTrigger>
@@ -576,7 +574,7 @@ function CodexStyleInput({ onSendMessage, autoFocus = false, placeholder, header
                       : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
                   }`}
                 >
-                  <Lightbulb size={13} className={thinkingEffort === 'default' ? 'text-muted-foreground/70' : 'text-success'} strokeWidth={1.5} />
+                  <Lightbulb size={13} className={thinkingEffort === 'default' ? 'text-muted-foreground/80' : 'text-success'} strokeWidth={1.5} />
                   <span className="truncate">{THINKING_LABELS[thinkingEffort]}</span>
                   <ChevronDown size={9} className={`transition-transform duration-100 ${showModelMenu ? 'rotate-180' : ''}`} />
                 </Button>
@@ -593,9 +591,9 @@ function CodexStyleInput({ onSendMessage, autoFocus = false, placeholder, header
                   return (
                     <button key={t.id} type="button"
                       onClick={() => { setThinkingEffort(t.id); setShowModelMenu(false); }}
-                      className={`w-full flex items-center gap-2 px-2 py-[6px] rounded-md text-left text-xs transition-colors ${active ? 'bg-accent/40 text-foreground' : 'text-foreground/80 hover:bg-accent/25'}`}
+                      className={`w-full flex items-center gap-2 px-2 py-[6px] rounded-md text-left text-xs transition-colors ${active ? 'bg-accent/40 text-foreground' : 'text-muted-foreground/80 hover:bg-accent/40'}`}
                     >
-                      <Lightbulb size={12} strokeWidth={1.5} className={`flex-shrink-0 ${active ? 'text-success' : 'text-muted-foreground/70'}`} />
+                      <Lightbulb size={12} strokeWidth={1.5} className={`flex-shrink-0 ${active ? 'text-success' : 'text-muted-foreground/80'}`} />
                       <span className="flex-1">{t.label}</span>
                       {active && <Check size={10} className="text-primary flex-shrink-0" />}
                     </button>
@@ -614,7 +612,7 @@ function CodexStyleInput({ onSendMessage, autoFocus = false, placeholder, header
                       : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
                   }`}
                 >
-                  <LayoutGrid size={13} className="text-muted-foreground/70" strokeWidth={1.5} />
+                  <LayoutGrid size={13} className="text-muted-foreground/80" strokeWidth={1.5} />
                   <span className="truncate">技能</span>
                   <ChevronDown size={9} className={`transition-transform duration-100 ${showSkillMenu ? 'rotate-180' : ''}`} />
                 </Button>
@@ -626,7 +624,7 @@ function CodexStyleInput({ onSendMessage, autoFocus = false, placeholder, header
                     onChange={setSkillSearch}
                     placeholder="搜索技能…"
                     clearable
-                    wrapperClassName="flex items-center gap-1.5 px-2 h-7 rounded-md bg-muted/30 border border-border/25"
+                    wrapperClassName="flex items-center gap-1.5 px-2 h-7 rounded-md bg-muted/30 border border-border/20"
                   />
                 </div>
                 {(() => {
@@ -641,7 +639,7 @@ function CodexStyleInput({ onSendMessage, autoFocus = false, placeholder, header
                   const filtered = q ? allSkills.filter(s => s.label.toLowerCase().includes(q)) : allSkills;
                   if (filtered.length === 0) {
                     return (
-                      <div className="px-2 py-3 text-center text-[11px] text-muted-foreground/50">
+                      <div className="px-2 py-3 text-center text-xs text-muted-foreground/50">
                         未找到匹配技能
                       </div>
                     );
@@ -654,7 +652,7 @@ function CodexStyleInput({ onSendMessage, autoFocus = false, placeholder, header
                         return (
                           <button key={s.id} type="button"
                             onClick={() => { setShowSkillMenu(false); setSkillSearch(''); }}
-                            className="w-full flex items-center gap-2 px-2 py-[6px] rounded-md text-left text-xs text-foreground/80 hover:bg-accent/25 transition-colors"
+                            className="w-full flex items-center gap-2 px-2 py-[6px] rounded-md text-left text-xs text-muted-foreground/80 hover:bg-accent/40 transition-colors"
                           >
                             <Icon size={12} strokeWidth={1.5} className={`flex-shrink-0 ${s.color}`} />
                             <span className="flex-1 truncate">{s.label}</span>
@@ -664,17 +662,17 @@ function CodexStyleInput({ onSendMessage, autoFocus = false, placeholder, header
                     </>
                   );
                 })()}
-                <div className="my-1 h-px bg-border/40" />
+                <Separator opacity={40} className="my-1" />
                 <button type="button"
                   onClick={() => setShowSkillMenu(false)}
-                  className="w-full flex items-center gap-2 px-2 py-[6px] rounded-md text-left text-xs text-muted-foreground hover:bg-accent/25 hover:text-foreground transition-colors"
+                  className="w-full flex items-center gap-2 px-2 py-[6px] rounded-md text-left text-xs text-muted-foreground hover:bg-accent/40 hover:text-foreground transition-colors"
                 >
                   <Wrench size={12} strokeWidth={1.5} className="flex-shrink-0" />
                   <span className="flex-1 truncate">管理技能…</span>
                 </button>
                 <button type="button"
                   onClick={() => setShowSkillMenu(false)}
-                  className="w-full flex items-center gap-2 px-2 py-[6px] rounded-md text-left text-xs text-muted-foreground hover:bg-accent/25 hover:text-foreground transition-colors"
+                  className="w-full flex items-center gap-2 px-2 py-[6px] rounded-md text-left text-xs text-muted-foreground hover:bg-accent/40 hover:text-foreground transition-colors"
                 >
                   <Plus size={12} strokeWidth={1.5} className="flex-shrink-0" />
                   <span className="flex-1 truncate">添加技能</span>
@@ -710,9 +708,9 @@ function CodexStyleInput({ onSendMessage, autoFocus = false, placeholder, header
               }`}
             >
               {currentProject ? (
-                <Folder size={12} className="text-muted-foreground/70" strokeWidth={1.5} />
+                <Folder size={12} className="text-muted-foreground/80" strokeWidth={1.5} />
               ) : (
-                <FolderX size={12} className="text-muted-foreground/70" strokeWidth={1.5} />
+                <FolderX size={12} className="text-muted-foreground/80" strokeWidth={1.5} />
               )}
               <span>{currentProject ? currentProject.label : '不使用项目'}</span>
               <ChevronDown size={9} className={`transition-transform duration-100 ${showProjectMenu ? 'rotate-180' : ''}`} />
@@ -725,7 +723,7 @@ function CodexStyleInput({ onSendMessage, autoFocus = false, placeholder, header
                 onChange={setProjectQuery}
                 placeholder="搜索项目"
                 iconSize={11}
-                wrapperClassName="px-2 py-[4px] rounded-md bg-accent/15 border border-border/25"
+                wrapperClassName="px-2 py-[4px] rounded-md bg-accent/15 border border-border/20"
               />
             </div>
             <div className="py-0.5">
@@ -738,30 +736,30 @@ function CodexStyleInput({ onSendMessage, autoFocus = false, placeholder, header
                   <button key={p.id} type="button"
                     onClick={() => { setActiveProject(p.id); setShowProjectMenu(false); }}
                     className={`w-full flex items-center gap-2 px-2 py-[6px] rounded-md text-left text-xs transition-colors ${
-                      isActive ? 'bg-accent/40 text-foreground' : 'text-foreground/80 hover:bg-accent/25'
+                      isActive ? 'bg-accent/40 text-foreground' : 'text-muted-foreground/80 hover:bg-accent/40'
                     }`}
                   >
-                    <Folder size={12} className="text-muted-foreground/70 flex-shrink-0" strokeWidth={1.5} />
+                    <Folder size={12} className="text-muted-foreground/80 flex-shrink-0" strokeWidth={1.5} />
                     <span className="flex-1 truncate">{p.label}</span>
                     {isActive && <Check size={11} className="text-foreground flex-shrink-0" />}
                   </button>
                 );
               })}
             </div>
-            <div className="h-px bg-border/30 my-0.5" />
+            <Separator opacity={30} className="my-0.5" />
             <button type="button"
-              className="w-full flex items-center gap-2 px-2 py-[6px] rounded-md text-left text-xs text-foreground/80 hover:bg-accent/25 transition-colors"
+              className="w-full flex items-center gap-2 px-2 py-[6px] rounded-md text-left text-xs text-muted-foreground/80 hover:bg-accent/40 transition-colors"
             >
-              <FolderPlus size={12} className="text-muted-foreground/70 flex-shrink-0" strokeWidth={1.5} />
+              <FolderPlus size={12} className="text-muted-foreground/80 flex-shrink-0" strokeWidth={1.5} />
               <span>添加新项目</span>
             </button>
             <button type="button"
               onClick={() => { setActiveProject(null); setShowProjectMenu(false); }}
               className={`w-full flex items-center gap-2 px-2 py-[6px] rounded-md text-left text-xs transition-colors ${
-                activeProject === null ? 'bg-accent/40 text-foreground' : 'text-foreground/80 hover:bg-accent/25'
+                activeProject === null ? 'bg-accent/40 text-foreground' : 'text-muted-foreground/80 hover:bg-accent/40'
               }`}
             >
-              <FolderX size={12} className="text-muted-foreground/70 flex-shrink-0" strokeWidth={1.5} />
+              <FolderX size={12} className="text-muted-foreground/80 flex-shrink-0" strokeWidth={1.5} />
               <span className="flex-1">不使用项目</span>
               {activeProject === null && <Check size={11} className="text-foreground flex-shrink-0" />}
             </button>
@@ -883,7 +881,7 @@ function AddCapabilityPanel({ tab, existingIds, onAdd, onClose, onBrowse }: {
     >
       {/* Header */}
       <div className="flex items-center gap-2 px-4 h-[38px] flex-shrink-0 border-b border-border/15">
-        <Button variant="ghost" size="icon-xs" onClick={onClose} className="text-muted-foreground hover:text-foreground hover:bg-accent/15">
+        <Button variant="ghost" size="icon-xs" onClick={onClose} className="text-muted-foreground hover:text-foreground hover:bg-accent/40">
           <ArrowLeft size={12} />
         </Button>
         <span className="text-xs text-foreground">{"\u6dfb\u52a0"}{tabLabel}</span>
@@ -932,7 +930,7 @@ function AddCapabilityPanel({ tab, existingIds, onAdd, onClose, onBrowse }: {
               <div className="text-xs text-muted-foreground/40 mb-1.5 px-0.5">{cat}</div>
               <div className="space-y-0.5">
                 {items.map((item: any) => (
-                  <div key={item.id} className="flex items-center gap-2 px-2.5 py-[7px] rounded-lg hover:bg-accent/15 transition-colors group">
+                  <div key={item.id} className="flex items-center gap-2 px-2.5 py-[7px] rounded-lg hover:bg-accent/40 transition-colors group">
                     <Wrench size={10} className="text-muted-foreground/40 flex-shrink-0" />
                     <div className="flex-1 min-w-0">
                       <div className="text-sm text-foreground truncate">{item.name}</div>
@@ -950,7 +948,7 @@ function AddCapabilityPanel({ tab, existingIds, onAdd, onClose, onBrowse }: {
         ) : (
           <div className="space-y-0.5">
             {filtered.map((item: any) => (
-              <div key={item.id} className="flex items-center gap-2 px-2.5 py-[7px] rounded-lg hover:bg-accent/15 transition-colors group">
+              <div key={item.id} className="flex items-center gap-2 px-2.5 py-[7px] rounded-lg hover:bg-accent/40 transition-colors group">
                 {tab === 'mcp' ? (
                   <Cable size={10} className="text-info/40 flex-shrink-0" />
                 ) : (
@@ -977,7 +975,7 @@ function AddCapabilityPanel({ tab, existingIds, onAdd, onClose, onBrowse }: {
         <Button size="inline"
           variant="ghost"
           onClick={onBrowse}
-          className="w-full justify-start gap-2 px-2.5 py-[7px] text-xs text-muted-foreground hover:text-foreground hover:bg-accent/15"
+          className="w-full justify-start gap-2 px-2.5 py-[7px] text-xs text-muted-foreground hover:text-foreground hover:bg-accent/40"
         >
           <Compass size={11} className="text-muted-foreground/50" />
           <span>{"\u53bb\u63a2\u7d22\u6d4f\u89c8"}</span>
@@ -985,7 +983,7 @@ function AddCapabilityPanel({ tab, existingIds, onAdd, onClose, onBrowse }: {
         </Button>
         <Button size="inline"
           variant="ghost"
-          className="w-full justify-start gap-2 px-2.5 py-[7px] text-xs text-muted-foreground hover:text-foreground hover:bg-accent/15"
+          className="w-full justify-start gap-2 px-2.5 py-[7px] text-xs text-muted-foreground hover:text-foreground hover:bg-accent/40"
         >
           <PenTool size={10} className="text-muted-foreground/50" />
           <span>{"\u624b\u52a8\u6dfb\u52a0"}</span>
@@ -1046,7 +1044,7 @@ function AgentInfoPanel({ agent, onClose, onEdit }: {
       animate={{ x: 0, opacity: 1 }}
       exit={{ x: 40, opacity: 0 }}
       transition={{ duration: 0.18, ease: [0.4, 0, 0.2, 1] }}
-      className="absolute top-2 right-2 bottom-2 z-[var(--z-sticky)] bg-background rounded-xl border border-border/25 shadow-2xl shadow-black/12 flex flex-col overflow-hidden"
+      className="absolute top-2 right-2 bottom-2 z-[var(--z-sticky)] bg-background rounded-xl border border-border/20 shadow-2xl shadow-black/12 flex flex-col overflow-hidden"
       style={{ width: 340 }}
     >
       {/* Add panel overlay */}
@@ -1070,11 +1068,11 @@ function AgentInfoPanel({ agent, onClose, onEdit }: {
         </div>
         <div className="flex items-center gap-0.5">
           <Tooltip content={"\u5728\u8d44\u6e90\u5e93\u4e2d\u7f16\u8f91"} side="bottom">
-            <Button variant="ghost" size="icon-xs" onClick={onEdit} className="text-muted-foreground hover:text-foreground hover:bg-accent/15">
+            <Button variant="ghost" size="icon-xs" onClick={onEdit} className="text-muted-foreground hover:text-foreground hover:bg-accent/40">
               <Edit3 size={11} />
             </Button>
           </Tooltip>
-          <Button variant="ghost" size="icon-xs" onClick={onClose} className="text-muted-foreground hover:text-foreground hover:bg-accent/15">
+          <Button variant="ghost" size="icon-xs" onClick={onClose} className="text-muted-foreground hover:text-foreground hover:bg-accent/40">
             <X size={12} />
           </Button>
         </div>
@@ -1141,7 +1139,7 @@ function AgentInfoPanel({ agent, onClose, onEdit }: {
           {/* System prompt — collapsible */}
           <div className="rounded-lg bg-muted/15 overflow-hidden">
             <Button variant="ghost" size="inline" onClick={() => setPromptExpanded(!promptExpanded)}
-              className="w-full justify-start gap-2 px-3 py-2 text-xs text-foreground hover:bg-accent/15">
+              className="w-full justify-start gap-2 px-3 py-2 text-xs text-foreground hover:bg-accent/40">
               <FileText size={10} className="text-muted-foreground flex-shrink-0" />
               <span className="flex-1 text-left">{"\u7cfb\u7edf\u63d0\u793a\u8bcd"}</span>
               <motion.div animate={{ rotate: promptExpanded ? 90 : 0 }} transition={{ duration: 0.1 }}>
@@ -1231,7 +1229,7 @@ function AgentInfoPanel({ agent, onClose, onEdit }: {
                               if (next.has(cat)) next.delete(cat); else next.add(cat);
                               return next;
                             })}
-                            className="flex items-center justify-between w-full mb-1 px-0.5 py-1 rounded hover:bg-accent/15 transition-colors"
+                            className="flex items-center justify-between w-full mb-1 px-0.5 py-1 rounded hover:bg-accent/40 transition-colors"
                           >
                             <div className="flex items-center gap-1">
                               <ChevronRight size={9} className={`text-muted-foreground/50 transition-transform duration-100 ${isCollapsed ? '' : 'rotate-90'}`} />
@@ -1250,7 +1248,7 @@ function AgentInfoPanel({ agent, onClose, onEdit }: {
                               >
                                 <div className="space-y-0.5">
                                   {items.map(tool => (
-                                    <div key={tool.id} className="flex items-center gap-2 px-2 py-[6px] rounded-md hover:bg-accent/15 transition-colors group">
+                                    <div key={tool.id} className="flex items-center gap-2 px-2 py-[6px] rounded-md hover:bg-accent/40 transition-colors group">
                                       <Wrench size={10} className={`flex-shrink-0 ${tool.enabled ? 'text-muted-foreground/60' : 'text-muted-foreground/50'}`} />
                                       <div className="flex-1 min-w-0">
                                         <div className={`text-sm truncate ${tool.enabled ? 'text-foreground' : 'text-muted-foreground/50'}`}>{tool.name}</div>
@@ -1284,7 +1282,7 @@ function AgentInfoPanel({ agent, onClose, onEdit }: {
                 ) : (
                   <div className="space-y-0.5">
                     {mcpServices.map(svc => (
-                      <div key={svc.id} className="flex items-center gap-2.5 px-2.5 py-[7px] rounded-lg hover:bg-accent/15 transition-colors group">
+                      <div key={svc.id} className="flex items-center gap-2.5 px-2.5 py-[7px] rounded-lg hover:bg-accent/40 transition-colors group">
                         <div className="w-6 h-6 rounded-md bg-accent/25 flex items-center justify-center flex-shrink-0">
                           <Cable size={11} className="text-info/60" />
                         </div>
@@ -1337,11 +1335,11 @@ function AgentInfoPanel({ agent, onClose, onEdit }: {
                             className={`flex items-center gap-1 px-2 py-[3px] rounded-md text-xs transition-colors ${
                               isActive
                                 ? 'bg-accent/40 text-foreground'
-                                : 'text-muted-foreground/60 hover:text-foreground hover:bg-accent/15'
+                                : 'text-muted-foreground/60 hover:text-foreground hover:bg-accent/40'
                             }`}
                           >
                             <span>{t.label}</span>
-                            <span className={`text-[10px] tabular-nums ${isActive ? 'text-muted-foreground/70' : 'text-muted-foreground/40'}`}>{count}</span>
+                            <span className={`text-[10px] tabular-nums ${isActive ? 'text-muted-foreground/80' : 'text-muted-foreground/40'}`}>{count}</span>
                           </button>
                         );
                       })}
@@ -1352,12 +1350,12 @@ function AgentInfoPanel({ agent, onClose, onEdit }: {
                         .map(skill => {
                           const source = skill.source ?? 'builtin';
                           const sourceCfg = {
-                            builtin: { label: '内置', cls: 'bg-foreground/8 text-muted-foreground' },
+                            builtin: { label: '内置', cls: 'bg-foreground/10 text-muted-foreground' },
                             custom: { label: '自定义', cls: 'bg-accent-blue-muted text-accent-blue' },
                             market: { label: '市场', cls: 'bg-accent-violet-muted text-accent-violet' },
                           }[source];
                           return (
-                            <div key={skill.id} className="flex items-center gap-2.5 px-2.5 py-[7px] rounded-lg hover:bg-accent/15 transition-colors">
+                            <div key={skill.id} className="flex items-center gap-2.5 px-2.5 py-[7px] rounded-lg hover:bg-accent/40 transition-colors">
                               <Zap size={10} className={`flex-shrink-0 ${skill.enabled ? 'text-warning/60' : 'text-muted-foreground/50'}`} />
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-1.5">
@@ -1400,7 +1398,7 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
   const { pinnedIds: pinnedAgentIds, togglePin: togglePinAgent } = usePinnedAgents();
   const [sessions, setSessions] = useState<AgentSession[]>(MOCK_SESSIONS);
   const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
-  const [localMessages, setLocalMessages] = useState<Record<string, ChatMessage[]>>({});
+  const [localMessages, setLocalMessages] = useState<Record<string, AgentChatMessage[]>>({});
   const [selectedFile, setSelectedFile] = useState<string | null>('src/App.tsx');
   const [showModelPicker, setShowModelPicker] = useState(false);
   const [selectedModel, setSelectedModel] = useState(MODELS[0]);
@@ -1416,7 +1414,7 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
   const [showSaveAsSkill, setShowSaveAsSkill] = useState(false);
   const activeSkillJob = useActiveSkillJob();
 
-  const sessionData: SessionData = useMemo(() => {
+  const sessionData: AgentSessionData = useMemo(() => {
     if (!activeSessionId) return EMPTY_SESSION_DATA;
     return SESSION_DATA_MAP[activeSessionId] || EMPTY_SESSION_DATA;
   }, [activeSessionId]);
@@ -1559,7 +1557,7 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
       key = newId;
     }
 
-    const addMsg = (msg: ChatMessage) => {
+    const addMsg = (msg: AgentChatMessage) => {
       setLocalMessages(prev => ({
         ...prev,
         [key]: [...(prev[key] ?? sessionData.messages), msg],
@@ -1570,7 +1568,7 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
       setLocalMessages(prev => ({ ...prev, [key]: [] }));
     }
 
-    const userMsg: ChatMessage = { id: `m${Date.now()}`, role: 'user', content: text, timestamp: ts };
+    const userMsg: AgentChatMessage = { id: `m${Date.now()}`, role: 'user', content: text, timestamp: ts };
     setLocalMessages(prev => ({
       ...prev,
       [key]: [...(prev[key] ?? []), userMsg],
@@ -1649,7 +1647,7 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
             className={`gap-1 px-1.5 py-[3px] text-xs ${
             showModelPicker
               ? 'bg-accent/25 text-foreground'
-              : 'text-muted-foreground hover:text-foreground hover:bg-accent/15'
+              : 'text-muted-foreground hover:text-foreground hover:bg-accent/40'
           }`}>
             <BrandLogo id={selectedModel.provider.toLowerCase()} fallbackLetter={selectedModel.provider[0]} size={14} className="shrink-0" />
             <span>{selectedModel.name}</span>
@@ -1687,7 +1685,7 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
         {/* History sidebar toggle */}
         <Tooltip content={historySidebar.isCompact ? '收起会话列表' : '展开会话列表'} side="bottom">
           <Button variant="ghost" size="icon-xs" onClick={() => historySidebar.toggle()}
-            className={`p-1.5 w-auto h-auto mr-0.5 ${historySidebar.isCompact ? 'text-muted-foreground hover:text-foreground hover:bg-accent/15' : 'text-muted-foreground/40 hover:text-foreground hover:bg-accent/15'}`}>
+            className={`p-1.5 w-auto h-auto mr-0.5 ${historySidebar.isCompact ? 'text-muted-foreground hover:text-foreground hover:bg-accent/40' : 'text-muted-foreground/40 hover:text-foreground hover:bg-accent/40'}`}>
             {historySidebar.isCompact ? <PanelLeftClose size={13} /> : <PanelLeftOpen size={13} />}
           </Button>
         </Tooltip>
@@ -1718,7 +1716,7 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
               <Tooltip content="将本次对话沉淀成可复用的 Skill" side="bottom">
                 <Button variant="ghost" size="xs"
                   onClick={() => setShowSaveAsSkill(true)}
-                  className="gap-1.5 px-2 py-[3px] text-xs text-muted-foreground hover:text-foreground hover:bg-accent/15">
+                  className="gap-1.5 px-2 py-[3px] text-xs text-muted-foreground hover:text-foreground hover:bg-accent/40">
                   <Sparkles size={11} className="text-accent-violet" />
                   <span>保存为 Skill</span>
                 </Button>
@@ -1733,7 +1731,7 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
           <Popover open={showPlan} onOpenChange={setShowPlan}>
             <PopoverTrigger asChild>
               <Button variant="ghost" size="icon-xs"
-                className={`relative p-1.5 w-auto h-auto ${showPlan ? 'text-foreground bg-accent/25' : 'text-muted-foreground hover:text-foreground hover:bg-accent/15'}`}>
+                className={`relative p-1.5 w-auto h-auto ${showPlan ? 'text-foreground bg-accent/25' : 'text-muted-foreground hover:text-foreground hover:bg-accent/40'}`}>
                 <ListChecks size={13} />
                 {sessionData.steps.some(s => s.status === 'running') && (
                   <span className="absolute top-[2px] right-[2px] w-[5px] h-[5px] rounded-full bg-warning animate-pulse" />
@@ -1762,7 +1760,7 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
           <div className="flex items-center gap-0.5">
             <div className="w-px h-3.5 bg-border/30 mx-0.5" />
             <Tooltip content={"显示预览面板"} side="bottom"><Button variant="ghost" size="icon-xs" onClick={() => setShowPreview(true)}
-              className="p-1.5 w-auto h-auto text-muted-foreground hover:text-foreground hover:bg-accent/15">
+              className="p-1.5 w-auto h-auto text-muted-foreground hover:text-foreground hover:bg-accent/40">
               <Columns2 size={12} />
             </Button></Tooltip>
           </div>

@@ -15,7 +15,6 @@ export type {
 export type { AssistantInfo, AssistantTopic } from '@/app/types/assistant';
 
 // Backward-compatible type aliases
-export type AssistantMessage = Message;
 export type AssistantModel = import('@/app/types/chat').ModelInfo;
 
 // --- Config re-exports ---

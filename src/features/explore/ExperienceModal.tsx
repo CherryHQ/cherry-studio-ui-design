@@ -25,7 +25,7 @@ function ModelSelector({ selectedId, onSelect }: { selectedId: string; onSelect:
         <Button size="inline"
           variant="outline"
           className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-xs ${
-            open ? 'border-primary/30 bg-accent/50' : 'border-border/30 hover:border-border/60 hover:bg-accent/50'
+            open ? 'border-primary/30 bg-accent/50' : 'border-border/30 hover:border-border/50 hover:bg-accent/50'
           }`}
         >
           <Sparkles size={10} className="text-muted-foreground/50" />
@@ -235,7 +235,7 @@ export function ExperienceModal({ resource, type, onClose }: ExperienceModalProp
           <div className="flex items-center gap-2 flex-shrink-0">
             <ModelSelector selectedId={modelId} onSelect={setModelId} />
             <Button variant="ghost" size="icon-xs" onClick={onClose}
-              className="text-muted-foreground/40 hover:text-foreground hover:bg-accent/15">
+              className="text-muted-foreground/40 hover:text-foreground hover:bg-accent/40">
               <X size={11} />
             </Button>
           </div>

@@ -70,7 +70,7 @@ export function AssistantConfig({ resource, onBack, inModal = false }: Props) {
             return (
               <Button key={s.id} variant="ghost" size="inline"
                 onClick={() => setActiveSection(s.id)}
-                className={`flex items-center justify-start gap-2 w-full px-3 py-2 rounded-lg text-left mb-0.5 transition-colors ${active ? 'bg-accent/50 text-foreground font-medium' : 'text-muted-foreground/65 hover:text-foreground hover:bg-muted/40'}`}>
+                className={`flex items-center justify-start gap-2 w-full px-3 py-2 rounded-lg text-left mb-0.5 transition-colors ${active ? 'bg-accent/50 text-foreground font-medium' : 'text-muted-foreground/60 hover:text-foreground hover:bg-accent/40'}`}>
                 <Icon size={13} strokeWidth={1.6} className="flex-shrink-0" />
                 <span className="text-sm">{s.label}</span>
               </Button>
@@ -85,7 +85,7 @@ export function AssistantConfig({ resource, onBack, inModal = false }: Props) {
               <>
                 <Button variant="ghost" size="inline"
                   onClick={() => setExtensionsExpanded(v => !v)}
-                  className={`flex items-center justify-start gap-2 w-full px-3 py-2 rounded-lg text-left mb-0.5 transition-colors ${childActive ? 'bg-accent/50 text-foreground font-medium' : 'text-muted-foreground/65 hover:text-foreground hover:bg-muted/40'}`}>
+                  className={`flex items-center justify-start gap-2 w-full px-3 py-2 rounded-lg text-left mb-0.5 transition-colors ${childActive ? 'bg-accent/50 text-foreground font-medium' : 'text-muted-foreground/60 hover:text-foreground hover:bg-accent/40'}`}>
                   <Blocks size={13} strokeWidth={1.6} className={`flex-shrink-0 ${childActive ? 'text-muted-foreground' : 'text-muted-foreground/40'}`} />
                   <span className="text-sm flex-1">拓展</span>
                   <ChevronDown size={11} className={`flex-shrink-0 text-muted-foreground/40 transition-transform ${extensionsExpanded ? '' : '-rotate-90'}`} />
@@ -107,9 +107,9 @@ export function AssistantConfig({ resource, onBack, inModal = false }: Props) {
                           return (
                             <Button key={c.id} variant="ghost" size="inline"
                               onClick={() => setActiveSection(sid)}
-                              className={`flex items-center justify-start gap-2 w-full px-3 py-1.5 rounded-lg text-left mb-0.5 transition-colors ${isActive ? 'bg-accent/50 text-foreground font-medium' : 'text-muted-foreground/65 hover:text-foreground hover:bg-muted/40'}`}>
+                              className={`flex items-center justify-start gap-2 w-full px-3 py-1.5 rounded-lg text-left mb-0.5 transition-colors ${isActive ? 'bg-accent/50 text-foreground font-medium' : 'text-muted-foreground/60 hover:text-foreground hover:bg-accent/40'}`}>
                               <CIcon size={11} strokeWidth={1.5} className={`flex-shrink-0 ${isActive ? 'text-muted-foreground' : 'text-muted-foreground/40'}`} />
-                              <span className="text-[13px]">{c.label}</span>
+                              <span className="text-sm">{c.label}</span>
                             </Button>
                           );
                         })}
@@ -139,7 +139,7 @@ export function AssistantConfig({ resource, onBack, inModal = false }: Props) {
           <AnimatePresence>
             {saved
               ? <motion.span key="saved" initial={{ opacity: 0, x: 6 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0 }} className="text-xs text-cherry-primary mr-auto flex items-center gap-1"><CheckCircle2 size={11} />已保存</motion.span>
-              : <motion.span key="dirty" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="text-xs text-muted-foreground/55 mr-auto">有未保存的更改</motion.span>}
+              : <motion.span key="dirty" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="text-xs text-muted-foreground/50 mr-auto">有未保存的更改</motion.span>}
           </AnimatePresence>
           <Button variant="outline" size="xs" onClick={onBack} className="h-7 px-3 text-xs">取消</Button>
           <Button size="xs" onClick={handleSave} className="h-7 px-3 text-xs gap-1.5"><Save size={11} />保存</Button>

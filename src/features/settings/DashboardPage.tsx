@@ -288,7 +288,7 @@ export function DashboardPage() {
           <div className="space-y-[1px]">
             {RECENT_CONVERSATIONS.map((conv, i) => (
               <div key={i} className="flex items-center gap-2 py-[4px] group">
-                <div className="w-[3px] h-[3px] rounded-full bg-foreground/15 flex-shrink-0 group-hover:bg-foreground/45 transition-colors" />
+                <div className="w-[3px] h-[3px] rounded-full bg-foreground/15 flex-shrink-0 group-hover:bg-foreground/40 transition-colors" />
                 <div className="flex-1 min-w-0">
                   <p className="text-xs text-muted-foreground truncate group-hover:text-foreground transition-colors">{conv.title}</p>
                   <div className="flex items-center gap-2 mt-[1px]">

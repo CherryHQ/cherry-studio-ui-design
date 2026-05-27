@@ -250,7 +250,7 @@ function DetailPanel({ ext, onClose }: { ext: Extension; onClose: () => void }) 
 
         {/* MCP Tools */}
         {ext.mcpTools && ext.mcpTools.length > 0 && (
-          <div className="rounded-xl border border-border/25 bg-muted/30 p-3.5">
+          <div className="rounded-xl border border-border/20 bg-muted/30 p-3.5">
             <div className="flex items-center gap-1.5 mb-2.5">
               <Wrench size={12} className="text-muted-foreground/50" />
               <span className="text-xs font-medium text-muted-foreground">MCP 工具</span>
@@ -269,7 +269,7 @@ function DetailPanel({ ext, onClose }: { ext: Extension; onClose: () => void }) 
 
         {/* Permissions */}
         {ext.permissions && ext.permissions.length > 0 && (
-          <div className="rounded-xl border border-border/25 bg-muted/30 p-3.5">
+          <div className="rounded-xl border border-border/20 bg-muted/30 p-3.5">
             <div className="flex items-center gap-1.5 mb-2.5">
               <Shield size={12} className="text-muted-foreground/50" />
               <span className="text-xs font-medium text-muted-foreground">权限</span>

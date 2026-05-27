@@ -23,8 +23,6 @@ export {
 
 // --- Assistant types (re-export from central types) ---
 export type { AssistantInfo, AssistantTopic } from '../types/assistant';
-// AssistantMessage is now an alias for Message in the unified type system
-export type { Message as AssistantMessage } from '../types/chat';
 
 // --- Agent mock data (migrated to mock/agentData.ts) ---
 export {

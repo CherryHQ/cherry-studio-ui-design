@@ -112,7 +112,7 @@ function GlobalStrategyConfig() {
 
       {/* 常规设置 */}
       <div className="mb-5 border border-section-border rounded-[var(--radius-button)] px-3.5 py-3">
-        <p className="text-xs font-medium text-foreground/70 mb-3">常规设置</p>
+        <p className="text-xs font-medium text-muted-foreground/80 mb-3">常规设置</p>
 
         {/* Top K Slider */}
         <div className="mb-4">
@@ -149,7 +149,7 @@ function GlobalStrategyConfig() {
 
       {/* 结果处理 */}
       <div className="mb-5 border border-section-border rounded-[var(--radius-button)] px-3.5 py-3">
-        <p className="text-xs font-medium text-foreground/70 mb-3">结果处理 (Post-Processing)</p>
+        <p className="text-xs font-medium text-muted-foreground/80 mb-3">结果处理 (Post-Processing)</p>
 
         <div className="mb-3.5">
           <label className="text-xs text-muted-foreground mb-1.5 block">压缩方法</label>
@@ -183,7 +183,7 @@ function GlobalStrategyConfig() {
       {/* 黑名单 */}
       <div className="mb-5 border border-section-border rounded-[var(--radius-button)] px-3.5 py-3">
         <div className="flex items-center gap-2 mb-3">
-          <p className="text-xs font-medium text-foreground/70">黑名单 (Blacklist)</p>
+          <p className="text-xs font-medium text-muted-foreground/80">黑名单 (Blacklist)</p>
           <span className="text-xs text-primary bg-primary/10 px-1.5 py-[1px] rounded-md font-medium">
             {blacklistRules.split('\n').filter(r => r.trim()).length} Rules
           </span>
@@ -284,7 +284,7 @@ function ProviderDetailConfig({ provider }: { provider: SearchProvider }) {
       </div>
 
       <div className="mb-5 border border-section-border rounded-[var(--radius-button)] px-3.5 py-3">
-        <p className="text-xs font-medium text-foreground/70 mb-3">认证 (Authentication)</p>
+        <p className="text-xs font-medium text-muted-foreground/80 mb-3">认证 (Authentication)</p>
 
         {provider.id !== 'searxng' && (
           <div className="mb-3">
@@ -333,7 +333,7 @@ function ProviderDetailConfig({ provider }: { provider: SearchProvider }) {
 
       {provider.params.length > 0 && (
         <div className="border border-section-border rounded-[var(--radius-button)] px-3.5 py-3">
-          <p className="text-xs font-medium text-foreground/70 mb-3">参数配置</p>
+          <p className="text-xs font-medium text-muted-foreground/80 mb-3">参数配置</p>
           <div className="space-y-3.5">
             {provider.params.map(param => (
               <div key={param.id}>

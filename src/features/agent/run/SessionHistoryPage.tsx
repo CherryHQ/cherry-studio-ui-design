@@ -121,7 +121,7 @@ function GroupSection({ title, count, children, defaultOpen = true, icon }: {
     <div className="mb-2">
       <Button variant="ghost" size="inline"
         onClick={() => setOpen(!open)}
-        className="w-full justify-start gap-2 px-2 py-1.5 font-normal hover:bg-accent/15"
+        className="w-full justify-start gap-2 px-2 py-1.5 font-normal hover:bg-accent/40"
       >
         <motion.div animate={{ rotate: open ? 0 : -90 }} transition={{ duration: 0.1 }}>
           <ChevronDown size={11} className="text-muted-foreground" />
@@ -282,7 +282,7 @@ function SessionCard({ session, isActive, isHovered, onSelect, onEditTags, onTog
           className={`flex items-center gap-2.5 px-3 py-2 rounded-lg cursor-pointer transition-all duration-100 ${
             isActive
               ? 'bg-cherry-active-bg border border-cherry-ring'
-              : 'border border-transparent hover:bg-accent/15 hover:border-border/30'
+              : 'border border-transparent hover:bg-accent/40 hover:border-border/30'
           }`}
         >
           {/* Agent icon -- small */}
@@ -362,7 +362,7 @@ function SessionListRow({ session, isActive, isHovered, onSelect, onEditTags, on
           onMouseEnter={onMouseEnter}
           onMouseLeave={onMouseLeave}
           className={`flex items-center gap-2.5 px-3 py-[7px] rounded-lg cursor-pointer transition-all duration-75 group ${
-            isActive ? 'bg-cherry-active-bg' : 'hover:bg-accent/15'
+            isActive ? 'bg-cherry-active-bg' : 'hover:bg-accent/40'
           }`}
         >
           <span className="text-sm flex-shrink-0 w-5 text-center">{session.agentIcon || AGENT_ICONS[session.agentName] || '🤖'}</span>
@@ -533,7 +533,7 @@ export function SessionHistoryPage({ sessions, activeSessionId, onSelectSession,
         <div className="flex items-center justify-between px-3 h-[40px] border-b border-border/30 flex-shrink-0">
           <span className="text-xs text-foreground">{"话题"}</span>
           <div className="flex items-center gap-1">
-            <Button variant="ghost" size="icon-xs" onClick={onClose} className="p-1.5 rounded text-muted-foreground/40 hover:text-foreground hover:bg-accent/15">
+            <Button variant="ghost" size="icon-xs" onClick={onClose} className="p-1.5 rounded text-muted-foreground/40 hover:text-foreground hover:bg-accent/40">
               <X size={13} />
             </Button>
           </div>
@@ -560,7 +560,7 @@ export function SessionHistoryPage({ sessions, activeSessionId, onSelectSession,
                   className={`w-full justify-start px-2.5 py-[7px] font-normal truncate ${
                     isActive
                       ? 'bg-accent/25 text-foreground'
-                      : 'text-muted-foreground hover:text-foreground hover:bg-accent/15'
+                      : 'text-muted-foreground hover:text-foreground hover:bg-accent/40'
                   }`}
                 >
                   {s.title}
@@ -624,7 +624,7 @@ export function SessionHistoryPage({ sessions, activeSessionId, onSelectSession,
                   key={item.key}
                   onClick={() => setStatusFilter(item.key)}
                   className={`w-full justify-start gap-2 ${
-                    statusFilter === item.key ? 'bg-accent/50 text-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-accent/15'
+                    statusFilter === item.key ? 'bg-accent/50 text-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-accent/40'
                   }`}
                 >
                   {item.key !== 'all' && <StatusDot status={item.key} />}
@@ -642,7 +642,7 @@ export function SessionHistoryPage({ sessions, activeSessionId, onSelectSession,
               <Button variant="ghost" size="xs"
                 onClick={() => setSelectedAgent(null)}
                 className={`w-full justify-start gap-2 ${
-                  !selectedAgent ? 'bg-accent/50 text-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-accent/15'
+                  !selectedAgent ? 'bg-accent/50 text-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-accent/40'
                 }`}
               >
                 <span className="flex-1 text-left">全部</span>
@@ -655,7 +655,7 @@ export function SessionHistoryPage({ sessions, activeSessionId, onSelectSession,
                     key={agent}
                     onClick={() => setSelectedAgent(selectedAgent === agent ? null : agent)}
                     className={`w-full justify-start gap-2 ${
-                      selectedAgent === agent ? 'bg-accent/50 text-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-accent/15'
+                      selectedAgent === agent ? 'bg-accent/50 text-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-accent/40'
                     }`}
                   >
                     <span className="text-xs flex-shrink-0">{AGENT_ICONS[agent] || '🤖'}</span>
@@ -670,7 +670,7 @@ export function SessionHistoryPage({ sessions, activeSessionId, onSelectSession,
           {hasFilters && (
             <Button variant="outline" size="xs"
               onClick={clearFilters}
-              className="w-full border-dashed border-border/30 text-muted-foreground hover:text-foreground hover:bg-accent/15 mt-auto"
+              className="w-full border-dashed border-border/30 text-muted-foreground hover:text-foreground hover:bg-accent/40 mt-auto"
             >
               <X size={9} />
               {"清除所有筛选"}
@@ -691,7 +691,7 @@ export function SessionHistoryPage({ sessions, activeSessionId, onSelectSession,
                     className={`gap-1 ${
                       tagDropdownOpen || selectedTags.length > 0
                         ? 'bg-accent/50 text-foreground'
-                        : 'text-muted-foreground hover:text-foreground hover:bg-accent/15'
+                        : 'text-muted-foreground hover:text-foreground hover:bg-accent/40'
                     }`}
                   >
                     <Tag size={9} />
@@ -713,7 +713,7 @@ export function SessionHistoryPage({ sessions, activeSessionId, onSelectSession,
                                   key={tag}
                                   onClick={() => toggleTag(tag)}
                                   className={`w-full justify-start gap-2 ${
-                                    isSelected ? 'bg-foreground/6 text-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-accent/15'
+                                    isSelected ? 'bg-foreground/10 text-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-accent/40'
                                   }`}
                                 >
                                   <Checkbox checked={isSelected} className="flex-shrink-0" />
@@ -725,20 +725,20 @@ export function SessionHistoryPage({ sessions, activeSessionId, onSelectSession,
                             })}
                             {selectedTags.length > 0 && (
                               <div>
-                                <div className="h-px bg-border/30 my-0.5" />
+                                <Separator opacity={30} className="my-0.5" />
                                 <Button variant="ghost" size="xs"
                                   onClick={() => setSelectedTags([])}
-                                  className="w-full justify-start gap-2 text-muted-foreground hover:text-foreground hover:bg-accent/15"
+                                  className="w-full justify-start gap-2 text-muted-foreground hover:text-foreground hover:bg-accent/40"
                                 >
                                   <X size={9} className="flex-shrink-0" />
                                   <span>{"清除选择"}</span>
                                 </Button>
                               </div>
                             )}
-                            <div className="h-px bg-border/30 my-0.5" />
+                            <Separator opacity={30} className="my-0.5" />
                             <Button variant="ghost" size="xs"
                               onClick={() => setTagManageMode(true)}
-                              className="w-full justify-start gap-2 text-muted-foreground hover:text-foreground hover:bg-accent/15"
+                              className="w-full justify-start gap-2 text-muted-foreground hover:text-foreground hover:bg-accent/40"
                             >
                               <Edit3 size={9} className="flex-shrink-0" />
                               <span>{"管理标签"}</span>
@@ -789,7 +789,7 @@ export function SessionHistoryPage({ sessions, activeSessionId, onSelectSession,
                               return (
                                 <div
                                   key={tag}
-                                  className="flex items-center gap-2 px-2.5 py-[5px] text-xs text-foreground group/tag hover:bg-accent/15 transition-colors"
+                                  className="flex items-center gap-2 px-2.5 py-[5px] text-xs text-foreground group/tag hover:bg-accent/40 transition-colors"
                                 >
                                   <TagBadge tag={tag} size="xs" />
                                   <span className="flex-1" />
@@ -820,7 +820,7 @@ export function SessionHistoryPage({ sessions, activeSessionId, onSelectSession,
 
             <div className="flex items-center gap-1.5">
               {/* Topic search */}
-              <SearchInput value={searchQuery} onChange={setSearchQuery} placeholder="搜索话题..." clearable wrapperClassName="flex items-center gap-1.5 px-2 py-[3px] rounded-md bg-accent/15 border border-border/25 w-[160px]" />
+              <SearchInput value={searchQuery} onChange={setSearchQuery} placeholder="搜索话题..." clearable wrapperClassName="flex items-center gap-1.5 px-2 py-[3px] rounded-md bg-accent/15 border border-border/20 w-[160px]" />
               <div className="w-px h-4 bg-border/30" />
               {/* Group */}
               <div className="flex items-center gap-[2px] bg-accent/15 rounded-md p-[2px]">
@@ -847,7 +847,7 @@ export function SessionHistoryPage({ sessions, activeSessionId, onSelectSession,
                   else if (sortKey === 'name') setSortKey('messages');
                   else setSortKey('time');
                 }}
-                className="gap-1 text-muted-foreground hover:text-foreground hover:bg-accent/15"
+                className="gap-1 text-muted-foreground hover:text-foreground hover:bg-accent/40"
               >
                 <ArrowUpDown size={10} />
                 {sortKey === 'time' ? '按时间' : sortKey === 'name' ? '按名称' : '按消息数'}
