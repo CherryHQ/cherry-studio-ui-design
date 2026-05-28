@@ -1,11 +1,16 @@
-import { useMemo } from 'react';
-import { Plus, Sparkles, FileText, Pin, Trash2 } from 'lucide-react';
+import { useMemo, useState } from 'react';
+import { Plus, Sparkles, FileText, Pin, Trash2, Pencil } from 'lucide-react';
 import { useGlobalActions } from '@/app/context/GlobalActionContext';
 import { dialogAppIcons, newTabHtmlPreviews } from '@/app/config/constants';
 import { miniAppList } from '@/features/miniapp/MiniAppsPage';
-import { usePinnedArtifacts } from '@/app/stores/sharedArtifactsStore';
-import { resolveArtifactIcon } from '@/app/utils/artifactIcons';
-import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuSeparator, ContextMenuTrigger } from '@cherry-studio/ui';
+import { usePinnedArtifacts, updateArtifact } from '@/app/stores/sharedArtifactsStore';
+import { DEFAULT_ARTIFACT_ICON_NAME, resolveArtifactIcon } from '@/app/utils/artifactIcons';
+import { PinToWorkbenchForm } from '@/app/components/shared/PinToWorkbenchForm';
+import { toast } from 'sonner';
+import {
+  ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuSeparator, ContextMenuTrigger,
+  Popover, PopoverAnchor, PopoverContent,
+} from '@cherry-studio/ui';
 
 // ===========================
 // 启动页 (Launchpad)
@@ -19,6 +24,28 @@ import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuSeparator,
 export function LaunchpadPage() {
   const { launchpadOpen, openMiniApp, pinToSidebar, removeFromLaunchpad, removedFromLaunchpad } = useGlobalActions();
   const pinned = usePinnedArtifacts();
+
+  // Single source of truth for which pinned artifact is being edited
+  // (vs one Popover state per tile). Re-keyed draft state resets when
+  // the selected tile changes.
+  const [editingPinnedId, setEditingPinnedId] = useState<string | null>(null);
+  const [editDraftName, setEditDraftName] = useState('');
+  const [editDraftIcon, setEditDraftIcon] = useState<string>(DEFAULT_ARTIFACT_ICON_NAME);
+
+  const startEditPinned = (artifact: { id: string; label: string; iconName?: string }) => {
+    setEditDraftName(artifact.label);
+    setEditDraftIcon(artifact.iconName ?? DEFAULT_ARTIFACT_ICON_NAME);
+    setEditingPinnedId(artifact.id);
+  };
+
+  const confirmEditPinned = () => {
+    if (!editingPinnedId) return;
+    const trimmed = editDraftName.trim();
+    if (!trimmed) { toast.error('请输入应用名称'); return; }
+    updateArtifact(editingPinnedId, { label: trimmed, iconName: editDraftIcon });
+    toast.success('已更新');
+    setEditingPinnedId(null);
+  };
 
   // 用户添加的小程序 — embedded webpages (Gemini, ChatGPT, etc.).
   // Show the first 8 mini-apps as the user's "added" set; the full
@@ -104,15 +131,43 @@ export function LaunchpadPage() {
               </PinnableTile>
             ))}
             {visiblePinned.map(a => (
-              <PinnableTile
+              <Popover
                 key={a.id}
-                label={a.label}
-                onOpen={() => launchpadOpen(`html:pinned:${a.id}`)}
-                onPin={() => pinToSidebar('artifact', `pinned:${a.id}`, a.label)}
-                onRemove={() => removeFromLaunchpad('artifact', `pinned:${a.id}`)}
+                open={editingPinnedId === a.id}
+                onOpenChange={(v) => { if (!v) setEditingPinnedId(null); }}
               >
-                <ArtifactAvatar iconName={a.iconName} />
-              </PinnableTile>
+                <PopoverAnchor asChild>
+                  <div>
+                    <PinnableTile
+                      label={a.label}
+                      onOpen={() => launchpadOpen(`html:pinned:${a.id}`)}
+                      onPin={() => pinToSidebar('artifact', `pinned:${a.id}`, a.label)}
+                      onRemove={() => removeFromLaunchpad('artifact', `pinned:${a.id}`)}
+                      onEdit={() => startEditPinned(a)}
+                    >
+                      <ArtifactAvatar iconName={a.iconName} />
+                    </PinnableTile>
+                  </div>
+                </PopoverAnchor>
+                <PopoverContent
+                  side="bottom"
+                  align="start"
+                  sideOffset={8}
+                  className="w-[300px] p-3"
+                  onOpenAutoFocus={(e) => e.preventDefault()}
+                >
+                  <PinToWorkbenchForm
+                    title="编辑名称与图标"
+                    name={editDraftName}
+                    iconName={editDraftIcon}
+                    onNameChange={setEditDraftName}
+                    onIconChange={setEditDraftIcon}
+                    onConfirm={confirmEditPinned}
+                    onCancel={() => setEditingPinnedId(null)}
+                    confirmLabel="保存"
+                  />
+                </PopoverContent>
+              </Popover>
             ))}
             {visiblePinned.length === 0 && visibleHtmlPreviews.length === 0 && (
               <EmptyHint
@@ -160,12 +215,14 @@ function Grid({ children }: { children: React.ReactNode }) {
 }
 
 // Tile with a right-click context menu — iPhone home-screen "Edit Home
-// Screen" style. "添加至侧边栏" is universal; "移除" appears only for
-// user-supplied kinds (mini-apps / artifacts), not for built-in 功能.
-function PinnableTile({ label, onOpen, onPin, onRemove, children }: {
+// Screen" style. "添加至侧边栏" is universal; "编辑名称与图标" appears
+// for pinned artifacts (provided by the launchpad); "从启动页移除" appears
+// for user-supplied kinds (mini-apps / artifacts), not for built-in 功能.
+function PinnableTile({ label, onOpen, onPin, onEdit, onRemove, children }: {
   label: string;
   onOpen: () => void;
   onPin: () => void;
+  onEdit?: () => void;
   onRemove?: () => void;
   children: React.ReactNode;
 }) {
@@ -188,6 +245,12 @@ function PinnableTile({ label, onOpen, onPin, onRemove, children }: {
           <Pin size={14} strokeWidth={1.6} />
           添加至侧边栏
         </ContextMenuItem>
+        {onEdit && (
+          <ContextMenuItem onSelect={onEdit}>
+            <Pencil size={14} strokeWidth={1.6} />
+            编辑名称与图标
+          </ContextMenuItem>
+        )}
         {onRemove && (
           <>
             <ContextMenuSeparator />

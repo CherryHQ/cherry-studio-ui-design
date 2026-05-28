@@ -6,20 +6,17 @@ import {
   Maximize2, Minimize2,
   Share2, Pin, Users2,
   FileText, Globe, MousePointer2, TerminalSquare, ExternalLink,
-  FileCode2, BookOpen, BarChart3, LineChart, PieChart,
-  LayoutDashboard, Newspaper, ScrollText, FileSpreadsheet,
-  ClipboardList, NotebookPen, FlaskConical, Receipt, Trophy,
-  Sparkles, Layers,
 } from 'lucide-react';
 import {
-  Button, EmptyState, Input,
+  Button, EmptyState,
   DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator,
   DropdownMenuSub, DropdownMenuSubTrigger, DropdownMenuSubContent,
-  Popover, PopoverAnchor, PopoverContent, PopoverTrigger,
+  Popover, PopoverAnchor, PopoverContent,
 } from '@cherry-studio/ui';
 import { MOCK_GROUPS } from '@/features/collaboration/data';
 import { pinArtifact, shareArtifactToGroup } from '@/app/stores/sharedArtifactsStore';
-import { ARTIFACT_ICON_MAP, ARTIFACT_ICON_NAMES, DEFAULT_ARTIFACT_ICON_NAME, resolveArtifactIcon } from '@/app/utils/artifactIcons';
+import { DEFAULT_ARTIFACT_ICON_NAME } from '@/app/utils/artifactIcons';
+import { PinToWorkbenchForm } from '@/app/components/shared/PinToWorkbenchForm';
 import { NewTopicDialog, type AttachedArtifact } from '@/features/collaboration/components/NewTopicDialog';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'motion/react';
@@ -170,6 +167,13 @@ export function ArtifactViewer({ fileContent, fileName, previewUrl, hasArtifact,
   // When set, the NewTopicDialog opens with the artifact pre-attached so
   // the user can type a comment before posting it as a new group topic.
   const [shareTarget, setShareTarget] = useState<{ groupId: string; groupName: string } | null>(null);
+  // Share dropdown needs to be controlled so that clicking "添加至工作台"
+  // can preventDefault (skip auto-close), manually close, and then open
+  // the popover after the dismiss cycle settles. An uncontrolled
+  // dropdown caused the popover to "flash and disappear" — Radix's
+  // outside-click logic on the just-opened popover saw the still-
+  // unwinding dropdown click as a dismiss interaction.
+  const [shareMenuOpen, setShareMenuOpen] = useState(false);
   // "添加至工作台" popover: opens anchored to the share button, with a
   // draft name + icon prefilled from the current artifact. Both are
   // editable before the user confirms.
@@ -202,10 +206,11 @@ export function ArtifactViewer({ fileContent, fileName, previewUrl, hasArtifact,
     const payload = buildSharePayload();
     setPinDraftName(payload.label);
     setPinDraftIcon(payload.iconName);
-    // The Share dropdown auto-closes when its item is selected; defer
-    // opening the popover one frame so Radix's dismiss-on-outside-click
-    // logic doesn't immediately close it again.
-    requestAnimationFrame(() => setPinPopoverOpen(true));
+    // Close the share dropdown manually (preventDefault on the item
+    // suppressed the auto-close), then wait long enough for Radix's
+    // dismiss + focus-restoration cycle before opening the popover.
+    setShareMenuOpen(false);
+    setTimeout(() => setPinPopoverOpen(true), 80);
   };
 
   const handlePinConfirm = () => {
@@ -352,7 +357,7 @@ export function ArtifactViewer({ fileContent, fileName, previewUrl, hasArtifact,
           <div className="w-px h-3 bg-border/30 mx-1" />
           <Popover open={pinPopoverOpen} onOpenChange={setPinPopoverOpen}>
           <PopoverAnchor>
-          <DropdownMenu>
+          <DropdownMenu open={shareMenuOpen} onOpenChange={setShareMenuOpen}>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon-xs"
                 className="text-muted-foreground hover:text-foreground"
@@ -361,7 +366,10 @@ export function ArtifactViewer({ fileContent, fileName, previewUrl, hasArtifact,
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" side="bottom" className="w-[180px]">
-              <DropdownMenuItem className="gap-2 px-2 py-[5px] text-xs" onSelect={handlePinToWorkbench}>
+              <DropdownMenuItem
+                className="gap-2 px-2 py-[5px] text-xs"
+                onSelect={(e) => { e.preventDefault(); handlePinToWorkbench(); }}
+              >
                 <Pin size={12} className="text-muted-foreground/80 flex-shrink-0" />
                 <span className="flex-1">添加至工作台</span>
               </DropdownMenuItem>
@@ -405,7 +413,8 @@ export function ArtifactViewer({ fileContent, fileName, previewUrl, hasArtifact,
               e.preventDefault();
             }}
           >
-            <PinToWorkbenchInline
+            <PinToWorkbenchForm
+              title="添加至工作台"
               name={pinDraftName}
               iconName={pinDraftIcon}
               onNameChange={setPinDraftName}
@@ -507,84 +516,3 @@ export function ArtifactViewer({ fileContent, fileName, previewUrl, hasArtifact,
   );
 }
 
-// ===========================
-// Pin-to-Workbench Inline Form
-// ===========================
-// Compact popover anchored to the share button — one row with
-// [icon-picker-popover-trigger] [name input] [添加 button]. Selecting
-// the icon opens a nested popover with the curated lucide grid.
-function PinToWorkbenchInline({
-  name, iconName, onNameChange, onIconChange, onConfirm, onCancel,
-}: {
-  name: string;
-  iconName: string;
-  onNameChange: (v: string) => void;
-  onIconChange: (v: string) => void;
-  onConfirm: () => void;
-  onCancel: () => void;
-}) {
-  const SelectedIcon = resolveArtifactIcon(iconName);
-  const [iconPickerOpen, setIconPickerOpen] = useState(false);
-  return (
-    <div className="space-y-2.5">
-      <div className="text-[11px] text-muted-foreground/70">添加至工作台</div>
-      <div className="flex items-center gap-2">
-        {/* Icon picker — small button opens a nested popover */}
-        <Popover open={iconPickerOpen} onOpenChange={setIconPickerOpen}>
-          <PopoverTrigger asChild>
-            <button
-              type="button"
-              title="选择图标"
-              className="w-9 h-9 rounded-lg bg-accent-violet/15 text-accent-violet flex items-center justify-center hover:bg-accent-violet/20 transition-colors flex-shrink-0"
-            >
-              <SelectedIcon size={16} strokeWidth={1.6} />
-            </button>
-          </PopoverTrigger>
-          <PopoverContent side="bottom" align="start" sideOffset={4} className="w-[228px] p-2">
-            <div className="grid grid-cols-6 gap-1">
-              {ARTIFACT_ICON_NAMES.map((n) => {
-                const Icon = ARTIFACT_ICON_MAP[n];
-                const isSelected = n === iconName;
-                return (
-                  <button
-                    key={n}
-                    type="button"
-                    onClick={() => { onIconChange(n); setIconPickerOpen(false); }}
-                    title={n}
-                    className={`w-8 h-8 rounded-md flex items-center justify-center transition-colors
-                      ${isSelected
-                        ? 'bg-accent-violet/15 text-accent-violet ring-1 ring-accent-violet/40'
-                        : 'text-muted-foreground/70 hover:text-foreground hover:bg-accent/40'}`}
-                  >
-                    <Icon size={14} strokeWidth={1.6} />
-                  </button>
-                );
-              })}
-            </div>
-          </PopoverContent>
-        </Popover>
-
-        {/* Name input — autoFocus on first open */}
-        <Input
-          value={name}
-          onChange={(e) => onNameChange(e.target.value)}
-          placeholder="应用名称"
-          className="h-9 text-sm flex-1 min-w-0"
-          autoFocus
-          onKeyDown={(e) => {
-            if (e.key === 'Enter') { e.preventDefault(); onConfirm(); }
-            if (e.key === 'Escape') { e.preventDefault(); onCancel(); }
-          }}
-        />
-      </div>
-      <div className="flex items-center justify-end gap-1.5">
-        <Button variant="ghost" size="xs" onClick={onCancel} className="h-7 px-2.5 text-xs">
-          取消
-        </Button>
-        <Button variant="default" size="xs" onClick={onConfirm} className="h-7 px-3 text-xs">
-          添加
-        </Button>
-      </div>
-    </div>
-  );
-}

@@ -100,6 +100,23 @@ export function unpinArtifact(id: string): void {
   emit();
 }
 
+/**
+ * Patch label / iconName of an already-pinned artifact. Used by the
+ * LaunchpadPage "编辑" action so the user can re-name and re-icon a
+ * tile after it's been added.
+ */
+export function updateArtifact(
+  id: string,
+  patch: Partial<Pick<SharedArtifact, 'label' | 'iconName'>>,
+): void {
+  state = {
+    ...state,
+    pinned: state.pinned.map(p => (p.id === id ? { ...p, ...patch } : p)),
+  };
+  persist(state);
+  emit();
+}
+
 export function usePinnedArtifacts(): SharedArtifact[] {
   const [, force] = useState(0);
   useEffect(() => {
