@@ -4,6 +4,7 @@ import { HoverCard, HoverCardContent, HoverCardTrigger, DropdownMenu, DropdownMe
 import { Locate } from 'lucide-react';
 import { toast } from 'sonner';
 import { Attachment, findMember, findMemberByMention, Group, MessageRef, Topic } from '../data';
+import { useGroupSharedArtifacts } from '@/app/stores/sharedArtifactsStore';
 import { Avatar } from './Avatar';
 import { ShareDialog, type ShareItem } from './ShareDialog';
 import { MemberCardPopover } from './ContactsPanel';
@@ -31,6 +32,18 @@ const INITIAL_REACTIONS_BY_TOPIC: Record<string, Reaction[]> = {
     { emoji: '👀', users: ['me', 'u-zhangsan'] },
   ],
 };
+
+function formatTime(iso: string): string {
+  try {
+    const d = new Date(iso);
+    const now = new Date();
+    const sameDay = d.toDateString() === now.toDateString();
+    if (sameDay) return d.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit', hour12: false });
+    return d.toLocaleDateString('zh-CN', { month: 'short', day: 'numeric' });
+  } catch {
+    return '';
+  }
+}
 
 function formatReactorNames(users: string[]): string {
   const names = users.map(uid => findMember(uid)?.name ?? uid);
@@ -78,7 +91,22 @@ export function TopicView({ group, onOpenGroupSettings, onClickNewTopic, onClick
   // Aggregate all attachments across topics for the Files tab. Pinned items
   // are a curated subset (first topic starter + first few file-type
   // attachments) — prototype-grade, no persistence.
-  const allFiles = useMemo(() => collectFiles(group), [group]);
+  const sharedFromAgent = useGroupSharedArtifacts(group.id);
+  const allFiles = useMemo(() => {
+    const base = collectFiles(group);
+    // Synthesize FileEntry rows for artifacts shared via the agent run's
+    // "分享到群组" menu. They show up as HTML files, alongside attachments
+    // pulled from real topic messages.
+    const synthetic: FileEntry[] = sharedFromAgent.map(a => ({
+      key: `shared:${a.id}`,
+      att: { name: a.fileName, kind: 'html' },
+      authorName: '从智能体分享',
+      time: formatTime(a.sharedAt),
+      topicId: `shared:${a.id}`,
+      topicTitle: '分享文件',
+    }));
+    return [...synthetic, ...base];
+  }, [group, sharedFromAgent]);
   const pinnedItems = useMemo(() => derivePinned(group, allFiles), [group, allFiles]);
   const subscribedTopics = useMemo(
     () => group.topics.filter(t => subscribedIds.has(t.id)),

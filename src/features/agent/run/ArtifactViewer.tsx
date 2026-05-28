@@ -4,13 +4,17 @@ import {
   Copy, Check, ChevronRight, ChevronDown, Eye,
   FolderOpen, X,
   Maximize2, Minimize2,
-  Share2, Link as LinkIcon, Layers,
+  Share2, Pin, Users2,
   FileText, Globe, MousePointer2, TerminalSquare, ExternalLink,
 } from 'lucide-react';
 import {
   Button, EmptyState,
   DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator,
+  DropdownMenuSub, DropdownMenuSubTrigger, DropdownMenuSubContent,
 } from '@cherry-studio/ui';
+import { MOCK_GROUPS } from '@/features/collaboration/data';
+import { pinArtifact, shareArtifactToGroup } from '@/app/stores/sharedArtifactsStore';
+import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'motion/react';
 import { copyToClipboard } from '@/app/utils/clipboard';
 import { Tooltip } from '@/app/components/Tooltip';
@@ -157,6 +161,37 @@ export function ArtifactViewer({ fileContent, fileName, previewUrl, hasArtifact,
   const [previewKey, setPreviewKey] = useState(0);
   const [previewCollapsed, setPreviewCollapsed] = useState(false);
 
+  const buildSharePayload = () => {
+    const name = fileName ?? '未命名.html';
+    // Strip extension for a friendlier label; cap at 14 chars for tile UX.
+    const stem = name.replace(/\.[a-zA-Z0-9]+$/, '');
+    const label = stem.length > 14 ? `${stem.slice(0, 13)}…` : stem;
+    return {
+      fileName: name,
+      label,
+      emoji: '📄',
+      html: previewHtml ?? fileContent ?? '',
+    };
+  };
+
+  const handlePinToWorkbench = () => {
+    if (!previewHtml && !fileContent) {
+      toast.error('当前没有可 Pin 的内容');
+      return;
+    }
+    pinArtifact(buildSharePayload());
+    toast.success('已 Pin 到工作台');
+  };
+
+  const handleShareToGroup = (groupId: string, groupName: string) => {
+    if (!previewHtml && !fileContent) {
+      toast.error('当前没有可分享的内容');
+      return;
+    }
+    shareArtifactToGroup(groupId, buildSharePayload());
+    toast.success(`已分享到 ${groupName}`);
+  };
+
   const handleCopy = () => {
     if (fileContent) {
       copyToClipboard(fileContent);
@@ -275,15 +310,37 @@ export function ArtifactViewer({ fileContent, fileName, previewUrl, hasArtifact,
                 <Share2 size={11} />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" side="bottom" className="w-[170px]">
-              <DropdownMenuItem className="gap-2 px-2 py-[5px] text-xs">
-                <Layers size={12} className="text-muted-foreground/80 flex-shrink-0" />
-                <span className="flex-1">分享到工作台</span>
+            <DropdownMenuContent align="end" side="bottom" className="w-[180px]">
+              <DropdownMenuItem className="gap-2 px-2 py-[5px] text-xs" onSelect={handlePinToWorkbench}>
+                <Pin size={12} className="text-muted-foreground/80 flex-shrink-0" />
+                <span className="flex-1">Pin 到工作台</span>
               </DropdownMenuItem>
-              <DropdownMenuItem className="gap-2 px-2 py-[5px] text-xs">
-                <LinkIcon size={12} className="text-muted-foreground/80 flex-shrink-0" />
-                <span className="flex-1">分享链接</span>
-              </DropdownMenuItem>
+              <DropdownMenuSub>
+                <DropdownMenuSubTrigger className="gap-2 px-2 py-[5px] text-xs">
+                  <Users2 size={12} className="text-muted-foreground/80 flex-shrink-0" />
+                  <span className="flex-1">分享到群组</span>
+                </DropdownMenuSubTrigger>
+                <DropdownMenuSubContent className="w-[220px] max-h-[260px] overflow-y-auto">
+                  {MOCK_GROUPS.length === 0 ? (
+                    <div className="text-[11px] text-muted-foreground/50 px-2 py-2 text-center">暂无群组</div>
+                  ) : (
+                    MOCK_GROUPS.map(g => (
+                      <DropdownMenuItem key={g.id} className="gap-2 px-2 py-[6px] text-xs"
+                        onSelect={() => handleShareToGroup(g.id, g.name)}>
+                        <div className="w-6 h-6 rounded-md bg-accent/50 flex items-center justify-center flex-shrink-0 text-[11px] text-muted-foreground/70">
+                          {g.name.slice(0, 1)}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="truncate text-foreground">{g.name}</div>
+                          <div className="text-[10px] text-muted-foreground/55 truncate">
+                            {g.members.length} 成员 · {g.topics.length} 话题
+                          </div>
+                        </div>
+                      </DropdownMenuItem>
+                    ))
+                  )}
+                </DropdownMenuSubContent>
+              </DropdownMenuSub>
             </DropdownMenuContent>
           </DropdownMenu>
 

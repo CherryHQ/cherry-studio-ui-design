@@ -49,6 +49,7 @@ import { useFloatingWindows } from '@/app/hooks/useFloatingWindows';
 import { useTabDrag } from '@/app/hooks/useTabDrag';
 import { CollabProvider, useCollab } from '@/features/collaboration/CollabContext';
 import { UserInfoPopup } from '@/features/collaboration/components/UserInfoPopup';
+import { usePinnedArtifacts, findPinnedArtifact } from '@/app/stores/sharedArtifactsStore';
 
 // ===========================
 // Main UI
@@ -73,6 +74,20 @@ function CherryStudioInner() {
   // their resources and the recycle-bin delete flow is unreachable.
   const [hiddenApps, setHiddenApps] = useState<Set<string>>(new Set(['explore', 'knowledge', 'file', 'code', 'note', 'extensions']));
   const [appOrder, setAppOrder] = useState<string[]>(() => dialogAppIconsWithAgents.map(a => a.id));
+
+  // Runtime-pinned HTML artifacts (from ArtifactViewer's "Pin 到工作台").
+  // Appended to the static launchpad tiles. Persists via localStorage.
+  const pinnedArtifacts = usePinnedArtifacts();
+  const launchpadTiles = useMemo(() => [
+    ...dialogAppIconsWithAgents,
+    ...pinnedArtifacts.map(a => ({
+      id: `html:pinned:${a.id}`,
+      label: a.label,
+      icon: makeEmojiIcon(a.emoji),
+      color: 'text-foreground',
+      bg: 'bg-accent-violet/15',
+    })),
+  ], [pinnedArtifacts]);
   const [annotationListOpen, setAnnotationListOpen] = useState(false);
   const [showMigration, setShowMigration] = useState(false);
 
@@ -210,8 +225,19 @@ function CherryStudioInner() {
     // artifact already exists, focus it instead of duplicating.
     if (menuItemId.startsWith('html:')) {
       const key = menuItemId.slice('html:'.length);
-      const preview = newTabHtmlPreviews[key];
-      if (!preview) { setNewTabDialogOpen(false); return; }
+      // Two flavors of html-preview keys:
+      //   "pinned:<id>"  → runtime-pinned artifact (look up in store)
+      //   "<staticKey>"  → entry in newTabHtmlPreviews const
+      let title: string;
+      if (key.startsWith('pinned:')) {
+        const artifact = findPinnedArtifact(key.slice('pinned:'.length));
+        if (!artifact) { setNewTabDialogOpen(false); return; }
+        title = artifact.label;
+      } else {
+        const preview = newTabHtmlPreviews[key];
+        if (!preview) { setNewTabDialogOpen(false); return; }
+        title = preview.title;
+      }
       const existing = tabs.find(t => t.htmlPreviewKey === key);
       if (existing) {
         setActiveTabId(existing.id);
@@ -219,7 +245,7 @@ function CherryStudioInner() {
         const newId = `html-${key}-${Date.now()}`;
         setTabs(prev => [...prev, {
           id: newId,
-          title: preview.title,
+          title,
           icon: Globe,
           closeable: true,
           htmlPreviewKey: key,
@@ -427,7 +453,7 @@ function CherryStudioInner() {
           setHiddenApps={setHiddenApps}
           appOrder={appOrder}
           setAppOrder={setAppOrder}
-          dialogAppIcons={dialogAppIconsWithAgents}
+          dialogAppIcons={launchpadTiles}
           dialogFilterTabs={dialogFilterTabs}
           newTabHistoryItems={newTabHistoryItems}
           newTabFileItems={newTabFileItems}
