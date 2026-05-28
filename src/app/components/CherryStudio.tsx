@@ -38,12 +38,14 @@ import { SettingsPage } from '@/features/settings/SettingsPage';
 import { SettingsProvider, useSettings } from '@/app/context/SettingsContext';
 import { GlobalActionProvider } from '@/app/context/GlobalActionContext';
 import type { GlobalActions } from '@/app/context/GlobalActionContext';
-import { Toaster } from 'sonner';
+import { Toaster, toast } from 'sonner';
 import { DataMigrationOverlay } from './DataMigrationOverlay';
 import { initGlobalErrorHandler } from '@/app/services/errorHandler';
 import { useTabs } from '@/app/hooks/useTabs';
 import { useFloatingWindows } from '@/app/hooks/useFloatingWindows';
 import { useTabDrag } from '@/app/hooks/useTabDrag';
+import { CollabProvider, useCollab } from '@/features/collaboration/CollabContext';
+import { UserInfoPopup } from '@/features/collaboration/components/UserInfoPopup';
 
 // ===========================
 // Main UI
@@ -65,6 +67,24 @@ function CherryStudioInner() {
   const [appOrder, setAppOrder] = useState<string[]>(() => dialogAppIconsWithAgents.map(a => a.id));
   const [annotationListOpen, setAnnotationListOpen] = useState(false);
   const [showMigration, setShowMigration] = useState(false);
+
+  // Surface annotation persistence failures (quota exceeded, etc.) so the
+  // user knows their comment wasn't actually saved — previously this failed
+  // silently, leaving "ghost" annotations the Agent couldn't read.
+  useEffect(() => {
+    const onStorageError = (e: Event) => {
+      const detail = (e as CustomEvent<{ reason?: string }>).detail;
+      if (detail?.reason === 'quota') {
+        toast.error('批注未能保存：本地存储已满', {
+          description: '请删除部分批注或减少附图，再尝试保存。',
+        });
+      } else {
+        toast.error('批注保存失败');
+      }
+    };
+    window.addEventListener('annotation-storage-error', onStorageError);
+    return () => window.removeEventListener('annotation-storage-error', onStorageError);
+  }, []);
 
   const [libraryEditResourceId, setLibraryEditResourceId] = useState<string | null>(null);
   const [libraryCreateType, setLibraryCreateType] = useState<'agent' | 'assistant' | null>(null);
@@ -421,8 +441,25 @@ export function CherryStudio() {
 
   return (
     <SettingsProvider>
-      <CherryStudioInner />
-      <Toaster position="bottom-right" richColors closeButton />
+      <CollabProvider>
+        <CherryStudioInner />
+        <UserInfoPopupHost />
+        <Toaster position="bottom-right" richColors closeButton />
+      </CollabProvider>
     </SettingsProvider>
+  );
+}
+
+/** Mounts the user-info popup at the top level so any component can trigger it via context. */
+function UserInfoPopupHost() {
+  const { userInfoOpen, closeUserInfo, boundEmail, setBoundEmail } = useCollab();
+  return (
+    <UserInfoPopup
+      open={userInfoOpen}
+      onClose={closeUserInfo}
+      boundEmail={boundEmail}
+      onBindEmail={(email) => setBoundEmail(email)}
+      onUnbind={() => setBoundEmail(null)}
+    />
   );
 }

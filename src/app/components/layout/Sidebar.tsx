@@ -7,6 +7,7 @@ import { Button } from '@cherry-studio/ui';
 import { Tooltip } from '@/app/components/Tooltip';
 import { BP_ICON, BP_VERTICAL_CARD, BP_FULL, getLayout } from '@/app/config/constants';
 import type { MenuItem, Tab } from '@/app/types';
+import { useCollab } from '@/features/collaboration/CollabContext';
 
 function CherryLogo({ size = 'md' }: { size?: 'sm' | 'md' }) {
   const s = size === 'sm' ? 'w-7 h-7' : 'w-8 h-8';
@@ -154,8 +155,23 @@ function FullBottomSection({ onSettingsClick }: {
   isDark?: boolean;
   onToggleTheme?: () => void;
 }) {
+  const { openUserInfo } = useCollab();
   return (
-    <div className="px-2.5 py-2.5">
+    <div className="px-2.5 py-2.5 space-y-1">
+      <button
+        onClick={openUserInfo}
+        className="flex items-center gap-2.5 w-full rounded-lg px-1.5 py-1.5 -mx-1 text-sidebar-foreground/80 hover:text-sidebar-foreground hover:bg-accent/30 transition-colors cursor-pointer"
+        title="个人信息"
+      >
+        <div className="w-6 h-6 rounded-full overflow-hidden ring-1 ring-border flex-shrink-0">
+          <div className="w-full h-full bg-gradient-to-br from-blue-400 to-indigo-500 flex items-center justify-center text-white text-[10px]">S</div>
+        </div>
+        <div className="flex-1 min-w-0 text-left">
+          <div className="text-xs text-sidebar-foreground truncate">Siin</div>
+          <div className="text-[10px] text-muted-foreground truncate">siin@gmail.com</div>
+        </div>
+      </button>
+
       {/* Bottom bar: settings shortcut */}
       <button
         onClick={() => onSettingsClick?.()}

@@ -284,14 +284,44 @@ export function loadAnnotations(storageKey: string): Annotation[] {
   }
 }
 
+/**
+ * Persist annotations to localStorage.
+ *
+ * Returns `true` on success, `false` when the write fails (quota exceeded,
+ * private-mode restrictions, etc.). Callers MUST check the result — silently
+ * swallowing here previously caused "ghost" annotations: the UI rendered
+ * them from React state, but they were absent on reload and invisible to
+ * any external reader (Agent, export, copy-as-prompt). When persistence
+ * fails we also dispatch a window-level `annotation-storage-error` event so
+ * the host app can surface a toast / clear stale data.
+ */
 export function saveAnnotations(
   storageKey: string,
   annotations: Annotation[],
-): void {
+): boolean {
   try {
     localStorage.setItem(storageKey, JSON.stringify(annotations))
-  } catch {
-    // storage full — silently ignore
+    return true
+  } catch (err) {
+    const isQuota =
+      err instanceof DOMException &&
+      (err.name === "QuotaExceededError" ||
+        err.name === "NS_ERROR_DOM_QUOTA_REACHED" ||
+        err.code === 22)
+    console.warn(
+      `[annotations] persist failed (${isQuota ? "quota" : "error"}):`,
+      err,
+    )
+    try {
+      window.dispatchEvent(
+        new CustomEvent("annotation-storage-error", {
+          detail: { storageKey, reason: isQuota ? "quota" : "error", count: annotations.length },
+        }),
+      )
+    } catch {
+      // window unavailable (SSR) — nothing more we can do
+    }
+    return false
   }
 }
 

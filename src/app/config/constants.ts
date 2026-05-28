@@ -4,6 +4,7 @@ import {
   Sparkles, MousePointerClick, Blocks, ShoppingBag,
   Zap, Cloud, MessageSquareText,
   Shield, ShieldCheck, ShieldAlert,
+  Users2,
 } from 'lucide-react';
 import type {
   MenuItem, SidebarLayout,
@@ -18,6 +19,7 @@ import type {
 export const menuItems: MenuItem[] = [
   { id: 'chat', label: '聊天', icon: MessageCircle },
   { id: 'agent', label: 'Agent', icon: MousePointerClick },
+  { id: 'collaboration', label: '协作', icon: Users2 },
   { id: 'painting', label: '创作', icon: Palette },
   { id: 'translate', label: '翻译', icon: Languages },
   { id: 'explore', label: '探索', icon: Compass },
@@ -53,6 +55,7 @@ export function getLayout(width: number): SidebarLayout {
 export const dialogAppIcons: { id: string; label: string; icon: typeof MessageCircle; color: string; bg: string }[] = [
   { id: 'chat', label: '聊天', icon: MessageCircle, color: 'text-foreground/50', bg: 'bg-foreground/[0.1]' },
   { id: 'agent', label: 'Agent', icon: MousePointerClick, color: 'text-info', bg: 'bg-info/20' },
+  { id: 'collaboration', label: '协作', icon: Users2, color: 'text-emerald-400', bg: 'bg-emerald-500/20' },
   { id: 'painting', label: '绘画', icon: Palette, color: 'text-rose-400', bg: 'bg-rose-500/20' },
   { id: 'translate', label: '翻译', icon: Languages, color: 'text-violet-400', bg: 'bg-violet-500/20' },
   { id: 'knowledge', label: '知识库', icon: BookOpen, color: 'text-cyan-400', bg: 'bg-cyan-500/20' },
