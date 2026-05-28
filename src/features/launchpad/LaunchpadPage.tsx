@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Plus, Sparkles, FileText, Pin, Trash2, Pencil } from 'lucide-react';
+import { Plus, Sparkles, FileText, Pin, Trash2, Pencil, X } from 'lucide-react';
 import { useGlobalActions } from '@/app/context/GlobalActionContext';
 import { dialogAppIcons, newTabHtmlPreviews } from '@/app/config/constants';
 import { miniAppList } from '@/features/miniapp/MiniAppsPage';
@@ -22,7 +22,11 @@ import {
 // `launchpadOpen` action which routes by id namespace.
 
 export function LaunchpadPage() {
-  const { launchpadOpen, openMiniApp, pinToSidebar, removeFromLaunchpad, removedFromLaunchpad } = useGlobalActions();
+  const {
+    launchpadOpen, openMiniApp, pinToSidebar,
+    removeFromLaunchpad, removedFromLaunchpad,
+    launchpadEditMode, setLaunchpadEditMode,
+  } = useGlobalActions();
   const pinned = usePinnedArtifacts();
 
   // Single source of truth for which pinned artifact is being edited
@@ -67,11 +71,26 @@ export function LaunchpadPage() {
   return (
     <div className="flex-1 overflow-y-auto scrollbar-thin">
       <div className="max-w-[960px] mx-auto px-8 py-10 space-y-10">
-        <header>
-          <h1 className="text-xl text-foreground">启动页</h1>
-          <p className="text-xs text-muted-foreground/55 mt-1">
-            选择一个功能开始，或者从下方继续使用已添加的小程序与 Agent 产物。
-          </p>
+        <header className="flex items-end justify-between gap-4">
+          <div>
+            <h1 className="text-xl text-foreground">
+              {launchpadEditMode ? '编辑启动页' : '启动页'}
+            </h1>
+            <p className="text-xs text-muted-foreground/55 mt-1">
+              {launchpadEditMode
+                ? '点击角标移除，或拖动重排（即将支持）。完成后点右侧"完成"。'
+                : '选择一个功能开始，或者从下方继续使用已添加的小程序与 Agent 产物。'}
+            </p>
+          </div>
+          {launchpadEditMode && (
+            <button
+              type="button"
+              onClick={() => setLaunchpadEditMode(false)}
+              className="flex-shrink-0 px-4 h-8 rounded-xl bg-primary text-primary-foreground text-xs font-medium hover:bg-primary/90 transition-colors"
+            >
+              完成
+            </button>
+          )}
         </header>
 
         <Section title="功能">
@@ -84,6 +103,7 @@ export function LaunchpadPage() {
                   label={item.label}
                   onOpen={() => launchpadOpen(item.id)}
                   onPin={() => pinToSidebar('function', item.id, item.label)}
+                  editMode={launchpadEditMode}
                 >
                   <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${item.bg}`}>
                     <Icon size={20} strokeWidth={1.6} className={item.color} />
@@ -106,6 +126,7 @@ export function LaunchpadPage() {
                   onOpen={() => openMiniApp(app)}
                   onPin={() => pinToSidebar('miniapp', app.id, app.name)}
                   onRemove={() => removeFromLaunchpad('miniapp', app.id)}
+                  editMode={launchpadEditMode}
                 >
                   <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-base font-medium text-white ${app.color}`}>
                     {app.initial}
@@ -126,6 +147,7 @@ export function LaunchpadPage() {
                 onOpen={() => launchpadOpen(`html:${key}`)}
                 onPin={() => pinToSidebar('artifact', key, preview.label)}
                 onRemove={() => removeFromLaunchpad('artifact', key)}
+                editMode={launchpadEditMode}
               >
                 <ArtifactAvatar />
               </PinnableTile>
@@ -144,6 +166,7 @@ export function LaunchpadPage() {
                       onPin={() => pinToSidebar('artifact', `pinned:${a.id}`, a.label)}
                       onRemove={() => removeFromLaunchpad('artifact', `pinned:${a.id}`)}
                       onEdit={() => startEditPinned(a)}
+                      editMode={launchpadEditMode}
                     >
                       <ArtifactAvatar iconName={a.iconName} />
                     </PinnableTile>
@@ -215,30 +238,50 @@ function Grid({ children }: { children: React.ReactNode }) {
 }
 
 // Tile with a right-click context menu — iPhone home-screen "Edit Home
-// Screen" style. "添加至侧边栏" is universal; "编辑名称与图标" appears
-// for pinned artifacts (provided by the launchpad); "从启动页移除" appears
-// for user-supplied kinds (mini-apps / artifacts), not for built-in 功能.
-function PinnableTile({ label, onOpen, onPin, onEdit, onRemove, children }: {
+// Screen" style. In normal mode: click opens, right-click shows the
+// context menu (添加至侧边栏 / 编辑 / 移除). In edit mode: the tile
+// jiggles, a `×` corner badge appears for removable kinds, and clicking
+// the body is disabled to avoid accidental opens.
+function PinnableTile({ label, onOpen, onPin, onEdit, onRemove, editMode, children }: {
   label: string;
   onOpen: () => void;
   onPin: () => void;
   onEdit?: () => void;
   onRemove?: () => void;
+  editMode?: boolean;
   children: React.ReactNode;
 }) {
   return (
     <ContextMenu>
       <ContextMenuTrigger asChild>
-        <button
-          type="button"
-          onClick={onOpen}
-          className="group flex flex-col items-center gap-2 p-2 rounded-xl hover:bg-accent/30 active:scale-[0.96] transition-all"
-        >
-          {children}
-          <span className="text-xs text-foreground/80 group-hover:text-foreground truncate max-w-full">
-            {label}
-          </span>
-        </button>
+        <div className="relative">
+          <button
+            type="button"
+            onClick={editMode ? undefined : onOpen}
+            disabled={editMode && !onRemove}
+            className={`group flex flex-col items-center gap-2 p-2 rounded-xl hover:bg-accent/30 active:scale-[0.96] transition-all w-full
+              ${editMode ? 'animate-launchpad-jiggle' : ''}`}
+          >
+            {children}
+            <span className="text-xs text-foreground/80 group-hover:text-foreground truncate max-w-full">
+              {label}
+            </span>
+          </button>
+          {/* iPhone-style delete corner badge — only in edit mode, only
+              for removable kinds (mini-apps / artifacts). Functions are
+              built-in; you can hide them from the sidebar but not from
+              the launchpad. */}
+          {editMode && onRemove && (
+            <button
+              type="button"
+              onClick={(e) => { e.stopPropagation(); onRemove(); }}
+              aria-label="移除"
+              className="absolute -top-0.5 -left-0.5 w-5 h-5 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center shadow-md hover:scale-110 active:scale-95 transition-transform z-10"
+            >
+              <X size={11} strokeWidth={2.5} />
+            </button>
+          )}
+        </div>
       </ContextMenuTrigger>
       <ContextMenuContent>
         <ContextMenuItem onSelect={onPin}>

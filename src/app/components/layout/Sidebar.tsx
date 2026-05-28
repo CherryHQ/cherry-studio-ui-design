@@ -2,6 +2,9 @@ import React, { useRef, useCallback, useState } from 'react';
 import {
   Search, X, ChevronRight, Settings, PinOff, LayoutGrid,
 } from 'lucide-react';
+// `LayoutGrid` is the 管理 icon used inside the right-click menu — kept
+// here so the context-menu item icon doesn't drift from how the
+// launchpad represents itself elsewhere.
 import cherryLogoImg from "@/assets/cherry-icon.png";
 import { Button, ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from '@cherry-studio/ui';
 import { Tooltip } from '@/app/components/Tooltip';
@@ -93,22 +96,15 @@ function FullMenuItems({
                   <PinOff size={14} strokeWidth={1.6} />
                   从侧边栏移除
                 </ContextMenuItem>
+                <ContextMenuItem onSelect={() => openLaunchpad(true)}>
+                  <LayoutGrid size={14} strokeWidth={1.6} />
+                  管理
+                </ContextMenuItem>
               </ContextMenuContent>
             </ContextMenu>
           </div>
         );
       })}
-      {/* iPhone-style "管理" entry — opens the Launchpad where the user
-          can right-click tiles to pin / unpin them from this sidebar. */}
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={openLaunchpad}
-        className="w-full justify-start gap-2.5 px-2.5 py-[7px] rounded-xl text-sm text-muted-foreground/70 hover:text-foreground hover:bg-accent/50"
-      >
-        <LayoutGrid size={16} strokeWidth={1.6} />
-        <span className="truncate">管理</span>
-      </Button>
     </div>
   );
 }

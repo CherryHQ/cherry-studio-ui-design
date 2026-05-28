@@ -17,6 +17,10 @@
 @theme {
   --animate-accordion-down: accordion-down 0.2s ease-out;
   --animate-accordion-up: accordion-up 0.2s ease-out;
+  /* iPhone-style "jiggle" used by the launchpad when in edit mode. Two
+     tiny rotations on the body axis, slightly off-rhythm so a grid of
+     tiles doesn't visually synchronise. */
+  --animate-launchpad-jiggle: launchpad-jiggle 0.32s ease-in-out infinite;
 
   @keyframes accordion-down {
     from { height: 0; }
@@ -25,6 +29,11 @@
   @keyframes accordion-up {
     from { height: var(--radix-accordion-content-height); }
     to { height: 0; }
+  }
+  @keyframes launchpad-jiggle {
+    0%   { transform: rotate(-1.2deg) translateY(0px); }
+    50%  { transform: rotate(1.2deg) translateY(-0.5px); }
+    100% { transform: rotate(-1.2deg) translateY(0px); }
   }
 }
 

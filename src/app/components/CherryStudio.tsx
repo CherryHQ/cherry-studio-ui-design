@@ -323,7 +323,13 @@ function CherryStudioInner() {
     }
   }, []);
 
-  const openLaunchpad = useCallback(() => {
+  // iPhone-jiggle "edit home screen" mode for the launchpad. Triggered
+  // from sidebar's right-click 管理; LaunchpadPage reads this from
+  // GlobalActions state and renders delete badges + a 完成 exit button.
+  const [launchpadEditMode, setLaunchpadEditMode] = useState(false);
+
+  const openLaunchpad = useCallback((editMode = false) => {
+    setLaunchpadEditMode(editMode);
     setActiveItem('launchpad');
     const existing = tabs.find(t => t.menuItemId === 'launchpad');
     if (existing) setActiveTabId(existing.id);
@@ -360,12 +366,15 @@ function CherryStudioInner() {
     libraryEditResourceId,
     libraryCreateType,
     removedFromLaunchpad,
+    launchpadEditMode,
+    setLaunchpadEditMode,
   }), [
     handleOpenMiniApp, handlePinTab, handleEditAssistantInLibrary,
     handleNavigateToKnowledge, handleNavigateToLibrary, handleLibraryReturn,
     handleTabTitleChange, handleDialogCreateTab,
     pinToSidebar, unpinFromSidebar, openLaunchpad, removeFromLaunchpad,
     libraryEditResourceId, libraryCreateType, removedFromLaunchpad,
+    launchpadEditMode,
   ]);
 
   // ===========================

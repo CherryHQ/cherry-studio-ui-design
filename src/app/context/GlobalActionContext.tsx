@@ -48,8 +48,13 @@ export interface GlobalActionFunctions {
   pinToSidebar: (kind: 'function' | 'miniapp' | 'artifact', id: string, label?: string) => void;
   /** Inverse of pinToSidebar — invoked from the sidebar's right-click. */
   unpinFromSidebar: (kind: 'function' | 'miniapp' | 'artifact', id: string) => void;
-  /** Navigate to the Launchpad tab — wired to the "管理" sidebar entry. */
-  openLaunchpad: () => void;
+  /**
+   * Navigate to the Launchpad tab. When `editMode` is true, the
+   * launchpad enters iPhone-jiggle "edit home screen" mode — tiles
+   * grow a delete corner badge and the page shows a 完成 exit affordance.
+   * Wired to the sidebar item's right-click "管理" entry.
+   */
+  openLaunchpad: (editMode?: boolean) => void;
   /**
    * Hide a mini-app or artifact tile from the Launchpad. Functions stay
    * built-in (only `hiddenApps` toggles their sidebar visibility, not
@@ -70,6 +75,13 @@ export interface GlobalActionState {
    * filters its grids against this set.
    */
   removedFromLaunchpad: Set<string>;
+  /**
+   * iPhone-jiggle edit mode for the launchpad — tiles grow a delete
+   * corner badge and shake. Toggled from the sidebar's right-click 管理.
+   */
+  launchpadEditMode: boolean;
+  /** Setter so LaunchpadPage's 完成 button can exit edit mode. */
+  setLaunchpadEditMode: (v: boolean) => void;
 }
 
 /** Combined interface for backward compatibility */
@@ -101,6 +113,8 @@ const defaultState: GlobalActionState = {
   libraryEditResourceId: null,
   libraryCreateType: null,
   removedFromLaunchpad: new Set<string>(),
+  launchpadEditMode: false,
+  setLaunchpadEditMode: noop,
 };
 
 const GlobalActionFunctionsContext = createContext<GlobalActionFunctions>(defaultFunctions);
@@ -149,7 +163,12 @@ export function GlobalActionProvider({ value, children }: GlobalActionProviderPr
     libraryEditResourceId: value.libraryEditResourceId,
     libraryCreateType: value.libraryCreateType,
     removedFromLaunchpad: value.removedFromLaunchpad,
-  }), [value.libraryEditResourceId, value.libraryCreateType, value.removedFromLaunchpad]);
+    launchpadEditMode: value.launchpadEditMode,
+    setLaunchpadEditMode: value.setLaunchpadEditMode,
+  }), [
+    value.libraryEditResourceId, value.libraryCreateType, value.removedFromLaunchpad,
+    value.launchpadEditMode, value.setLaunchpadEditMode,
+  ]);
 
   return (
     <GlobalActionFunctionsContext.Provider value={functions}>
