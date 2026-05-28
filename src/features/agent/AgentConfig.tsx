@@ -13,7 +13,10 @@ import {
   Upload, Link2,
   Send, MessageCircle, Github, Info,
   Cable, Plug, LayoutGrid, Blocks,
+  Users2,
 } from 'lucide-react';
+import { EmailAuthWizard } from '@/features/collaboration/components/EmailAuthWizard';
+import { useCollab } from '@/features/collaboration/CollabContext';
 import { Button } from '@cherrystudio/ui/components/primitives/button';
 import { Slider } from '@cherrystudio/ui/components/primitives/slider';
 // Input + Textarea kept on legacy — v2's are too faint on the modal card.
@@ -25,8 +28,10 @@ import {
   Select, SelectTrigger, SelectValue, SelectContent, SelectItem,
 } from '@cherrystudio/ui/components/primitives/select';
 // V2 doesn't ship SearchInput / Typography / EmptyState / SimpleTooltip / Switch
-import { Input, Textarea, EmptyState, SearchInput, Typography, SimpleTooltip, Switch } from '@cherry-studio/ui';
-import { Separator } from "@cherry-studio/ui";
+import {
+  Input, Textarea, EmptyState, SearchInput, Typography, SimpleTooltip, Switch,
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Separator,
+} from '@cherry-studio/ui';
 import { motion, AnimatePresence } from 'motion/react';
 import type { ResourceItem, MCPServerStatus } from '@/app/types';
 import { PromptSection } from '@/features/assistant/sections/PromptSection';
@@ -41,7 +46,7 @@ interface Props { resource: ResourceItem; onBack: () => void; inModal?: boolean 
 // sub-tabs each become a separate sidebar item under it. Other entries
 // stay flat.
 type ToolchainTabId = 'tools' | 'mcp' | 'skills' | 'integrations';
-type Section = 'basic' | 'models' | 'prompt' | 'knowledge' | 'notes' | 'advanced' | `toolchain:${ToolchainTabId}`;
+type Section = 'basic' | 'models' | 'prompt' | 'knowledge' | 'notes' | 'collaboration' | 'advanced' | `toolchain:${ToolchainTabId}`;
 
 // 拓展 group children — Skills 排第一位（最高频）。Knowledge / notes
 // 走自己的 dedicated section；toolchain 四个子 tab 走 <ToolchainSection
@@ -58,10 +63,11 @@ const EXPANSION_CHILDREN: { id: Section; label: string; icon: React.ElementType 
 // Flat top-level entries above the collapsible 拓展 group + the
 // 高级设置 tail. 模型设置 split out from BasicSection per design feedback.
 const sections: { id: Section; label: string; icon: React.ElementType }[] = [
-  { id: 'basic',    label: '基础设置', icon: Settings },
-  { id: 'models',   label: '模型设置', icon: Layers },
-  { id: 'prompt',   label: '提示词',   icon: FileText },
-  { id: 'advanced', label: '高级设置', icon: Settings2 },
+  { id: 'basic',         label: '基础设置', icon: Settings },
+  { id: 'models',        label: '模型设置', icon: Layers },
+  { id: 'prompt',        label: '提示词',   icon: FileText },
+  { id: 'collaboration', label: '协作',     icon: Users2 },
+  { id: 'advanced',      label: '高级设置', icon: Settings2 },
 ];
 
 
@@ -190,6 +196,7 @@ export function AgentConfig({ resource, onBack, inModal = false }: Props) {
                   controlledTab={activeSection.slice('toolchain:'.length) as ToolchainTabId}
                 />
               )}
+              {activeSection === 'collaboration' && <AgentCollaborationSection />}
               {activeSection === 'advanced' && <AgentAdvancedSection />}
             </motion.div>
           </AnimatePresence>
@@ -1585,4 +1592,160 @@ function AgentAdvancedSection() {
 
 function FieldGroup({ label, children }: { label: React.ReactNode; children: React.ReactNode }) {
   return (<div><label className="text-sm text-muted-foreground mb-1.5 block">{label}</label>{children}</div>);
+}
+
+// ===========================
+// Agent Collaboration Section (协作)
+// ===========================
+
+interface CloneRecord {
+  userName: string;
+  userAvatarInitial: string;
+  userAvatarColor: string;  // tailwind gradient classes
+  time: string;
+}
+
+// Mock clone history — illustrative only, no real persistence.
+const MOCK_CLONE_HISTORY: CloneRecord[] = [
+  { userName: '张三', userAvatarInitial: '张', userAvatarColor: 'from-amber-400 to-orange-500', time: '今天 10:32' },
+  { userName: '李四', userAvatarInitial: '李', userAvatarColor: 'from-emerald-400 to-teal-500', time: '昨天 16:45' },
+  { userName: '王五', userAvatarInitial: '王', userAvatarColor: 'from-rose-400 to-pink-500', time: '2026-05-25 14:20' },
+  { userName: '赵六', userAvatarInitial: '赵', userAvatarColor: 'from-violet-400 to-purple-500', time: '2026-05-22 09:05' },
+  { userName: '孙七', userAvatarInitial: '孙', userAvatarColor: 'from-cyan-400 to-blue-500', time: '2026-05-18 21:11' },
+];
+
+function AgentCollaborationSection() {
+  const { boundEmail: userEmail } = useCollab();
+  const [agentEmail, setAgentEmail] = useState<string | null>(null);
+  const [wizardOpen, setWizardOpen] = useState(false);
+  const [cloneable, setCloneable] = useState(false);
+  const [cloneHistoryOpen, setCloneHistoryOpen] = useState(false);
+
+  const cloneCount = MOCK_CLONE_HISTORY.length;
+
+  return (
+    <div className="max-w-3xl space-y-5">
+      {/* Section header */}
+      <div>
+        <p className="text-xs text-muted-foreground/55">
+          Agent 在协作模块（群组 + 话题）里收发消息所需的配置。
+        </p>
+      </div>
+
+      {/* Agent email */}
+      <div className="rounded-lg border border-border/40 bg-card/30 p-4 space-y-2">
+        <div className="flex items-center gap-1.5 text-sm text-foreground/85">
+          <Mail size={13} strokeWidth={1.6} />
+          <span>Agent 邮箱</span>
+        </div>
+        <p className="text-xs text-muted-foreground/55 leading-relaxed">
+          Agent 需要一个独立邮箱用于收发协作消息，必须与你的用户邮箱不同。
+        </p>
+        {agentEmail ? (
+          <div className="flex items-center justify-between mt-1 px-2.5 py-2 rounded-md bg-primary/5 border border-primary/20">
+            <div className="flex items-center gap-2">
+              <div className="w-5 h-5 rounded-full bg-primary/15 text-primary flex items-center justify-center">
+                <CheckCircle2 size={11} strokeWidth={2.4} />
+              </div>
+              <div>
+                <div className="text-sm text-foreground">{agentEmail}</div>
+                <div className="text-xs text-muted-foreground/55">已绑定</div>
+              </div>
+            </div>
+            <Button variant="ghost" size="sm" onClick={() => setAgentEmail(null)} className="text-muted-foreground/55 hover:text-destructive text-xs h-7">
+              解绑
+            </Button>
+          </div>
+        ) : (
+          <Button variant="outline" onClick={() => setWizardOpen(true)} className="w-full mt-1 border-dashed text-muted-foreground/65 hover:text-foreground">
+            为 Agent 绑定邮箱
+          </Button>
+        )}
+        {!userEmail && (
+          <p className="text-xs text-amber-600 dark:text-amber-400 mt-1">
+            提示：你尚未绑定用户邮箱，建议先去左下角个人信息里完成。
+          </p>
+        )}
+      </div>
+
+      {/* Clone permission — adds an inline "已被克隆 N 次" stat that opens
+          the clone history modal. Stat stays visible regardless of toggle
+          state since the history is retrospective. */}
+      <div className="rounded-lg border border-border/40 bg-card/30 p-4 space-y-2">
+        <div className="flex items-start justify-between gap-4">
+          <div className="flex-1 min-w-0">
+            <div className="text-sm text-foreground/90">允许被克隆</div>
+            <div className="text-xs text-muted-foreground/55 leading-relaxed mt-0.5">
+              开启后，其他成员可以把这个 Agent 克隆到自己本地，用他们的 token 跑。
+            </div>
+          </div>
+          <Switch checked={cloneable} onCheckedChange={setCloneable} />
+        </div>
+        {cloneCount > 0 && (
+          <button
+            type="button"
+            onClick={() => setCloneHistoryOpen(true)}
+            className="inline-flex items-center gap-1 text-xs text-muted-foreground/70 hover:text-primary transition-colors"
+          >
+            已被克隆 <span className="text-foreground/85 font-medium">{cloneCount}</span> 次
+            <ChevronRight size={11} strokeWidth={1.8} />
+          </button>
+        )}
+      </div>
+
+      <EmailAuthWizard
+        open={wizardOpen}
+        onClose={() => setWizardOpen(false)}
+        onComplete={(email) => { setAgentEmail(email); setWizardOpen(false); }}
+        forbidEmail={userEmail ?? undefined}
+        title="为 Agent 绑定邮箱"
+        description="Agent 邮箱必须与你的用户邮箱不同"
+      />
+
+      <CloneHistoryDialog
+        open={cloneHistoryOpen}
+        onClose={() => setCloneHistoryOpen(false)}
+        records={MOCK_CLONE_HISTORY}
+      />
+    </div>
+  );
+}
+
+function CloneHistoryDialog({
+  open, onClose, records,
+}: { open: boolean; onClose: () => void; records: CloneRecord[] }) {
+  return (
+    <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className="max-w-[420px]">
+        <DialogHeader>
+          <DialogTitle>克隆记录</DialogTitle>
+          <DialogDescription>
+            共 {records.length} 次克隆 · 谁、什么时候把这个 Agent 克隆到了自己本地
+          </DialogDescription>
+        </DialogHeader>
+        <div className="border border-border rounded-md max-h-[320px] overflow-y-auto">
+          {records.length === 0 ? (
+            <div className="text-center text-[12px] text-muted-foreground py-8">
+              还没有克隆记录
+            </div>
+          ) : (
+            records.map((r, i) => (
+              <div
+                key={i}
+                className="flex items-center gap-2.5 px-3 py-2 border-b border-border/30 last:border-b-0"
+              >
+                <div className={`w-8 h-8 rounded-full bg-gradient-to-br ${r.userAvatarColor} text-white text-[12px] flex items-center justify-center flex-shrink-0`}>
+                  {r.userAvatarInitial}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-[12.5px] text-foreground truncate">{r.userName}</div>
+                  <div className="text-[10.5px] text-muted-foreground">克隆于 {r.time}</div>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
 }

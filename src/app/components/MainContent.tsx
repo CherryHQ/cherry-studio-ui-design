@@ -20,6 +20,7 @@ import { FilePage } from '@/features/file/FilePage';
 import { ModelServicePage } from '@/app/components/settings/ModelServicePage';
 import { ExtensionsPage } from '@/features/extensions/ExtensionsPage';
 import { EmptyStatePreview } from '@/features/dev/EmptyStatePreview';
+import { CollaborationPage } from '@/features/collaboration/CollaborationPage';
 
 interface MainContentProps {
   tabs: Tab[];
@@ -102,6 +103,7 @@ const TabContent = React.memo(function TabContent({ tab, isActive }: { tab: Tab;
         : menuItemId === 'file' ? <FilePage />
         : menuItemId === 'miniapp' ? <MiniAppsPage />
         : menuItemId === 'extensions' ? <ExtensionsPage />
+        : menuItemId === 'collaboration' ? <CollaborationPage />
         : menuItemId === 'empty-preview' ? <EmptyStatePreview />
         : tab.miniAppId ? <MiniAppEmbedPage tab={tab} />
         : <GenericPage tab={tab} />

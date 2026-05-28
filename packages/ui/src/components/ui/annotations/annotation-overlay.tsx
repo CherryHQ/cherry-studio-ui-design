@@ -101,6 +101,15 @@ export function AnnotationOverlay() {
     }
   }, [page])
 
+  // Exiting annotation mode hides the markers — also dismiss any open bubble
+  // so we don't leave a floating popover anchored to an invisible marker.
+  useEffect(() => {
+    if (!enabled) {
+      setPending(null)
+      setActiveBubbleId(null)
+    }
+  }, [enabled])
+
   // ─── Keyboard shortcuts ────────────────────────────────────────────────
   //   ⌘+Shift+X  → toggle annotation mode
   //   ⌘+Shift+F  → copy AI prompt
@@ -466,7 +475,7 @@ export function AnnotationOverlay() {
 
   // ─── Handlers ─────────────────────────────────────────────────────────
 
-  const handleCreateSave = (comment: string, category: Annotation["category"]) => {
+  const handleCreateSave = (comment: string, category: Annotation["category"], referenceImages?: string[]) => {
     if (!pending) return
     addAnnotation({
       selector: pending.selector,
@@ -480,6 +489,7 @@ export function AnnotationOverlay() {
       rect: pending.rect,
       computedStyles: pending.computedStyles,
       className: pending.className,
+      ...(referenceImages && referenceImages.length > 0 ? { referenceImages } : {}),
     })
     setPending(null)
   }
@@ -595,8 +605,9 @@ export function AnnotationOverlay() {
         )
       })()}
 
-      {/* Annotation markers — sequential numbering among visible only */}
-      {(() => {
+      {/* Annotation markers — only visible while annotation mode is on (Figma-style).
+          When mode is off, markers are hidden so they don't obscure the live UI. */}
+      {enabled && (() => {
         let visibleIndex = 0
         return annotations.map((ann) => {
           const pos = markerPositions.get(ann.id)
@@ -659,7 +670,7 @@ export function AnnotationOverlay() {
             style={{ top: pos.y, left: pos.x }}
             customActions={bubbleActions}
             onSave={() => { /* view mode only */ }}
-            onUpdate={(id, comment) => updateAnnotation(id, { comment })}
+            onUpdate={(id, comment, referenceImages) => updateAnnotation(id, { comment, referenceImages })}
             onResolve={resolveAnnotation}
             onDelete={(id) => {
               removeAnnotation(id)

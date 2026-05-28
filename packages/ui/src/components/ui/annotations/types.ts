@@ -43,6 +43,8 @@ export interface Annotation {
   orphaned?: boolean
   /** Optional element screenshot as data URL (PNG) — populated by extension */
   screenshot?: string
+  /** User-attached reference images (data URLs) — uploaded via the bubble */
+  referenceImages?: string[]
   /** Optional origin (set by extension to track source site) */
   origin?: string
 }
@@ -74,6 +76,10 @@ export interface AnnotationMessages {
   describePlaceholder: string
   showPresets: string
   customInputTitle: string                // tooltip on the empty preset
+  /** Tooltip on the "attach image" button in the bubble editor */
+  attachImage: string
+  /** A11y label on the per-thumbnail remove (×) button */
+  removeImage: string
   hideStyles: string
   showStyleDiff: string
   /** "{n} changed" — n style fields differ from saved */
@@ -149,6 +155,8 @@ export const DEFAULT_ANNOTATION_MESSAGES: AnnotationMessages = {
   describePlaceholder: "Describe the issue or change needed…",
   showPresets: "Show preset templates",
   customInputTitle: "Custom input",
+  attachImage: "Attach reference image",
+  removeImage: "Remove image",
   hideStyles: "Hide styles",
   showStyleDiff: "Show style diff",
   changedCount: (n) => `${n} changed`,

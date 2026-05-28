@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef, useMemo } from "react"
-import { Check, CheckCircle2, Clipboard, Pencil, Trash2, X, Zap } from "lucide-react"
+import React, { useState, useEffect, useLayoutEffect, useRef, useMemo } from "react"
+import { Check, CheckCircle2, Clipboard, ImagePlus, Pencil, Trash2, X, Zap } from "lucide-react"
 import { Button } from "../button"
 import { Badge } from "../badge"
 import { cn } from "../../../lib/utils"
@@ -74,8 +74,8 @@ const PRESETS: Record<AnnotationCategory, { label: string; prompt: string }[]> =
 interface AnnotationBubbleProps {
   annotation?: Annotation
   style?: React.CSSProperties
-  onSave: (comment: string, category: AnnotationCategory) => void
-  onUpdate?: (id: string, comment: string) => void
+  onSave: (comment: string, category: AnnotationCategory, referenceImages?: string[]) => void
+  onUpdate?: (id: string, comment: string, referenceImages?: string[]) => void
   onResolve?: (id: string) => void
   onDelete?: (id: string) => void
   onClose: () => void
@@ -83,6 +83,52 @@ interface AnnotationBubbleProps {
   breadcrumb?: string
   /** Custom action buttons (rendered before built-in Edit/Resolve/Delete) */
   customActions?: import("./types").BubbleAction[]
+}
+
+const MAX_REFERENCE_IMAGES = 6
+const MAX_IMAGE_BYTES = 5 * 1024 * 1024 // 5MB per file (input limit)
+const COMPRESS_MAX_DIM = 1280            // resize bound (longest side)
+const COMPRESS_QUALITY = 0.82            // tuned for screenshots
+
+/**
+ * Compress an image to a downsized JPEG/WebP data URL before persisting.
+ *
+ * Reference images live in localStorage alongside the annotation, and the
+ * quota (5–10 MB on most browsers) is shared across the whole annotation
+ * store. A single uncompressed 4K screenshot easily exceeds that on its
+ * own, which causes `setItem` to throw `QuotaExceededError`. Resizing to
+ * 1280px on the longest side + ~0.82 quality keeps reference shots legible
+ * while typically landing under 200 KB each. WebP is preferred when the
+ * browser supports it; falls back to JPEG.
+ */
+async function compressImageFile(file: File): Promise<string> {
+  const url = URL.createObjectURL(file)
+  try {
+    const img = await new Promise<HTMLImageElement>((resolve, reject) => {
+      const el = new Image()
+      el.onload = () => resolve(el)
+      el.onerror = () => reject(new Error("image decode failed"))
+      el.src = url
+    })
+    let { naturalWidth: w, naturalHeight: h } = img
+    if (w > COMPRESS_MAX_DIM || h > COMPRESS_MAX_DIM) {
+      const scale = Math.min(COMPRESS_MAX_DIM / w, COMPRESS_MAX_DIM / h)
+      w = Math.max(1, Math.round(w * scale))
+      h = Math.max(1, Math.round(h * scale))
+    }
+    const canvas = document.createElement("canvas")
+    canvas.width = w
+    canvas.height = h
+    const ctx = canvas.getContext("2d")
+    if (!ctx) throw new Error("2d context unavailable")
+    ctx.drawImage(img, 0, 0, w, h)
+    // Try WebP first — typically 25-35% smaller than equivalent JPEG.
+    const webp = canvas.toDataURL("image/webp", COMPRESS_QUALITY)
+    if (webp.startsWith("data:image/webp")) return webp
+    return canvas.toDataURL("image/jpeg", COMPRESS_QUALITY)
+  } finally {
+    URL.revokeObjectURL(url)
+  }
 }
 
 export function AnnotationBubble({
@@ -105,7 +151,84 @@ export function AnnotationBubble({
   const [showStyles, setShowStyles] = useState(false)
   const [showPresets, setShowPresets] = useState(isCreate)
   const [copiedPrompt, setCopiedPrompt] = useState(false)
+  const [referenceImages, setReferenceImages] = useState<string[]>(annotation?.referenceImages || [])
+  const [lightboxSrc, setLightboxSrc] = useState<string | null>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  const handleFiles = async (files: FileList | null) => {
+    if (!files || files.length === 0) return
+    const remaining = MAX_REFERENCE_IMAGES - referenceImages.length
+    if (remaining <= 0) return
+    const accepted: File[] = []
+    for (const f of Array.from(files).slice(0, remaining)) {
+      if (f.type.startsWith("image/") && f.size <= MAX_IMAGE_BYTES) accepted.push(f)
+    }
+    if (accepted.length === 0) return
+    const urls = await Promise.all(accepted.map(compressImageFile))
+    setReferenceImages((prev) => [...prev, ...urls].slice(0, MAX_REFERENCE_IMAGES))
+  }
+
+  const removeImageAt = (idx: number) => {
+    setReferenceImages((prev) => prev.filter((_, i) => i !== idx))
+  }
+
+  // Image-paste handler — extracts image files from a clipboard event and
+  // appends them via handleFiles. Returns true if it consumed image data.
+  const consumeClipboardImages = (cd: DataTransfer | null): boolean => {
+    const items = cd?.items
+    if (!items) return false
+    const imageFiles: File[] = []
+    for (const it of Array.from(items)) {
+      if (it.kind === "file" && it.type.startsWith("image/")) {
+        const f = it.getAsFile()
+        if (f) imageFiles.push(f)
+      }
+    }
+    if (imageFiles.length === 0) return false
+    const dt = new DataTransfer()
+    imageFiles.forEach((f) => dt.items.add(f))
+    void handleFiles(dt.files)
+    return true
+  }
+
+  // ─── Viewport clamp ───────────────────────────────────────────────────
+  // The overlay computes an initial position from the click point. That
+  // estimate doesn't know the rendered bubble height (which varies with
+  // presets, attached images, and category content), so the bubble can be
+  // pushed off-screen — hiding the Save/Cancel buttons. After mount we
+  // measure the actual size and shift `posStyle.top/left` upward/leftward
+  // just enough to keep the entire bubble inside the viewport, with an 8px
+  // safety margin. A ResizeObserver re-runs the clamp when the bubble grows
+  // (attaching an image, opening the style diff, etc.) so newly-added
+  // content can't push the action row off-screen either.
+  const VIEWPORT_MARGIN = 8
+  const rootRef = useRef<HTMLDivElement>(null)
+  const [clampOffset, setClampOffset] = useState<{ top: number; left: number } | null>(null)
+  const recomputeClamp = () => {
+    const el = rootRef.current
+    if (!el) return
+    const rect = el.getBoundingClientRect()
+    const maxLeft = Math.max(VIEWPORT_MARGIN, window.innerWidth - rect.width - VIEWPORT_MARGIN)
+    const maxTop = Math.max(VIEWPORT_MARGIN, window.innerHeight - rect.height - VIEWPORT_MARGIN)
+    const nextLeft = Math.min(Math.max(VIEWPORT_MARGIN, rect.left), maxLeft)
+    const nextTop = Math.min(Math.max(VIEWPORT_MARGIN, rect.top), maxTop)
+    if (Math.round(nextLeft) === Math.round(rect.left) && Math.round(nextTop) === Math.round(rect.top)) return
+    setClampOffset({ top: nextTop, left: nextLeft })
+  }
+  useLayoutEffect(() => {
+    recomputeClamp()
+    const el = rootRef.current
+    if (!el) return
+    const ro = new ResizeObserver(recomputeClamp)
+    ro.observe(el)
+    window.addEventListener("resize", recomputeClamp)
+    return () => {
+      ro.disconnect()
+      window.removeEventListener("resize", recomputeClamp)
+    }
+    // posStyle changes whenever the parent re-anchors the bubble — re-clamp.
+  }, [posStyle?.top, posStyle?.left])
 
   // ─── Drag-to-reposition ──────────────────────────────────────────────
   // Header acts as the drag handle. Once the user has dragged, posStyle
@@ -204,13 +327,32 @@ export function AnnotationBubble({
     }
   }, [editing])
 
+  // Global paste — when the bubble is in edit mode, intercept ⌘/Ctrl+V at
+  // the document level so users can paste images even when the textarea
+  // isn't focused. We register at capture phase to win against textarea
+  // handlers, but only consume the event when image data is present (text
+  // paste into the textarea still works normally).
+  useEffect(() => {
+    if (!editing) return
+    const onDocPaste = (e: ClipboardEvent) => {
+      if (consumeClipboardImages(e.clipboardData)) {
+        e.preventDefault()
+        e.stopPropagation()
+      }
+    }
+    document.addEventListener("paste", onDocPaste, true)
+    return () => document.removeEventListener("paste", onDocPaste, true)
+    // consumeClipboardImages closes over referenceImages via handleFiles —
+    // re-binding each render is cheap and keeps the cap accurate.
+  })
+
   const handleSubmit = () => {
     const trimmed = comment.trim()
-    if (!trimmed) return
+    if (!trimmed && referenceImages.length === 0) return
     if (isCreate) {
-      onSave(trimmed, category)
+      onSave(trimmed, category, referenceImages.length > 0 ? referenceImages : undefined)
     } else {
-      onUpdate?.(annotation.id, trimmed)
+      onUpdate?.(annotation.id, trimmed, referenceImages.length > 0 ? referenceImages : undefined)
       setEditing(false)
     }
   }
@@ -252,10 +394,11 @@ export function AnnotationBubble({
 
   return (
     <div
+      ref={rootRef}
       data-annotation-ui
       data-bubble-root
-      className="fixed w-80 rounded-[var(--radius-card)] border border-border bg-popover text-popover-foreground shadow-popover animate-in fade-in-0 zoom-in-95 pointer-events-auto"
-      style={{ ...posStyle, ...(dragOffset || {}), zIndex: 99999 }}
+      className="fixed w-80 max-h-[calc(100vh-16px)] overflow-y-auto rounded-[var(--radius-card)] border border-border bg-popover text-popover-foreground shadow-popover animate-in fade-in-0 zoom-in-95 pointer-events-auto"
+      style={{ ...posStyle, ...(clampOffset || {}), ...(dragOffset || {}), zIndex: 100000 }}
       onClick={(e) => e.stopPropagation()}
       onMouseDown={(e) => e.stopPropagation()}
       onPointerDown={(e) => e.stopPropagation()}
@@ -322,20 +465,83 @@ export function AnnotationBubble({
               onChange={(e) => setComment(e.target.value)}
               onKeyDown={handleKeyDown}
               onPointerDown={handleTextareaPointerDown}
+              onPaste={(e) => { if (consumeClipboardImages(e.clipboardData)) e.preventDefault() }}
               placeholder={messages.describePlaceholder}
               className="w-full min-h-20 resize-none rounded-[var(--radius-button)] border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
             />
-            <div className="flex items-center justify-between mt-2">
-              <span className="text-[length:var(--fs-xs)] text-muted-foreground">{messages.saveHint}</span>
-              <div className="flex gap-1.5">
+
+            {referenceImages.length > 0 && (
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                {referenceImages.map((src, i) => (
+                  <div key={i} className="relative group">
+                    <button
+                      type="button"
+                      onClick={() => setLightboxSrc(src)}
+                      className="block w-12 h-12 rounded-[var(--radius-dot)] border border-border overflow-hidden bg-muted focus:outline-none focus:ring-1 focus:ring-ring"
+                    >
+                      <img src={src} alt="" className="w-full h-full object-cover" />
+                    </button>
+                    <button
+                      type="button"
+                      aria-label={messages.removeImage}
+                      onClick={() => removeImageAt(i)}
+                      className="absolute -top-1 -right-1 size-4 rounded-full bg-foreground text-background flex items-center justify-center shadow opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity"
+                    >
+                      <X className="size-2.5" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              multiple
+              hidden
+              onChange={(e) => {
+                void handleFiles(e.target.files)
+                if (fileInputRef.current) fileInputRef.current.value = ""
+              }}
+            />
+
+            <div className="flex items-center justify-between mt-2 gap-2">
+              <div className="flex items-center gap-1.5 min-w-0">
+                <Button
+                  variant="ghost"
+                  size="icon-xs"
+                  title={messages.attachImage}
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={referenceImages.length >= MAX_REFERENCE_IMAGES}
+                >
+                  <ImagePlus className="size-3.5" />
+                </Button>
+                <span className="text-[length:var(--fs-xs)] text-muted-foreground truncate">{messages.saveHint}</span>
+              </div>
+              <div className="flex gap-1.5 shrink-0">
                 <Button variant="outline" size="xs" onClick={onClose}>{messages.cancel}</Button>
-                <Button size="xs" onClick={handleSubmit} disabled={!comment.trim()}>{messages.save}</Button>
+                <Button size="xs" onClick={handleSubmit} disabled={!comment.trim() && referenceImages.length === 0}>{messages.save}</Button>
               </div>
             </div>
           </>
         ) : (
           <>
             <p className={cn("text-[length:var(--fs-sm)] whitespace-pre-wrap", annotation?.resolved && "line-through text-muted-foreground")}>{annotation?.comment}</p>
+            {annotation?.referenceImages && annotation.referenceImages.length > 0 && (
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                {annotation.referenceImages.map((src, i) => (
+                  <button
+                    key={i}
+                    type="button"
+                    onClick={() => setLightboxSrc(src)}
+                    className="block w-12 h-12 rounded-[var(--radius-dot)] border border-border overflow-hidden bg-muted focus:outline-none focus:ring-1 focus:ring-ring"
+                  >
+                    <img src={src} alt="" className="w-full h-full object-cover" />
+                  </button>
+                ))}
+              </div>
+            )}
             {annotation && (
               <div className="flex items-center justify-between mt-3 pt-2 border-t border-border">
                 <span className="text-[length:var(--fs-xs)] text-muted-foreground">{new Date(annotation.timestamp).toLocaleString()}</span>
@@ -397,6 +603,18 @@ export function AnnotationBubble({
               )}
             </div>
           )}
+        </div>
+      )}
+
+      {lightboxSrc && (
+        <div
+          data-annotation-ui
+          className="fixed inset-0 bg-black/70 flex items-center justify-center p-8 cursor-zoom-out"
+          style={{ zIndex: 100001 }}
+          onClick={() => setLightboxSrc(null)}
+          onPointerDown={(e) => e.stopPropagation()}
+        >
+          <img src={lightboxSrc} alt="" className="max-w-full max-h-full rounded-md shadow-2xl" />
         </div>
       )}
     </div>
