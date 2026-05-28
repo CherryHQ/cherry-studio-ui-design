@@ -2,21 +2,22 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Puzzle, Layers, Database } from 'lucide-react';
 import { Sidebar } from './layout/Sidebar';
 import { TabBar } from './layout/TabBar';
-import { TabContextMenu, FloatingWindow, NewTabDialog, SearchDialog, DragGhost, AnnotationProvider, AnnotationOverlay, AnnotationToggle, AnnotationList } from '@cherry-studio/ui';
+import { TabContextMenu, FloatingWindow, NewTabDialog, SearchDialog, DragGhost, AnnotationProvider, AnnotationOverlay, AnnotationToggle, AnnotationList, Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@cherry-studio/ui';
 import { MainContent } from './MainContent';
 import {
   menuItems, getLayout,
   dialogAppIcons, dialogFilterTabs,
-  newTabHistoryItems, newTabFileItems, dialogQuickActions,
+  newTabHistoryItems, newTabFileItems, dialogQuickActions, newTabHtmlPreviews,
   searchFilterTabs, searchRecentItems, searchFileItems, searchQuickActions,
   MOCK_RESOURCES,
 } from '@/app/config/constants';
-import { AVAILABLE_AGENTS } from '@/app/config/agentTools';
 
-// User-created agents appear as additional launcher tiles in the
-// NewTabDialog grid. We map the emoji avatar to a tiny inline component
-// so it satisfies AppIconItem.icon (React.ElementType) without changing
-// the dialog's render contract.
+// Agent-produced HTML artifacts (reports, summaries, dashboards) appear as
+// additional launcher tiles in the NewTabDialog grid. Clicking one opens an
+// inline preview rather than creating a tab (see handleDialogCreateTab).
+// We map the emoji avatar to a tiny inline component so it satisfies
+// AppIconItem.icon (React.ElementType) without changing the dialog's render
+// contract.
 function makeEmojiIcon(emoji: string): React.ElementType {
   const C: React.FC = () => <span className="text-[16px] leading-none">{emoji}</span>;
   C.displayName = `EmojiIcon(${emoji})`;
@@ -25,12 +26,12 @@ function makeEmojiIcon(emoji: string): React.ElementType {
 
 const dialogAppIconsWithAgents = [
   ...dialogAppIcons,
-  ...AVAILABLE_AGENTS.map(a => ({
-    id: `agent:${a.id}`,
-    label: a.name,
-    icon: makeEmojiIcon(a.avatar),
+  ...Object.entries(newTabHtmlPreviews).map(([key, preview]) => ({
+    id: `html:${key}`,
+    label: preview.label,
+    icon: makeEmojiIcon(preview.emoji),
     color: 'text-foreground',
-    bg: 'bg-accent/40',
+    bg: 'bg-accent-violet/15',
   })),
 ];
 import type { Tab, MenuItem, ContextMenuState } from '@/app/types';
@@ -64,6 +65,9 @@ function CherryStudioInner() {
   const [newTabDialogOpen, setNewTabDialogOpen] = useState(false);
   const [newTabSearch, setNewTabSearch] = useState('');
   const [newTabManageMode, setNewTabManageMode] = useState(false);
+  // Suffix of the `html:<key>` id when an HTML file in the launchpad is clicked
+  // — opens the inline preview dialog backed by newTabHtmlPreviews[key].
+  const [htmlPreviewKey, setHtmlPreviewKey] = useState<string | null>(null);
   const [searchDialogOpen, setSearchDialogOpen] = useState(false);
   // Library is intentionally NOT hidden — it's now the home of custom
   // resource management (assistants / agents / skills / prompts / etc.)
@@ -204,6 +208,14 @@ function CherryStudioInner() {
   }, [tabs, createTabForMenuItem]);
 
   const handleDialogCreateTab = (menuItemId: string) => {
+    // `html:<key>` file items open in an inline iframe preview instead of
+    // creating a tab. Keeps the launchpad as a quick-look surface for
+    // generated HTML deliverables.
+    if (menuItemId.startsWith('html:')) {
+      setHtmlPreviewKey(menuItemId.slice('html:'.length));
+      setNewTabDialogOpen(false);
+      return;
+    }
     // 'agent:<id>' tiles are user-created agent shortcuts — open the
     // agent tab. (Pre-selecting the specific agent would need extra
     // plumbing; routing to the agent surface is the design intent.)
@@ -418,6 +430,28 @@ function CherryStudioInner() {
           searchFileItems={searchFileItems}
           searchQuickActions={searchQuickActions}
         />
+
+        {/* Launchpad HTML preview — opened when an `html:<key>` file item is
+            clicked in NewTabDialog. Renders the mock HTML inside a sandboxed
+            iframe so its styles can't leak into Cherry. */}
+        <Dialog open={htmlPreviewKey !== null} onOpenChange={(v) => { if (!v) setHtmlPreviewKey(null); }}>
+          <DialogContent className="max-w-[820px] sm:max-w-[820px] p-0 overflow-hidden">
+            {htmlPreviewKey && newTabHtmlPreviews[htmlPreviewKey] && (
+              <>
+                <DialogHeader className="px-5 pt-4 pb-3 border-b border-border/30">
+                  <DialogTitle className="text-sm">{newTabHtmlPreviews[htmlPreviewKey].title}</DialogTitle>
+                  <DialogDescription className="text-xs">来自 Launchpad · 内嵌预览</DialogDescription>
+                </DialogHeader>
+                <iframe
+                  title={newTabHtmlPreviews[htmlPreviewKey].title}
+                  srcDoc={newTabHtmlPreviews[htmlPreviewKey].html}
+                  sandbox=""
+                  className="w-full h-[560px] border-0 bg-white"
+                />
+              </>
+            )}
+          </DialogContent>
+        </Dialog>
 
         <SettingsPage
           open={settingsOpen}
