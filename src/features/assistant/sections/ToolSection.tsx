@@ -85,21 +85,24 @@ export function ToolSection() {
 
         {mode !== 'disabled' && (
           <div className="flex items-center justify-between gap-3">
-            <label className="text-sm text-muted-foreground">调用方式</label>
-            <div className="flex flex-col items-end gap-1">
-              <Select value={mode} onValueChange={(v) => setMode(v as McpMode)}>
-                <SelectTrigger className="h-8 w-[140px] text-sm border-border/40 bg-muted/30 hover:bg-accent/40 rounded-lg">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="auto">自动</SelectItem>
-                  <SelectItem value="manual">手动</SelectItem>
-                </SelectContent>
-              </Select>
-              <p className="text-xs text-muted-foreground/50 text-right max-w-[280px]">
-                {MODE_OPTIONS.find(o => o.id === mode)?.description}
-              </p>
+            <div className="flex items-center gap-1.5">
+              <label className="text-sm text-muted-foreground">自动调用</label>
+              <SimpleTooltip
+                content="开启后助手按对话上下文自动决定调用哪些 MCP 工具；关闭后仅允许手动勾选的工具被调用。"
+                side="top"
+                sideOffset={6}
+              >
+                <button type="button" tabIndex={-1}
+                  className="inline-flex items-center text-muted-foreground/40 hover:text-muted-foreground cursor-help">
+                  <Info size={12} />
+                </button>
+              </SimpleTooltip>
             </div>
+            <Switch
+              checked={mode === 'auto'}
+              onCheckedChange={(v) => setMode(v ? 'auto' : 'manual')}
+              className="flex-shrink-0"
+            />
           </div>
         )}
       </div>

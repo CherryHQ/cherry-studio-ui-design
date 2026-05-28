@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import {
   ArrowLeft, ChevronRight, ChevronDown, Save, Trash2,
   FileJson, FileText, FileCode, Archive, ExternalLink,
-  Tag, Clock, User, Package, RefreshCw, X,
+  Tag, Clock, User, Package, RefreshCw, X, MessageSquare,
   Folder, FolderOpen, File as FileIconLucide,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
@@ -274,149 +274,79 @@ export function SkillPluginDetail({ resource, onBack, onToggle, onDelete, inModa
       )}
 
       {inModal ? (
-        <div className="flex-1 min-w-0 flex overflow-hidden">
-          {/* Left pane — Directory file tree */}
-          <aside className="w-[200px] flex-shrink-0 border-r border-border/15 bg-muted/15 flex flex-col">
-            <div className="px-3 py-2 text-xs uppercase tracking-wide text-muted-foreground/50 border-b border-border/15">
-              Directory
-            </div>
-            <div className="flex-1 overflow-y-auto scrollbar-thin px-2 py-2">
-              <SkillFileTree
-                nodes={skillTree}
-                selectedPath={selectedFilePath}
-                onSelect={setSelectedFilePath}
-                expanded={expandedFolders}
-                onToggleExpand={toggleFolder}
-              />
-            </div>
-          </aside>
+        // Single-column layout per design feedback:
+        //   - Top: editable description (intro paragraph)
+        //   - Middle: rendered SKILL.md body (markdown preview)
+        //   - Bottom: 回收 + 在对话中试用 CTAs
+        // File-tree / per-file preview removed — for skills the SKILL.md
+        // body is the canonical "what does this do" surface, the rest
+        // is implementation detail surfaced elsewhere.
+        <div className="flex-1 min-w-0 flex flex-col overflow-hidden">
+          <div className="flex-1 overflow-y-auto scrollbar-thin">
+            <div className="px-6 py-5 space-y-5">
+              {/* Description — editable inline */}
+              <p
+                onClick={() => setEditingDesc(true)}
+                className={`text-sm leading-relaxed cursor-text rounded-lg transition-all ${
+                  editingDesc ? '' : 'px-3 py-2 -mx-3 hover:bg-accent/40 text-muted-foreground'
+                }`}
+              >
+                {editingDesc ? (
+                  <Textarea
+                    value={description}
+                    onChange={e => setDescription(e.target.value)}
+                    onBlur={() => setEditingDesc(false)}
+                    autoFocus
+                    rows={4}
+                    placeholder="为这个 Skill 写一段简短描述"
+                    className="w-full min-h-[80px] px-3 py-2 rounded-lg border border-border/60 bg-accent/15 text-sm text-foreground placeholder:text-muted-foreground/60 shadow-none focus-visible:border-border focus-visible:ring-0 resize-none"
+                  />
+                ) : (
+                  description || '点击添加描述...'
+                )}
+              </p>
 
-          {/* Right pane — file content preview */}
-          <div className="flex-1 min-w-0 flex flex-col overflow-hidden">
-            {/* Path breadcrumb */}
-            <div className="flex items-center gap-1.5 px-4 py-2 border-b border-border/15 text-xs text-muted-foreground/60 font-mono">
-              {selectedFilePath.split('/').map((seg, i, arr) => (
-                <React.Fragment key={i}>
-                  {i > 0 && <ChevronRight size={9} className="text-muted-foreground/40" />}
-                  <span className={i === arr.length - 1 ? 'text-foreground' : ''}>{seg}</span>
-                </React.Fragment>
-              ))}
+              <Separator opacity={30} />
+
+              {/* Rendered SKILL.md body */}
+              <div className="prose prose-sm max-w-none text-foreground leading-relaxed text-sm space-y-3">
+                {mockSkillFileContent('SKILL.md', resource).split('\n\n').map((para, i) => {
+                  if (para.startsWith('# ')) return <h2 key={i} className="text-base font-semibold text-foreground mt-1 mb-2">{para.slice(2)}</h2>;
+                  if (para.startsWith('## ')) return <h3 key={i} className="text-sm font-semibold text-foreground mt-3 mb-1.5">{para.slice(3)}</h3>;
+                  if (para.startsWith('- ')) {
+                    return (
+                      <ul key={i} className="list-disc pl-5 space-y-1.5 text-muted-foreground">
+                        {para.split('\n').map((line, j) => (
+                          <li key={j}>{line.replace(/^- /, '')}</li>
+                        ))}
+                      </ul>
+                    );
+                  }
+                  return <p key={i} className="text-muted-foreground">{para}</p>;
+                })}
+              </div>
             </div>
+          </div>
 
-            {/* Body — editable description + tags when SKILL.md, code preview otherwise */}
-            <div className="flex-1 overflow-y-auto scrollbar-thin">
-              {selectedFilePath === 'SKILL.md' ? (
-                <div className="px-5 py-4 space-y-5">
-                  <Field>
-                    <FieldLabel>Description</FieldLabel>
-                    <FieldContent>
-                      <Textarea
-                        value={description}
-                        onChange={e => setDescription(e.target.value)}
-                        rows={3}
-                        placeholder="为这个 Skill 写一段简短描述"
-                        className="text-sm resize-none"
-                      />
-                    </FieldContent>
-                  </Field>
-                  <Field>
-                    <FieldLabel className="flex items-center gap-1"><Tag size={9} /> 标签</FieldLabel>
-                    <FieldContent>
-                      <Combobox
-                        multiple
-                        searchable
-                        value={tags}
-                        onChange={(v) => setTags(Array.isArray(v) ? v : [v])}
-                        options={Object.keys(TAG_COLORS).map(t => ({ value: t, label: t }))}
-                        placeholder="选择标签…"
-                        searchPlaceholder="搜索标签…"
-                        emptyText="没有匹配标签"
-                        renderOption={(opt) => {
-                          const c = TAG_COLORS[opt.value] || DEFAULT_TAG_COLOR;
-                          return (
-                            <span className="inline-flex items-center gap-1">
-                              <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${c.dot}`} />
-                              <span className={`px-1.5 py-[1px] rounded-md text-xs border ${c.badge}`}>{opt.label}</span>
-                            </span>
-                          );
-                        }}
-                        renderValue={(val) => {
-                          const selected = Array.isArray(val) ? val : (val ? [val] : []);
-                          if (selected.length === 0) return null;
-                          return (
-                            <div className="flex flex-wrap gap-1 flex-1 min-w-0">
-                              {selected.map(t => {
-                                const c = TAG_COLORS[t] || DEFAULT_TAG_COLOR;
-                                return (
-                                  <span key={t} className={`inline-flex items-center gap-1 px-1.5 py-[2px] rounded-md text-xs border ${c.badge}`}>
-                                    <span className={`w-1.5 h-1.5 rounded-full ${c.dot}`} />
-                                    {t}
-                                    <button type="button"
-                                      onClick={(e) => { e.stopPropagation(); setTags(prev => prev.filter(x => x !== t)); }}
-                                      aria-label={`移除 ${t}`}
-                                      className="ml-0.5 opacity-50 hover:opacity-100 transition-opacity"
-                                    >
-                                      <X size={9} />
-                                    </button>
-                                  </span>
-                                );
-                              })}
-                            </div>
-                          );
-                        }}
-                      />
-                    </FieldContent>
-                  </Field>
-
-                  {/* Rendered SKILL.md body */}
-                  <div className="pt-4 border-t border-border/15">
-                    <div className="prose prose-sm max-w-none text-muted-foreground leading-relaxed text-sm space-y-3">
-                      {mockSkillFileContent('SKILL.md', resource).split('\n\n').map((para, i) => {
-                        if (para.startsWith('# ')) return <h2 key={i} className="text-base font-semibold text-foreground mt-1 mb-2">{para.slice(2)}</h2>;
-                        if (para.startsWith('- ')) {
-                          return (
-                            <ul key={i} className="list-disc pl-5 space-y-1.5">
-                              {para.split('\n').map((line, j) => (
-                                <li key={j}>{line.replace(/^- /, '')}</li>
-                              ))}
-                            </ul>
-                          );
-                        }
-                        return <p key={i}>{para}</p>;
-                      })}
-                    </div>
-                  </div>
-
-                  {/* Metadata strip — moved to the bottom, compact */}
-                  <div className="pt-4 border-t border-border/15 grid grid-cols-2 gap-x-6 gap-y-2 text-xs">
-                    <div className="flex items-baseline gap-2">
-                      <span className="text-muted-foreground/50 w-14 flex-shrink-0">创建时间</span>
-                      <span className="text-muted-foreground">{new Date(resource.createdAt).toLocaleDateString('zh-CN')} <span className="text-muted-foreground/40">({timeAgo(resource.createdAt)})</span></span>
-                    </div>
-                    <div className="flex items-baseline gap-2">
-                      <span className="text-muted-foreground/50 w-14 flex-shrink-0">最近更新</span>
-                      <span className="text-muted-foreground">{new Date(resource.updatedAt).toLocaleDateString('zh-CN')} <span className="text-muted-foreground/40">({timeAgo(resource.updatedAt)})</span></span>
-                    </div>
-                    {resource.version && (
-                      <div className="flex items-baseline gap-2">
-                        <span className="text-muted-foreground/50 w-14 flex-shrink-0">版本</span>
-                        <span className="text-muted-foreground">v{resource.version}{resource.hasUpdate && <span className="ml-2 text-accent-orange">有新版本</span>}</span>
-                      </div>
-                    )}
-                    {resource.author && (
-                      <div className="flex items-baseline gap-2">
-                        <span className="text-muted-foreground/50 w-14 flex-shrink-0">作者</span>
-                        <span className="text-muted-foreground">{resource.author}</span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              ) : (
-                <pre className="p-4 text-xs text-muted-foreground/80 leading-relaxed overflow-x-auto font-mono scrollbar-thin whitespace-pre">
-                  {mockSkillFileContent(selectedFilePath, resource)}
-                </pre>
-              )}
-            </div>
+          {/* Footer — 回收 left, 在对话中试用 right (per screenshot) */}
+          <div className="flex-shrink-0 flex items-center justify-between gap-2 px-5 py-3 border-t border-border/15 bg-background/95">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => onDelete(resource)}
+              className="h-8 px-3 text-xs text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+            >
+              <Trash2 size={11} />
+              <span>回收</span>
+            </Button>
+            <Button
+              variant="default"
+              size="sm"
+              className="h-8 px-3 text-xs gap-1.5 bg-foreground text-background hover:bg-foreground/90"
+            >
+              <MessageSquare size={11} />
+              <span>在对话中试用</span>
+            </Button>
           </div>
         </div>
       ) : (

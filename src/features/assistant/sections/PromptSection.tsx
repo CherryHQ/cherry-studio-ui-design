@@ -49,7 +49,7 @@ const SLASH_TABS: { id: SlashTab; label: string; icon: React.ElementType }[] = [
 // ===========================
 
 const BADGE_STYLES: Record<BadgeKind, string> = {
-  system: 'display:inline-flex;align-items:center;gap:2px;padding:1px 7px;margin:0 2px;border-radius:5px;background:color-mix(in oklch,var(--color-teal-500) 13%,transparent);color:var(--color-teal-300);font-size:10px;line-height:1.6;cursor:default;user-select:all;vertical-align:baseline;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;white-space:nowrap;',
+  system: 'display:inline-flex;align-items:center;gap:2px;padding:1px 7px;margin:0 2px;border-radius:5px;background:color-mix(in oklch,var(--color-accent-violet) 13%,transparent);color:var(--color-accent-violet);font-size:10px;line-height:1.6;cursor:default;user-select:all;vertical-align:baseline;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;white-space:nowrap;',
   custom: 'display:inline-flex;align-items:center;gap:2px;padding:1px 7px;margin:0 2px;border-radius:5px;background:color-mix(in oklch,var(--color-accent-violet) 13%,transparent);color:var(--color-accent-violet);font-size:10px;line-height:1.6;cursor:default;user-select:all;vertical-align:baseline;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;white-space:nowrap;',
   kb: 'display:inline-flex;align-items:center;gap:2px;padding:1px 7px;margin:0 2px;border-radius:5px;background:color-mix(in oklch,var(--color-blue-500) 13%,transparent);color:var(--color-blue-300);font-size:10px;line-height:1.6;cursor:default;user-select:all;vertical-align:baseline;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;white-space:nowrap;',
   mcp: 'display:inline-flex;align-items:center;gap:2px;padding:1px 7px;margin:0 2px;border-radius:5px;background:color-mix(in oklch,var(--color-amber-500) 13%,transparent);color:var(--color-amber-300);font-size:10px;line-height:1.6;cursor:default;user-select:all;vertical-align:baseline;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;white-space:nowrap;',
@@ -87,7 +87,7 @@ function rawToHTML(text: string): string {
   const withBadges = escaped
     .replace(RE_DBL_BRACE, (_: string, name: string) => {
       const kind = SYSTEM_VARIABLES.some(v => v.name === name) ? 'system' : 'custom';
-      const icon = kind === 'system' ? '⚙ ' : '✦ ';
+      const icon = '𝑥 ';
       return `<span contenteditable="false" data-var="${name}" data-kind="${kind}" style="${BADGE_STYLES[kind]}">${icon}${name}</span>`;
     })
     .replace(RE_DBL_BRACKET, (_: string, name: string) => {
@@ -136,8 +136,7 @@ function createBadgeElement(name: string, kind: BadgeKind): HTMLSpanElement {
     span.textContent = `⚡ ${name}`;
   } else {
     span.dataset.var = name;
-    const icon = kind === 'system' ? '⚙ ' : '✦ ';
-    span.textContent = `${icon}${name}`;
+    span.textContent = `𝑥 ${name}`;
   }
   span.dataset.kind = kind;
   span.setAttribute('style', BADGE_STYLES[kind]);

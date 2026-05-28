@@ -1,12 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { ChevronLeft, Save, Variable, X } from 'lucide-react';
+import { ChevronLeft, Save, Variable } from 'lucide-react';
 import { Button } from '@cherrystudio/ui/components/primitives/button';
-import { Combobox } from '@cherrystudio/ui/components/primitives/combobox';
 import { Field, FieldContent, FieldLabel } from '@cherrystudio/ui/components/primitives/field';
 import { Popover, PopoverContent, PopoverTrigger } from '@cherrystudio/ui/components/primitives/popover';
 import { Input, SearchInput, Typography, SYSTEM_VARIABLES, type VariableDef } from '@cherry-studio/ui';
 import type { ResourceItem } from '@/app/types';
-import { DEFAULT_TAG_COLOR, TAG_COLORS } from '@/app/config/constants';
 
 function extractVars(content: string): string[] {
   const p = /\$\{(\w+)\}/g;
@@ -216,58 +214,12 @@ export function PromptEditPage({ resource, onBack, onSave, inModal = false }: {
   const BasicSection = (
     <div className="space-y-5">
       <Typography variant="subtitle">基础信息</Typography>
-      <div className="grid grid-cols-[1fr_220px] gap-3">
-        <Field>
-          <FieldLabel>名称</FieldLabel>
-          <FieldContent>
-            <Input value={name} onChange={e => setName(e.target.value)} className="h-8 text-sm" placeholder="Prompt 名称" />
-          </FieldContent>
-        </Field>
-        <Field>
-          <FieldLabel>标签</FieldLabel>
-          <FieldContent>
-            <Combobox
-              multiple
-              searchable
-              value={tags}
-              onChange={(v) => setTags(Array.isArray(v) ? v : [v])}
-              options={Object.keys(TAG_COLORS).map(t => ({ value: t, label: t }))}
-              placeholder="选择标签…"
-              searchPlaceholder="搜索标签…"
-              emptyText="没有匹配标签"
-              renderOption={(opt) => {
-                const c = TAG_COLORS[opt.value] || DEFAULT_TAG_COLOR;
-                return <span className={`px-1.5 py-[1px] rounded-md text-xs border ${c.badge}`}>{opt.label}</span>;
-              }}
-              renderValue={(val) => {
-                const selected = Array.isArray(val) ? val : (val ? [val] : []);
-                if (selected.length === 0) return null;
-                return (
-                  <div className="flex flex-wrap gap-1 flex-1 min-w-0">
-                    {selected.map(t => {
-                      const c = TAG_COLORS[t] || DEFAULT_TAG_COLOR;
-                      return (
-                        <span key={t} className={`inline-flex items-center gap-1 px-1.5 py-[2px] rounded-md text-xs border ${c.badge}`}>
-                          <span className={`w-1.5 h-1.5 rounded-full ${c.dot}`} />
-                          {t}
-                          <button
-                            type="button"
-                            onClick={(e) => { e.stopPropagation(); setTags(prev => prev.filter(x => x !== t)); }}
-                            aria-label={`移除 ${t}`}
-                            className="ml-0.5 opacity-50 hover:opacity-100 transition-opacity"
-                          >
-                            <X size={9} />
-                          </button>
-                        </span>
-                      );
-                    })}
-                  </div>
-                );
-              }}
-            />
-          </FieldContent>
-        </Field>
-      </div>
+      <Field>
+        <FieldLabel>名称</FieldLabel>
+        <FieldContent>
+          <Input value={name} onChange={e => setName(e.target.value)} className="h-8 text-sm" placeholder="Prompt 名称" />
+        </FieldContent>
+      </Field>
     </div>
   );
 
