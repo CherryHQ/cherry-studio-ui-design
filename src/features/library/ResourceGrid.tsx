@@ -1,37 +1,35 @@
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
-  LayoutGrid, List, ArrowUpDown, Plus,
+  Plus,
   MoreHorizontal,
   Pencil, Copy, FolderInput, Download, Trash2,
-  Clock, Layers, ChevronDown, Upload, Tag, Plus as PlusIcon,
-  Check,
+  Layers, ChevronDown, Upload, Tag,
+  Check, X,
   Filter, Sparkles,
 } from 'lucide-react';
-import { Button, Input, Popover, PopoverTrigger, PopoverContent, SearchInput, EmptyState, Badge, Switch } from '@cherry-studio/ui';
+import { Button, Input, Popover, PopoverTrigger, PopoverContent, SearchInput, EmptyState, Badge } from '@cherry-studio/ui';
 import { Separator } from "@cherry-studio/ui";
 import { motion, AnimatePresence } from 'motion/react';
-import type { ResourceItem, ResourceType, ViewMode, SortKey, FolderNode, TagItem } from '@/app/types';
-import { RESOURCE_TYPE_CONFIG, RESOURCE_TYPES_LIST, SORT_LABELS, TAG_COLORS, DEFAULT_TAG_COLOR } from '@/app/config/constants';
+import type { ResourceItem, ResourceType, SortKey, FolderNode, TagItem } from '@/app/types';
+import { RESOURCE_TYPE_CONFIG, SORT_LABELS, TAG_COLORS, DEFAULT_TAG_COLOR } from '@/app/config/constants';
 
 interface Props {
   resources: ResourceItem[];
-  viewMode: ViewMode;
   sortKey: SortKey;
   search: string;
   onSearchChange: (v: string) => void;
-  onViewModeChange: (v: ViewMode) => void;
   onSortKeyChange: (k: SortKey) => void;
   onEdit: (r: ResourceItem) => void;
   onDuplicate: (r: ResourceItem) => void;
   onDelete: (r: ResourceItem) => void;
-  onToggle: (id: string) => void;
   onCreate: (type: ResourceType) => void;
   folders: FolderNode[];
   onMoveToFolder: (resourceId: string, folderId: string | undefined) => void;
-  // Tag filtering
+  // Tag filtering — multi-select
   tags: TagItem[];
-  activeTag: string | null;
-  onTagFilter: (tagName: string | null) => void;
+  activeTags: Set<string>;
+  onToggleTag: (tagName: string) => void;
+  onClearTags: () => void;
   onAddTag: (tagName: string) => void;
   onDeleteTag: (tagName: string) => void;
   onUpdateResourceTags: (resourceId: string, tags: string[]) => void;
@@ -40,7 +38,6 @@ interface Props {
   activeType: ResourceType | null;
   onTypeFilter: (type: ResourceType | null) => void;
   typeCounts: Record<string, number>;
-  templateBanner?: React.ReactNode;
   onBrowseTemplates?: () => void;
 }
 
@@ -73,23 +70,19 @@ function flattenFolders(nodes: FolderNode[], depth = 0): { id: string; name: str
 // ===========================
 
 export function ResourceGrid({
-  resources, viewMode, sortKey, search,
-  onSearchChange, onViewModeChange, onSortKeyChange,
-  onEdit, onDuplicate, onDelete, onToggle, onCreate,
+  resources, sortKey, search,
+  onSearchChange, onSortKeyChange,
+  onEdit, onDuplicate, onDelete, onCreate,
   folders, onMoveToFolder,
-  tags, activeTag, onTagFilter, onAddTag, onDeleteTag, onUpdateResourceTags, allTagNames,
+  tags, activeTags, onToggleTag, onClearTags, onAddTag, onDeleteTag, onUpdateResourceTags, allTagNames,
   activeType, onTypeFilter, typeCounts,
-  templateBanner, onBrowseTemplates,
+  onBrowseTemplates,
 }: Props) {
-  const [showSort, setShowSort] = useState(false);
+  const [showFilter, setShowFilter] = useState(false);
   const [showCreate, setShowCreate] = useState(false);
-  const [showTypeFilter, setShowTypeFilter] = useState(false);
   const [statusFilter, setStatusFilter] = useState<'all' | 'enabled' | 'disabled'>('all');
   const [menuState, setMenuState] = useState<{ id: string; x: number; y: number } | null>(null);
   const [moveMenuId, setMoveMenuId] = useState<string | null>(null);
-  const [showAddTag, setShowAddTag] = useState(false);
-  const [newTagName, setNewTagName] = useState('');
-  const [tagCtx, setTagCtx] = useState<{ name: string; x: number; y: number } | null>(null);
 
   const displayResources = statusFilter === 'all' ? resources
     : statusFilter === 'enabled' ? resources.filter(r => r.enabled)
@@ -98,186 +91,84 @@ export function ResourceGrid({
   const openMenu = useCallback((id: string, e: React.MouseEvent) => {
     e.stopPropagation();
     const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
-    // Position menu to the left of the button, aligned to its bottom
     setMenuState({ id, x: rect.left, y: rect.bottom + 4 });
     setMoveMenuId(null);
   }, []);
 
   const closeMenu = useCallback(() => { setMenuState(null); setMoveMenuId(null); }, []);
 
-  const handleAddTag = () => {
-    if (newTagName.trim()) {
-      onAddTag(newTagName.trim());
-      setNewTagName('');
-      setShowAddTag(false);
-    }
-  };
-
-  const handleTagCtx = (e: React.MouseEvent, name: string) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setTagCtx({ name, x: e.clientX, y: e.clientY });
-  };
-
   return (
     <div className="flex flex-col min-h-0 flex-1">
-      {/* Toolbar */}
-      <div className="flex flex-col flex-shrink-0 border-b border-border/30">
-        {/* Row 1: Search + Sort + View + Create */}
-        <div className="flex items-center gap-2 px-5 py-3">
-          {/* Search */}
-          <SearchInput
-            value={search}
-            onChange={onSearchChange}
-            placeholder="搜索资源名称、描述..."
-            iconSize={13}
-            wrapperClassName="flex-1 max-w-[260px] px-2.5 py-1.5 rounded-lg border border-border/40 bg-accent/25 focus-within:border-primary/40 transition-all"
-          />
+      {/* Toolbar — search · 筛选 · 浏览模板 · 新建资源 */}
+      <div className="flex items-center gap-2 px-5 py-3 flex-shrink-0 border-b border-border/30">
+        <SearchInput
+          value={search}
+          onChange={onSearchChange}
+          placeholder="搜索资源名称、描述..."
+          iconSize={13}
+          wrapperClassName="flex-1 max-w-[260px] px-2.5 py-1.5 rounded-lg border border-border/40 bg-accent/25 focus-within:border-primary/40 transition-all"
+        />
 
-          {/* Sort */}
-          <Popover open={showSort} onOpenChange={(v) => { setShowSort(v); if (v) { setShowCreate(false); setShowTypeFilter(false); } }}>
-            <PopoverTrigger asChild>
-              <Button variant="ghost" size="xs"
-                className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs border transition-all ${showSort ? 'border-primary/30 bg-accent/50 text-foreground' : 'border-border/40 text-muted-foreground/60 hover:text-foreground hover:border-border/50'}`}>
-                <ArrowUpDown size={10} /><span>{SORT_LABELS[sortKey]}</span>
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent align="start" className="p-1 min-w-[110px] w-auto">
-              {(Object.keys(SORT_LABELS) as SortKey[]).map(k => (
-                <Button variant="ghost" size="xs" key={k} onClick={() => { onSortKeyChange(k); setShowSort(false); }}
-                  className={`w-full text-left px-2.5 py-[5px] rounded-md text-xs transition-colors ${sortKey === k ? 'bg-accent text-foreground' : 'text-muted-foreground/60 hover:bg-accent/50 hover:text-foreground'}`}>
-                  {SORT_LABELS[k]}
+        <UnifiedFilter
+          open={showFilter}
+          onOpenChange={setShowFilter}
+          sortKey={sortKey} onSortKeyChange={onSortKeyChange}
+          statusFilter={statusFilter} onStatusFilterChange={setStatusFilter}
+          tags={tags} activeTags={activeTags} onToggleTag={onToggleTag} onClearTags={onClearTags}
+          onAddTag={onAddTag} onDeleteTag={onDeleteTag}
+        />
+
+        <div className="flex-1" />
+
+        {onBrowseTemplates && (
+          <Button variant="outline" size="xs"
+            onClick={onBrowseTemplates}
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs text-muted-foreground hover:text-foreground border-border/40 transition-colors">
+            <Sparkles size={10} />
+            <span>浏览模板</span>
+          </Button>
+        )}
+
+        <Separator orientation="vertical" opacity={30} className="!h-4 flex-shrink-0" />
+
+        <Popover open={showCreate} onOpenChange={(v) => { setShowCreate(v); if (v) setShowFilter(false); }}>
+          <PopoverTrigger asChild>
+            <Button variant="default" size="xs"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs transition-colors active:scale-[0.97]">
+              <Plus size={11} /><span>新建资源</span>
+              <ChevronDown size={9} className={`transition-transform ${showCreate ? 'rotate-180' : ''}`} />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent align="end" className="p-1 min-w-[150px] w-auto">
+            {(['prompt', 'assistant', 'agent'] as const).map(t => {
+              const cfg = RESOURCE_TYPE_CONFIG[t];
+              const Icon = cfg.icon;
+              return (
+                <Button variant="ghost" size="xs" key={t} onClick={() => { onCreate(t); setShowCreate(false); }}
+                  className="flex items-center justify-start gap-2.5 w-full px-2.5 py-[6px] rounded-lg text-xs text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-colors">
+                  <div className={`w-5 h-5 rounded-md flex items-center justify-center flex-shrink-0 ${cfg.color}`}>
+                    <Icon size={10} />
+                  </div>
+                  <span className="text-left">新建{cfg.label}</span>
                 </Button>
-              ))}
-            </PopoverContent>
-          </Popover>
-
-          {/* Status filter dropdown */}
-          <Popover open={showTypeFilter} onOpenChange={(v) => { setShowTypeFilter(v); if (v) { setShowSort(false); setShowCreate(false); } }}>
-            <PopoverTrigger asChild>
-              <Button variant="ghost" size="xs"
-                className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs border transition-all ${showTypeFilter ? 'border-primary/30 bg-accent/50 text-foreground' : 'border-border/40 text-muted-foreground/60 hover:text-foreground hover:border-border/50'}`}>
-                <Filter size={10} />
-                <span>{statusFilter === 'all' ? '全部状态' : statusFilter === 'enabled' ? '已启用' : '已禁用'}</span>
-                <ChevronDown size={9} className={`transition-transform ${showTypeFilter ? 'rotate-180' : ''}`} />
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent align="start" className="p-1 min-w-[110px] w-auto">
-              {([
-                { key: 'all' as const, label: '全部状态' },
-                { key: 'enabled' as const, label: '已启用' },
-                { key: 'disabled' as const, label: '已禁用' },
-              ]).map(opt => (
-                <Button variant="ghost" size="xs" key={opt.key}
-                  onClick={() => { setStatusFilter(opt.key); setShowTypeFilter(false); }}
-                  className={`w-full text-left px-2.5 py-[5px] rounded-md text-xs transition-colors ${statusFilter === opt.key ? 'bg-accent text-foreground' : 'text-muted-foreground/60 hover:bg-accent/50 hover:text-foreground'}`}>
-                  {opt.label}
-                </Button>
-              ))}
-            </PopoverContent>
-          </Popover>
-
-          {/* View toggle */}
-          <div className="flex items-center border border-border/40 rounded-lg overflow-hidden">
-            <Button variant="ghost" size="icon-xs" onClick={() => onViewModeChange('grid')} className={`p-1.5 transition-colors ${viewMode === 'grid' ? 'bg-accent text-foreground' : 'text-muted-foreground/50 hover:text-foreground hover:bg-accent/50'}`}><LayoutGrid size={11} /></Button>
-            <Button variant="ghost" size="icon-xs" onClick={() => onViewModeChange('list')} className={`p-1.5 transition-colors ${viewMode === 'list' ? 'bg-accent text-foreground' : 'text-muted-foreground/50 hover:text-foreground hover:bg-accent/50'}`}><List size={11} /></Button>
-          </div>
-
-          <div className="flex-1" />
-
-          {/* Browse templates (only for assistant / skill) */}
-          {onBrowseTemplates && (
-            <Button variant="outline" size="xs"
-              onClick={onBrowseTemplates}
-              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs text-muted-foreground hover:text-foreground border-border/40 transition-colors">
-              <Sparkles size={10} />
-              <span>浏览模板</span>
+              );
+            })}
+            <Separator opacity={30} className="my-0.5 mx-1" />
+            <Button variant="ghost" size="xs" onClick={() => { onCreate('skill'); setShowCreate(false); }}
+              className="flex items-center justify-start gap-2.5 w-full px-2.5 py-[6px] rounded-lg text-xs text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-colors">
+              <div className={`w-5 h-5 rounded-md flex items-center justify-center flex-shrink-0 ${RESOURCE_TYPE_CONFIG.skill.color}`}>
+                <Upload size={10} />
+              </div>
+              <span className="text-left">导入Skill</span>
             </Button>
-          )}
-
-          <Separator orientation="vertical" opacity={30} className="!h-4 flex-shrink-0" />
-
-          {/* Create */}
-          <Popover open={showCreate} onOpenChange={(v) => { setShowCreate(v); if (v) { setShowSort(false); setShowTypeFilter(false); } }}>
-            <PopoverTrigger asChild>
-              <Button variant="default" size="xs"
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs transition-colors active:scale-[0.97]">
-                <Plus size={11} /><span>新建资源</span>
-                <ChevronDown size={9} className={`transition-transform ${showCreate ? 'rotate-180' : ''}`} />
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent align="end" className="p-1 min-w-[150px] w-auto">
-              {(['prompt', 'assistant', 'agent'] as const).map(t => {
-                const cfg = RESOURCE_TYPE_CONFIG[t];
-                const Icon = cfg.icon;
-                return (
-                  <Button variant="ghost" size="xs" key={t} onClick={() => { onCreate(t); setShowCreate(false); }}
-                    className="flex items-center justify-start gap-2.5 w-full px-2.5 py-[6px] rounded-lg text-xs text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-colors">
-                    <div className={`w-5 h-5 rounded-md flex items-center justify-center flex-shrink-0 ${cfg.color}`}>
-                      <Icon size={10} />
-                    </div>
-                    <span className="text-left">新建{cfg.label}</span>
-                  </Button>
-                );
-              })}
-              <Separator opacity={30} className="my-0.5 mx-1" />
-              <Button variant="ghost" size="xs" onClick={() => { onCreate('skill'); setShowCreate(false); }}
-                className="flex items-center justify-start gap-2.5 w-full px-2.5 py-[6px] rounded-lg text-xs text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-colors">
-                <div className={`w-5 h-5 rounded-md flex items-center justify-center flex-shrink-0 ${RESOURCE_TYPE_CONFIG.skill.color}`}>
-                  <Upload size={10} />
-                </div>
-                <span className="text-left">导入Skill</span>
-              </Button>
-            </PopoverContent>
-          </Popover>
-        </div>
-
-        {/* Row 2: Tag chips */}
-        <div className="flex items-center gap-1.5 px-5 pb-3 overflow-x-auto scrollbar-hide">
-          {/* Tag filter */}
-          <Tag size={11} className="text-muted-foreground/40 flex-shrink-0 mr-0.5" />
-          {tags.map(tag => (
-            <Button
-              variant="ghost" size="xs"
-              key={tag.id}
-              onClick={() => onTagFilter(activeTag === tag.name ? null : tag.name)}
-              onContextMenu={e => handleTagCtx(e, tag.name)}
-              className={`flex items-center gap-1.5 px-2.5 py-[3px] rounded-full text-xs border transition-all flex-shrink-0 ${
-                activeTag === tag.name
-                  ? 'border-primary/40 bg-primary/10 text-foreground'
-                  : 'border-border/30 text-muted-foreground/50 hover:text-foreground hover:border-border/50 hover:bg-accent/50'
-              }`}
-            >
-              <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${tag.color}`} />
-              <span>{tag.name}</span>
-              <span className="text-xs text-muted-foreground/40 tabular-nums">{tag.count}</span>
-            </Button>
-          ))}
-          {/* Add tag */}
-          {showAddTag ? (
-            <div className="flex items-center gap-1 flex-shrink-0">
-              <Input autoFocus value={newTagName} onChange={e => setNewTagName(e.target.value)}
-                onKeyDown={e => { if (e.key === 'Enter') handleAddTag(); if (e.key === 'Escape') { setShowAddTag(false); setNewTagName(''); } }}
-                onBlur={() => { if (!newTagName.trim()) setShowAddTag(false); }}
-                placeholder="标签名..."
-                className="w-[70px] px-2 py-[3px] rounded-full border border-border/40 bg-accent/25 text-xs text-foreground outline-none focus:border-primary/40 transition-all placeholder:text-muted-foreground/60" />
-              <Button variant="ghost" size="icon-xs" onClick={handleAddTag} className="text-muted-foreground/40 hover:text-foreground transition-colors"><Plus size={10} /></Button>
-            </div>
-          ) : (
-            <Button variant="ghost" size="xs" onClick={() => setShowAddTag(true)} className="flex items-center gap-0.5 px-2 py-[3px] rounded-full text-xs text-muted-foreground/40 hover:text-foreground hover:bg-accent/50 border border-dashed border-border/40 hover:border-border/50 transition-all flex-shrink-0">
-              <Plus size={9} /> 标签
-            </Button>
-          )}
-        </div>
+          </PopoverContent>
+        </Popover>
       </div>
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto px-5 py-4 scrollbar-thin">
-        {/* Template banner (only for assistant / skill) */}
-        {templateBanner}
-
         {displayResources.length === 0 ? (
-          search || statusFilter !== 'all' ? (
+          search || statusFilter !== 'all' || activeTags.size > 0 ? (
             <EmptyState preset="no-result" />
           ) : (
             <EmptyState
@@ -288,17 +179,10 @@ export function ResourceGrid({
               onSecondary={() => onCreate('assistant')}
             />
           )
-        ) : viewMode === 'grid' ? (
+        ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-5 gap-3">
             {displayResources.map((r, i) => (
-              <GridCard key={r.id} resource={r} index={i} onEdit={onEdit} onToggle={onToggle}
-                onOpenMenu={openMenu} />
-            ))}
-          </div>
-        ) : (
-          <div className="space-y-1">
-            {displayResources.map((r, i) => (
-              <ListRow key={r.id} resource={r} index={i} onEdit={onEdit} onToggle={onToggle}
+              <GridCard key={r.id} resource={r} index={i} onEdit={onEdit}
                 onOpenMenu={openMenu} />
             ))}
           </div>
@@ -325,23 +209,179 @@ export function ResourceGrid({
         })()}
       </AnimatePresence>
 
-      {/* Tag context menu */}
-      <AnimatePresence>
-        {tagCtx && (
-          <div>
-            <div className="fixed inset-0 z-[var(--z-popover)]" onClick={() => setTagCtx(null)} />
-            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }}
-              className="fixed z-[var(--z-popover)] bg-popover border border-border/30 rounded-xl shadow-xl p-1 min-w-[100px]"
-              style={{ left: tagCtx.x, top: tagCtx.y }}>
-              <Button variant="destructive" size="xs" onClick={() => { onDeleteTag(tagCtx.name); setTagCtx(null); }}
-                className="flex items-center gap-2 w-full px-2.5 py-[5px] rounded-md text-xs text-destructive/70 hover:text-destructive hover:bg-destructive/10 transition-colors">
-                <Trash2 size={10} /> 删除标签
-              </Button>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
     </div>
+  );
+}
+
+// ===========================
+// Unified filter popover — sort + status + tag filter in one entry
+// ===========================
+interface UnifiedFilterProps {
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  sortKey: SortKey;
+  onSortKeyChange: (k: SortKey) => void;
+  statusFilter: 'all' | 'enabled' | 'disabled';
+  onStatusFilterChange: (s: 'all' | 'enabled' | 'disabled') => void;
+  tags: TagItem[];
+  activeTags: Set<string>;
+  onToggleTag: (name: string) => void;
+  onClearTags: () => void;
+  onAddTag: (name: string) => void;
+  onDeleteTag: (name: string) => void;
+}
+
+function UnifiedFilter({
+  open, onOpenChange,
+  sortKey, onSortKeyChange,
+  statusFilter, onStatusFilterChange,
+  tags, activeTags, onToggleTag, onClearTags, onAddTag, onDeleteTag,
+}: UnifiedFilterProps) {
+  const [showAddTag, setShowAddTag] = useState(false);
+  const [newTagName, setNewTagName] = useState('');
+
+  const activeCount =
+    (sortKey !== 'updatedAt' ? 1 : 0) +
+    (statusFilter !== 'all' ? 1 : 0) +
+    (activeTags.size > 0 ? 1 : 0);
+
+  const tagSummary = activeTags.size === 1
+    ? Array.from(activeTags)[0]
+    : `(${activeTags.size})`;
+
+  const handleAddTag = () => {
+    const name = newTagName.trim();
+    if (!name) return;
+    onAddTag(name);
+    setNewTagName('');
+    setShowAddTag(false);
+  };
+
+  return (
+    <Popover open={open} onOpenChange={onOpenChange}>
+      <PopoverTrigger asChild>
+        <Button variant="ghost" size="xs"
+          className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs border transition-all ${
+            open || activeCount > 0
+              ? 'border-primary/30 bg-accent/50 text-foreground'
+              : 'border-border/40 text-muted-foreground/60 hover:text-foreground hover:border-border/50'
+          }`}>
+          <Filter size={10} />
+          <span>筛选</span>
+          {activeCount > 0 && (
+            <span className="inline-flex items-center justify-center min-w-[14px] h-3.5 px-1 rounded-full bg-primary text-primary-foreground text-[10px] leading-none tabular-nums">
+              {activeCount}
+            </span>
+          )}
+          <ChevronDown size={9} className={`transition-transform ${open ? 'rotate-180' : ''}`} />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent align="start" className="w-[280px] p-0">
+        {/* 排序 */}
+        <div className="px-3 pt-3 pb-2">
+          <div className="text-[11px] text-muted-foreground/55 mb-1.5">排序</div>
+          <div className="flex flex-wrap gap-1">
+            {(Object.keys(SORT_LABELS) as SortKey[]).map(k => (
+              <button type="button" key={k} onClick={() => onSortKeyChange(k)}
+                className={`px-2 py-1 rounded-md text-xs transition-colors ${
+                  sortKey === k
+                    ? 'bg-accent text-foreground'
+                    : 'text-muted-foreground/60 hover:text-foreground hover:bg-accent/40'
+                }`}>
+                {SORT_LABELS[k]}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <Separator opacity={30} />
+
+        {/* 状态 */}
+        <div className="px-3 py-2">
+          <div className="text-[11px] text-muted-foreground/55 mb-1.5">状态</div>
+          <div className="flex gap-1">
+            {([
+              { key: 'all' as const, label: '全部' },
+              { key: 'enabled' as const, label: '已启用' },
+              { key: 'disabled' as const, label: '已禁用' },
+            ]).map(opt => (
+              <button type="button" key={opt.key} onClick={() => onStatusFilterChange(opt.key)}
+                className={`px-2 py-1 rounded-md text-xs transition-colors ${
+                  statusFilter === opt.key
+                    ? 'bg-accent text-foreground'
+                    : 'text-muted-foreground/60 hover:text-foreground hover:bg-accent/40'
+                }`}>
+                {opt.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <Separator opacity={30} />
+
+        {/* 标签 — compact multi-select list (dropdown-style rows) */}
+        <div className="px-3 py-2">
+          <div className="flex items-center justify-between mb-1.5">
+            <span className="text-[11px] text-muted-foreground/55">
+              标签{activeTags.size > 0 && <span className="ml-1 text-muted-foreground/40 tabular-nums">{tagSummary}</span>}
+            </span>
+            {activeTags.size > 0 && (
+              <button type="button" onClick={onClearTags}
+                className="text-[11px] text-muted-foreground/60 hover:text-foreground">
+                清除
+              </button>
+            )}
+          </div>
+          <div className="max-h-[180px] overflow-y-auto rounded-md border border-border/30 bg-accent/15 scrollbar-thin">
+            {tags.length === 0 && !showAddTag ? (
+              <div className="text-[11px] text-muted-foreground/40 px-2 py-2 text-center">暂无标签</div>
+            ) : (
+              tags.map(tag => {
+                const checked = activeTags.has(tag.name);
+                return (
+                  <div key={tag.id}
+                    className="group/tag flex items-center gap-1.5 px-2 py-1 text-[11px] hover:bg-accent/40 cursor-pointer"
+                    onClick={() => onToggleTag(tag.name)}>
+                    <span className={`inline-flex items-center justify-center w-3 h-3 rounded-[3px] border ${
+                      checked ? 'bg-primary border-primary text-primary-foreground' : 'border-border/60'
+                    }`}>
+                      {checked && <Check size={8} strokeWidth={3} />}
+                    </span>
+                    <span className={`w-1.5 h-1.5 rounded-full ${tag.color}`} />
+                    <span className="flex-1 truncate text-foreground">{tag.name}</span>
+                    <span className="text-muted-foreground/40 tabular-nums">{tag.count}</span>
+                    <button type="button"
+                      onClick={e => { e.stopPropagation(); onDeleteTag(tag.name); }}
+                      title="删除标签"
+                      className="text-muted-foreground/30 hover:text-destructive opacity-0 group-hover/tag:opacity-100 transition-opacity">
+                      <X size={9} />
+                    </button>
+                  </div>
+                );
+              })
+            )}
+            {showAddTag ? (
+              <div className="flex items-center gap-1 px-2 py-1 border-t border-border/20">
+                <Input autoFocus value={newTagName}
+                  onChange={e => setNewTagName(e.target.value)}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter') handleAddTag();
+                    if (e.key === 'Escape') { setShowAddTag(false); setNewTagName(''); }
+                  }}
+                  onBlur={() => { if (!newTagName.trim()) setShowAddTag(false); }}
+                  placeholder="标签名"
+                  className="flex-1 h-5 px-1.5 rounded text-[11px] outline-none focus:border-primary/40" />
+              </div>
+            ) : (
+              <button type="button" onClick={() => setShowAddTag(true)}
+                className="w-full flex items-center gap-1 px-2 py-1 text-[11px] text-muted-foreground/55 hover:text-foreground hover:bg-accent/40 border-t border-border/20 transition-colors">
+                <Plus size={9} /> 新建标签
+              </button>
+            )}
+          </div>
+        </div>
+      </PopoverContent>
+    </Popover>
   );
 }
 
@@ -353,11 +393,10 @@ interface CardItemProps {
   resource: ResourceItem;
   index: number;
   onEdit: (r: ResourceItem) => void;
-  onToggle: (id: string) => void;
   onOpenMenu: (id: string, e: React.MouseEvent) => void;
 }
 
-function GridCard({ resource: r, index, onEdit, onToggle, onOpenMenu }: CardItemProps) {
+function GridCard({ resource: r, index, onEdit, onOpenMenu }: CardItemProps) {
   const cfg = RESOURCE_TYPE_CONFIG[r.type];
   const isToolType = r.type === 'skill';
   const isPrompt = r.type === 'prompt';
@@ -386,59 +425,12 @@ function GridCard({ resource: r, index, onEdit, onToggle, onOpenMenu }: CardItem
             <p className="text-xs text-muted-foreground/60 line-clamp-1 mt-0.5">{r.description}</p>
           </div>
           <div className="flex items-center gap-1 flex-shrink-0" onClick={e => e.stopPropagation()}>
-            {isToolType && <Switch size="sm" checked={r.enabled} onCheckedChange={() => onToggle(r.id)} />}
             <Button variant="ghost" size="icon-xs" onClick={e => onOpenMenu(r.id, e)}
               className="w-6 h-6 rounded-md flex items-center justify-center text-muted-foreground/40 hover:text-foreground hover:bg-accent/50 transition-colors opacity-0 group-hover:opacity-100">
               <MoreHorizontal size={12} />
             </Button>
           </div>
         </div>
-      </div>
-    </motion.div>
-  );
-}
-
-// ===========================
-// List Row
-// ===========================
-
-function ListRow({ resource: r, index, onEdit, onToggle, onOpenMenu }: CardItemProps) {
-  const cfg = RESOURCE_TYPE_CONFIG[r.type];
-  const isToolType = r.type === 'skill';
-  const isPrompt = r.type === 'prompt';
-  const Icon = cfg.icon;
-
-  return (
-    <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.15, delay: index * 0.015 }}
-      className="group flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-accent/50 transition-colors cursor-pointer" onClick={() => onEdit(r)}>
-      {isPrompt ? (
-        <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${cfg.color}`}><Icon size={14} /></div>
-      ) : (
-        <div className="w-8 h-8 rounded-lg bg-accent/50 flex items-center justify-center text-sm flex-shrink-0">{r.avatar}</div>
-      )}
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-1.5">
-          <span className="text-sm text-foreground truncate">{r.name}</span>
-          <span className={`text-xs px-1.5 py-px rounded-full flex-shrink-0 ${cfg.color}`}>{cfg.label}</span>
-          {r.hasUpdate && <Badge variant="secondary" className="text-xs px-1 py-px rounded-full bg-accent-orange-muted text-accent-orange flex-shrink-0">更新</Badge>}
-        </div>
-        <p className="text-xs text-muted-foreground/60 truncate mt-px">{r.description}</p>
-      </div>
-      {r.model && <span className="text-xs text-muted-foreground/50 flex-shrink-0 hidden sm:block">{r.model}</span>}
-      {r.version && <span className="text-xs text-muted-foreground/50 flex-shrink-0 hidden sm:block">v{r.version}</span>}
-      {r.tags.length > 0 && (
-        <div className="flex items-center gap-1 flex-shrink-0 hidden lg:flex">
-          {r.tags.slice(0, 2).map(t => <span key={t} className="text-xs px-1.5 py-px rounded-full bg-accent/50 text-muted-foreground/50">{t}</span>)}
-          {r.tags.length > 2 && <span className="text-xs text-muted-foreground/50">+{r.tags.length - 2}</span>}
-        </div>
-      )}
-      <div className="flex items-center gap-1 flex-shrink-0 text-xs text-muted-foreground/40 hidden md:flex"><Clock size={8} /><span>{timeAgo(r.updatedAt)}</span></div>
-      {isToolType && <div onClick={e => e.stopPropagation()} className="flex-shrink-0"><Switch size="sm" checked={r.enabled} onCheckedChange={() => onToggle(r.id)} /></div>}
-      <div className="flex-shrink-0" onClick={e => e.stopPropagation()}>
-        <Button variant="ghost" size="icon-xs" onClick={e => onOpenMenu(r.id, e)}
-          className="w-6 h-6 rounded-md flex items-center justify-center text-muted-foreground/40 hover:text-foreground hover:bg-accent/50 transition-colors opacity-0 group-hover:opacity-100">
-          <MoreHorizontal size={12} />
-        </Button>
       </div>
     </motion.div>
   );

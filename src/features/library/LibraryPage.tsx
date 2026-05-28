@@ -1,16 +1,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import { Trash2, X } from 'lucide-react';
-// Switch stays on legacy `@cherry-studio/ui` — v2's is visually
-// inferior (per the user) and is the only legacy primitive still
-// pulled inside the library modal.
-import { Switch } from '@cherry-studio/ui';
 import { Button } from '@cherrystudio/ui/components/primitives/button';
 import { Dialog, DialogContent } from '@cherrystudio/ui/components/primitives/dialog';
 import { useGlobalActions } from '@/app/context/GlobalActionContext';
 import type {
   FolderNode, LibraryConfigView, LibrarySidebarFilter,
-  ResourceItem, ResourceType, SortKey, ViewMode,
+  ResourceItem, ResourceType, SortKey,
 } from '@/app/types';
 import { MOCK_FOLDERS, MOCK_RESOURCES, RESOURCE_TYPE_CONFIG } from '@/app/config/constants';
 import { getUserSkills, useUserSkills } from '@/app/stores/userSkillsStore';
@@ -23,7 +19,6 @@ import { AssistantConfig } from '@/features/assistant/AssistantConfig';
 import { AgentConfig } from '@/features/agent/AgentConfig';
 import { useRecycleBin, type RecycleBinItemType } from "@/app/context/RecycleBinContext";
 import { RecycleBinConfirmDialog } from "@/app/components/shared/RecycleBinConfirmDialog";
-import { TemplateBanner } from "./TemplateBanner";
 import { TemplateBrowsePage } from "./TemplateBrowsePage";
 import { PromptEditPage } from "./PromptEditPage";
 import { buildTags, findFolder } from "./helpers";
@@ -55,11 +50,9 @@ export function LibraryPage() {
   // Default landing: open on the first resource type ("Skill") instead of
   // mixing every type together. Users switch via the left sidebar.
   const [sidebarFilter, setSidebarFilter] = useState<LibrarySidebarFilter>({ type: 'resource', resourceType: 'skill' });
-  const [dismissedBanners, setDismissedBanners] = useState<Set<string>>(new Set());
   const [templateBrowse, setTemplateBrowse] = useState<'skill' | 'assistant' | null>(null);
 
   const [search, setSearch] = useState('');
-  const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [sortKey, setSortKey] = useState<SortKey>('updatedAt');
   const [importOpen, setImportOpen] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState<ResourceItem | null>(null);
@@ -68,8 +61,16 @@ export function LibraryPage() {
   const [spImportOpen, setSpImportOpen] = useState(false);
   const [spImportType, setSpImportType] = useState<'skill' | 'plugin'>('skill');
 
-  // Tag filter (separate from sidebar filter)
-  const [activeTag, setActiveTag] = useState<string | null>(null);
+  // Tag filter (separate from sidebar filter) — multi-select.
+  const [activeTags, setActiveTags] = useState<Set<string>>(() => new Set());
+  const toggleTag = useCallback((name: string) => {
+    setActiveTags(prev => {
+      const next = new Set(prev);
+      if (next.has(name)) next.delete(name); else next.add(name);
+      return next;
+    });
+  }, []);
+  const clearTags = useCallback(() => setActiveTags(new Set()), []);
 
   // Type filter (toolbar). Null = no implicit filter — let the left sidebar
   // drive resource-type selection.
@@ -146,8 +147,8 @@ export function LibraryPage() {
       list = list.filter(r => r.tags.includes(sidebarFilter.tagName));
     }
     // Apply tag filter from top bar
-    if (activeTag) {
-      list = list.filter(r => r.tags.includes(activeTag));
+    if (activeTags.size > 0) {
+      list = list.filter(r => r.tags.some(t => activeTags.has(t)));
     }
     // Optional toolbar-driven type filter (left sidebar is the primary one)
     if (activeType) {
@@ -162,7 +163,7 @@ export function LibraryPage() {
       if (sortKey === 'createdAt') return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
       return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
     });
-  }, [resources, sidebarFilter, activeTag, activeType, search, sortKey, folders]);
+  }, [resources, sidebarFilter, activeTags, activeType, search, sortKey, folders]);
 
 
   // ===========================
@@ -178,8 +179,13 @@ export function LibraryPage() {
       ...r,
       tags: r.tags.filter(t => t !== tagName),
     })));
-    if (activeTag === tagName) setActiveTag(null);
-  }, [activeTag]);
+    setActiveTags(prev => {
+      if (!prev.has(tagName)) return prev;
+      const next = new Set(prev);
+      next.delete(tagName);
+      return next;
+    });
+  }, []);
 
   // Collect all unique tag names across all resources
   const allTagNames = useMemo(() => {
@@ -333,25 +339,15 @@ export function LibraryPage() {
       <div className="flex-1 flex flex-col min-w-0 min-h-0">
         <ResourceGrid
           resources={filtered}
-          viewMode={viewMode} sortKey={sortKey} search={search}
-          onSearchChange={setSearch} onViewModeChange={setViewMode} onSortKeyChange={setSortKey}
+          sortKey={sortKey} search={search}
+          onSearchChange={setSearch} onSortKeyChange={setSortKey}
           onEdit={handleEdit} onDuplicate={handleDuplicate} onDelete={handleDelete}
-          onToggle={handleToggle} onCreate={handleCreateResource}
+          onCreate={handleCreateResource}
           folders={folders} onMoveToFolder={handleMoveToFolder}
-          tags={scopedTags} activeTag={activeTag} onTagFilter={setActiveTag}
+          tags={scopedTags} activeTags={activeTags} onToggleTag={toggleTag} onClearTags={clearTags}
           onAddTag={handleAddTag} onDeleteTag={handleDeleteTag}
           allTagNames={allTagNames} onUpdateResourceTags={handleUpdateResourceTags}
           activeType={activeType} onTypeFilter={setActiveType} typeCounts={typeCounts}
-          templateBanner={
-            activeResourceType && ['assistant', 'skill'].includes(activeResourceType) && !dismissedBanners.has(activeResourceType)
-              ? <TemplateBanner
-                  resourceType={activeResourceType as 'assistant' | 'skill'}
-                  installedNames={installedNames}
-                  onClose={() => setDismissedBanners(prev => new Set(prev).add(activeResourceType!))}
-                  onBrowseAll={() => setTemplateBrowse(activeResourceType as 'assistant' | 'skill')}
-                />
-              : undefined
-          }
           onBrowseTemplates={
             activeResourceType && ['assistant', 'skill'].includes(activeResourceType)
               ? () => setTemplateBrowse(activeResourceType as 'assistant' | 'skill')
@@ -411,21 +407,10 @@ export function LibraryPage() {
                       <TypeIcon size={9} />
                       {cfg.label}
                     </span>
-                    <span className="inline-flex items-center gap-1 flex-shrink-0 text-xs text-muted-foreground/60 font-normal">
-                      <span className={`w-1.5 h-1.5 rounded-full ${r.enabled ? 'bg-success' : 'bg-muted-foreground/40'}`} />
-                      {r.enabled ? '已启用' : '已禁用'}
-                    </span>
                   </div>
                 </div>
                 {configView.type === 'skill-plugin-detail' && (
                   <>
-                    <Switch
-                      size="sm"
-                      checked={r.enabled}
-                      onCheckedChange={() => handleToggle(r.id)}
-                      aria-label={r.enabled ? '已启用' : '已禁用'}
-                      className="flex-shrink-0"
-                    />
                     <Button
                       variant="ghost"
                       size="icon-sm"
