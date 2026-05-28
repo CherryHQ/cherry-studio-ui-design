@@ -99,7 +99,7 @@ function FullMenuItems({
               <ContextMenuContent className="z-[var(--z-popover)]">
                 <ContextMenuItem onSelect={() => unpinFromSidebar('function', item.id)}>
                   <PinOff size={14} strokeWidth={1.6} />
-                  从侧边栏移除
+                  从菜单栏移除
                 </ContextMenuItem>
                 <ContextMenuItem onSelect={() => openLaunchpad(true)}>
                   <LayoutGrid size={14} strokeWidth={1.6} />
@@ -132,7 +132,7 @@ function FullMenuItems({
           <ContextMenuContent className="z-[var(--z-popover)]">
             <ContextMenuItem onSelect={() => unpinFromSidebar('miniapp', app.id)}>
               <PinOff size={14} strokeWidth={1.6} />
-              从侧边栏移除
+              从菜单栏移除
             </ContextMenuItem>
             <ContextMenuItem onSelect={() => openLaunchpad(true)}>
               <LayoutGrid size={14} strokeWidth={1.6} />
@@ -163,7 +163,7 @@ function FullMenuItems({
             <ContextMenuContent className="z-[var(--z-popover)]">
               <ContextMenuItem onSelect={() => unpinFromSidebar('artifact', a.key)}>
                 <PinOff size={14} strokeWidth={1.6} />
-                从侧边栏移除
+                从菜单栏移除
               </ContextMenuItem>
               <ContextMenuItem onSelect={() => openLaunchpad(true)}>
                 <LayoutGrid size={14} strokeWidth={1.6} />
@@ -312,6 +312,14 @@ export function Sidebar({
   const sidebarRef = useRef<HTMLDivElement>(null);
   const hoverTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
   const layout = getLayout(width);
+  // Pinned mini-apps + artifacts need to surface in every layout
+  // (icon / vertical-card / full). FullMenuItems pulls them itself; the
+  // icon and vertical-card branches below pull from here.
+  const {
+    sidebarMiniapps, sidebarArtifacts,
+    openMiniApp, launchpadOpen,
+    unpinFromSidebar, openLaunchpad,
+  } = useGlobalActions();
 
   const startResizing = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
@@ -531,6 +539,67 @@ export function Sidebar({
                 </div>
               );
             })}
+
+            {/* Pinned mini-apps */}
+            {sidebarMiniapps.map((app) => (
+              <ContextMenu key={`mini-${app.id}`}>
+                <ContextMenuTrigger asChild>
+                  <Tooltip content={app.name}>
+                    <Button
+                      variant="ghost"
+                      size="icon-sm"
+                      onClick={() => openMiniApp(app)}
+                      className="text-muted-foreground hover:text-foreground hover:bg-accent/50"
+                    >
+                      <div className={`w-4 h-4 rounded-md flex items-center justify-center text-[10px] text-white ${app.color}`}>
+                        {app.initial}
+                      </div>
+                    </Button>
+                  </Tooltip>
+                </ContextMenuTrigger>
+                <ContextMenuContent className="z-[var(--z-popover)]">
+                  <ContextMenuItem onSelect={() => unpinFromSidebar('miniapp', app.id)}>
+                    <PinOff size={14} strokeWidth={1.6} />
+                    从菜单栏移除
+                  </ContextMenuItem>
+                  <ContextMenuItem onSelect={() => openLaunchpad(true)}>
+                    <LayoutGrid size={14} strokeWidth={1.6} />
+                    管理
+                  </ContextMenuItem>
+                </ContextMenuContent>
+              </ContextMenu>
+            ))}
+
+            {/* Pinned artifacts */}
+            {sidebarArtifacts.map((a) => {
+              const Icon = resolveArtifactIcon(a.iconName);
+              return (
+                <ContextMenu key={`art-${a.key}`}>
+                  <ContextMenuTrigger asChild>
+                    <Tooltip content={a.label}>
+                      <Button
+                        variant="ghost"
+                        size="icon-sm"
+                        onClick={() => launchpadOpen(`html:${a.key}`)}
+                        className="text-muted-foreground hover:text-foreground hover:bg-accent/50"
+                      >
+                        <Icon size={18} strokeWidth={1.6} className="text-accent-violet" />
+                      </Button>
+                    </Tooltip>
+                  </ContextMenuTrigger>
+                  <ContextMenuContent className="z-[var(--z-popover)]">
+                    <ContextMenuItem onSelect={() => unpinFromSidebar('artifact', a.key)}>
+                      <PinOff size={14} strokeWidth={1.6} />
+                      从菜单栏移除
+                    </ContextMenuItem>
+                    <ContextMenuItem onSelect={() => openLaunchpad(true)}>
+                      <LayoutGrid size={14} strokeWidth={1.6} />
+                      管理
+                    </ContextMenuItem>
+                  </ContextMenuContent>
+                </ContextMenu>
+              );
+            })}
           </div>
         )}
 
@@ -575,6 +644,65 @@ export function Sidebar({
                     </Button>
                   ))}
                 </div>
+              );
+            })}
+
+            {/* Pinned mini-apps */}
+            {sidebarMiniapps.map((app) => (
+              <ContextMenu key={`mini-${app.id}`}>
+                <ContextMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => openMiniApp(app)}
+                    className="w-full flex-col items-center gap-0.5 py-2 text-muted-foreground hover:text-foreground hover:bg-accent/50"
+                  >
+                    <div className={`w-[18px] h-[18px] rounded-md flex items-center justify-center text-[10px] text-white ${app.color}`}>
+                      {app.initial}
+                    </div>
+                    <span className="text-xs leading-tight truncate max-w-[50px]">{app.name}</span>
+                  </Button>
+                </ContextMenuTrigger>
+                <ContextMenuContent className="z-[var(--z-popover)]">
+                  <ContextMenuItem onSelect={() => unpinFromSidebar('miniapp', app.id)}>
+                    <PinOff size={14} strokeWidth={1.6} />
+                    从菜单栏移除
+                  </ContextMenuItem>
+                  <ContextMenuItem onSelect={() => openLaunchpad(true)}>
+                    <LayoutGrid size={14} strokeWidth={1.6} />
+                    管理
+                  </ContextMenuItem>
+                </ContextMenuContent>
+              </ContextMenu>
+            ))}
+
+            {/* Pinned artifacts */}
+            {sidebarArtifacts.map((a) => {
+              const Icon = resolveArtifactIcon(a.iconName);
+              return (
+                <ContextMenu key={`art-${a.key}`}>
+                  <ContextMenuTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => launchpadOpen(`html:${a.key}`)}
+                      className="w-full flex-col items-center gap-0.5 py-2 text-muted-foreground hover:text-foreground hover:bg-accent/50"
+                    >
+                      <Icon size={18} strokeWidth={1.6} className="text-accent-violet" />
+                      <span className="text-xs leading-tight truncate max-w-[50px]">{a.label}</span>
+                    </Button>
+                  </ContextMenuTrigger>
+                  <ContextMenuContent className="z-[var(--z-popover)]">
+                    <ContextMenuItem onSelect={() => unpinFromSidebar('artifact', a.key)}>
+                      <PinOff size={14} strokeWidth={1.6} />
+                      从菜单栏移除
+                    </ContextMenuItem>
+                    <ContextMenuItem onSelect={() => openLaunchpad(true)}>
+                      <LayoutGrid size={14} strokeWidth={1.6} />
+                      管理
+                    </ContextMenuItem>
+                  </ContextMenuContent>
+                </ContextMenu>
               );
             })}
           </div>
