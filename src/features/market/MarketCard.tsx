@@ -55,7 +55,14 @@ export function MarketCardGrid({
           >
             <Avatar item={it} size={36} />
             <div className="flex-1 min-w-0 pr-2">
-              <div className="text-sm font-medium text-foreground truncate">{it.name}</div>
+              <div className="flex items-center gap-1.5 min-w-0">
+                <span className="text-sm font-medium text-foreground truncate">{it.name}</span>
+                {it.version && (
+                  <span className="flex-shrink-0 text-[10px] tabular-nums text-muted-foreground/60 font-mono">
+                    v{it.version}
+                  </span>
+                )}
+              </div>
               <div className="text-xs text-muted-foreground/60 truncate mt-0.5">{it.tagline}</div>
             </div>
             <button

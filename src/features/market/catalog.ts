@@ -16,9 +16,12 @@ export const BUILTIN_FEEDS: { id: string; label: string }[] = [
 ];
 
 // Per-integration product logo via the Simple Icons CDN with the brand's
-// official hex. Falls back to the catalog avatar emoji when an id isn't
-// mapped.
+// official hex. Same map services both Market ids (m-*) and Agent
+// toolchain integration ids (integ-*), so an integration installed
+// from Market shows up with the same brand logo in the agent config.
+// Falls back to the catalog avatar emoji when an id isn't mapped.
 export const INTEGRATION_LOGO: Record<string, { slug: string; color: string }> = {
+  // Market ids
   'm-19': { slug: 'notion',           color: '000000' },
   'm-20': { slug: 'yuque',            color: '25B864' },
   'm-21': { slug: 'googlecalendar',   color: '4285F4' },
@@ -29,6 +32,13 @@ export const INTEGRATION_LOGO: Record<string, { slug: string; color: string }> =
   'm-26': { slug: 'github',           color: '181717' },
   'm-27': { slug: 'confluence',       color: '172B4D' },
   'm-28': { slug: 'microsoftoutlook', color: '0078D4' },
+  // Agent toolchain ids (mirror the same brand logos)
+  'integ-notion': { slug: 'notion',     color: '000000' },
+  'integ-yuque':  { slug: 'yuque',      color: '25B864' },
+  'integ-feishu': { slug: 'larksuite',  color: '00D6B9' },
+  'integ-slack':  { slug: 'slack',      color: '4A154B' },
+  'integ-github': { slug: 'github',     color: '181717' },
+  'integ-linear': { slug: 'linear',     color: '5E6AD2' },
 };
 
 // Install counts mirror real GitHub star counts (May 2026). When a single
@@ -41,7 +51,7 @@ export const CATALOG: MarketItem[] = [
   { id: 'm-1',  kind: 'skill',     name: 'pdf',                 tagline: 'Anthropic 官方 PDF Skill：解析 PDF 正文、表格、签字与表单字段', author: '@anthropics',   avatar: '📕',  avatarBg: 'bg-destructive/15',   language: 'EN',  region: '全球',     category: '内容创作', ageLabel: '4mo', installs: 18500, trending: true  },
   { id: 'm-4',  kind: 'skill',     name: 'xlsx',                tagline: 'Anthropic 官方 Excel Skill：读写 .xlsx，支持公式、图表与多表汇总', author: '@anthropics',   avatar: '📊',  avatarBg: 'bg-success/20',       language: 'EN',  region: '全球',     category: '数据',     ageLabel: '4mo', installs: 12400                  },
   { id: 'm-10', kind: 'skill',     name: 'docx',                tagline: 'Anthropic 官方 Word Skill：生成 / 编辑 .docx，含目录、样式、批注', author: '@anthropics',   avatar: '📘',  avatarBg: 'bg-accent-blue/25',   language: 'EN',  region: '全球',     category: '写作',     ageLabel: '4mo', installs: 7300                   },
-  { id: 'm-16', kind: 'skill',     name: 'pptx',                tagline: 'Anthropic 官方 PowerPoint Skill：一句话生成可编辑幻灯片',     author: '@anthropics',   avatar: '📑',  avatarBg: 'bg-accent-orange/25', language: 'EN',  region: '全球',     category: '办公',     ageLabel: '4mo', installs: 5200                   },
+  { id: 'm-16', kind: 'skill',     name: 'pptx',                tagline: 'Anthropic 官方 PowerPoint Skill：一句话生成可编辑幻灯片',     author: '@anthropics',   avatar: '📑',  avatarBg: 'bg-accent-orange/25', language: 'EN',  region: '全球',     category: '办公',     ageLabel: '4mo', installs: 5200, trending: true, version: '1.4.0'  },
 
   // ─── MCP Servers — mostly modelcontextprotocol/servers (85,965 split per server) ──
   { id: 'm-2',  kind: 'mcp',       name: 'server-filesystem',   tagline: '@modelcontextprotocol 官方：受控读写本地文件，含 glob 搜索',   author: '@modelcontextprotocol', avatar: '📁',  avatarBg: 'bg-accent-blue/25', language: 'EN',  region: '全球',     category: '开发',     ageLabel: '1y',  installs: 34800, trending: true  },
@@ -61,7 +71,7 @@ export const CATALOG: MarketItem[] = [
 
   // ─── Agents — 多步自治 workflow ──
   { id: 'm-7',  kind: 'agent',     name: '调研分析师',         tagline: '多步调研：搜索 → 抓取 → 整理 → 输出含引用的报告与对比表',     author: '@cherry-team',  avatar: '🔬',  avatarBg: 'bg-accent-cyan/25',   language: '中文', region: '通用',     category: '研究',     ageLabel: '3mo', installs: 712                    },
-  { id: 'm-54', kind: 'agent',     name: 'SQL 数据分析 Agent', tagline: '自然语言转 SQL，连库跑数 + 出表 + 解读，对接主流仓库与 BI',     author: '@cherry-team',  avatar: '🧮',  avatarBg: 'bg-accent-indigo/25', language: '中文', region: '通用',     category: '数据',     ageLabel: '5mo', installs: 838                    },
+  { id: 'm-54', kind: 'agent',     name: 'SQL 数据分析 Agent', tagline: '自然语言转 SQL，连库跑数 + 出表 + 解读，对接主流仓库与 BI',     author: '@cherry-team',  avatar: '🧮',  avatarBg: 'bg-accent-indigo/25', language: '中文', region: '通用',     category: '数据',     ageLabel: '5mo', installs: 838, trending: true, version: '0.8.2'  },
   { id: 'm-56', kind: 'agent',     name: 'Bug 修复 Agent',      tagline: '读栈追踪 → 定位文件 → 读 / 改代码 → 跑测试，最后输出 diff',     author: '@cherry-team',  avatar: '🛠',   avatarBg: 'bg-destructive/15',   language: '中文', region: '通用',     category: '编程',     ageLabel: '2mo', installs: 423,  trending: true   },
   { id: 'm-57', kind: 'agent',     name: '竞品调研 Agent',      tagline: '给一个产品名，自动抓取官网 / 定价 / 评测 / 社交反馈，输出对比表', author: '@cherry-team',  avatar: '🧭',  avatarBg: 'bg-accent-violet/25', language: '中文', region: '通用',     category: '研究',     ageLabel: '2mo', installs: 356                    },
 
@@ -79,7 +89,7 @@ export const CATALOG: MarketItem[] = [
 
   // ─── Real-world CLIs ──
   { id: 'm-29', kind: 'cli',       name: 'gh',                  tagline: 'GitHub 官方 CLI：管理仓库 / PR / Issue / Release / GitHub Actions', author: '@cli/cli',      avatar: 'gh',  avatarBg: 'bg-foreground/12',    language: 'EN',  region: '全球',     category: '开发',     ageLabel: '2y',  installs: 44484, trending: true  },
-  { id: 'm-30', kind: 'cli',       name: 'lark-cli',            tagline: '飞书 OpenAPI SDK + CLI：消息 / 文档 / 多维表格 / 日历 / 妙记 / 会议', author: '@larksuite',    avatar: '🪶',  avatarBg: 'bg-accent-blue/25',   language: '中文', region: '中国',     category: '办公',     ageLabel: '1y',  installs: 586                    },
+  { id: 'm-30', kind: 'cli',       name: 'lark-cli',            tagline: '飞书 OpenAPI SDK + CLI：消息 / 文档 / 多维表格 / 日历 / 妙记 / 会议', author: '@larksuite',    avatar: '🪶',  avatarBg: 'bg-accent-blue/25',   language: '中文', region: '中国',     category: '办公',     ageLabel: '1y',  installs: 586, trending: true, version: '2.1.0' },
   { id: 'm-31', kind: 'cli',       name: 'yuque-cli',           tagline: '语雀文档读写、附件上传、知识库同步与导出',       author: '@yuque',        avatar: '📘',  avatarBg: 'bg-success/20',       language: '中文', region: '中国',     category: '办公',     ageLabel: '10mo', installs: 6                     },
   { id: 'm-32', kind: 'cli',       name: 'claude-code',         tagline: 'Anthropic 官方终端编程 agent，可读写文件、运行命令、走多步任务', author: '@anthropics',   avatar: '🅰',  avatarBg: 'bg-accent-amber/25',  language: 'EN',  region: '全球',     category: '开发',     ageLabel: '6mo', installs: 125103, trending: true  },
   { id: 'm-33', kind: 'cli',       name: 'vercel',              tagline: 'Vercel 部署、查日志、配置域名 / 环境变量 / 团队',  author: '@vercel',       avatar: '▲',   avatarBg: 'bg-foreground/15',    language: 'EN',  region: '全球',     category: '开发',     ageLabel: '3y',  installs: 15513                  },
@@ -102,7 +112,7 @@ export const CATALOG: MarketItem[] = [
 
   // ─── Community Skills ──
   { id: 'm-51', kind: 'skill',     name: 'mermaid',             tagline: '在对话中实时渲染 Mermaid 流程图 / 时序图 / Gantt，支持 SVG 导出', author: '@mermaid-js',   avatar: '🌊',  avatarBg: 'bg-accent-cyan/25',   language: 'EN',  region: '全球',     category: '设计',     ageLabel: '11mo', installs: 88166, trending: true },
-  { id: 'm-52', kind: 'skill',     name: 'code-interpreter',    tagline: 'E2B 提供的 Python 沙箱：跑代码、出图、读 csv / xlsx / parquet',     author: '@e2b-dev',      avatar: '⚙',   avatarBg: 'bg-accent-emerald/25', language: 'EN',  region: '全球',     category: '编程',     ageLabel: '9mo', installs: 2322                   },
+  { id: 'm-52', kind: 'skill',     name: 'code-interpreter',    tagline: 'E2B 提供的 Python 沙箱：跑代码、出图、读 csv / xlsx / parquet',     author: '@e2b-dev',      avatar: '⚙',   avatarBg: 'bg-accent-emerald/25', language: 'EN',  region: '全球',     category: '编程',     ageLabel: '9mo', installs: 2322, trending: true, version: '0.9.1' },
 
   // ─── Integrations (commercial products, no public OSS repo) ──
   { id: 'm-19', kind: 'integration', name: 'Notion',           tagline: '页面读写、数据库查询、批量更新与权限同步',     author: '@notion-labs',  avatar: '📝',  avatarBg: 'bg-muted',            language: 'EN',  region: '通用',     category: '办公',     ageLabel: '1y',  installs: 4120                   },
