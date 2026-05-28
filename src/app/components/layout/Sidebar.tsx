@@ -1,13 +1,14 @@
 import React, { useRef, useCallback, useState } from 'react';
 import {
-  Search, X, ChevronRight, Settings,
+  Search, X, ChevronRight, Settings, PinOff, LayoutGrid,
 } from 'lucide-react';
 import cherryLogoImg from "@/assets/cherry-icon.png";
-import { Button } from '@cherry-studio/ui';
+import { Button, ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from '@cherry-studio/ui';
 import { Tooltip } from '@/app/components/Tooltip';
 import { BP_ICON, BP_VERTICAL_CARD, BP_FULL, getLayout } from '@/app/config/constants';
 import type { MenuItem, Tab } from '@/app/types';
 import { useCollab } from '@/features/collaboration/CollabContext';
+import { useGlobalActions } from '@/app/context/GlobalActionContext';
 
 function CherryLogo({ size = 'md' }: { size?: 'sm' | 'md' }) {
   const s = size === 'sm' ? 'w-7 h-7' : 'w-8 h-8';
@@ -54,6 +55,7 @@ function FullMenuItems({
   onMiniAppTabClick?: (tabId: string) => void;
   isFloating?: boolean;
 }) {
+  const { unpinFromSidebar, openLaunchpad } = useGlobalActions();
   return (
     <div className="px-2 space-y-0.5">
       {items.map((item) => {
@@ -62,22 +64,32 @@ function FullMenuItems({
         const miniTabs = item.id === 'miniapp' ? activeMiniAppTabs : [];
         return (
           <div key={item.id}>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => onItemClick(item.id)}
-              className={`w-full justify-start gap-2.5 px-2.5 py-[7px] rounded-xl text-sm relative
-                ${isActive
-                  ? 'bg-cherry-active-bg text-foreground'
-                  : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
-                }`}
-            >
-              {isActive && (
-                <div className="absolute inset-0 rounded-xl border border-cherry-active-border pointer-events-none" />
-              )}
-              <Icon size={16} strokeWidth={1.6} />
-              <span className="truncate">{item.label}</span>
-            </Button>
+            <ContextMenu>
+              <ContextMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => onItemClick(item.id)}
+                  className={`w-full justify-start gap-2.5 px-2.5 py-[7px] rounded-xl text-sm relative
+                    ${isActive
+                      ? 'bg-cherry-active-bg text-foreground'
+                      : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
+                    }`}
+                >
+                  {isActive && (
+                    <div className="absolute inset-0 rounded-xl border border-cherry-active-border pointer-events-none" />
+                  )}
+                  <Icon size={16} strokeWidth={1.6} />
+                  <span className="truncate">{item.label}</span>
+                </Button>
+              </ContextMenuTrigger>
+              <ContextMenuContent>
+                <ContextMenuItem onSelect={() => unpinFromSidebar('function', item.id)}>
+                  <PinOff size={14} strokeWidth={1.6} />
+                  从侧边栏移除
+                </ContextMenuItem>
+              </ContextMenuContent>
+            </ContextMenu>
             {miniTabs.map(mt => (
               <Button
                 variant="ghost"
@@ -97,6 +109,17 @@ function FullMenuItems({
           </div>
         );
       })}
+      {/* iPhone-style "管理" entry — opens the Launchpad where the user
+          can right-click tiles to pin / unpin them from this sidebar. */}
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={openLaunchpad}
+        className="w-full justify-start gap-2.5 px-2.5 py-[7px] rounded-xl text-sm text-muted-foreground/70 hover:text-foreground hover:bg-accent/50"
+      >
+        <LayoutGrid size={16} strokeWidth={1.6} />
+        <span className="truncate">管理</span>
+      </Button>
     </div>
   );
 }

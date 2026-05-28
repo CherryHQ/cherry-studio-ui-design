@@ -1,9 +1,10 @@
 import { useMemo } from 'react';
-import { Plus, Sparkles, Globe } from 'lucide-react';
+import { Plus, Sparkles, Globe, Pin } from 'lucide-react';
 import { useGlobalActions } from '@/app/context/GlobalActionContext';
 import { dialogAppIcons, newTabHtmlPreviews } from '@/app/config/constants';
 import { miniAppList } from '@/features/miniapp/MiniAppsPage';
 import { usePinnedArtifacts } from '@/app/stores/sharedArtifactsStore';
+import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from '@cherry-studio/ui';
 
 // ===========================
 // 启动页 (Launchpad)
@@ -15,7 +16,7 @@ import { usePinnedArtifacts } from '@/app/stores/sharedArtifactsStore';
 // `launchpadOpen` action which routes by id namespace.
 
 export function LaunchpadPage() {
-  const { launchpadOpen, openMiniApp } = useGlobalActions();
+  const { launchpadOpen, openMiniApp, pinToSidebar } = useGlobalActions();
   const pinned = usePinnedArtifacts();
 
   // 用户添加的小程序 — embedded webpages (Gemini, ChatGPT, etc.).
@@ -38,15 +39,16 @@ export function LaunchpadPage() {
             {dialogAppIcons.map(item => {
               const Icon = item.icon;
               return (
-                <Tile
+                <PinnableTile
                   key={item.id}
                   label={item.label}
-                  onClick={() => launchpadOpen(item.id)}
+                  onOpen={() => launchpadOpen(item.id)}
+                  onPin={() => pinToSidebar('function', item.id, item.label)}
                 >
                   <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${item.bg}`}>
                     <Icon size={20} strokeWidth={1.6} className={item.color} />
                   </div>
-                </Tile>
+                </PinnableTile>
               );
             })}
           </Grid>
@@ -58,15 +60,16 @@ export function LaunchpadPage() {
           ) : (
             <Grid>
               {userMiniApps.map(app => (
-                <Tile
+                <PinnableTile
                   key={app.id}
                   label={app.name}
-                  onClick={() => openMiniApp(app)}
+                  onOpen={() => openMiniApp(app)}
+                  onPin={() => pinToSidebar('miniapp', app.id, app.name)}
                 >
                   <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-base font-medium text-white ${app.color}`}>
                     {app.initial}
                   </div>
-                </Tile>
+                </PinnableTile>
               ))}
               <AddTile label="添加小程序" onClick={() => launchpadOpen('miniapp')} />
             </Grid>
@@ -76,22 +79,24 @@ export function LaunchpadPage() {
         <Section title="Agent 产物">
           <Grid>
             {Object.entries(newTabHtmlPreviews).map(([key, preview]) => (
-              <Tile
+              <PinnableTile
                 key={`static-${key}`}
                 label={preview.label}
-                onClick={() => launchpadOpen(`html:${key}`)}
+                onOpen={() => launchpadOpen(`html:${key}`)}
+                onPin={() => pinToSidebar('artifact', key, preview.label)}
               >
                 <ArtifactAvatar />
-              </Tile>
+              </PinnableTile>
             ))}
             {pinned.map(a => (
-              <Tile
+              <PinnableTile
                 key={a.id}
                 label={a.label}
-                onClick={() => launchpadOpen(`html:pinned:${a.id}`)}
+                onOpen={() => launchpadOpen(`html:pinned:${a.id}`)}
+                onPin={() => pinToSidebar('artifact', `pinned:${a.id}`, a.label)}
               >
                 <ArtifactAvatar />
-              </Tile>
+              </PinnableTile>
             ))}
             {pinned.length === 0 && Object.keys(newTabHtmlPreviews).length === 0 && (
               <EmptyHint
@@ -135,18 +140,36 @@ function Grid({ children }: { children: React.ReactNode }) {
   );
 }
 
-function Tile({ label, onClick, children }: { label: string; onClick: () => void; children: React.ReactNode }) {
+// Tile with a right-click context menu offering "添加至侧边栏" — the
+// iPhone home-screen "Add to Dock" gesture, but routed through Radix's
+// ContextMenu so it works with keyboard menu key + macOS Ctrl-click.
+function PinnableTile({ label, onOpen, onPin, children }: {
+  label: string;
+  onOpen: () => void;
+  onPin: () => void;
+  children: React.ReactNode;
+}) {
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="group flex flex-col items-center gap-2 p-2 rounded-xl hover:bg-accent/30 active:scale-[0.96] transition-all"
-    >
-      {children}
-      <span className="text-xs text-foreground/80 group-hover:text-foreground truncate max-w-full">
-        {label}
-      </span>
-    </button>
+    <ContextMenu>
+      <ContextMenuTrigger asChild>
+        <button
+          type="button"
+          onClick={onOpen}
+          className="group flex flex-col items-center gap-2 p-2 rounded-xl hover:bg-accent/30 active:scale-[0.96] transition-all"
+        >
+          {children}
+          <span className="text-xs text-foreground/80 group-hover:text-foreground truncate max-w-full">
+            {label}
+          </span>
+        </button>
+      </ContextMenuTrigger>
+      <ContextMenuContent>
+        <ContextMenuItem onSelect={onPin}>
+          <Pin size={14} strokeWidth={1.6} />
+          添加至侧边栏
+        </ContextMenuItem>
+      </ContextMenuContent>
+    </ContextMenu>
   );
 }
 

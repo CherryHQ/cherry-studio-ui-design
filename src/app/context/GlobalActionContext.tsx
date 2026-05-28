@@ -32,6 +32,24 @@ export interface GlobalActionFunctions {
   changeTabTitle: (title: string) => void;
   /** Open the global Settings overlay, optionally jumping to a specific section */
   openSettings: (section?: string) => void;
+  /**
+   * Open a tile from the Launchpad page. Target uses the same id namespace
+   * as the legacy new-tab dialog: built-in menu id ("chat"), agent id
+   * ("agent:<id>"), or html-artifact key ("html:pinned:<id>" /
+   * "html:<staticKey>").
+   */
+  launchpadOpen: (target: string) => void;
+  /**
+   * iPhone-style "add to dock": pin a Launchpad tile to the sidebar so
+   * the user can reach it without re-opening the Launchpad. For
+   * `function` kind the id is the menuItem id (un-hides in the sidebar);
+   * `miniapp` / `artifact` are surface placeholders for now.
+   */
+  pinToSidebar: (kind: 'function' | 'miniapp' | 'artifact', id: string, label?: string) => void;
+  /** Inverse of pinToSidebar — invoked from the sidebar's right-click. */
+  unpinFromSidebar: (kind: 'function' | 'miniapp' | 'artifact', id: string) => void;
+  /** Navigate to the Launchpad tab — wired to the "管理" sidebar entry. */
+  openLaunchpad: () => void;
 }
 
 /** Mutable state values consumed by pages */
@@ -60,6 +78,10 @@ const defaultFunctions: GlobalActionFunctions = {
   libraryReturn: noop,
   changeTabTitle: noop,
   openSettings: noop,
+  launchpadOpen: noop,
+  pinToSidebar: noop,
+  unpinFromSidebar: noop,
+  openLaunchpad: noop,
 };
 
 const defaultState: GlobalActionState = {
@@ -95,10 +117,15 @@ export function GlobalActionProvider({ value, children }: GlobalActionProviderPr
     libraryReturn: value.libraryReturn,
     changeTabTitle: value.changeTabTitle,
     openSettings: value.openSettings,
+    launchpadOpen: value.launchpadOpen,
+    pinToSidebar: value.pinToSidebar,
+    unpinFromSidebar: value.unpinFromSidebar,
+    openLaunchpad: value.openLaunchpad,
   }), [
     value.openMiniApp, value.pinTab, value.editAssistantInLibrary,
     value.navigateToKnowledge, value.navigateToLibrary, value.libraryReturn,
-    value.changeTabTitle, value.openSettings,
+    value.changeTabTitle, value.openSettings, value.launchpadOpen,
+    value.pinToSidebar, value.unpinFromSidebar, value.openLaunchpad,
   ]);
 
   // Extract state (changes when libraryEditResourceId or libraryCreateType change)

@@ -297,6 +297,39 @@ function CherryStudioInner() {
   // ===========================
   // GlobalActionContext value
   // ===========================
+  // iPhone-style sidebar pinning: functions toggle via `hiddenApps`
+  // (already exists); mini-apps and artifacts get placeholder toasts for
+  // now — full sidebar rendering of those kinds is the next step.
+  const pinToSidebar = useCallback((kind: 'function' | 'miniapp' | 'artifact', id: string, label?: string) => {
+    if (kind === 'function') {
+      setHiddenApps(prev => {
+        if (!prev.has(id)) return prev;
+        const next = new Set(prev);
+        next.delete(id);
+        return next;
+      });
+      toast.success(`已固定到侧边栏：${label ?? id}`);
+    } else {
+      toast(`已固定到侧边栏：${label ?? id}`, { description: '即将在下一版本中真正出现在侧边栏' });
+    }
+  }, []);
+
+  const unpinFromSidebar = useCallback((kind: 'function' | 'miniapp' | 'artifact', id: string) => {
+    if (kind === 'function') {
+      setHiddenApps(prev => {
+        if (prev.has(id)) return prev;
+        return new Set([...prev, id]);
+      });
+    }
+  }, []);
+
+  const openLaunchpad = useCallback(() => {
+    setActiveItem('launchpad');
+    const existing = tabs.find(t => t.menuItemId === 'launchpad');
+    if (existing) setActiveTabId(existing.id);
+    else createTabForMenuItem('launchpad');
+  }, [tabs, createTabForMenuItem, setActiveTabId]);
+
   const globalActions = useMemo<GlobalActions>(() => ({
     openMiniApp: handleOpenMiniApp,
     pinTab: handlePinTab,
@@ -307,12 +340,17 @@ function CherryStudioInner() {
     changeTabTitle: handleTabTitleChange,
     openSettings: (section?: string) => { setSettingsInitialSection(section); setSettingsOpen(true); },
     launchpadOpen: handleDialogCreateTab,
+    pinToSidebar,
+    unpinFromSidebar,
+    openLaunchpad,
     libraryEditResourceId,
     libraryCreateType,
   }), [
     handleOpenMiniApp, handlePinTab, handleEditAssistantInLibrary,
     handleNavigateToKnowledge, handleNavigateToLibrary, handleLibraryReturn,
-    handleTabTitleChange, handleDialogCreateTab, libraryEditResourceId, libraryCreateType,
+    handleTabTitleChange, handleDialogCreateTab,
+    pinToSidebar, unpinFromSidebar, openLaunchpad,
+    libraryEditResourceId, libraryCreateType,
   ]);
 
   // ===========================
