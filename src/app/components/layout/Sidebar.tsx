@@ -56,12 +56,17 @@ function FullMenuItems({
   isFloating?: boolean;
 }) {
   const { unpinFromSidebar, openLaunchpad } = useGlobalActions();
+  // Newly-opened mini-apps live in the top tab bar only — we used to nest
+  // them under the 小程序 menu item, but that double-surfaced the same
+  // embed (left rail + top tabs) and confused which click did what.
+  void activeMiniAppTabs;
+  void activeTabId;
+  void onMiniAppTabClick;
   return (
     <div className="px-2 space-y-0.5">
       {items.map((item) => {
         const isActive = activeItem === item.id;
         const Icon = item.icon;
-        const miniTabs = item.id === 'miniapp' ? activeMiniAppTabs : [];
         return (
           <div key={item.id}>
             <ContextMenu>
@@ -90,22 +95,6 @@ function FullMenuItems({
                 </ContextMenuItem>
               </ContextMenuContent>
             </ContextMenu>
-            {miniTabs.map(mt => (
-              <Button
-                variant="ghost"
-                size="sm"
-                key={mt.id}
-                onClick={() => onMiniAppTabClick?.(mt.id)}
-                className={`w-full justify-start gap-2 pl-7 pr-2.5 py-[5px] rounded-xl text-sm relative
-                  ${activeTabId === mt.id ? 'bg-cherry-active-bg text-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'}`}
-              >
-                {activeTabId === mt.id && (
-                  <div className="absolute inset-0 rounded-xl border border-cherry-active-border pointer-events-none" />
-                )}
-                <MiniAppIcon tab={mt} />
-                <span className="truncate">{mt.title}</span>
-              </Button>
-            ))}
           </div>
         );
       })}

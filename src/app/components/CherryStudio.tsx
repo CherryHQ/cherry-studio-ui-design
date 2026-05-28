@@ -330,6 +330,19 @@ function CherryStudioInner() {
     else createTabForMenuItem('launchpad');
   }, [tabs, createTabForMenuItem, setActiveTabId]);
 
+  // Tiles the user has explicitly removed from the launchpad — keyed as
+  // `${kind}:${id}` (e.g. `miniapp:gemini`, `artifact:roadmap`). Filtered
+  // out of the launchpad grids in LaunchpadPage.
+  const [removedFromLaunchpad, setRemovedFromLaunchpad] = useState<Set<string>>(new Set());
+
+  const removeFromLaunchpad = useCallback((kind: 'miniapp' | 'artifact', id: string) => {
+    setRemovedFromLaunchpad(prev => {
+      const next = new Set(prev);
+      next.add(`${kind}:${id}`);
+      return next;
+    });
+  }, []);
+
   const globalActions = useMemo<GlobalActions>(() => ({
     openMiniApp: handleOpenMiniApp,
     pinTab: handlePinTab,
@@ -343,14 +356,16 @@ function CherryStudioInner() {
     pinToSidebar,
     unpinFromSidebar,
     openLaunchpad,
+    removeFromLaunchpad,
     libraryEditResourceId,
     libraryCreateType,
+    removedFromLaunchpad,
   }), [
     handleOpenMiniApp, handlePinTab, handleEditAssistantInLibrary,
     handleNavigateToKnowledge, handleNavigateToLibrary, handleLibraryReturn,
     handleTabTitleChange, handleDialogCreateTab,
-    pinToSidebar, unpinFromSidebar, openLaunchpad,
-    libraryEditResourceId, libraryCreateType,
+    pinToSidebar, unpinFromSidebar, openLaunchpad, removeFromLaunchpad,
+    libraryEditResourceId, libraryCreateType, removedFromLaunchpad,
   ]);
 
   // ===========================

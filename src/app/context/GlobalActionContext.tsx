@@ -50,6 +50,12 @@ export interface GlobalActionFunctions {
   unpinFromSidebar: (kind: 'function' | 'miniapp' | 'artifact', id: string) => void;
   /** Navigate to the Launchpad tab — wired to the "管理" sidebar entry. */
   openLaunchpad: () => void;
+  /**
+   * Hide a mini-app or artifact tile from the Launchpad. Functions stay
+   * built-in (only `hiddenApps` toggles their sidebar visibility, not
+   * launchpad visibility).
+   */
+  removeFromLaunchpad: (kind: 'miniapp' | 'artifact', id: string) => void;
 }
 
 /** Mutable state values consumed by pages */
@@ -58,6 +64,12 @@ export interface GlobalActionState {
   libraryEditResourceId: string | null;
   /** Pre-selected create type when Library was opened from agent/assistant run page */
   libraryCreateType: 'agent' | 'assistant' | null;
+  /**
+   * Namespaced ids of tiles the user has removed from the launchpad
+   * (e.g. `miniapp:gemini`, `artifact:roadmap`). The LaunchpadPage
+   * filters its grids against this set.
+   */
+  removedFromLaunchpad: Set<string>;
 }
 
 /** Combined interface for backward compatibility */
@@ -82,11 +94,13 @@ const defaultFunctions: GlobalActionFunctions = {
   pinToSidebar: noop,
   unpinFromSidebar: noop,
   openLaunchpad: noop,
+  removeFromLaunchpad: noop,
 };
 
 const defaultState: GlobalActionState = {
   libraryEditResourceId: null,
   libraryCreateType: null,
+  removedFromLaunchpad: new Set<string>(),
 };
 
 const GlobalActionFunctionsContext = createContext<GlobalActionFunctions>(defaultFunctions);
@@ -121,18 +135,21 @@ export function GlobalActionProvider({ value, children }: GlobalActionProviderPr
     pinToSidebar: value.pinToSidebar,
     unpinFromSidebar: value.unpinFromSidebar,
     openLaunchpad: value.openLaunchpad,
+    removeFromLaunchpad: value.removeFromLaunchpad,
   }), [
     value.openMiniApp, value.pinTab, value.editAssistantInLibrary,
     value.navigateToKnowledge, value.navigateToLibrary, value.libraryReturn,
     value.changeTabTitle, value.openSettings, value.launchpadOpen,
     value.pinToSidebar, value.unpinFromSidebar, value.openLaunchpad,
+    value.removeFromLaunchpad,
   ]);
 
   // Extract state (changes when libraryEditResourceId or libraryCreateType change)
   const state = useMemo<GlobalActionState>(() => ({
     libraryEditResourceId: value.libraryEditResourceId,
     libraryCreateType: value.libraryCreateType,
-  }), [value.libraryEditResourceId, value.libraryCreateType]);
+    removedFromLaunchpad: value.removedFromLaunchpad,
+  }), [value.libraryEditResourceId, value.libraryCreateType, value.removedFromLaunchpad]);
 
   return (
     <GlobalActionFunctionsContext.Provider value={functions}>

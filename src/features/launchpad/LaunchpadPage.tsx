@@ -1,10 +1,10 @@
 import { useMemo } from 'react';
-import { Plus, Sparkles, Globe, Pin } from 'lucide-react';
+import { Plus, Sparkles, Globe, Pin, Trash2 } from 'lucide-react';
 import { useGlobalActions } from '@/app/context/GlobalActionContext';
 import { dialogAppIcons, newTabHtmlPreviews } from '@/app/config/constants';
 import { miniAppList } from '@/features/miniapp/MiniAppsPage';
 import { usePinnedArtifacts } from '@/app/stores/sharedArtifactsStore';
-import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from '@cherry-studio/ui';
+import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuSeparator, ContextMenuTrigger } from '@cherry-studio/ui';
 
 // ===========================
 // 启动页 (Launchpad)
@@ -16,13 +16,25 @@ import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } 
 // `launchpadOpen` action which routes by id namespace.
 
 export function LaunchpadPage() {
-  const { launchpadOpen, openMiniApp, pinToSidebar } = useGlobalActions();
+  const { launchpadOpen, openMiniApp, pinToSidebar, removeFromLaunchpad, removedFromLaunchpad } = useGlobalActions();
   const pinned = usePinnedArtifacts();
 
   // 用户添加的小程序 — embedded webpages (Gemini, ChatGPT, etc.).
   // Show the first 8 mini-apps as the user's "added" set; the full
-  // catalog lives in the dedicated 小程序 page.
-  const userMiniApps = useMemo(() => miniAppList.slice(0, 8), []);
+  // catalog lives in the dedicated 小程序 page. Items the user
+  // explicitly removed (right-click → 移除) are filtered out.
+  const userMiniApps = useMemo(
+    () => miniAppList.slice(0, 8).filter(a => !removedFromLaunchpad.has(`miniapp:${a.id}`)),
+    [removedFromLaunchpad],
+  );
+  const visibleHtmlPreviews = useMemo(
+    () => Object.entries(newTabHtmlPreviews).filter(([key]) => !removedFromLaunchpad.has(`artifact:${key}`)),
+    [removedFromLaunchpad],
+  );
+  const visiblePinned = useMemo(
+    () => pinned.filter(a => !removedFromLaunchpad.has(`artifact:pinned:${a.id}`)),
+    [pinned, removedFromLaunchpad],
+  );
 
   return (
     <div className="flex-1 overflow-y-auto scrollbar-thin">
@@ -65,6 +77,7 @@ export function LaunchpadPage() {
                   label={app.name}
                   onOpen={() => openMiniApp(app)}
                   onPin={() => pinToSidebar('miniapp', app.id, app.name)}
+                  onRemove={() => removeFromLaunchpad('miniapp', app.id)}
                 >
                   <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-base font-medium text-white ${app.color}`}>
                     {app.initial}
@@ -78,27 +91,29 @@ export function LaunchpadPage() {
 
         <Section title="Agent 产物">
           <Grid>
-            {Object.entries(newTabHtmlPreviews).map(([key, preview]) => (
+            {visibleHtmlPreviews.map(([key, preview]) => (
               <PinnableTile
                 key={`static-${key}`}
                 label={preview.label}
                 onOpen={() => launchpadOpen(`html:${key}`)}
                 onPin={() => pinToSidebar('artifact', key, preview.label)}
+                onRemove={() => removeFromLaunchpad('artifact', key)}
               >
                 <ArtifactAvatar />
               </PinnableTile>
             ))}
-            {pinned.map(a => (
+            {visiblePinned.map(a => (
               <PinnableTile
                 key={a.id}
                 label={a.label}
                 onOpen={() => launchpadOpen(`html:pinned:${a.id}`)}
                 onPin={() => pinToSidebar('artifact', `pinned:${a.id}`, a.label)}
+                onRemove={() => removeFromLaunchpad('artifact', `pinned:${a.id}`)}
               >
                 <ArtifactAvatar />
               </PinnableTile>
             ))}
-            {pinned.length === 0 && Object.keys(newTabHtmlPreviews).length === 0 && (
+            {visiblePinned.length === 0 && visibleHtmlPreviews.length === 0 && (
               <EmptyHint
                 text="在 Agent 运行结果里点 Pin，就会出现在这里"
                 icon={<Sparkles size={14} strokeWidth={1.5} />}
@@ -140,13 +155,14 @@ function Grid({ children }: { children: React.ReactNode }) {
   );
 }
 
-// Tile with a right-click context menu offering "添加至侧边栏" — the
-// iPhone home-screen "Add to Dock" gesture, but routed through Radix's
-// ContextMenu so it works with keyboard menu key + macOS Ctrl-click.
-function PinnableTile({ label, onOpen, onPin, children }: {
+// Tile with a right-click context menu — iPhone home-screen "Edit Home
+// Screen" style. "添加至侧边栏" is universal; "移除" appears only for
+// user-supplied kinds (mini-apps / artifacts), not for built-in 功能.
+function PinnableTile({ label, onOpen, onPin, onRemove, children }: {
   label: string;
   onOpen: () => void;
   onPin: () => void;
+  onRemove?: () => void;
   children: React.ReactNode;
 }) {
   return (
@@ -168,6 +184,15 @@ function PinnableTile({ label, onOpen, onPin, children }: {
           <Pin size={14} strokeWidth={1.6} />
           添加至侧边栏
         </ContextMenuItem>
+        {onRemove && (
+          <>
+            <ContextMenuSeparator />
+            <ContextMenuItem variant="destructive" onSelect={onRemove}>
+              <Trash2 size={14} strokeWidth={1.6} />
+              从启动页移除
+            </ContextMenuItem>
+          </>
+        )}
       </ContextMenuContent>
     </ContextMenu>
   );
