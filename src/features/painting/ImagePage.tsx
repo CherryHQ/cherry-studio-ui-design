@@ -16,7 +16,7 @@ import {
   SlidersHorizontal, Filter, Star, LayoutGrid, Loader2,
   MousePointer2, Undo2, Redo2, Crop, Play, Plus,
   Share2, ArrowLeft, PanelRightClose, PanelRightOpen,
-  Image as ImageIcon, ExternalLink, AlertTriangle, RefreshCw,
+  Image as ImageIcon, ExternalLink, AlertTriangle, RefreshCw, Trash2,
 } from 'lucide-react';
 import type {
   GeneratedImage, ImageMode, AspectRatio, ImageSize, GenerationParams,
@@ -24,6 +24,7 @@ import type {
 import {
   IMAGE_MODELS, MOCK_IMAGES, RATIO_DIMENSIONS, SIZE_LABELS,
 } from './mockData';
+import { useRecycleBin } from '@/app/context/RecycleBinContext';
 
 // Adapt IMAGE_MODELS to ModelInfo for ModelPickerPanel
 const IMAGE_MODELS_AS_MODEL_INFO: ModelInfo[] = IMAGE_MODELS.map(m => ({
@@ -177,6 +178,32 @@ export function ImagePage() {
     ));
   }, []);
 
+  // Delete a painting → move to recycle bin with 5-second undo toast.
+  // Lightweight path (no confirm dialog) since paintings are easy to
+  // re-generate and the toast already gives an instant revert.
+  const { moveToBin: moveToRecycleBin } = useRecycleBin();
+  const handleDeletePainting = useCallback((img: GeneratedImage) => {
+    setImages(prev => prev.filter(i => i.id !== img.id));
+    if (selectedImage?.id === img.id) {
+      // Replacement selection — first remaining image, or undefined.
+      const remaining = images.filter(i => i.id !== img.id);
+      if (remaining.length > 0) setSelectedImage(remaining[0]);
+    }
+    moveToRecycleBin(
+      {
+        id: `bin-painting-${img.id}-${Date.now()}`,
+        type: 'painting',
+        name: img.prompt || '未命名绘图',
+        icon: '🎨',
+        meta: `${img.model} · ${img.width}×${img.height}`,
+        source: 'manual',
+      },
+      {
+        onUndo: () => setImages(prev => [img, ...prev]),
+      },
+    );
+  }, [images, selectedImage, moveToRecycleBin]);
+
   const handleImageClick = useCallback((img: GeneratedImage) => {
     setSelectedImage(img);
     setPreviewMode(true);
@@ -262,6 +289,7 @@ export function ImagePage() {
             images={images}
             onSelect={handleImageClick}
             onToggleFavorite={toggleFavorite}
+            onDelete={handleDeletePainting}
           />
         )}
       </div>
@@ -305,7 +333,7 @@ function TopToolbar({ view, onViewChange }: {
         ))}
       </div>
       <div className="flex items-center gap-1">
-        <Button variant="outline" size="xs" className="gap-1.5 px-3 border-border/50 text-xs text-foreground hover:bg-muted/40">
+        <Button variant="outline" size="xs" className="gap-1.5 px-3 border-border/50 text-xs text-foreground hover:bg-accent/40">
           {'\u5bfc\u51fa'}
         </Button>
       </div>
@@ -326,7 +354,7 @@ function HistoryStrip({ images, selectedId, onSelect }: {
 
   return (
     <div className="w-[54px] shrink-0 flex flex-col items-center py-2 gap-1 bg-background overflow-y-auto scrollbar-hide">
-      <Button variant="ghost" size="icon-sm" className="rounded-full bg-muted/30 text-muted-foreground/40 hover:bg-muted/50 hover:text-foreground mb-1">
+      <Button variant="ghost" size="icon-sm" className="rounded-full bg-muted/30 text-muted-foreground/40 hover:bg-accent/40 hover:text-foreground mb-1">
         <Clock size={12} />
       </Button>
       {images.map(img => (
@@ -425,7 +453,7 @@ function ControlPanel({ params, onChange, onClose }: {
             <PopoverTrigger asChild>
               <Button size="inline"
                 variant="ghost"
-                className="w-full flex items-center justify-between gap-2 px-2.5 py-[6px] rounded-lg bg-muted/35 hover:bg-muted/50 text-xs"
+                className="w-full flex items-center justify-between gap-2 px-2.5 py-[6px] rounded-lg bg-muted/35 hover:bg-accent/40 text-xs"
               >
                 <div className="flex items-center gap-1.5 min-w-0">
                   <BrandLogo id={selectedModel?.provider?.toLowerCase() || ''} fallbackLetter={selectedModel?.provider?.[0] || '?'} size={14} className="shrink-0" />
@@ -467,7 +495,7 @@ function ControlPanel({ params, onChange, onClose }: {
                 className={`flex flex-col items-center gap-1 py-1.5 rounded-lg transition-all duration-150 ${
                   params.ratio === ratio
                     ? 'bg-cherry-active-bg text-cherry-primary-dark ring-1 ring-cherry-ring'
-                    : 'bg-muted/25 text-muted-foreground/60 hover:bg-muted/40 hover:text-foreground'
+                    : 'bg-muted/25 text-muted-foreground/60 hover:bg-accent/40 hover:text-foreground'
                 }`}
               >
                 {ratioIcons[ratio]}
@@ -485,7 +513,7 @@ function ControlPanel({ params, onChange, onClose }: {
             <PopoverTrigger asChild>
               <Button size="inline"
                 variant="ghost"
-                className="w-full flex items-center justify-between gap-2 px-2.5 py-[6px] rounded-lg bg-muted/35 hover:bg-muted/50 text-xs"
+                className="w-full flex items-center justify-between gap-2 px-2.5 py-[6px] rounded-lg bg-muted/35 hover:bg-accent/40 text-xs"
               >
                 <span className="text-foreground">{SIZE_LABELS[params.size]}</span>
                 <ChevronDown size={9} className="text-muted-foreground/40" />
@@ -500,7 +528,7 @@ function ControlPanel({ params, onChange, onClose }: {
                   className={`w-full px-3 py-[6px] text-xs transition-colors ${
                     params.size === size
                       ? 'bg-cherry-active-bg text-cherry-primary-dark'
-                      : 'text-muted-foreground hover:bg-muted/40'
+                      : 'text-muted-foreground hover:bg-accent/40'
                   }`}
                 >
                   {SIZE_LABELS[size]}
@@ -520,7 +548,7 @@ function ControlPanel({ params, onChange, onClose }: {
                 className={`flex-1 py-[5px] rounded-lg text-xs transition-all duration-150 ${
                   params.count === n
                     ? 'bg-cherry-active-bg text-cherry-primary-dark ring-1 ring-cherry-ring'
-                    : 'bg-muted/25 text-muted-foreground/40 hover:bg-muted/40 hover:text-foreground'
+                    : 'bg-muted/25 text-muted-foreground/40 hover:bg-accent/40 hover:text-foreground'
                 }`}
               >
                 {n}
@@ -673,8 +701,8 @@ function CanvasArea({ image, images, currentIndex, onNavigate, onClickImage, onS
                 onClick={() => onSelectImage(images[realIdx])}
                 className={`w-[5px] h-[5px] p-0 rounded-full transition-all duration-200 ${
                   realIdx === currentIndex
-                    ? 'bg-foreground/60 scale-125'
-                    : 'bg-muted-foreground/25 hover:bg-muted-foreground/40'
+                    ? 'bg-foreground/50 scale-125'
+                    : 'bg-muted-foreground/25 hover:bg-accent/40-foreground/40'
                 }`}
               />
             );
@@ -720,7 +748,7 @@ function PromptBar({ params, onChange, onGenerate, isGenerating }: {
         />
         <div className="flex items-center justify-between px-3.5 pb-3 pt-2.5">
           <div className="flex items-center gap-1">
-            <Button variant="ghost" size="icon-xs" className="p-1.5 text-muted-foreground/40 hover:text-foreground hover:bg-muted/40">
+            <Button variant="ghost" size="icon-xs" className="p-1.5 text-muted-foreground/40 hover:text-foreground hover:bg-accent/40">
               <Plus size={13} />
             </Button>
             <Popover>
@@ -748,7 +776,7 @@ function PromptBar({ params, onChange, onGenerate, isGenerating }: {
               <PopoverTrigger asChild>
                 <Button size="inline"
                   variant="ghost"
-                  className="gap-1 px-2 py-1 text-xs text-muted-foreground hover:bg-muted/40"
+                  className="gap-1 px-2 py-1 text-xs text-muted-foreground hover:bg-accent/40"
                 >
                   <BrandLogo id={selectedModel?.provider?.toLowerCase() || ''} fallbackLetter={selectedModel?.provider?.[0] || '?'} size={14} className="shrink-0" />
                   <span>{selectedModel?.name || 'Select Model'}</span>
@@ -793,10 +821,11 @@ function PromptBar({ params, onChange, onGenerate, isGenerating }: {
 // Gallery Grid View
 // ===========================
 
-function GalleryGrid({ images, onSelect, onToggleFavorite }: {
+function GalleryGrid({ images, onSelect, onToggleFavorite, onDelete }: {
   images: GeneratedImage[];
   onSelect: (img: GeneratedImage) => void;
   onToggleFavorite: (id: string) => void;
+  onDelete: (img: GeneratedImage) => void;
 }) {
   const [filter, setFilter] = useState<'all' | 'favorites'>('all');
   const [ratioFilter, setRatioFilter] = useState<'all' | AspectRatio>('all');
@@ -863,7 +892,7 @@ function GalleryGrid({ images, onSelect, onToggleFavorite }: {
           <Button size="inline"
             variant="ghost"
             onClick={() => setSort(s => s === 'newest' ? 'oldest' : 'newest')}
-            className="gap-1 px-2 py-[3px] text-xs text-muted-foreground/40 hover:text-foreground hover:bg-muted/40"
+            className="gap-1 px-2 py-[3px] text-xs text-muted-foreground/40 hover:text-foreground hover:bg-accent/40"
           >
             <SlidersHorizontal size={9} />
             {sort === 'newest' ? 'Newest' : 'Oldest'}
@@ -905,14 +934,24 @@ function GalleryGrid({ images, onSelect, onToggleFavorite }: {
                 </span>
               </div>
               <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
-                <div className="absolute top-1.5 right-1.5">
+                <div className="absolute top-1.5 right-1.5 flex items-center gap-1">
                   <Button
                     variant="ghost"
                     size="icon-xs"
                     onClick={e => { e.stopPropagation(); onToggleFavorite(img.id); }}
                     className="p-1 bg-foreground/40 backdrop-blur-sm"
+                    title="收藏"
                   >
                     <Heart size={9} className={img.favorite ? 'text-accent-pink fill-accent-pink' : 'text-white/60'} />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon-xs"
+                    onClick={e => { e.stopPropagation(); onDelete(img); }}
+                    className="p-1 bg-foreground/40 backdrop-blur-sm hover:bg-destructive/60"
+                    title="移到回收站"
+                  >
+                    <Trash2 size={9} className="text-white/60" />
                   </Button>
                 </div>
                 <div className="absolute bottom-0 left-0 right-0 px-2 py-1.5">
@@ -963,7 +1002,7 @@ function PreviewPage({ images, selected, onSelect, onBack, onNavigate, onToggleF
           variant="ghost"
           size="icon-sm"
           onClick={onBack}
-          className="p-1.5 text-muted-foreground/50 hover:text-foreground hover:bg-muted/40"
+          className="p-1.5 text-muted-foreground/50 hover:text-foreground hover:bg-accent/40"
         >
           <X size={14} />
         </Button>
@@ -990,10 +1029,10 @@ function PreviewPage({ images, selected, onSelect, onBack, onNavigate, onToggleF
         </div>
 
         <div className="flex items-center gap-1">
-          <Button variant="ghost" size="icon-xs" className="p-1.5 text-muted-foreground/40 hover:text-foreground hover:bg-muted/40">
+          <Button variant="ghost" size="icon-xs" className="p-1.5 text-muted-foreground/40 hover:text-foreground hover:bg-accent/40">
             <Download size={13} />
           </Button>
-          <Button variant="ghost" size="icon-xs" className="p-1.5 text-muted-foreground/40 hover:text-foreground hover:bg-muted/40">
+          <Button variant="ghost" size="icon-xs" className="p-1.5 text-muted-foreground/40 hover:text-foreground hover:bg-accent/40">
             <Share2 size={13} />
           </Button>
           <Button size="inline"
@@ -1207,7 +1246,7 @@ function VerticalToolHandle({ showRightPanel, onToggleRightPanel }: {
             className={`p-[7px] rounded-xl transition-all duration-150 ${
               isActive
                 ? 'bg-cherry-active-bg text-cherry-primary-dark shadow-sm'
-                : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
+                : 'text-muted-foreground hover:text-foreground hover:bg-accent/40'
             }`}
           >
             {tool.icon}

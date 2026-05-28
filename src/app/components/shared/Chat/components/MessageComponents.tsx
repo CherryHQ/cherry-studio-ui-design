@@ -62,7 +62,7 @@ export function MermaidBlock({ code }: { code: string }) {
               {i > 0 && <div className="w-px h-3 bg-border/30" />}
               <div className={`px-3 py-1.5 rounded-lg border text-xs text-center min-w-[100px] ${
                 i === 0 ? 'bg-accent/25 border-border/40 text-foreground' :
-                'bg-accent/15 border-border/25 text-muted-foreground'
+                'bg-accent/15 border-border/20 text-muted-foreground'
               }`}>
                 {node.label}
               </div>
@@ -71,7 +71,7 @@ export function MermaidBlock({ code }: { code: string }) {
                   {nodes.slice(1, 4).map((child) => (
                     <div key={child.id} className="flex flex-col items-center gap-1.5">
                       <div className="w-px h-3 bg-border/30" />
-                      <div className="px-2.5 py-1 rounded-md border bg-accent/15 border-border/25 text-xs text-muted-foreground text-center min-w-[70px]">
+                      <div className="px-2.5 py-1 rounded-md border bg-accent/15 border-border/20 text-xs text-muted-foreground text-center min-w-[70px]">
                         {child.label}
                       </div>
                     </div>

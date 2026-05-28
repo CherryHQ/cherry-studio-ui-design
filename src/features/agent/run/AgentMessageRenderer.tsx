@@ -14,13 +14,12 @@ import type { AgentChatMessage } from '@/app/types/agent';
 import { GenUIButtons, GenUISelection, GenUIConfirmation } from './GenerativeUI';
 
 // Re-export for backward compatibility
-export type ChatMessage = AgentChatMessage;
 
 // ===========================
 // Collapsible Tool Call Row
 // ===========================
 
-function ToolCallRow({ msg }: { msg: ChatMessage }) {
+function ToolCallRow({ msg }: { msg: AgentChatMessage }) {
   const [expanded, setExpanded] = useState(false);
   const tc = msg.toolCall!;
   const isError = tc.status === 'error';
@@ -62,7 +61,7 @@ function ToolCallRow({ msg }: { msg: ChatMessage }) {
         {tc.status === 'done' && (
           <>
             {tc.duration && <span className="text-text-tertiary tabular-nums flex-shrink-0">{tc.duration}</span>}
-            <Check size={9} className="text-primary flex-shrink-0" />
+            <Check size={9} className="text-success flex-shrink-0" />
           </>
         )}
         {tc.status === 'error' && (
@@ -78,7 +77,7 @@ function ToolCallRow({ msg }: { msg: ChatMessage }) {
               <button
                 type="button"
                 onClick={(e) => e.stopPropagation()}
-                className="flex items-center gap-1 px-1.5 py-[1px] rounded text-[11px] text-muted-foreground/70 hover:text-foreground hover:bg-accent/40 transition-colors flex-shrink-0 opacity-0 group-hover/tc:opacity-100"
+                className="flex items-center gap-1 px-1.5 py-[1px] rounded text-xs text-muted-foreground/80 hover:text-foreground hover:bg-accent/40 transition-colors flex-shrink-0 opacity-0 group-hover/tc:opacity-100"
               >
                 <ExternalLink size={9} />
                 <span>打开</span>
@@ -88,7 +87,7 @@ function ToolCallRow({ msg }: { msg: ChatMessage }) {
             <DropdownMenuContent align="start" side="bottom" className="w-[160px]" onClick={(e) => e.stopPropagation()}>
               {previewable && (
                 <DropdownMenuItem className="gap-2 px-2 py-[5px] text-xs">
-                  <EyeIcon size={12} className="text-muted-foreground/70 flex-shrink-0" />
+                  <EyeIcon size={12} className="text-muted-foreground/80 flex-shrink-0" />
                   <span className="flex-1">预览</span>
                 </DropdownMenuItem>
               )}
@@ -109,7 +108,7 @@ function ToolCallRow({ msg }: { msg: ChatMessage }) {
                 <span className="flex-1">Finder</span>
               </DropdownMenuItem>
               <DropdownMenuItem className="gap-2 px-2 py-[5px] text-xs">
-                <TerminalSquare size={12} className="text-muted-foreground/70 flex-shrink-0" />
+                <TerminalSquare size={12} className="text-muted-foreground/80 flex-shrink-0" />
                 <span className="flex-1">Terminal</span>
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -276,7 +275,7 @@ export function PermissionApprovalCard({
   onResolve,
   variant = 'inline',
 }: {
-  request: NonNullable<ChatMessage['permissionRequest']>;
+  request: NonNullable<AgentChatMessage['permissionRequest']>;
   onResolve: (action: 'allow' | 'allow-always' | 'deny') => void;
   /** "inline" = compact card in chat; "composer" = wider card replacing the input box */
   variant?: 'inline' | 'composer';
@@ -305,7 +304,7 @@ export function PermissionApprovalCard({
         )}
         <span className="text-muted-foreground/60">权限请求</span>
         <span className="text-muted-foreground/30">·</span>
-        <span className="font-mono text-foreground/60 truncate">{request.toolName}</span>
+        <span className="font-mono text-muted-foreground/60 truncate">{request.toolName}</span>
         <span className="text-muted-foreground/30">·</span>
         <span className="text-muted-foreground/60">
           {request.status === 'approved' ? '已允许' : '已拒绝'}
@@ -340,7 +339,7 @@ export function PermissionApprovalCard({
         <div className="flex items-start gap-2 px-4 pt-3.5 pb-2">
           <AlertTriangle size={14} className={`flex-shrink-0 mt-[2px] ${cfg.iconClass}`} />
           <p className="text-sm text-foreground flex-1 min-w-0 leading-[1.55]">{question}</p>
-          <span className={`text-[11px] leading-[16px] px-1.5 py-[1px] rounded border ${cfg.badgeClass} flex-shrink-0 mt-[1px]`}>
+          <span className={`text-xs leading-[16px] px-1.5 py-[1px] rounded border ${cfg.badgeClass} flex-shrink-0 mt-[1px]`}>
             {cfg.label}
           </span>
         </div>
@@ -369,7 +368,7 @@ export function PermissionApprovalCard({
                 <button
                   type="button"
                   onClick={() => setExpanded(v => !v)}
-                  className="w-full flex items-center justify-center gap-1 py-1 text-[11px] text-muted-foreground/70 hover:text-foreground hover:bg-accent/30 border-t border-border/30 transition-colors"
+                  className="w-full flex items-center justify-center gap-1 py-1 text-xs text-muted-foreground/80 hover:text-foreground hover:bg-accent/40 border-t border-border/30 transition-colors"
                 >
                   <ChevronDown size={10} className={`transition-transform duration-100 ${expanded ? 'rotate-180' : ''}`} />
                   <span>{expanded ? '折叠' : '展开'}</span>
@@ -385,7 +384,7 @@ export function PermissionApprovalCard({
             <button
               key={opt.id}
               onClick={() => onResolve(opt.id)}
-              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all hover:bg-accent/60 active:scale-[0.99] group border-b border-border/10 last:border-b-0 ${
+              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all hover:bg-accent/50 active:scale-[0.97] group border-b border-border/15 last:border-b-0 ${
                 opt.danger ? 'hover:bg-destructive/8' : ''
               }`}
             >
@@ -420,14 +419,14 @@ export function PermissionApprovalCard({
         <Icon size={composer ? 14 : 12} className={`flex-shrink-0 ${cfg.iconClass}`} />
         {composer && <span className="text-xs text-foreground">权限请求</span>}
         {composer && <span className="text-muted-foreground/40">·</span>}
-        <span className={`${composer ? 'text-sm' : 'text-xs'} text-foreground/80 font-mono truncate flex-1 min-w-0`}>{request.toolName}</span>
-        <span className={`${composer ? 'text-[11px] leading-[16px] px-1.5 py-[1px]' : 'text-[10px] leading-[14px] px-1.5'} rounded border ${cfg.badgeClass} flex-shrink-0`}>
+        <span className={`${composer ? 'text-sm' : 'text-xs'} text-muted-foreground/80 font-mono truncate flex-1 min-w-0`}>{request.toolName}</span>
+        <span className={`${composer ? 'text-xs leading-[16px] px-1.5 py-[1px]' : 'text-[10px] leading-[14px] px-1.5'} rounded border ${cfg.badgeClass} flex-shrink-0`}>
           {cfg.label}
         </span>
         {hasParams && !composer && (
           <button
             onClick={() => setExpanded(v => !v)}
-            className="p-0.5 rounded text-muted-foreground/60 hover:text-foreground hover:bg-accent/15 transition-colors flex-shrink-0"
+            className="p-0.5 rounded text-muted-foreground/60 hover:text-foreground hover:bg-accent/40 transition-colors flex-shrink-0"
             title={expanded ? '收起' : '展开'}
           >
             <ChevronRight size={11} className={`transition-transform duration-100 ${expanded ? 'rotate-90' : ''}`} />
@@ -447,14 +446,14 @@ export function PermissionApprovalCard({
           >
             <div className={composer ? 'px-3.5 pb-2.5 pt-0 space-y-1.5' : 'px-3 pb-2 pt-2 space-y-1.5 border-t border-border/30'}>
               {request.toolDescription && (
-                <div className={`${composer ? 'text-xs leading-[1.6]' : 'text-[11px] leading-[1.6]'} text-muted-foreground`}>
+                <div className={`${composer ? 'text-xs leading-[1.6]' : 'text-xs leading-[1.6]'} text-muted-foreground`}>
                   {request.toolDescription}
                 </div>
               )}
               {hasParams && (
                 <div className="space-y-1">
                   {request.params!.map(p => (
-                    <div key={p.label} className={`flex gap-2 ${composer ? 'text-xs' : 'text-[11px]'}`}>
+                    <div key={p.label} className={`flex gap-2 ${composer ? 'text-xs' : 'text-xs'}`}>
                       <span className="text-muted-foreground/60 flex-shrink-0">{p.label}</span>
                       <span className="text-foreground font-mono break-all">{p.value}</span>
                     </div>
@@ -477,7 +476,7 @@ export function PermissionApprovalCard({
               className={
                 composer
                   ? 'px-3 py-1 text-xs text-muted-foreground hover:text-destructive hover:bg-destructive/8 rounded-md'
-                  : 'px-2.5 py-[3px] text-[11px] text-muted-foreground hover:text-destructive hover:bg-destructive/8 rounded-md'
+                  : 'px-2.5 py-[3px] text-xs text-muted-foreground hover:text-destructive hover:bg-destructive/8 rounded-md'
               }
             >
               拒绝
@@ -490,8 +489,8 @@ export function PermissionApprovalCard({
                 onClick={() => onResolve('allow-always')}
                 className={
                   composer
-                    ? 'px-3 py-1 text-xs text-muted-foreground hover:text-foreground hover:bg-accent/15 rounded-md'
-                    : 'px-2.5 py-[3px] text-[11px] text-muted-foreground hover:text-foreground hover:bg-accent/15 rounded-md'
+                    ? 'px-3 py-1 text-xs text-muted-foreground hover:text-foreground hover:bg-accent/40 rounded-md'
+                    : 'px-2.5 py-[3px] text-xs text-muted-foreground hover:text-foreground hover:bg-accent/40 rounded-md'
                 }
               >
                 始终允许
@@ -501,13 +500,13 @@ export function PermissionApprovalCard({
               variant="default"
               size={composer ? 'xs' : 'inline'}
               onClick={() => onResolve('allow')}
-              className={composer ? 'px-4 py-1 text-xs rounded-md' : 'px-3 py-[3px] text-[11px] rounded-md'}
+              className={composer ? 'px-4 py-1 text-xs rounded-md' : 'px-3 py-[3px] text-xs rounded-md'}
             >
               允许
             </Button>
           </>
         ) : (
-          <div className={`flex items-center gap-1.5 px-2 ${composer ? 'py-1 text-xs' : 'py-[3px] text-[11px]'}`}>
+          <div className={`flex items-center gap-1.5 px-2 ${composer ? 'py-1 text-xs' : 'py-[3px] text-xs'}`}>
             {request.status === 'approved' ? (
               <>
                 <Check size={composer ? 12 : 10} className="text-success" />
@@ -530,7 +529,7 @@ export function PermissionApprovalCard({
 // User Message
 // ===========================
 
-export function UserMessage({ msg }: { msg: ChatMessage }) {
+export function UserMessage({ msg }: { msg: AgentChatMessage }) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 4 }}
@@ -538,7 +537,7 @@ export function UserMessage({ msg }: { msg: ChatMessage }) {
       transition={{ duration: 0.15 }}
       className="flex justify-end"
     >
-      <div className="max-w-[85%] px-3.5 py-2.5 rounded-[var(--radius-button)] rounded-br-[var(--radius-dot)] bg-[#F8F8F9] dark:bg-foreground/15 text-foreground text-xs leading-[1.65]">
+      <div className="max-w-[85%] px-3.5 py-2.5 rounded-[var(--radius-button)] rounded-br-[var(--radius-dot)] bg-muted/50 text-foreground text-xs leading-[1.65]">
         {msg.content}
       </div>
     </motion.div>
@@ -577,7 +576,7 @@ function ArtifactCard({ filePath, onOpen }: { filePath: string; onOpen?: (filePa
       initial={{ opacity: 0, y: 4 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.15 }}
-      className="group/art flex items-center gap-2 px-2 py-1.5 rounded-lg border border-border/40 bg-card/60 hover:bg-accent/20 hover:border-border/70 active:scale-[0.99] transition-all max-w-[420px] text-left cursor-pointer"
+      className="group/art flex items-center gap-2 px-2 py-1.5 rounded-lg border border-border/40 bg-card/60 hover:bg-accent/40 hover:border-border/50 active:scale-[0.97] transition-all max-w-[420px] text-left cursor-pointer"
       title={`打开 ${fileName}`}
     >
       <div className={`w-6 h-6 rounded-md flex items-center justify-center flex-shrink-0 ${fts.tileCls}`}>
@@ -598,7 +597,7 @@ function ArtifactCard({ filePath, onOpen }: { filePath: string; onOpen?: (filePa
 // ===========================
 
 export function AgentMessageGroup({ msgs, onResolve, onAvatarClick, onOpenArtifact, isRunning = true }: {
-  msgs: ChatMessage[];
+  msgs: AgentChatMessage[];
   onResolve: (msgId: string, value: string) => void;
   onAvatarClick?: () => void;
   onOpenArtifact?: (filePath: string) => void;
@@ -705,7 +704,7 @@ export function AgentMessageGroup({ msgs, onResolve, onAvatarClick, onOpenArtifa
 // ===========================
 
 function ProcessBlock({ msgs, isRunning, onResolve }: {
-  msgs: ChatMessage[];
+  msgs: AgentChatMessage[];
   isRunning: boolean;
   onResolve: (msgId: string, value: string) => void;
 }) {
@@ -743,7 +742,7 @@ function ProcessBlock({ msgs, isRunning, onResolve }: {
       {!isRunning && (
         <button
           onClick={() => setExpanded(v => !v)}
-          className="flex items-center gap-1.5 py-[3px] px-1 text-xs text-muted-foreground hover:text-foreground w-fit rounded-md hover:bg-accent/30 transition-colors"
+          className="flex items-center gap-1.5 py-[3px] px-1 text-xs text-muted-foreground hover:text-foreground w-fit rounded-md hover:bg-accent/40 transition-colors"
         >
           {expanded
             ? <ChevronDown size={10} className="flex-shrink-0" />
@@ -833,9 +832,9 @@ function ThinkingRow({ content }: { content: string }) {
 // Message grouping utility
 // ===========================
 
-export function useGroupedMessages(messages: ChatMessage[]) {
+export function useGroupedMessages(messages: AgentChatMessage[]) {
   return useMemo(() => {
-    const groups: Array<{ type: 'user'; msg: ChatMessage } | { type: 'agent'; msgs: ChatMessage[] }> = [];
+    const groups: Array<{ type: 'user'; msg: AgentChatMessage } | { type: 'agent'; msgs: AgentChatMessage[] }> = [];
     for (const msg of messages) {
       if (msg.role === 'user') {
         groups.push({ type: 'user', msg });

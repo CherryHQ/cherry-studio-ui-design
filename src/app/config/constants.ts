@@ -146,17 +146,22 @@ export const SORT_LABELS: Record<string, string> = {
 // Library — Tag Color Palette (static)
 // ===========================
 
+// Selected-tag chip palette — kept intentionally pale: a colored dot
+// carries the identity, the chip body uses muted text on a faint tint
+// so multi-tag combinations don't visually shout. Dot colors stay
+// saturated for filter pills (list-view) where one-color-per-row is
+// the only signal users have.
 export const TAG_COLORS: Record<string, { dot: string; badge: string }> = {
-  '生产力': { dot: 'bg-accent-violet',   badge: 'bg-accent-violet-muted text-accent-violet border-accent-violet/20' },
-  '写作':   { dot: 'bg-accent-emerald',  badge: 'bg-accent-emerald-muted text-accent-emerald border-accent-emerald/20' },
-  '编程':   { dot: 'bg-accent-blue',     badge: 'bg-accent-blue-muted text-accent-blue border-accent-blue/20' },
-  '翻译':   { dot: 'bg-accent-amber',    badge: 'bg-accent-amber-muted text-accent-amber border-accent-amber/20' },
-  '分析':   { dot: 'bg-destructive',     badge: 'bg-destructive/12 text-destructive border-destructive/20' },
-  '创意':   { dot: 'bg-accent-pink',     badge: 'bg-accent-pink-muted text-accent-pink border-accent-pink/20' },
-  '对话':   { dot: 'bg-accent-cyan',     badge: 'bg-accent-cyan-muted text-accent-cyan border-accent-cyan/20' },
-  '通用':   { dot: 'bg-muted-foreground/40', badge: 'bg-muted text-muted-foreground border-border/50' },
+  '生产力': { dot: 'bg-accent-violet',   badge: 'bg-accent-violet-muted text-muted-foreground border-accent-violet/15' },
+  '写作':   { dot: 'bg-accent-emerald',  badge: 'bg-accent-emerald-muted text-muted-foreground border-accent-emerald/15' },
+  '编程':   { dot: 'bg-accent-blue',     badge: 'bg-accent-blue-muted text-muted-foreground border-accent-blue/15' },
+  '翻译':   { dot: 'bg-accent-amber',    badge: 'bg-accent-amber-muted text-muted-foreground border-accent-amber/15' },
+  '分析':   { dot: 'bg-destructive',     badge: 'bg-destructive/10 text-muted-foreground border-destructive/15' },
+  '创意':   { dot: 'bg-accent-pink',     badge: 'bg-accent-pink-muted text-muted-foreground border-accent-pink/15' },
+  '对话':   { dot: 'bg-accent-cyan',     badge: 'bg-accent-cyan-muted text-muted-foreground border-accent-cyan/15' },
+  '通用':   { dot: 'bg-muted-foreground/40', badge: 'bg-muted text-muted-foreground border-border/30' },
 };
-export const DEFAULT_TAG_COLOR = { dot: 'bg-muted-foreground/40', badge: 'bg-muted text-muted-foreground border-border/50' };
+export const DEFAULT_TAG_COLOR = { dot: 'bg-muted-foreground/40', badge: 'bg-muted text-muted-foreground border-border/30' };
 
 // ===========================
 // Config — Avatar Options (static)

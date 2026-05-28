@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { X, Check, ChevronDown, Upload, Link2, Plus, Trash2, RotateCcw, Info } from 'lucide-react';
+import { X, Check, Upload, Link2, Plus, Trash2, RotateCcw, Info } from 'lucide-react';
 import type { ResourceItem } from '@/app/types';
 import { AVATAR_OPTIONS } from '@/app/config/constants';
 import { Button } from '@cherrystudio/ui/components/primitives/button';
@@ -7,6 +7,7 @@ import { Button } from '@cherrystudio/ui/components/primitives/button';
 // transparent default. Textarea + Switch stay on legacy for now.
 import { Input } from '@cherrystudio/ui/components/primitives/input';
 import { Textarea, Switch } from '@cherry-studio/ui';
+import { Separator } from "@cherry-studio/ui";
 import { Slider } from '@cherrystudio/ui/components/primitives/slider';
 import { Badge } from '@cherrystudio/ui/components/primitives/badge';
 import { Popover, PopoverTrigger, PopoverContent } from '@cherrystudio/ui/components/primitives/popover';
@@ -15,36 +16,37 @@ import {
   Select, SelectTrigger, SelectValue, SelectContent, SelectItem,
 } from '@cherrystudio/ui/components/primitives/select';
 import { Typography, SimpleTooltip } from '@cherry-studio/ui';
-import { ModelPickerPanel } from '@/app/components/shared/ModelPickerPanel';
-import { ASSISTANT_MODELS } from '@/app/config/models';
 
 // ===========================
 // Tag presets
 // ===========================
 
+// Selected-tag chip palette — kept pale on purpose: muted-foreground
+// text + faint accent-tinted bg + thin colored border. Lets multi-tag
+// combinations stay readable without visual noise.
 const TAG_PRESETS: { tag: string; color: string }[] = [
-  { tag: '写作', color: 'bg-accent-amber-muted text-accent-amber border-accent-amber/20' },
-  { tag: '编程', color: 'bg-accent-cyan-muted text-accent-cyan border-accent-cyan/20' },
-  { tag: '翻译', color: 'bg-accent-violet-muted text-accent-violet border-accent-violet/20' },
-  { tag: '创作', color: 'bg-accent-pink-muted text-accent-pink border-accent-pink/20' },
-  { tag: '代码审查', color: 'bg-accent-blue-muted text-accent-blue border-accent-blue/20' },
-  { tag: '数据分析', color: 'bg-accent-indigo-muted text-accent-indigo border-accent-indigo/20' },
-  { tag: '对话', color: 'bg-muted text-foreground border-border/50' },
-  { tag: '工具', color: 'bg-accent-orange-muted text-accent-orange border-accent-orange/20' },
-  { tag: '知识问答', color: 'bg-accent-blue-muted text-accent-blue border-accent-blue/20' },
-  { tag: '效率', color: 'bg-accent-amber-muted text-accent-amber border-accent-amber/20' },
-  { tag: '学习', color: 'bg-accent-emerald-muted text-accent-emerald border-accent-emerald/20' },
-  { tag: '产品', color: 'bg-accent-pink-muted text-accent-pink border-accent-pink/20' },
+  { tag: '写作', color: 'bg-accent-amber-muted text-muted-foreground border-accent-amber/15' },
+  { tag: '编程', color: 'bg-accent-cyan-muted text-muted-foreground border-accent-cyan/15' },
+  { tag: '翻译', color: 'bg-accent-violet-muted text-muted-foreground border-accent-violet/15' },
+  { tag: '创作', color: 'bg-accent-pink-muted text-muted-foreground border-accent-pink/15' },
+  { tag: '代码审查', color: 'bg-accent-blue-muted text-muted-foreground border-accent-blue/15' },
+  { tag: '数据分析', color: 'bg-accent-indigo-muted text-muted-foreground border-accent-indigo/15' },
+  { tag: '对话', color: 'bg-muted text-muted-foreground border-border/30' },
+  { tag: '工具', color: 'bg-accent-orange-muted text-muted-foreground border-accent-orange/15' },
+  { tag: '知识问答', color: 'bg-accent-blue-muted text-muted-foreground border-accent-blue/15' },
+  { tag: '效率', color: 'bg-accent-amber-muted text-muted-foreground border-accent-amber/15' },
+  { tag: '学习', color: 'bg-accent-emerald-muted text-muted-foreground border-accent-emerald/15' },
+  { tag: '产品', color: 'bg-accent-pink-muted text-muted-foreground border-accent-pink/15' },
 ];
 
 function getTagColor(tag: string): string {
   const preset = TAG_PRESETS.find(p => p.tag === tag);
   if (preset) return preset.color;
   const colors = [
-    'bg-muted text-foreground border-border/50',
-    'bg-accent-purple-muted text-accent-purple border-accent-purple/20',
-    'bg-accent-emerald-muted text-accent-emerald border-accent-emerald/20',
-    'bg-destructive/12 text-destructive border-destructive/20',
+    'bg-muted text-muted-foreground border-border/30',
+    'bg-accent-purple-muted text-muted-foreground border-accent-purple/15',
+    'bg-accent-emerald-muted text-muted-foreground border-accent-emerald/15',
+    'bg-destructive/10 text-muted-foreground border-destructive/15',
   ];
   let hash = 0;
   for (let i = 0; i < tag.length; i++) hash = tag.charCodeAt(i) + ((hash << 5) - hash);
@@ -63,8 +65,6 @@ export function BasicSection({ resource }: Props) {
   const [avatarUrl, setAvatarUrl] = useState('');
   const [avatarTab, setAvatarTab] = useState<'emoji' | 'image'>('emoji');
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [model, setModel] = useState(resource.model || 'claude-4-opus');
-  const [modelPickerOpen, setModelPickerOpen] = useState(false);
 
   // Tags state — dropdown multi-select
   const [tags, setTags] = useState<string[]>(resource.tags || ['标签']);
@@ -80,17 +80,16 @@ export function BasicSection({ resource }: Props) {
 
   return (
     <div className="max-w-3xl space-y-5">
-      {/* Row 1: 头像与名称 + 模型 — two-row form with aligned label band */}
+      {/* 头像与名称 — full-width row. 模型 lives on its own row below
+          (via the page's `space-y-5`) so it can take the full container
+          width without competing with the avatar + name combo. */}
       <div>
-        <div className="flex items-center justify-between gap-3 mb-1.5">
-          <label className="text-sm text-foreground/85">头像与名称</label>
-          <label className="text-sm text-foreground/85 w-[220px] flex-shrink-0">模型</label>
-        </div>
-        <div className="flex items-center gap-3">
-          <Popover>
+          <label className="text-sm text-muted-foreground mb-1.5 block">头像与名称</label>
+          <div className="flex items-center gap-3 min-w-0">
+            <Popover>
             <PopoverTrigger asChild>
               <button type="button"
-                className="w-11 h-11 rounded-xl bg-accent/50 flex items-center justify-center text-xl flex-shrink-0 border border-border/20 overflow-hidden hover:border-border/40 transition-colors">
+                className="w-9 h-9 rounded-lg bg-accent/50 flex items-center justify-center text-lg flex-shrink-0 border border-border/60 overflow-hidden hover:border-border transition-colors">
                 {avatarType === 'image' && avatarUrl ? (
                   <img src={avatarUrl} alt="avatar" className="w-full h-full object-cover" />
                 ) : (
@@ -116,7 +115,7 @@ export function BasicSection({ resource }: Props) {
                   );
                 })}
               </div>
-              <div className="h-px bg-border/30 mt-1.5" />
+              <Separator opacity={30} className="mt-1.5" />
               {avatarTab === 'emoji' && (
                 <div className="grid grid-cols-8 gap-1 p-2 max-h-[260px] overflow-y-auto scrollbar-thin">
                   {AVATAR_OPTIONS.map(a => (
@@ -167,43 +166,23 @@ export function BasicSection({ resource }: Props) {
           </Popover>
           <Input value={name} onChange={e => setName(e.target.value)}
             placeholder="助手名称"
-            className="flex-1 min-w-0 h-11 px-3 rounded-xl border-border/20 bg-accent/15 text-xs text-foreground focus:border-border/40 focus:bg-accent/15 transition-all" />
-          <Popover open={modelPickerOpen} onOpenChange={setModelPickerOpen}>
-            <PopoverTrigger asChild>
-              <Button
-                variant="outline"
-                className="flex-shrink-0 justify-between gap-2 h-11 px-3 text-xs border-border/20 bg-accent/15 hover:bg-accent/25 w-[220px] rounded-xl"
-              >
-                <span className="truncate text-foreground">
-                  {ASSISTANT_MODELS.find(m => m.id === model)?.name || model}
-                </span>
-                <ChevronDown
-                  size={12}
-                  className={`text-muted-foreground/50 flex-shrink-0 transition-transform ${modelPickerOpen ? 'rotate-180' : ''}`}
-                />
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent align="end" className="p-0 w-[480px]">
-              <ModelPickerPanel
-                selectedModels={[model]}
-                onSelectModel={setModel}
-                multiModel={false}
-                onToggleMultiModel={() => {}}
-                onClose={() => setModelPickerOpen(false)}
-                showMultiModelToggle={false}
-              />
-            </PopoverContent>
-          </Popover>
-        </div>
+            className="flex-1 min-w-0 h-9 px-3 py-1.5 rounded-lg border border-border/60 bg-accent/15 text-xs md:text-xs text-foreground focus:border-border focus:bg-accent/15 transition-all" />
+          </div>
       </div>
 
-      {/* Row 2: 简介 (full width) */}
+      {/* 模型选择已迁移到「模型设置」tab；BasicSection 只保留身份信息。 */}
+
+      {/* 简介 (full width) */}
       <FieldGroup label="简介">
-        <Textarea value={description} onChange={e => setDescription(e.target.value)} rows={3}
-          className="text-sm resize-none" />
+        <Textarea
+          value={description}
+          onChange={e => setDescription(e.target.value)}
+          rows={3}
+          className="w-full min-h-[80px] px-3 py-2 rounded-lg border border-border/60 bg-accent/15 text-xs text-foreground placeholder:text-muted-foreground/60 shadow-none focus-visible:border-border focus-visible:ring-0 resize-none"
+        />
       </FieldGroup>
 
-      {/* Tags — full width */}
+      {/* Tags — full width, same field styling */}
       <FieldGroup label="标签">
         <Combobox
           multiple
@@ -214,10 +193,35 @@ export function BasicSection({ resource }: Props) {
           placeholder="选择标签…"
           searchPlaceholder="搜索标签…"
           emptyText="没有匹配标签"
-          className="h-11 rounded-xl border-border/20 bg-accent/15 text-xs hover:bg-accent/20"
+          width="100%"
+          className="flex h-9 px-3 rounded-lg border border-border/60 bg-accent/15 dark:bg-accent/15 text-xs hover:bg-accent/40"
           renderOption={(opt) => {
             const preset = TAG_PRESETS.find(p => p.tag === opt.value);
             return <span className={`px-1.5 py-[1px] rounded-md text-xs border ${preset?.color ?? ''}`}>{opt.label}</span>;
+          }}
+          renderValue={(val) => {
+            const selected = Array.isArray(val) ? val : (val ? [val] : []);
+            if (selected.length === 0) return null;
+            return (
+              <div className="flex flex-wrap gap-1 flex-1 min-w-0">
+                {selected.map(t => {
+                  const color = getTagColor(t);
+                  return (
+                    <span key={t} className={`inline-flex items-center gap-1 px-1.5 py-[2px] rounded-md text-xs border ${color}`}>
+                      {t}
+                      <button
+                        type="button"
+                        onClick={(e) => { e.stopPropagation(); setTags(prev => prev.filter(x => x !== t)); }}
+                        aria-label={`移除 ${t}`}
+                        className="opacity-50 hover:opacity-100 transition-opacity"
+                      >
+                        <X size={9} />
+                      </button>
+                    </span>
+                  );
+                })}
+              </div>
+            );
           }}
         />
       </FieldGroup>
@@ -230,7 +234,7 @@ export function BasicSection({ resource }: Props) {
 function FieldGroup({ label, children }: { label: React.ReactNode; children: React.ReactNode }) {
   return (
     <div>
-      <label className="text-sm text-foreground/85 mb-1.5 block">{label}</label>
+      <label className="text-sm text-muted-foreground mb-1.5 block">{label}</label>
       {children}
     </div>
   );
@@ -245,7 +249,7 @@ function ToggleRow({ label, hint, checked, onCheckedChange }: {
   return (
     <div className="flex items-center justify-between gap-3 py-3">
       <div className="flex items-center gap-1.5 min-w-0">
-        <label className="text-sm text-foreground/85">{label}</label>
+        <label className="text-sm text-muted-foreground">{label}</label>
         {hint && <InfoTip text={hint} />}
       </div>
       <Switch checked={checked} onCheckedChange={onCheckedChange} className="flex-shrink-0" />
@@ -270,7 +274,7 @@ function ParamRow({
     <div className="py-3">
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-1.5 min-w-0">
-          <label className="text-sm text-foreground/85">
+          <label className="text-sm text-muted-foreground">
             {label}
             {valueLabel != null && enabled && (
               <span className="text-muted-foreground/40 ml-1.5 tabular-nums">{valueLabel}</span>

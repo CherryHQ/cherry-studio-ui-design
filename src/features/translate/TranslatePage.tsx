@@ -7,6 +7,7 @@ import {
   Star, Repeat, Clock, ChevronRight, PenLine, Plus
 } from 'lucide-react';
 import { Button, Input, Switch, Textarea, InlineSelect, Popover, PopoverTrigger, PopoverContent, EmptyState, SearchInput, Checkbox } from '@cherry-studio/ui';
+import { Separator } from "@cherry-studio/ui";
 import { Tooltip } from '@/app/components/Tooltip';
 import { motion, AnimatePresence } from 'motion/react';
 import { copyToClipboard } from '@/app/lib/utils/clipboard';
@@ -362,7 +363,7 @@ export function TranslatePage() {
               {/* Floating swap button on the divider, aligned with header strip */}
               <Tooltip content="互换语言" side="bottom">
                 <Button variant="ghost" size="icon-xs" onClick={handleSwapLangs}
-                  className="absolute left-1/2 -translate-x-1/2 top-[5px] z-10 w-6 h-6 rounded-full bg-background border border-border/40 shadow-sm text-muted-foreground/70 hover:text-foreground hover:bg-accent/40">
+                  className="absolute left-1/2 -translate-x-1/2 top-[5px] z-10 w-6 h-6 rounded-full bg-background border border-border/40 shadow-sm text-muted-foreground/80 hover:text-foreground hover:bg-accent/40">
                   <ArrowLeftRight size={11} />
                 </Button>
               </Tooltip>
@@ -423,7 +424,7 @@ export function TranslatePage() {
                 </div>
               </div>
               {/* Center divider - subtle */}
-              <div className="w-px bg-border/30 flex-shrink-0" />
+              <Separator orientation="vertical" opacity={30} className="flex-shrink-0" />
               {/* Target */}
               <div className="flex-1 flex flex-col min-h-0 bg-muted/10 rounded-br-2xl">
                 {/* Target header — language picker (centered with label) */}
@@ -818,7 +819,7 @@ export function TranslatePage() {
                             className="w-5 h-5 text-muted-foreground/40 hover:text-foreground flex-shrink-0"><X size={10} /></Button>
                         </div>
                       ) : (
-                        <div key={i} className="flex items-center gap-2 px-2 py-[5px] rounded-lg hover:bg-muted/30 group transition-colors">
+                        <div key={i} className="flex items-center gap-2 px-2 py-[5px] rounded-lg hover:bg-accent/40 group transition-colors">
                           <span className="text-sm text-foreground truncate min-w-0">{lang.name}</span>
                           <span className="text-xs text-muted-foreground/50 font-mono flex-shrink-0">{lang.code}</span>
                           <span className="flex-1" />
@@ -855,7 +856,7 @@ export function TranslatePage() {
                       </div>
                     ) : (
                       <Button variant="ghost" size="inline" onClick={() => setAddingLang(true)}
-                        className="w-full flex items-center justify-center gap-1 py-1.5 rounded-lg border border-dashed border-border/40 text-xs text-muted-foreground/40 hover:text-muted-foreground hover:border-border/60">
+                        className="w-full flex items-center justify-center gap-1 py-1.5 rounded-lg border border-dashed border-border/40 text-xs text-muted-foreground/40 hover:text-muted-foreground hover:border-border/50">
                         <Plus size={11} />
                         <span>添加语言</span>
                       </Button>

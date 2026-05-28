@@ -9,11 +9,9 @@ import {
   Button, Input,
   ContextMenu, ContextMenuTrigger, ContextMenuContent, ContextMenuItem, ContextMenuSeparator,
 } from '@cherry-studio/ui';
+import { Separator } from "@cherry-studio/ui";
 import type { Message } from '@/app/types/chat';
 import type { BranchNode, LayoutNode } from '@/app/types/assistant';
-
-// Backward-compatible alias
-type AssistantMessage = Message;
 
 // ===========================
 // Constants
@@ -146,7 +144,7 @@ function buildDefaultTree(): BranchNode {
   };
 }
 
-function buildFromMessages(messages: AssistantMessage[], modelName: string): BranchNode {
+function buildFromMessages(messages: Message[], modelName: string): BranchNode {
   if (messages.length === 0) return buildDefaultTree();
 
   const root: BranchNode = {
@@ -247,7 +245,7 @@ function collectAncestorIds(node: BranchNode, targetId: string): string[] | null
 }
 
 /** Get messages up to and including the node with given ID. */
-function getMessagesUpToNode(messages: AssistantMessage[], nodeId: string, tree: BranchNode): AssistantMessage[] {
+function getMessagesUpToNode(messages: Message[], nodeId: string, tree: BranchNode): Message[] {
   // The root node uses messages[0], subsequent nodes use messages[1..N] in order.
   // Node IDs match message IDs (except root which is 'root').
   const ancestorIds = collectAncestorIds(tree, nodeId);
@@ -255,7 +253,7 @@ function getMessagesUpToNode(messages: AssistantMessage[], nodeId: string, tree:
 
   // Collect message IDs from ancestor path (skip 'root' which maps to messages[0])
   const nodeIdSet = new Set(ancestorIds);
-  const result: AssistantMessage[] = [];
+  const result: Message[] = [];
 
   // First message is always included (root)
   if (messages.length > 0) result.push(messages[0]);
@@ -580,7 +578,7 @@ function TreeNode({
 
               {/* Collapse indicator */}
               {isNodeCollapsed && hasChildren && (
-                <div className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-4 h-3 rounded-b-md bg-muted-foreground/5 border border-t-0 border-border/10 flex items-center justify-center">
+                <div className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-4 h-3 rounded-b-md bg-muted-foreground/5 border border-t-0 border-border/15 flex items-center justify-center">
                   <span className="text-xs text-muted-foreground/50">{childCount}</span>
                 </div>
               )}
@@ -660,7 +658,7 @@ function HoverTooltip({ info }: { info: { x: number; y: number; preview: string 
 // ===========================
 
 interface BranchTreePanelProps {
-  messages: AssistantMessage[];
+  messages: Message[];
   onClose: () => void;
   assistantName: string;
   modelName: string;
@@ -668,7 +666,7 @@ interface BranchTreePanelProps {
   /** Called when active branch changes (e.g. new node created, branch switched) */
   onBranchChange?: (branchId: string, newNode?: BranchNode) => void;
   /** Called when user copies a branch node as a new topic. Receives messages up to (and including) the node. */
-  onCopyAsTopic?: (messagesUpToNode: AssistantMessage[], sourceNodeId: string) => void;
+  onCopyAsTopic?: (messagesUpToNode: Message[], sourceNodeId: string) => void;
 }
 
 export function BranchTreePanel({ messages, onClose, assistantName, modelName, topicName, onBranchChange, onCopyAsTopic }: BranchTreePanelProps) {
@@ -897,7 +895,7 @@ export function BranchTreePanel({ messages, onClose, assistantName, modelName, t
                   className={`gap-1 px-2 py-[3px] text-xs whitespace-nowrap flex-shrink-0 ${
                     isCurrent
                       ? 'bg-accent/25 text-foreground border border-border/30'
-                      : 'text-muted-foreground/40 hover:text-foreground hover:bg-accent/15 border border-transparent'
+                      : 'text-muted-foreground/40 hover:text-foreground hover:bg-accent/40 border border-transparent'
                   }`}
                 >
                   <GitBranch size={8} className={`flex-shrink-0 ${isCurrent ? 'text-muted-foreground' : 'text-muted-foreground/50'}`} />
@@ -1056,7 +1054,7 @@ export function BranchTreePanel({ messages, onClose, assistantName, modelName, t
         </div>
 
         {/* Bottom-left: Zoom & expand/collapse controls */}
-        <div className="absolute bottom-3 left-3 flex flex-col bg-card/90 border border-border/25 rounded-lg overflow-hidden shadow-sm">
+        <div className="absolute bottom-3 left-3 flex flex-col bg-card/90 border border-border/20 rounded-lg overflow-hidden shadow-sm">
           <Button variant="ghost" size="icon-xs" onClick={expandAll} className="p-1.5 rounded-none border-b border-border/15" title={'\u5168\u90e8\u5c55\u5f00'}>
             <UnfoldVertical size={11} className="text-muted-foreground" />
           </Button>
@@ -1227,7 +1225,7 @@ export function BranchTreePanel({ messages, onClose, assistantName, modelName, t
                 showToast('已创建新分支并切换');
                 setNodeMenu(null);
               }}
-              className="flex items-center gap-2.5 w-full px-2.5 py-[5px] text-xs text-foreground/80 hover:bg-accent/30 rounded-md transition-colors cursor-pointer text-left"
+              className="flex items-center gap-2.5 w-full px-2.5 py-[5px] text-xs text-muted-foreground/80 hover:bg-accent/40 rounded-md transition-colors cursor-pointer text-left"
             >
               <Plus size={11} className="text-cherry-primary" />
               创建新节点
@@ -1241,7 +1239,7 @@ export function BranchTreePanel({ messages, onClose, assistantName, modelName, t
               setNodeMenu(null);
             }}
             disabled={activeBranch === nodeMenu.node.branchId}
-            className="flex items-center gap-2.5 w-full px-2.5 py-[5px] text-xs text-foreground/80 hover:bg-accent/30 rounded-md transition-colors cursor-pointer text-left disabled:opacity-40 disabled:cursor-default"
+            className="flex items-center gap-2.5 w-full px-2.5 py-[5px] text-xs text-muted-foreground/80 hover:bg-accent/40 rounded-md transition-colors cursor-pointer text-left disabled:opacity-40 disabled:cursor-default"
           >
             <Star size={11} className="text-accent-amber/70" />
             设置为活跃分支
@@ -1258,13 +1256,13 @@ export function BranchTreePanel({ messages, onClose, assistantName, modelName, t
               setNodeMenu(null);
             }}
             disabled={pinnedBranches.has(nodeMenu.node.branchId)}
-            className="flex items-center gap-2.5 w-full px-2.5 py-[5px] text-xs text-foreground/80 hover:bg-accent/30 rounded-md transition-colors cursor-pointer text-left disabled:opacity-40 disabled:cursor-default"
+            className="flex items-center gap-2.5 w-full px-2.5 py-[5px] text-xs text-muted-foreground/80 hover:bg-accent/40 rounded-md transition-colors cursor-pointer text-left disabled:opacity-40 disabled:cursor-default"
           >
             <Pencil size={11} className="text-muted-foreground" />
             固定为标签
             {pinnedBranches.has(nodeMenu.node.branchId) && <Check size={9} className="text-cherry-primary ml-auto" />}
           </button>
-          <div className="h-px bg-border/30 my-0.5" />
+          <Separator opacity={30} className="my-0.5" />
           <button
             onClick={() => {
               if (onCopyAsTopic) {
@@ -1274,7 +1272,7 @@ export function BranchTreePanel({ messages, onClose, assistantName, modelName, t
               showToast('已复制为新话题');
               setNodeMenu(null);
             }}
-            className="flex items-center gap-2.5 w-full px-2.5 py-[5px] text-xs text-foreground/80 hover:bg-accent/30 rounded-md transition-colors cursor-pointer text-left"
+            className="flex items-center gap-2.5 w-full px-2.5 py-[5px] text-xs text-muted-foreground/80 hover:bg-accent/40 rounded-md transition-colors cursor-pointer text-left"
           >
             <Copy size={11} className="text-muted-foreground" />
             复制为新话题

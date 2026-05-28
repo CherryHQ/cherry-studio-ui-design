@@ -130,7 +130,7 @@ function ProcessDetail({ step }: { step: WorkflowStep }) {
           )}
           <div className="py-0.5">
             {step.details.map((item, i) => (
-              <div key={i} className="flex items-center gap-2 px-3 py-[4px] hover:bg-muted/80 transition-colors">
+              <div key={i} className="flex items-center gap-2 px-3 py-[4px] hover:bg-accent/50 transition-colors">
                 {item.icon && (
                   <span className="text-xs w-4 h-4 flex items-center justify-center flex-shrink-0 rounded bg-muted">
                     {item.icon}
@@ -164,14 +164,14 @@ export function WorkflowPanel({ steps, inline = false }: { steps: WorkflowStep[]
   return (
     <div className={inline
       ? 'overflow-hidden'
-      : 'mx-3 mt-3 mb-1 rounded-xl border border-border/60 shadow-[0_1px_4px_var(--color-border)] bg-card overflow-hidden flex-shrink-0'
+      : 'mx-3 mt-3 mb-1 rounded-xl border border-border/50 shadow-[0_1px_4px_var(--color-border)] bg-card overflow-hidden flex-shrink-0'
     }>
       {/* Collapsible header — hidden in inline mode (parent supplies its own header) */}
       {!inline && (
         <Button size="inline"
           variant="ghost"
           onClick={() => setPanelExpanded(!panelExpanded)}
-          className="w-full justify-start gap-2 px-3.5 py-2.5 font-normal hover:bg-muted/50 rounded-none"
+          className="w-full justify-start gap-2 px-3.5 py-2.5 font-normal hover:bg-accent/40 rounded-none"
         >
           <motion.div
             animate={{ rotate: panelExpanded ? 0 : -90 }}
@@ -218,7 +218,7 @@ export function WorkflowPanel({ steps, inline = false }: { steps: WorkflowStep[]
                 <Button size="inline"
                   variant="ghost"
                   onClick={(e) => { e.stopPropagation(); setProcessExpanded(!processExpanded); }}
-                  className="w-full justify-start gap-2 px-4 py-2 font-normal hover:bg-muted/50 rounded-none border-t border-border/30"
+                  className="w-full justify-start gap-2 px-4 py-2 font-normal hover:bg-accent/40 rounded-none border-t border-border/30"
                 >
                   <motion.div
                     animate={{ rotate: processExpanded ? 0 : -90 }}

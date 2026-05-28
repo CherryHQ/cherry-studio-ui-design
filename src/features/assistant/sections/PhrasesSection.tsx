@@ -67,11 +67,11 @@ export function PhrasesSection() {
 
       <div>
         <div className="flex items-center justify-between mb-2">
-          <label className="text-sm text-foreground/85">已引用 Prompt</label>
+          <label className="text-sm text-muted-foreground">已引用 Prompt</label>
           <Popover open={showPicker} onOpenChange={(v) => { setShowPicker(v); if (!v) setPickerSearch(''); }}>
             <PopoverTrigger asChild>
               <Button variant="outline" size="xs"
-                className="flex items-center gap-1 h-7 px-2.5 rounded-md text-xs text-muted-foreground/70 hover:text-foreground hover:bg-accent/15 border border-border/30">
+                className="flex items-center gap-1 h-7 px-2.5 rounded-md text-xs text-muted-foreground/80 hover:text-foreground hover:bg-accent/40 border border-border/30">
                 <Plus size={10} /> 引用 Prompt
               </Button>
             </PopoverTrigger>
@@ -82,7 +82,7 @@ export function PhrasesSection() {
                   onChange={setPickerSearch}
                   placeholder="搜索 Prompt…"
                   clearable
-                  wrapperClassName="flex items-center gap-1.5 px-2 h-7 rounded-md bg-muted/30 border border-border/25"
+                  wrapperClassName="flex items-center gap-1.5 px-2 h-7 rounded-md bg-muted/30 border border-border/20"
                 />
               </div>
               <div className="max-h-[260px] overflow-y-auto scrollbar-thin space-y-1">
@@ -101,7 +101,7 @@ export function PhrasesSection() {
                       <span className="text-sm">{p.avatar}</span>
                       <div className="flex-1 min-w-0">
                         <div className="text-xs text-foreground truncate">{p.name}</div>
-                        <div className="text-[11px] text-muted-foreground/55 truncate">{p.description}</div>
+                        <div className="text-xs text-muted-foreground/50 truncate">{p.description}</div>
                       </div>
                     </button>
                   ))
@@ -117,45 +117,13 @@ export function PhrasesSection() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
             {linkedItems.map(p => (
               <div key={p.id}
-                className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg border border-border/15 bg-accent/15 group hover:border-border/30 transition-colors min-w-0">
-                <div className="w-7 h-7 rounded-md bg-accent/50 flex items-center justify-center text-xs flex-shrink-0">
-                  {p.avatar}
-                </div>
+                className="flex items-center gap-2.5 px-3 py-2 rounded-lg border border-border/60 bg-accent/15 group hover:border-border hover:bg-accent/40 transition-colors min-w-0">
+                <FileText size={11} className="text-muted-foreground/60 flex-shrink-0" />
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-xs text-foreground truncate">{p.name}</span>
-                    {p.tags.slice(0, 2).map(t => (
-                      <span key={t} className={`text-[9px] px-1 py-px rounded border ${tagClass(t)} flex-shrink-0`}>{t}</span>
-                    ))}
-                  </div>
-                  <div className="text-xs text-muted-foreground/55 truncate">{p.description}</div>
+                  <span className="text-sm text-foreground truncate">{p.name}</span>
                 </div>
-                {/* Preview popover — shows the full Prompt body */}
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button variant="ghost" size="icon-xs" title="预览内容"
-                      className="rounded-md text-muted-foreground/40 hover:text-foreground hover:bg-accent/40 opacity-0 group-hover:opacity-100 transition-all">
-                      <Eye size={11} />
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent side="left" align="start" sideOffset={6} className="w-[340px] p-0 overflow-hidden">
-                    <div className="flex items-center justify-between gap-2 px-3 py-2 border-b border-border/20">
-                      <div className="flex items-center gap-1.5 min-w-0">
-                        <span className="text-sm flex-shrink-0">{p.avatar}</span>
-                        <span className="text-xs font-medium text-foreground truncate">{p.name}</span>
-                      </div>
-                      <Button variant="ghost" size="icon-xs" onClick={() => handleCopy(p.id, p.content || '')}
-                        className="text-muted-foreground/60 hover:text-foreground" title="复制 Prompt">
-                        {copiedId === p.id ? <Check size={11} className="text-primary" /> : <Copy size={11} />}
-                      </Button>
-                    </div>
-                    <pre className="max-h-[260px] overflow-y-auto scrollbar-thin px-3 py-2.5 text-[11px] font-mono leading-relaxed text-foreground/85 whitespace-pre-wrap break-words">
-                      {p.content || '（无正文）'}
-                    </pre>
-                  </PopoverContent>
-                </Popover>
                 <Button variant="ghost" size="icon-xs" onClick={() => toggleLink(p.id)} title="取消引用"
-                  className="rounded-md text-muted-foreground/40 hover:text-destructive hover:bg-destructive/10 opacity-0 group-hover:opacity-100 transition-all">
+                  className="rounded-md text-muted-foreground/40 hover:text-destructive hover:bg-destructive/10 opacity-0 group-hover:opacity-100 transition-all flex-shrink-0">
                   <Trash2 size={11} />
                 </Button>
               </div>

@@ -357,7 +357,7 @@ export function KnowledgeSidebar({
                             variant="ghost"
                             size="icon-xs"
                             onClick={e => handleKbDots(e, kb.id)}
-                            className="w-4 h-4 rounded text-muted-foreground/40 hover:text-foreground hover:bg-muted opacity-0 group-hover/kb:opacity-100 transition-all flex-shrink-0"
+                            className="w-4 h-4 rounded text-muted-foreground/40 hover:text-foreground hover:bg-accent/40 opacity-0 group-hover/kb:opacity-100 transition-all flex-shrink-0"
                           >
                             <MoreHorizontal size={9} />
                           </Button>
@@ -403,7 +403,7 @@ export function KnowledgeSidebar({
         <Button size="inline"
           variant="outline"
           onClick={() => setShowCreateDialog(true)}
-          className="w-full flex items-center justify-center gap-1 py-[5px] text-xs text-muted-foreground hover:text-foreground border-dashed border-border/40 hover:border-border/70"
+          className="w-full flex items-center justify-center gap-1 py-[5px] text-xs text-muted-foreground hover:text-foreground border-dashed border-border/40 hover:border-border/50"
         >
           <Plus size={11} strokeWidth={1.8} />
           <span>新建知识库</span>

@@ -28,49 +28,59 @@ import {
   Select, SelectTrigger, SelectValue, SelectContent, SelectItem,
 } from '@cherrystudio/ui/components/primitives/select';
 // V2 doesn't ship SearchInput / Typography / EmptyState / SimpleTooltip / Switch
-import { Input, Textarea, EmptyState, SearchInput, Typography, SimpleTooltip, Switch, Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@cherry-studio/ui';
+import {
+  Input, Textarea, EmptyState, SearchInput, Typography, SimpleTooltip, Switch,
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Separator,
+} from '@cherry-studio/ui';
 import { motion, AnimatePresence } from 'motion/react';
 import type { ResourceItem, MCPServerStatus } from '@/app/types';
 import { PromptSection } from '@/features/assistant/sections/PromptSection';
 import { AVATAR_OPTIONS } from '@/app/config/constants';
 import { ModelPickerPanel } from '@/app/components/shared/ModelPickerPanel';
 import { ASSISTANT_MODELS } from '@/app/config/models';
+import { InstallIntegrationDialog } from '@/features/market/InstallIntegrationDialog';
+import { INTEGRATION_LOGO } from '@/features/market/catalog';
 
 interface Props { resource: ResourceItem; onBack: () => void; inModal?: boolean }
 // The 工具 sidebar entry is a collapsible group: the four toolchain
 // sub-tabs each become a separate sidebar item under it. Other entries
 // stay flat.
 type ToolchainTabId = 'tools' | 'mcp' | 'skills' | 'integrations';
-type Section = 'basic' | 'prompt' | 'knowledge' | 'collaboration' | 'advanced' | `toolchain:${ToolchainTabId}`;
+type Section = 'basic' | 'models' | 'prompt' | 'knowledge' | 'notes' | 'collaboration' | 'advanced' | `toolchain:${ToolchainTabId}`;
 
-const TOOLCHAIN_CHILDREN: { id: ToolchainTabId; label: string; icon: React.ElementType }[] = [
-  { id: 'tools',        label: '内置工具',   icon: Wrench },
-  { id: 'mcp',          label: 'MCP Server', icon: Cable },
-  { id: 'skills',       label: 'Skills',     icon: Sparkles },
-  { id: 'integrations', label: '连接器',     icon: Plug },
+// 拓展 group children — Skills 排第一位（最高频）。Knowledge / notes
+// 走自己的 dedicated section；toolchain 四个子 tab 走 <ToolchainSection
+// controlledTab>。
+const EXPANSION_CHILDREN: { id: Section; label: string; icon: React.ElementType }[] = [
+  { id: 'toolchain:skills',       label: 'Skills',     icon: Sparkles },
+  { id: 'toolchain:tools',        label: '内置工具',   icon: Wrench },
+  { id: 'toolchain:mcp',          label: 'MCP Server', icon: Cable },
+  { id: 'toolchain:integrations', label: '连接器',     icon: Plug },
+  { id: 'knowledge',              label: '知识库',     icon: BookOpen },
+  { id: 'notes',                  label: '笔记',       icon: FileEdit },
 ];
 
-// 'advanced' is rendered as the last entry below the collapsible
-// 拓展 group; the other three sit at the top of the sidebar.
+// Flat top-level entries above the collapsible 拓展 group + the
+// 高级设置 tail. 模型设置 split out from BasicSection per design feedback.
 const sections: { id: Section; label: string; icon: React.ElementType }[] = [
   { id: 'basic',         label: '基础设置', icon: Settings },
+  { id: 'models',        label: '模型设置', icon: Layers },
   { id: 'prompt',        label: '提示词',   icon: FileText },
-  { id: 'knowledge',     label: '知识库',  icon: BookOpen },
-  { id: 'collaboration', label: '协作',    icon: Users2 },
+  { id: 'collaboration', label: '协作',     icon: Users2 },
   { id: 'advanced',      label: '高级设置', icon: Settings2 },
 ];
 
 
 const TAG_PRESETS: { tag: string; color: string }[] = [
-  { tag: '编程', color: 'bg-accent-cyan-muted text-accent-cyan border-accent-cyan/20' },
-  { tag: '数据分析', color: 'bg-accent-indigo-muted text-accent-indigo border-accent-indigo/20' },
-  { tag: '写作', color: 'bg-warning-muted text-warning border-warning/20' },
-  { tag: '工具', color: 'bg-accent-orange-muted text-accent-orange border-accent-orange/20' },
-  { tag: '自动化', color: 'bg-muted text-foreground border-border/50' },
-  { tag: '研究', color: 'bg-accent-violet-muted text-accent-violet border-accent-violet/20' },
+  { tag: '编程', color: 'bg-accent-cyan-muted text-muted-foreground border-accent-cyan/15' },
+  { tag: '数据分析', color: 'bg-accent-indigo-muted text-muted-foreground border-accent-indigo/15' },
+  { tag: '写作', color: 'bg-warning-muted text-muted-foreground border-warning/15' },
+  { tag: '工具', color: 'bg-accent-orange-muted text-muted-foreground border-accent-orange/15' },
+  { tag: '自动化', color: 'bg-muted text-muted-foreground border-border/30' },
+  { tag: '研究', color: 'bg-accent-violet-muted text-muted-foreground border-accent-violet/15' },
 ];
 function getTagColor(tag: string): string {
-  return TAG_PRESETS.find(p => p.tag === tag)?.color || 'bg-muted text-foreground border-border/50';
+  return TAG_PRESETS.find(p => p.tag === tag)?.color || 'bg-muted text-muted-foreground border-border/30';
 }
 
 // ===========================
@@ -101,14 +111,14 @@ export function AgentConfig({ resource, onBack, inModal = false }: Props) {
       )}
       <div className="flex flex-1 min-h-0">
         <div className="w-[150px] flex-shrink-0 border-r border-border/15 p-2 overflow-y-auto">
-          {/* Flat entries: 基础设置 / 提示词 / 知识库 (advanced moved
-              below the 拓展 group). */}
+          {/* Flat entries: 基础设置 / 提示词 (advanced moved below
+              the 拓展 group; knowledge + notes now live inside it). */}
           {sections.filter(s => s.id !== 'advanced').map(s => {
             const active = activeSection === s.id;
             const Icon = s.icon;
             return (
               <Button variant="ghost" key={s.id} onClick={() => setActiveSection(s.id)}
-                className={`w-full justify-start gap-2 px-3 py-2 mb-0.5 rounded-lg transition-colors ${active ? 'bg-accent/50 text-foreground font-medium' : 'font-normal text-muted-foreground/65 hover:text-foreground hover:bg-muted/40'}`}>
+                className={`w-full justify-start gap-2 px-3 py-2 mb-0.5 rounded-lg transition-colors ${active ? 'bg-accent/50 text-foreground font-medium' : 'font-normal text-muted-foreground/60 hover:text-foreground hover:bg-accent/40'}`}>
                 <Icon size={13} strokeWidth={1.5} className={`flex-shrink-0 ${active ? 'text-muted-foreground' : 'text-muted-foreground/40'}`} />
                 <span className="text-sm">{s.label}</span>
               </Button>
@@ -119,12 +129,12 @@ export function AgentConfig({ resource, onBack, inModal = false }: Props) {
               four toolchain sub-tabs. Sits at the bottom of the sidebar
               since its children form a longer secondary nav. */}
           {(() => {
-            const childActive = typeof activeSection === 'string' && activeSection.startsWith('toolchain:');
+            const childActive = EXPANSION_CHILDREN.some(c => c.id === activeSection);
             return (
               <>
                 <Button variant="ghost"
                   onClick={() => setToolchainExpanded(v => !v)}
-                  className={`w-full justify-start gap-2 px-3 py-2 mb-0.5 rounded-lg transition-colors ${childActive ? 'bg-accent/50 text-foreground font-medium' : 'font-normal text-muted-foreground/65 hover:text-foreground hover:bg-muted/40'}`}>
+                  className={`w-full justify-start gap-2 px-3 py-2 mb-0.5 rounded-lg transition-colors ${childActive ? 'bg-accent/50 text-foreground font-medium' : 'font-normal text-muted-foreground/60 hover:text-foreground hover:bg-accent/40'}`}>
                   <Blocks size={13} strokeWidth={1.5} className={`flex-shrink-0 ${childActive ? 'text-muted-foreground' : 'text-muted-foreground/40'}`} />
                   <span className="text-sm flex-1 text-left">拓展</span>
                   <ChevronDown size={11} className={`flex-shrink-0 text-muted-foreground/40 transition-transform ${toolchainExpanded ? '' : '-rotate-90'}`} />
@@ -140,15 +150,14 @@ export function AgentConfig({ resource, onBack, inModal = false }: Props) {
                       className="overflow-hidden"
                     >
                       <div className="space-y-0.5">
-                        {TOOLCHAIN_CHILDREN.map(c => {
-                          const sid: Section = `toolchain:${c.id}`;
-                          const isActive = activeSection === sid;
+                        {EXPANSION_CHILDREN.map(c => {
+                          const isActive = activeSection === c.id;
                           const CIcon = c.icon;
                           return (
-                            <Button variant="ghost" key={c.id} onClick={() => setActiveSection(sid)}
-                              className={`w-full justify-start gap-2 px-3 py-1.5 mb-0.5 rounded-lg transition-colors ${isActive ? 'bg-accent/50 text-foreground font-medium' : 'font-normal text-muted-foreground/65 hover:text-foreground hover:bg-muted/40'}`}>
+                            <Button variant="ghost" key={c.id} onClick={() => setActiveSection(c.id)}
+                              className={`w-full justify-start gap-2 px-3 py-1.5 mb-0.5 rounded-lg transition-colors ${isActive ? 'bg-accent/50 text-foreground font-medium' : 'font-normal text-muted-foreground/60 hover:text-foreground hover:bg-accent/40'}`}>
                               <CIcon size={11} strokeWidth={1.5} className={`flex-shrink-0 ${isActive ? 'text-muted-foreground' : 'text-muted-foreground/40'}`} />
-                              <span className="text-[13px]">{c.label}</span>
+                              <span className="text-sm">{c.label}</span>
                             </Button>
                           );
                         })}
@@ -166,7 +175,7 @@ export function AgentConfig({ resource, onBack, inModal = false }: Props) {
             const Icon = s.icon;
             return (
               <Button variant="ghost" key={s.id} onClick={() => setActiveSection(s.id)}
-                className={`w-full justify-start gap-2 px-3 py-2 mb-0.5 rounded-lg transition-colors ${active ? 'bg-accent/50 text-foreground font-medium' : 'font-normal text-muted-foreground/65 hover:text-foreground hover:bg-muted/40'}`}>
+                className={`w-full justify-start gap-2 px-3 py-2 mb-0.5 rounded-lg transition-colors ${active ? 'bg-accent/50 text-foreground font-medium' : 'font-normal text-muted-foreground/60 hover:text-foreground hover:bg-accent/40'}`}>
                 <Icon size={13} strokeWidth={1.5} className={`flex-shrink-0 ${active ? 'text-muted-foreground' : 'text-muted-foreground/40'}`} />
                 <span className="text-sm">{s.label}</span>
               </Button>
@@ -177,8 +186,10 @@ export function AgentConfig({ resource, onBack, inModal = false }: Props) {
           <AnimatePresence mode="wait">
             <motion.div key={activeSection} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.2 }}>
               {activeSection === 'basic' && <AgentBasicSection resource={resource} />}
+              {activeSection === 'models' && <AgentModelsSection />}
               {activeSection === 'prompt' && <AgentPromptSection />}
               {activeSection === 'knowledge' && <KnowledgeBaseSection />}
+              {activeSection === 'notes' && <AgentNotesSection />}
               {typeof activeSection === 'string' && activeSection.startsWith('toolchain:') && (
                 <ToolchainSection
                   onExplore={onBack}
@@ -196,7 +207,7 @@ export function AgentConfig({ resource, onBack, inModal = false }: Props) {
           <AnimatePresence>
             {saved
               ? <motion.span key="saved" initial={{ opacity: 0, x: 6 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0 }} className="text-xs text-cherry-primary mr-auto flex items-center gap-1"><CheckCircle2 size={11} />已保存</motion.span>
-              : <motion.span key="dirty" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="text-xs text-muted-foreground/55 mr-auto">有未保存的更改</motion.span>}
+              : <motion.span key="dirty" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="text-xs text-muted-foreground/50 mr-auto">有未保存的更改</motion.span>}
           </AnimatePresence>
           <Button variant="outline" size="xs" onClick={onBack} className="h-7 px-3 text-xs">取消</Button>
           <Button size="xs" onClick={handleSave} className="h-7 px-3 text-xs gap-1.5"><Save size={11} />保存</Button>
@@ -215,12 +226,12 @@ function ModelSelector({ label, value, onChange, hint }: { label: string; value:
   return (
     <div>
       <div className="flex items-center justify-between mb-1.5">
-        <label className="text-sm text-foreground/85">{label}</label>
-        <span className="text-[11px] text-muted-foreground/55">{hint}</span>
+        <label className="text-sm text-muted-foreground">{label}</label>
+        <span className="text-xs text-muted-foreground/50">{hint}</span>
       </div>
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
-          <Button variant="outline" className="w-full justify-between px-3 py-2 border-border/40 bg-muted/30 text-sm text-foreground hover:border-border/60 hover:bg-muted/40">
+          <Button variant="outline" className="w-full justify-between px-3 py-2 border-border/40 bg-muted/30 text-sm text-foreground hover:border-border/50 hover:bg-accent/40">
             <span className="truncate">{selected?.name || value}</span><ChevronDown size={10} className="text-muted-foreground/40 flex-shrink-0" />
           </Button>
         </PopoverTrigger>
@@ -250,30 +261,19 @@ function AgentBasicSection({ resource }: { resource: ResourceItem }) {
   const [avatarUrl, setAvatarUrl] = useState('');
   const [avatarTab, setAvatarTab] = useState<'emoji' | 'image'>('emoji');
   const fileInputRef2 = useRef<HTMLInputElement>(null);
-  const [tags, setTags] = useState<string[]>(resource.tags || ['工具']);
-  const [tagInput, setTagInput] = useState('');
-  const tagInputRef = useRef<HTMLInputElement>(null);
-  const [planningModel, setPlanningModel] = useState('claude-4-opus');
-  const [regularModel, setRegularModel] = useState('gpt-41');
-  const [fastModel, setFastModel] = useState('gemini-25-flash');
   // Agent runtime type — drives how the agent executes (terminal-native
   // Claude Code, Cherry's in-app runtime, or long-running background job)
   const [agentType, setAgentType] = useState<'claude-code' | 'cherry-runtime' | 'long-running'>('cherry-runtime');
-  const addTag = (tag: string) => { const t = tag.trim(); if (t && !tags.includes(t)) setTags(prev => [...prev, t]); setTagInput(''); };
-  const removeTag = (tag: string) => setTags(prev => prev.filter(t => t !== tag));
-  const togglePresetTag = (tag: string) => { if (tags.includes(tag)) removeTag(tag); else setTags(prev => [...prev, tag]); };
   return (
     <div className="max-w-3xl space-y-5">
-      <div>
-        <div className="flex items-center justify-between gap-3 mb-1.5">
-          <label className="text-sm text-foreground/85">头像与名称</label>
-          <label className="text-sm text-foreground/85 w-[160px] flex-shrink-0">类型</label>
-        </div>
-        <div className="flex items-center gap-3">
+      <div className="grid grid-cols-2 gap-3">
+        <div className="min-w-0">
+          <label className="text-sm text-muted-foreground mb-1.5 block">头像与名称</label>
+          <div className="flex items-center gap-3 min-w-0">
           <Popover>
             <PopoverTrigger asChild>
               <button type="button"
-                className="w-11 h-11 rounded-xl bg-accent/50 flex items-center justify-center text-xl flex-shrink-0 border border-border/20 overflow-hidden hover:border-border/40 transition-colors">
+                className="w-9 h-9 rounded-lg bg-accent/50 flex items-center justify-center text-lg flex-shrink-0 border border-border/60 overflow-hidden hover:border-border transition-colors">
                 {avatarType === 'image' && avatarUrl ? (
                   <img src={avatarUrl} alt="avatar" className="w-full h-full object-cover" />
                 ) : (
@@ -298,7 +298,7 @@ function AgentBasicSection({ resource }: { resource: ResourceItem }) {
                   );
                 })}
               </div>
-              <div className="h-px bg-border/30 mt-1.5" />
+              <Separator opacity={30} className="mt-1.5" />
               {avatarTab === 'emoji' && (
                 <div className="grid grid-cols-8 gap-1 p-2 max-h-[260px] overflow-y-auto scrollbar-thin">
                   {AVATAR_OPTIONS.map(a => (
@@ -340,9 +340,13 @@ function AgentBasicSection({ resource }: { resource: ResourceItem }) {
             </PopoverContent>
           </Popover>
           <Input value={name} onChange={e => setName(e.target.value)} placeholder="智能体名称"
-            className="flex-1 min-w-0 h-11 px-3 border-border/40 bg-muted/30 text-sm text-foreground focus-visible:border-border/60 focus-visible:ring-0 shadow-none" />
+            className="flex-1 min-w-0 h-9 px-3 py-1.5 rounded-lg border border-border/60 bg-accent/15 text-xs md:text-xs text-foreground focus-visible:border-border focus-visible:ring-0 shadow-none transition-all" />
+          </div>
+        </div>
+        <div className="min-w-0">
+          <label className="text-sm text-muted-foreground mb-1.5 block">类型</label>
           <Select value={agentType} onValueChange={(v) => setAgentType(v as typeof agentType)}>
-            <SelectTrigger className="w-[160px] flex-shrink-0 !h-11 px-3 text-sm border-border/40 bg-muted/30 hover:bg-muted/40 rounded-xl">
+            <SelectTrigger className="w-full !h-9 px-3 text-xs border border-border/60 bg-accent/15 hover:bg-accent/40 rounded-lg">
               <SelectValue placeholder="类型" />
             </SelectTrigger>
             <SelectContent>
@@ -353,34 +357,40 @@ function AgentBasicSection({ resource }: { resource: ResourceItem }) {
           </Select>
         </div>
       </div>
-      <div>
-        <div className="flex items-center gap-2 mb-2.5">
-          <span className="text-sm text-foreground/85">模型配置</span>
-          <div className="flex-1 h-px bg-border/30" />
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-3 gap-y-3">
-          <ModelSelector label="规划模型" value={planningModel} onChange={setPlanningModel} hint="负责任务拆解和决策" />
-          <ModelSelector label="常规模型" value={regularModel} onChange={setRegularModel} hint="负责主要推理和执行" />
-          <ModelSelector label="快速模型" value={fastModel} onChange={setFastModel} hint="负责简单判断和格式化" />
-        </div>
-      </div>
-      <FieldGroup label="简介"><Textarea value={description} onChange={e => setDescription(e.target.value)} rows={2} className="input-accent resize-none" /></FieldGroup>
-      <FieldGroup label="标签">
-        <Combobox
-          multiple
-          searchable
-          value={tags}
-          onChange={(v) => setTags(Array.isArray(v) ? v : [v])}
-          options={TAG_PRESETS.map(p => ({ value: p.tag, label: p.tag }))}
-          placeholder="选择标签…"
-          searchPlaceholder="搜索标签…"
-          emptyText="没有匹配标签"
-          renderOption={(opt) => {
-            const preset = TAG_PRESETS.find(p => p.tag === opt.value);
-            return <span className={`px-1.5 py-[1px] rounded-md text-xs border ${preset?.color ?? ''}`}>{opt.label}</span>;
-          }}
+      <FieldGroup label="简介">
+        <Textarea
+          value={description}
+          onChange={e => setDescription(e.target.value)}
+          rows={3}
+          className="w-full min-h-[80px] px-3 py-2 rounded-lg border border-border/60 bg-accent/15 text-xs text-foreground placeholder:text-muted-foreground/60 shadow-none focus-visible:border-border focus-visible:ring-0 resize-none"
         />
       </FieldGroup>
+    </div>
+  );
+}
+
+// ===========================
+// 模型设置 — Three-tier model picker (规划 / 常规 / 快速). Split out
+// from BasicSection so the basic info form stays focused on identity.
+// ===========================
+function AgentModelsSection() {
+  const [planningModel, setPlanningModel] = useState('claude-4-opus');
+  const [regularModel, setRegularModel] = useState('gpt-41');
+  const [fastModel, setFastModel] = useState('gemini-25-flash');
+
+  return (
+    <div className="max-w-3xl space-y-3">
+      <div>
+        <h3 className="text-sm font-medium text-foreground">三档模型</h3>
+        <p className="text-xs text-muted-foreground/60 mt-0.5">
+          智能体按任务自动选择对应档位。规划负责拆解 / 决策，常规负责推理 / 执行，快速负责简单判断 / 格式化。
+        </p>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-x-3 gap-y-3">
+        <ModelSelector label="规划模型" value={planningModel} onChange={setPlanningModel} hint="负责任务拆解和决策" />
+        <ModelSelector label="常规模型" value={regularModel} onChange={setRegularModel} hint="负责主要推理和执行" />
+        <ModelSelector label="快速模型" value={fastModel} onChange={setFastModel} hint="负责简单判断和格式化" />
+      </div>
     </div>
   );
 }
@@ -525,9 +535,9 @@ const statusConfig: Record<MCPServerStatus, { label: string; color: string }> = 
 function TagFilter({ tags, selected, onToggle }: { tags: readonly string[]; selected: string | null; onToggle: (t: string | null) => void }) {
   return (
     <div className="flex flex-wrap gap-1 mb-3">
-      <Button variant="ghost" size="xs" onClick={() => onToggle(null)} className={`px-2 py-[3px] rounded-full text-xs ${selected === null ? 'bg-accent/50 border border-border/30 text-foreground' : 'border border-transparent text-muted-foreground/40 hover:text-foreground hover:bg-accent/15'}`}>{"全部"}</Button>
+      <Button variant="ghost" size="xs" onClick={() => onToggle(null)} className={`px-2 py-[3px] rounded-full text-xs ${selected === null ? 'bg-accent/50 border border-border/30 text-foreground' : 'border border-transparent text-muted-foreground/40 hover:text-foreground hover:bg-accent/40'}`}>{"全部"}</Button>
       {tags.map(tag => (
-        <Button variant="ghost" size="xs" key={tag} onClick={() => onToggle(selected === tag ? null : tag)} className={`px-2 py-[3px] rounded-full text-xs ${selected === tag ? 'bg-accent/50 border border-border/30 text-foreground' : 'border border-transparent text-muted-foreground/40 hover:text-foreground hover:bg-accent/15'}`}>{tag}</Button>
+        <Button variant="ghost" size="xs" key={tag} onClick={() => onToggle(selected === tag ? null : tag)} className={`px-2 py-[3px] rounded-full text-xs ${selected === tag ? 'bg-accent/50 border border-border/30 text-foreground' : 'border border-transparent text-muted-foreground/40 hover:text-foreground hover:bg-accent/40'}`}>{tag}</Button>
       ))}
     </div>
   );
@@ -592,7 +602,7 @@ function AddResourcePanel({ activeTab, addedIds, onAdd, onClose, onExplore }: { 
         <Button variant="ghost" size="icon-xs" onClick={onClose} className="text-muted-foreground/40"><X size={11} /></Button>
       </div>
       <div className="px-2.5 pt-2 pb-1.5">
-        <SearchInput ref={searchRef} value={search} onChange={setSearch} placeholder={`搜索${tabLabel}...`} clearable wrapperClassName="flex items-center gap-1.5 px-2 py-[5px] rounded-lg bg-accent/15 border border-border/12" />
+        <SearchInput ref={searchRef} value={search} onChange={setSearch} placeholder={`搜索${tabLabel}...`} clearable wrapperClassName="flex items-center gap-1.5 px-2 py-[5px] rounded-lg bg-accent/15 border border-border/15" />
       </div>
       {/* Tag filter pills in add panel */}
       {(activeTab === 'mcp' || activeTab === 'skills') && (
@@ -608,12 +618,12 @@ function AddResourcePanel({ activeTab, addedIds, onAdd, onClose, onExplore }: { 
           Array.from(groupedCatalog.entries()).map(([cat, items]) => (
             <div key={cat} className="mb-1.5">
               <div className="text-xs text-muted-foreground/50 px-2 py-1 uppercase tracking-wider">{cat}</div>
-              {items.map((item: any) => (<div key={item.id} className="flex items-center gap-2 px-2 py-[6px] rounded-md hover:bg-accent/15 transition-colors group cursor-pointer" onClick={() => onAdd(item)}><div className="w-5 h-5 rounded bg-accent/15 flex items-center justify-center flex-shrink-0">{getIcon(item)}</div><div className="flex-1 min-w-0"><div className="text-sm text-foreground truncate">{item.name}</div><div className="text-xs text-muted-foreground/50 truncate">{item.desc}</div></div><Plus size={10} className="text-muted-foreground/40 group-hover:text-cherry-primary transition-colors flex-shrink-0" /></div>))}
+              {items.map((item: any) => (<div key={item.id} className="flex items-center gap-2 px-2 py-[6px] rounded-md hover:bg-accent/40 transition-colors group cursor-pointer" onClick={() => onAdd(item)}><div className="w-5 h-5 rounded bg-accent/15 flex items-center justify-center flex-shrink-0">{getIcon(item)}</div><div className="flex-1 min-w-0"><div className="text-sm text-foreground truncate">{item.name}</div><div className="text-xs text-muted-foreground/50 truncate">{item.desc}</div></div><Plus size={10} className="text-muted-foreground/40 group-hover:text-cherry-primary transition-colors flex-shrink-0" /></div>))}
             </div>
           ))
         ) : (
           <div className="space-y-0.5">
-            {catalog.map((item: any) => (<div key={item.id} className="flex items-center gap-2 px-2 py-[6px] rounded-md hover:bg-accent/15 transition-colors group cursor-pointer" onClick={() => onAdd(item)}><div className="w-5 h-5 rounded bg-accent/15 flex items-center justify-center flex-shrink-0">{getIcon(item)}</div><div className="flex-1 min-w-0"><div className="text-sm text-foreground truncate">{item.name}</div><div className="text-xs text-muted-foreground/50 truncate">{item.author ? `@${item.author}` : item.desc}</div></div><Plus size={10} className="text-muted-foreground/40 group-hover:text-cherry-primary transition-colors flex-shrink-0" /></div>))}
+            {catalog.map((item: any) => (<div key={item.id} className="flex items-center gap-2 px-2 py-[6px] rounded-md hover:bg-accent/40 transition-colors group cursor-pointer" onClick={() => onAdd(item)}><div className="w-5 h-5 rounded bg-accent/15 flex items-center justify-center flex-shrink-0">{getIcon(item)}</div><div className="flex-1 min-w-0"><div className="text-sm text-foreground truncate">{item.name}</div><div className="text-xs text-muted-foreground/50 truncate">{item.author ? `@${item.author}` : item.desc}</div></div><Plus size={10} className="text-muted-foreground/40 group-hover:text-cherry-primary transition-colors flex-shrink-0" /></div>))}
           </div>
         )}
       </div>
@@ -621,7 +631,7 @@ function AddResourcePanel({ activeTab, addedIds, onAdd, onClose, onExplore }: { 
         <AnimatePresence>
           {showManualForm && (
             <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.2 }} className="overflow-hidden">
-              <div className="mb-2 p-2.5 rounded-lg bg-accent/5 border border-border/10 space-y-2">
+              <div className="mb-2 p-2.5 rounded-lg bg-accent/5 border border-border/15 space-y-2">
                 <div className="text-xs text-muted-foreground/50 mb-1">{activeTab === 'mcp' ? '手动添加 MCP Server' : activeTab === 'skills' ? '手动添加 Skill' : '手动添加工具'}</div>
                 <Input value={manualName} onChange={e => setManualName(e.target.value)} placeholder="名称" className="w-full px-2 py-[5px] border-border/15 bg-background text-sm text-foreground focus-visible:border-border/30 focus-visible:ring-0 shadow-none placeholder:text-muted-foreground/60" />
                 {activeTab === 'mcp' && <Input value={manualUrl} onChange={e => setManualUrl(e.target.value)} placeholder="Server URL (如 https://... 或 npx @mcp/...)" className="w-full px-2 py-[5px] border-border/15 bg-background text-sm text-foreground font-mono focus-visible:border-border/30 focus-visible:ring-0 shadow-none placeholder:text-muted-foreground/60" />}
@@ -637,15 +647,15 @@ function AddResourcePanel({ activeTab, addedIds, onAdd, onClose, onExplore }: { 
                     }
                     setManualName(''); setManualUrl(''); setManualDesc(''); setShowManualForm(false);
                   }} className="flex-1 py-[5px] rounded-md bg-cherry-primary text-primary-foreground text-xs hover:bg-cherry-primary-dark disabled:opacity-30 disabled:cursor-not-allowed transition-all">{"确认添加"}</Button>
-                  <Button variant="ghost" size="xs" onClick={() => { setShowManualForm(false); setManualName(''); setManualUrl(''); setManualDesc(''); }} className="text-muted-foreground/50 hover:text-foreground hover:bg-accent/15">{"取消"}</Button>
+                  <Button variant="ghost" size="xs" onClick={() => { setShowManualForm(false); setManualName(''); setManualUrl(''); setManualDesc(''); }} className="text-muted-foreground/50 hover:text-foreground hover:bg-accent/40">{"取消"}</Button>
                 </div>
               </div>
             </motion.div>
           )}
         </AnimatePresence>
         <div className="space-y-0.5">
-          <Button variant="ghost" size="xs" onClick={onExplore} className="w-full justify-start gap-2 text-muted-foreground/60 hover:text-foreground hover:bg-accent/15"><ExternalLink size={9} className="text-muted-foreground/40" /><span>{"去探索浏览"}</span></Button>
-          <Button variant="ghost" size="xs" onClick={() => setShowManualForm(!showManualForm)} className={`w-full justify-start gap-2 ${showManualForm ? 'text-foreground bg-accent/15' : 'text-muted-foreground/60 hover:text-foreground hover:bg-accent/15'}`}><Plus size={9} className="text-muted-foreground/40" /><span>{"手动添加"}</span></Button>
+          <Button variant="ghost" size="xs" onClick={onExplore} className="w-full justify-start gap-2 text-muted-foreground/60 hover:text-foreground hover:bg-accent/40"><ExternalLink size={9} className="text-muted-foreground/40" /><span>{"去探索浏览"}</span></Button>
+          <Button variant="ghost" size="xs" onClick={() => setShowManualForm(!showManualForm)} className={`w-full justify-start gap-2 ${showManualForm ? 'text-foreground bg-accent/15' : 'text-muted-foreground/60 hover:text-foreground hover:bg-accent/40'}`}><Plus size={9} className="text-muted-foreground/40" /><span>{"手动添加"}</span></Button>
         </div>
       </div>
     </div>
@@ -666,9 +676,9 @@ function MCPServerCard({ server, onToggleConnect, onRemove, onToggleTool, onTogg
   const allEnabled = enabledCount === server.tools.length;
 
   return (
-    <div className="rounded-xl border border-border/12 bg-accent/15 overflow-hidden transition-all">
+    <div className="rounded-xl border border-border/15 bg-accent/15 overflow-hidden transition-all">
       {/* Header row */}
-      <div className="flex items-center gap-2.5 px-3 py-2.5 cursor-pointer hover:bg-accent/25 transition-colors" onClick={() => isConnected && setExpanded(!expanded)}>
+      <div className="flex items-center gap-2.5 px-3 py-2.5 cursor-pointer hover:bg-accent/40 transition-colors" onClick={() => isConnected && setExpanded(!expanded)}>
         <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${isConnected ? 'bg-cherry-primary' : server.status === 'error' ? 'bg-destructive' : 'bg-muted-foreground/20'}`} />
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
@@ -704,7 +714,7 @@ function MCPServerCard({ server, onToggleConnect, onRemove, onToggleTool, onTogg
               </div>
               <div className="space-y-0.5 max-h-[180px] overflow-y-auto scrollbar-thin-xs">
                 {server.tools.map(tool => (
-                  <div key={tool.id} className={`flex items-center gap-2.5 px-1.5 py-[5px] rounded-md cursor-pointer transition-colors ${tool.enabled ? 'hover:bg-accent/15' : 'hover:bg-accent/15'}`} onClick={() => onToggleTool(tool.id)}>
+                  <div key={tool.id} className={`flex items-center gap-2.5 px-1.5 py-[5px] rounded-md cursor-pointer transition-colors ${tool.enabled ? 'hover:bg-accent/40' : 'hover:bg-accent/40'}`} onClick={() => onToggleTool(tool.id)}>
                     <Checkbox checked={tool.enabled} className="flex-shrink-0" />
                     <span className={`text-sm font-mono truncate flex-1 min-w-0 ${tool.enabled ? 'text-foreground' : 'text-muted-foreground/50'}`}>{tool.name}</span>
                     <span className="text-xs text-muted-foreground/50 truncate max-w-[100px] flex-shrink-0">{tool.desc}</span>
@@ -736,10 +746,23 @@ function ToolchainSection({ onExplore, controlledTab }: { onExplore: () => void;
   const [mcpTagFilter, setMcpTagFilter] = useState<string | null>(null);
   const [skillTagFilter, setSkillTagFilter] = useState<string | null>(null);
   const [toolTagFilter, setToolTagFilter] = useState<string | null>(null);
+  // OAuth-style install sheet for integrations — triggered when the
+  // user clicks an integration row that's not yet connected. Same dialog
+  // is used in the Marketplace so the visual + permission copy stay
+  // consistent between the two entry points.
+  const [installIntegration, setInstallIntegration] = useState<IntegrationItem | null>(null);
 
   const toggleTool = (id: string) => setTools(prev => prev.map(t => t.id === id ? { ...t, enabled: !t.enabled } : t));
   const toggleSkill = (id: string) => setSkills(prev => prev.map(s => s.id === id ? { ...s, enabled: !s.enabled } : s));
   const toggleIntegration = (id: string) => setIntegrations(prev => prev.map(i => i.id === id ? { ...i, enabled: !i.enabled } : i));
+  const handleIntegrationClick = (integ: IntegrationItem) => {
+    if (integ.enabled) {
+      // Already connected → disconnect inline.
+      toggleIntegration(integ.id);
+    } else {
+      setInstallIntegration(integ);
+    }
+  };
 
   const handleAdd = useCallback((item: any) => {
     if (activeTab === 'tools') setTools(prev => [...prev, { ...item, enabled: true }]);
@@ -831,7 +854,7 @@ function ToolchainSection({ onExplore, controlledTab }: { onExplore: () => void;
             <PopoverTrigger asChild>
               <Button variant="ghost" size="xs"
                 className={`gap-1 h-7 px-2.5 rounded-md text-xs border border-border/30 ${
-                  showAddPanel ? 'text-foreground bg-accent/25 border-border/50' : 'text-muted-foreground/70 hover:text-foreground hover:bg-accent/15'
+                  showAddPanel ? 'text-foreground bg-accent/25 border-border/50' : 'text-muted-foreground/80 hover:text-foreground hover:bg-accent/40'
                 }`}>
                 <Plus size={11} />
                 <span>添加</span>
@@ -842,7 +865,7 @@ function ToolchainSection({ onExplore, controlledTab }: { onExplore: () => void;
             </PopoverContent>
           </Popover>
           <Button variant="ghost" size="xs" onClick={onExplore}
-            className="gap-1 h-7 px-2.5 rounded-md text-xs border border-border/30 text-muted-foreground/70 hover:text-foreground hover:bg-accent/15">
+            className="gap-1 h-7 px-2.5 rounded-md text-xs border border-border/30 text-muted-foreground/80 hover:text-foreground hover:bg-accent/40">
             <ExternalLink size={11} />
             <span>去市场浏览</span>
           </Button>
@@ -877,7 +900,7 @@ function ToolchainSection({ onExplore, controlledTab }: { onExplore: () => void;
                     {filteredTools.map(tool => { const Icon = tool.icon; return (
                       <div key={tool.id}
                         onClick={() => toggleTool(tool.id)}
-                        className={`flex items-center gap-3 px-3 py-2.5 rounded-xl border border-border/12 bg-accent/15 hover:bg-accent/25 transition-all cursor-pointer ${tool.enabled ? '' : 'opacity-55'}`}>
+                        className={`flex items-center gap-3 px-3 py-2.5 rounded-xl border border-border/15 bg-accent/15 hover:bg-accent/40 transition-all cursor-pointer ${tool.enabled ? '' : 'opacity-55'}`}>
                         <Icon size={15} strokeWidth={1.5} className={tool.enabled ? 'text-muted-foreground flex-shrink-0' : 'text-muted-foreground/40 flex-shrink-0'} />
                         <div className="flex-1 min-w-0">
                           <div className="text-sm text-foreground truncate">{tool.name}</div>
@@ -915,16 +938,26 @@ function ToolchainSection({ onExplore, controlledTab }: { onExplore: () => void;
               {activeTab === 'integrations' && (integrations.length === 0 ? <TabEmptyState preset="no-resource" label="集成" onAdd={() => setShowAddPanel(true)} /> : (
                 <div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                    {filteredIntegrations.map(integ => { const Icon = integ.icon; return (
+                    {filteredIntegrations.map(integ => { const Icon = integ.icon; const brand = INTEGRATION_LOGO[integ.id]; return (
                       <div key={integ.id}
-                        onClick={() => toggleIntegration(integ.id)}
-                        className={`flex items-center gap-3 px-3 py-2.5 rounded-xl border border-border/12 bg-accent/15 hover:bg-accent/25 transition-all cursor-pointer ${integ.enabled ? '' : 'opacity-55'}`}>
-                        <Icon size={15} strokeWidth={1.5} className={integ.enabled ? `${integ.tintCls} flex-shrink-0` : 'text-muted-foreground/40 flex-shrink-0'} />
+                        onClick={() => handleIntegrationClick(integ)}
+                        className={`flex items-center gap-3 px-3 py-2.5 rounded-xl border border-border/15 bg-accent/15 hover:bg-accent/40 transition-all cursor-pointer ${integ.enabled ? '' : 'opacity-70'}`}>
+                        {brand ? (
+                          <div className="w-7 h-7 rounded-md bg-muted/40 border border-border/20 flex items-center justify-center flex-shrink-0 overflow-hidden">
+                            <img src={`https://cdn.simpleicons.org/${brand.slug}/${brand.color}`} alt="" className="w-4 h-4" draggable={false} />
+                          </div>
+                        ) : (
+                          <Icon size={15} strokeWidth={1.5} className={integ.enabled ? `${integ.tintCls} flex-shrink-0` : 'text-muted-foreground/40 flex-shrink-0'} />
+                        )}
                         <div className="flex-1 min-w-0">
                           <div className="text-sm text-foreground truncate">{integ.name}</div>
                           <div className="text-xs text-muted-foreground/50 truncate">{integ.desc}</div>
                         </div>
-                        <Switch size="sm" checked={integ.enabled} className="pointer-events-none flex-shrink-0" />
+                        {integ.enabled ? (
+                          <Switch size="sm" checked className="pointer-events-none flex-shrink-0" />
+                        ) : (
+                          <span className="text-xs text-muted-foreground/50 flex-shrink-0 px-1.5">未连接</span>
+                        )}
                       </div>
                     ); })}
                   </div>
@@ -940,7 +973,7 @@ function ToolchainSection({ onExplore, controlledTab }: { onExplore: () => void;
                     {filteredSkills.map(skill => { const Icon = skill.icon; return (
                       <div key={skill.id}
                         onClick={() => toggleSkill(skill.id)}
-                        className={`flex items-center gap-3 px-3 py-2.5 rounded-xl border border-border/12 bg-accent/15 hover:bg-accent/25 transition-all cursor-pointer ${skill.enabled ? '' : 'opacity-55'}`}>
+                        className={`flex items-center gap-3 px-3 py-2.5 rounded-xl border border-border/15 bg-accent/15 hover:bg-accent/40 transition-all cursor-pointer ${skill.enabled ? '' : 'opacity-55'}`}>
                         <Icon size={15} strokeWidth={1.5} className={skill.enabled ? 'text-muted-foreground flex-shrink-0' : 'text-muted-foreground/40 flex-shrink-0'} />
                         <div className="flex-1 min-w-0">
                           <div className="text-sm text-foreground truncate">{skill.name}</div>
@@ -958,6 +991,31 @@ function ToolchainSection({ onExplore, controlledTab }: { onExplore: () => void;
           </AnimatePresence>
         </div>
       </div>
+
+      {/* OAuth-style install sheet — shared visual with the Market's
+          InstallIntegrationDialog so user sees the same scopes /
+          permission card / branded logos regardless of where they
+          triggered the connect from. */}
+      <InstallIntegrationDialog
+        item={installIntegration ? {
+          id: installIntegration.id,
+          kind: 'integration',
+          name: installIntegration.name,
+          tagline: installIntegration.desc,
+          author: '',
+          avatar: '🔌',
+          avatarBg: 'bg-muted/30',
+          category: '集成',
+          ageLabel: '',
+          installs: 0,
+        } : null}
+        installed={false}
+        onOpenChange={(open) => { if (!open) setInstallIntegration(null); }}
+        onConfirm={() => {
+          if (installIntegration) toggleIntegration(installIntegration.id);
+          setInstallIntegration(null);
+        }}
+      />
     </div>
   );
 }
@@ -993,6 +1051,10 @@ function KnowledgeBaseSection() {
   // 知识库识别 — 'off' / 'on' segment, matches Cherry Studio source's
   // AssistantKnowledgeBaseSettings.knowledgeRecognition.
   const [recognition, setRecognition] = useState<'off' | 'on'>('off');
+  // 自动关联 — when ON, Cherry picks relevant KBs per query and the
+  // manual list below is hidden. When OFF, fall back to the manual
+  // "已关联知识库" picker.
+  const [autoLink, setAutoLink] = useState(true);
 
   const linkedIds = useMemo(() => new Set(linkedKBs.map(k => k.id)), [linkedKBs]);
 
@@ -1013,21 +1075,42 @@ function KnowledgeBaseSection() {
 
 
   return (
-    <div className="max-w-3xl space-y-5">
-      {/* Linked knowledge bases */}
+    <div className="max-w-3xl space-y-3">
+      {/* 自动关联 — top-level toggle. When on, Cherry decides per query;
+          when off, user manually curates the list below. */}
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center gap-1.5 min-w-0">
+          <label className="text-sm text-muted-foreground">自动关联</label>
+          <SimpleTooltip
+            content="开启后 Cherry 自动判断当前消息需要哪些知识库；关闭后由你手动选择固定关联的知识库。"
+            side="top"
+            sideOffset={6}
+          >
+            <button type="button" tabIndex={-1}
+              className="inline-flex items-center text-muted-foreground/40 hover:text-muted-foreground cursor-help"
+              aria-label="什么是自动关联">
+              <Info size={12} />
+            </button>
+          </SimpleTooltip>
+        </div>
+        <Switch checked={autoLink} onCheckedChange={setAutoLink} className="flex-shrink-0" />
+      </div>
+
+      {/* Manual KB list — only shown when 自动关联 is off. */}
+      {!autoLink && (
       <div>
         <div className="flex items-center justify-between mb-2">
-          <label className="text-sm text-foreground/85">已关联知识库</label>
+          <label className="text-sm text-muted-foreground">已关联知识库</label>
           <Popover open={showAddPanel} onOpenChange={(v) => { setShowAddPanel(v); if (v) { setAddSearch(''); setAddGroupFilter('全部'); } }}>
             <PopoverTrigger asChild>
               <Button variant="outline" size="xs"
-                className="flex items-center gap-1 h-7 px-2.5 rounded-md text-xs text-muted-foreground/70 hover:text-foreground hover:bg-accent/15 border border-border/30">
+                className="flex items-center gap-1 h-7 px-2.5 rounded-md text-xs text-muted-foreground/80 hover:text-foreground hover:bg-accent/40 border border-border/30">
                 <Plus size={11} /><span>添加知识库</span>
               </Button>
             </PopoverTrigger>
             <PopoverContent align="end" className="p-0 w-[340px] overflow-hidden">
               <div className="px-3 pt-3 pb-2">
-                <SearchInput value={addSearch} onChange={setAddSearch} placeholder="搜索知识库..." clearable wrapperClassName="flex items-center gap-1.5 px-2.5 py-[6px] rounded-lg bg-accent/15 border border-border/12" autoFocus />
+                <SearchInput value={addSearch} onChange={setAddSearch} placeholder="搜索知识库..." clearable wrapperClassName="flex items-center gap-1.5 px-2.5 py-[6px] rounded-lg bg-accent/15 border border-border/15" autoFocus />
               </div>
               <div className="px-3 pb-2 flex flex-wrap gap-1">
                 {KB_GROUPS.map(g => (
@@ -1042,7 +1125,7 @@ function KnowledgeBaseSection() {
                   <div className="space-y-0.5">
                     {filteredCatalog.map(kb => (
                       <div key={kb.id} onClick={() => addKB(kb)}
-                        className="flex items-center gap-2.5 px-2.5 py-[7px] rounded-lg hover:bg-accent/15 transition-colors cursor-pointer group">
+                        className="flex items-center gap-2.5 px-2.5 py-[7px] rounded-lg hover:bg-accent/40 transition-colors cursor-pointer group">
                         <div className={`w-6 h-6 rounded ${kb.iconColor} flex items-center justify-center flex-shrink-0`}>
                           <FolderOpen size={11} className="text-white/90" />
                         </div>
@@ -1070,7 +1153,7 @@ function KnowledgeBaseSection() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
             {linkedKBs.map(kb => (
               <motion.div key={kb.id} layout initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}
-                className="flex items-center gap-3 px-4 py-3 rounded-xl border border-border/12 bg-accent/15 hover:bg-accent/25 transition-all group">
+                className="flex items-center gap-3 px-4 py-3 rounded-xl border border-border/15 bg-accent/15 hover:bg-accent/40 transition-all group">
                 <div className={`w-8 h-8 rounded-lg ${kb.iconColor} flex items-center justify-center flex-shrink-0`}>
                   <FolderOpen size={14} className="text-white/90" />
                 </div>
@@ -1085,15 +1168,16 @@ function KnowledgeBaseSection() {
         )}
 
       </div>
+      )}
 
       {/* 知识库识别 — Switch row, matches Cherry Studio source pattern
           (knowledgeRecognition off/on Segmented + question tooltip).
           Retrieval params (Top-K, similarity threshold) are not part of
           source's AssistantKnowledgeBaseSettings — they belong on the
           knowledge base itself, configured in 资源库 → 知识库. */}
-      <div className="flex items-center justify-between gap-3 py-3 border-t border-border/15">
+      <div className="flex items-center justify-between gap-3 pt-2 border-t border-border/15">
         <div className="flex items-center gap-1.5 min-w-0">
-          <label className="text-sm text-foreground/85">知识库识别</label>
+          <label className="text-sm text-muted-foreground">知识库识别</label>
           <SimpleTooltip
             content="开启后助手自动判断是否需要检索已引用的知识库；关闭则每条消息都强制检索。"
             side="top"
@@ -1119,14 +1203,387 @@ function KnowledgeBaseSection() {
   );
 }
 
+// ===========================
+// Notes Section — read / write / manage permissions for user notes
+// ===========================
+
+// Mock note tree — in production this comes from the notes feature.
+// Notes can live at any depth; folders carry children.
+interface NoteNode {
+  id: string;
+  type: 'folder' | 'note';
+  title: string;
+  updatedAt: string;
+  children?: NoteNode[];
+}
+
+const MOCK_NOTE_TREE: NoteNode[] = [
+  {
+    id: 'nf-prod', type: 'folder', title: '产品', updatedAt: '今天',
+    children: [
+      { id: 'n-1', type: 'note', title: '产品周会纪要', updatedAt: '2 天前' },
+      { id: 'n-7', type: 'note', title: 'PRD: 新版编辑器', updatedAt: '5 天前' },
+      {
+        id: 'nf-research', type: 'folder', title: '调研', updatedAt: '1 周前',
+        children: [
+          { id: 'n-3', type: 'note', title: '客户访谈记录', updatedAt: '2 周前' },
+          { id: 'n-4', type: 'note', title: '竞品分析', updatedAt: '3 周前' },
+        ],
+      },
+    ],
+  },
+  {
+    id: 'nf-eng', type: 'folder', title: '工程', updatedAt: '昨天',
+    children: [
+      { id: 'n-2', type: 'note', title: 'API 设计稿', updatedAt: '1 周前' },
+      { id: 'n-5', type: 'note', title: '架构演进备忘', updatedAt: '1 个月前' },
+      { id: 'n-8', type: 'note', title: '部署 Runbook', updatedAt: '2 个月前' },
+    ],
+  },
+  { id: 'n-6', type: 'note', title: '随笔：阅读笔记', updatedAt: '昨天' },
+];
+
+// Flatten the tree into a path-aware list, used for both search and
+// "find selected node" lookups.
+function flattenNoteTree(nodes: NoteNode[], parents: NoteNode[] = []): { node: NoteNode; path: NoteNode[] }[] {
+  return nodes.flatMap(node => {
+    const here = { node, path: parents };
+    const children = node.children ? flattenNoteTree(node.children, [...parents, node]) : [];
+    return [here, ...children];
+  });
+}
+
+const ALL_NOTE_FLAT = flattenNoteTree(MOCK_NOTE_TREE);
+
+function findNoteNode(id: string): NoteNode | null {
+  return ALL_NOTE_FLAT.find(({ node }) => node.id === id)?.node ?? null;
+}
+
+function getNodesAtPath(path: string[]): NoteNode[] {
+  let level = MOCK_NOTE_TREE;
+  for (const id of path) {
+    const found = level.find(n => n.id === id);
+    if (!found?.children) return [];
+    level = found.children;
+  }
+  return level;
+}
+
+function AgentNotesSection() {
+  // 总开关 — 关闭后整个笔记能力对智能体不可见（读 / 写 / 管理都失效）。
+  const [notesEnabled, setNotesEnabled] = useState(true);
+
+  // 读取
+  const [readEnabled, setReadEnabled] = useState(true);
+  // 'auto' = 智能体自行判断；'specified' = 用户指定一批可读笔记/文件夹
+  const [readScope, setReadScope] = useState<'auto' | 'specified'>('auto');
+  // Both folders and notes can be picked — selecting a folder grants
+  // read on the entire subtree.
+  const [pickedIds, setPickedIds] = useState<Set<string>>(() => new Set(['n-1']));
+  const [notePickerOpen, setNotePickerOpen] = useState(false);
+  const [noteSearch, setNoteSearch] = useState('');
+  // Hierarchical browse — folder ids from root → current.
+  const [browsePath, setBrowsePath] = useState<string[]>([]);
+
+  // 写入
+  const [writeEnabled, setWriteEnabled] = useState(false);
+  // 管理 / 删除
+  const [manageEnabled, setManageEnabled] = useState(false);
+
+  // Items shown in the popover:
+  //   - 搜索时：跨层级 flat 结果（含 path）
+  //   - 默认：当前 browsePath 这一层的子项
+  // 已选中的项隐藏掉，跟知识库 add 行为一致。
+  const browseItems = useMemo(() => {
+    const q = noteSearch.trim().toLowerCase();
+    if (q) {
+      return ALL_NOTE_FLAT
+        .filter(({ node }) => !pickedIds.has(node.id) && node.title.toLowerCase().includes(q));
+    }
+    return getNodesAtPath(browsePath)
+      .filter(node => !pickedIds.has(node.id))
+      .map(node => ({ node, path: [] as NoteNode[] }));
+  }, [noteSearch, browsePath, pickedIds]);
+
+  const breadcrumbNodes = useMemo(
+    () => browsePath.map(id => findNoteNode(id)).filter((n): n is NoteNode => !!n),
+    [browsePath],
+  );
+
+  const pickedNodes = useMemo(
+    () => Array.from(pickedIds).map(id => findNoteNode(id)).filter((n): n is NoteNode => !!n),
+    [pickedIds],
+  );
+
+  const addNode = (node: NoteNode) => {
+    setPickedIds(prev => new Set(prev).add(node.id));
+  };
+
+  const removeNode = (id: string) => {
+    setPickedIds(prev => {
+      const next = new Set(prev);
+      next.delete(id);
+      return next;
+    });
+  };
+
+  const enterFolder = (id: string) => {
+    setBrowsePath(prev => [...prev, id]);
+    setNoteSearch('');
+  };
+
+  const goToCrumb = (index: number) => {
+    // index === -1 → root (笔记)
+    setBrowsePath(prev => prev.slice(0, index + 1));
+    setNoteSearch('');
+  };
+
+  // 笔记内 N 条（递归）— 用于已选文件夹卡片副文本。
+  const countNotesInside = (node: NoteNode): number => {
+    if (node.type === 'note') return 1;
+    return (node.children ?? []).reduce((acc, c) => acc + countNotesInside(c), 0);
+  };
+
+  return (
+    <div className="max-w-3xl space-y-3">
+      {/* 使用笔记 — 总开关。关闭后下方所有读 / 写 / 管理配置隐藏，
+          智能体完全感知不到笔记能力。 */}
+      <div className="flex items-center justify-between gap-3 pb-3 border-b border-border/15">
+        <div className="flex items-center gap-1.5 min-w-0">
+          <label className="text-sm font-medium text-foreground">使用笔记</label>
+          <SimpleTooltip content="关闭后智能体完全不感知笔记能力（读、写、管理全部失效）。" side="top" sideOffset={6}>
+            <button type="button" tabIndex={-1}
+              className="inline-flex items-center text-muted-foreground/40 hover:text-muted-foreground cursor-help"
+              aria-label="什么是使用笔记">
+              <Info size={12} />
+            </button>
+          </SimpleTooltip>
+        </div>
+        <Switch checked={notesEnabled} onCheckedChange={setNotesEnabled} className="flex-shrink-0" />
+      </div>
+
+      {notesEnabled && <>
+      {/* 读取 */}
+      <section className="space-y-2">
+        <div>
+          <h3 className="text-sm font-medium text-foreground">读取</h3>
+          <p className="text-xs text-muted-foreground/60 mt-0.5">控制智能体能不能看你的笔记，以及看哪些。</p>
+        </div>
+
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-1.5 min-w-0">
+            <label className="text-sm text-muted-foreground">读取权限</label>
+            <SimpleTooltip content="关闭后智能体完全无法访问你的笔记内容。" side="top" sideOffset={6}>
+              <button type="button" tabIndex={-1}
+                className="inline-flex items-center text-muted-foreground/40 hover:text-muted-foreground cursor-help"
+                aria-label="什么是读取权限">
+                <Info size={12} />
+              </button>
+            </SimpleTooltip>
+          </div>
+          <Switch checked={readEnabled} onCheckedChange={setReadEnabled} className="flex-shrink-0" />
+        </div>
+
+        {readEnabled && (
+          <>
+            <div className="flex items-center justify-between gap-3">
+              <label className="text-sm text-muted-foreground">读取范围</label>
+              <Select value={readScope} onValueChange={(v) => setReadScope(v as 'auto' | 'specified')}>
+                <SelectTrigger className="w-[120px] flex-shrink-0 !h-9 px-3 text-xs border border-border/60 bg-accent/15 hover:bg-accent/40 rounded-lg">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="auto">自动</SelectItem>
+                  <SelectItem value="specified">指定</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* 已指定笔记 — 同知识库添加的形式：右上「添加笔记」popover +
+                下方已选卡片 grid + 空态。Popover 支持文件夹层级浏览 +
+                跨层级搜索，选中文件夹相当于授权整个子树。 */}
+            {readScope === 'specified' && (
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="text-sm text-muted-foreground">已指定笔记</label>
+                  <Popover open={notePickerOpen} onOpenChange={(v) => { setNotePickerOpen(v); if (v) { setNoteSearch(''); setBrowsePath([]); } }}>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" size="xs"
+                        className="flex items-center gap-1 h-7 px-2.5 rounded-md text-xs text-muted-foreground/80 hover:text-foreground hover:bg-accent/40 border border-border/30">
+                        <Plus size={11} /><span>添加笔记</span>
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent align="end" className="p-0 w-[340px] overflow-hidden">
+                      <div className="px-3 pt-3 pb-2">
+                        <SearchInput
+                          value={noteSearch}
+                          onChange={setNoteSearch}
+                          placeholder="搜索笔记 / 文件夹..."
+                          clearable
+                          wrapperClassName="flex items-center gap-1.5 px-2.5 py-[6px] rounded-lg bg-accent/15 border border-border/15"
+                          autoFocus
+                        />
+                      </div>
+
+                      {/* Breadcrumb — only when not searching */}
+                      {!noteSearch.trim() && (
+                        <div className="px-3 pb-2 flex items-center gap-0.5 text-xs text-muted-foreground/60 overflow-x-auto scrollbar-hide">
+                          <button type="button" onClick={() => goToCrumb(-1)}
+                            className={`px-1.5 py-[2px] rounded text-xs leading-none transition-colors hover:bg-accent/40 ${browsePath.length === 0 ? 'text-foreground font-medium' : 'hover:text-foreground'}`}>
+                            笔记
+                          </button>
+                          {breadcrumbNodes.map((node, i) => (
+                            <React.Fragment key={node.id}>
+                              <ChevronRight size={9} className="text-muted-foreground/40 flex-shrink-0" />
+                              <button type="button" onClick={() => goToCrumb(i)}
+                                className={`px-1.5 py-[2px] rounded text-xs leading-none transition-colors hover:bg-accent/40 truncate max-w-[100px] ${i === breadcrumbNodes.length - 1 ? 'text-foreground font-medium' : 'hover:text-foreground'}`}>
+                                {node.title}
+                              </button>
+                            </React.Fragment>
+                          ))}
+                        </div>
+                      )}
+
+                      <div className="max-h-[240px] overflow-y-auto px-1.5 pb-2 scrollbar-thin">
+                        {browseItems.length === 0 ? (
+                          <EmptyState preset="no-result" title={noteSearch ? '无匹配项' : '空文件夹'} compact />
+                        ) : (
+                          <div className="space-y-0.5">
+                            {browseItems.map(({ node, path }) => {
+                              const isFolder = node.type === 'folder';
+                              const Icon = isFolder ? FolderOpen : FileEdit;
+                              return (
+                                <div key={node.id}
+                                  className="flex items-center gap-2.5 px-2.5 py-[7px] rounded-lg hover:bg-accent/40 transition-colors cursor-pointer group"
+                                  onClick={() => { if (isFolder && !noteSearch) enterFolder(node.id); else addNode(node); }}
+                                >
+                                  <div className={`w-6 h-6 rounded flex items-center justify-center flex-shrink-0 ${isFolder ? 'bg-accent-amber-muted' : 'bg-accent/50'}`}>
+                                    <Icon size={11} className={isFolder ? 'text-accent-amber' : 'text-muted-foreground/70'} />
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <div className="text-sm text-foreground truncate">{node.title}</div>
+                                    <div className="text-xs text-muted-foreground/50 truncate">
+                                      {path.length > 0 && (
+                                        <span className="font-mono">{path.map(p => p.title).join(' / ')} · </span>
+                                      )}
+                                      {isFolder ? `${countNotesInside(node)} 条笔记` : node.updatedAt}
+                                    </div>
+                                  </div>
+                                  {/* For folders: chevron to drill in (when not searching);
+                                      + button to add whole subtree. For notes: just +. */}
+                                  {isFolder && !noteSearch && (
+                                    <Button variant="ghost" size="icon-xs"
+                                      onClick={(e) => { e.stopPropagation(); addNode(node); }}
+                                      className="text-muted-foreground/40 hover:text-cherry-primary opacity-0 group-hover:opacity-100"
+                                      title="添加整个文件夹">
+                                      <Plus size={11} />
+                                    </Button>
+                                  )}
+                                  {isFolder && !noteSearch ? (
+                                    <ChevronRight size={11} className="text-muted-foreground/40 flex-shrink-0" />
+                                  ) : (
+                                    <Plus size={10} className="text-muted-foreground/40 group-hover:text-cherry-primary transition-colors flex-shrink-0" />
+                                  )}
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
+                    </PopoverContent>
+                  </Popover>
+                </div>
+
+                {pickedNodes.length === 0 ? (
+                  <EmptyState
+                    preset="no-resource"
+                    title="尚未指定笔记"
+                    description="点击右上「添加笔记」从笔记库中选择，文件夹或单条笔记都可以。"
+                    compact
+                  />
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                    {pickedNodes.map(n => {
+                      const isFolder = n.type === 'folder';
+                      const Icon = isFolder ? FolderOpen : FileEdit;
+                      return (
+                        <motion.div key={n.id} layout initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}
+                          className="flex items-center gap-3 px-4 py-3 rounded-xl border border-border/15 bg-accent/15 hover:bg-accent/40 transition-all group">
+                          <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${isFolder ? 'bg-accent-amber-muted' : 'bg-accent/60'}`}>
+                            <Icon size={14} className={isFolder ? 'text-accent-amber' : 'text-muted-foreground/70'} />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="text-sm text-foreground truncate">{n.title}</div>
+                            <div className="text-xs text-muted-foreground/50">
+                              {isFolder ? `整个文件夹 · ${countNotesInside(n)} 条笔记` : n.updatedAt}
+                            </div>
+                          </div>
+                          <Button variant="ghost" size="icon-xs" onClick={() => removeNode(n.id)} className="text-muted-foreground/40 hover:text-destructive hover:bg-destructive/8 opacity-0 group-hover:opacity-100"><Trash2 size={11} /></Button>
+                        </motion.div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            )}
+          </>
+        )}
+      </section>
+
+      {/* 写入 */}
+      <section className="space-y-2 pt-2 border-t border-border/15">
+        <div>
+          <h3 className="text-sm font-medium text-foreground">写入</h3>
+          <p className="text-xs text-muted-foreground/60 mt-0.5">允许智能体在笔记里新增 / 修改内容。</p>
+        </div>
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-1.5 min-w-0">
+            <label className="text-sm text-muted-foreground">写入权限</label>
+            <SimpleTooltip content="开启后智能体可新建或编辑笔记内容；建议配合「管理删除」一起决策。" side="top" sideOffset={6}>
+              <button type="button" tabIndex={-1}
+                className="inline-flex items-center text-muted-foreground/40 hover:text-muted-foreground cursor-help"
+                aria-label="什么是写入权限">
+                <Info size={12} />
+              </button>
+            </SimpleTooltip>
+          </div>
+          <Switch checked={writeEnabled} onCheckedChange={setWriteEnabled} className="flex-shrink-0" />
+        </div>
+      </section>
+
+      {/* 管理 / 删除 */}
+      <section className="space-y-2 pt-2 border-t border-border/15">
+        <div>
+          <h3 className="text-sm font-medium text-foreground">管理删除</h3>
+          <p className="text-xs text-muted-foreground/60 mt-0.5">允许智能体删除笔记、调整文件夹结构。慎开。</p>
+        </div>
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-1.5 min-w-0">
+            <label className="text-sm text-muted-foreground">管理 / 删除权限</label>
+            <SimpleTooltip content="开启后智能体可删除笔记或移动文件夹，删除操作进入回收站可恢复。" side="top" sideOffset={6}>
+              <button type="button" tabIndex={-1}
+                className="inline-flex items-center text-muted-foreground/40 hover:text-muted-foreground cursor-help"
+                aria-label="什么是管理删除权限">
+                <Info size={12} />
+              </button>
+            </SimpleTooltip>
+          </div>
+          <Switch checked={manageEnabled} onCheckedChange={setManageEnabled} className="flex-shrink-0" />
+        </div>
+      </section>
+      </>}
+    </div>
+  );
+}
+
 function AgentAdvancedSection() {
   const [maxRounds, setMaxRounds] = useState(10);
   return (
     <div className="max-w-3xl space-y-5">
       <div>
-        <label className="text-sm text-foreground/85 mb-1.5 block">{"最大执行轮次"} <span className="text-muted-foreground/50 ml-1">{maxRounds}</span></label>
-        <Slider min={1} max={50} step={1} value={[maxRounds]} onValueChange={([v]) => setMaxRounds(v)} />
-        <div className="flex justify-between mt-1"><span className="text-xs text-muted-foreground/50">1</span><span className="text-xs text-muted-foreground/50">50</span></div>
+        <label className="text-sm text-muted-foreground mb-1.5 block">{"最大执行轮次"} <span className="text-muted-foreground/50 ml-1">{maxRounds}</span></label>
+        <Slider min={1} max={100} step={1} value={[maxRounds]} onValueChange={([v]) => setMaxRounds(v)} />
+        <div className="flex justify-between mt-1"><span className="text-xs text-muted-foreground/50">1</span><span className="text-xs text-muted-foreground/50">100</span></div>
         <p className="text-xs text-muted-foreground/50 mt-2">{"每次会话中智能体与工具交互的最大轮次数。达到上限后将停止执行并返回当前结果。"}</p>
       </div>
     </div>
@@ -1134,7 +1591,7 @@ function AgentAdvancedSection() {
 }
 
 function FieldGroup({ label, children }: { label: React.ReactNode; children: React.ReactNode }) {
-  return (<div><label className="text-sm text-foreground/85 mb-1.5 block">{label}</label>{children}</div>);
+  return (<div><label className="text-sm text-muted-foreground mb-1.5 block">{label}</label>{children}</div>);
 }
 
 // ===========================

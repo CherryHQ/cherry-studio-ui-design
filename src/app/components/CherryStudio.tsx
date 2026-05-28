@@ -38,6 +38,8 @@ import { SettingsPage } from '@/features/settings/SettingsPage';
 import { SettingsProvider, useSettings } from '@/app/context/SettingsContext';
 import { GlobalActionProvider } from '@/app/context/GlobalActionContext';
 import type { GlobalActions } from '@/app/context/GlobalActionContext';
+import { RecycleBinProvider } from '@/app/context/RecycleBinContext';
+import { ArchiveProvider } from '@/app/context/ArchiveContext';
 import { Toaster, toast } from 'sonner';
 import { DataMigrationOverlay } from './DataMigrationOverlay';
 import { initGlobalErrorHandler } from '@/app/services/errorHandler';
@@ -63,7 +65,12 @@ function CherryStudioInner() {
   const [newTabSearch, setNewTabSearch] = useState('');
   const [newTabManageMode, setNewTabManageMode] = useState(false);
   const [searchDialogOpen, setSearchDialogOpen] = useState(false);
-  const [hiddenApps, setHiddenApps] = useState<Set<string>>(new Set(['explore', 'library', 'knowledge', 'file', 'code', 'note', 'extensions']));
+  // Library is intentionally NOT hidden — it's now the home of custom
+  // resource management (assistants / agents / skills / prompts / etc.)
+  // after main moved "管理我的资源" out of the Market page. Without a
+  // visible Library entry in the sidebar, users have no way to reach
+  // their resources and the recycle-bin delete flow is unreachable.
+  const [hiddenApps, setHiddenApps] = useState<Set<string>>(new Set(['explore', 'knowledge', 'file', 'code', 'note', 'extensions']));
   const [appOrder, setAppOrder] = useState<string[]>(() => dialogAppIconsWithAgents.map(a => a.id));
   const [annotationListOpen, setAnnotationListOpen] = useState(false);
   const [showMigration, setShowMigration] = useState(false);
@@ -268,7 +275,7 @@ function CherryStudioInner() {
         {/* Dev: Empty State Preview — outside app window */}
         <button
           onClick={() => navigateToMenuTab('empty-preview')}
-          className="absolute right-0 top-1/2 -translate-y-1/2 flex items-center gap-1 px-1 py-3 rounded-l-lg bg-foreground/10 border border-border/30 border-r-0 text-foreground/40 hover:text-foreground hover:bg-foreground/20 hover:px-1.5 transition-all"
+          className="absolute right-0 top-1/2 -translate-y-1/2 flex items-center gap-1 px-1 py-3 rounded-l-lg bg-foreground/10 border border-border/30 border-r-0 text-muted-foreground/40 hover:text-foreground hover:bg-foreground/20 hover:px-1.5 transition-all"
           title="Empty State Preview"
         >
           <Layers size={11} />
@@ -277,7 +284,7 @@ function CherryStudioInner() {
         {/* Dev: Data Migration Demo — outside app window */}
         <button
           onClick={() => setShowMigration(true)}
-          className="absolute right-0 top-1/2 translate-y-4 flex items-center gap-1 px-1 py-3 rounded-l-lg bg-foreground/10 border border-border/30 border-r-0 text-foreground/40 hover:text-foreground hover:bg-foreground/20 hover:px-1.5 transition-all"
+          className="absolute right-0 top-1/2 translate-y-4 flex items-center gap-1 px-1 py-3 rounded-l-lg bg-foreground/10 border border-border/30 border-r-0 text-muted-foreground/40 hover:text-foreground hover:bg-foreground/20 hover:px-1.5 transition-all"
           title="Data Migration Demo"
         >
           <Database size={11} />
@@ -441,11 +448,25 @@ export function CherryStudio() {
 
   return (
     <SettingsProvider>
-      <CollabProvider>
-        <CherryStudioInner />
-        <UserInfoPopupHost />
-        <Toaster position="bottom-right" richColors closeButton />
-      </CollabProvider>
+      <RecycleBinProvider>
+        <ArchiveProvider>
+          <CollabProvider>
+            <CherryStudioInner />
+            <UserInfoPopupHost />
+            {/* Radix Dialog sets body { pointer-events: none } while open;
+                Sonner's portal-rendered toast inherits that and becomes
+                visible-but-unclickable. Force pointer-events back on at the
+                container + each toast so undo actions work inside Settings. */}
+            <Toaster
+              position="bottom-right"
+              richColors
+              closeButton
+              className="pointer-events-auto"
+              toastOptions={{ className: 'pointer-events-auto' }}
+            />
+          </CollabProvider>
+        </ArchiveProvider>
+      </RecycleBinProvider>
     </SettingsProvider>
   );
 }

@@ -49,7 +49,7 @@ const SLASH_TABS: { id: SlashTab; label: string; icon: React.ElementType }[] = [
 // ===========================
 
 const BADGE_STYLES: Record<BadgeKind, string> = {
-  system: 'display:inline-flex;align-items:center;gap:2px;padding:1px 7px;margin:0 2px;border-radius:5px;background:color-mix(in oklch,var(--color-teal-500) 13%,transparent);color:var(--color-teal-300);font-size:10px;line-height:1.6;cursor:default;user-select:all;vertical-align:baseline;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;white-space:nowrap;',
+  system: 'display:inline-flex;align-items:center;gap:2px;padding:1px 7px;margin:0 2px;border-radius:5px;background:color-mix(in oklch,var(--color-accent-violet) 13%,transparent);color:var(--color-accent-violet);font-size:10px;line-height:1.6;cursor:default;user-select:all;vertical-align:baseline;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;white-space:nowrap;',
   custom: 'display:inline-flex;align-items:center;gap:2px;padding:1px 7px;margin:0 2px;border-radius:5px;background:color-mix(in oklch,var(--color-accent-violet) 13%,transparent);color:var(--color-accent-violet);font-size:10px;line-height:1.6;cursor:default;user-select:all;vertical-align:baseline;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;white-space:nowrap;',
   kb: 'display:inline-flex;align-items:center;gap:2px;padding:1px 7px;margin:0 2px;border-radius:5px;background:color-mix(in oklch,var(--color-blue-500) 13%,transparent);color:var(--color-blue-300);font-size:10px;line-height:1.6;cursor:default;user-select:all;vertical-align:baseline;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;white-space:nowrap;',
   mcp: 'display:inline-flex;align-items:center;gap:2px;padding:1px 7px;margin:0 2px;border-radius:5px;background:color-mix(in oklch,var(--color-amber-500) 13%,transparent);color:var(--color-amber-300);font-size:10px;line-height:1.6;cursor:default;user-select:all;vertical-align:baseline;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;white-space:nowrap;',
@@ -87,7 +87,7 @@ function rawToHTML(text: string): string {
   const withBadges = escaped
     .replace(RE_DBL_BRACE, (_: string, name: string) => {
       const kind = SYSTEM_VARIABLES.some(v => v.name === name) ? 'system' : 'custom';
-      const icon = kind === 'system' ? '⚙ ' : '✦ ';
+      const icon = '𝑥 ';
       return `<span contenteditable="false" data-var="${name}" data-kind="${kind}" style="${BADGE_STYLES[kind]}">${icon}${name}</span>`;
     })
     .replace(RE_DBL_BRACKET, (_: string, name: string) => {
@@ -136,8 +136,7 @@ function createBadgeElement(name: string, kind: BadgeKind): HTMLSpanElement {
     span.textContent = `⚡ ${name}`;
   } else {
     span.dataset.var = name;
-    const icon = kind === 'system' ? '⚙ ' : '✦ ';
-    span.textContent = `${icon}${name}`;
+    span.textContent = `𝑥 ${name}`;
   }
   span.dataset.kind = kind;
   span.setAttribute('style', BADGE_STYLES[kind]);
@@ -545,7 +544,7 @@ export function PromptSection({ hideFewShot }: { hideFewShot?: boolean } = {}) {
       {/* System Prompt */}
       <div>
         <div className="flex items-center justify-between mb-1.5">
-          <label className="text-sm text-foreground/85">系统提示词</label>
+          <label className="text-sm text-muted-foreground">系统提示词</label>
           <Popover>
             <PopoverTrigger asChild>
               <Button size="inline" variant="ghost"
@@ -559,7 +558,7 @@ export function PromptSection({ hideFewShot }: { hideFewShot?: boolean } = {}) {
             </PopoverContent>
           </Popover>
         </div>
-        <p className="text-xs text-muted-foreground/50 mb-1.5">输入 <span className="font-mono text-muted-foreground/70">/</span> 也可以快速插入变量</p>
+        <p className="text-xs text-muted-foreground/50 mb-1.5">输入 <span className="font-mono text-muted-foreground/80">/</span> 也可以快速插入变量</p>
         <div className="relative">
           {/* ContentEditable Editor */}
           <div className="rounded-xl border border-border/20 bg-accent/15 transition-all focus-within:border-border/40 focus-within:bg-accent/15 overflow-hidden">
@@ -615,7 +614,7 @@ export function PromptSection({ hideFewShot }: { hideFewShot?: boolean } = {}) {
       {!hideFewShot && (
         <div className="border border-border/15 rounded-xl overflow-hidden">
           <Button variant="ghost" size="inline" onClick={() => setFsOpen(!fsOpen)}
-            className="flex items-center gap-2 w-full px-4 py-3 justify-start hover:bg-accent/15 transition-colors">
+            className="flex items-center gap-2 w-full px-4 py-3 justify-start hover:bg-accent/40 transition-colors">
             {fsOpen ? <ChevronDown size={11} className="text-muted-foreground/40" /> : <ChevronRight size={11} className="text-muted-foreground/40" />}
             <MessageCircle size={12} className="text-muted-foreground/60" />
             <span className="text-xs text-foreground">对话样本 (Few-Shot)</span>
@@ -626,7 +625,7 @@ export function PromptSection({ hideFewShot }: { hideFewShot?: boolean } = {}) {
               <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
                 <div className="px-4 pb-4 space-y-3">
                   {fewShots.map((fs, i) => (
-                    <div key={fs.id} className="group border border-border/10 rounded-xl p-3 space-y-2 relative hover:border-border/25 transition-colors">
+                    <div key={fs.id} className="group border border-border/15 rounded-xl p-3 space-y-2 relative hover:border-border/20 transition-colors">
                       <div className="flex items-center justify-between mb-1">
                         <span className="text-xs text-muted-foreground/40">样本 {i + 1}</span>
                         <Button variant="ghost" size="icon-xs" onClick={() => removeFewShot(fs.id)}

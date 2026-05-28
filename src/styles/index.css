@@ -69,3 +69,12 @@
     @apply absolute inset-y-2 right-2 bg-background rounded-2xl shadow-2xl border border-border/50 flex flex-col overflow-hidden;
   }
 }
+
+/* Sonner toast clickability when a Radix Dialog is open.
+   Radix sets body { pointer-events: none } on its overlay; Sonner's
+   portal-rendered toast inherits it and becomes unclickable. Force
+   pointer-events back on for any Sonner container + toast.            */
+[data-sonner-toaster],
+[data-sonner-toast] {
+  pointer-events: auto !important;
+}

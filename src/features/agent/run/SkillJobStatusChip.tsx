@@ -49,7 +49,7 @@ export function SkillJobStatusChip() {
           className={`gap-1.5 px-2 py-[3px] text-xs ${
             job.status === 'done'
               ? 'text-success hover:text-success hover:bg-success/10'
-              : 'text-muted-foreground hover:text-foreground hover:bg-accent/15'
+              : 'text-muted-foreground hover:text-foreground hover:bg-accent/40'
           }`}
           title={job.status === 'running' ? '查看 create_skill 状态' : '查看新创建的 Skill'}
         >
@@ -87,12 +87,12 @@ export function SkillJobStatusChip() {
         {/* Meta */}
         <div className="px-3 py-2.5 space-y-1.5 border-b border-border/15">
           <div className="flex items-baseline gap-2">
-            <span className="text-[10px] uppercase tracking-wide text-muted-foreground/45 w-10 flex-shrink-0">工具名</span>
+            <span className="text-[10px] uppercase tracking-wide text-muted-foreground/40 w-10 flex-shrink-0">工具名</span>
             <span className="text-xs text-foreground truncate font-mono">{job.name}</span>
           </div>
           <div className="flex items-baseline gap-2">
-            <span className="text-[10px] uppercase tracking-wide text-muted-foreground/45 w-10 flex-shrink-0">来源</span>
-            <span className="text-xs text-muted-foreground/75 truncate">{job.agentAvatar} {job.agentName}</span>
+            <span className="text-[10px] uppercase tracking-wide text-muted-foreground/40 w-10 flex-shrink-0">来源</span>
+            <span className="text-xs text-muted-foreground/80 truncate">{job.agentAvatar} {job.agentName}</span>
           </div>
         </div>
 
@@ -105,10 +105,10 @@ export function SkillJobStatusChip() {
               <div key={step.id} className="flex items-center gap-2 text-xs">
                 <span className="w-3.5 h-3.5 flex items-center justify-center flex-shrink-0">
                   {isDone && <CheckCircle2 size={11} className="text-success" />}
-                  {isRunning && <Loader2 size={11} className="text-muted-foreground/70 animate-spin" />}
+                  {isRunning && <Loader2 size={11} className="text-muted-foreground/80 animate-spin" />}
                   {!isDone && !isRunning && <span className="w-1 h-1 rounded-full bg-muted-foreground/30" />}
                 </span>
-                <span className={isDone ? 'text-foreground' : isRunning ? 'text-foreground/80' : 'text-muted-foreground/45'}>
+                <span className={isDone ? 'text-foreground' : isRunning ? 'text-muted-foreground/80' : 'text-muted-foreground/40'}>
                   {step.label}
                 </span>
               </div>
@@ -124,7 +124,7 @@ export function SkillJobStatusChip() {
                 type="button"
                 onClick={dismissActiveSkillJob}
                 aria-label="关闭"
-                className="inline-flex items-center justify-center w-6 h-6 rounded-md text-muted-foreground/50 hover:text-foreground hover:bg-accent/15"
+                className="inline-flex items-center justify-center w-6 h-6 rounded-md text-muted-foreground/50 hover:text-foreground hover:bg-accent/40"
               >
                 <X size={11} />
               </button>
@@ -139,7 +139,7 @@ export function SkillJobStatusChip() {
               </Button>
             </>
           ) : (
-            <span className="text-[11px] text-muted-foreground/55 flex items-center gap-1.5">
+            <span className="text-xs text-muted-foreground/50 flex items-center gap-1.5">
               <Loader2 size={10} className="animate-spin" />
               后台执行中，可继续对话
             </span>

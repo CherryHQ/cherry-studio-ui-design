@@ -404,7 +404,7 @@ function AddSourceDialog({ onAdd, onCancel }: {
         <div className="flex-1 overflow-y-auto p-3 scrollbar-thin">
           {tab === 'file' && (
             <div>
-              <div className={`border-2 border-dashed rounded-lg p-5 text-center transition-colors cursor-pointer ${isDragOver ? 'border-primary/50 bg-primary/[0.04]' : 'border-border/30 hover:border-border/60'}`}
+              <div className={`border-2 border-dashed rounded-lg p-5 text-center transition-colors cursor-pointer ${isDragOver ? 'border-primary/50 bg-primary/[0.04]' : 'border-border/30 hover:border-border/50'}`}
                 onDragOver={e => { e.preventDefault(); setIsDragOver(true); }} onDragLeave={() => setIsDragOver(false)} onDrop={handleFileDrop} onClick={handleFileSelect}>
                 <Upload size={18} className="text-muted-foreground/40 mx-auto mb-1.5" strokeWidth={1.4} />
                 <p className="text-xs text-muted-foreground/50 mb-0.5">{'\u70b9\u51fb\u9009\u62e9\u6587\u4ef6\u6216\u62d6\u62fd\u5230\u6b64\u5904'}</p>
@@ -441,7 +441,7 @@ function AddSourceDialog({ onAdd, onCancel }: {
             </div>
           )}
           {tab === 'folder' && (
-            <div className={`border-2 border-dashed rounded-lg p-5 text-center transition-colors cursor-pointer ${isDragOver ? 'border-primary/50 bg-primary/[0.04]' : 'border-border/30 hover:border-border/60'}`}
+            <div className={`border-2 border-dashed rounded-lg p-5 text-center transition-colors cursor-pointer ${isDragOver ? 'border-primary/50 bg-primary/[0.04]' : 'border-border/30 hover:border-border/50'}`}
               onDragOver={e => { e.preventDefault(); setIsDragOver(true); }} onDragLeave={() => setIsDragOver(false)} onDrop={handleFileDrop} onClick={handleFileSelect}>
               <Folder size={18} className="text-accent-violet/35 mx-auto mb-1.5" strokeWidth={1.4} />
               <p className="text-xs text-muted-foreground/50 mb-0.5">{'\u9009\u62e9\u6216\u62d6\u5165\u672c\u5730\u6587\u4ef6\u5939'}</p>
@@ -542,7 +542,7 @@ export function DataSourceList({ sources, onAddSources, onDeleteSource, onReinde
       </div>
 
       <div
-        className={`flex-1 overflow-y-auto mx-2.5 mb-2.5 rounded-lg border transition-colors scrollbar-thin ${isDragOver ? 'border-primary/50 bg-primary/[0.03]' : 'border-border/25'}`}
+        className={`flex-1 overflow-y-auto mx-2.5 mb-2.5 rounded-lg border transition-colors scrollbar-thin ${isDragOver ? 'border-primary/50 bg-primary/[0.03]' : 'border-border/20'}`}
         onDragOver={e => { e.preventDefault(); setIsDragOver(true); }}
         onDragLeave={() => setIsDragOver(false)}
         onDrop={handleDrop}
