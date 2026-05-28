@@ -12,6 +12,7 @@ import { BP_ICON, BP_VERTICAL_CARD, BP_FULL, getLayout } from '@/app/config/cons
 import type { MenuItem, Tab } from '@/app/types';
 import { useCollab } from '@/features/collaboration/CollabContext';
 import { useGlobalActions } from '@/app/context/GlobalActionContext';
+import { resolveArtifactIcon } from '@/app/utils/artifactIcons';
 
 function CherryLogo({ size = 'md' }: { size?: 'sm' | 'md' }) {
   const s = size === 'sm' ? 'w-7 h-7' : 'w-8 h-8';
@@ -58,7 +59,7 @@ function FullMenuItems({
   onMiniAppTabClick?: (tabId: string) => void;
   isFloating?: boolean;
 }) {
-  const { unpinFromSidebar, openLaunchpad } = useGlobalActions();
+  const { unpinFromSidebar, openLaunchpad, openMiniApp, launchpadOpen, sidebarMiniapps, sidebarArtifacts } = useGlobalActions();
   // Newly-opened mini-apps live in the top tab bar only — we used to nest
   // them under the 小程序 menu item, but that double-surfaced the same
   // embed (left rail + top tabs) and confused which click did what.
@@ -107,6 +108,69 @@ function FullMenuItems({
               </ContextMenuContent>
             </ContextMenu>
           </div>
+        );
+      })}
+
+      {/* Pinned mini-apps — added from the launchpad's edit mode. Each
+          opens the embed via openMiniApp, and right-click offers removal
+          from the sidebar. */}
+      {sidebarMiniapps.map((app) => (
+        <ContextMenu key={`mini-${app.id}`}>
+          <ContextMenuTrigger asChild>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => openMiniApp(app)}
+              className="w-full justify-start gap-2.5 px-2.5 py-[7px] rounded-xl text-sm relative text-muted-foreground hover:text-foreground hover:bg-accent/50"
+            >
+              <div className={`w-4 h-4 rounded-md flex items-center justify-center text-[10px] text-white flex-shrink-0 ${app.color}`}>
+                {app.initial}
+              </div>
+              <span className="truncate">{app.name}</span>
+            </Button>
+          </ContextMenuTrigger>
+          <ContextMenuContent className="z-[var(--z-popover)]">
+            <ContextMenuItem onSelect={() => unpinFromSidebar('miniapp', app.id)}>
+              <PinOff size={14} strokeWidth={1.6} />
+              从侧边栏移除
+            </ContextMenuItem>
+            <ContextMenuItem onSelect={() => openLaunchpad(true)}>
+              <LayoutGrid size={14} strokeWidth={1.6} />
+              管理
+            </ContextMenuItem>
+          </ContextMenuContent>
+        </ContextMenu>
+      ))}
+
+      {/* Pinned artifacts — generic FileText-style avatar, opens the
+          html-preview tab via launchpadOpen which handles both static
+          keys and runtime "pinned:<id>" keys. */}
+      {sidebarArtifacts.map((a) => {
+        const Icon = resolveArtifactIcon(a.iconName);
+        return (
+          <ContextMenu key={`art-${a.key}`}>
+            <ContextMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => launchpadOpen(`html:${a.key}`)}
+                className="w-full justify-start gap-2.5 px-2.5 py-[7px] rounded-xl text-sm relative text-muted-foreground hover:text-foreground hover:bg-accent/50"
+              >
+                <Icon size={16} strokeWidth={1.6} className="text-accent-violet flex-shrink-0" />
+                <span className="truncate">{a.label}</span>
+              </Button>
+            </ContextMenuTrigger>
+            <ContextMenuContent className="z-[var(--z-popover)]">
+              <ContextMenuItem onSelect={() => unpinFromSidebar('artifact', a.key)}>
+                <PinOff size={14} strokeWidth={1.6} />
+                从侧边栏移除
+              </ContextMenuItem>
+              <ContextMenuItem onSelect={() => openLaunchpad(true)}>
+                <LayoutGrid size={14} strokeWidth={1.6} />
+                管理
+              </ContextMenuItem>
+            </ContextMenuContent>
+          </ContextMenu>
         );
       })}
     </div>

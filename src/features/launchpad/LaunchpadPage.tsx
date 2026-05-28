@@ -26,7 +26,7 @@ export function LaunchpadPage() {
     launchpadOpen, openMiniApp, pinToSidebar, unpinFromSidebar,
     removeFromLaunchpad, removedFromLaunchpad,
     launchpadEditMode, setLaunchpadEditMode,
-    hiddenSidebarApps,
+    hiddenSidebarApps, sidebarMiniapps, sidebarArtifacts,
   } = useGlobalActions();
   const pinned = usePinnedArtifacts();
 
@@ -126,43 +126,54 @@ export function LaunchpadPage() {
             <EmptyHint text="还没有添加的小程序" />
           ) : (
             <Grid>
-              {userMiniApps.map(app => (
-                <PinnableTile
-                  key={app.id}
-                  label={app.name}
-                  onOpen={() => openMiniApp(app)}
-                  onPin={() => pinToSidebar('miniapp', app.id, app.name)}
-                  onRemove={() => removeFromLaunchpad('miniapp', app.id)}
-                  inSidebar={false}
-                  onToggleSidebar={() => pinToSidebar('miniapp', app.id, app.name)}
-                  editMode={launchpadEditMode}
-                >
-                  <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-base font-medium text-white ${app.color}`}>
-                    {app.initial}
-                  </div>
-                </PinnableTile>
-              ))}
-              <AddTile label="添加小程序" onClick={() => launchpadOpen('miniapp')} />
+              {userMiniApps.map(app => {
+                const inSidebar = sidebarMiniapps.some(p => p.id === app.id);
+                return (
+                  <PinnableTile
+                    key={app.id}
+                    label={app.name}
+                    onOpen={() => openMiniApp(app)}
+                    onPin={() => pinToSidebar('miniapp', app.id, app.name)}
+                    onRemove={() => removeFromLaunchpad('miniapp', app.id)}
+                    inSidebar={inSidebar}
+                    onToggleSidebar={() => inSidebar
+                      ? unpinFromSidebar('miniapp', app.id)
+                      : pinToSidebar('miniapp', app.id, app.name)
+                    }
+                    editMode={launchpadEditMode}
+                  >
+                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-base font-medium text-white ${app.color}`}>
+                      {app.initial}
+                    </div>
+                  </PinnableTile>
+                );
+              })}
             </Grid>
           )}
         </Section>
 
         <Section title="Agent 产物">
           <Grid>
-            {visibleHtmlPreviews.map(([key, preview]) => (
-              <PinnableTile
-                key={`static-${key}`}
-                label={preview.label}
-                onOpen={() => launchpadOpen(`html:${key}`)}
-                onPin={() => pinToSidebar('artifact', key, preview.label)}
-                onRemove={() => removeFromLaunchpad('artifact', key)}
-                inSidebar={false}
-                onToggleSidebar={() => pinToSidebar('artifact', key, preview.label)}
-                editMode={launchpadEditMode}
-              >
-                <ArtifactAvatar />
-              </PinnableTile>
-            ))}
+            {visibleHtmlPreviews.map(([key, preview]) => {
+              const inSidebar = sidebarArtifacts.some(p => p.key === key);
+              return (
+                <PinnableTile
+                  key={`static-${key}`}
+                  label={preview.label}
+                  onOpen={() => launchpadOpen(`html:${key}`)}
+                  onPin={() => pinToSidebar('artifact', key, preview.label)}
+                  onRemove={() => removeFromLaunchpad('artifact', key)}
+                  inSidebar={inSidebar}
+                  onToggleSidebar={() => inSidebar
+                    ? unpinFromSidebar('artifact', key)
+                    : pinToSidebar('artifact', key, preview.label)
+                  }
+                  editMode={launchpadEditMode}
+                >
+                  <ArtifactAvatar />
+                </PinnableTile>
+              );
+            })}
             {visiblePinned.map(a => (
               <Popover
                 key={a.id}
@@ -177,8 +188,11 @@ export function LaunchpadPage() {
                       onPin={() => pinToSidebar('artifact', `pinned:${a.id}`, a.label)}
                       onRemove={() => removeFromLaunchpad('artifact', `pinned:${a.id}`)}
                       onEdit={() => startEditPinned(a)}
-                      inSidebar={false}
-                      onToggleSidebar={() => pinToSidebar('artifact', `pinned:${a.id}`, a.label)}
+                      inSidebar={sidebarArtifacts.some(p => p.key === `pinned:${a.id}`)}
+                      onToggleSidebar={() => sidebarArtifacts.some(p => p.key === `pinned:${a.id}`)
+                        ? unpinFromSidebar('artifact', `pinned:${a.id}`)
+                        : pinToSidebar('artifact', `pinned:${a.id}`, a.label)
+                      }
                       editMode={launchpadEditMode}
                     >
                       <ArtifactAvatar iconName={a.iconName} />
@@ -334,21 +348,6 @@ function PinnableTile({
   );
 }
 
-function AddTile({ label, onClick }: { label: string; onClick?: () => void }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="group flex flex-col items-center gap-2 p-2 rounded-xl hover:bg-accent/30 active:scale-[0.96] transition-all"
-      title={label}
-    >
-      <div className="w-12 h-12 rounded-2xl border border-dashed border-border/40 text-muted-foreground/50 group-hover:text-foreground group-hover:border-border/70 flex items-center justify-center transition-colors">
-        <Plus size={16} strokeWidth={1.6} />
-      </div>
-      <span className="text-xs text-muted-foreground/55">{label}</span>
-    </button>
-  );
-}
 
 function EmptyHint({ text, icon }: { text: string; icon?: React.ReactNode }) {
   return (

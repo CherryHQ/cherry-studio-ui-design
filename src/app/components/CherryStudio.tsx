@@ -46,6 +46,8 @@ import { useTabDrag } from '@/app/hooks/useTabDrag';
 import { CollabProvider, useCollab } from '@/features/collaboration/CollabContext';
 import { UserInfoPopup } from '@/features/collaboration/components/UserInfoPopup';
 import { usePinnedArtifacts, findPinnedArtifact } from '@/app/stores/sharedArtifactsStore';
+import { miniAppList } from '@/features/miniapp/MiniAppsPage';
+import { DEFAULT_ARTIFACT_ICON_NAME } from '@/app/utils/artifactIcons';
 
 // ===========================
 // Main UI
@@ -297,9 +299,15 @@ function CherryStudioInner() {
   // ===========================
   // GlobalActionContext value
   // ===========================
-  // iPhone-style sidebar pinning: functions toggle via `hiddenApps`
-  // (already exists); mini-apps and artifacts get placeholder toasts for
-  // now — full sidebar rendering of those kinds is the next step.
+  // iPhone-style sidebar pinning. Three kinds, three storage paths:
+  //   - function : un-hide in `hiddenApps` (existing state)
+  //   - miniapp  : append to `sidebarMiniapps` (richer payload, looked up
+  //                from miniAppList by id at pin time)
+  //   - artifact : append to `sidebarArtifacts` (key = static id like
+  //                "weekly-report" OR "pinned:<id>" for runtime ones)
+  const [sidebarMiniapps, setSidebarMiniapps] = useState<Array<{ id: string; name: string; color: string; initial: string; url: string; logoUrl?: string }>>([]);
+  const [sidebarArtifacts, setSidebarArtifacts] = useState<Array<{ key: string; label: string; iconName?: string }>>([]);
+
   const pinToSidebar = useCallback((kind: 'function' | 'miniapp' | 'artifact', id: string, label?: string) => {
     if (kind === 'function') {
       setHiddenApps(prev => {
@@ -309,17 +317,40 @@ function CherryStudioInner() {
         return next;
       });
       toast.success(`已固定到侧边栏：${label ?? id}`);
+    } else if (kind === 'miniapp') {
+      const app = miniAppList.find(a => a.id === id);
+      if (!app) return;
+      setSidebarMiniapps(prev => prev.some(p => p.id === id) ? prev : [...prev, app]);
+      toast.success(`已固定到侧边栏：${app.name}`);
     } else {
-      toast(`已固定到侧边栏：${label ?? id}`, { description: '即将在下一版本中真正出现在侧边栏' });
+      // artifact — look up label + iconName based on key flavor
+      const isPinned = id.startsWith('pinned:');
+      let resolvedLabel = label ?? '产物';
+      let iconName: string | undefined = DEFAULT_ARTIFACT_ICON_NAME;
+      if (isPinned) {
+        const art = findPinnedArtifact(id.slice('pinned:'.length));
+        if (!art) return;
+        resolvedLabel = art.label;
+        iconName = art.iconName ?? DEFAULT_ARTIFACT_ICON_NAME;
+      } else {
+        const preview = newTabHtmlPreviews[id];
+        if (!preview) return;
+        resolvedLabel = preview.label;
+      }
+      setSidebarArtifacts(prev => prev.some(p => p.key === id)
+        ? prev
+        : [...prev, { key: id, label: resolvedLabel, iconName }]);
+      toast.success(`已固定到侧边栏：${resolvedLabel}`);
     }
   }, []);
 
   const unpinFromSidebar = useCallback((kind: 'function' | 'miniapp' | 'artifact', id: string) => {
     if (kind === 'function') {
-      setHiddenApps(prev => {
-        if (prev.has(id)) return prev;
-        return new Set([...prev, id]);
-      });
+      setHiddenApps(prev => prev.has(id) ? prev : new Set([...prev, id]));
+    } else if (kind === 'miniapp') {
+      setSidebarMiniapps(prev => prev.filter(p => p.id !== id));
+    } else {
+      setSidebarArtifacts(prev => prev.filter(p => p.key !== id));
     }
   }, []);
 
@@ -369,13 +400,15 @@ function CherryStudioInner() {
     launchpadEditMode,
     setLaunchpadEditMode,
     hiddenSidebarApps: hiddenApps,
+    sidebarMiniapps,
+    sidebarArtifacts,
   }), [
     handleOpenMiniApp, handlePinTab, handleEditAssistantInLibrary,
     handleNavigateToKnowledge, handleNavigateToLibrary, handleLibraryReturn,
     handleTabTitleChange, handleDialogCreateTab,
     pinToSidebar, unpinFromSidebar, openLaunchpad, removeFromLaunchpad,
     libraryEditResourceId, libraryCreateType, removedFromLaunchpad,
-    launchpadEditMode, hiddenApps,
+    launchpadEditMode, hiddenApps, sidebarMiniapps, sidebarArtifacts,
   ]);
 
   // ===========================

@@ -89,6 +89,17 @@ export interface GlobalActionState {
    * "in sidebar?" state on the toggle badge.
    */
   hiddenSidebarApps: Set<string>;
+  /**
+   * Mini-apps the user pinned to the sidebar via launchpad → 添加至侧边栏.
+   * Rendered as rows below the standard menu items.
+   */
+  sidebarMiniapps: Array<{ id: string; name: string; color: string; initial: string; url: string; logoUrl?: string }>;
+  /**
+   * Agent artifacts the user pinned to the sidebar. `key` matches the
+   * id used by `pinToSidebar('artifact', key, …)` — either a static key
+   * like `weekly-report` or a runtime key like `pinned:<id>`.
+   */
+  sidebarArtifacts: Array<{ key: string; label: string; iconName?: string }>;
 }
 
 /** Combined interface for backward compatibility */
@@ -123,6 +134,8 @@ const defaultState: GlobalActionState = {
   launchpadEditMode: false,
   setLaunchpadEditMode: noop,
   hiddenSidebarApps: new Set<string>(),
+  sidebarMiniapps: [],
+  sidebarArtifacts: [],
 };
 
 const GlobalActionFunctionsContext = createContext<GlobalActionFunctions>(defaultFunctions);
@@ -174,9 +187,12 @@ export function GlobalActionProvider({ value, children }: GlobalActionProviderPr
     launchpadEditMode: value.launchpadEditMode,
     setLaunchpadEditMode: value.setLaunchpadEditMode,
     hiddenSidebarApps: value.hiddenSidebarApps,
+    sidebarMiniapps: value.sidebarMiniapps,
+    sidebarArtifacts: value.sidebarArtifacts,
   }), [
     value.libraryEditResourceId, value.libraryCreateType, value.removedFromLaunchpad,
     value.launchpadEditMode, value.setLaunchpadEditMode, value.hiddenSidebarApps,
+    value.sidebarMiniapps, value.sidebarArtifacts,
   ]);
 
   return (

@@ -61,6 +61,7 @@ export const dialogAppIcons: { id: string; label: string; icon: typeof MessageCi
   { id: 'translate', label: '翻译', icon: Languages, color: 'text-violet-400', bg: 'bg-violet-500/20' },
   { id: 'knowledge', label: '知识库', icon: BookOpen, color: 'text-cyan-400', bg: 'bg-cyan-500/20' },
   { id: 'library', label: '资源', icon: Library, color: 'text-indigo-400', bg: 'bg-indigo-500/20' },
+  { id: 'market', label: '市场', icon: ShoppingBag, color: 'text-pink-400', bg: 'bg-pink-500/20' },
   { id: 'note', label: '笔记', icon: NotebookPen, color: 'text-teal-400', bg: 'bg-teal-500/20' },
   { id: 'code', label: 'Code', icon: Code2, color: 'text-slate-400', bg: 'bg-slate-500/20' },
   { id: 'explore', label: '探索', icon: Compass, color: 'text-orange-400', bg: 'bg-orange-500/20' },
