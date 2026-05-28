@@ -87,7 +87,16 @@ function CherryStudioInner() {
     })),
   ], [pinnedArtifacts]);
   const [annotationListOpen, setAnnotationListOpen] = useState(false);
-  const [showMigration, setShowMigration] = useState(false);
+  // Show the V1→V2 migration overlay on first launch (and again on
+  // every refresh in this design-prototype) until the user reaches a
+  // terminal state — completed / declined are persisted to
+  // localStorage; postponed only suppresses for the current session.
+  const [showMigration, setShowMigration] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    const persisted = window.localStorage.getItem('cherry:v2-migration');
+    const session = window.sessionStorage.getItem('cherry:v2-migration-postponed');
+    return persisted !== 'completed' && persisted !== 'declined' && session !== '1';
+  });
 
   // Surface annotation persistence failures (quota exceeded, etc.) so the
   // user knows their comment wasn't actually saved — previously this failed
@@ -580,7 +589,16 @@ function CherryStudioInner() {
         <AnnotationList open={annotationListOpen} onClose={() => setAnnotationListOpen(false)} />
 
         {showMigration && (
-          <DataMigrationOverlay onComplete={() => setShowMigration(false)} />
+          <DataMigrationOverlay
+            onClose={(reason) => {
+              if (reason === 'completed' || reason === 'declined') {
+                try { window.localStorage.setItem('cherry:v2-migration', reason); } catch { /* quota */ }
+              } else {
+                try { window.sessionStorage.setItem('cherry:v2-migration-postponed', '1'); } catch { /* quota */ }
+              }
+              setShowMigration(false);
+            }}
+          />
         )}
       </div>
       </AnnotationProvider>
