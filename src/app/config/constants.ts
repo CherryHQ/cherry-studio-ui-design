@@ -17,6 +17,7 @@ import type {
 // ===========================
 
 export const menuItems: MenuItem[] = [
+  { id: 'launchpad', label: '启动页', icon: Layers },
   { id: 'chat', label: '聊天', icon: MessageCircle },
   { id: 'agent', label: 'Agent', icon: MousePointerClick },
   { id: 'collaboration', label: '协作', icon: Users2 },
@@ -202,6 +203,76 @@ section h2{font-size:13px;font-weight:600;color:#3a3a3a;margin:0 0 12px;letter-s
 <section><h2>主色板</h2><div class="palette"><div class="swatch s1">#0D0D0D</div><div class="swatch s2">#2A2A2A</div><div class="swatch s3">#7A7A7A</div><div class="swatch s4">#EAEAEA</div></div></section>
 <section><h2>字号阶梯</h2><div class="type"><b>Display</b><span>22 / 26 · -0.01em</span><b>Title</b><span>16 / 22 · -0.005em</span><b>Body</b><span>13 / 18</span><b>Caption</b><span>11 / 14 · #7A7A7A</span></div></section>
 <section><h2>间距阶梯 (px)</h2><div class="spacing"><div style="width:4px;height:20px">4</div><div style="width:8px;height:32px">8</div><div style="width:12px;height:44px">12</div><div style="width:16px;height:56px">16</div><div style="width:24px;height:80px">24</div><div style="width:32px;height:104px">32</div></div></section>
+</body></html>`,
+  },
+  'roadmap': {
+    label: '产品路线图',
+    emoji: '🗺',
+    title: '产品路线图 · 2026 H2',
+    html: `<!doctype html><html lang="zh"><head><meta charset="utf-8"><title>产品路线图</title><style>
+body{font-family:-apple-system,BlinkMacSystemFont,'PingFang SC',sans-serif;margin:0;padding:32px 40px;background:#fafafa;color:#1a1a1a}
+h1{margin:0;font-size:22px;font-weight:600;letter-spacing:-.01em}
+.sub{color:#8a8a8a;font-size:12px;margin:4px 0 28px}
+.lane{display:grid;grid-template-columns:60px 1fr;gap:14px;margin:18px 0;align-items:start}
+.lane b{color:#7a7a7a;font-size:11px;letter-spacing:.04em;text-transform:uppercase;padding-top:2px}
+.lane ul{margin:0;padding-left:16px;font-size:13px;line-height:1.7}
+.lane li::marker{color:#c8a2c8}
+</style></head><body>
+<h1>产品路线图 · 2026 H2</h1><div class="sub">产品 Agent · 节奏由 Q1 用户访谈反推</div>
+<div class="lane"><b>Q3</b><ul><li>多模态草稿（截图 → 编辑）</li><li>会话搜索 + 标签</li><li>团队协作评论</li></ul></div>
+<div class="lane"><b>Q4</b><ul><li>导出 HTML / PDF 报告</li><li>插件市场 v2 + 上架审核</li><li>Agent 调度策略可视化</li></ul></div>
+<div class="lane"><b>2027 Q1</b><ul><li>桌面端打包发布（macOS / Win）</li><li>企业版 SSO 接入</li></ul></div>
+</body></html>`,
+  },
+  'incident-report': {
+    label: '事故回顾',
+    emoji: '🚨',
+    title: '事故回顾 · 2026-05-19 模型响应延迟',
+    html: `<!doctype html><html lang="zh"><head><meta charset="utf-8"><title>事故回顾</title><style>
+body{font-family:-apple-system,BlinkMacSystemFont,'PingFang SC',sans-serif;margin:0;padding:32px 40px;background:#fff5f5;color:#1a1a1a}
+h1{margin:0;font-size:22px;font-weight:600;letter-spacing:-.01em;color:#9f1239}
+.sub{color:#8a8a8a;font-size:12px;margin:4px 0 24px}
+.box{border-left:3px solid #f43f5e;padding:10px 14px;margin:14px 0;background:#fff;border-radius:0 8px 8px 0;font-size:13px;line-height:1.7}
+.box b{display:block;font-size:11px;color:#9f1239;text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px}
+.kpi{display:flex;gap:12px;margin:18px 0}
+.kpi div{flex:1;background:#fff;padding:12px 14px;border-radius:10px;border:1px solid #f3d3d6}
+.kpi b{display:block;font-size:18px;font-weight:600;color:#9f1239}
+.kpi span{font-size:11px;color:#8a8a8a}
+</style></head><body>
+<h1>事故回顾 · 模型响应延迟</h1><div class="sub">2026-05-19 14:02 - 14:38 UTC · 影响约 12% 用户</div>
+<div class="kpi"><div><b>36 min</b><span>影响时长</span></div><div><b>P2</b><span>事故等级</span></div><div><b>0</b><span>数据丢失</span></div></div>
+<div class="box"><b>触发</b>上游供应商在峰值时段下调了 inference 配额阈值，未发布 changelog；我方未对 quota header 做监控。</div>
+<div class="box"><b>响应</b>14:09 用户反馈出现；14:18 oncall 切流到 fallback 集群；14:38 上游恢复后切回。</div>
+<div class="box"><b>跟进</b>(1) 增加 quota header 告警；(2) 与上游约定 changelog 推送渠道；(3) fallback 集群冷启动从 9 分钟压到 90 秒。</div>
+</body></html>`,
+  },
+  'pricing-experiment': {
+    label: '定价 A/B 结果',
+    emoji: '🧪',
+    title: '定价 A/B 实验报告 · 2026-04',
+    html: `<!doctype html><html lang="zh"><head><meta charset="utf-8"><title>定价 A/B 报告</title><style>
+body{font-family:-apple-system,BlinkMacSystemFont,'PingFang SC',sans-serif;margin:0;padding:32px 40px;background:#fafafa;color:#1a1a1a}
+h1{margin:0;font-size:22px;font-weight:600;letter-spacing:-.01em}
+.sub{color:#8a8a8a;font-size:12px;margin:4px 0 24px}
+table{width:100%;border-collapse:collapse;margin:16px 0;font-size:13px}
+th{text-align:left;font-weight:500;color:#7a7a7a;font-size:11px;text-transform:uppercase;letter-spacing:.04em;padding:8px 12px;border-bottom:1px solid #e5e5e5}
+td{padding:10px 12px;border-bottom:1px solid #f1f1f1;color:#2a2a2a}
+.tag{display:inline-block;padding:1px 6px;border-radius:5px;font-size:11px;font-weight:500}
+.win{background:#dcfce7;color:#166534}
+.flat{background:#f3f4f6;color:#525252}
+.lose{background:#fee2e2;color:#991b1b}
+.note{background:#fff;border:1px solid #eee;border-radius:10px;padding:12px 14px;font-size:13px;line-height:1.65;margin-top:18px}
+.note b{color:#3a3a3a}
+</style></head><body>
+<h1>定价 A/B 实验报告</h1><div class="sub">实验编号 EXP-2026-04 · 增长 Agent · 7 天 · 1.8 万样本</div>
+<table>
+<thead><tr><th>分组</th><th>付费转化</th><th>ARPU</th><th>留存 D7</th><th>结论</th></tr></thead>
+<tbody>
+<tr><td>对照 ($12 / mo)</td><td>3.8%</td><td>$12.0</td><td>62%</td><td><span class="tag flat">基线</span></td></tr>
+<tr><td>实验 1 ($9 / mo)</td><td>5.4%</td><td>$9.0</td><td>61%</td><td><span class="tag win">收益 +14%</span></td></tr>
+<tr><td>实验 2 ($16 / mo, 含会议总结)</td><td>2.9%</td><td>$16.0</td><td>67%</td><td><span class="tag lose">转化下降，留存改善</span></td></tr>
+</tbody></table>
+<div class="note"><b>建议 ·</b> 推广实验 1 价格点至全量；实验 2 的会议总结作为加购选项，单独 $4 / mo，避免冲击主转化。</div>
 </body></html>`,
   },
 };

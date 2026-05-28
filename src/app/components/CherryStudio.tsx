@@ -13,24 +13,20 @@ import {
 } from '@/app/config/constants';
 
 // Agent-produced HTML artifacts (reports, summaries, dashboards) appear as
-// additional launcher tiles in the NewTabDialog grid. Clicking one opens an
-// inline preview rather than creating a tab (see handleDialogCreateTab).
-// We map the emoji avatar to a tiny inline component so it satisfies
-// AppIconItem.icon (React.ElementType) without changing the dialog's render
-// contract.
-function makeEmojiIcon(emoji: string): React.ElementType {
-  const C: React.FC = () => <span className="text-[16px] leading-none">{emoji}</span>;
-  C.displayName = `EmojiIcon(${emoji})`;
-  return C;
-}
+// additional launcher tiles in the NewTabDialog grid. Clicking one opens the
+// artifact in a new top-bar tab (see handleDialogCreateTab). All artifact
+// tiles share a single generic icon — they're typed by being artifacts, not
+// by their topic — so the visual scan reads as one bucket.
+const ArtifactTileIcon: React.ElementType = (props: { size?: number; strokeWidth?: number; className?: string }) =>
+  <Globe size={props.size} strokeWidth={props.strokeWidth ?? 1.6} className={props.className} />;
 
 const dialogAppIconsWithAgents = [
   ...dialogAppIcons,
   ...Object.entries(newTabHtmlPreviews).map(([key, preview]) => ({
     id: `html:${key}`,
     label: preview.label,
-    icon: makeEmojiIcon(preview.emoji),
-    color: 'text-foreground',
+    icon: ArtifactTileIcon,
+    color: 'text-accent-violet',
     bg: 'bg-accent-violet/15',
   })),
 ];
@@ -83,8 +79,8 @@ function CherryStudioInner() {
     ...pinnedArtifacts.map(a => ({
       id: `html:pinned:${a.id}`,
       label: a.label,
-      icon: makeEmojiIcon(a.emoji),
-      color: 'text-foreground',
+      icon: ArtifactTileIcon,
+      color: 'text-accent-violet',
       bg: 'bg-accent-violet/15',
     })),
   ], [pinnedArtifacts]);
@@ -202,7 +198,9 @@ function CherryStudioInner() {
     .filter(id => !hiddenApps.has(id))
     .map(id => menuItems.find(m => m.id === id))
     .filter((m): m is MenuItem => !!m);
-  const unmanagedItems = menuItems.filter(m => !managedIds.has(m.id) && m.id !== 'empty-preview');
+  // launchpad never shows in the sidebar — it's reached only via the
+  // tab-bar "+" button. empty-preview is a dev-only surface.
+  const unmanagedItems = menuItems.filter(m => !managedIds.has(m.id) && m.id !== 'empty-preview' && m.id !== 'launchpad');
   const visibleMenuItems = [...orderedVisible, ...unmanagedItems];
 
   // ===========================
@@ -308,12 +306,13 @@ function CherryStudioInner() {
     libraryReturn: handleLibraryReturn,
     changeTabTitle: handleTabTitleChange,
     openSettings: (section?: string) => { setSettingsInitialSection(section); setSettingsOpen(true); },
+    launchpadOpen: handleDialogCreateTab,
     libraryEditResourceId,
     libraryCreateType,
   }), [
     handleOpenMiniApp, handlePinTab, handleEditAssistantInLibrary,
     handleNavigateToKnowledge, handleNavigateToLibrary, handleLibraryReturn,
-    handleTabTitleChange, libraryEditResourceId, libraryCreateType,
+    handleTabTitleChange, handleDialogCreateTab, libraryEditResourceId, libraryCreateType,
   ]);
 
   // ===========================
@@ -351,7 +350,7 @@ function CherryStudioInner() {
               e.preventDefault();
               setContextMenu({ open: true, x: e.clientX, y: e.clientY, tabId });
             }}
-            onNewTab={() => { setNewTabSearch(''); setNewTabManageMode(false); setNewTabDialogOpen(true); }}
+            onNewTab={() => navigateToMenuTab('launchpad')}
             onManageShortcuts={() => { setNewTabSearch(''); setNewTabManageMode(true); setNewTabDialogOpen(true); }}
             startTabDrag={onStartTabDrag}
           />

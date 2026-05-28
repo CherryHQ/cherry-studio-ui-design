@@ -1,0 +1,176 @@
+import { useMemo } from 'react';
+import { Plus, Sparkles, Globe } from 'lucide-react';
+import { useGlobalActions } from '@/app/context/GlobalActionContext';
+import { dialogAppIcons, newTabHtmlPreviews } from '@/app/config/constants';
+import { miniAppList } from '@/features/miniapp/MiniAppsPage';
+import { usePinnedArtifacts } from '@/app/stores/sharedArtifactsStore';
+
+// ===========================
+// 启动页 (Launchpad)
+// ===========================
+// Replaces the legacy NewTabDialog modal. Three sections only —
+// 功能 (built-in surfaces), 小程序 (user-added agents/mini-apps from
+// the launcher), Agent 产物 (HTML artifacts the user pinned from
+// agent runs). Clicking a tile delegates to the shared
+// `launchpadOpen` action which routes by id namespace.
+
+export function LaunchpadPage() {
+  const { launchpadOpen, openMiniApp } = useGlobalActions();
+  const pinned = usePinnedArtifacts();
+
+  // 用户添加的小程序 — embedded webpages (Gemini, ChatGPT, etc.).
+  // Show the first 8 mini-apps as the user's "added" set; the full
+  // catalog lives in the dedicated 小程序 page.
+  const userMiniApps = useMemo(() => miniAppList.slice(0, 8), []);
+
+  return (
+    <div className="flex-1 overflow-y-auto scrollbar-thin">
+      <div className="max-w-[960px] mx-auto px-8 py-10 space-y-10">
+        <header>
+          <h1 className="text-xl text-foreground">启动页</h1>
+          <p className="text-xs text-muted-foreground/55 mt-1">
+            选择一个功能开始，或者从下方继续使用已添加的小程序与 Agent 产物。
+          </p>
+        </header>
+
+        <Section title="功能">
+          <Grid>
+            {dialogAppIcons.map(item => {
+              const Icon = item.icon;
+              return (
+                <Tile
+                  key={item.id}
+                  label={item.label}
+                  onClick={() => launchpadOpen(item.id)}
+                >
+                  <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${item.bg}`}>
+                    <Icon size={20} strokeWidth={1.6} className={item.color} />
+                  </div>
+                </Tile>
+              );
+            })}
+          </Grid>
+        </Section>
+
+        <Section title="小程序">
+          {userMiniApps.length === 0 ? (
+            <EmptyHint text="还没有添加的小程序" />
+          ) : (
+            <Grid>
+              {userMiniApps.map(app => (
+                <Tile
+                  key={app.id}
+                  label={app.name}
+                  onClick={() => openMiniApp(app)}
+                >
+                  <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-base font-medium text-white ${app.color}`}>
+                    {app.initial}
+                  </div>
+                </Tile>
+              ))}
+              <AddTile label="添加小程序" onClick={() => launchpadOpen('miniapp')} />
+            </Grid>
+          )}
+        </Section>
+
+        <Section title="Agent 产物">
+          <Grid>
+            {Object.entries(newTabHtmlPreviews).map(([key, preview]) => (
+              <Tile
+                key={`static-${key}`}
+                label={preview.label}
+                onClick={() => launchpadOpen(`html:${key}`)}
+              >
+                <ArtifactAvatar />
+              </Tile>
+            ))}
+            {pinned.map(a => (
+              <Tile
+                key={a.id}
+                label={a.label}
+                onClick={() => launchpadOpen(`html:pinned:${a.id}`)}
+              >
+                <ArtifactAvatar />
+              </Tile>
+            ))}
+            {pinned.length === 0 && Object.keys(newTabHtmlPreviews).length === 0 && (
+              <EmptyHint
+                text="在 Agent 运行结果里点 Pin，就会出现在这里"
+                icon={<Sparkles size={14} strokeWidth={1.5} />}
+              />
+            )}
+          </Grid>
+        </Section>
+      </div>
+    </div>
+  );
+}
+
+// Single generic avatar for any Agent-produced artifact tile. Per-artifact
+// emojis (when present) are intentionally not used here — the launchpad
+// treats artifacts as one bucket, identified by title rather than topic icon.
+function ArtifactAvatar() {
+  return (
+    <div className="w-12 h-12 rounded-2xl bg-accent-violet/15 flex items-center justify-center text-accent-violet">
+      <Globe size={20} strokeWidth={1.6} />
+    </div>
+  );
+}
+
+function Section({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <section>
+      <h2 className="text-sm font-medium text-foreground mb-4">{title}</h2>
+      {children}
+    </section>
+  );
+}
+
+function Grid({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="grid gap-x-2 gap-y-5"
+      style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(86px, 1fr))' }}>
+      {children}
+    </div>
+  );
+}
+
+function Tile({ label, onClick, children }: { label: string; onClick: () => void; children: React.ReactNode }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="group flex flex-col items-center gap-2 p-2 rounded-xl hover:bg-accent/30 active:scale-[0.96] transition-all"
+    >
+      {children}
+      <span className="text-xs text-foreground/80 group-hover:text-foreground truncate max-w-full">
+        {label}
+      </span>
+    </button>
+  );
+}
+
+function AddTile({ label, onClick }: { label: string; onClick?: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="group flex flex-col items-center gap-2 p-2 rounded-xl hover:bg-accent/30 active:scale-[0.96] transition-all"
+      title={label}
+    >
+      <div className="w-12 h-12 rounded-2xl border border-dashed border-border/40 text-muted-foreground/50 group-hover:text-foreground group-hover:border-border/70 flex items-center justify-center transition-colors">
+        <Plus size={16} strokeWidth={1.6} />
+      </div>
+      <span className="text-xs text-muted-foreground/55">{label}</span>
+    </button>
+  );
+}
+
+function EmptyHint({ text, icon }: { text: string; icon?: React.ReactNode }) {
+  return (
+    <div className="flex items-center gap-2 px-3 py-4 rounded-xl border border-dashed border-border/30 text-xs text-muted-foreground/55">
+      {icon}
+      <span>{text}</span>
+    </div>
+  );
+}
