@@ -1376,10 +1376,10 @@ function AgentNotesSection() {
   };
 
   return (
-    <div className="max-w-3xl space-y-3">
+    <div className="max-w-3xl divide-y divide-border/15">
       {/* 使用笔记 — 总开关。关闭后下方所有读 / 写 / 管理配置隐藏，
           智能体完全感知不到笔记能力。 */}
-      <div className="flex items-center justify-between gap-3 pb-3 border-b border-border/15">
+      <div className="flex items-center justify-between gap-3 pb-3">
         <div className="flex items-center gap-1.5 min-w-0">
           <label className="text-sm font-medium text-foreground">使用笔记</label>
           <SimpleTooltip content="关闭后智能体完全不感知笔记能力（读、写、管理全部失效）。" side="top" sideOffset={6}>
@@ -1395,7 +1395,7 @@ function AgentNotesSection() {
 
       {notesEnabled && <>
       {/* 读取 */}
-      <section className="space-y-2">
+      <section className="pt-3 pb-3 space-y-2">
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-1.5 min-w-0">
             <label className="text-sm text-muted-foreground">读取权限</label>
@@ -1413,11 +1413,19 @@ function AgentNotesSection() {
         {readEnabled && (
           <>
             <div className="flex items-center justify-between gap-3">
-              <div className="flex flex-col min-w-0">
+              <div className="flex items-center gap-1.5 min-w-0">
                 <label className="text-sm text-muted-foreground">自动读取</label>
-                <span className="text-xs text-muted-foreground/45 mt-0.5">
-                  {readScope === 'auto' ? '助手按意图自动选择需要读取的笔记' : '仅读取下方手动指定的范围'}
-                </span>
+                <SimpleTooltip
+                  content={readScope === 'auto'
+                    ? '助手按意图自动选择需要读取的笔记'
+                    : '关闭后仅读取下方手动指定的范围'}
+                  side="top" sideOffset={6}>
+                  <button type="button" tabIndex={-1}
+                    className="inline-flex items-center text-muted-foreground/40 hover:text-muted-foreground cursor-help"
+                    aria-label="什么是自动读取">
+                    <Info size={12} />
+                  </button>
+                </SimpleTooltip>
               </div>
               <Switch
                 checked={readScope === 'auto'}
@@ -1558,7 +1566,7 @@ function AgentNotesSection() {
       </section>
 
       {/* 写入 */}
-      <section className="space-y-2 pt-2 border-t border-border/15">
+      <section className="pt-3 pb-3 space-y-2">
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-1.5 min-w-0">
             <label className="text-sm text-muted-foreground">写入权限</label>
@@ -1575,7 +1583,7 @@ function AgentNotesSection() {
       </section>
 
       {/* 管理 / 删除 */}
-      <section className="space-y-2 pt-2 border-t border-border/15">
+      <section className="pt-3 pb-3 space-y-2">
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-1.5 min-w-0">
             <label className="text-sm text-muted-foreground">管理 / 删除权限</label>
