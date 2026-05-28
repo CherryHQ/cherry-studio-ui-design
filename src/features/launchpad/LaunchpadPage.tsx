@@ -75,11 +75,11 @@ export function LaunchpadPage() {
         <header className="flex items-end justify-between gap-4">
           <div>
             <h1 className="text-xl text-foreground">
-              {launchpadEditMode ? '编辑启动页' : '启动页'}
+              {launchpadEditMode ? '编辑菜单栏' : '启动页'}
             </h1>
             <p className="text-xs text-muted-foreground/55 mt-1">
               {launchpadEditMode
-                ? '点击角标把功能添加到侧边栏 / 从侧边栏移除。完成后点右侧"完成"。'
+                ? '点击角标把项目添加到菜单栏 / 从菜单栏移除。完成后点右侧"完成"。'
                 : '选择一个功能开始，或者从下方继续使用已添加的小程序与 Agent 产物。'}
             </p>
           </div>
