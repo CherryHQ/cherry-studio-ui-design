@@ -368,13 +368,14 @@ function CherryStudioInner() {
     removedFromLaunchpad,
     launchpadEditMode,
     setLaunchpadEditMode,
+    hiddenSidebarApps: hiddenApps,
   }), [
     handleOpenMiniApp, handlePinTab, handleEditAssistantInLibrary,
     handleNavigateToKnowledge, handleNavigateToLibrary, handleLibraryReturn,
     handleTabTitleChange, handleDialogCreateTab,
     pinToSidebar, unpinFromSidebar, openLaunchpad, removeFromLaunchpad,
     libraryEditResourceId, libraryCreateType, removedFromLaunchpad,
-    launchpadEditMode,
+    launchpadEditMode, hiddenApps,
   ]);
 
   // ===========================

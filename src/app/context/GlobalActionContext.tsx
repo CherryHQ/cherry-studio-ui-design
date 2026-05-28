@@ -76,12 +76,19 @@ export interface GlobalActionState {
    */
   removedFromLaunchpad: Set<string>;
   /**
-   * iPhone-jiggle edit mode for the launchpad — tiles grow a delete
-   * corner badge and shake. Toggled from the sidebar's right-click 管理.
+   * iPhone-jiggle edit mode for the launchpad — tiles grow a sidebar
+   * pin/unpin corner badge and shake. Toggled from the sidebar's
+   * right-click 管理.
    */
   launchpadEditMode: boolean;
   /** Setter so LaunchpadPage's 完成 button can exit edit mode. */
   setLaunchpadEditMode: (v: boolean) => void;
+  /**
+   * Menu item ids the user has hidden from the sidebar. Exposed so the
+   * Launchpad's edit mode can render each function tile's current
+   * "in sidebar?" state on the toggle badge.
+   */
+  hiddenSidebarApps: Set<string>;
 }
 
 /** Combined interface for backward compatibility */
@@ -115,6 +122,7 @@ const defaultState: GlobalActionState = {
   removedFromLaunchpad: new Set<string>(),
   launchpadEditMode: false,
   setLaunchpadEditMode: noop,
+  hiddenSidebarApps: new Set<string>(),
 };
 
 const GlobalActionFunctionsContext = createContext<GlobalActionFunctions>(defaultFunctions);
@@ -165,9 +173,10 @@ export function GlobalActionProvider({ value, children }: GlobalActionProviderPr
     removedFromLaunchpad: value.removedFromLaunchpad,
     launchpadEditMode: value.launchpadEditMode,
     setLaunchpadEditMode: value.setLaunchpadEditMode,
+    hiddenSidebarApps: value.hiddenSidebarApps,
   }), [
     value.libraryEditResourceId, value.libraryCreateType, value.removedFromLaunchpad,
-    value.launchpadEditMode, value.setLaunchpadEditMode,
+    value.launchpadEditMode, value.setLaunchpadEditMode, value.hiddenSidebarApps,
   ]);
 
   return (

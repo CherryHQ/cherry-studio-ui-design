@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Plus, Sparkles, FileText, Pin, Trash2, Pencil, X } from 'lucide-react';
+import { Plus, Sparkles, FileText, Pin, Trash2, Pencil, Check } from 'lucide-react';
 import { useGlobalActions } from '@/app/context/GlobalActionContext';
 import { dialogAppIcons, newTabHtmlPreviews } from '@/app/config/constants';
 import { miniAppList } from '@/features/miniapp/MiniAppsPage';
@@ -23,9 +23,10 @@ import {
 
 export function LaunchpadPage() {
   const {
-    launchpadOpen, openMiniApp, pinToSidebar,
+    launchpadOpen, openMiniApp, pinToSidebar, unpinFromSidebar,
     removeFromLaunchpad, removedFromLaunchpad,
     launchpadEditMode, setLaunchpadEditMode,
+    hiddenSidebarApps,
   } = useGlobalActions();
   const pinned = usePinnedArtifacts();
 
@@ -78,7 +79,7 @@ export function LaunchpadPage() {
             </h1>
             <p className="text-xs text-muted-foreground/55 mt-1">
               {launchpadEditMode
-                ? '点击角标移除，或拖动重排（即将支持）。完成后点右侧"完成"。'
+                ? '点击角标把功能添加到侧边栏 / 从侧边栏移除。完成后点右侧"完成"。'
                 : '选择一个功能开始，或者从下方继续使用已添加的小程序与 Agent 产物。'}
             </p>
           </div>
@@ -97,12 +98,18 @@ export function LaunchpadPage() {
           <Grid>
             {dialogAppIcons.map(item => {
               const Icon = item.icon;
+              const inSidebar = !hiddenSidebarApps.has(item.id);
               return (
                 <PinnableTile
                   key={item.id}
                   label={item.label}
                   onOpen={() => launchpadOpen(item.id)}
                   onPin={() => pinToSidebar('function', item.id, item.label)}
+                  inSidebar={inSidebar}
+                  onToggleSidebar={() => inSidebar
+                    ? unpinFromSidebar('function', item.id)
+                    : pinToSidebar('function', item.id, item.label)
+                  }
                   editMode={launchpadEditMode}
                 >
                   <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${item.bg}`}>
@@ -126,6 +133,8 @@ export function LaunchpadPage() {
                   onOpen={() => openMiniApp(app)}
                   onPin={() => pinToSidebar('miniapp', app.id, app.name)}
                   onRemove={() => removeFromLaunchpad('miniapp', app.id)}
+                  inSidebar={false}
+                  onToggleSidebar={() => pinToSidebar('miniapp', app.id, app.name)}
                   editMode={launchpadEditMode}
                 >
                   <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-base font-medium text-white ${app.color}`}>
@@ -147,6 +156,8 @@ export function LaunchpadPage() {
                 onOpen={() => launchpadOpen(`html:${key}`)}
                 onPin={() => pinToSidebar('artifact', key, preview.label)}
                 onRemove={() => removeFromLaunchpad('artifact', key)}
+                inSidebar={false}
+                onToggleSidebar={() => pinToSidebar('artifact', key, preview.label)}
                 editMode={launchpadEditMode}
               >
                 <ArtifactAvatar />
@@ -166,6 +177,8 @@ export function LaunchpadPage() {
                       onPin={() => pinToSidebar('artifact', `pinned:${a.id}`, a.label)}
                       onRemove={() => removeFromLaunchpad('artifact', `pinned:${a.id}`)}
                       onEdit={() => startEditPinned(a)}
+                      inSidebar={false}
+                      onToggleSidebar={() => pinToSidebar('artifact', `pinned:${a.id}`, a.label)}
                       editMode={launchpadEditMode}
                     >
                       <ArtifactAvatar iconName={a.iconName} />
@@ -237,18 +250,26 @@ function Grid({ children }: { children: React.ReactNode }) {
   );
 }
 
-// Tile with a right-click context menu — iPhone home-screen "Edit Home
-// Screen" style. In normal mode: click opens, right-click shows the
-// context menu (添加至侧边栏 / 编辑 / 移除). In edit mode: the tile
-// jiggles, a `×` corner badge appears for removable kinds, and clicking
-// the body is disabled to avoid accidental opens.
-function PinnableTile({ label, onOpen, onPin, onEdit, onRemove, editMode, children }: {
+// Tile with a right-click context menu. Edit mode is iPhone "Edit Home
+// Screen" style but reframed for *sidebar shortcut management* — the
+// corner badge toggles whether the tile lives in the sidebar (the user
+// asked for this; the old × delete-from-launchpad badge moved back into
+// the right-click menu).
+function PinnableTile({
+  label, onOpen, onPin, onEdit, onRemove, editMode,
+  inSidebar, onToggleSidebar,
+  children,
+}: {
   label: string;
   onOpen: () => void;
   onPin: () => void;
   onEdit?: () => void;
   onRemove?: () => void;
   editMode?: boolean;
+  /** Whether this tile is currently surfaced in the sidebar. */
+  inSidebar?: boolean;
+  /** Click handler for the edit-mode corner badge. */
+  onToggleSidebar?: () => void;
   children: React.ReactNode;
 }) {
   return (
@@ -258,7 +279,7 @@ function PinnableTile({ label, onOpen, onPin, onEdit, onRemove, editMode, childr
           <button
             type="button"
             onClick={editMode ? undefined : onOpen}
-            disabled={editMode && !onRemove}
+            disabled={editMode}
             className={`group flex flex-col items-center gap-2 p-2 rounded-xl hover:bg-accent/30 active:scale-[0.96] transition-all w-full
               ${editMode ? 'animate-launchpad-jiggle' : ''}`}
           >
@@ -267,18 +288,23 @@ function PinnableTile({ label, onOpen, onPin, onEdit, onRemove, editMode, childr
               {label}
             </span>
           </button>
-          {/* iPhone-style delete corner badge — only in edit mode, only
-              for removable kinds (mini-apps / artifacts). Functions are
-              built-in; you can hide them from the sidebar but not from
-              the launchpad. */}
-          {editMode && onRemove && (
+          {/* Sidebar pin toggle — top-right corner. Filled green ✓ when
+              the tile is in the sidebar; outlined + when it isn't.
+              Click toggles. */}
+          {editMode && onToggleSidebar && (
             <button
               type="button"
-              onClick={(e) => { e.stopPropagation(); onRemove(); }}
-              aria-label="移除"
-              className="absolute -top-0.5 -left-0.5 w-5 h-5 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center shadow-md hover:scale-110 active:scale-95 transition-transform z-10"
+              onClick={(e) => { e.stopPropagation(); onToggleSidebar(); }}
+              aria-label={inSidebar ? '从侧边栏移除' : '添加至侧边栏'}
+              title={inSidebar ? '已在侧边栏 · 点击移除' : '点击添加至侧边栏'}
+              className={`absolute -top-0.5 -right-0.5 w-5 h-5 rounded-full flex items-center justify-center shadow-md hover:scale-110 active:scale-95 transition-all z-10
+                ${inSidebar
+                  ? 'bg-success text-success-foreground'
+                  : 'bg-background border border-border text-muted-foreground/80 hover:text-foreground'}`}
             >
-              <X size={11} strokeWidth={2.5} />
+              {inSidebar
+                ? <Check size={11} strokeWidth={2.5} />
+                : <Plus size={11} strokeWidth={2.5} />}
             </button>
           )}
         </div>
