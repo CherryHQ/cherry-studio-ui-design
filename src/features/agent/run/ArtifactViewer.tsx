@@ -14,7 +14,7 @@ import {
   Popover, PopoverAnchor, PopoverContent,
 } from '@cherry-studio/ui';
 import { MOCK_GROUPS } from '@/features/collaboration/data';
-import { pinArtifact, shareArtifactToGroup } from '@/app/stores/sharedArtifactsStore';
+import { pinArtifact, shareArtifactToGroup, updateArtifact, usePinnedArtifacts } from '@/app/stores/sharedArtifactsStore';
 import { DEFAULT_ARTIFACT_ICON_NAME } from '@/app/utils/artifactIcons';
 import { PinToWorkbenchForm } from '@/app/components/shared/PinToWorkbenchForm';
 import { NewTopicDialog, type AttachedArtifact } from '@/features/collaboration/components/NewTopicDialog';
@@ -176,10 +176,18 @@ export function ArtifactViewer({ fileContent, fileName, previewUrl, hasArtifact,
   const [shareMenuOpen, setShareMenuOpen] = useState(false);
   // "添加至工作台" popover: opens anchored to the share button, with a
   // draft name + icon prefilled from the current artifact. Both are
-  // editable before the user confirms.
+  // editable before the user confirms. When the file is already pinned,
+  // the popover swaps into edit mode — same form, but it patches the
+  // existing entry via `updateArtifact` instead of creating a new one.
+  const pinnedArtifacts = usePinnedArtifacts();
   const [pinPopoverOpen, setPinPopoverOpen] = useState(false);
   const [pinDraftName, setPinDraftName] = useState('');
   const [pinDraftIcon, setPinDraftIcon] = useState<string>(DEFAULT_ARTIFACT_ICON_NAME);
+  const [editingExistingPinId, setEditingExistingPinId] = useState<string | null>(null);
+  const existingPinned = useMemo(
+    () => fileName ? pinnedArtifacts.find(p => p.fileName === fileName) ?? null : null,
+    [pinnedArtifacts, fileName],
+  );
 
   const buildSharePayload = (overrides?: { label?: string; iconName?: string }) => {
     const name = fileName ?? '未命名.html';
@@ -200,12 +208,19 @@ export function ArtifactViewer({ fileContent, fileName, previewUrl, hasArtifact,
       toast.error('当前没有可固定的内容');
       return;
     }
-    // Prefill the draft from the current artifact and open the popover
-    // anchored to the share button — user tweaks label + icon then
-    // confirms (no longer one-click pin).
-    const payload = buildSharePayload();
-    setPinDraftName(payload.label);
-    setPinDraftIcon(payload.iconName);
+    // If this file is already pinned, prefill from the existing entry
+    // and switch the form into edit mode. Otherwise prefill from the
+    // current artifact for a fresh pin.
+    if (existingPinned) {
+      setPinDraftName(existingPinned.label);
+      setPinDraftIcon(existingPinned.iconName ?? DEFAULT_ARTIFACT_ICON_NAME);
+      setEditingExistingPinId(existingPinned.id);
+    } else {
+      const payload = buildSharePayload();
+      setPinDraftName(payload.label);
+      setPinDraftIcon(payload.iconName);
+      setEditingExistingPinId(null);
+    }
     // Close the share dropdown manually (preventDefault on the item
     // suppressed the auto-close), then wait long enough for Radix's
     // dismiss + focus-restoration cycle before opening the popover.
@@ -219,8 +234,13 @@ export function ArtifactViewer({ fileContent, fileName, previewUrl, hasArtifact,
       toast.error('请输入应用名称');
       return;
     }
-    pinArtifact(buildSharePayload({ label: trimmed, iconName: pinDraftIcon }));
-    toast.success('已添加至工作台');
+    if (editingExistingPinId) {
+      updateArtifact(editingExistingPinId, { label: trimmed, iconName: pinDraftIcon });
+      toast.success('已更新工作台条目');
+    } else {
+      pinArtifact(buildSharePayload({ label: trimmed, iconName: pinDraftIcon }));
+      toast.success('已添加至工作台');
+    }
     setPinPopoverOpen(false);
   };
 
@@ -371,7 +391,7 @@ export function ArtifactViewer({ fileContent, fileName, previewUrl, hasArtifact,
                 onSelect={(e) => { e.preventDefault(); handlePinToWorkbench(); }}
               >
                 <Pin size={12} className="text-muted-foreground/80 flex-shrink-0" />
-                <span className="flex-1">添加至工作台</span>
+                <span className="flex-1">{existingPinned ? '编辑工作台条目' : '添加至工作台'}</span>
               </DropdownMenuItem>
               <DropdownMenuSub>
                 <DropdownMenuSubTrigger className="gap-2 px-2 py-[5px] text-xs">
@@ -414,13 +434,14 @@ export function ArtifactViewer({ fileContent, fileName, previewUrl, hasArtifact,
             }}
           >
             <PinToWorkbenchForm
-              title="添加至工作台"
+              title={editingExistingPinId ? '编辑工作台条目' : '添加至工作台'}
               name={pinDraftName}
               iconName={pinDraftIcon}
               onNameChange={setPinDraftName}
               onIconChange={setPinDraftIcon}
               onConfirm={handlePinConfirm}
               onCancel={() => setPinPopoverOpen(false)}
+              confirmLabel={editingExistingPinId ? '保存' : '添加'}
             />
           </PopoverContent>
           </Popover>

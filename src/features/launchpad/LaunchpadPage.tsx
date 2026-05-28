@@ -40,7 +40,12 @@ export function LaunchpadPage() {
   const startEditPinned = (artifact: { id: string; label: string; iconName?: string }) => {
     setEditDraftName(artifact.label);
     setEditDraftIcon(artifact.iconName ?? DEFAULT_ARTIFACT_ICON_NAME);
-    setEditingPinnedId(artifact.id);
+    // ContextMenu auto-closes on item select and that close cycle would
+    // immediately dismiss the Popover we're about to open (Radix's
+    // outside-click logic). Push state to open the popover after the
+    // close cycle settles, same trick as the share dropdown → pin
+    // popover handoff in ArtifactViewer.
+    setTimeout(() => setEditingPinnedId(artifact.id), 80);
   };
 
   const confirmEditPinned = () => {
