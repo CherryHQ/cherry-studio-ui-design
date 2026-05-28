@@ -91,7 +91,11 @@ function FullMenuItems({
                   <span className="truncate">{item.label}</span>
                 </Button>
               </ContextMenuTrigger>
-              <ContextMenuContent>
+              {/* Override the default `--z-dropdown` (200) — the sidebar
+                  sits at `--z-sticky` (300) and would otherwise occlude
+                  its own right-click menu. `--z-popover` (600) puts the
+                  menu cleanly above any sidebar chrome. */}
+              <ContextMenuContent className="z-[var(--z-popover)]">
                 <ContextMenuItem onSelect={() => unpinFromSidebar('function', item.id)}>
                   <PinOff size={14} strokeWidth={1.6} />
                   从侧边栏移除
