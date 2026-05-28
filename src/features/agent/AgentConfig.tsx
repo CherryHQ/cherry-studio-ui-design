@@ -678,7 +678,7 @@ function MCPServerCard({ server, onToggleConnect, onRemove, onToggleTool, onTogg
   const allEnabled = enabledCount === server.tools.length;
 
   return (
-    <div className="rounded-xl border border-border/15 bg-accent/15 overflow-hidden transition-all">
+    <div className="group/mcp rounded-xl border border-border/15 bg-accent/15 overflow-hidden transition-all">
       {/* Header row */}
       <div className="flex items-center gap-2.5 px-3 py-2.5 cursor-pointer hover:bg-accent/40 transition-colors" onClick={() => isConnected ? setExpanded(!expanded) : onToggleConnect()}>
         <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${isConnected ? 'bg-cherry-primary' : server.status === 'error' ? 'bg-destructive' : 'bg-muted-foreground/20'}`} />
@@ -688,14 +688,24 @@ function MCPServerCard({ server, onToggleConnect, onRemove, onToggleTool, onTogg
             <span className={`text-xs ${statusConfig[server.status].color}`}>{statusConfig[server.status].label}</span>
             {isConnected && <span className="text-xs text-muted-foreground/50">{enabledCount}/{server.tools.length} {"个工具"}</span>}
           </div>
-          <div className="flex items-center gap-1.5 mt-px">
-            <span className="text-xs text-muted-foreground/50 font-mono truncate">{server.url}</span>
-            {server.tags.map(t => (<span key={t} className="text-xs px-1 py-px rounded bg-accent/15 text-muted-foreground/50">{t}</span>))}
+          <div className="flex items-center gap-1.5 mt-0.5 min-w-0">
+            <span className="text-xs text-muted-foreground/50 font-mono truncate min-w-0">{server.url}</span>
+            {server.tags.map(t => (
+              <span key={t}
+                className="inline-flex items-center text-[10px] leading-none px-1.5 py-0.5 rounded bg-accent/40 text-muted-foreground/60 flex-shrink-0">
+                {t}
+              </span>
+            ))}
           </div>
         </div>
         <div className="flex items-center gap-2 flex-shrink-0">
           {isConnected && <ChevronDown size={10} className={`text-muted-foreground/40 transition-transform ${expanded ? 'rotate-180' : ''}`} />}
-          <Button variant="ghost" size="icon-xs" onClick={e => { e.stopPropagation(); onRemove(); }} className="text-muted-foreground/40 hover:text-destructive hover:bg-destructive/8" title="移除"><Trash2 size={10} /></Button>
+          <Button variant="ghost" size="icon-xs"
+            onClick={e => { e.stopPropagation(); onRemove(); }}
+            className="text-muted-foreground/40 hover:text-destructive hover:bg-destructive/10 opacity-0 group-hover/mcp:opacity-100 transition-opacity"
+            title="移除">
+            <Trash2 size={10} />
+          </Button>
         </div>
       </div>
 
@@ -752,7 +762,9 @@ function ToolchainSection({ onExplore, controlledTab }: { onExplore: () => void;
   const [installIntegration, setInstallIntegration] = useState<IntegrationItem | null>(null);
 
   const toggleTool = (id: string) => setTools(prev => prev.map(t => t.id === id ? { ...t, enabled: !t.enabled } : t));
+  const removeTool = (id: string) => setTools(prev => prev.filter(t => t.id !== id));
   const toggleSkill = (id: string) => setSkills(prev => prev.map(s => s.id === id ? { ...s, enabled: !s.enabled } : s));
+  const removeSkill = (id: string) => setSkills(prev => prev.filter(s => s.id !== id));
   const toggleIntegration = (id: string) => setIntegrations(prev => prev.map(i => i.id === id ? { ...i, enabled: !i.enabled } : i));
   const handleIntegrationClick = (integ: IntegrationItem) => {
     if (integ.enabled) {
@@ -896,13 +908,28 @@ function ToolchainSection({ onExplore, controlledTab }: { onExplore: () => void;
                 <div>
                   <TagFilter tags={TOOL_CATEGORIES} selected={toolTagFilter} onToggle={setToolTagFilter} />
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                    {filteredTools.map(tool => (
-                      <div key={tool.id}
-                        onClick={() => toggleTool(tool.id)}
-                        className={`flex items-center px-3 py-2 rounded-xl border border-border/15 bg-accent/15 hover:bg-accent/40 transition-all cursor-pointer ${tool.enabled ? '' : 'opacity-55'}`}>
-                        <div className="text-sm text-foreground truncate">{tool.name}</div>
-                      </div>
-                    ))}
+                    {filteredTools.map(tool => {
+                      const ToolIcon = tool.icon;
+                      return (
+                        <div key={tool.id}
+                          onClick={() => toggleTool(tool.id)}
+                          className={`group/tool flex items-center gap-2.5 px-3 py-2 rounded-xl border border-border/30 bg-accent/15 hover:border-border/50 hover:bg-accent/40 transition-all cursor-pointer ${tool.enabled ? '' : 'opacity-55'}`}>
+                          <div className="w-7 h-7 rounded-md bg-accent/40 flex items-center justify-center flex-shrink-0">
+                            <ToolIcon size={13} className="text-muted-foreground/70" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="text-sm text-foreground truncate">{tool.name}</div>
+                            <div className="text-xs text-muted-foreground/55 truncate">{tool.desc}</div>
+                          </div>
+                          <Button variant="ghost" size="icon-xs"
+                            onClick={e => { e.stopPropagation(); removeTool(tool.id); }}
+                            title="移除"
+                            className="text-muted-foreground/40 hover:text-destructive hover:bg-destructive/10 opacity-0 group-hover/tool:opacity-100 transition-opacity flex-shrink-0">
+                            <Trash2 size={11} />
+                          </Button>
+                        </div>
+                      );
+                    })}
                   </div>
                   {filteredTools.length === 0 && <EmptyState preset="no-result" title={search ? '未找到匹配结果' : '该分类下无工具'} compact />}
                 </div>
@@ -964,13 +991,28 @@ function ToolchainSection({ onExplore, controlledTab }: { onExplore: () => void;
                 <div>
                   <TagFilter tags={SKILL_TAGS} selected={skillTagFilter} onToggle={setSkillTagFilter} />
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                    {filteredSkills.map(skill => (
-                      <div key={skill.id}
-                        onClick={() => toggleSkill(skill.id)}
-                        className={`flex items-center px-3 py-2 rounded-xl border border-border/15 bg-accent/15 hover:bg-accent/40 transition-all cursor-pointer ${skill.enabled ? '' : 'opacity-55'}`}>
-                        <div className="text-sm text-foreground truncate">{skill.name}</div>
-                      </div>
-                    ))}
+                    {filteredSkills.map(skill => {
+                      const SkillIcon = skill.icon;
+                      return (
+                        <div key={skill.id}
+                          onClick={() => toggleSkill(skill.id)}
+                          className={`group/skill flex items-center gap-2.5 px-3 py-2 rounded-xl border border-border/30 bg-accent/15 hover:border-border/50 hover:bg-accent/40 transition-all cursor-pointer ${skill.enabled ? '' : 'opacity-55'}`}>
+                          <div className="w-7 h-7 rounded-md bg-accent/40 flex items-center justify-center flex-shrink-0">
+                            <SkillIcon size={13} className="text-muted-foreground/70" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="text-sm text-foreground truncate">{skill.name}</div>
+                            <div className="text-xs text-muted-foreground/55 truncate">{skill.desc}</div>
+                          </div>
+                          <Button variant="ghost" size="icon-xs"
+                            onClick={e => { e.stopPropagation(); removeSkill(skill.id); }}
+                            title="移除"
+                            className="text-muted-foreground/40 hover:text-destructive hover:bg-destructive/10 opacity-0 group-hover/skill:opacity-100 transition-opacity flex-shrink-0">
+                            <Trash2 size={11} />
+                          </Button>
+                        </div>
+                      );
+                    })}
                   </div>
                   {filteredSkills.length === 0 && <EmptyState preset="no-result" title={search ? '未找到匹配结果' : '该分类下无 Skill'} compact />}
                 </div>
@@ -1354,13 +1396,6 @@ function AgentNotesSection() {
       {notesEnabled && <>
       {/* 读取 */}
       <section className="space-y-2">
-        <div className="flex items-center gap-1.5">
-          <h3 className="text-sm font-medium text-foreground">读取</h3>
-          <SimpleTooltip content="控制智能体能不能看你的笔记，以及看哪些。" side="top" sideOffset={6}>
-            <Info size={12} className="text-muted-foreground/40 hover:text-muted-foreground transition-colors cursor-help" />
-          </SimpleTooltip>
-        </div>
-
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-1.5 min-w-0">
             <label className="text-sm text-muted-foreground">读取权限</label>
@@ -1378,16 +1413,17 @@ function AgentNotesSection() {
         {readEnabled && (
           <>
             <div className="flex items-center justify-between gap-3">
-              <label className="text-sm text-muted-foreground">读取范围</label>
-              <Select value={readScope} onValueChange={(v) => setReadScope(v as 'auto' | 'specified')}>
-                <SelectTrigger className="w-[120px] flex-shrink-0 !h-9 px-3 text-xs border border-border/60 bg-accent/15 hover:bg-accent/40 rounded-lg">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="auto">自动</SelectItem>
-                  <SelectItem value="specified">指定</SelectItem>
-                </SelectContent>
-              </Select>
+              <div className="flex flex-col min-w-0">
+                <label className="text-sm text-muted-foreground">自动读取</label>
+                <span className="text-xs text-muted-foreground/45 mt-0.5">
+                  {readScope === 'auto' ? '助手按意图自动选择需要读取的笔记' : '仅读取下方手动指定的范围'}
+                </span>
+              </div>
+              <Switch
+                checked={readScope === 'auto'}
+                onCheckedChange={(v) => setReadScope(v ? 'auto' : 'specified')}
+                className="flex-shrink-0"
+              />
             </div>
 
             {/* 已指定笔记 — 同知识库添加的形式：右上「添加笔记」popover +
@@ -1523,12 +1559,6 @@ function AgentNotesSection() {
 
       {/* 写入 */}
       <section className="space-y-2 pt-2 border-t border-border/15">
-        <div className="flex items-center gap-1.5">
-          <h3 className="text-sm font-medium text-foreground">写入</h3>
-          <SimpleTooltip content="允许智能体在笔记里新增 / 修改内容。" side="top" sideOffset={6}>
-            <Info size={12} className="text-muted-foreground/40 hover:text-muted-foreground transition-colors cursor-help" />
-          </SimpleTooltip>
-        </div>
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-1.5 min-w-0">
             <label className="text-sm text-muted-foreground">写入权限</label>
@@ -1546,12 +1576,6 @@ function AgentNotesSection() {
 
       {/* 管理 / 删除 */}
       <section className="space-y-2 pt-2 border-t border-border/15">
-        <div className="flex items-center gap-1.5">
-          <h3 className="text-sm font-medium text-foreground">管理删除</h3>
-          <SimpleTooltip content="允许智能体删除笔记、调整文件夹结构。慎开。" side="top" sideOffset={6}>
-            <Info size={12} className="text-muted-foreground/40 hover:text-muted-foreground transition-colors cursor-help" />
-          </SimpleTooltip>
-        </div>
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-1.5 min-w-0">
             <label className="text-sm text-muted-foreground">管理 / 删除权限</label>
