@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { X, ExternalLink, Code2, Eye, Share2, Maximize2, Minimize2 } from 'lucide-react';
 import { ShareDialog, type ShareItem } from './ShareDialog';
+import { findSharedArtifactByFileName } from '@/app/stores/sharedArtifactsStore';
 
 interface HtmlArtifactPanelProps {
   fileName: string;
@@ -93,6 +94,18 @@ export function HtmlArtifactPanel({ fileName, onClose, maximized, onToggleMaximi
 }
 
 function ArtifactPreview({ fileName }: { fileName: string }) {
+  // Prefer real HTML the user shared from an Agent run.
+  const shared = findSharedArtifactByFileName(fileName);
+  if (shared) {
+    return (
+      <iframe
+        title={shared.fileName}
+        srcDoc={shared.html}
+        sandbox=""
+        className="flex-1 w-full h-full border-0 bg-white"
+      />
+    );
+  }
   if (fileName.includes('工资计算器') || fileName.toLowerCase().includes('salary')) {
     return <SalaryCalculator />;
   }

@@ -376,12 +376,19 @@ export function LibraryPage() {
           with `inModal={true}` so it strips its own redundant
           breadcrumb / back / cancel chrome. The 两栏 (sidebar +
           content) layout comes from the editors themselves. */}
+      {/* modal={false}: keeps the focus trap off the outer dialog so that
+          nested wizards (e.g. EmailAuthWizard from the agent 协作 tab)
+          can actually receive keystrokes in their own inputs. Outside
+          clicks no longer auto-dismiss — explicit X / ESC instead. */}
       <Dialog
+        modal={false}
         open={configView.type !== 'list'}
         onOpenChange={(open) => { if (!open) handleConfigBack(); }}
       >
         <DialogContent
           showCloseButton={false}
+          onPointerDownOutside={(e) => e.preventDefault()}
+          onInteractOutside={(e) => e.preventDefault()}
           // Defaults shipped by DialogContent (`sm:max-w-lg`, `p-6`,
           // `grid gap-4`) all need explicit `!` overrides to lose;
           // the flex column + min-w-0 lets the embedded editors

@@ -22,6 +22,7 @@ import { ExtensionsPage } from '@/features/extensions/ExtensionsPage';
 import { EmptyStatePreview } from '@/features/dev/EmptyStatePreview';
 import { CollaborationPage } from '@/features/collaboration/CollaborationPage';
 import { newTabHtmlPreviews } from '@/app/config/constants';
+import { findPinnedArtifact } from '@/app/stores/sharedArtifactsStore';
 
 interface MainContentProps {
   tabs: Tab[];
@@ -115,6 +116,26 @@ const TabContent = React.memo(function TabContent({ tab, isActive }: { tab: Tab;
 });
 
 function HtmlPreviewPage({ tabKey }: { tabKey: string }) {
+  // Keys prefixed with "pinned:" come from the runtime pinned-artifacts
+  // store; everything else is a static preview shipped in constants.
+  if (tabKey.startsWith('pinned:')) {
+    const artifact = findPinnedArtifact(tabKey.slice('pinned:'.length));
+    if (!artifact) {
+      return (
+        <div className="flex-1 flex items-center justify-center text-sm text-muted-foreground">
+          已取消 Pin，预览不再可用
+        </div>
+      );
+    }
+    return (
+      <iframe
+        title={artifact.fileName}
+        srcDoc={artifact.html}
+        sandbox=""
+        className="flex-1 w-full border-0 bg-white"
+      />
+    );
+  }
   const preview = newTabHtmlPreviews[tabKey];
   if (!preview) {
     return (
