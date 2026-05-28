@@ -15,7 +15,7 @@ import {
   Button, EmptyState, Input,
   DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator,
   DropdownMenuSub, DropdownMenuSubTrigger, DropdownMenuSubContent,
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
+  Popover, PopoverAnchor, PopoverContent, PopoverTrigger,
 } from '@cherry-studio/ui';
 import { MOCK_GROUPS } from '@/features/collaboration/data';
 import { pinArtifact, shareArtifactToGroup } from '@/app/stores/sharedArtifactsStore';
@@ -170,9 +170,10 @@ export function ArtifactViewer({ fileContent, fileName, previewUrl, hasArtifact,
   // When set, the NewTopicDialog opens with the artifact pre-attached so
   // the user can type a comment before posting it as a new group topic.
   const [shareTarget, setShareTarget] = useState<{ groupId: string; groupName: string } | null>(null);
-  // "添加至工作台" dialog: opens with a draft name + icon prefilled
-  // from the current artifact, both editable before the user confirms.
-  const [pinDialogOpen, setPinDialogOpen] = useState(false);
+  // "添加至工作台" popover: opens anchored to the share button, with a
+  // draft name + icon prefilled from the current artifact. Both are
+  // editable before the user confirms.
+  const [pinPopoverOpen, setPinPopoverOpen] = useState(false);
   const [pinDraftName, setPinDraftName] = useState('');
   const [pinDraftIcon, setPinDraftIcon] = useState<string>(DEFAULT_ARTIFACT_ICON_NAME);
 
@@ -195,12 +196,16 @@ export function ArtifactViewer({ fileContent, fileName, previewUrl, hasArtifact,
       toast.error('当前没有可固定的内容');
       return;
     }
-    // Prefill the draft from the current artifact and open the dialog —
-    // user picks label + icon then confirms (no longer one-click pin).
+    // Prefill the draft from the current artifact and open the popover
+    // anchored to the share button — user tweaks label + icon then
+    // confirms (no longer one-click pin).
     const payload = buildSharePayload();
     setPinDraftName(payload.label);
     setPinDraftIcon(payload.iconName);
-    setPinDialogOpen(true);
+    // The Share dropdown auto-closes when its item is selected; defer
+    // opening the popover one frame so Radix's dismiss-on-outside-click
+    // logic doesn't immediately close it again.
+    requestAnimationFrame(() => setPinPopoverOpen(true));
   };
 
   const handlePinConfirm = () => {
@@ -211,7 +216,7 @@ export function ArtifactViewer({ fileContent, fileName, previewUrl, hasArtifact,
     }
     pinArtifact(buildSharePayload({ label: trimmed, iconName: pinDraftIcon }));
     toast.success('已添加至工作台');
-    setPinDialogOpen(false);
+    setPinPopoverOpen(false);
   };
 
   const handleShareToGroup = (groupId: string, groupName: string) => {
@@ -345,6 +350,8 @@ export function ArtifactViewer({ fileContent, fileName, previewUrl, hasArtifact,
 
           {/* Share — dropdown with workspace + link share targets */}
           <div className="w-px h-3 bg-border/30 mx-1" />
+          <Popover open={pinPopoverOpen} onOpenChange={setPinPopoverOpen}>
+          <PopoverAnchor>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon-xs"
@@ -386,6 +393,28 @@ export function ArtifactViewer({ fileContent, fileName, previewUrl, hasArtifact,
               </DropdownMenuSub>
             </DropdownMenuContent>
           </DropdownMenu>
+          </PopoverAnchor>
+          <PopoverContent
+            side="bottom"
+            align="end"
+            sideOffset={6}
+            className="w-[300px] p-3"
+            onOpenAutoFocus={(e) => {
+              // Don't steal focus from the name Input on first open —
+              // popover would otherwise focus its container.
+              e.preventDefault();
+            }}
+          >
+            <PinToWorkbenchInline
+              name={pinDraftName}
+              iconName={pinDraftIcon}
+              onNameChange={setPinDraftName}
+              onIconChange={setPinDraftIcon}
+              onConfirm={handlePinConfirm}
+              onCancel={() => setPinPopoverOpen(false)}
+            />
+          </PopoverContent>
+          </Popover>
 
           {/* Maximize toggle */}
           {onToggleMaximize && (
@@ -474,78 +503,45 @@ export function ArtifactViewer({ fileContent, fileName, previewUrl, hasArtifact,
         onSubmit={handleShareSubmit}
         onClose={() => setShareTarget(null)}
       />
-
-      <PinToWorkbenchDialog
-        open={pinDialogOpen}
-        name={pinDraftName}
-        iconName={pinDraftIcon}
-        onNameChange={setPinDraftName}
-        onIconChange={setPinDraftIcon}
-        onConfirm={handlePinConfirm}
-        onClose={() => setPinDialogOpen(false)}
-      />
     </div>
   );
 }
 
 // ===========================
-// Pin-to-Workbench Dialog
+// Pin-to-Workbench Inline Form
 // ===========================
-// Confirms label + icon before the artifact lands on the workbench /
-// launchpad. Both fields are pre-filled from the active artifact so the
-// happy path is one click; the icon picker is a small curated grid of
-// lucide icons that fit "Agent-produced document" without bringing the
-// whole 1000+ icon library.
-function PinToWorkbenchDialog({
-  open, name, iconName, onNameChange, onIconChange, onConfirm, onClose,
+// Compact popover anchored to the share button — one row with
+// [icon-picker-popover-trigger] [name input] [添加 button]. Selecting
+// the icon opens a nested popover with the curated lucide grid.
+function PinToWorkbenchInline({
+  name, iconName, onNameChange, onIconChange, onConfirm, onCancel,
 }: {
-  open: boolean;
   name: string;
   iconName: string;
   onNameChange: (v: string) => void;
   onIconChange: (v: string) => void;
   onConfirm: () => void;
-  onClose: () => void;
+  onCancel: () => void;
 }) {
   const SelectedIcon = resolveArtifactIcon(iconName);
+  const [iconPickerOpen, setIconPickerOpen] = useState(false);
   return (
-    <Dialog open={open} onOpenChange={(v) => { if (!v) onClose(); }}>
-      <DialogContent className="max-w-[440px] p-0 overflow-hidden">
-        <DialogHeader className="px-5 pt-4 pb-3 border-b border-border/30">
-          <DialogTitle className="text-sm">添加至工作台</DialogTitle>
-          <DialogDescription className="text-xs">
-            为这个产物起一个易识别的名称和图标，之后在启动页和侧边栏上会用到。
-          </DialogDescription>
-        </DialogHeader>
-
-        <div className="px-5 py-4 space-y-4">
-          {/* Preview row */}
-          <div className="flex items-center gap-3 px-3 py-2.5 rounded-xl bg-accent/30 border border-border/40">
-            <div className="w-10 h-10 rounded-xl bg-accent-violet/15 flex items-center justify-center text-accent-violet flex-shrink-0">
-              <SelectedIcon size={18} strokeWidth={1.6} />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm text-foreground truncate">{name || '未命名产物'}</p>
-              <p className="text-[11px] text-muted-foreground/60">预览效果</p>
-            </div>
-          </div>
-
-          {/* Name input */}
-          <div className="space-y-1.5">
-            <label className="text-xs text-muted-foreground/70">应用名称</label>
-            <Input
-              value={name}
-              onChange={(e) => onNameChange(e.target.value)}
-              placeholder="例：周报 · Week 12"
-              className="h-9 text-sm"
-              autoFocus
-            />
-          </div>
-
-          {/* Icon picker */}
-          <div className="space-y-1.5">
-            <label className="text-xs text-muted-foreground/70">图标</label>
-            <div className="grid grid-cols-9 gap-1.5">
+    <div className="space-y-2.5">
+      <div className="text-[11px] text-muted-foreground/70">添加至工作台</div>
+      <div className="flex items-center gap-2">
+        {/* Icon picker — small button opens a nested popover */}
+        <Popover open={iconPickerOpen} onOpenChange={setIconPickerOpen}>
+          <PopoverTrigger asChild>
+            <button
+              type="button"
+              title="选择图标"
+              className="w-9 h-9 rounded-lg bg-accent-violet/15 text-accent-violet flex items-center justify-center hover:bg-accent-violet/20 transition-colors flex-shrink-0"
+            >
+              <SelectedIcon size={16} strokeWidth={1.6} />
+            </button>
+          </PopoverTrigger>
+          <PopoverContent side="bottom" align="start" sideOffset={4} className="w-[228px] p-2">
+            <div className="grid grid-cols-6 gap-1">
               {ARTIFACT_ICON_NAMES.map((n) => {
                 const Icon = ARTIFACT_ICON_MAP[n];
                 const isSelected = n === iconName;
@@ -553,30 +549,42 @@ function PinToWorkbenchDialog({
                   <button
                     key={n}
                     type="button"
-                    onClick={() => onIconChange(n)}
+                    onClick={() => { onIconChange(n); setIconPickerOpen(false); }}
                     title={n}
-                    className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors
+                    className={`w-8 h-8 rounded-md flex items-center justify-center transition-colors
                       ${isSelected
                         ? 'bg-accent-violet/15 text-accent-violet ring-1 ring-accent-violet/40'
                         : 'text-muted-foreground/70 hover:text-foreground hover:bg-accent/40'}`}
                   >
-                    <Icon size={15} strokeWidth={1.6} />
+                    <Icon size={14} strokeWidth={1.6} />
                   </button>
                 );
               })}
             </div>
-          </div>
-        </div>
+          </PopoverContent>
+        </Popover>
 
-        <DialogFooter className="px-5 py-3 border-t border-border/20 bg-muted/15 gap-2">
-          <Button variant="outline" size="sm" onClick={onClose} className="h-8">
-            取消
-          </Button>
-          <Button variant="default" size="sm" onClick={onConfirm} className="h-8">
-            添加
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        {/* Name input — autoFocus on first open */}
+        <Input
+          value={name}
+          onChange={(e) => onNameChange(e.target.value)}
+          placeholder="应用名称"
+          className="h-9 text-sm flex-1 min-w-0"
+          autoFocus
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') { e.preventDefault(); onConfirm(); }
+            if (e.key === 'Escape') { e.preventDefault(); onCancel(); }
+          }}
+        />
+      </div>
+      <div className="flex items-center justify-end gap-1.5">
+        <Button variant="ghost" size="xs" onClick={onCancel} className="h-7 px-2.5 text-xs">
+          取消
+        </Button>
+        <Button variant="default" size="xs" onClick={onConfirm} className="h-7 px-3 text-xs">
+          添加
+        </Button>
+      </div>
+    </div>
   );
 }
