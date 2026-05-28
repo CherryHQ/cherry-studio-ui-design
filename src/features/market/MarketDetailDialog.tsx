@@ -1,9 +1,10 @@
-import { Check, Download, ExternalLink, Star } from 'lucide-react';
+import { Check, Download, ExternalLink, Package, Sparkles, Star, Wrench } from 'lucide-react';
 import {
   Button, Dialog, DialogContent, DialogFooter,
 } from '@cherry-studio/ui';
 import { KIND_ICON, KIND_LABEL } from './types';
 import type { MarketItem } from './types';
+import { BUNDLE_MAP } from './bundles';
 
 export function MarketDetailDialog({
   item, onOpenChange, installed, onToggleInstall,
@@ -78,6 +79,40 @@ export function MarketDetailDialog({
               {item.tagline}
             </p>
 
+            {/* Bundled Skills (for CLI 套件) / Tools (for MCP server).
+                A CLI like claude-code or lark-cli bundles multiple
+                named Skills; an MCP server exposes a set of named
+                Tools. Listing them here so users can preview what
+                actually gets installed before clicking 安装. */}
+            {(() => {
+              const bundle = BUNDLE_MAP[item.id];
+              if (!bundle || bundle.length === 0) return null;
+              const isMcp = item.kind === 'mcp';
+              const SubIcon = isMcp ? Wrench : Sparkles;
+              const groupLabel = isMcp ? '提供的 Tools' : '包含的 Skills';
+              return (
+                <div className="pt-3 border-t border-border/20">
+                  <div className="flex items-center gap-1.5 mb-2.5">
+                    <Package size={11} className="text-muted-foreground/60 flex-shrink-0" />
+                    <span className="text-xs font-medium text-foreground">{groupLabel}</span>
+                    <span className="text-xs text-muted-foreground/60 tabular-nums">{bundle.length}</span>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-1.5">
+                    {bundle.map(sub => (
+                      <div key={sub.name}
+                        className="flex items-start gap-2 px-3 py-2 rounded-lg border border-border/20 bg-accent/15 hover:bg-accent/40 transition-colors">
+                        <SubIcon size={11} className="text-muted-foreground/60 flex-shrink-0 mt-[3px]" />
+                        <div className="flex-1 min-w-0">
+                          <div className="text-xs font-mono font-medium text-foreground leading-tight truncate">{sub.name}</div>
+                          <p className="text-xs text-muted-foreground/70 leading-relaxed mt-0.5 line-clamp-2">{sub.description}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            })()}
+
             {/* Meta — compact 2-col key/value */}
             <div className="grid grid-cols-2 gap-x-6 gap-y-1.5 text-xs pt-3 border-t border-border/20">
               <div className="flex items-baseline gap-2">
@@ -100,7 +135,25 @@ export function MarketDetailDialog({
                 <span className="text-muted-foreground/50 w-12 flex-shrink-0">类型</span>
                 <span className="text-foreground">{KIND_LABEL[item.kind]}</span>
               </div>
+              {item.version && (
+                <div className="flex items-baseline gap-2">
+                  <span className="text-muted-foreground/50 w-12 flex-shrink-0">版本</span>
+                  <span className="text-foreground font-mono">v{item.version}</span>
+                </div>
+              )}
             </div>
+
+            {/* Where it attaches — surfaced once installed so users don't get
+                lost (cherry-studio#15029 spec: "show where the installed
+                skill lives"). */}
+            {installed && (
+              <div className="flex items-start gap-2 px-3 py-2.5 rounded-lg border border-success/20 bg-success/[0.06]">
+                <Check size={12} className="text-success flex-shrink-0 mt-px" strokeWidth={2.5} />
+                <p className="text-xs text-foreground leading-relaxed">
+                  已安装到资源库，所有 Agent 默认可用。在<span className="text-foreground font-medium"> Agent 配置 → 拓展 → {KIND_LABEL[item.kind] === 'Skill' ? 'Skills' : KIND_LABEL[item.kind]}</span>{' '}里关闭单个 Agent 的访问。
+                </p>
+              </div>
+            )}
 
             {/* Source repo chip */}
             <a

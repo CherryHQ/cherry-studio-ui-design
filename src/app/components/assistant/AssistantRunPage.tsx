@@ -75,8 +75,27 @@ import { AssistantPickerPanel } from '@/app/components/shared/AssistantPickerPan
 import { CreateEntityDialog } from '@/app/components/shared/CreateEntityDialog';
 import { HistorySidebar } from '@/app/components/shared/HistorySidebar';
 import { RecycleBinConfirmDialog } from '@/app/components/shared/RecycleBinConfirmDialog';
+import { ResourceConfigDialog } from '@/app/components/shared/ResourceConfigDialog';
 import { useRecycleBin } from '@/app/context/RecycleBinContext';
 import { useHistorySidebar } from '@/app/hooks/useHistorySidebar';
+import type { ResourceItem } from '@/app/types';
+
+// Convert the runtime AssistantInfo + emoji into the ResourceItem the
+// shared config dialog expects.
+function assistantToResource(a: AssistantInfo, emoji: string): ResourceItem {
+  return {
+    id: a.id,
+    name: a.name,
+    type: 'assistant',
+    description: a.systemPrompt?.slice(0, 80) || '',
+    avatar: emoji,
+    model: a.model,
+    tags: a.tags,
+    enabled: true,
+    createdAt: a.updatedAt,
+    updatedAt: a.updatedAt,
+  };
+}
 
 // Syntax highlighting, file icons, animations, and shared message components
 // are imported from shared utilities above.
@@ -1495,7 +1514,7 @@ type SelectMode = 'assistant' | 'model';
 function MultiSelectPicker({
   mode, selectedAssistants, selectedModels, onSelectAssistant, onSelectModel, onChangeMode,
   multiAssistant, multiModel, onToggleMultiAssistant, onToggleMultiModel,
-  onCreateAssistant,
+  onCreateAssistant, onConfigureAssistant,
 }: {
   mode: SelectMode;
   selectedAssistants: string[];
@@ -1508,6 +1527,7 @@ function MultiSelectPicker({
   onToggleMultiAssistant: () => void;
   onToggleMultiModel: () => void;
   onCreateAssistant?: () => void;
+  onConfigureAssistant?: (id: string) => void;
 }) {
   const [open, setOpen] = useState(false);
   const activeAssistant = MOCK_ASSISTANTS.find(a => a.id === selectedAssistants[0]);
@@ -1549,6 +1569,7 @@ function MultiSelectPicker({
             onToggleMultiAssistant={onToggleMultiAssistant}
             onClose={() => setOpen(false)}
             onCreateAssistant={onCreateAssistant}
+            onConfigureAssistant={onConfigureAssistant}
           />
         </PopoverContent>
       </Popover>
@@ -2271,6 +2292,9 @@ export function AssistantRunPage() {
           onToggleMultiAssistant={handleToggleMultiAssistant}
           onToggleMultiModel={handleToggleMultiModel}
           onCreateAssistant={() => setShowCreateAssistant(true)}
+          // Picker 中的 bolt 配置按钮 → 在当前页面弹出 AssistantConfig，
+          // 不跳到资源库（同 cherry-studio#15029 spec）。
+          onConfigureAssistant={(id) => { setSelectedAssistants([id]); setRightPanel('assistantInfo'); }}
         />
         <div className="flex-1" />
         <div className="flex items-center gap-0.5">
@@ -2921,20 +2945,17 @@ export function AssistantRunPage() {
           )}
         </AnimatePresence>
 
+        {/* Assistant configuration dialog — same modal used in
+            LibraryPage, opened by clicking the avatar / 配置 entry
+            instead of jumping out to the library. */}
+        <ResourceConfigDialog
+          resource={rightPanel === 'assistantInfo' ? assistantToResource(currentAssistant, currentAssistantEmoji) : null}
+          onOpenChange={(open) => { if (!open) setRightPanel(null); }}
+        />
+
         {/* Right: Floating Panels */}
         <AnimatePresence mode="wait">
-          {rightPanel === 'assistantInfo' && (
-            <AssistantInfoPanel
-              key="assistantInfo"
-              assistant={currentAssistant}
-              topics={topics}
-              onSelectTopic={handleSelectTopic}
-              onClose={() => setRightPanel(null)}
-              onEdit={() => onEditAssistantInLibrary?.(currentAssistant.name)}
-              onOpenHistory={() => { setRightPanel(null); setHistoryInitialAssistant(currentAssistant.name); historySidebar.expand(); }}
-              onNavigateToKnowledge={onNavigateToKnowledge}
-            />
-          )}
+          {/* assistantInfo handled via ResourceConfigDialog above */}
           {rightPanel === 'chatDetail' && inspectedMsg?.metadata && (
             <ChatDetailPanel key="chatDetail" metadata={inspectedMsg.metadata} onClose={() => setRightPanel(null)} />
           )}

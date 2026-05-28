@@ -61,7 +61,7 @@ function ToolCallRow({ msg }: { msg: AgentChatMessage }) {
         {tc.status === 'done' && (
           <>
             {tc.duration && <span className="text-text-tertiary tabular-nums flex-shrink-0">{tc.duration}</span>}
-            <Check size={9} className="text-primary flex-shrink-0" />
+            <Check size={9} className="text-success flex-shrink-0" />
           </>
         )}
         {tc.status === 'error' && (

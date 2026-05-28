@@ -26,6 +26,7 @@ import { FileExplorer } from './FileExplorer';
 import { ArtifactViewer } from './ArtifactViewer';
 import { ChatPanel } from './ChatPanel';
 import { SaveAsSkillDialog } from './SaveAsSkillDialog';
+import { SaveAsSkillCallout } from './SaveAsSkillCallout';
 import { SkillJobStatusChip } from './SkillJobStatusChip';
 import { useActiveSkillJob } from '@/app/stores/skillJobStore';
 import { WorkflowPanel } from './WorkflowPanel';
@@ -34,8 +35,27 @@ import { SessionHistoryPage, type SessionDisplayMode } from './SessionHistoryPag
 import { HistorySidebar } from '@/app/components/shared/HistorySidebar';
 import { CreateEntityDialog } from '@/app/components/shared/CreateEntityDialog';
 import { RecycleBinConfirmDialog } from '@/app/components/shared/RecycleBinConfirmDialog';
+import { ResourceConfigDialog } from '@/app/components/shared/ResourceConfigDialog';
 import { useRecycleBin } from '@/app/context/RecycleBinContext';
 import { useHistorySidebar } from '@/app/hooks/useHistorySidebar';
+import type { ResourceItem } from '@/app/types';
+
+// Convert the AvailableAgent runtime shape into the ResourceItem the
+// shared config dialog (and the embedded AgentConfig editor) expects.
+function agentToResource(a: typeof AVAILABLE_AGENTS[0]): ResourceItem {
+  return {
+    id: a.id,
+    name: a.name,
+    type: 'agent',
+    description: a.desc,
+    avatar: a.avatar,
+    model: a.model,
+    tags: a.tags,
+    enabled: true,
+    createdAt: a.createdAt,
+    updatedAt: a.updatedAt,
+  };
+}
 import {
   MOCK_SESSIONS, MODELS, SESSION_DATA_MAP, EMPTY_SESSION_DATA,
   DEFAULT_INITIAL_FILES,
@@ -1248,14 +1268,16 @@ function AgentInfoPanel({ agent, onClose, onEdit }: {
                               >
                                 <div className="space-y-0.5">
                                   {items.map(tool => (
-                                    <div key={tool.id} className="flex items-center gap-2 px-2 py-[6px] rounded-md hover:bg-accent/40 transition-colors group">
-                                      <Wrench size={10} className={`flex-shrink-0 ${tool.enabled ? 'text-muted-foreground/60' : 'text-muted-foreground/50'}`} />
+                                    <label
+                                      key={tool.id}
+                                      className="flex items-center gap-2.5 px-2 py-[6px] rounded-md hover:bg-accent/40 transition-colors cursor-pointer"
+                                    >
                                       <div className="flex-1 min-w-0">
-                                        <div className={`text-sm truncate ${tool.enabled ? 'text-foreground' : 'text-muted-foreground/50'}`}>{tool.name}</div>
-                                        <div className="text-xs text-muted-foreground/50 truncate">{tool.desc}</div>
+                                        <div className={`text-sm truncate leading-tight ${tool.enabled ? 'text-foreground' : 'text-muted-foreground/40'}`}>{tool.name}</div>
+                                        <div className="text-xs text-muted-foreground/50 truncate mt-0.5">{tool.desc}</div>
                                       </div>
-                                      <Switch size="sm" checked={tool.enabled} onCheckedChange={() => {}} />
-                                    </div>
+                                      <Switch size="sm" checked={tool.enabled} onCheckedChange={() => {}} className="flex-shrink-0" />
+                                    </label>
                                   ))}
                                 </div>
                               </motion.div>
@@ -1282,21 +1304,16 @@ function AgentInfoPanel({ agent, onClose, onEdit }: {
                 ) : (
                   <div className="space-y-0.5">
                     {mcpServices.map(svc => (
-                      <div key={svc.id} className="flex items-center gap-2.5 px-2.5 py-[7px] rounded-lg hover:bg-accent/40 transition-colors group">
-                        <div className="w-6 h-6 rounded-md bg-accent/25 flex items-center justify-center flex-shrink-0">
-                          <Cable size={11} className="text-info/60" />
-                        </div>
+                      <label
+                        key={svc.id}
+                        className="flex items-center gap-2.5 px-2 py-[6px] rounded-md hover:bg-accent/40 transition-colors cursor-pointer"
+                      >
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-1.5">
-                            <div className="text-sm text-foreground truncate">{svc.name}</div>
-                            <span className={`w-[5px] h-[5px] rounded-full flex-shrink-0 ${
-                              svc.status === 'connected' ? 'bg-success' : 'bg-muted-foreground/30'
-                            }`} />
-                          </div>
-                          <div className="text-xs text-muted-foreground/50 truncate">{svc.desc}</div>
+                          <div className="text-sm text-foreground truncate leading-tight">{svc.name}</div>
+                          <div className="text-xs text-muted-foreground/50 truncate mt-0.5">{svc.desc}</div>
                         </div>
-                        <Switch size="sm" checked={svc.status === 'connected'} onCheckedChange={() => {}} />
-                      </div>
+                        <Switch size="sm" checked={svc.status === 'connected'} onCheckedChange={() => {}} className="flex-shrink-0" />
+                      </label>
                     ))}
                   </div>
                 )
@@ -1355,19 +1372,21 @@ function AgentInfoPanel({ agent, onClose, onEdit }: {
                             market: { label: '市场', cls: 'bg-accent-violet-muted text-accent-violet' },
                           }[source];
                           return (
-                            <div key={skill.id} className="flex items-center gap-2.5 px-2.5 py-[7px] rounded-lg hover:bg-accent/40 transition-colors">
-                              <Zap size={10} className={`flex-shrink-0 ${skill.enabled ? 'text-warning/60' : 'text-muted-foreground/50'}`} />
+                            <label
+                              key={skill.id}
+                              className="flex items-center gap-2.5 px-2 py-[6px] rounded-md hover:bg-accent/40 transition-colors cursor-pointer"
+                            >
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-1.5">
-                                  <div className={`text-sm truncate ${skill.enabled ? 'text-foreground' : 'text-muted-foreground/40'}`}>{skill.name}</div>
+                                  <span className={`text-sm truncate leading-tight ${skill.enabled ? 'text-foreground' : 'text-muted-foreground/40'}`}>{skill.name}</span>
                                   <span className={`text-[10px] leading-[14px] px-1 rounded ${sourceCfg.cls} flex-shrink-0`}>
                                     {sourceCfg.label}
                                   </span>
                                 </div>
-                                <div className="text-xs text-muted-foreground/50 truncate">{skill.desc}</div>
+                                <div className="text-xs text-muted-foreground/50 truncate mt-0.5">{skill.desc}</div>
                               </div>
-                              <Switch size="sm" checked={skill.enabled} onCheckedChange={() => {}} />
-                            </div>
+                              <Switch size="sm" checked={skill.enabled} onCheckedChange={() => {}} className="flex-shrink-0" />
+                            </label>
                           );
                         })}
                     </div>
@@ -1413,6 +1432,10 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
   const [showCreateAgent, setShowCreateAgent] = useState(false);
   const [showSaveAsSkill, setShowSaveAsSkill] = useState(false);
   const activeSkillJob = useActiveSkillJob();
+  // Sessions where the user dismissed the inline "Save as Skill?"
+  // callout. Per cherry-studio#15029 we surface this contextually after
+  // task completion; once dismissed we don't nag again for the session.
+  const [skillCalloutDismissed, setSkillCalloutDismissed] = useState<Set<string>>(() => new Set());
 
   const sessionData: AgentSessionData = useMemo(() => {
     if (!activeSessionId) return EMPTY_SESSION_DATA;
@@ -1636,7 +1659,7 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
         onSelectAgent={setSelectedAgent}
         onCreateNew={() => setShowCreateAgent(true)}
         onAvatarClick={() => setShowAgentInfo(true)}
-        onConfigureAgent={(agent) => editAssistantInLibrary(agent.name)}
+        onConfigureAgent={(agent) => { setSelectedAgent(agent); setShowAgentInfo(true); }}
         pinnedIds={pinnedAgentIds}
         onTogglePin={togglePinAgent}
       />
@@ -1693,38 +1716,17 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
       </div>
 
       <div className="flex items-center gap-0.5">
-        {/* Save the conversation as a reusable Skill — only surfaced
-            when the chat has produced something worth sedimenting:
-            either the agent ran a workflow with concrete steps, or
-            the user has invested at least a few turns. While a
-            create_skill job is in flight we swap in the status chip
-            so the user can click to inspect progress. */}
-        {(() => {
-          if (activeSkillJob) {
-            return (
-              <>
-                <SkillJobStatusChip />
-                <div className="w-px h-3.5 bg-border/30 mx-0.5" />
-              </>
-            );
-          }
-          const userMsgCount = messages.filter(m => m.role === 'user').length;
-          const canSaveAsSkill = sessionData.steps.length > 0 || userMsgCount >= 3;
-          if (!canSaveAsSkill) return null;
-          return (
-            <>
-              <Tooltip content="将本次对话沉淀成可复用的 Skill" side="bottom">
-                <Button variant="ghost" size="xs"
-                  onClick={() => setShowSaveAsSkill(true)}
-                  className="gap-1.5 px-2 py-[3px] text-xs text-muted-foreground hover:text-foreground hover:bg-accent/40">
-                  <Sparkles size={11} className="text-accent-violet" />
-                  <span>保存为 Skill</span>
-                </Button>
-              </Tooltip>
-              <div className="w-px h-3.5 bg-border/30 mx-0.5" />
-            </>
-          );
-        })()}
+        {/* "保存为 Skill" is no longer a chrome button — the in-chat
+            SaveAsSkillCallout (rendered above the composer) drives
+            discovery now. This slot only shows the create_skill job
+            chip when a background packaging job is in flight, so the
+            user can click in to inspect progress. */}
+        {activeSkillJob && (
+          <>
+            <SkillJobStatusChip />
+            <Separator orientation="vertical" opacity={30} className="!h-3.5 mx-0.5" />
+          </>
+        )}
 
         {/* Plan toggle — only when there are workflow steps. Opens floating card. */}
         {sessionData.steps.length > 0 && (
@@ -1821,16 +1823,11 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
         {/* Compact input bar at the bottom */}
         <CompactInputBar onSendMessage={handleSendMessage} agentName={selectedAgent.name} headerControls={composerHeaderControls} />
 
-        {/* Agent Info Overlay */}
-        <AnimatePresence>
-          {showAgentInfo && (
-            <AgentInfoPanel
-              agent={selectedAgent}
-              onClose={() => setShowAgentInfo(false)}
-              onEdit={() => onNavigateToLibrary?.()}
-            />
-          )}
-        </AnimatePresence>
+        {/* Agent configuration dialog — same modal used in LibraryPage. */}
+        <ResourceConfigDialog
+          resource={showAgentInfo ? agentToResource(selectedAgent) : null}
+          onOpenChange={(open) => { if (!open) setShowAgentInfo(false); }}
+        />
       </div>
     );
   }
@@ -1905,6 +1902,34 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
               onAvatarClick={() => setShowAgentInfo(true)}
               onOpenArtifact={handleOpenArtifact}
               headerControls={composerHeaderControls}
+              taskCompleteCallout={(() => {
+                // Show only after a workflow run actually finished or the
+                // user racked up a meaningful conversation, and only
+                // once per session (dismissed sticks for the session).
+                const sid = activeSessionId || '';
+                if (!sid || skillCalloutDismissed.has(sid)) return null;
+                if (activeSkillJob) return null;
+                const userMsgCount = messages.filter(m => m.role === 'user').length;
+                const hasDoneSteps = sessionData.steps.length > 0
+                  && sessionData.steps.every(s => s.status === 'done');
+                const enoughChat = sessionData.steps.length === 0 && userMsgCount >= 3;
+                if (!hasDoneSteps && !enoughChat) return null;
+                // Hint summary — first user turn keeps the callout grounded.
+                const firstUser = messages.find(m => m.role === 'user');
+                const taskSummary = firstUser?.content
+                  ? firstUser.content.slice(0, 28).replace(/\s+/g, ' ').trim()
+                  : undefined;
+                return (
+                  <SaveAsSkillCallout
+                    taskSummary={taskSummary}
+                    onSave={() => {
+                      setSkillCalloutDismissed(prev => new Set(prev).add(sid));
+                      setShowSaveAsSkill(true);
+                    }}
+                    onDismiss={() => setSkillCalloutDismissed(prev => new Set(prev).add(sid))}
+                  />
+                );
+              })()}
             />
           )}
         </div>
@@ -2000,16 +2025,11 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
         )}
       </AnimatePresence>
 
-      {/* ===== Agent Info Overlay ===== */}
-      <AnimatePresence>
-        {showAgentInfo && (
-          <AgentInfoPanel
-            agent={selectedAgent}
-            onClose={() => setShowAgentInfo(false)}
-            onEdit={() => onNavigateToLibrary?.()}
-          />
-        )}
-      </AnimatePresence>
+      {/* ===== Agent configuration dialog ===== */}
+      <ResourceConfigDialog
+        resource={showAgentInfo ? agentToResource(selectedAgent) : null}
+        onOpenChange={(open) => { if (!open) setShowAgentInfo(false); }}
+      />
 
       {/* ===== Create Agent Onboarding ===== */}
       <CreateEntityDialog

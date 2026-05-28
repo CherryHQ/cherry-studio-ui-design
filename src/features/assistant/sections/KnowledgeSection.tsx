@@ -10,17 +10,18 @@ import { MOCK_KNOWLEDGE_BASES } from '@/app/config/constants';
 // ===========================
 // Mirrors Cherry Studio source's AssistantKnowledgeBaseSettings:
 //   - reference list of available knowledge bases
-//   - 知识库识别 segmented toggle (off / on)
+//   - 意图检索 switch — same row as the section header so the picker
+//     stays compact (removed the standalone 检索设置 sub-section).
 // The Top-K / similarity-threshold sliders that used to live here
 // belong elsewhere per source; they're configured at the KB itself.
-
-type KnowledgeRecognition = 'off' | 'on';
 
 export function KnowledgeSection() {
   const [linkedKBs, setLinkedKBs] = useState<string[]>(['kb-1', 'kb-2']);
   const [showKBPicker, setShowKBPicker] = useState(false);
   const [kbSearch, setKbSearch] = useState('');
-  const [recognition, setRecognition] = useState<KnowledgeRecognition>('off');
+  // 意图检索 — when ON, the assistant decides per-query whether to
+  // search the linked KBs (vs forcing retrieval on every message).
+  const [intentRetrieval, setIntentRetrieval] = useState(true);
 
   const linkedItems = MOCK_KNOWLEDGE_BASES.filter(kb => linkedKBs.includes(kb.id));
   const unlinkedItems = MOCK_KNOWLEDGE_BASES.filter(kb =>
@@ -32,7 +33,32 @@ export function KnowledgeSection() {
   };
 
   return (
-    <div className="max-w-3xl space-y-5">
+    <div className="max-w-3xl space-y-3">
+      {/* 意图检索 — section-level behavior toggle. Sits above the
+          linked-KB list as a standalone row instead of being squeezed
+          next to the section label (which felt cramped). */}
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center gap-1.5 min-w-0">
+          <label className="text-sm text-muted-foreground">意图检索</label>
+          <SimpleTooltip
+            content="开启后助手按意图自动判断是否检索已引用的知识库；关闭则每条消息都强制检索。"
+            side="top"
+            sideOffset={6}
+          >
+            <button type="button" tabIndex={-1}
+              className="inline-flex items-center text-muted-foreground/40 hover:text-muted-foreground cursor-help"
+              aria-label="什么是意图检索">
+              <Info size={12} />
+            </button>
+          </SimpleTooltip>
+        </div>
+        <Switch
+          checked={intentRetrieval}
+          onCheckedChange={setIntentRetrieval}
+          className="flex-shrink-0"
+        />
+      </div>
+
       {/* Linked KBs */}
       <div>
         <div className="flex items-center justify-between mb-2">
@@ -102,36 +128,6 @@ export function KnowledgeSection() {
           </div>
         )}
 
-      </div>
-
-      {/* 检索设置 — separated from the linked-KB list above since it
-          configures retrieval strategy, not the KB data itself. */}
-      <div className="pt-4 border-t border-border/15">
-        <label className="text-sm text-muted-foreground mb-2 block">检索设置</label>
-        <div className="flex items-center justify-between gap-3 py-1">
-          <div className="flex items-center gap-1.5 min-w-0">
-            <span className="text-sm text-muted-foreground/80">知识库识别</span>
-          <SimpleTooltip
-            content="开启后助手自动判断是否需要检索已引用的知识库；关闭则每条消息都强制检索。"
-            side="top"
-            sideOffset={6}
-          >
-            <button
-              type="button"
-              tabIndex={-1}
-              className="inline-flex items-center text-muted-foreground/40 hover:text-muted-foreground cursor-help"
-              aria-label="什么是知识库识别"
-            >
-              <Info size={12} />
-            </button>
-          </SimpleTooltip>
-        </div>
-          <Switch
-            checked={recognition === 'on'}
-            onCheckedChange={(v) => setRecognition(v ? 'on' : 'off')}
-            className="flex-shrink-0"
-          />
-        </div>
       </div>
     </div>
   );

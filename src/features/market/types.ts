@@ -25,6 +25,8 @@ export interface MarketItem {
   ageLabel: string;
   installs: number;
   trending?: boolean;
+  /** Semver-ish version label shown in card / detail (e.g. "1.2.0"). */
+  version?: string;
 }
 
 export const KIND_LABEL: Record<ResourceKind, string> = {

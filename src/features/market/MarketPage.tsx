@@ -148,11 +148,6 @@ export function MarketPage() {
             <MarketSidebar kind={kind} onKindChange={setKind} />
 
             <div className="flex-1 min-w-0">
-              {/* Centered hero title */}
-              <h1 className="text-center text-2xl sm:text-3xl font-semibold text-foreground mb-6">
-                让 Cherry 按你的方式工作
-              </h1>
-
               {/* Search bar */}
               <div className="mb-3">
                 <SearchInput
