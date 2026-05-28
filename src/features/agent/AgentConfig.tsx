@@ -224,14 +224,16 @@ function ModelSelector({ label, value, onChange, hint }: { label: string; value:
   const [open, setOpen] = useState(false);
   const selected = ASSISTANT_MODELS.find(m => m.id === value);
   return (
-    <div>
-      <div className="flex items-center justify-between mb-1.5">
+    <div className="flex items-center gap-3">
+      <div className="flex items-center gap-1.5 min-w-0 flex-shrink-0 w-[200px]">
         <label className="text-sm text-muted-foreground">{label}</label>
-        <span className="text-xs text-muted-foreground/50">{hint}</span>
+        <SimpleTooltip content={hint} side="top" sideOffset={6}>
+          <Info size={12} className="text-muted-foreground/40 hover:text-muted-foreground transition-colors cursor-help" />
+        </SimpleTooltip>
       </div>
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
-          <Button variant="outline" className="w-full justify-between px-3 py-2 border-border/40 bg-muted/30 text-sm text-foreground hover:border-border/50 hover:bg-accent/40">
+          <Button variant="outline" className="flex-1 justify-between px-3 py-2 border-border/40 bg-muted/30 text-sm text-foreground hover:border-border/50 hover:bg-accent/40">
             <span className="truncate">{selected?.name || value}</span><ChevronDown size={10} className="text-muted-foreground/40 flex-shrink-0" />
           </Button>
         </PopoverTrigger>
@@ -266,7 +268,7 @@ function AgentBasicSection({ resource }: { resource: ResourceItem }) {
   const [agentType, setAgentType] = useState<'claude-code' | 'cherry-runtime' | 'long-running'>('cherry-runtime');
   return (
     <div className="max-w-3xl space-y-5">
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 gap-3">
         <div className="min-w-0">
           <label className="text-sm text-muted-foreground mb-1.5 block">头像与名称</label>
           <div className="flex items-center gap-3 min-w-0">
@@ -386,7 +388,7 @@ function AgentModelsSection() {
           智能体按任务自动选择对应档位。规划负责拆解 / 决策，常规负责推理 / 执行，快速负责简单判断 / 格式化。
         </p>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-x-3 gap-y-3">
+      <div className="grid grid-cols-1 gap-y-2.5">
         <ModelSelector label="规划模型" value={planningModel} onChange={setPlanningModel} hint="负责任务拆解和决策" />
         <ModelSelector label="常规模型" value={regularModel} onChange={setRegularModel} hint="负责主要推理和执行" />
         <ModelSelector label="快速模型" value={fastModel} onChange={setFastModel} hint="负责简单判断和格式化" />
@@ -678,7 +680,7 @@ function MCPServerCard({ server, onToggleConnect, onRemove, onToggleTool, onTogg
   return (
     <div className="rounded-xl border border-border/15 bg-accent/15 overflow-hidden transition-all">
       {/* Header row */}
-      <div className="flex items-center gap-2.5 px-3 py-2.5 cursor-pointer hover:bg-accent/40 transition-colors" onClick={() => isConnected && setExpanded(!expanded)}>
+      <div className="flex items-center gap-2.5 px-3 py-2.5 cursor-pointer hover:bg-accent/40 transition-colors" onClick={() => isConnected ? setExpanded(!expanded) : onToggleConnect()}>
         <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${isConnected ? 'bg-cherry-primary' : server.status === 'error' ? 'bg-destructive' : 'bg-muted-foreground/20'}`} />
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
@@ -694,9 +696,6 @@ function MCPServerCard({ server, onToggleConnect, onRemove, onToggleTool, onTogg
         <div className="flex items-center gap-2 flex-shrink-0">
           {isConnected && <ChevronDown size={10} className={`text-muted-foreground/40 transition-transform ${expanded ? 'rotate-180' : ''}`} />}
           <Button variant="ghost" size="icon-xs" onClick={e => { e.stopPropagation(); onRemove(); }} className="text-muted-foreground/40 hover:text-destructive hover:bg-destructive/8" title="移除"><Trash2 size={10} /></Button>
-          <span onClick={e => { e.stopPropagation(); onToggleConnect(); }}>
-            <Switch size="sm" checked={isConnected} className="pointer-events-none" />
-          </span>
         </div>
       </div>
 
@@ -897,18 +896,13 @@ function ToolchainSection({ onExplore, controlledTab }: { onExplore: () => void;
                 <div>
                   <TagFilter tags={TOOL_CATEGORIES} selected={toolTagFilter} onToggle={setToolTagFilter} />
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                    {filteredTools.map(tool => { const Icon = tool.icon; return (
+                    {filteredTools.map(tool => (
                       <div key={tool.id}
                         onClick={() => toggleTool(tool.id)}
-                        className={`flex items-center gap-3 px-3 py-2.5 rounded-xl border border-border/15 bg-accent/15 hover:bg-accent/40 transition-all cursor-pointer ${tool.enabled ? '' : 'opacity-55'}`}>
-                        <Icon size={15} strokeWidth={1.5} className={tool.enabled ? 'text-muted-foreground flex-shrink-0' : 'text-muted-foreground/40 flex-shrink-0'} />
-                        <div className="flex-1 min-w-0">
-                          <div className="text-sm text-foreground truncate">{tool.name}</div>
-                          <div className="text-xs text-muted-foreground/50 truncate">{tool.desc}</div>
-                        </div>
-                        <Switch size="sm" checked={tool.enabled} className="pointer-events-none flex-shrink-0" />
+                        className={`flex items-center px-3 py-2 rounded-xl border border-border/15 bg-accent/15 hover:bg-accent/40 transition-all cursor-pointer ${tool.enabled ? '' : 'opacity-55'}`}>
+                        <div className="text-sm text-foreground truncate">{tool.name}</div>
                       </div>
-                    ); })}
+                    ))}
                   </div>
                   {filteredTools.length === 0 && <EmptyState preset="no-result" title={search ? '未找到匹配结果' : '该分类下无工具'} compact />}
                 </div>
@@ -970,18 +964,13 @@ function ToolchainSection({ onExplore, controlledTab }: { onExplore: () => void;
                 <div>
                   <TagFilter tags={SKILL_TAGS} selected={skillTagFilter} onToggle={setSkillTagFilter} />
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                    {filteredSkills.map(skill => { const Icon = skill.icon; return (
+                    {filteredSkills.map(skill => (
                       <div key={skill.id}
                         onClick={() => toggleSkill(skill.id)}
-                        className={`flex items-center gap-3 px-3 py-2.5 rounded-xl border border-border/15 bg-accent/15 hover:bg-accent/40 transition-all cursor-pointer ${skill.enabled ? '' : 'opacity-55'}`}>
-                        <Icon size={15} strokeWidth={1.5} className={skill.enabled ? 'text-muted-foreground flex-shrink-0' : 'text-muted-foreground/40 flex-shrink-0'} />
-                        <div className="flex-1 min-w-0">
-                          <div className="text-sm text-foreground truncate">{skill.name}</div>
-                          <div className="text-xs text-muted-foreground/50 truncate">{skill.desc}</div>
-                        </div>
-                        <Switch size="sm" checked={skill.enabled} className="pointer-events-none flex-shrink-0" />
+                        className={`flex items-center px-3 py-2 rounded-xl border border-border/15 bg-accent/15 hover:bg-accent/40 transition-all cursor-pointer ${skill.enabled ? '' : 'opacity-55'}`}>
+                        <div className="text-sm text-foreground truncate">{skill.name}</div>
                       </div>
-                    ); })}
+                    ))}
                   </div>
                   {filteredSkills.length === 0 && <EmptyState preset="no-result" title={search ? '未找到匹配结果' : '该分类下无 Skill'} compact />}
                 </div>
@@ -1365,9 +1354,11 @@ function AgentNotesSection() {
       {notesEnabled && <>
       {/* 读取 */}
       <section className="space-y-2">
-        <div>
+        <div className="flex items-center gap-1.5">
           <h3 className="text-sm font-medium text-foreground">读取</h3>
-          <p className="text-xs text-muted-foreground/60 mt-0.5">控制智能体能不能看你的笔记，以及看哪些。</p>
+          <SimpleTooltip content="控制智能体能不能看你的笔记，以及看哪些。" side="top" sideOffset={6}>
+            <Info size={12} className="text-muted-foreground/40 hover:text-muted-foreground transition-colors cursor-help" />
+          </SimpleTooltip>
         </div>
 
         <div className="flex items-center justify-between gap-3">
@@ -1532,9 +1523,11 @@ function AgentNotesSection() {
 
       {/* 写入 */}
       <section className="space-y-2 pt-2 border-t border-border/15">
-        <div>
+        <div className="flex items-center gap-1.5">
           <h3 className="text-sm font-medium text-foreground">写入</h3>
-          <p className="text-xs text-muted-foreground/60 mt-0.5">允许智能体在笔记里新增 / 修改内容。</p>
+          <SimpleTooltip content="允许智能体在笔记里新增 / 修改内容。" side="top" sideOffset={6}>
+            <Info size={12} className="text-muted-foreground/40 hover:text-muted-foreground transition-colors cursor-help" />
+          </SimpleTooltip>
         </div>
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-1.5 min-w-0">
@@ -1553,9 +1546,11 @@ function AgentNotesSection() {
 
       {/* 管理 / 删除 */}
       <section className="space-y-2 pt-2 border-t border-border/15">
-        <div>
+        <div className="flex items-center gap-1.5">
           <h3 className="text-sm font-medium text-foreground">管理删除</h3>
-          <p className="text-xs text-muted-foreground/60 mt-0.5">允许智能体删除笔记、调整文件夹结构。慎开。</p>
+          <SimpleTooltip content="允许智能体删除笔记、调整文件夹结构。慎开。" side="top" sideOffset={6}>
+            <Info size={12} className="text-muted-foreground/40 hover:text-muted-foreground transition-colors cursor-help" />
+          </SimpleTooltip>
         </div>
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-1.5 min-w-0">
