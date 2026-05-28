@@ -1,9 +1,10 @@
 import { useMemo } from 'react';
-import { Plus, Sparkles, Globe, Pin, Trash2 } from 'lucide-react';
+import { Plus, Sparkles, FileText, Pin, Trash2 } from 'lucide-react';
 import { useGlobalActions } from '@/app/context/GlobalActionContext';
 import { dialogAppIcons, newTabHtmlPreviews } from '@/app/config/constants';
 import { miniAppList } from '@/features/miniapp/MiniAppsPage';
 import { usePinnedArtifacts } from '@/app/stores/sharedArtifactsStore';
+import { resolveArtifactIcon } from '@/app/utils/artifactIcons';
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuSeparator, ContextMenuTrigger } from '@cherry-studio/ui';
 
 // ===========================
@@ -110,7 +111,7 @@ export function LaunchpadPage() {
                 onPin={() => pinToSidebar('artifact', `pinned:${a.id}`, a.label)}
                 onRemove={() => removeFromLaunchpad('artifact', `pinned:${a.id}`)}
               >
-                <ArtifactAvatar />
+                <ArtifactAvatar iconName={a.iconName} />
               </PinnableTile>
             ))}
             {visiblePinned.length === 0 && visibleHtmlPreviews.length === 0 && (
@@ -126,13 +127,16 @@ export function LaunchpadPage() {
   );
 }
 
-// Single generic avatar for any Agent-produced artifact tile. Per-artifact
-// emojis (when present) are intentionally not used here — the launchpad
-// treats artifacts as one bucket, identified by title rather than topic icon.
-function ArtifactAvatar() {
+// Avatar for any Agent-produced artifact tile. Per-artifact emoji isn't
+// surfaced here — the launchpad uses a single document-shaped icon
+// (FileText by default) so the section reads as one bucket. When a
+// pinned artifact carries a user-picked `iconName` via the
+// "添加至工作台" dialog, that lucide icon takes over.
+function ArtifactAvatar({ iconName }: { iconName?: string }) {
+  const Icon = resolveArtifactIcon(iconName) ?? FileText;
   return (
     <div className="w-12 h-12 rounded-2xl bg-accent-violet/15 flex items-center justify-center text-accent-violet">
-      <Globe size={20} strokeWidth={1.6} />
+      <Icon size={20} strokeWidth={1.6} />
     </div>
   );
 }

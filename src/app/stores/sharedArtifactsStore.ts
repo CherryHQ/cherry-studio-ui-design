@@ -17,12 +17,20 @@ export interface SharedArtifact {
   fileName: string;
   /** Short label for the launchpad tile. */
   label: string;
-  /** Emoji used as the launchpad avatar. */
+  /** Emoji used as the launchpad avatar (legacy / fallback). */
   emoji: string;
+  /**
+   * Optional lucide-react icon name (e.g. `FileText`). When set, the
+   * launchpad renders this icon in place of the emoji — chosen via the
+   * "添加至工作台" dialog's icon picker.
+   */
+  iconName?: string;
   /** Full HTML body (for srcDoc rendering). */
   html: string;
   /** When it was shared. */
   sharedAt: string;
+  /** Optional message body posted alongside the artifact in 分享到群组. */
+  comment?: string;
 }
 
 interface StoreShape {

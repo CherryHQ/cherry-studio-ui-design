@@ -6,14 +6,21 @@ import {
   Maximize2, Minimize2,
   Share2, Pin, Users2,
   FileText, Globe, MousePointer2, TerminalSquare, ExternalLink,
+  FileCode2, BookOpen, BarChart3, LineChart, PieChart,
+  LayoutDashboard, Newspaper, ScrollText, FileSpreadsheet,
+  ClipboardList, NotebookPen, FlaskConical, Receipt, Trophy,
+  Sparkles, Layers,
 } from 'lucide-react';
 import {
-  Button, EmptyState,
+  Button, EmptyState, Input,
   DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator,
   DropdownMenuSub, DropdownMenuSubTrigger, DropdownMenuSubContent,
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
 } from '@cherry-studio/ui';
 import { MOCK_GROUPS } from '@/features/collaboration/data';
 import { pinArtifact, shareArtifactToGroup } from '@/app/stores/sharedArtifactsStore';
+import { ARTIFACT_ICON_MAP, ARTIFACT_ICON_NAMES, DEFAULT_ARTIFACT_ICON_NAME, resolveArtifactIcon } from '@/app/utils/artifactIcons';
+import { NewTopicDialog, type AttachedArtifact } from '@/features/collaboration/components/NewTopicDialog';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'motion/react';
 import { copyToClipboard } from '@/app/utils/clipboard';
@@ -160,27 +167,51 @@ export function ArtifactViewer({ fileContent, fileName, previewUrl, hasArtifact,
   const [copied, setCopied] = useState(false);
   const [previewKey, setPreviewKey] = useState(0);
   const [previewCollapsed, setPreviewCollapsed] = useState(false);
+  // When set, the NewTopicDialog opens with the artifact pre-attached so
+  // the user can type a comment before posting it as a new group topic.
+  const [shareTarget, setShareTarget] = useState<{ groupId: string; groupName: string } | null>(null);
+  // "添加至工作台" dialog: opens with a draft name + icon prefilled
+  // from the current artifact, both editable before the user confirms.
+  const [pinDialogOpen, setPinDialogOpen] = useState(false);
+  const [pinDraftName, setPinDraftName] = useState('');
+  const [pinDraftIcon, setPinDraftIcon] = useState<string>(DEFAULT_ARTIFACT_ICON_NAME);
 
-  const buildSharePayload = () => {
+  const buildSharePayload = (overrides?: { label?: string; iconName?: string }) => {
     const name = fileName ?? '未命名.html';
     // Strip extension for a friendlier label; cap at 14 chars for tile UX.
     const stem = name.replace(/\.[a-zA-Z0-9]+$/, '');
-    const label = stem.length > 14 ? `${stem.slice(0, 13)}…` : stem;
+    const defaultLabel = stem.length > 14 ? `${stem.slice(0, 13)}…` : stem;
     return {
       fileName: name,
-      label,
+      label: overrides?.label ?? defaultLabel,
       emoji: '📄',
+      iconName: overrides?.iconName ?? DEFAULT_ARTIFACT_ICON_NAME,
       html: previewHtml ?? fileContent ?? '',
     };
   };
 
   const handlePinToWorkbench = () => {
     if (!previewHtml && !fileContent) {
-      toast.error('当前没有可 Pin 的内容');
+      toast.error('当前没有可固定的内容');
       return;
     }
-    pinArtifact(buildSharePayload());
-    toast.success('已 Pin 到工作台');
+    // Prefill the draft from the current artifact and open the dialog —
+    // user picks label + icon then confirms (no longer one-click pin).
+    const payload = buildSharePayload();
+    setPinDraftName(payload.label);
+    setPinDraftIcon(payload.iconName);
+    setPinDialogOpen(true);
+  };
+
+  const handlePinConfirm = () => {
+    const trimmed = pinDraftName.trim();
+    if (!trimmed) {
+      toast.error('请输入应用名称');
+      return;
+    }
+    pinArtifact(buildSharePayload({ label: trimmed, iconName: pinDraftIcon }));
+    toast.success('已添加至工作台');
+    setPinDialogOpen(false);
   };
 
   const handleShareToGroup = (groupId: string, groupName: string) => {
@@ -188,8 +219,20 @@ export function ArtifactViewer({ fileContent, fileName, previewUrl, hasArtifact,
       toast.error('当前没有可分享的内容');
       return;
     }
-    shareArtifactToGroup(groupId, buildSharePayload());
-    toast.success(`已分享到 ${groupName}`);
+    setShareTarget({ groupId, groupName });
+  };
+
+  const handleShareSubmit = (text: string, artifact: AttachedArtifact | null) => {
+    if (!shareTarget) return;
+    if (!artifact && !text.trim()) {
+      // Nothing to send. Shouldn't happen — the dialog disables Send in this state.
+      return;
+    }
+    if (artifact) {
+      shareArtifactToGroup(shareTarget.groupId, { ...artifact, comment: text.trim() || undefined });
+    }
+    toast.success(`已分享到 ${shareTarget.groupName}`);
+    setShareTarget(null);
   };
 
   const handleCopy = () => {
@@ -313,7 +356,7 @@ export function ArtifactViewer({ fileContent, fileName, previewUrl, hasArtifact,
             <DropdownMenuContent align="end" side="bottom" className="w-[180px]">
               <DropdownMenuItem className="gap-2 px-2 py-[5px] text-xs" onSelect={handlePinToWorkbench}>
                 <Pin size={12} className="text-muted-foreground/80 flex-shrink-0" />
-                <span className="flex-1">Pin 到工作台</span>
+                <span className="flex-1">添加至工作台</span>
               </DropdownMenuItem>
               <DropdownMenuSub>
                 <DropdownMenuSubTrigger className="gap-2 px-2 py-[5px] text-xs">
@@ -423,6 +466,117 @@ export function ArtifactViewer({ fileContent, fileName, previewUrl, hasArtifact,
         </AnimatePresence>
         )}
       </div>
+
+      <NewTopicDialog
+        open={!!shareTarget}
+        group={shareTarget ? MOCK_GROUPS.find(g => g.id === shareTarget.groupId) ?? null : null}
+        attachedArtifact={shareTarget ? buildSharePayload() : undefined}
+        onSubmit={handleShareSubmit}
+        onClose={() => setShareTarget(null)}
+      />
+
+      <PinToWorkbenchDialog
+        open={pinDialogOpen}
+        name={pinDraftName}
+        iconName={pinDraftIcon}
+        onNameChange={setPinDraftName}
+        onIconChange={setPinDraftIcon}
+        onConfirm={handlePinConfirm}
+        onClose={() => setPinDialogOpen(false)}
+      />
     </div>
+  );
+}
+
+// ===========================
+// Pin-to-Workbench Dialog
+// ===========================
+// Confirms label + icon before the artifact lands on the workbench /
+// launchpad. Both fields are pre-filled from the active artifact so the
+// happy path is one click; the icon picker is a small curated grid of
+// lucide icons that fit "Agent-produced document" without bringing the
+// whole 1000+ icon library.
+function PinToWorkbenchDialog({
+  open, name, iconName, onNameChange, onIconChange, onConfirm, onClose,
+}: {
+  open: boolean;
+  name: string;
+  iconName: string;
+  onNameChange: (v: string) => void;
+  onIconChange: (v: string) => void;
+  onConfirm: () => void;
+  onClose: () => void;
+}) {
+  const SelectedIcon = resolveArtifactIcon(iconName);
+  return (
+    <Dialog open={open} onOpenChange={(v) => { if (!v) onClose(); }}>
+      <DialogContent className="max-w-[440px] p-0 overflow-hidden">
+        <DialogHeader className="px-5 pt-4 pb-3 border-b border-border/30">
+          <DialogTitle className="text-sm">添加至工作台</DialogTitle>
+          <DialogDescription className="text-xs">
+            为这个产物起一个易识别的名称和图标，之后在启动页和侧边栏上会用到。
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="px-5 py-4 space-y-4">
+          {/* Preview row */}
+          <div className="flex items-center gap-3 px-3 py-2.5 rounded-xl bg-accent/30 border border-border/40">
+            <div className="w-10 h-10 rounded-xl bg-accent-violet/15 flex items-center justify-center text-accent-violet flex-shrink-0">
+              <SelectedIcon size={18} strokeWidth={1.6} />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm text-foreground truncate">{name || '未命名产物'}</p>
+              <p className="text-[11px] text-muted-foreground/60">预览效果</p>
+            </div>
+          </div>
+
+          {/* Name input */}
+          <div className="space-y-1.5">
+            <label className="text-xs text-muted-foreground/70">应用名称</label>
+            <Input
+              value={name}
+              onChange={(e) => onNameChange(e.target.value)}
+              placeholder="例：周报 · Week 12"
+              className="h-9 text-sm"
+              autoFocus
+            />
+          </div>
+
+          {/* Icon picker */}
+          <div className="space-y-1.5">
+            <label className="text-xs text-muted-foreground/70">图标</label>
+            <div className="grid grid-cols-9 gap-1.5">
+              {ARTIFACT_ICON_NAMES.map((n) => {
+                const Icon = ARTIFACT_ICON_MAP[n];
+                const isSelected = n === iconName;
+                return (
+                  <button
+                    key={n}
+                    type="button"
+                    onClick={() => onIconChange(n)}
+                    title={n}
+                    className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors
+                      ${isSelected
+                        ? 'bg-accent-violet/15 text-accent-violet ring-1 ring-accent-violet/40'
+                        : 'text-muted-foreground/70 hover:text-foreground hover:bg-accent/40'}`}
+                  >
+                    <Icon size={15} strokeWidth={1.6} />
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+
+        <DialogFooter className="px-5 py-3 border-t border-border/20 bg-muted/15 gap-2">
+          <Button variant="outline" size="sm" onClick={onClose} className="h-8">
+            取消
+          </Button>
+          <Button variant="default" size="sm" onClick={onConfirm} className="h-8">
+            添加
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
