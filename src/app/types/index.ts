@@ -54,6 +54,9 @@ export interface Tab {
   miniAppInitial?: string;
   miniAppUrl?: string;
   miniAppLogoUrl?: string;
+  /** Key into `newTabHtmlPreviews` — when set, this tab renders the
+      Agent-produced HTML artifact in a full-bleed iframe. */
+  htmlPreviewKey?: string;
 }
 
 export type SidebarLayout = 'hidden' | 'icon' | 'vertical-card' | 'full';

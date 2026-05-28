@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { Puzzle, Layers, Database } from 'lucide-react';
+import { Puzzle, Layers, Database, Globe } from 'lucide-react';
 import { Sidebar } from './layout/Sidebar';
 import { TabBar } from './layout/TabBar';
 import { TabContextMenu, FloatingWindow, NewTabDialog, SearchDialog, DragGhost, AnnotationProvider, AnnotationOverlay, AnnotationToggle, AnnotationList } from '@cherry-studio/ui';
@@ -7,16 +7,17 @@ import { MainContent } from './MainContent';
 import {
   menuItems, getLayout,
   dialogAppIcons, dialogFilterTabs,
-  newTabHistoryItems, newTabFileItems, dialogQuickActions,
+  newTabHistoryItems, newTabFileItems, dialogQuickActions, newTabHtmlPreviews,
   searchFilterTabs, searchRecentItems, searchFileItems, searchQuickActions,
   MOCK_RESOURCES,
 } from '@/app/config/constants';
-import { AVAILABLE_AGENTS } from '@/app/config/agentTools';
 
-// User-created agents appear as additional launcher tiles in the
-// NewTabDialog grid. We map the emoji avatar to a tiny inline component
-// so it satisfies AppIconItem.icon (React.ElementType) without changing
-// the dialog's render contract.
+// Agent-produced HTML artifacts (reports, summaries, dashboards) appear as
+// additional launcher tiles in the NewTabDialog grid. Clicking one opens an
+// inline preview rather than creating a tab (see handleDialogCreateTab).
+// We map the emoji avatar to a tiny inline component so it satisfies
+// AppIconItem.icon (React.ElementType) without changing the dialog's render
+// contract.
 function makeEmojiIcon(emoji: string): React.ElementType {
   const C: React.FC = () => <span className="text-[16px] leading-none">{emoji}</span>;
   C.displayName = `EmojiIcon(${emoji})`;
@@ -25,12 +26,12 @@ function makeEmojiIcon(emoji: string): React.ElementType {
 
 const dialogAppIconsWithAgents = [
   ...dialogAppIcons,
-  ...AVAILABLE_AGENTS.map(a => ({
-    id: `agent:${a.id}`,
-    label: a.name,
-    icon: makeEmojiIcon(a.avatar),
+  ...Object.entries(newTabHtmlPreviews).map(([key, preview]) => ({
+    id: `html:${key}`,
+    label: preview.label,
+    icon: makeEmojiIcon(preview.emoji),
     color: 'text-foreground',
-    bg: 'bg-accent/40',
+    bg: 'bg-accent-violet/15',
   })),
 ];
 import type { Tab, MenuItem, ContextMenuState } from '@/app/types';
@@ -204,6 +205,30 @@ function CherryStudioInner() {
   }, [tabs, createTabForMenuItem]);
 
   const handleDialogCreateTab = (menuItemId: string) => {
+    // `html:<key>` tiles open the Agent-produced HTML artifact in a new
+    // full-content tab (more room than a modal). If a tab for the same
+    // artifact already exists, focus it instead of duplicating.
+    if (menuItemId.startsWith('html:')) {
+      const key = menuItemId.slice('html:'.length);
+      const preview = newTabHtmlPreviews[key];
+      if (!preview) { setNewTabDialogOpen(false); return; }
+      const existing = tabs.find(t => t.htmlPreviewKey === key);
+      if (existing) {
+        setActiveTabId(existing.id);
+      } else {
+        const newId = `html-${key}-${Date.now()}`;
+        setTabs(prev => [...prev, {
+          id: newId,
+          title: preview.title,
+          icon: Globe,
+          closeable: true,
+          htmlPreviewKey: key,
+        }]);
+        setActiveTabId(newId);
+      }
+      setNewTabDialogOpen(false);
+      return;
+    }
     // 'agent:<id>' tiles are user-created agent shortcuts — open the
     // agent tab. (Pre-selecting the specific agent would need extra
     // plumbing; routing to the agent surface is the design intent.)
@@ -418,6 +443,7 @@ function CherryStudioInner() {
           searchFileItems={searchFileItems}
           searchQuickActions={searchQuickActions}
         />
+
 
         <SettingsPage
           open={settingsOpen}
