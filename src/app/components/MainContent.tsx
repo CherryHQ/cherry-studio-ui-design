@@ -21,6 +21,7 @@ import { ModelServicePage } from '@/app/components/settings/ModelServicePage';
 import { ExtensionsPage } from '@/features/extensions/ExtensionsPage';
 import { EmptyStatePreview } from '@/features/dev/EmptyStatePreview';
 import { CollaborationPage } from '@/features/collaboration/CollaborationPage';
+import { newTabHtmlPreviews } from '@/app/config/constants';
 
 interface MainContentProps {
   tabs: Tab[];
@@ -106,8 +107,28 @@ const TabContent = React.memo(function TabContent({ tab, isActive }: { tab: Tab;
         : menuItemId === 'collaboration' ? <CollaborationPage />
         : menuItemId === 'empty-preview' ? <EmptyStatePreview />
         : tab.miniAppId ? <MiniAppEmbedPage tab={tab} />
+        : tab.htmlPreviewKey ? <HtmlPreviewPage tabKey={tab.htmlPreviewKey} />
         : <GenericPage tab={tab} />
       }
     </ErrorBoundary>
   );
 });
+
+function HtmlPreviewPage({ tabKey }: { tabKey: string }) {
+  const preview = newTabHtmlPreviews[tabKey];
+  if (!preview) {
+    return (
+      <div className="flex-1 flex items-center justify-center text-sm text-muted-foreground">
+        预览内容不存在或已过期
+      </div>
+    );
+  }
+  return (
+    <iframe
+      title={preview.title}
+      srcDoc={preview.html}
+      sandbox=""
+      className="flex-1 w-full border-0 bg-white"
+    />
+  );
+}

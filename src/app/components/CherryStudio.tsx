@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { Puzzle, Layers, Database } from 'lucide-react';
+import { Puzzle, Layers, Database, Globe } from 'lucide-react';
 import { Sidebar } from './layout/Sidebar';
 import { TabBar } from './layout/TabBar';
-import { TabContextMenu, FloatingWindow, NewTabDialog, SearchDialog, DragGhost, AnnotationProvider, AnnotationOverlay, AnnotationToggle, AnnotationList, Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@cherry-studio/ui';
+import { TabContextMenu, FloatingWindow, NewTabDialog, SearchDialog, DragGhost, AnnotationProvider, AnnotationOverlay, AnnotationToggle, AnnotationList } from '@cherry-studio/ui';
 import { MainContent } from './MainContent';
 import {
   menuItems, getLayout,
@@ -65,9 +65,6 @@ function CherryStudioInner() {
   const [newTabDialogOpen, setNewTabDialogOpen] = useState(false);
   const [newTabSearch, setNewTabSearch] = useState('');
   const [newTabManageMode, setNewTabManageMode] = useState(false);
-  // Suffix of the `html:<key>` id when an HTML file in the launchpad is clicked
-  // — opens the inline preview dialog backed by newTabHtmlPreviews[key].
-  const [htmlPreviewKey, setHtmlPreviewKey] = useState<string | null>(null);
   const [searchDialogOpen, setSearchDialogOpen] = useState(false);
   // Library is intentionally NOT hidden — it's now the home of custom
   // resource management (assistants / agents / skills / prompts / etc.)
@@ -208,11 +205,27 @@ function CherryStudioInner() {
   }, [tabs, createTabForMenuItem]);
 
   const handleDialogCreateTab = (menuItemId: string) => {
-    // `html:<key>` file items open in an inline iframe preview instead of
-    // creating a tab. Keeps the launchpad as a quick-look surface for
-    // generated HTML deliverables.
+    // `html:<key>` tiles open the Agent-produced HTML artifact in a new
+    // full-content tab (more room than a modal). If a tab for the same
+    // artifact already exists, focus it instead of duplicating.
     if (menuItemId.startsWith('html:')) {
-      setHtmlPreviewKey(menuItemId.slice('html:'.length));
+      const key = menuItemId.slice('html:'.length);
+      const preview = newTabHtmlPreviews[key];
+      if (!preview) { setNewTabDialogOpen(false); return; }
+      const existing = tabs.find(t => t.htmlPreviewKey === key);
+      if (existing) {
+        setActiveTabId(existing.id);
+      } else {
+        const newId = `html-${key}-${Date.now()}`;
+        setTabs(prev => [...prev, {
+          id: newId,
+          title: preview.title,
+          icon: Globe,
+          closeable: true,
+          htmlPreviewKey: key,
+        }]);
+        setActiveTabId(newId);
+      }
       setNewTabDialogOpen(false);
       return;
     }
@@ -431,27 +444,6 @@ function CherryStudioInner() {
           searchQuickActions={searchQuickActions}
         />
 
-        {/* Launchpad HTML preview — opened when an `html:<key>` file item is
-            clicked in NewTabDialog. Renders the mock HTML inside a sandboxed
-            iframe so its styles can't leak into Cherry. */}
-        <Dialog open={htmlPreviewKey !== null} onOpenChange={(v) => { if (!v) setHtmlPreviewKey(null); }}>
-          <DialogContent className="max-w-[820px] sm:max-w-[820px] p-0 overflow-hidden">
-            {htmlPreviewKey && newTabHtmlPreviews[htmlPreviewKey] && (
-              <>
-                <DialogHeader className="px-5 pt-4 pb-3 border-b border-border/30">
-                  <DialogTitle className="text-sm">{newTabHtmlPreviews[htmlPreviewKey].title}</DialogTitle>
-                  <DialogDescription className="text-xs">来自 Launchpad · 内嵌预览</DialogDescription>
-                </DialogHeader>
-                <iframe
-                  title={newTabHtmlPreviews[htmlPreviewKey].title}
-                  srcDoc={newTabHtmlPreviews[htmlPreviewKey].html}
-                  sandbox=""
-                  className="w-full h-[560px] border-0 bg-white"
-                />
-              </>
-            )}
-          </DialogContent>
-        </Dialog>
 
         <SettingsPage
           open={settingsOpen}
