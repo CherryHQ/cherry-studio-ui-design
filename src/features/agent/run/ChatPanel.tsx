@@ -159,6 +159,10 @@ export interface ChatPanelProps {
   /** Slot rendered first inside the composer's left toolbar
    *  (e.g. agent picker + model picker pulled in from the page header). */
   headerControls?: React.ReactNode;
+  /** Inline affordance rendered just below the last message and above
+   *  the input area — used by the "Save as Skill" guidance callout
+   *  (cherry-studio#15029). */
+  taskCompleteCallout?: React.ReactNode;
 }
 
 export function ChatPanel({
@@ -169,6 +173,7 @@ export function ChatPanel({
   onAvatarClick,
   onOpenArtifact,
   headerControls,
+  taskCompleteCallout,
 }: ChatPanelProps) {
   const [input, setInput] = useState('');
   const [showPlusMenu, setShowPlusMenu] = useState(false);
@@ -308,6 +313,10 @@ export function ChatPanel({
           );
         })}
       </MessageList>
+
+      {/* Task-complete callout (e.g. "save as skill" guidance) — appears
+          between the last message and the queue/input. */}
+      <AnimatePresence initial={false}>{taskCompleteCallout}</AnimatePresence>
 
       {/* Queued user messages — sit above the input, sent in order when agent idles */}
       <AnimatePresence initial={false}>
