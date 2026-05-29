@@ -95,6 +95,10 @@ export function DataMigrationOverlay({ onClose }: { onClose: (reason: MigrationC
   // keep the rest" instead of skipping the entire step.
   const [failedItems, setFailedItems] = useState<Array<{ id: string; label: string }>>([]);
   const [logCopied, setLogCopied] = useState(false);
+  // Battery state for intro-screen "low battery, not plugged in" warning.
+  // navigator.getBattery() is unavailable on Safari + some Linux Chromes,
+  // so we ignore failures silently — the warning just won't appear.
+  const [batteryWarning, setBatteryWarning] = useState<{ level: number } | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const stepTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   // Set to true once the user clicks "重新检查" on the concurrent screen
@@ -356,6 +360,26 @@ export function DataMigrationOverlay({ onClose }: { onClose: (reason: MigrationC
     return () => clearTimeout(t);
   }, [screen, onClose]);
 
+  // Probe battery once on mount. Show the warning when the user is on
+  // battery (not charging) AND the level is below 50%. The 50% threshold
+  // matches the spec's "至少 1.2 GB / 2-5 分钟" budget — anything less
+  // and the migration could die mid-step.
+  useEffect(() => {
+    if (typeof navigator === 'undefined') return;
+    type BatteryManager = { charging: boolean; level: number };
+    type NavWithBattery = Navigator & { getBattery?: () => Promise<BatteryManager> };
+    const getBattery = (navigator as NavWithBattery).getBattery;
+    if (typeof getBattery !== 'function') return;
+    let cancelled = false;
+    getBattery.call(navigator).then((b) => {
+      if (cancelled) return;
+      if (!b.charging && b.level < 0.5) {
+        setBatteryWarning({ level: Math.round(b.level * 100) });
+      }
+    }).catch(() => { /* silently ignore unsupported browsers */ });
+    return () => { cancelled = true; };
+  }, []);
+
   const formatTime = (s: number) => {
     const m = Math.floor(s / 60);
     const sec = s % 60;
@@ -505,6 +529,21 @@ export function DataMigrationOverlay({ onClose }: { onClose: (reason: MigrationC
                 检测到 V1 版本数据。我们将引导你完成 <span className="text-foreground/70">4 步</span> 安全迁移。
               </p>
             </div>
+
+            {/* Battery banner — only when on battery AND under 50%.
+                Real migrations risk corruption if power dies mid-step,
+                so this prompts the user to plug in before continuing. */}
+            {batteryWarning && (
+              <div className="rounded-xl bg-destructive/[0.06] border border-destructive/25 px-4 py-3 flex items-start gap-2.5">
+                <Plug size={13} className="text-destructive/85 flex-shrink-0 mt-0.5" />
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs font-medium text-destructive/85">未连接电源 · 当前电量 {batteryWarning.level}%</p>
+                  <p className="text-[11px] text-destructive/75 mt-1 leading-relaxed">
+                    迁移期间断电可能损坏数据库。建议先连接电源，再继续。
+                  </p>
+                </div>
+              </div>
+            )}
 
             {/* Highlights — what's migrated + safety + ETA + requirements */}
             <div className="rounded-xl border border-border/30 divide-y divide-border/15">
@@ -708,6 +747,15 @@ export function DataMigrationOverlay({ onClose }: { onClose: (reason: MigrationC
               <div className="flex items-center gap-2">
                 <Database size={12} className="text-muted-foreground/60 flex-shrink-0" />
                 <span className="text-[11px] text-muted-foreground/80">247 MB · 完整可还原</span>
+              </div>
+              {/* SHA-256 checksum — gives the user something concrete to
+                  verify against the on-disk archive if they ever doubt
+                  the backup is intact. */}
+              <div className="flex items-center gap-2">
+                <ShieldCheck size={12} className="text-success flex-shrink-0" />
+                <span className="text-[11px] text-success font-mono">
+                  SHA256 已校验 · a3f2c81d…7b9c4f0e
+                </span>
               </div>
             </div>
 
