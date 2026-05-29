@@ -814,17 +814,83 @@ export function DataMigrationOverlay({ onClose }: { onClose: (reason: MigrationC
               </button>
             )}
 
-            {/* Completed action */}
+            {/* Completed — summary + actions. Real migrations almost
+                always have a partial success story: N steps done, M items
+                migrated, possibly some skipped. Surface the count up
+                front so users trust what landed, and call out skipped
+                steps with a settings entry to retry later. */}
             {screen === 'completed' && (
               <motion.div
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="pt-2"
+                className="space-y-4 pt-3"
               >
-                <Button variant="default" size="sm" onClick={() => onClose('completed')} className="w-full gap-2">
-                  <CheckCircle2 size={14} />
-                  进入 Cherry Studio V2
-                </Button>
+                {(() => {
+                  const completedSteps = steps.filter(s => s.status === 'completed');
+                  const skippedSteps = steps.filter(s => s.status === 'skipped');
+                  const itemsMigrated = completedSteps.reduce((sum, s) => sum + (s.count?.done ?? 0), 0);
+                  const itemsSkipped = skippedSteps.reduce((sum, s) => sum + (s.count?.total ?? 0), 0);
+                  const hasSkips = skippedSteps.length > 0;
+                  return (
+                    <>
+                      {/* Hero stats */}
+                      <div className="rounded-xl border border-success/25 bg-success/[0.05] px-4 py-3 grid grid-cols-3 gap-3 text-center">
+                        <div>
+                          <p className="text-xl font-semibold text-success tabular-nums">{completedSteps.length}</p>
+                          <p className="text-[10px] text-muted-foreground/65 mt-0.5">步已完成</p>
+                        </div>
+                        <div>
+                          <p className="text-xl font-semibold text-foreground tabular-nums">{itemsMigrated}</p>
+                          <p className="text-[10px] text-muted-foreground/65 mt-0.5">条数据已迁移</p>
+                        </div>
+                        <div>
+                          <p className="text-xl font-semibold tabular-nums tracking-tight">
+                            <span className="text-muted-foreground/60">{formatTime(elapsed)}</span>
+                          </p>
+                          <p className="text-[10px] text-muted-foreground/65 mt-0.5">耗时</p>
+                        </div>
+                      </div>
+
+                      {/* Skip warning — only when applicable */}
+                      {hasSkips && (
+                        <div className="rounded-xl bg-warning/[0.06] border border-warning/20 px-4 py-3 space-y-2">
+                          <div className="flex items-start gap-2.5">
+                            <AlertTriangle size={13} className="text-warning/70 flex-shrink-0 mt-0.5" />
+                            <div className="flex-1 min-w-0">
+                              <p className="text-xs font-medium text-warning/85">
+                                有 {skippedSteps.length} 步被跳过（共 {itemsSkipped} 项数据）
+                              </p>
+                              <ul className="text-[11px] text-warning/75 mt-1.5 space-y-0.5">
+                                {skippedSteps.map(s => (
+                                  <li key={s.id}>· {s.label}{s.count ? ` · ${s.count.total} 项` : ''}</li>
+                                ))}
+                              </ul>
+                              <p className="text-[11px] text-warning/70 mt-2 leading-relaxed">
+                                可前往 <span className="text-foreground/80">「设置 → 数据 → 重建」</span> 单独重试这些步骤。
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Backup location */}
+                      <div className="rounded-xl border border-border/30 bg-muted/10 px-4 py-2.5 flex items-start gap-2.5">
+                        <FolderOpen size={12} className="text-muted-foreground/60 flex-shrink-0 mt-0.5" />
+                        <div className="min-w-0 flex-1">
+                          <p className="text-[10px] uppercase tracking-wide text-muted-foreground/55 font-medium">V1 备份</p>
+                          <p className="text-[11px] text-muted-foreground/75 font-mono break-all mt-0.5">
+                            ~/Library/Application Support/CherryStudio/backups/v1_2026-05-28_232133.zip
+                          </p>
+                        </div>
+                      </div>
+
+                      <Button variant="default" size="sm" onClick={() => onClose('completed')} className="w-full gap-2">
+                        <CheckCircle2 size={14} />
+                        进入 Cherry Studio V2
+                      </Button>
+                    </>
+                  );
+                })()}
               </motion.div>
             )}
 
