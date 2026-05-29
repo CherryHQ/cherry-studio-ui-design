@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@cherry-studio/ui';
 import { motion, AnimatePresence } from 'motion/react';
+import { toast } from 'sonner';
 
 // ===========================
 // Types
@@ -35,7 +36,7 @@ interface MigrationStep {
 //   3. running           — actual data migration
 //   4. completed / failed
 type Screen =
-  | 'checking' | 'no-v1' | 'concurrent'
+  | 'checking' | 'no-v1' | 'concurrent' | 'resume-prompt'
   | 'intro' | 'backup-choose' | 'backup-running' | 'backup-ready'
   | 'running' | 'completed' | 'failed' | 'decline-confirm'
   | 'cancel-confirm' | 'cancelled';
@@ -255,6 +256,32 @@ export function DataMigrationOverlay({ onClose }: { onClose: (reason: MigrationC
     setScreen('intro');
   }, []);
 
+  // Crash-recovery resume — pretend the previous run made it through the
+  // first 3 steps and died on conversations. Mark those done in state
+  // and jump straight into running from step 3.
+  const PARTIAL_DONE_INDEX = 3;
+  const handleResume = useCallback(() => {
+    setSteps((prev) => prev.map((s, i) =>
+      i < PARTIAL_DONE_INDEX
+        ? { ...s, status: 'completed' as const, progress: 100, count: s.count ? { done: s.count.total, total: s.count.total } : s.count }
+        : s
+    ));
+    setElapsed(0);
+    setLogs([]);
+    addLog(`Resuming from step ${PARTIAL_DONE_INDEX + 1}.`);
+    setScreen('running');
+    advanceStep(PARTIAL_DONE_INDEX, { failNext: false });
+  }, [addLog, advanceStep]);
+
+  // V1 escape hatch — when the user wants out without trusting the
+  // migration, give them a one-click export of the raw V1 dataset.
+  const handleExportV1 = useCallback(() => {
+    addLog('Exported V1 dataset to ~/Downloads/cherry-v1-export.zip');
+    toast.success('已导出 V1 数据', {
+      description: '~/Downloads/cherry-v1-export.zip · 247 MB',
+    });
+  }, [addLog]);
+
   const handleRetry = useCallback(() => {
     if (failedStepIdx === null) return;
     addLog(`Retrying: ${MIGRATION_STEPS[failedStepIdx].label}`);
@@ -335,11 +362,15 @@ export function DataMigrationOverlay({ onClose }: { onClose: (reason: MigrationC
     const params = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
     const simulateFresh = params?.get('nov1') === '1';
     const simulateConcurrent = params?.get('concurrent') === '1' && !concurrentClearedRef.current;
+    const simulateResume = params?.get('resume') === '1';
     addLog('Probing for V1 data…');
     const t = setTimeout(() => {
       if (simulateConcurrent) {
         addLog('Another migration is already running. Waiting.');
         setScreen('concurrent');
+      } else if (simulateResume) {
+        addLog('Detected partial migration state from previous run.');
+        setScreen('resume-prompt');
       } else if (simulateFresh) {
         addLog('No V1 data found. Skipping migration.');
         setScreen('no-v1');
@@ -480,6 +511,54 @@ export function DataMigrationOverlay({ onClose }: { onClose: (reason: MigrationC
               </Button>
               <Button variant="ghost" size="sm" onClick={() => onClose('postponed')} className="w-full text-muted-foreground/70 hover:text-foreground">
                 先退出
+              </Button>
+            </div>
+          </motion.div>
+        )}
+
+        {/* Resume — previous run died mid-migration. Offer to pick up
+            from the last completed step instead of redoing everything.
+            Demo via `?resume=1`; production reads a real partial-state
+            marker from the data layer. */}
+        {screen === 'resume-prompt' && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="space-y-5"
+          >
+            <div className="text-center">
+              <div className="w-16 h-16 rounded-2xl bg-warning/12 border border-warning/25 flex items-center justify-center mx-auto mb-4">
+                <RefreshCw size={28} strokeWidth={1.4} className="text-warning" />
+              </div>
+              <h1 className="text-lg font-semibold text-foreground tracking-tight">检测到未完成的迁移</h1>
+              <p className="text-sm text-muted-foreground/65 mt-2 leading-relaxed">
+                上次的迁移在「<span className="text-foreground/85">迁移对话记录</span>」处中断（约 1 小时前）。
+              </p>
+            </div>
+
+            <div className="rounded-xl border border-border/30 bg-muted/10 px-4 py-3 space-y-2">
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-muted-foreground/70">已完成的步骤</span>
+                <span className="text-muted-foreground/55 tabular-nums">3 / 6</span>
+              </div>
+              <ul className="text-[11px] text-muted-foreground/75 space-y-1">
+                <li className="flex items-center gap-2"><CheckCircle2 size={11} className="text-success" />检测旧版数据</li>
+                <li className="flex items-center gap-2"><CheckCircle2 size={11} className="text-success" />迁移系统设置 · 24 项</li>
+                <li className="flex items-center gap-2"><CheckCircle2 size={11} className="text-success" />（部分）迁移对话记录 · 143/358</li>
+              </ul>
+            </div>
+
+            <div className="space-y-2">
+              <Button variant="default" size="sm" onClick={handleResume} className="w-full gap-2">
+                <ArrowRight size={14} />
+                从中断处继续
+              </Button>
+              <Button variant="outline" size="sm" onClick={restartFromCancelled} className="w-full gap-2">
+                <RefreshCw size={13} />
+                从头重新开始
+              </Button>
+              <Button variant="ghost" size="sm" onClick={openDecline} className="w-full text-muted-foreground/70 hover:text-foreground">
+                放弃迁移
               </Button>
             </div>
           </motion.div>
@@ -812,6 +891,22 @@ export function DataMigrationOverlay({ onClose }: { onClose: (reason: MigrationC
                 </li>
               </ul>
             </div>
+            {/* V1 export escape hatch — for users who refuse to trust
+                the migration but still want to keep a copy of their V1
+                data. Surface inline so it's discoverable at the moment
+                they're walking away. */}
+            <button
+              type="button"
+              onClick={handleExportV1}
+              className="w-full text-left rounded-xl border border-dashed border-border/40 px-4 py-2.5 flex items-center gap-2.5 hover:border-border/70 hover:bg-accent/30 transition-colors"
+            >
+              <FolderOpen size={13} className="text-muted-foreground/70 flex-shrink-0" />
+              <div className="min-w-0 flex-1">
+                <p className="text-xs text-foreground">先导出 V1 数据为 .zip</p>
+                <p className="text-[10px] text-muted-foreground/60 mt-0.5">~/Downloads/cherry-v1-export.zip · 247 MB</p>
+              </div>
+            </button>
+
             <div className="flex items-center gap-2 pt-1">
               <Button variant="outline" size="sm" onClick={() => setScreen(previousScreen)} className="flex-1">
                 返回
