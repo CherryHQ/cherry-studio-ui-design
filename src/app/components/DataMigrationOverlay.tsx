@@ -37,7 +37,8 @@ interface MigrationStep {
 type Screen =
   | 'checking' | 'no-v1'
   | 'intro' | 'backup-choose' | 'backup-running' | 'backup-ready'
-  | 'running' | 'completed' | 'failed' | 'decline-confirm';
+  | 'running' | 'completed' | 'failed' | 'decline-confirm'
+  | 'cancel-confirm' | 'cancelled';
 export type MigrationCloseReason = 'completed' | 'declined' | 'postponed' | 'no-v1';
 type BackupChoice = 'create' | 'existing';
 // Numeric step indicator (1-4) per current screen — drives the dot rail
@@ -204,6 +205,35 @@ export function DataMigrationOverlay({ onClose }: { onClose: (reason: MigrationC
     setPreviousScreen(screen);
     setScreen('decline-confirm');
   }, [screen]);
+
+  // Cancel during running — confirm first because a half-done migration
+  // can't be silently undone. On confirm: stop all timers, mark the
+  // in-flight step as skipped, and land on the cancelled summary so the
+  // user can choose to restart or exit.
+  const requestCancel = useCallback(() => {
+    setPreviousScreen('running');
+    setScreen('cancel-confirm');
+  }, []);
+
+  const confirmCancel = useCallback(() => {
+    if (timerRef.current) clearInterval(timerRef.current);
+    if (stepTimerRef.current) clearTimeout(stepTimerRef.current);
+    setSteps((prev: MigrationStep[]) => prev.map((s) =>
+      s.status === 'running' ? { ...s, status: 'skipped' as const } : s
+    ));
+    addLog('Migration cancelled by user.');
+    setScreen('cancelled');
+  }, [addLog]);
+
+  const restartFromCancelled = useCallback(() => {
+    setSteps(MIGRATION_STEPS);
+    setBackupProgress(0);
+    setAcknowledged(false);
+    setFailedStepIdx(null);
+    setErrorMessage('');
+    setSimulateFailure(false);
+    setScreen('intro');
+  }, []);
 
   const handleRetry = useCallback(() => {
     if (failedStepIdx === null) return;
@@ -771,6 +801,19 @@ export function DataMigrationOverlay({ onClose }: { onClose: (reason: MigrationC
               </div>
             )}
 
+            {/* Cancel button — appears only while actually running. Ghost
+                muted styling so it doesn't compete with content; the
+                destructive intent surfaces in the confirm modal. */}
+            {screen === 'running' && (
+              <button
+                type="button"
+                onClick={requestCancel}
+                className="block mx-auto text-[11px] text-muted-foreground/55 hover:text-destructive transition-colors pt-1"
+              >
+                取消迁移
+              </button>
+            )}
+
             {/* Completed action */}
             {screen === 'completed' && (
               <motion.div
@@ -832,6 +875,112 @@ export function DataMigrationOverlay({ onClose }: { onClose: (reason: MigrationC
                 </p>
               </motion.div>
             )}
+          </motion.div>
+        )}
+
+        {/* Cancel-Confirm — modal-style card, same pattern as
+            decline-confirm. Stops short of doing anything destructive
+            until the user explicitly confirms. */}
+        {screen === 'cancel-confirm' && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="space-y-4"
+          >
+            <div className="rounded-2xl border border-warning/25 bg-warning/[0.06] px-5 py-4 space-y-3">
+              <div className="flex items-start gap-3">
+                <div className="w-9 h-9 rounded-xl bg-warning/15 border border-warning/25 flex items-center justify-center flex-shrink-0">
+                  <AlertTriangle size={16} strokeWidth={1.8} className="text-warning" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h2 className="text-sm font-medium text-foreground">取消正在进行的迁移？</h2>
+                  <p className="text-xs text-muted-foreground/70 mt-1 leading-relaxed">
+                    已完成的步骤不会回滚，正在进行的步骤会标记为已跳过。可以稍后从设置里重新继续。
+                  </p>
+                </div>
+              </div>
+              <ul className="text-[11px] text-muted-foreground/70 space-y-1.5 pl-12">
+                <li className="flex items-start gap-2">
+                  <ShieldCheck size={11} className="text-success/80 flex-shrink-0 mt-0.5" />
+                  <span>V1 备份仍在 ~/Library/.../backups/，可以还原。</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <RefreshCw size={11} className="text-muted-foreground/50 flex-shrink-0 mt-0.5" />
+                  <span>下次启动会自动检测进度，可以选择继续或重来。</span>
+                </li>
+              </ul>
+            </div>
+            <div className="flex items-center gap-2 pt-1">
+              <Button variant="outline" size="sm" onClick={() => setScreen(previousScreen)} className="flex-1">
+                继续迁移
+              </Button>
+              <Button
+                variant="default"
+                size="sm"
+                onClick={confirmCancel}
+                className="flex-1 bg-warning text-warning-foreground hover:bg-warning/90"
+              >
+                确认取消
+              </Button>
+            </div>
+          </motion.div>
+        )}
+
+        {/* Cancelled — terminal summary. Show how many steps got done
+            before the cancel, where the backup lives, and offer both
+            restart and exit. */}
+        {screen === 'cancelled' && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="space-y-5"
+          >
+            <div className="text-center">
+              <div className="w-16 h-16 rounded-2xl bg-warning/12 border border-warning/25 flex items-center justify-center mx-auto mb-4">
+                <XCircle size={28} strokeWidth={1.4} className="text-warning" />
+              </div>
+              <h2 className="text-xl font-semibold text-foreground tracking-tight">迁移已取消</h2>
+              <p className="text-sm text-muted-foreground/65 mt-2 leading-relaxed">
+                {steps.filter(s => s.status === 'completed').length} 步已完成，
+                {steps.filter(s => s.status === 'skipped' || s.status === 'pending').length} 步未执行。
+              </p>
+            </div>
+
+            {/* Mini step summary — green dots for done, muted for skipped */}
+            <div className="rounded-xl border border-border/30 bg-muted/10 px-4 py-3 space-y-1.5">
+              {steps.map((s) => (
+                <div key={s.id} className="flex items-center gap-2 text-xs">
+                  {s.status === 'completed' ? (
+                    <CheckCircle2 size={11} className="text-success flex-shrink-0" />
+                  ) : (
+                    <XCircle size={11} className="text-muted-foreground/35 flex-shrink-0" />
+                  )}
+                  <span className={s.status === 'completed' ? 'text-foreground/85' : 'text-muted-foreground/55'}>
+                    {s.label}
+                  </span>
+                  <span className="ml-auto text-[10px] text-muted-foreground/45">
+                    {s.status === 'completed' ? '已完成' : '已取消'}
+                  </span>
+                </div>
+              ))}
+            </div>
+
+            <div className="rounded-xl bg-info/[0.06] border border-info/20 px-4 py-3 flex items-start gap-2.5">
+              <FolderOpen size={13} className="text-info/70 flex-shrink-0 mt-0.5" />
+              <p className="text-[11px] text-info/85 leading-relaxed">
+                V1 备份保留在 <span className="font-mono">~/Library/.../v1_2026-05-28.zip</span>，需要时可一键还原。
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <Button variant="default" size="sm" onClick={restartFromCancelled} className="w-full gap-2">
+                <RefreshCw size={13} />
+                重新开始迁移
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => onClose('postponed')} className="w-full text-muted-foreground/70 hover:text-foreground">
+                稍后再说，先进入 V2（无 V1 数据）
+              </Button>
+            </div>
           </motion.div>
         )}
       </div>
