@@ -867,25 +867,25 @@ export function DataMigrationOverlay({ onClose }: { onClose: (reason: MigrationC
             animate={{ opacity: 1, y: 0 }}
             className="space-y-4"
           >
-            <div className="rounded-2xl border border-destructive/20 bg-destructive/[0.04] px-5 py-4 space-y-3">
-              <div className="flex items-start gap-3">
-                <div className="w-9 h-9 rounded-xl bg-destructive/12 border border-destructive/20 flex items-center justify-center flex-shrink-0">
-                  <AlertTriangle size={16} strokeWidth={1.8} className="text-destructive/85" />
+            <div className="rounded-2xl border border-destructive/20 bg-destructive/[0.04] px-4 py-3 space-y-2.5">
+              <div className="flex items-start gap-2.5">
+                <div className="w-8 h-8 rounded-xl bg-destructive/12 border border-destructive/20 flex items-center justify-center flex-shrink-0">
+                  <AlertTriangle size={14} strokeWidth={1.8} className="text-destructive/85" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h2 className="text-sm font-medium text-foreground">不迁移 V1 数据？</h2>
-                  <p className="text-xs text-muted-foreground/70 mt-1 leading-relaxed">
+                  <h2 className="text-[13px] font-semibold text-foreground tracking-tight">不迁移 V1 数据？</h2>
+                  <p className="text-[11px] text-muted-foreground/70 mt-1 leading-relaxed">
                     所有功能都将以空状态启动：你看不到 V1 的会话历史、自定义助手、知识库等数据。
                   </p>
                 </div>
               </div>
-              <ul className="text-xs text-muted-foreground/70 space-y-1.5 pl-12">
-                <li className="flex items-start gap-2">
-                  <Shield size={11} strokeWidth={1.8} className="text-success/80 flex-shrink-0 mt-0.5" />
+              <ul className="text-[11px] text-muted-foreground/70 space-y-1 pl-[42px]">
+                <li className="flex items-start gap-1.5">
+                  <Shield size={10} strokeWidth={1.8} className="text-success/80 flex-shrink-0 mt-0.5" />
                   <span>V1 数据会留在备份文件夹，不会被删除。</span>
                 </li>
-                <li className="flex items-start gap-2">
-                  <RefreshCw size={11} strokeWidth={1.8} className="text-muted-foreground/50 flex-shrink-0 mt-0.5" />
+                <li className="flex items-start gap-1.5">
+                  <RefreshCw size={10} strokeWidth={1.8} className="text-muted-foreground/50 flex-shrink-0 mt-0.5" />
                   <span>稍后可以在「设置 → 数据」里重新触发迁移。</span>
                 </li>
               </ul>
@@ -907,14 +907,14 @@ export function DataMigrationOverlay({ onClose }: { onClose: (reason: MigrationC
             </button>
 
             <div className="flex items-center gap-2 pt-1">
-              <Button variant="outline" size="sm" onClick={() => setScreen(previousScreen)} className="flex-1">
+              <Button variant="outline" size="xs" onClick={() => setScreen(previousScreen)} className="flex-1 h-8 text-xs">
                 返回
               </Button>
               <Button
                 variant="default"
-                size="sm"
+                size="xs"
                 onClick={() => onClose('declined')}
-                className="flex-1 bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                className="flex-1 h-8 text-xs bg-destructive text-destructive-foreground hover:bg-destructive/90"
               >
                 继续不迁移
               </Button>
@@ -971,39 +971,39 @@ export function DataMigrationOverlay({ onClose }: { onClose: (reason: MigrationC
             {/* Step list */}
             <div className="rounded-xl border border-border/30 overflow-hidden divide-y divide-border/10">
               {steps.map((step: MigrationStep) => (
-                <div key={step.id} className="px-4 py-3 flex items-center gap-3">
-                  <div className={`w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors ${
+                <div key={step.id} className="px-3.5 py-2 flex items-center gap-2.5">
+                  <div className={`w-5 h-5 rounded-md flex items-center justify-center flex-shrink-0 transition-colors ${
                     step.status === 'completed' ? 'bg-success/10 text-success' :
                     step.status === 'running' ? 'bg-primary/10 text-primary' :
                     step.status === 'error' ? 'bg-destructive/10 text-destructive' :
                     'bg-muted/20 text-muted-foreground/30'
                   }`}>
                     {step.status === 'running' ? (
-                      <Loader2 size={13} className="animate-spin" />
+                      <Loader2 size={11} className="animate-spin" />
                     ) : step.status === 'completed' ? (
-                      <CheckCircle2 size={13} />
+                      <CheckCircle2 size={11} />
                     ) : step.status === 'error' ? (
-                      <XCircle size={13} />
+                      <XCircle size={11} />
                     ) : (
                       step.icon
                     )}
                   </div>
 
                   <div className="flex-1 min-w-0">
-                    <span className={`text-sm ${
-                      step.status === 'completed' || step.status === 'running' ? 'text-foreground' : 'text-muted-foreground/40'
+                    <span className={`text-xs ${
+                      step.status === 'completed' || step.status === 'running' ? 'text-foreground/85' : 'text-muted-foreground/40'
                     }`}>{step.label}</span>
                     {step.status === 'running' && step.detail && (
-                      <p className="text-xs text-muted-foreground/40 mt-0.5">{step.detail}</p>
+                      <p className="text-[10px] text-muted-foreground/40 mt-0.5">{step.detail}</p>
                     )}
                   </div>
 
                   <div className="flex items-center gap-2 flex-shrink-0">
                     {step.count && step.count.total > 0 && (
-                      <span className={`text-xs tabular-nums ${
-                        step.status === 'completed' ? 'text-success/50' :
-                        step.status === 'running' ? 'text-muted-foreground/50' :
-                        'text-muted-foreground/30'
+                      <span className={`text-[10px] tabular-nums ${
+                        step.status === 'completed' ? 'text-success/55' :
+                        step.status === 'running' ? 'text-muted-foreground/55' :
+                        'text-muted-foreground/35'
                       }`}>
                         {step.status === 'pending' ? step.count.total : `${step.count.done}/${step.count.total}`}
                       </span>
