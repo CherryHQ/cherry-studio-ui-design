@@ -52,13 +52,14 @@
 
 ## 4. 方案选型
 
-popover 实现采用**设计系统的 Radix `Popover` + `PopoverAnchor`**（`@cherry-studio/ui`，`packages/ui/src/components/ui/popover.tsx`），而非仿 slash/@ 的 `absolute bottom-full` 定位 div：
+popover 实现采用**绝对定位浮层（`absolute bottom-full`）+ window 级 capture keydown 监听**，与本文件 slash / @ 菜单同一范式，**不使用 Radix `Popover`**。
 
-- Radix Popover 打开时自动把焦点移入 content（`onOpenAutoFocus`），`1/2/3`/方向键等**不会漏进 contentEditable 输入框**；关闭时把焦点交还输入框。
-- `side="top"` + `sideOffset` 天然满足"悬浮上方、留间隙、不相交"。
-- 是真正的 "popover"，样式（`shadow-popover`、动画、`z-[var(--z-popover)]`）与项目一致。
+> 实现历程（重要）：最初尝试 Radix `Popover` + `PopoverAnchor` 程序化打开，连续踩两个坑——① 从「+」菜单项打开时，菜单关闭会把焦点交还其 trigger，被非模态 Popover 当作 focus-outside，导致**打开瞬间自我关闭**（连带刚加的 loading chip 被 cancel 删掉）；② 选项行 `tabIndex={-1}`，Radix autofocus 找不到可聚焦目标，**焦点进不去 popover**、键盘失灵。两个坑都源于"用 Anchor 程序化打开 + 手动管焦点"在与 Radix 焦点模型搏斗，故改用浮层方案。
 
-定位被 div 方案的劣势：需手动管焦点或加全局 keydown 监听，`1/2/3` 容易误入输入框。
+- **键盘**：`window` capture 阶段 keydown 监听——`1/2/3`/方向键/Enter/Esc **不依赖浮层是否持有焦点**，且 `stopPropagation` 把这些键挡在 contentEditable 输入框之外。这是相对"靠焦点"方案的关键优势。
+- **定位**：`absolute bottom-full left-0 mb-2.5` 悬浮在输入栏上方、留间隙、不相交（消息区在上方，空间充足、不被裁切）。
+- **样式**：沿用设计系统 token（`bg-popover`、`shadow-popover`、`rounded-[var(--radius-card)]`、`z-[var(--z-popover)]`、`animate-in` 动画），视觉上仍是真正的 popover。
+- **取消外部点击**：`document` mousedown（capture）监听，点击浮层外即取消。
 
 ## 5. 架构与数据流
 
@@ -76,31 +77,33 @@ interface DuplicateFilePopoverProps {
   onResolve: (choice: DuplicateChoice) => void;
   /** Esc / 点外部 / 关闭 = 取消上传（不加 chip）。 */
   onCancel: () => void;
-  /** 锚点：输入栏容器，作为 PopoverAnchor 的 asChild 子元素。 */
+  /** 输入栏容器：组件内部用一个 relative 包裹 div 容纳它，浮层据此 `absolute` 定位到其上方。 */
   children: React.ReactNode;
 }
 ```
 
-渲染结构：
+渲染结构（relative 包裹 + 绝对定位浮层，无 Radix）：
 
 ```tsx
-<Popover open={state !== null} onOpenChange={(o) => { if (!o && confirmed === null) onCancel(); }}>
-  <PopoverAnchor asChild>{children}</PopoverAnchor>
+<div className="relative">
+  {children}
   {state !== null && (
-    <PopoverContent
-      side="top"
-      align="start"
-      sideOffset={10}
-      avoidCollisions={false}   /* 永远在上方，不翻到下面 */
-      className="w-80 p-0"       /* 自定义内边距，容纳标题/选项/页脚 */
-      onKeyDown={handleKey}
-      onCloseAutoFocus={(e) => e.preventDefault()}   /* 阻止 Radix 默认聚焦锚点；焦点由父级 composerRef.focus() 接管 */
+    <div
+      ref={panelRef}
+      role="dialog"
+      aria-label="重复文件处理"
+      className="absolute bottom-full left-0 z-[var(--z-popover)] mb-2.5 w-80 origin-bottom
+                 rounded-[var(--radius-card)] border bg-popover text-popover-foreground
+                 shadow-popover backdrop-blur-[6px]
+                 animate-in fade-in-0 zoom-in-95 slide-in-from-bottom-2 duration-150"
     >
       …标题 + 三选项 + 页脚提示…
-    </PopoverContent>
+    </div>
   )}
-</Popover>
+</div>
 ```
+
+键盘 / 外部点击由 `useEffect` 在打开期间挂 `window` keydown（capture）与 `document` mousedown（capture）监听处理（见下），**不依赖浮层持有焦点**。
 
 内容布局（沿用设计系统 token：`bg-popover`、`text-popover-foreground`、`bg-accent` 高亮、`text-muted-foreground` 副文案）：
 - **标题区**：`发现内容相同的文件 ` + `<span 文件名 medium>` ；下一行副文案 `请决定如何处理`。
@@ -111,21 +114,24 @@ interface DuplicateFilePopoverProps {
 - `highlight: number`（0/1/2），`state` 变为非 null 时（`useEffect`）重置为 **0（复用）**。
 - `confirmed: number | null`：已选中的选项 index（进入 success 动画）；`null` = 尚未确认。`state` 变非 null 时一并重置为 `null`。
 - `timerRef`：动画后触发 `onResolve` 的定时器；组件卸载 / 重开时 `clearTimeout`。
+- `panelRef`：浮层 DOM 引用，用于判定"点击是否落在浮层外"。
 
-统一确认入口 `confirm(index)`（确认即播动画、延迟关闭，见 §6）：
+统一确认入口 `confirm(index)`（`useCallback([confirmed, onResolve])`；确认即播动画、延迟关闭，见 §6），按钮 onClick 与键盘监听共用：
 ```ts
-const confirm = (index: number) => {
+const confirm = useCallback((index: number) => {
   if (confirmed !== null) return;                 // 动画进行中，忽略
   setConfirmed(index);                            // 触发该选项徽标的 success ✓ 动画
   timerRef.current = window.setTimeout(() => onResolve(OPTIONS[index].choice), 600);
-};
+}, [confirmed, onResolve]);
 ```
 
-键盘处理 `handleKey`（全部 `preventDefault` + `stopPropagation`，防漏进输入框；`confirmed !== null` 时直接吞掉所有按键）：
+键盘处理：打开期间用 `useEffect` 在 `window` 上挂 **capture 阶段** keydown 监听（deps `[state, highlight, confirmed, confirm, onCancel]`，关闭时移除）。全部 `preventDefault` + `stopPropagation`，既触发动作又把按键挡在 contentEditable 输入框之外；`confirmed !== null` 时吞掉所有键：
 - `'1' | '2' | '3'` → `confirm(n - 1)`。
 - `ArrowUp` → `highlight = (highlight + 2) % 3`；`ArrowDown` → `(highlight + 1) % 3`（循环）。
 - `Enter` → `confirm(highlight)`。
-- `Escape` → 交由 Radix 触发 `onOpenChange(false)` → `onCancel`（仅当 `confirmed === null`）。
+- `Escape` → `onCancel()`（自行处理，不再依赖 Radix）。
+
+同一 `useEffect` 还在 `document` 上挂 capture 阶段 mousedown 监听：点击落在 `panelRef` 之外且 `confirmed === null` 时 `onCancel()`。监听在浮层渲染后（effect 运行时）才挂，故"打开那一下"的点击不会被误判为外部点击。
 
 选项常量（单一数据源）：
 ```ts
@@ -177,7 +183,7 @@ const cancelDuplicate = useCallback(() => {
 接线点：
 - Paperclip 按钮 `line 2631`：`onClick={addDemoAttachment}` → `onClick={handleAttachClick}`。
 - 「添加图片或附件」`DropdownMenuItem` `line 2570`：加 `onSelect={handleAttachClick}`（仅对 `item.id === 'attach'`）。
-- 用 `<DuplicateFilePopover state={dupState} onResolve={resolveDuplicate} onCancel={cancelDuplicate}>` 包裹 `line 2425` 的输入栏容器 `div` 作为锚点。
+- 用 `<DuplicateFilePopover state={dupState} onResolve={resolveDuplicate} onCancel={cancelDuplicate}>` 包裹 `line 2425` 的输入栏容器 `div`（组件内部再套一层 `relative` 供浮层定位）。
 
 ### 5.3 `InlineAttachmentChip` / `ComposerAttachment` 新增 `loading?`
 
@@ -210,15 +216,15 @@ if (loading) {
 - **文件名**：用本次"上传"文件（池中当前项）的 `name`，写入 popover 正文与 loading chip。
 - **确认动画**：选中（`1/2/3` / `Enter` / 点击）后 popover **不立即关闭**——被选项徽标先播 success `✓` 弹入动画，约 600ms 后才 `onResolve`（关 popover + loading chip 同步落定）；动画期间吞掉按键、忽略外部关闭（`confirmed !== null` 守卫）。
 - **loading chip 时序**：点击即插入 loading chip → popover 决策 → 确认动画播完后同一 id 的 chip `loading: false` 变最终态；取消时按 id 移除。
-- **不相交保证**：`side="top"` + `sideOffset={10}` + `avoidCollisions={false}`；聊天消息区在输入栏上方，空间充足，不会被裁切。
-- **焦点**：打开时 Radix 自动聚焦 content（拦截键盘）；确认/取消后 `composerRef.current?.focus()` 交还输入框。
-- **取消**：Esc / 点外部 / `onOpenChange(false)` → 移除 loading chip、不弹 toast。
+- **不相交保证**：浮层 `absolute bottom-full left-0 mb-2.5`；聊天消息区在输入栏上方，空间充足，不会被裁切。
+- **焦点**：**不依赖**浮层持有焦点——键盘走 `window` capture 监听，焦点在输入框/「+」按钮/别处都能截获；确认/取消后父级 `composerRef.current?.focus()` 交还输入框。
+- **取消**：Esc（window 监听）/ 点浮层外（document mousedown 监听）→ 移除 loading chip、不弹 toast。
 - **可选增强（默认不做）**：给 chip 加 `复用/覆盖/双份` 小徽标，需扩展 `InlineAttachmentChip`，不在本次范围。
 
 ## 7. 改动文件清单
 
-1. 🆕 `src/app/components/shared/Chat/DuplicateFilePopover.tsx` —— popover + 键盘逻辑 + 选项 success 确认动画（自包含，导出 `DuplicateFilePopover` 与 `DuplicateChoice`）。
-2. ✏️ `src/app/components/assistant/AssistantRunPage.tsx` —— `dupState` 状态、`handleAttachClick`（替换并删除 `addDemoAttachment`）、`resolveDuplicate` / `cancelDuplicate`、两处入口接线、包裹锚点。
+1. 🆕 `src/app/components/shared/Chat/DuplicateFilePopover.tsx` —— 绝对定位浮层 + window/document capture 监听 + 选项 success 确认动画（自包含，导出 `DuplicateFilePopover` 与 `DuplicateChoice`）。
+2. ✏️ `src/app/components/assistant/AssistantRunPage.tsx` —— `dupState` 状态、`handleAttachClick`（替换并删除 `addDemoAttachment`）、`resolveDuplicate` / `cancelDuplicate`、两处入口接线、包裹输入栏容器。
 3. ✏️ `packages/ui/src/components/ui/inline-attachment-chip.tsx` —— `InlineAttachmentChipProps` 增加 `loading?`；loading 态渲染旋转图标的精简 pill（跳过预览/移除），基础类名抽 `CHIP_BASE` 共用。
 
 ## 8. 验证
