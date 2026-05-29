@@ -3,7 +3,7 @@ import {
   Loader2, CheckCircle2, XCircle, ChevronDown, ChevronUp,
   MessageSquare, Settings, Database, Layers, Sparkles,
   FileText, ArrowRight, ArrowLeft, AlertTriangle, RefreshCw, Bug, SkipForward, Shield,
-  Clock, HardDrive, Power, Plug, FolderOpen, ShieldCheck,
+  Clock, HardDrive, Power, Plug, FolderOpen, ShieldCheck, Copy,
 } from 'lucide-react';
 import { Button } from '@cherry-studio/ui';
 import { motion, AnimatePresence } from 'motion/react';
@@ -94,6 +94,7 @@ export function DataMigrationOverlay({ onClose }: { onClose: (reason: MigrationC
   // can't be migrated so the user can choose "skip just these items and
   // keep the rest" instead of skipping the entire step.
   const [failedItems, setFailedItems] = useState<Array<{ id: string; label: string }>>([]);
+  const [logCopied, setLogCopied] = useState(false);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const stepTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   // Set to true once the user clicks "重新检查" on the concurrent screen
@@ -786,13 +787,31 @@ export function DataMigrationOverlay({ onClose }: { onClose: (reason: MigrationC
             animate={{ opacity: 1 }}
             className="space-y-4"
           >
-            {/* Overall progress */}
+            {/* Overall progress + dynamic ETA. Items/sec is computed from
+                total items done so far ÷ elapsed; ETA extrapolates the
+                remaining items against the same rate. Once total
+                completion is reached we drop the ETA so it doesn't
+                flicker at 0:00. */}
             <div>
               <div className="flex items-center justify-between mb-2">
                 <span className="text-xs text-muted-foreground/50">
                   {screen === 'running' ? `迁移中 ${totalProgress}%` : screen === 'completed' ? '迁移完成' : '迁移出错'}
                 </span>
-                <span className="text-xs text-muted-foreground/40 tabular-nums">{formatTime(elapsed)}</span>
+                {(() => {
+                  if (screen !== 'running' || elapsed < 1) {
+                    return <span className="text-xs text-muted-foreground/40 tabular-nums">{formatTime(elapsed)}</span>;
+                  }
+                  const totalItems = steps.reduce((sum, s) => sum + (s.count?.total ?? 0), 0);
+                  const doneItems = steps.reduce((sum, s) => sum + (s.count?.done ?? 0), 0);
+                  const rate = doneItems / elapsed;
+                  const remaining = Math.max(0, totalItems - doneItems);
+                  const etaSec = rate > 0 ? Math.round(remaining / rate) : 0;
+                  return (
+                    <span className="text-xs text-muted-foreground/40 tabular-nums">
+                      {rate >= 1 ? `${Math.round(rate)} 项/秒 · 余 ${formatTime(etaSec)}` : formatTime(elapsed)}
+                    </span>
+                  );
+                })()}
               </div>
               <div className="h-2 bg-muted/30 rounded-full overflow-hidden">
                 <motion.div
@@ -866,14 +885,34 @@ export function DataMigrationOverlay({ onClose }: { onClose: (reason: MigrationC
             {/* Log toggle */}
             {logs.length > 0 && (
               <div className="rounded-xl border border-border/20 overflow-hidden">
-                <button
-                  type="button"
-                  onClick={() => setShowLog((v: boolean) => !v)}
-                  className="w-full px-4 py-2 flex items-center justify-between text-xs text-muted-foreground/40 hover:bg-accent/40 transition-colors"
-                >
-                  <span>日志 ({logs.length})</span>
-                  {showLog ? <ChevronUp size={11} /> : <ChevronDown size={11} />}
-                </button>
+                <div className="w-full px-4 py-2 flex items-center justify-between text-xs text-muted-foreground/40 hover:bg-accent/40 transition-colors">
+                  <button
+                    type="button"
+                    onClick={() => setShowLog((v: boolean) => !v)}
+                    className="flex items-center gap-1.5 flex-1 text-left"
+                  >
+                    <span>日志 ({logs.length})</span>
+                    {showLog ? <ChevronUp size={11} /> : <ChevronDown size={11} />}
+                  </button>
+                  {/* Copy-to-clipboard for the log dump — failed migrations
+                      almost always end with the user filing an issue; the
+                      log paste needs to be one click. */}
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      try {
+                        await navigator.clipboard.writeText(logs.join('\n'));
+                        setLogCopied(true);
+                        setTimeout(() => setLogCopied(false), 1500);
+                      } catch { /* ignore */ }
+                    }}
+                    title="复制日志"
+                    className="ml-2 inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded hover:bg-accent/60 hover:text-foreground transition-colors"
+                  >
+                    {logCopied ? <CheckCircle2 size={10} className="text-success" /> : <Copy size={10} />}
+                    {logCopied ? '已复制' : '复制'}
+                  </button>
+                </div>
                 <AnimatePresence>
                   {showLog && (
                     <motion.div
