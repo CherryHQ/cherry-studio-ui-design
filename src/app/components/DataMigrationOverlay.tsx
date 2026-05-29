@@ -35,7 +35,7 @@ interface MigrationStep {
 //   3. running           — actual data migration
 //   4. completed / failed
 type Screen =
-  | 'checking' | 'no-v1'
+  | 'checking' | 'no-v1' | 'concurrent'
   | 'intro' | 'backup-choose' | 'backup-running' | 'backup-ready'
   | 'running' | 'completed' | 'failed' | 'decline-confirm'
   | 'cancel-confirm' | 'cancelled';
@@ -92,6 +92,10 @@ export function DataMigrationOverlay({ onClose }: { onClose: (reason: MigrationC
   const [errorMessage, setErrorMessage] = useState<string>('');
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const stepTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Set to true once the user clicks "重新检查" on the concurrent screen
+  // — for the design demo this fakes the other window finishing so the
+  // re-probe lands on intro instead of looping back to concurrent.
+  const concurrentClearedRef = useRef(false);
 
   const totalProgress = (() => {
     const completed = steps.filter((s: MigrationStep) => s.status === 'completed' || s.status === 'skipped').length;
@@ -279,16 +283,22 @@ export function DataMigrationOverlay({ onClose }: { onClose: (reason: MigrationC
     };
   }, []);
 
-  // Pre-step V1-data probe. In production this would touch the file
-  // system / Dexie; here it's a 750ms artificial check. Append `?nov1=1`
-  // to demo the fresh-install path; otherwise we assume V1 exists.
+  // Pre-step probe. In production this would touch the file system /
+  // Dexie AND check an inter-process lock; here it's a 750ms artificial
+  // check. Demo flags:
+  //   ?nov1=1        → fresh-install path
+  //   ?concurrent=1  → another window is already migrating (PR #13900)
   useEffect(() => {
     if (screen !== 'checking') return;
     const params = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
     const simulateFresh = params?.get('nov1') === '1';
-    addLog(simulateFresh ? 'Probing for V1 data…' : 'Probing for V1 data…');
+    const simulateConcurrent = params?.get('concurrent') === '1' && !concurrentClearedRef.current;
+    addLog('Probing for V1 data…');
     const t = setTimeout(() => {
-      if (simulateFresh) {
+      if (simulateConcurrent) {
+        addLog('Another migration is already running. Waiting.');
+        setScreen('concurrent');
+      } else if (simulateFresh) {
         addLog('No V1 data found. Skipping migration.');
         setScreen('no-v1');
       } else {
@@ -362,6 +372,53 @@ export function DataMigrationOverlay({ onClose }: { onClose: (reason: MigrationC
               </div>
               <h1 className="text-base font-medium text-foreground">正在检测 V1 数据…</h1>
               <p className="text-xs text-muted-foreground/55 mt-1.5">扫描旧版数据库，决定是否需要迁移</p>
+            </div>
+          </motion.div>
+        )}
+
+        {/* Concurrent — another window is already running the migration
+            (PR #13900). Hold this window in a friendly wait state instead
+            of letting it kick off a second concurrent run. */}
+        {screen === 'concurrent' && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="space-y-5"
+          >
+            <div className="text-center">
+              <div className="w-16 h-16 rounded-2xl bg-info/12 border border-info/25 flex items-center justify-center mx-auto mb-4">
+                <Loader2 size={28} strokeWidth={1.4} className="text-info animate-spin" />
+              </div>
+              <h1 className="text-lg font-semibold text-foreground tracking-tight">另一个窗口正在迁移</h1>
+              <p className="text-sm text-muted-foreground/65 mt-2 leading-relaxed">
+                V1 → V2 数据迁移需要独占进程。请等待对方完成，或切换过去查看进度。
+              </p>
+            </div>
+
+            <div className="rounded-xl border border-border/30 bg-muted/10 px-4 py-3 space-y-2">
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-muted-foreground/70">对方进度</span>
+                <span className="text-muted-foreground/55 tabular-nums">约 68%</span>
+              </div>
+              <div className="h-1.5 bg-muted/30 rounded-full overflow-hidden">
+                <div className="h-full bg-info/70 rounded-full" style={{ width: '68%' }} />
+              </div>
+              <p className="text-[10px] text-muted-foreground/55">最后心跳：12 秒前</p>
+            </div>
+
+            <div className="space-y-2">
+              <Button
+                variant="default"
+                size="sm"
+                onClick={() => { concurrentClearedRef.current = true; setScreen('checking'); }}
+                className="w-full gap-2"
+              >
+                <RefreshCw size={13} />
+                重新检查
+              </Button>
+              <Button variant="ghost" size="sm" onClick={() => onClose('postponed')} className="w-full text-muted-foreground/70 hover:text-foreground">
+                先退出
+              </Button>
             </div>
           </motion.div>
         )}
