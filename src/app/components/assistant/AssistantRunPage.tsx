@@ -22,6 +22,7 @@ import { getFileIcon } from '@/app/utils/fileIcons';
 import { ChatInterface } from '@/app/components/shared/Chat/ChatInterface';
 import { ThinkingBlock, InlineCodeBlock, MermaidBlock, ImageGallery } from '@/app/components/shared/Chat/components/MessageComponents';
 import { AttachmentList } from '@/app/components/shared/Chat/AttachmentList';
+import { DuplicateFilePopover } from '@/app/components/shared/Chat/DuplicateFilePopover';
 import { Tooltip } from '@/app/components/Tooltip';
 import {
   Button, Textarea, EmptyState, SearchInput, Typography,
@@ -1949,14 +1950,40 @@ export function AssistantRunPage() {
   ]);
   const demoPoolCursor = useRef(0);
 
-  const addDemoAttachment = useCallback(() => {
+  // Duplicate-file decision flow. When the user "uploads" a file and main
+  // finds a byte-identical copy already in its store, we drop a *loading* chip
+  // into the composer and ask how to handle it via DuplicateFilePopover.
+  // (Demo: every attach click simulates a hit, cycling the demo pool for the
+  // file name.) Resolving turns the loading chip into its final state;
+  // cancelling removes it.
+  const [dupState, setDupState] = useState<{ fileName: string; chipId: string } | null>(null);
+
+  const handleAttachClick = useCallback(() => {
+    if (dupState) return; // a decision is already pending
     const pool = demoAttachmentPool.current;
     if (pool.length === 0) return;
     const next = pool[demoPoolCursor.current % pool.length];
     demoPoolCursor.current += 1;
-    setInlineAttachments(prev => [...prev, { ...next, id: `att-${Date.now()}-${prev.length}` }]);
+    const chipId = `att-${Date.now()}`;
+    // Drop a loading chip into the composer and open the duplicate-decision
+    // popover. (Demo: every attach click simulates main finding a duplicate.)
+    setInlineAttachments(prev => [...prev, { ...next, id: chipId, loading: true }]);
+    setDupState({ fileName: next.name, chipId });
+  }, [dupState]);
+
+  const resolveDuplicate = useCallback(() => {
+    if (!dupState) return;
+    const { chipId } = dupState;
+    setInlineAttachments(prev => prev.map(a => (a.id === chipId ? { ...a, loading: false } : a)));
+    setDupState(null);
     composerRef.current?.focus();
-  }, []);
+  }, [dupState]);
+
+  const cancelDuplicate = useCallback(() => {
+    if (dupState) setInlineAttachments(prev => prev.filter(a => a.id !== dupState.chipId));
+    setDupState(null);
+    composerRef.current?.focus();
+  }, [dupState]);
 
   const removeInlineAttachment = useCallback((id: string) => {
     setInlineAttachments(prev => prev.filter(a => a.id !== id));
@@ -2422,6 +2449,7 @@ export function AssistantRunPage() {
               </AnimatePresence>
 
               <div className="flex-shrink-0 px-4 pb-3">
+                <DuplicateFilePopover state={dupState} onResolve={resolveDuplicate} onCancel={cancelDuplicate}>
                 <div className="relative rounded-xl border border-border/50 bg-background shadow-sm focus-within:border-border/50 transition-all duration-150">
                   <RichComposer
                     ref={composerRef}
@@ -2567,7 +2595,10 @@ export function AssistantRunPage() {
                               }
                               return (
                                 <div key={item.id}>
-                                  <DropdownMenuItem className="gap-2 px-2 py-[5px] text-xs">
+                                  <DropdownMenuItem
+                                    className="gap-2 px-2 py-[5px] text-xs"
+                                    onSelect={item.id === 'attach' ? handleAttachClick : undefined}
+                                  >
                                     <Icon size={13} strokeWidth={1.5} className="text-muted-foreground flex-shrink-0" />
                                     <span className="flex-1 text-left">{item.label}</span>
                                   </DropdownMenuItem>
@@ -2628,7 +2659,7 @@ export function AssistantRunPage() {
                         <>
                           {/* Primary tools — always visible */}
                           <Tooltip content="添加附件（与文字混合插入）" side="top">
-                            <Button variant="ghost" size="icon-sm" onClick={addDemoAttachment} className="p-[5px] w-auto h-auto text-muted-foreground hover:text-foreground hover:bg-accent/50"><Paperclip size={14} strokeWidth={1.5} /></Button>
+                            <Button variant="ghost" size="icon-sm" onClick={handleAttachClick} className="p-[5px] w-auto h-auto text-muted-foreground hover:text-foreground hover:bg-accent/50"><Paperclip size={14} strokeWidth={1.5} /></Button>
                           </Tooltip>
                           <Tooltip content="网络搜索" side="top">
                             <Button variant="ghost" size="icon-sm" className="p-[5px] w-auto h-auto text-muted-foreground hover:text-foreground hover:bg-accent/50"><Globe size={14} strokeWidth={1.5} /></Button>
@@ -2875,6 +2906,7 @@ export function AssistantRunPage() {
                     </div>
                   </div>
                 </div>
+                </DuplicateFilePopover>
               </div>
               </>
             }

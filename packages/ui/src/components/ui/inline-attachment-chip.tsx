@@ -15,7 +15,7 @@
 import * as React from "react";
 import {
   Image as ImageIcon, FileText, FileCode2, FileArchive,
-  Music, Video, Sheet, FileQuestion, FileType2, Trash2,
+  Music, Video, Sheet, FileQuestion, FileType2, Trash2, Loader2,
 } from "lucide-react";
 import { cn } from "../../lib/utils";
 import { Popover, PopoverTrigger, PopoverContent } from "./popover";
@@ -78,13 +78,45 @@ export interface InlineAttachmentChipProps {
   /** Show a small remove button on hover that calls `onRemove`. */
   onRemove?: () => void;
   className?: string;
+  /** While true, render a compact spinner pill (no hover preview / remove) —
+   *  used when the file is uploading / awaiting a backend decision. */
+  loading?: boolean;
 }
+
+// Shared pill chrome — used by both the loading and the resolved chip so the
+// two states keep identical sizing / borders / typography.
+const CHIP_BASE = cn(
+  "inline-flex items-center gap-1 align-baseline mx-[1px]",
+  "px-1.5 py-[1px] rounded-sm border font-medium leading-none",
+  "text-[11px] cursor-default select-none",
+  // Neutral chrome — color lives only in the icon.
+  "border-border/40 bg-muted/50 text-foreground/85",
+);
 
 // ----- Component ----------------------------------------------------------
 
 export function InlineAttachmentChip({
-  name, ext, size, previewUrl, snippet, kind, onRemove, className,
+  name, ext, size, previewUrl, snippet, kind, onRemove, className, loading,
 }: InlineAttachmentChipProps) {
+  // Loading state: a compact spinner pill while the file is uploading /
+  // awaiting a backend decision. No hover preview (nothing to preview yet)
+  // and no remove button (can't remove mid-decision).
+  if (loading) {
+    return (
+      <span
+        contentEditable={false}
+        data-slot="inline-attachment-chip"
+        data-chip-loading="true"
+        className={cn(CHIP_BASE, "opacity-70", className)}
+        title={name}
+      >
+        <Loader2 size={10} strokeWidth={2} className="flex-shrink-0 animate-spin text-muted-foreground" />
+        <span className="truncate max-w-[180px]">{name}</span>
+        {ext && <span className="opacity-50 uppercase tracking-wide text-[9px]">{ext}</span>}
+      </span>
+    );
+  }
+
   const resolvedKind = kind ?? getChipKind(ext);
   const cfg = KIND_CONFIG[resolvedKind];
   const Icon = cfg.Icon;
@@ -97,11 +129,7 @@ export function InlineAttachmentChip({
           data-slot="inline-attachment-chip"
           data-chip-kind={resolvedKind}
           className={cn(
-            "inline-flex items-center gap-1 align-baseline mx-[1px]",
-            "px-1.5 py-[1px] rounded-sm border font-medium leading-none",
-            "text-[11px] cursor-default select-none",
-            // Neutral chrome — color lives only in the icon below.
-            "border-border/40 bg-muted/50 text-foreground/85",
+            CHIP_BASE,
             "hover:bg-muted/70 hover:border-border/60 transition-colors",
             className,
           )}
