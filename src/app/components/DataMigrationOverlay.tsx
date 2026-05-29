@@ -90,6 +90,10 @@ export function DataMigrationOverlay({ onClose }: { onClose: (reason: MigrationC
   const [simulateFailure, setSimulateFailure] = useState(false);
   const [failedStepIdx, setFailedStepIdx] = useState<number | null>(null);
   const [errorMessage, setErrorMessage] = useState<string>('');
+  // Per PR #14734 — when a step fails, expose the specific entries that
+  // can't be migrated so the user can choose "skip just these items and
+  // keep the rest" instead of skipping the entire step.
+  const [failedItems, setFailedItems] = useState<Array<{ id: string; label: string }>>([]);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const stepTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   // Set to true once the user clicks "重新检查" on the concurrent screen
@@ -135,12 +139,19 @@ export function DataMigrationOverlay({ onClose }: { onClose: (reason: MigrationC
       progress += Math.random() * 12 + 4;
       if (shouldFail && progress >= failAtFraction * 100) {
         clearInterval(interval);
-        const reason = '校验失败：检测到 3 条会话引用了已删除的助手 ID (assistant_4f7c92)，无法迁移。';
+        const reason = '检测到 3 条会话引用了已删除的助手 ID (assistant_4f7c92)，无法迁移。';
         setSteps((prev: MigrationStep[]) => prev.map((s: MigrationStep, i: number) =>
           i === stepIdx ? { ...s, status: 'error' as const } : s
         ));
         setFailedStepIdx(stepIdx);
         setErrorMessage(reason);
+        // Mock the offending entries so the failed screen can offer
+        // a per-item recovery path.
+        setFailedItems([
+          { id: 'c_4f7c92', label: '周报创作 · 2026-04-28' },
+          { id: 'c_8a1d33', label: '代码 review · 性能调优思路' },
+          { id: 'c_2e9b18', label: '学习计划 · TLA+ 入门' },
+        ]);
         addLog(`ERROR: ${step.label} — ${reason}`);
         setScreen('failed');
         return;
@@ -263,10 +274,36 @@ export function DataMigrationOverlay({ onClose }: { onClose: (reason: MigrationC
     const nextIdx = failedStepIdx + 1;
     setFailedStepIdx(null);
     setErrorMessage('');
+    setFailedItems([]);
     setSimulateFailure(false);
     setScreen('running');
     advanceStep(nextIdx, { failNext: false });
   }, [failedStepIdx, addLog, advanceStep]);
+
+  // Per PR #14734 — partial-success path. Mark only the failed items
+  // as skipped, count the rest of the step as migrated, and move on.
+  // The step lands as 'completed' with `count.done = total - failed`
+  // so the completion summary shows a true partial number.
+  const handleSkipFailedItems = useCallback(() => {
+    if (failedStepIdx === null) return;
+    const failedCount = failedItems.length;
+    const step = MIGRATION_STEPS[failedStepIdx];
+    const total = step.count?.total ?? 0;
+    const partialDone = Math.max(0, total - failedCount);
+    addLog(`Partial: ${step.label} — ${failedCount} items skipped, ${partialDone}/${total} migrated.`);
+    setSteps((prev: MigrationStep[]) => prev.map((s: MigrationStep, i: number) =>
+      i === failedStepIdx
+        ? { ...s, status: 'completed' as const, progress: 100, count: total ? { done: partialDone, total } : s.count }
+        : s
+    ));
+    const nextIdx = failedStepIdx + 1;
+    setFailedStepIdx(null);
+    setErrorMessage('');
+    setFailedItems([]);
+    setSimulateFailure(false);
+    setScreen('running');
+    advanceStep(nextIdx, { failNext: false });
+  }, [failedStepIdx, failedItems, addLog, advanceStep]);
 
   useEffect(() => {
     let t: ReturnType<typeof setInterval> | null = null;
@@ -968,21 +1005,55 @@ export function DataMigrationOverlay({ onClose }: { onClose: (reason: MigrationC
                       <p className="text-xs text-destructive/85 font-medium">
                         在「{MIGRATION_STEPS[failedStepIdx].label}」处中断
                       </p>
-                      <p className="text-[11px] text-destructive/70 leading-relaxed mt-1 font-mono break-words">
+                      <p className="text-[11px] text-destructive/70 leading-relaxed mt-1 break-words">
                         {errorMessage}
                       </p>
                     </div>
                   </div>
                 </div>
 
+                {/* Failed-items list — fine-grained recovery per PR #14734.
+                    Lets the user inspect which entries broke and choose to
+                    skip just those instead of the whole step. */}
+                {failedItems.length > 0 && (
+                  <div className="rounded-xl border border-border/30 bg-muted/10 overflow-hidden">
+                    <div className="px-4 py-2 border-b border-border/15 flex items-center justify-between">
+                      <span className="text-[11px] text-muted-foreground/75 font-medium">
+                        无法迁移的 {failedItems.length} 项
+                      </span>
+                      <span className="text-[10px] text-muted-foreground/50">
+                        余 {(MIGRATION_STEPS[failedStepIdx].count?.total ?? 0) - failedItems.length} 项可继续
+                      </span>
+                    </div>
+                    <ul className="divide-y divide-border/10">
+                      {failedItems.map(it => (
+                        <li key={it.id} className="px-4 py-2 flex items-center gap-2">
+                          <XCircle size={11} className="text-destructive/70 flex-shrink-0" />
+                          <span className="text-[11px] text-foreground/85 truncate flex-1">{it.label}</span>
+                          <span className="text-[10px] text-muted-foreground/45 font-mono flex-shrink-0">{it.id}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {/* Action priority: recommended first (skip-items keeps
+                    most of the step), then retry, then skip-step, then
+                    exit. Lighter actions get smaller buttons. */}
+                {failedItems.length > 0 && (
+                  <Button variant="default" size="sm" onClick={handleSkipFailedItems} className="w-full gap-2">
+                    <SkipForward size={13} />
+                    仅跳过这 {failedItems.length} 项，迁移其余 {(MIGRATION_STEPS[failedStepIdx].count?.total ?? 0) - failedItems.length} 项
+                  </Button>
+                )}
                 <div className="flex items-center gap-2">
-                  <Button variant="default" size="sm" onClick={handleRetry} className="flex-1 gap-2">
+                  <Button variant="outline" size="sm" onClick={handleRetry} className="flex-1 gap-2">
                     <RefreshCw size={13} />
                     重试本步
                   </Button>
                   <Button variant="outline" size="sm" onClick={handleSkipFailedStep} className="flex-1 gap-2">
                     <SkipForward size={13} />
-                    跳过并继续
+                    跳过整步
                   </Button>
                 </div>
                 <Button
@@ -994,7 +1065,7 @@ export function DataMigrationOverlay({ onClose }: { onClose: (reason: MigrationC
                   退出，不再迁移
                 </Button>
                 <p className="text-[10px] text-muted-foreground/45 text-center leading-relaxed">
-                  已完成的步骤会保留。跳过的步骤可以稍后在「设置 → 数据」单独重试。
+                  已完成的步骤会保留。跳过的项目可以稍后在「设置 → 数据 → 重建」里单独处理。
                 </p>
               </motion.div>
             )}
