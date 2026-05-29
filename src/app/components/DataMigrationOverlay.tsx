@@ -859,7 +859,6 @@ export function DataMigrationOverlay({ onClose }: { onClose: (reason: MigrationC
             </div>
           </motion.div>
         )}
-        )}
 
         {/* Decline-Confirm State */}
         {screen === 'decline-confirm' && (
