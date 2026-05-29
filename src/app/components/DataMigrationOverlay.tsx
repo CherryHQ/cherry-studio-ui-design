@@ -422,9 +422,35 @@ export function DataMigrationOverlay({ onClose }: { onClose: (reason: MigrationC
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-[9999] bg-background flex items-center justify-center"
+      className="fixed inset-0 z-[9999] bg-muted/70 dark:bg-background/70 backdrop-blur-sm flex items-center justify-center p-6"
     >
-      <div className="w-full max-w-[480px] px-6">
+      {/* Window frame — matches the rest of the app's "windowed" look so
+          the migration feels like an OS-level dialog rather than a
+          full-screen takeover. macOS-style traffic lights on the left;
+          the red one closes (treated as postpone). */}
+      <motion.div
+        initial={{ scale: 0.96, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        className="w-full max-w-[560px] max-h-[88vh] rounded-xl bg-content-bg border border-content-border shadow-2xl overflow-hidden flex flex-col"
+      >
+        {/* Title bar */}
+        <div className="h-9 px-3 flex items-center bg-accent/40 border-b border-border/30 flex-shrink-0 relative">
+          <div className="flex items-center gap-1.5">
+            <button
+              type="button"
+              onClick={() => onClose('postponed')}
+              title="关闭（稍后再说）"
+              className="w-3 h-3 rounded-full bg-traffic-red border border-traffic-red-border hover:opacity-80 transition-opacity"
+            />
+            <div className="w-3 h-3 rounded-full bg-traffic-yellow border border-traffic-yellow-border" />
+            <div className="w-3 h-3 rounded-full bg-traffic-green border border-traffic-green-border" />
+          </div>
+          <span className="absolute left-1/2 -translate-x-1/2 text-[11px] text-muted-foreground/70 font-medium tracking-tight">
+            数据迁移
+          </span>
+        </div>
+
+      <div className="w-full flex-1 overflow-y-auto scrollbar-thin px-8 py-7">
         {/* Step rail — shows the 4-step wizard position (intro / backup /
             running / done). Hidden on pre-step probes (checking / no-v1)
             and on the decline-confirm modal. */}
@@ -1359,6 +1385,7 @@ export function DataMigrationOverlay({ onClose }: { onClose: (reason: MigrationC
           </motion.div>
         )}
       </div>
+      </motion.div>
     </motion.div>
   );
 }
