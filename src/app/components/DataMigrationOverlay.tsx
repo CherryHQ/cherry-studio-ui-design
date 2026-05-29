@@ -520,7 +520,7 @@ export function DataMigrationOverlay({ onClose }: { onClose: (reason: MigrationC
                 <span className="text-muted-foreground/55 tabular-nums">约 68%</span>
               </div>
               <div className="h-1.5 bg-muted/30 rounded-full overflow-hidden">
-                <div className="h-full bg-info/70 rounded-full" style={{ width: '68%' }} />
+                <div className="h-full bg-primary/70 rounded-full" style={{ width: '68%' }} />
               </div>
               <p className="text-[10px] text-muted-foreground/55">最后心跳：12 秒前</p>
             </div>
@@ -816,7 +816,7 @@ export function DataMigrationOverlay({ onClose }: { onClose: (reason: MigrationC
             </div>
             <div className="h-2 bg-muted/30 rounded-full overflow-hidden">
               <motion.div
-                className="h-full bg-info rounded-full"
+                className="h-full bg-primary rounded-full"
                 animate={{ width: `${backupProgress}%` }}
                 transition={{ duration: 0.2 }}
               />
