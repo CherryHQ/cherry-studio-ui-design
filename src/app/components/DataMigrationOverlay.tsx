@@ -26,6 +26,8 @@ interface MigrationStep {
 // Multi-screen flow mirroring the structure proposed in
 // CherryHQ/cherry-studio#13547. Four wizard steps with a step indicator
 // at the top, plus a decline-confirm modal that gates a permanent skip.
+//   0. checking          — pre-step probe for V1 data (per PR #13764)
+//      no-v1             — fresh install detected, auto-closes
 //   1. intro             — overview + safety highlights
 //   2. backup-choose     — pick backup mode (create / use existing)
 //      backup-running    — backup in progress
@@ -33,13 +35,15 @@ interface MigrationStep {
 //   3. running           — actual data migration
 //   4. completed / failed
 type Screen =
+  | 'checking' | 'no-v1'
   | 'intro' | 'backup-choose' | 'backup-running' | 'backup-ready'
   | 'running' | 'completed' | 'failed' | 'decline-confirm';
-export type MigrationCloseReason = 'completed' | 'declined' | 'postponed';
+export type MigrationCloseReason = 'completed' | 'declined' | 'postponed' | 'no-v1';
 type BackupChoice = 'create' | 'existing';
 // Numeric step indicator (1-4) per current screen — drives the dot rail
-// at the top of the wizard.
-const STEP_NUMBER: Record<Exclude<Screen, 'decline-confirm'>, 1 | 2 | 3 | 4> = {
+// at the top of the wizard. Pre-step screens (checking / no-v1) and
+// the decline-confirm modal hide the rail.
+const STEP_NUMBER: Partial<Record<Screen, 1 | 2 | 3 | 4>> = {
   intro: 1,
   'backup-choose': 2,
   'backup-running': 2,
@@ -62,7 +66,11 @@ const MIGRATION_STEPS: MigrationStep[] = [
 // Data Migration Overlay
 // ===========================
 export function DataMigrationOverlay({ onClose }: { onClose: (reason: MigrationCloseReason) => void }) {
-  const [screen, setScreen] = useState<Screen>('intro');
+  // Per PR #13764 — probe for V1 data before showing the wizard. Default
+  // start is 'checking'; the effect below decides intro vs no-v1. To
+  // demo the fresh-install path, append `?nov1=1` to the URL (the
+  // overlay reads the param at mount).
+  const [screen, setScreen] = useState<Screen>('checking');
   const [previousScreen, setPreviousScreen] = useState<Screen>('intro');
   const [steps, setSteps] = useState<MigrationStep[]>(MIGRATION_STEPS);
   const [showLog, setShowLog] = useState(false);
@@ -241,6 +249,35 @@ export function DataMigrationOverlay({ onClose }: { onClose: (reason: MigrationC
     };
   }, []);
 
+  // Pre-step V1-data probe. In production this would touch the file
+  // system / Dexie; here it's a 750ms artificial check. Append `?nov1=1`
+  // to demo the fresh-install path; otherwise we assume V1 exists.
+  useEffect(() => {
+    if (screen !== 'checking') return;
+    const params = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
+    const simulateFresh = params?.get('nov1') === '1';
+    addLog(simulateFresh ? 'Probing for V1 data…' : 'Probing for V1 data…');
+    const t = setTimeout(() => {
+      if (simulateFresh) {
+        addLog('No V1 data found. Skipping migration.');
+        setScreen('no-v1');
+      } else {
+        addLog('V1 data detected. Migration wizard available.');
+        setScreen('intro');
+      }
+    }, 750);
+    return () => clearTimeout(t);
+  }, [screen, addLog]);
+
+  // When the no-v1 screen renders, hold ~1.6s so the user sees the
+  // confirmation, then auto-close. The onClose call uses the new
+  // 'no-v1' reason so the parent can persist + suppress next launch.
+  useEffect(() => {
+    if (screen !== 'no-v1') return;
+    const t = setTimeout(() => onClose('no-v1'), 1600);
+    return () => clearTimeout(t);
+  }, [screen, onClose]);
+
   const formatTime = (s: number) => {
     const m = Math.floor(s / 60);
     const sec = s % 60;
@@ -256,11 +293,12 @@ export function DataMigrationOverlay({ onClose }: { onClose: (reason: MigrationC
     >
       <div className="w-full max-w-[480px] px-6">
         {/* Step rail — shows the 4-step wizard position (intro / backup /
-            running / done). decline-confirm is a modal step, not a rail step. */}
-        {screen !== 'decline-confirm' && (
+            running / done). Hidden on pre-step probes (checking / no-v1)
+            and on the decline-confirm modal. */}
+        {STEP_NUMBER[screen] && (
           <div className="flex items-center justify-center gap-2 mb-7">
             {[1, 2, 3, 4].map((n) => {
-              const cur = STEP_NUMBER[screen];
+              const cur = STEP_NUMBER[screen]!;
               const done = n < cur;
               const active = n === cur;
               return (
@@ -277,6 +315,52 @@ export function DataMigrationOverlay({ onClose }: { onClose: (reason: MigrationC
               );
             })}
           </div>
+        )}
+
+        {/* Pre-step probe — show while we ask the data layer whether V1
+            data even exists. Brief so the user perceives it as the app's
+            startup splash, not an extra step. */}
+        {screen === 'checking' && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="space-y-5"
+          >
+            <div className="text-center">
+              <div className="w-16 h-16 rounded-2xl bg-info/10 border border-info/20 flex items-center justify-center mx-auto mb-4">
+                <Loader2 size={28} strokeWidth={1.4} className="text-info animate-spin" />
+              </div>
+              <h1 className="text-base font-medium text-foreground">正在检测 V1 数据…</h1>
+              <p className="text-xs text-muted-foreground/55 mt-1.5">扫描旧版数据库，决定是否需要迁移</p>
+            </div>
+          </motion.div>
+        )}
+
+        {/* No-V1 — fresh install path. Show a quick confirmation then
+            auto-close via the effect above. Keeps new users from being
+            dragged through 4 steps for nothing. */}
+        {screen === 'no-v1' && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.96 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="space-y-5"
+          >
+            <div className="text-center">
+              <div className="w-16 h-16 rounded-2xl bg-success/12 border border-success/25 flex items-center justify-center mx-auto mb-4">
+                <CheckCircle2 size={28} strokeWidth={1.4} className="text-success" />
+              </div>
+              <h1 className="text-lg font-semibold text-foreground tracking-tight">未检测到 V1 数据</h1>
+              <p className="text-sm text-muted-foreground/65 mt-2 leading-relaxed">
+                这是一次全新安装，无需迁移。马上进入 Cherry Studio V2。
+              </p>
+            </div>
+            <div className="text-center">
+              <span className="inline-flex items-center gap-1.5 text-[11px] text-muted-foreground/45">
+                <Loader2 size={10} className="animate-spin" />
+                正在进入…
+              </span>
+            </div>
+          </motion.div>
         )}
 
         {/* Intro */}

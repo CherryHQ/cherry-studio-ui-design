@@ -95,7 +95,7 @@ function CherryStudioInner() {
     if (typeof window === 'undefined') return false;
     const persisted = window.localStorage.getItem('cherry:v2-migration');
     const session = window.sessionStorage.getItem('cherry:v2-migration-postponed');
-    return persisted !== 'completed' && persisted !== 'declined' && session !== '1';
+    return persisted !== 'completed' && persisted !== 'declined' && persisted !== 'no-v1' && session !== '1';
   });
 
   // Surface annotation persistence failures (quota exceeded, etc.) so the
@@ -591,7 +591,11 @@ function CherryStudioInner() {
         {showMigration && (
           <DataMigrationOverlay
             onClose={(reason) => {
-              if (reason === 'completed' || reason === 'declined') {
+              // 'no-v1' (fresh install) persists like a completed
+              // migration — there's nothing to retry, future launches
+              // skip the overlay entirely. 'postponed' only suppresses
+              // for this session so a refresh re-shows the wizard.
+              if (reason === 'completed' || reason === 'declined' || reason === 'no-v1') {
                 try { window.localStorage.setItem('cherry:v2-migration', reason); } catch { /* quota */ }
               } else {
                 try { window.sessionStorage.setItem('cherry:v2-migration-postponed', '1'); } catch { /* quota */ }
