@@ -476,23 +476,28 @@ export function DataMigrationOverlay({ onClose }: { onClose: (reason: MigrationC
                 return (
                   <li key={s.n} className="relative">
                     <div className="flex items-center gap-2.5 py-1.5">
+                      {/* Active + done both use green so the step rail
+                          reads as one continuous "you've reached here"
+                          column instead of black-vs-green clash. Pending
+                          stays very faint so the contrast lands on what
+                          the user has done, not on what's left. */}
                       <div className={`flex items-center justify-center w-6 h-6 rounded-full text-[11px] font-medium flex-shrink-0 transition-colors
                         ${done ? 'bg-success text-success-foreground' :
-                          active ? 'bg-primary text-primary-foreground' :
-                          'bg-muted/60 text-muted-foreground/45 border border-border/30'}`}
+                          active ? 'bg-success text-success-foreground ring-2 ring-success/25' :
+                          'bg-muted/30 text-muted-foreground/35'}`}
                       >
                         {done ? <CheckCircle2 size={11} strokeWidth={2.5} /> : s.n}
                       </div>
                       <span className={`text-xs truncate ${
-                        done ? 'text-foreground/75' :
                         active ? 'text-foreground font-medium' :
-                        'text-muted-foreground/45'
+                        done ? 'text-foreground/70' :
+                        'text-muted-foreground/35'
                       }`}>{s.label}</span>
                     </div>
                     {/* Vertical connector to next step */}
                     {i < arr.length - 1 && (
                       <div className={`absolute left-[11px] top-[30px] bottom-[-4px] w-px ${
-                        done ? 'bg-success/40' : 'bg-border/40'
+                        done ? 'bg-success/40' : 'bg-border/25'
                       }`} />
                     )}
                   </li>
@@ -977,11 +982,15 @@ export function DataMigrationOverlay({ onClose }: { onClose: (reason: MigrationC
               <Button variant="outline" size="xs" onClick={() => setScreen(previousScreen)} className="flex-1 h-8 text-xs">
                 返回
               </Button>
+              {/* Use a muted destructive — bg-destructive/85 instead of
+                  full saturation so the button reads as "this is
+                  permanent, please confirm" rather than "warning,
+                  panic". Matches the rest of cherry's tonal palette. */}
               <Button
-                variant="default"
+                variant="ghost"
                 size="xs"
                 onClick={() => onClose('declined')}
-                className="flex-1 h-8 text-xs bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                className="flex-1 h-8 text-xs bg-destructive/10 text-destructive border border-destructive/25 hover:bg-destructive/15 hover:text-destructive"
               >
                 继续不迁移
               </Button>
