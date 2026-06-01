@@ -427,11 +427,14 @@ export function DataMigrationOverlay({ onClose }: { onClose: (reason: MigrationC
       {/* Window frame — matches the rest of the app's "windowed" look so
           the migration feels like an OS-level dialog rather than a
           full-screen takeover. macOS-style traffic lights on the left;
-          the red one closes (treated as postpone). */}
+          the red one closes (treated as postpone). Wider than a stock
+          modal because the wizard wants room for a left step rail
+          (Introduction · Backup · Migration · Complete) the way the
+          reference design lays it out. */}
       <motion.div
         initial={{ scale: 0.96, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
-        className="w-full max-w-[560px] max-h-[88vh] rounded-xl bg-content-bg border border-content-border shadow-2xl overflow-hidden flex flex-col"
+        className="w-full max-w-[720px] max-h-[88vh] rounded-xl bg-content-bg border border-content-border shadow-2xl overflow-hidden flex flex-col"
       >
         {/* Title bar */}
         <div className="h-9 px-3 flex items-center bg-accent/40 border-b border-border/30 flex-shrink-0 relative">
@@ -446,35 +449,73 @@ export function DataMigrationOverlay({ onClose }: { onClose: (reason: MigrationC
             <div className="w-3 h-3 rounded-full bg-traffic-green border border-traffic-green-border" />
           </div>
           <span className="absolute left-1/2 -translate-x-1/2 text-[11px] text-muted-foreground/70 font-medium tracking-tight">
-            数据迁移
+            数据迁移向导
           </span>
         </div>
 
-      <div className="w-full flex-1 overflow-y-auto scrollbar-thin px-8 py-7">
-        {/* Step rail — shows the 4-step wizard position (intro / backup /
-            running / done). Hidden on pre-step probes (checking / no-v1)
-            and on the decline-confirm modal. */}
+      {/* Body — left rail + right content. Reference design (PR #13547
+          / shadcn rewrite) puts the step list on the left with a
+          language picker pinned at the bottom; the right column hosts
+          the per-screen hero + actions. */}
+      <div className="flex-1 flex min-h-0">
+        {/* Left rail: vertical step list + language picker. Hidden when
+            the wizard rail itself doesn't apply (checking / no-v1) so
+            those pre-step probes still get full-bleed treatment. */}
         {STEP_NUMBER[screen] && (
-          <div className="flex items-center justify-center gap-2 mb-7">
-            {[1, 2, 3, 4].map((n) => {
-              const cur = STEP_NUMBER[screen]!;
-              const done = n < cur;
-              const active = n === cur;
-              return (
-                <React.Fragment key={n}>
-                  <div className={`flex items-center justify-center w-6 h-6 rounded-full text-[10px] font-medium transition-colors
-                    ${done ? 'bg-primary/15 text-primary border border-primary/30' :
-                      active ? 'bg-primary text-primary-foreground' :
-                      'bg-muted/40 text-muted-foreground/40 border border-border/20'}`}
-                  >
-                    {done ? <CheckCircle2 size={11} strokeWidth={2.5} /> : n}
-                  </div>
-                  {n < 4 && <div className={`h-px w-6 ${n < cur ? 'bg-primary/30' : 'bg-border/30'}`} />}
-                </React.Fragment>
-              );
-            })}
-          </div>
+          <aside className="w-44 flex-shrink-0 bg-muted/25 border-r border-border/30 flex flex-col">
+            <ol className="flex-1 py-6 px-4 space-y-1">
+              {([
+                { n: 1 as const, label: 'Introduction' },
+                { n: 2 as const, label: 'Backup' },
+                { n: 3 as const, label: 'Migration' },
+                { n: 4 as const, label: 'Complete' },
+              ]).map((s, i, arr) => {
+                const cur = STEP_NUMBER[screen]!;
+                const done = s.n < cur;
+                const active = s.n === cur;
+                return (
+                  <li key={s.n} className="relative">
+                    <div className="flex items-center gap-2.5 py-1.5">
+                      <div className={`flex items-center justify-center w-6 h-6 rounded-full text-[11px] font-medium flex-shrink-0 transition-colors
+                        ${done ? 'bg-success text-success-foreground' :
+                          active ? 'bg-primary text-primary-foreground' :
+                          'bg-muted/60 text-muted-foreground/45 border border-border/30'}`}
+                      >
+                        {done ? <CheckCircle2 size={11} strokeWidth={2.5} /> : s.n}
+                      </div>
+                      <span className={`text-xs truncate ${
+                        done ? 'text-foreground/75' :
+                        active ? 'text-foreground font-medium' :
+                        'text-muted-foreground/45'
+                      }`}>{s.label}</span>
+                    </div>
+                    {/* Vertical connector to next step */}
+                    {i < arr.length - 1 && (
+                      <div className={`absolute left-[11px] top-[30px] bottom-[-4px] w-px ${
+                        done ? 'bg-success/40' : 'bg-border/40'
+                      }`} />
+                    )}
+                  </li>
+                );
+              })}
+            </ol>
+            {/* Language picker — purely decorative in this mock (no real
+                i18n yet) but matches the reference layout. */}
+            <div className="px-4 py-3 border-t border-border/20">
+              <button
+                type="button"
+                className="w-full flex items-center justify-between gap-1.5 px-2.5 py-1.5 rounded-lg border border-border/40 bg-background/60 hover:bg-accent/30 text-xs text-foreground/85 transition-colors"
+                title="语言（占位 UI）"
+              >
+                <span>简体中文</span>
+                <ChevronDown size={11} className="text-muted-foreground/60" />
+              </button>
+            </div>
+          </aside>
         )}
+
+        {/* Right column — the existing per-screen content. */}
+        <div className="flex-1 overflow-y-auto scrollbar-thin px-8 py-7 min-w-0">
 
         {/* Pre-step probe — show while we ask the data layer whether V1
             data even exists. Brief so the user perceives it as the app's
@@ -1384,6 +1425,7 @@ export function DataMigrationOverlay({ onClose }: { onClose: (reason: MigrationC
             </div>
           </motion.div>
         )}
+        </div>
       </div>
       </motion.div>
     </motion.div>
