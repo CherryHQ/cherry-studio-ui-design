@@ -28,6 +28,7 @@ import { ChatPanel } from './ChatPanel';
 import { SaveAsSkillDialog } from './SaveAsSkillDialog';
 import { SaveAsSkillCallout } from './SaveAsSkillCallout';
 import { SkillJobStatusChip } from './SkillJobStatusChip';
+import { StarterCardsCarousel } from '@/app/components/shared/StarterCardsCarousel';
 import { useActiveSkillJob } from '@/app/stores/skillJobStore';
 import { WorkflowPanel } from './WorkflowPanel';
 import type { AgentChatMessage, AgentSession, AgentSessionData } from '@/app/types/agent';
@@ -361,12 +362,16 @@ const CSI_MENTIONS: { id: string; label: string; desc: string; icon: React.Compo
   { id: 'mcp-search', label: 'web-search', desc: 'MCP', icon: Globe },
 ];
 
-function CodexStyleInput({ onSendMessage, autoFocus = false, placeholder, headerControls }: {
+function CodexStyleInput({ onSendMessage, autoFocus = false, placeholder, headerControls, prefill, prefillNonce }: {
   onSendMessage: (text: string) => void;
   autoFocus?: boolean;
   placeholder?: string;
   /** Same as ChatPanel.headerControls — agent + model pickers, etc. */
   headerControls?: React.ReactNode;
+  /** External prompt to pre-fill into the textarea (e.g. from starter cards). */
+  prefill?: string;
+  /** Bump this whenever a new prefill should be applied, even if string is identical. */
+  prefillNonce?: number;
 }) {
   const [input, setInput] = useState('');
   const [activeMode, setActiveMode] = useState('normal');
@@ -385,6 +390,20 @@ function CodexStyleInput({ onSendMessage, autoFocus = false, placeholder, header
   const [showMention, setShowMention] = useState(false);
   const [projectQuery, setProjectQuery] = useState('');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    if (prefillNonce === undefined || !prefill) return;
+    setInput(prefill);
+    const ta = textareaRef.current;
+    if (ta) {
+      ta.style.height = 'auto';
+      ta.style.height = Math.min(ta.scrollHeight, 220) + 'px';
+      ta.focus();
+      const pos = prefill.length;
+      try { ta.setSelectionRange(pos, pos); } catch { /* noop */ }
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [prefillNonce]);
 
   const currentProject = NEW_PROJECTS.find(p => p.id === activeProject) ?? null;
   const filteredProjects = NEW_PROJECTS.filter(p => !projectQuery || p.label.toLowerCase().includes(projectQuery.toLowerCase()));
@@ -791,10 +810,16 @@ function CodexStyleInput({ onSendMessage, autoFocus = false, placeholder, header
 }
 
 function NewSessionEmpty({ onSendMessage, agentName, headerControls }: { onSendMessage: (text: string) => void; agentName?: string; headerControls?: React.ReactNode }) {
+  const [prefill, setPrefill] = useState<string>('');
+  const [prefillNonce, setPrefillNonce] = useState(0);
+  const handlePickPrompt = (p: string) => {
+    setPrefill(p);
+    setPrefillNonce(n => n + 1);
+  };
   return (
     <div className="flex flex-col h-full w-full">
       {/* Centered empty state */}
-      <div className="flex-1 flex flex-col items-center justify-center">
+      <div className="flex-1 flex flex-col items-center justify-center px-4">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}
           className="flex flex-col items-center max-w-[360px] w-full">
           <div className="w-14 h-14 rounded-2xl bg-gradient-to-b from-accent/60 to-accent/30 border border-border/30 flex items-center justify-center mb-5">
@@ -805,11 +830,25 @@ function NewSessionEmpty({ onSendMessage, agentName, headerControls }: { onSendM
             向 {agentName || '智能体'} 提问，支持生成文章、代码和可视化内容
           </p>
         </motion.div>
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.12 }}
+          className="w-full mt-8"
+        >
+          <StarterCardsCarousel surface="agent" onPickPrompt={handlePickPrompt} />
+        </motion.div>
       </div>
 
       {/* Input bar at bottom */}
       <div className="flex-shrink-0 px-4 pb-3 pt-2">
-        <CodexStyleInput onSendMessage={onSendMessage} autoFocus headerControls={headerControls} />
+        <CodexStyleInput
+          onSendMessage={onSendMessage}
+          autoFocus
+          headerControls={headerControls}
+          prefill={prefill}
+          prefillNonce={prefillNonce}
+        />
       </div>
     </div>
   );

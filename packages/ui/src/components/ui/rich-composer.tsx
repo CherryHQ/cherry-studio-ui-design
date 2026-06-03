@@ -51,6 +51,9 @@ export interface RichComposerHandle {
   clearText: () => void;
   /** Get the current plain-text content typed by the user. */
   getText: () => string;
+  /** Replace the editable text content (chips are untouched). Useful for
+   *  pre-fill flows such as starter cards or slash-command templates. */
+  setText: (text: string) => void;
 }
 
 export const RichComposer = React.forwardRef<RichComposerHandle, RichComposerProps>(function RichComposer(
@@ -77,6 +80,19 @@ export const RichComposer = React.forwardRef<RichComposerHandle, RichComposerPro
       el.textContent = "";
     },
     getText: () => editorRef.current?.textContent ?? "",
+    setText: (text: string) => {
+      const el = editorRef.current;
+      if (!el) return;
+      el.textContent = text;
+      // Move caret to the end so the user can immediately edit / send.
+      el.focus();
+      const range = document.createRange();
+      range.selectNodeContents(el);
+      range.collapse(false);
+      const sel = window.getSelection();
+      sel?.removeAllRanges();
+      sel?.addRange(range);
+    },
   }), []);
 
   return (
