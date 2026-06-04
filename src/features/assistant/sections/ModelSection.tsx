@@ -1,12 +1,17 @@
 import React, { useState } from 'react';
-import { Plus, Trash2, RotateCcw, Info } from 'lucide-react';
+import { Plus, Trash2, RotateCcw, Info, ChevronDown } from 'lucide-react';
 import { Button } from '@cherrystudio/ui/components/primitives/button';
 import { Input } from '@cherry-studio/ui';
 import { Slider } from '@cherrystudio/ui/components/primitives/slider';
 import {
+  Popover, PopoverContent, PopoverTrigger,
+} from '@cherrystudio/ui/components/primitives/popover';
+import {
   Select, SelectTrigger, SelectValue, SelectContent, SelectItem,
 } from '@cherrystudio/ui/components/primitives/select';
 import { Typography, SimpleTooltip, Switch } from '@cherry-studio/ui';
+import { ModelPickerPanel } from '@/app/components/shared/ModelPickerPanel';
+import { ASSISTANT_MODELS } from '@/app/config/models';
 
 // ===========================
 // 模型设置 (Model Settings) section
@@ -19,6 +24,8 @@ import { Typography, SimpleTooltip, Switch } from '@cherry-studio/ui';
 type CustomParam = { name: string; type: 'string' | 'number' | 'boolean' | 'json'; value: string };
 
 export function ModelSection() {
+  const [modelId, setModelId]                       = useState<string>(ASSISTANT_MODELS[0]?.id ?? '');
+  const [modelPickerOpen, setModelPickerOpen]       = useState(false);
   const [temperature, setTemperature]               = useState(0.7);
   const [enableTemperature, setEnableTemperature]   = useState(true);
   const [topP, setTopP]                             = useState(0.9);
@@ -51,8 +58,35 @@ export function ModelSection() {
     setCustomParameters([]);
   };
 
+  const selectedModel = ASSISTANT_MODELS.find(m => m.id === modelId);
+
   return (
     <div className="max-w-3xl space-y-5">
+      {/* 模型 — picker at top so users see + change the model alongside
+          its parameter set (no separate Basic-section model row). */}
+      <div className="flex items-center justify-between gap-3">
+        <label className="text-sm text-muted-foreground">模型</label>
+        <Popover open={modelPickerOpen} onOpenChange={setModelPickerOpen}>
+          <PopoverTrigger asChild>
+            <Button variant="outline"
+              className="flex-1 max-w-[300px] justify-between px-3 py-2 h-9 border-border/60 bg-accent/15 text-sm text-foreground hover:border-border/80 hover:bg-accent/40">
+              <span className="truncate">{selectedModel?.name ?? modelId ?? '选择模型'}</span>
+              <ChevronDown size={11} className="text-muted-foreground/50 flex-shrink-0" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent align="end" className="p-0 w-[480px]">
+            <ModelPickerPanel
+              selectedModels={[modelId]}
+              onSelectModel={(id) => { setModelId(id); setModelPickerOpen(false); }}
+              multiModel={false}
+              onToggleMultiModel={() => {}}
+              onClose={() => setModelPickerOpen(false)}
+              showMultiModelToggle={false}
+            />
+          </PopoverContent>
+        </Popover>
+      </div>
+
       <div className="flex justify-end -mb-2">
         <Button variant="ghost" size="xs" onClick={resetParameters}
           className="gap-1.5 text-muted-foreground/80 hover:text-foreground">

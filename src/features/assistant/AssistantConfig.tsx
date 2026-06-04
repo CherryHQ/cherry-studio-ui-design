@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ArrowLeft, Save, Settings, FileText, BookOpen, ChevronRight, Wrench, Zap, SlidersHorizontal, CheckCircle2, Blocks, ChevronDown } from 'lucide-react';
+import { ArrowLeft, Save, Settings, FileText, BookOpen, ChevronRight, Wrench, SlidersHorizontal, CheckCircle2, Blocks, ChevronDown } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Button } from '@cherrystudio/ui/components/primitives/button';
 import type { ResourceItem } from '@/app/types';
@@ -8,7 +8,6 @@ import { ModelSection } from './sections/ModelSection';
 import { PromptSection } from './sections/PromptSection';
 import { KnowledgeSection } from './sections/KnowledgeSection';
 import { ToolSection } from './sections/ToolSection';
-import { PhrasesSection } from './sections/PhrasesSection';
 
 interface Props {
   resource: ResourceItem;
@@ -24,13 +23,12 @@ interface Props {
 // 知识库 and 工具(MCP). Mirrors the Agent's sidebar shape so the two
 // configs feel structurally identical.
 type ExtensionId = 'knowledge' | 'tools';
-type Section = 'basic' | 'model' | 'prompt' | 'phrases' | `extensions:${ExtensionId}`;
+type Section = 'basic' | 'model' | 'prompt' | `extensions:${ExtensionId}`;
 
 const sections: { id: Exclude<Section, `extensions:${string}`>; label: string; icon: React.ElementType }[] = [
   { id: 'basic',   label: '基础设置', icon: Settings },
   { id: 'model',   label: '模型设置', icon: SlidersHorizontal },
   { id: 'prompt',  label: '提示词',   icon: FileText },
-  { id: 'phrases', label: '快捷短语', icon: Zap },
 ];
 
 const EXTENSION_CHILDREN: { id: ExtensionId; label: string; icon: React.ElementType }[] = [
@@ -127,24 +125,12 @@ export function AssistantConfig({ resource, onBack, inModal = false }: Props) {
               {activeSection === 'basic' && <BasicSection resource={resource} />}
               {activeSection === 'model' && <ModelSection />}
               {activeSection === 'prompt' && <PromptSection />}
-              {activeSection === 'phrases' && <PhrasesSection />}
               {activeSection === 'extensions:knowledge' && <KnowledgeSection />}
               {activeSection === 'extensions:tools' && <ToolSection />}
             </motion.div>
           </AnimatePresence>
         </div>
       </div>
-      {inModal && (
-        <div className="flex-shrink-0 flex items-center justify-end gap-2 px-4 py-2.5 border-t border-border/15 bg-background/95 backdrop-blur-sm">
-          <AnimatePresence>
-            {saved
-              ? <motion.span key="saved" initial={{ opacity: 0, x: 6 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0 }} className="text-xs text-cherry-primary mr-auto flex items-center gap-1"><CheckCircle2 size={11} />已保存</motion.span>
-              : <motion.span key="dirty" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="text-xs text-muted-foreground/50 mr-auto">有未保存的更改</motion.span>}
-          </AnimatePresence>
-          <Button variant="outline" size="xs" onClick={onBack} className="h-7 px-3 text-xs">取消</Button>
-          <Button size="xs" onClick={handleSave} className="h-7 px-3 text-xs gap-1.5"><Save size={11} />保存</Button>
-        </div>
-      )}
     </div>
   );
 }

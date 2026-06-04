@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import {
   Copy, Check, X,
   GitBranch, Download, ZoomIn,
+  Play, Pause, Volume2, VolumeX, Maximize2,
 } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
 import { Button } from '@cherry-studio/ui';
@@ -137,6 +138,133 @@ export function ImageGallery({ images }: { images: string[] }) {
               className="absolute top-6 right-6 rounded-full bg-background/10 hover:bg-background/20 text-background">
               <X size={16} />
             </Button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+// ===========================
+// VideoGallery — grid of generated video clips with hover playback
+// + lightbox for full-screen viewing.
+// ===========================
+import type { VideoClip } from '@/app/types/chat';
+
+function VideoTile({ clip, onOpen, isSingle }: { clip: VideoClip; onOpen: () => void; isSingle?: boolean }) {
+  const videoRef = React.useRef<HTMLVideoElement>(null);
+  const [hovering, setHovering] = useState(false);
+  const [playing, setPlaying] = useState(false);
+
+  const togglePlay = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const v = videoRef.current;
+    if (!v) return;
+    if (v.paused) { v.play(); setPlaying(true); } else { v.pause(); setPlaying(false); }
+  };
+
+  return (
+    <div className="flex flex-col gap-1 min-w-0">
+      <div
+        className={`relative group rounded-lg overflow-hidden border border-border/20 cursor-pointer bg-foreground/5 ${isSingle ? 'aspect-video' : ''}`}
+        onMouseEnter={() => setHovering(true)}
+        onMouseLeave={() => setHovering(false)}
+        onClick={onOpen}
+      >
+        <video
+          ref={videoRef}
+          src={clip.url}
+          poster={clip.poster}
+          muted
+          loop
+          playsInline
+          preload="metadata"
+          className={`block w-full min-w-0 ${isSingle ? 'h-full' : 'h-[120px]'} object-cover`}
+        />
+        {/* Center play / pause overlay — only visible on hover or while playing */}
+        <div className={`absolute inset-0 flex items-center justify-center pointer-events-none transition-opacity ${hovering || !playing ? 'opacity-100' : 'opacity-0'}`}>
+          <div className="pointer-events-auto rounded-full bg-foreground/45 backdrop-blur-sm w-8 h-8 flex items-center justify-center"
+            onClick={togglePlay}>
+            {playing ? <Pause size={12} className="text-background" /> : <Play size={12} className="text-background ml-0.5" />}
+          </div>
+        </div>
+        {/* Duration badge */}
+        {clip.duration && (
+          <div className="absolute bottom-1.5 right-1.5 px-1.5 py-0.5 rounded text-[10px] leading-none text-background bg-foreground/55 tabular-nums">
+            {clip.duration}
+          </div>
+        )}
+        {/* Hover-only actions */}
+        <div className="absolute top-1.5 right-1.5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
+          <Button variant="overlay" size="icon-xs" className="p-1.5 rounded-full" onClick={(e) => { e.stopPropagation(); onOpen(); }}>
+            <Maximize2 size={11} />
+          </Button>
+          <Button variant="overlay" size="icon-xs" className="p-1.5 rounded-full">
+            <Download size={11} />
+          </Button>
+        </div>
+      </div>
+      {/* Caption (below the video, not overlaid) */}
+      {(clip.title || clip.resolution) && (
+        <div className="flex items-center gap-1.5 px-0.5 text-[10px] text-muted-foreground/70 min-w-0">
+          {clip.title && <span className="truncate">{clip.title}</span>}
+          {clip.resolution && <span className="ml-auto flex-shrink-0 tabular-nums">{clip.resolution}</span>}
+        </div>
+      )}
+    </div>
+  );
+}
+
+export function VideoGallery({ videos }: { videos: VideoClip[] }) {
+  const [lightboxIdx, setLightboxIdx] = useState<number | null>(null);
+  const [muted, setMuted] = useState(true);
+  const isSingle = videos.length === 1;
+  const cols = isSingle ? 1 : videos.length === 2 ? 2 : videos.length === 3 ? 3 : 2;
+  const current = lightboxIdx !== null ? videos[lightboxIdx] : null;
+
+  return (
+    <div className={`min-w-0 max-w-full overflow-hidden ${isSingle ? 'max-w-[420px] my-2.5' : 'my-2.5'}`}>
+      <div className="grid gap-2 min-w-0 max-w-full" style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}>
+        {videos.map((clip, i) => (
+          <VideoTile key={i} clip={clip} onOpen={() => setLightboxIdx(i)} isSingle={isSingle} />
+        ))}
+      </div>
+      <AnimatePresence>
+        {current && (
+          <motion.div
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[var(--z-floating)] bg-foreground/40 backdrop-blur-[1px] flex items-center justify-center p-8"
+            onClick={() => setLightboxIdx(null)}
+          >
+            <motion.div
+              initial={{ scale: 0.94, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.94, opacity: 0 }}
+              className="relative max-w-[min(960px,90vw)] max-h-[88vh]"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <video
+                key={current.url}
+                src={current.url}
+                poster={current.poster}
+                autoPlay
+                loop
+                muted={muted}
+                controls
+                className="w-full max-h-[88vh] rounded-xl bg-foreground/10 object-contain"
+              />
+              <div className="absolute -top-10 left-0 right-0 flex items-center justify-between text-background/90 text-xs">
+                <span className="truncate max-w-[60%]">{current.title || `Clip ${(lightboxIdx ?? 0) + 1} / ${videos.length}`}</span>
+                <div className="flex items-center gap-2">
+                  <Button variant="ghost" size="icon-sm" onClick={() => setMuted(m => !m)}
+                    className="rounded-full bg-background/10 hover:bg-background/20 text-background">
+                    {muted ? <VolumeX size={14} /> : <Volume2 size={14} />}
+                  </Button>
+                  <Button variant="ghost" size="icon-sm" onClick={() => setLightboxIdx(null)}
+                    className="rounded-full bg-background/10 hover:bg-background/20 text-background">
+                    <X size={14} />
+                  </Button>
+                </div>
+              </div>
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>

@@ -26,6 +26,8 @@ export interface GlobalActionFunctions {
   navigateToKnowledge: (kbName: string) => void;
   /** Navigate to the Library page, optionally starting the create-flow for agent/assistant */
   navigateToLibrary: (createType?: 'agent' | 'assistant') => void;
+  /** Navigate to the Market page (resource marketplace) */
+  navigateToMarket: () => void;
   /** Return from Library back to the page that initiated the navigation */
   libraryReturn: () => void;
   /** Change the title of the currently-active tab */
@@ -117,6 +119,7 @@ const defaultFunctions: GlobalActionFunctions = {
   editAssistantInLibrary: noop,
   navigateToKnowledge: noop,
   navigateToLibrary: noop,
+  navigateToMarket: noop,
   libraryReturn: noop,
   changeTabTitle: noop,
   openSettings: noop,
@@ -163,6 +166,7 @@ export function GlobalActionProvider({ value, children }: GlobalActionProviderPr
     editAssistantInLibrary: value.editAssistantInLibrary,
     navigateToKnowledge: value.navigateToKnowledge,
     navigateToLibrary: value.navigateToLibrary,
+    navigateToMarket: value.navigateToMarket,
     libraryReturn: value.libraryReturn,
     changeTabTitle: value.changeTabTitle,
     openSettings: value.openSettings,
@@ -173,7 +177,7 @@ export function GlobalActionProvider({ value, children }: GlobalActionProviderPr
     removeFromLaunchpad: value.removeFromLaunchpad,
   }), [
     value.openMiniApp, value.pinTab, value.editAssistantInLibrary,
-    value.navigateToKnowledge, value.navigateToLibrary, value.libraryReturn,
+    value.navigateToKnowledge, value.navigateToLibrary, value.navigateToMarket, value.libraryReturn,
     value.changeTabTitle, value.openSettings, value.launchpadOpen,
     value.pinToSidebar, value.unpinFromSidebar, value.openLaunchpad,
     value.removeFromLaunchpad,

@@ -124,10 +124,10 @@ export function MarketPage() {
             size="xs"
             onClick={() => navigateToLibrary()}
             className="h-8 px-2.5 gap-1 text-xs"
-            title="打开资源库"
+            title="打开我的资源库"
           >
             <FolderCog size={12} />
-            管理
+            我的
           </Button>
           <Button
             variant="outline"
@@ -159,9 +159,13 @@ export function MarketPage() {
                 />
               </div>
 
-              {/* Feed strip — built-in + custom sources */}
+              {/* Feed strip — built-in + custom sources.
+                  Feeds with a `kinds` whitelist only appear under matching tabs
+                  (e.g. Skill Hub / Claude Skill only under skill, Awesome MCP only under mcp). */}
               <div className="flex items-center gap-1.5 mb-5 flex-wrap">
-                {[...BUILTIN_FEEDS, ...customFeeds].map(feed => {
+                {[...BUILTIN_FEEDS, ...customFeeds]
+                  .filter(feed => !feed.kinds || feed.kinds.includes(kind))
+                  .map(feed => {
                   const active = feedId === feed.id;
                   return (
                     <button

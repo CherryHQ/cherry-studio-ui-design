@@ -476,44 +476,43 @@ export function DataMigrationOverlay({ onClose }: { onClose: (reason: MigrationC
                 return (
                   <li key={s.n} className="relative">
                     <div className="flex items-center gap-2.5 py-1.5">
-                      {/* Active + done both use green so the step rail
-                          reads as one continuous "you've reached here"
-                          column instead of black-vs-green clash. Pending
-                          stays very faint so the contrast lands on what
-                          the user has done, not on what's left. */}
+                      {/* Neutral tone — active = filled foreground, done =
+                          outline with check, pending = faint. No green
+                          accents so the rail reads as a quiet index, not
+                          a status traffic-light. */}
                       <div className={`flex items-center justify-center w-6 h-6 rounded-full text-[11px] font-medium flex-shrink-0 transition-colors
-                        ${done ? 'bg-success text-success-foreground' :
-                          active ? 'bg-success text-success-foreground ring-2 ring-success/25' :
-                          'bg-muted/30 text-muted-foreground/35'}`}
+                        ${active ? 'bg-foreground text-background' :
+                          done ? 'bg-transparent text-foreground/70 border border-border/60' :
+                          'bg-transparent text-muted-foreground/40 border border-border/40'}`}
                       >
                         {done ? <CheckCircle2 size={11} strokeWidth={2.5} /> : s.n}
                       </div>
                       <span className={`text-xs truncate ${
                         active ? 'text-foreground font-medium' :
-                        done ? 'text-foreground/70' :
-                        'text-muted-foreground/35'
+                        done ? 'text-foreground/65' :
+                        'text-muted-foreground/40'
                       }`}>{s.label}</span>
                     </div>
                     {/* Vertical connector to next step */}
                     {i < arr.length - 1 && (
-                      <div className={`absolute left-[11px] top-[30px] bottom-[-4px] w-px ${
-                        done ? 'bg-success/40' : 'bg-border/25'
-                      }`} />
+                      <div className="absolute left-[11px] top-[30px] bottom-[-4px] w-px bg-border/30" />
                     )}
                   </li>
                 );
               })}
             </ol>
             {/* Language picker — purely decorative in this mock (no real
-                i18n yet) but matches the reference layout. */}
-            <div className="px-4 py-3 border-t border-border/20">
+                i18n yet). Kept as a quiet text-only affordance so it
+                doesn't compete with the step rail or pick up any accent
+                color from hover states. */}
+            <div className="px-4 py-3">
               <button
                 type="button"
-                className="w-full flex items-center justify-between gap-1.5 px-2.5 py-1.5 rounded-lg border border-border/40 bg-background/60 hover:bg-accent/30 text-xs text-foreground/85 transition-colors"
+                className="flex items-center gap-1 text-[11px] text-muted-foreground/70 hover:text-foreground/80 transition-colors"
                 title="语言（占位 UI）"
               >
                 <span>简体中文</span>
-                <ChevronDown size={11} className="text-muted-foreground/60" />
+                <ChevronDown size={10} className="text-muted-foreground/50" />
               </button>
             </div>
           </aside>
@@ -978,21 +977,21 @@ export function DataMigrationOverlay({ onClose }: { onClose: (reason: MigrationC
               </div>
             </button>
 
-            <div className="flex items-center gap-2 pt-1">
-              <Button variant="outline" size="xs" onClick={() => setScreen(previousScreen)} className="flex-1 h-8 text-xs">
-                返回
-              </Button>
-              {/* Use a muted destructive — bg-destructive/85 instead of
-                  full saturation so the button reads as "this is
-                  permanent, please confirm" rather than "warning,
-                  panic". Matches the rest of cherry's tonal palette. */}
+            {/* Compact right-aligned action row. Returning to the wizard
+                is the primary (safe) action; the permanent skip is a
+                quiet ghost so the user has to deliberately click it
+                rather than have it shout for attention. */}
+            <div className="flex items-center justify-end gap-2 pt-1">
               <Button
                 variant="ghost"
-                size="xs"
+                size="sm"
                 onClick={() => onClose('declined')}
-                className="flex-1 h-8 text-xs bg-destructive/10 text-destructive border border-destructive/25 hover:bg-destructive/15 hover:text-destructive"
+                className="text-destructive/80 hover:text-destructive hover:bg-destructive/8"
               >
                 继续不迁移
+              </Button>
+              <Button variant="default" size="sm" onClick={() => setScreen(previousScreen)}>
+                返回
               </Button>
             </div>
           </motion.div>
@@ -1361,17 +1360,25 @@ export function DataMigrationOverlay({ onClose }: { onClose: (reason: MigrationC
                 </li>
               </ul>
             </div>
-            <div className="flex items-center gap-2 pt-1">
-              <Button variant="outline" size="sm" onClick={() => setScreen(previousScreen)} className="flex-1">
-                继续迁移
+            {/* Compact, right-aligned action row. Continue is the primary
+                (safe) path so it gets the filled treatment; the cancel
+                confirmation is a soft destructive ghost so it doesn't
+                shout louder than the actual primary action. */}
+            <div className="flex items-center justify-end gap-2 pt-1">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={confirmCancel}
+                className="text-destructive/80 hover:text-destructive hover:bg-destructive/8"
+              >
+                确认取消
               </Button>
               <Button
                 variant="default"
                 size="sm"
-                onClick={confirmCancel}
-                className="flex-1 bg-warning text-warning-foreground hover:bg-warning/90"
+                onClick={() => setScreen(previousScreen)}
               >
-                确认取消
+                继续迁移
               </Button>
             </div>
           </motion.div>

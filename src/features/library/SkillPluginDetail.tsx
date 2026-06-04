@@ -328,17 +328,9 @@ export function SkillPluginDetail({ resource, onBack, onToggle, onDelete, inModa
             </div>
           </div>
 
-          {/* Footer — 回收 left, 在对话中试用 right (per screenshot) */}
-          <div className="flex-shrink-0 flex items-center justify-between gap-2 px-5 py-3 border-t border-border/15 bg-background/95">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => onDelete(resource)}
-              className="h-8 px-3 text-xs text-muted-foreground hover:text-destructive hover:bg-destructive/10"
-            >
-              <Trash2 size={11} />
-              <span>回收</span>
-            </Button>
+          {/* Footer — primary CTA only; deletion lives in the resource
+              card's hover menu in the library list. */}
+          <div className="flex-shrink-0 flex items-center justify-end gap-2 px-5 py-3 border-t border-border/15 bg-background/95">
             <Button
               variant="default"
               size="sm"

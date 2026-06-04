@@ -65,12 +65,10 @@ function CherryStudioInner() {
   const [newTabSearch, setNewTabSearch] = useState('');
   const [newTabManageMode, setNewTabManageMode] = useState(false);
   const [searchDialogOpen, setSearchDialogOpen] = useState(false);
-  // Library is intentionally NOT hidden — it's now the home of custom
-  // resource management (assistants / agents / skills / prompts / etc.)
-  // after main moved "管理我的资源" out of the Market page. Without a
-  // visible Library entry in the sidebar, users have no way to reach
-  // their resources and the recycle-bin delete flow is unreachable.
-  const [hiddenApps, setHiddenApps] = useState<Set<string>>(new Set(['explore', 'knowledge', 'file', 'code', 'note', 'extensions']));
+  // Library is hidden from the sidebar — reached via the "我的" button
+  // in the Market page top-bar instead, so resource management lives one
+  // click in from the market rather than as a separate top-level entry.
+  const [hiddenApps, setHiddenApps] = useState<Set<string>>(new Set(['explore', 'library', 'knowledge', 'file', 'code', 'note', 'extensions']));
   const [appOrder, setAppOrder] = useState<string[]>(() => dialogAppIconsWithAgents.map(a => a.id));
 
   // Runtime-pinned HTML artifacts (from ArtifactViewer's "Pin 到工作台").
@@ -163,6 +161,10 @@ function CherryStudioInner() {
       setLibraryReturnTo(createType === 'assistant' ? 'chat' : 'agent');
     }
     navigateToMenuTab('library');
+  }, [tabs]);
+
+  const handleNavigateToMarket = useCallback(() => {
+    navigateToMenuTab('market');
   }, [tabs]);
 
   const handleLibraryReturn = useCallback(() => {
@@ -395,6 +397,7 @@ function CherryStudioInner() {
     editAssistantInLibrary: handleEditAssistantInLibrary,
     navigateToKnowledge: handleNavigateToKnowledge,
     navigateToLibrary: handleNavigateToLibrary,
+    navigateToMarket: handleNavigateToMarket,
     libraryReturn: handleLibraryReturn,
     changeTabTitle: handleTabTitleChange,
     openSettings: (section?: string) => { setSettingsInitialSection(section); setSettingsOpen(true); },
@@ -413,7 +416,7 @@ function CherryStudioInner() {
     sidebarArtifacts,
   }), [
     handleOpenMiniApp, handlePinTab, handleEditAssistantInLibrary,
-    handleNavigateToKnowledge, handleNavigateToLibrary, handleLibraryReturn,
+    handleNavigateToKnowledge, handleNavigateToLibrary, handleNavigateToMarket, handleLibraryReturn,
     handleTabTitleChange, handleDialogCreateTab,
     pinToSidebar, unpinFromSidebar, openLaunchpad, removeFromLaunchpad,
     libraryEditResourceId, libraryCreateType, removedFromLaunchpad,

@@ -147,6 +147,15 @@ export interface MessageMetadata {
   processJson?: string;
 }
 
+// --- Generated Videos ---
+export interface VideoClip {
+  url: string;
+  poster?: string;
+  title?: string;
+  duration?: string;
+  resolution?: string;
+}
+
 // --- Parallel Responses (Assistant) ---
 export interface ParallelResponse {
   id: string;
@@ -215,6 +224,7 @@ export interface Message {
   searchResults?: SearchResultItem[];
   ragInfo?: RAGInfo;
   images?: string[];
+  videos?: VideoClip[];
   codeBlock?: { language: string; code: string };
   mermaidCode?: string;
   parallelResponses?: ParallelResponse[];

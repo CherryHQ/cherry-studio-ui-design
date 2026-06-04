@@ -12,6 +12,7 @@ import { Button, DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, Dropdow
 import { motion, AnimatePresence } from 'motion/react';
 import type { AgentChatMessage } from '@/app/types/agent';
 import { GenUIButtons, GenUISelection, GenUIConfirmation } from './GenerativeUI';
+import { VideoGallery } from '@/app/components/shared/Chat/components/MessageComponents';
 
 // Re-export for backward compatibility
 
@@ -535,9 +536,13 @@ export function UserMessage({ msg }: { msg: AgentChatMessage }) {
       initial={{ opacity: 0, y: 4 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.15 }}
-      className="flex justify-end"
+      className="flex justify-end min-w-0 max-w-full"
+      style={{ width: '100%' }}
     >
-      <div className="max-w-[85%] px-3.5 py-2.5 rounded-[var(--radius-button)] rounded-br-[var(--radius-dot)] bg-muted/50 text-foreground text-xs leading-[1.65]">
+      <div
+        className="max-w-[85%] min-w-0 px-3.5 py-2.5 rounded-[var(--radius-button)] rounded-br-[var(--radius-dot)] bg-muted/50 text-foreground text-xs leading-[1.65] whitespace-pre-wrap"
+        style={{ wordBreak: 'break-word', overflowWrap: 'anywhere' }}
+      >
         {msg.content}
       </div>
     </motion.div>
@@ -683,6 +688,7 @@ export function AgentMessageGroup({ msgs, onResolve, onAvatarClick, onOpenArtifa
             className="text-xs text-foreground leading-[1.7] py-1 px-1"
           >
             {msg.content}
+            {msg.videos && msg.videos.length > 0 && <VideoGallery videos={msg.videos} />}
           </motion.div>
         ))}
 
