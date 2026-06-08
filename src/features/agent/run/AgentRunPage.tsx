@@ -28,9 +28,12 @@ import { ChatPanel } from './ChatPanel';
 import { SaveAsSkillDialog } from './SaveAsSkillDialog';
 import { SaveAsSkillCallout } from './SaveAsSkillCallout';
 import { SkillJobStatusChip } from './SkillJobStatusChip';
+import { StarterCardsCarousel } from '@/app/components/shared/StarterCardsCarousel';
+import { applyMarkdownRevisions, applyHtmlRevisions } from './annotations/applyRevisions';
+import { AnnotationAttachments } from './annotations/AnnotationAttachments';
 import { useActiveSkillJob } from '@/app/stores/skillJobStore';
 import { WorkflowPanel } from './WorkflowPanel';
-import type { AgentChatMessage, AgentSession, AgentSessionData } from '@/app/types/agent';
+import type { AgentChatMessage, AgentSession, AgentSessionData, Annotation, AnnotationAnchor, AnnotationBatch, ArtifactVersion } from '@/app/types/agent';
 import { SessionHistoryPage, type SessionDisplayMode } from './SessionHistoryPage';
 import { HistorySidebar } from '@/app/components/shared/HistorySidebar';
 import { CreateEntityDialog } from '@/app/components/shared/CreateEntityDialog';
@@ -317,9 +320,10 @@ function AgentPicker({
 // Compact Input Bar — used when artifact is fullscreen-maximized
 // ===========================
 
-function CompactInputBar({ onSendMessage, agentName, headerControls }: { onSendMessage: (text: string) => void; agentName?: string; headerControls?: React.ReactNode }) {
+function CompactInputBar({ onSendMessage, agentName, headerControls, composerAttachments }: { onSendMessage: (text: string) => void; agentName?: string; headerControls?: React.ReactNode; composerAttachments?: React.ReactNode }) {
   return (
-    <div className="flex-shrink-0 px-3 pb-3 pt-1.5">
+    <div className="flex-shrink-0 px-3 pb-3 pt-1.5 flex flex-col gap-1.5">
+      {composerAttachments}
       <CodexStyleInput onSendMessage={onSendMessage} placeholder={`继续与 ${agentName || '智能体'} 对话...`} headerControls={headerControls} />
     </div>
   );
@@ -361,12 +365,16 @@ const CSI_MENTIONS: { id: string; label: string; desc: string; icon: React.Compo
   { id: 'mcp-search', label: 'web-search', desc: 'MCP', icon: Globe },
 ];
 
-function CodexStyleInput({ onSendMessage, autoFocus = false, placeholder, headerControls }: {
+function CodexStyleInput({ onSendMessage, autoFocus = false, placeholder, headerControls, prefill, prefillNonce }: {
   onSendMessage: (text: string) => void;
   autoFocus?: boolean;
   placeholder?: string;
   /** Same as ChatPanel.headerControls — agent + model pickers, etc. */
   headerControls?: React.ReactNode;
+  /** External prompt to pre-fill into the textarea (e.g. from starter cards). */
+  prefill?: string;
+  /** Bump this whenever a new prefill should be applied, even if string is identical. */
+  prefillNonce?: number;
 }) {
   const [input, setInput] = useState('');
   const [activeMode, setActiveMode] = useState('normal');
@@ -385,6 +393,20 @@ function CodexStyleInput({ onSendMessage, autoFocus = false, placeholder, header
   const [showMention, setShowMention] = useState(false);
   const [projectQuery, setProjectQuery] = useState('');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    if (prefillNonce === undefined || !prefill) return;
+    setInput(prefill);
+    const ta = textareaRef.current;
+    if (ta) {
+      ta.style.height = 'auto';
+      ta.style.height = Math.min(ta.scrollHeight, 220) + 'px';
+      ta.focus();
+      const pos = prefill.length;
+      try { ta.setSelectionRange(pos, pos); } catch { /* noop */ }
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [prefillNonce]);
 
   const currentProject = NEW_PROJECTS.find(p => p.id === activeProject) ?? null;
   const filteredProjects = NEW_PROJECTS.filter(p => !projectQuery || p.label.toLowerCase().includes(projectQuery.toLowerCase()));
@@ -790,11 +812,17 @@ function CodexStyleInput({ onSendMessage, autoFocus = false, placeholder, header
   );
 }
 
-function NewSessionEmpty({ onSendMessage, agentName, headerControls }: { onSendMessage: (text: string) => void; agentName?: string; headerControls?: React.ReactNode }) {
+function NewSessionEmpty({ onSendMessage, agentName, headerControls, composerAttachments }: { onSendMessage: (text: string) => void; agentName?: string; headerControls?: React.ReactNode; composerAttachments?: React.ReactNode }) {
+  const [prefill, setPrefill] = useState<string>('');
+  const [prefillNonce, setPrefillNonce] = useState(0);
+  const handlePickPrompt = (p: string) => {
+    setPrefill(p);
+    setPrefillNonce(n => n + 1);
+  };
   return (
     <div className="flex flex-col h-full w-full">
       {/* Centered empty state */}
-      <div className="flex-1 flex flex-col items-center justify-center">
+      <div className="flex-1 flex flex-col items-center justify-center px-4">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}
           className="flex flex-col items-center max-w-[360px] w-full">
           <div className="w-14 h-14 rounded-2xl bg-gradient-to-b from-accent/60 to-accent/30 border border-border/30 flex items-center justify-center mb-5">
@@ -805,11 +833,26 @@ function NewSessionEmpty({ onSendMessage, agentName, headerControls }: { onSendM
             向 {agentName || '智能体'} 提问，支持生成文章、代码和可视化内容
           </p>
         </motion.div>
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.12 }}
+          className="w-full mt-8"
+        >
+          <StarterCardsCarousel surface="agent" onPickPrompt={handlePickPrompt} />
+        </motion.div>
       </div>
 
       {/* Input bar at bottom */}
-      <div className="flex-shrink-0 px-4 pb-3 pt-2">
-        <CodexStyleInput onSendMessage={onSendMessage} autoFocus headerControls={headerControls} />
+      <div className="flex-shrink-0 px-4 pb-3 pt-2 flex flex-col gap-1.5">
+        {composerAttachments}
+        <CodexStyleInput
+          onSendMessage={onSendMessage}
+          autoFocus
+          headerControls={headerControls}
+          prefill={prefill}
+          prefillNonce={prefillNonce}
+        />
       </div>
     </div>
   );
@@ -1437,6 +1480,31 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
   // task completion; once dismissed we don't nag again for the session.
   const [skillCalloutDismissed, setSkillCalloutDismissed] = useState<Set<string>>(() => new Set());
 
+  // ----- Annotations on the current artifact (session-local + ephemeral) -----
+  // Per cherry-studio#15607: users can pin comments to text spans / elements
+  // on the most recent HTML or Markdown artifact, then send them as one
+  // structured revision request. State is keyed by `${sessionId}:${version}`
+  // so a v2 artifact starts fresh and v1 (now superseded) becomes read-only.
+  const [annotationsBySession, setAnnotationsBySession] = useState<Record<string, Annotation[]>>({});
+  const [annotationsEnabled, setAnnotationsEnabled] = useState(false);
+  // version bump per session whenever a v2 lands; if the session's data
+  // already has new content the local override below also tracks updated MD.
+  const [artifactVersionBySession, setArtifactVersionBySession] = useState<Record<string, number>>({});
+  // Artifact state — one logical artifact has up to three synchronized
+  // representations (default deliverable / Markdown scratchpad / HTML
+  // scratchpad). Every annotation batch produces a new version with ALL
+  // representations updated, so switching versions keeps every view in
+  // sync. Picking an alternate chip just changes which representation is
+  // shown; the user can then annotate it and the changes propagate back
+  // to all forms.
+  const [localArtifactBySession, setLocalArtifactBySession] = useState<Record<string, { markdownContent?: string; previewHtml?: string }>>({});
+  const [activeAlternateBySession, setActiveAlternateBySession] = useState<Record<string, { kind: 'md' | 'html'; markdownContent?: string; previewHtml?: string }>>({});
+  // Annotation-driven revision history per session. v1 is the original
+  // (seeded lazily on first send), each subsequent batch produces a new
+  // entry. User can scroll back via the artifact toolbar version dropdown.
+  const [versionHistoryBySession, setVersionHistoryBySession] = useState<Record<string, ArtifactVersion[]>>({});
+  const [selectedVersionBySession, setSelectedVersionBySession] = useState<Record<string, string>>({});
+
   const sessionData: AgentSessionData = useMemo(() => {
     if (!activeSessionId) return EMPTY_SESSION_DATA;
     return SESSION_DATA_MAP[activeSessionId] || EMPTY_SESSION_DATA;
@@ -1455,22 +1523,293 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
 
   const fileContent = selectedFile ? (sessionData.fileContents[selectedFile] || null) : null;
 
+  // Compute current artifact view.
+  const sid = activeSessionId || '';
+  const activeAlternate = activeAlternateBySession[sid];
+  const localOverride = localArtifactBySession[sid];
+  const versionHistory = versionHistoryBySession[sid];
+  const selectedVersionId = selectedVersionBySession[sid];
+  const selectedVersion = versionHistory?.find(v => v.id === selectedVersionId);
+  const latestVersion = versionHistory?.[versionHistory.length - 1];
+  // "Effective version" = selected version if any, else the latest snapshot
+  // (or undefined when no revision has happened yet — we then fall through
+  // to live state / session mock).
+  const effectiveVersion = selectedVersion ?? latestVersion;
+  const viewingOldVersion = !!selectedVersionId && selectedVersionId !== latestVersion?.id;
+
+  // Default deliverable content at the effective version (falls back to
+  // local override and finally to the session mock).
+  const deliverableMarkdown =
+    effectiveVersion?.defaultMarkdownContent ?? localOverride?.markdownContent ?? sessionData.markdownContent;
+  const deliverablePreviewHtml =
+    effectiveVersion?.defaultPreviewHtml ?? localOverride?.previewHtml ?? sessionData.previewHtml;
+
+  // Alternate scratchpad contents at the effective version (per kind). The
+  // chip selection (activeAlternate.kind) decides which one is currently
+  // being shown; both stay in state so the other is preserved if user
+  // switches back.
+  const altMarkdown = effectiveVersion?.altMarkdownContent ?? (activeAlternate?.kind === 'md' ? activeAlternate.markdownContent : undefined);
+  const altPreviewHtml = effectiveVersion?.altPreviewHtml ?? (activeAlternate?.kind === 'html' ? activeAlternate.previewHtml : undefined);
+
+  // What the viewer actually shows: alt content when alt-kind is active;
+  // deliverable otherwise.
+  const currentMarkdown = activeAlternate?.kind === 'md' ? altMarkdown : deliverableMarkdown;
+  const currentPreviewHtml = activeAlternate?.kind === 'html' ? altPreviewHtml : deliverablePreviewHtml;
+  const currentArtifactName = sessionData.artifactName;
+  // Annotation availability: alternate scratchpads are always annotatable;
+  // when on the deliverable, defer to the session's flag. Older versions
+  // are read-only per spec (no new annotations on superseded artifacts).
+  const currentAnnotationsAvailable = !viewingOldVersion && (!!activeAlternate || (sessionData.defaultArtifactAnnotatable ?? true));
+  const currentAnnotKey = `${activeSessionId || ''}:${artifactVersionBySession[activeSessionId || ''] ?? 0}`;
+  const currentAnnotations = annotationsBySession[currentAnnotKey] ?? [];
+
+  const handleAddAnnotation = useCallback((anchor: AnnotationAnchor, comment: string) => {
+    const key = currentAnnotKey;
+    const newAnnot: Annotation = {
+      id: `annot-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+      anchor,
+      comment,
+      createdAt: Date.now(),
+    };
+    setAnnotationsBySession(prev => ({ ...prev, [key]: [...(prev[key] ?? []), newAnnot] }));
+  }, [currentAnnotKey]);
+
+  const handleDeleteAnnotation = useCallback((id: string) => {
+    const key = currentAnnotKey;
+    setAnnotationsBySession(prev => ({
+      ...prev,
+      [key]: (prev[key] ?? []).filter(a => a.id !== id),
+    }));
+  }, [currentAnnotKey]);
+
+  const handleEditAnnotation = useCallback((id: string, comment: string) => {
+    const key = currentAnnotKey;
+    setAnnotationsBySession(prev => ({
+      ...prev,
+      [key]: (prev[key] ?? []).map(a => (a.id === id ? { ...a, comment } : a)),
+    }));
+  }, [currentAnnotKey]);
+
+  const dispatchAnnotationBatch = useCallback((sessionId: string, batch: Annotation[], extraInstruction?: string) => {
+    if (batch.length === 0) return;
+    const ts = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
+    // Annotation always targets the DELIVERABLE — even when the user is
+    // marking up an alternate scratchpad, the agent revises the underlying
+    // deliverable and produces a new version of it.
+    const deliverableKind: 'html' | 'markdown' = deliverableMarkdown ? 'markdown' : 'html';
+    const artifactKind = deliverableKind;
+    const requestBatch: AnnotationBatch = {
+      artifactKind,
+      artifactName: currentArtifactName,
+      annotations: batch,
+      extraInstruction,
+    };
+    const userMsg: AgentChatMessage = {
+      id: `am-${Date.now()}`,
+      role: 'user',
+      annotationRequest: requestBatch,
+      timestamp: ts,
+    };
+    setLocalMessages(prev => ({
+      ...prev,
+      [sessionId]: [...(prev[sessionId] ?? sessionData.messages), userMsg],
+    }));
+    // Simulated agent reply: a thinking bubble, then a "已更新" message + v2 artifact.
+    setTimeout(() => {
+      setLocalMessages(prev => ({
+        ...prev,
+        [sessionId]: [...(prev[sessionId] ?? []), {
+          id: `am-${Date.now() + 1}`,
+          role: 'agent',
+          thinking: `根据 ${batch.length} 处批注调整 ${artifactKind === 'markdown' ? '文档' : '页面'} 内容…`,
+          timestamp: ts,
+        }],
+      }));
+    }, 500);
+    setTimeout(() => {
+      setArtifactVersionBySession(prev => ({ ...prev, [sessionId]: (prev[sessionId] ?? 0) + 1 }));
+      // Apply revisions to *every* representation that currently has content.
+      const nextDeliverableMd = deliverableMarkdown ? applyMarkdownRevisions(deliverableMarkdown, batch) : undefined;
+      const nextDeliverableHtml = deliverablePreviewHtml ? applyHtmlRevisions(deliverablePreviewHtml, batch) : undefined;
+      const nextAltMd = altMarkdown ? applyMarkdownRevisions(altMarkdown, batch) : undefined;
+      const nextAltHtml = altPreviewHtml ? applyHtmlRevisions(altPreviewHtml, batch) : undefined;
+
+      // Update live state (so when the user is NOT viewing a specific version,
+      // the fallback content reflects the latest).
+      if (nextDeliverableMd || nextDeliverableHtml) {
+        setLocalArtifactBySession(prev => ({
+          ...prev,
+          [sessionId]: {
+            markdownContent: nextDeliverableMd ?? prev[sessionId]?.markdownContent,
+            previewHtml: nextDeliverableHtml ?? prev[sessionId]?.previewHtml,
+          },
+        }));
+      }
+      if (nextAltMd || nextAltHtml) {
+        setActiveAlternateBySession(prev => {
+          const prevEntry = prev[sessionId];
+          if (!prevEntry) return prev;
+          return {
+            ...prev,
+            [sessionId]: {
+              kind: prevEntry.kind,
+              markdownContent: nextAltMd ?? prevEntry.markdownContent,
+              previewHtml: nextAltHtml ?? prevEntry.previewHtml,
+            },
+          };
+        });
+      }
+
+      // Push a new version snapshot containing ALL representations so
+      // hopping between versions keeps every view in sync.
+      setVersionHistoryBySession(prev => {
+        const existing = prev[sessionId] ?? [];
+        const list = existing.length === 0
+          ? [{
+              id: `${sessionId}-v1`,
+              label: 'v1',
+              createdAt: Date.now() - 5_000,
+              defaultMarkdownContent: deliverableMarkdown,
+              defaultPreviewHtml: deliverablePreviewHtml,
+              altMarkdownContent: altMarkdown,
+              altPreviewHtml: altPreviewHtml,
+              summary: '原始版本',
+            }]
+          : [...existing];
+        const nextLabel = `v${list.length + 1}`;
+        list.push({
+          id: `${sessionId}-${nextLabel}-${Date.now()}`,
+          label: nextLabel,
+          createdAt: Date.now(),
+          defaultMarkdownContent: nextDeliverableMd ?? deliverableMarkdown,
+          defaultPreviewHtml: nextDeliverableHtml ?? deliverablePreviewHtml,
+          altMarkdownContent: nextAltMd ?? altMarkdown,
+          altPreviewHtml: nextAltHtml ?? altPreviewHtml,
+          summary: `${batch.length} 处批注 · ${batch[0]?.comment ? batch[0].comment.slice(0, 24) : ''}${batch.length > 1 ? ' …' : ''}`,
+        });
+        return { ...prev, [sessionId]: list };
+      });
+      // Jump to the latest version (clear any "browsing history" selection).
+      setSelectedVersionBySession(prev => { const next = { ...prev }; delete next[sessionId]; return next; });
+
+      const deliverableLabel = currentArtifactName || (deliverableKind === 'markdown' ? '文档' : 'PDF');
+      setLocalMessages(prev => ({
+        ...prev,
+        [sessionId]: [...(prev[sessionId] ?? []), {
+          id: `am-${Date.now() + 2}`,
+          role: 'agent',
+          content: `已根据 ${batch.length} 处批注更新 ${deliverableLabel}，PDF / Markdown / HTML 三种视图均已同步到新版本（可在右上角版本历史回看任意版本）。`,
+          timestamp: ts,
+        }],
+      }));
+    }, 1400);
+  }, [sessionData.messages, deliverableMarkdown, deliverablePreviewHtml, altMarkdown, altPreviewHtml, currentArtifactName]);
+
+  const handleSendOneAnnotation = useCallback((id: string) => {
+    const sid = activeSessionId;
+    if (!sid) return;
+    const key = currentAnnotKey;
+    const list = annotationsBySession[key] ?? [];
+    const target = list.find(a => a.id === id);
+    if (!target) return;
+    dispatchAnnotationBatch(sid, [target]);
+    setAnnotationsBySession(prev => ({ ...prev, [key]: (prev[key] ?? []).filter(a => a.id !== id) }));
+  }, [activeSessionId, annotationsBySession, currentAnnotKey, dispatchAnnotationBatch]);
+
+  const handleSendAllAnnotations = useCallback(() => {
+    const sid = activeSessionId;
+    if (!sid) return;
+    const key = currentAnnotKey;
+    const list = annotationsBySession[key] ?? [];
+    if (list.length === 0) return;
+    dispatchAnnotationBatch(sid, list);
+    setAnnotationsBySession(prev => ({ ...prev, [key]: [] }));
+    setAnnotationsEnabled(false);
+  }, [activeSessionId, annotationsBySession, currentAnnotKey, dispatchAnnotationBatch]);
+
+  const handleToggleAnnotations = useCallback(() => {
+    setAnnotationsEnabled(v => !v);
+  }, []);
+
+  // Pick an "annotatable source" the agent surfaced in its reply (Markdown
+  // or HTML alternate for a non-annotatable deliverable like a PDF). This
+  // sets a transient "scratchpad" view on top of the deliverable; the
+  // underlying deliverable + its version history are untouched.
+  const handlePickAlternateArtifact = useCallback((alt: { kind: 'markdown' | 'html'; label: string; name?: string; markdownContent?: string; previewHtml?: string }) => {
+    const sid = activeSessionId;
+    if (!sid) return;
+    setActiveAlternateBySession(prev => {
+      const prevEntry = prev[sid];
+      if (alt.kind === 'markdown') {
+        return {
+          ...prev,
+          [sid]: {
+            kind: 'md' as const,
+            markdownContent: alt.markdownContent ?? '',
+            previewHtml: prevEntry?.previewHtml,
+          },
+        };
+      }
+      return {
+        ...prev,
+        [sid]: {
+          kind: 'html' as const,
+          previewHtml: alt.previewHtml ?? '',
+          markdownContent: prevEntry?.markdownContent,
+        },
+      };
+    });
+    // Jump to the latest deliverable version when entering a scratchpad —
+    // editing an older version is read-only per spec.
+    setSelectedVersionBySession(prev => { const next = { ...prev }; delete next[sid]; return next; });
+    setShowPreview(true);
+    setAnnotationsEnabled(false);
+  }, [activeSessionId]);
+
+  // "直接发送" from the comment popover — bypass the composer batch and
+  // dispatch this single annotation immediately.
+  const handleAddAndSendAnnotation = useCallback((anchor: AnnotationAnchor, comment: string) => {
+    const sid = activeSessionId;
+    if (!sid) return;
+    const newAnnot: Annotation = {
+      id: `annot-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+      anchor,
+      comment,
+      createdAt: Date.now(),
+    };
+    dispatchAnnotationBatch(sid, [newAnnot]);
+  }, [activeSessionId, dispatchAnnotationBatch]);
+
   const handleSelectFile = useCallback((path: string) => {
     setSelectedFile(path);
   }, []);
 
-  // Open an artifact in the right-side viewer (called from inline artifact card clicks)
+  // Open an artifact in the right-side viewer (called from inline artifact
+  // card clicks). Always clears the alternate scratchpad so the user is
+  // taken back to the actual deliverable view.
   const handleOpenArtifact = useCallback((filePath: string) => {
+    const sid = activeSessionId;
     setSelectedFile(filePath);
     setShowPreview(true);
-  }, []);
+    if (sid) {
+      setActiveAlternateBySession(prev => {
+        if (!prev[sid]) return prev;
+        const next = { ...prev };
+        delete next[sid];
+        return next;
+      });
+    }
+  }, [activeSessionId]);
 
   // Auto-open the artifact viewer when the current session has a previewHtml
-  // (i.e. produced visible deliverable). Runs only when session changes.
+  // or markdownContent (i.e. produced visible deliverable). Runs only when
+  // session changes.
   useEffect(() => {
-    if (sessionData.previewHtml && !showPreview) {
+    if ((sessionData.previewHtml || sessionData.markdownContent) && !showPreview) {
       setShowPreview(true);
     }
+    // Reset annotation mode when switching sessions.
+    setAnnotationsEnabled(false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeSessionId]);
 
@@ -1560,6 +1899,17 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
   }, []);
 
   const handleSendMessage = useCallback((text: string) => {
+    // If the user has pending artifact annotations on the current session,
+    // hijack the send and dispatch them as one annotation-revision batch
+    // (with the typed text as an optional extra instruction). This makes the
+    // composer Send button the natural "send my edits + my note" affordance.
+    const sid = activeSessionId;
+    if (sid && currentAnnotations.length > 0) {
+      dispatchAnnotationBatch(sid, currentAnnotations, text.trim() || undefined);
+      setAnnotationsBySession(prev => ({ ...prev, [currentAnnotKey]: [] }));
+      setAnnotationsEnabled(false);
+      return;
+    }
     const ts = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
 
     // Auto-create session if none active
@@ -1649,6 +1999,15 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
       </div>
     );
   }
+
+  // Annotation chips strip — rendered above whichever composer is currently
+  // shown. Empty when there are no pending annotations.
+  const composerAttachments = currentAnnotations.length > 0 ? (
+    <AnnotationAttachments
+      annotations={currentAnnotations}
+      onRemove={handleDeleteAnnotation}
+    />
+  ) : null;
 
   // Agent + Model picker pair — moved out of the page header into the
   // composer toolbar. Built once here so it stays in scope of state.
@@ -1808,20 +2167,36 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
               fileContent={fileContent}
               fileName={selectedFile}
               previewUrl={null}
-              hasArtifact={!!sessionData.previewHtml || !!fileContent}
-              previewHtml={sessionData.previewHtml}
+              hasArtifact={!!currentPreviewHtml || !!currentMarkdown || !!fileContent}
+              previewHtml={currentPreviewHtml}
+              markdownContent={currentMarkdown}
+              artifactName={currentArtifactName}
               showExplorer={showExplorer}
               onToggleExplorer={() => setShowExplorer(!showExplorer)}
               showPreview={showPreview}
               onTogglePreview={() => { setShowPreview(false); setPreviewMaximized(false); }}
               maximized={previewMaximized}
               onToggleMaximize={() => setPreviewMaximized(!previewMaximized)}
+              annotations={currentAnnotations}
+              annotationsEnabled={annotationsEnabled}
+              annotationsReadOnly={false}
+              annotationsAvailable={currentAnnotationsAvailable}
+              versionHistory={versionHistory}
+              activeVersionId={selectedVersionId ?? versionHistory?.[versionHistory.length - 1]?.id}
+              onSelectVersion={(vid) => setSelectedVersionBySession(prev => ({ ...prev, [sid]: vid }))}
+              onToggleAnnotations={handleToggleAnnotations}
+              onAddAnnotation={handleAddAnnotation}
+              onDeleteAnnotation={handleDeleteAnnotation}
+              onEditAnnotation={handleEditAnnotation}
+              onSendOneAnnotation={handleSendOneAnnotation}
+              onSendAllAnnotations={handleSendAllAnnotations}
+              onAddAndSendAnnotation={handleAddAndSendAnnotation}
             />
           </div>
         </motion.div>
 
         {/* Compact input bar at the bottom */}
-        <CompactInputBar onSendMessage={handleSendMessage} agentName={selectedAgent.name} headerControls={composerHeaderControls} />
+        <CompactInputBar onSendMessage={handleSendMessage} agentName={selectedAgent.name} headerControls={composerHeaderControls} composerAttachments={composerAttachments} />
 
         {/* Agent configuration dialog — same modal used in LibraryPage. */}
         <ResourceConfigDialog
@@ -1892,7 +2267,7 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
       <div className="flex flex-1 min-h-0 pl-2 min-w-0">
         <div className="min-h-0 h-full flex-1 min-w-0">
           {!hasMessages ? (
-            <NewSessionEmpty onSendMessage={handleSendMessage} agentName={selectedAgent.name} headerControls={composerHeaderControls} />
+            <NewSessionEmpty onSendMessage={handleSendMessage} agentName={selectedAgent.name} headerControls={composerHeaderControls} composerAttachments={composerAttachments} />
           ) : (
             <ChatPanel
               messages={messages}
@@ -1901,7 +2276,9 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
               onResolveUI={handleResolveUI}
               onAvatarClick={() => setShowAgentInfo(true)}
               onOpenArtifact={handleOpenArtifact}
+              onPickAlternateArtifact={handlePickAlternateArtifact}
               headerControls={composerHeaderControls}
+              composerAttachments={composerAttachments}
               taskCompleteCallout={(() => {
                 // Show only after a workflow run actually finished or the
                 // user racked up a meaningful conversation, and only
@@ -1970,14 +2347,30 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
                 fileContent={fileContent}
                 fileName={selectedFile}
                 previewUrl={null}
-                hasArtifact={!!sessionData.previewHtml || !!fileContent}
-                previewHtml={sessionData.previewHtml}
+                hasArtifact={!!currentPreviewHtml || !!currentMarkdown || !!fileContent}
+                previewHtml={currentPreviewHtml}
+                markdownContent={currentMarkdown}
+                artifactName={currentArtifactName}
                 showExplorer={showExplorer}
                 onToggleExplorer={() => setShowExplorer(!showExplorer)}
                 showPreview={showPreview}
                 onTogglePreview={() => { setShowPreview(false); setPreviewMaximized(false); }}
                 maximized={previewMaximized}
                 onToggleMaximize={() => setPreviewMaximized(!previewMaximized)}
+                annotations={currentAnnotations}
+                annotationsEnabled={annotationsEnabled}
+                annotationsReadOnly={false}
+              annotationsAvailable={currentAnnotationsAvailable}
+              versionHistory={versionHistory}
+              activeVersionId={selectedVersionId ?? versionHistory?.[versionHistory.length - 1]?.id}
+              onSelectVersion={(vid) => setSelectedVersionBySession(prev => ({ ...prev, [sid]: vid }))}
+                onToggleAnnotations={handleToggleAnnotations}
+                onAddAnnotation={handleAddAnnotation}
+                onDeleteAnnotation={handleDeleteAnnotation}
+                onEditAnnotation={handleEditAnnotation}
+                onSendOneAnnotation={handleSendOneAnnotation}
+                onSendAllAnnotations={handleSendAllAnnotations}
+                onAddAndSendAnnotation={handleAddAndSendAnnotation}
               />
             </div>
           </motion.div>

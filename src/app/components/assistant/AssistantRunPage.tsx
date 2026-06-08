@@ -22,6 +22,7 @@ import { getFileIcon } from '@/app/utils/fileIcons';
 import { ChatInterface } from '@/app/components/shared/Chat/ChatInterface';
 import { ThinkingBlock, InlineCodeBlock, MermaidBlock, ImageGallery } from '@/app/components/shared/Chat/components/MessageComponents';
 import { AttachmentList } from '@/app/components/shared/Chat/AttachmentList';
+import { StarterCardsCarousel } from '@/app/components/shared/StarterCardsCarousel';
 import { Tooltip } from '@/app/components/Tooltip';
 import {
   Button, Textarea, EmptyState, SearchInput, Typography,
@@ -2352,7 +2353,7 @@ export function AssistantRunPage() {
             hasMessages={hasMessages}
             messageListClassName="px-5"
             emptyState={
-              <div className="flex-1 flex flex-col items-center justify-center">
+              <div className="flex-1 flex flex-col items-center justify-center px-4">
                 <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}
                   className="flex flex-col items-center max-w-[360px] w-full">
                   <div className="w-14 h-14 rounded-2xl bg-gradient-to-b from-accent/60 to-accent/30 border border-border/30 flex items-center justify-center mb-5">
@@ -2360,8 +2361,22 @@ export function AssistantRunPage() {
                   </div>
                   <h2 className="text-sm text-foreground tracking-[-0.01em]">你好，有什么需要帮助的？</h2>
                   <p className="text-xs text-muted-foreground/60 text-center leading-[1.6] mt-1.5">
-                    向 {currentAssistant.name} 提问，支持生成文章、代码和可视化内���
+                    向 {currentAssistant.name} 提问，支持生成文章、代码和可视化内容
                   </p>
+                </motion.div>
+                <motion.div
+                  initial={{ opacity: 0, y: 16 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.4, delay: 0.12 }}
+                  className="w-full mt-8"
+                >
+                  <StarterCardsCarousel
+                    surface="chat"
+                    onPickPrompt={(p) => {
+                      setInput(p);
+                      composerRef.current?.setText(p);
+                    }}
+                  />
                 </motion.div>
               </div>
             }

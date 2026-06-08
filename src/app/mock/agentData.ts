@@ -1156,23 +1156,113 @@ const SESSION_6_PREVIEW = '<!DOCTYPE html>\n<html><head><meta charset="utf-8"><s
 // Showcase Sessions — rich artifact types (PDF / Markdown / Slides)
 // ===========================
 
-const SESSION_PDF_MESSAGES: AgentChatMessage[] = [
-  { id: 'pdf-m1', role: 'user', content: '帮我整理 Q4 用户行为分析报告，要 PDF 格式，包含数据图表和关键洞察。', timestamp: '15:10' },
-  { id: 'pdf-m2', role: 'agent', thinking: '需要从分析数据中提炼关键指标，按照标准报告格式生成 PDF：执行摘要、数据图表、关键发现、建议方案。', content: '我会生成一份结构化的 Q4 用户行为分析报告（PDF 格式），包含执行摘要、数据图表、关键发现和行动建议四个部分。', timestamp: '15:10' },
-  { id: 'pdf-m3', role: 'agent', toolCall: { name: 'query analytics: Q4 user behavior data', status: 'done', duration: '3.4s' }, content: '数据已提取：\n• 月活跃用户 (MAU): 124,800\n• 用户留存率：D1 68%, D7 42%, D30 28%\n• 平均会话时长：4分32秒\n• 转化漏斗：访问 → 注册 → 付费 = 100% → 18% → 3.2%\n• 内容偏好 TOP3: 教程类(42%), 案例分析(28%), 行业动态(18%)', timestamp: '15:11' },
-  { id: 'pdf-m4', role: 'agent', toolCall: { name: 'analyze trends: cohort retention', status: 'done', duration: '2.8s' }, content: 'Cohort 分析显示：\n• 新用户首日跳出率从 Q3 的 38% 降至 32% (改善 6pp)\n• D30 留存提升 4pp，主要来自付费用户群\n• 流失高峰在第 8-14 天，建议设计 D7 唤醒机制', timestamp: '15:12' },
-  { id: 'pdf-m5', role: 'agent', toolCall: { name: 'generate charts: 8 figures', status: 'done', duration: '4.5s' }, content: '已生成 8 个数据可视化图表：MAU 趋势、留存漏斗、Cohort 热力图、用户路径桑基图、行为偏好雷达图、转化率对比、流失曲线、收入构成。', timestamp: '15:13' },
-  { id: 'pdf-m6', role: 'agent', toolCall: { name: 'write reports/Q4-user-behavior-report.pdf', status: 'done', duration: '6.2s' }, content: 'PDF 报告已生成：18 页，包含 8 张图表、3 个数据表格、24 个关键指标。文件大小 2.4 MB。', timestamp: '15:14' },
-  { id: 'pdf-m7', role: 'agent', content: 'Q4 用户行为分析报告已完成。核心结论：\n\n**1. 用户规模稳健增长** — MAU 同比 +24%，环比 +8%\n**2. 留存改善显著** — D30 留存达 28%，超过行业均值 6pp\n**3. 付费转化是机会点** — 当前 3.2% 远低于头部水平 8%\n\n关键建议已在报告"行动方案"章节展开，包含 7 项可执行优化。', timestamp: '15:14' },
-];
+// Modern web-styled HTML version of the Q4 report — visually distinct from
+// the PDF-styled `SESSION_PDF_PREVIEW` so picking the "HTML 预览" alternate
+// is an obvious switch (cards / dashboard layout instead of printed page).
+const SESSION_PDF_REPORT_HTML = `<!DOCTYPE html>
+<html lang="zh"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, 'PingFang SC', system-ui, sans-serif; background: #fafafa; color: #111827; padding: 32px 28px 64px; }
+  .container { max-width: 880px; margin: 0 auto; }
+  .eyebrow { font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: #f59e0b; font-weight: 600; }
+  h1 { font-size: 30px; font-weight: 700; letter-spacing: -0.02em; margin: 6px 0 10px; line-height: 1.2; }
+  .meta { color: #6b7280; font-size: 13px; margin-bottom: 22px; }
+  h2 { font-size: 18px; font-weight: 600; letter-spacing: -0.01em; margin: 28px 0 12px; }
+  p { font-size: 14px; line-height: 1.75; color: #1f2937; }
+  .lead { font-size: 15px; line-height: 1.8; color: #1f2937; }
+  .lead strong { color: #b45309; background: #fef3c7; padding: 1px 5px; border-radius: 4px; }
+  .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin: 14px 0 6px; }
+  .stat { background: #fff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 14px 14px 12px; }
+  .stat .label { font-size: 11px; color: #6b7280; }
+  .stat .value { font-size: 22px; font-weight: 700; letter-spacing: -0.01em; margin-top: 4px; }
+  .stat .delta { font-size: 11px; color: #16a34a; margin-top: 2px; }
+  .stat .delta.down { color: #dc2626; }
+  ul { padding-left: 20px; }
+  ul li { font-size: 13.5px; line-height: 1.8; }
+  ul li strong { color: #111827; }
+  ol { padding-left: 22px; }
+  ol li { font-size: 13.5px; line-height: 1.85; margin-bottom: 4px; }
+  .callout { background: #fff7ed; border: 1px solid #fed7aa; border-left: 3px solid #f59e0b; border-radius: 10px; padding: 14px 16px; margin: 18px 0; font-size: 13px; color: #7c2d12; }
+  .footer { color: #9ca3af; font-size: 11.5px; margin-top: 28px; border-top: 1px solid #e5e7eb; padding-top: 14px; }
+</style>
+</head>
+<body>
+  <div class="container">
+    <div class="eyebrow">Cherry · Q4 2026</div>
+    <h1>Q4 用户行为分析报告</h1>
+    <div class="meta">报告周期：2025-10-01 — 2025-12-31 · 样本量 124,800</div>
 
-const SESSION_PDF_STEPS: WorkflowStep[] = [
-  { id: 'pdf-s1', label: '提取 Q4 用户行为数据', status: 'done' },
-  { id: 'pdf-s2', label: 'Cohort 留存分析', status: 'done' },
-  { id: 'pdf-s3', label: '生成数据可视化图表', status: 'done' },
-  { id: 'pdf-s4', label: '撰写报告正文与建议', status: 'done' },
-  { id: 'pdf-s5', label: '导出 PDF', status: 'done' },
-];
+    <h2>执行摘要</h2>
+    <p class="lead">本季度月活跃用户达 124,800，<strong>同比增长 24%</strong>，环比 8%。整体留存改善显著，D30 留存达 28%（高于行业均值 6pp）。<strong>付费转化是当前最大机会点</strong>，3.2% 的转化率与头部产品 8% 仍有较大差距。</p>
+
+    <h2>关键指标</h2>
+    <div class="grid">
+      <div class="stat"><div class="label">MAU</div><div class="value">124.8k</div><div class="delta">+24% YoY</div></div>
+      <div class="stat"><div class="label">D30 留存</div><div class="value">28%</div><div class="delta">+4pp QoQ</div></div>
+      <div class="stat"><div class="label">付费率</div><div class="value">3.2%</div><div class="delta down">−0.6pp QoQ</div></div>
+      <div class="stat"><div class="label">平均会话</div><div class="value">4m32s</div><div class="delta">+18s QoQ</div></div>
+    </div>
+
+    <h2>主要发现</h2>
+    <ul>
+      <li><strong>新用户首日跳出率从 38% 降至 32%</strong>，主要由 onboarding 改版贡献。</li>
+      <li><strong>D30 留存提升 4pp</strong>，付费用户群是关键拉动。</li>
+      <li><strong>流失高峰在第 8–14 天</strong>，需要设计 D7 唤醒机制。</li>
+      <li><strong>付费转化漏斗瓶颈在「注册 → 付费」</strong>，当前 17.8%，行业均值 25%+。</li>
+    </ul>
+
+    <div class="callout">关键决策建议：本季度优先重构付费漏斗（预计可拉动 0.8–1.2pp 付费率），其次启动 D7 唤醒推送实验。</div>
+
+    <h2>行动建议</h2>
+    <ol>
+      <li>启动 D7 唤醒推送实验（预期可挽留 8–12% 流失用户）。</li>
+      <li>优化首付价格梯度，引入年付折扣。</li>
+      <li>增加企业版试用入口，对接 CRM 跟进。</li>
+      <li>教程类内容产能扩 2x，对应 42% 用户偏好。</li>
+    </ol>
+
+    <div class="footer">数据来源：内部 BI（dash#23） · 制图工具：Looker · 撰写人：Cherry Agent</div>
+  </div>
+</body></html>`;
+
+// Markdown "source" version of the Q4 report — offered alongside the PDF
+// so the user can pin annotations on specific spans. Annotation only works
+// on Markdown / HTML, so when the agent produces a non-annotatable format
+// it surfaces these alternate representations in chat.
+const SESSION_PDF_REPORT_MD = `# Q4 用户行为分析报告
+
+报告周期：2025-10-01 至 2025-12-31 · 样本量 124,800
+
+## 执行摘要
+
+本季度月活跃用户达 124,800，同比增长 24%，环比 8%。整体留存改善显著，D30 留存达 28%（高于行业均值 6pp）。付费转化是当前最大机会点，3.2% 的转化率与头部产品 8% 仍有较大差距。
+
+## 关键指标变化
+
+- **MAU**：124.8k（同比 +24%）
+- **留存**：D1 68% / D7 42% / D30 28%
+- **平均会话**：4 分 32 秒（+18s QoQ）
+- **付费率**：3.2%（−0.6pp QoQ）
+
+## 主要发现
+
+1. **新用户首日跳出率从 38% 降至 32%**，主要由 onboarding 改版贡献。
+2. **D30 留存提升 4pp**，付费用户群是关键拉动。
+3. **流失高峰在第 8-14 天**，需要设计 D7 唤醒机制。
+4. **付费转化漏斗瓶颈在「注册 → 付费」**，当前 17.8%，行业均值 25%+。
+
+## 行动建议
+
+- 启动 D7 唤醒推送实验（预期可挽留 8-12% 流失用户）。
+- 优化首付价格梯度，引入年付折扣。
+- 增加企业版试用入口，对接 CRM 跟进。
+- 教程类内容产能扩 2x，对应 42% 用户偏好。
+
+---
+
+*数据来源：内部 BI（dash#23） · 制图工具：Looker · 撰写人：Cherry Agent*
+`;
 
 const SESSION_PDF_PREVIEW = `<!DOCTYPE html>
 <html lang="zh"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
@@ -1303,6 +1393,31 @@ const SESSION_PDF_PREVIEW = `<!DOCTYPE html>
 
 </body></html>`;
 
+// SESSION_PDF_MESSAGES is declared after SESSION_PDF_PREVIEW because one of
+// its messages embeds SESSION_PDF_PREVIEW as an "annotatable source"
+// alternate; if it lived above, that reference would hit a TDZ ReferenceError
+// at module load and the whole page would render blank.
+const SESSION_PDF_MESSAGES: AgentChatMessage[] = [
+  { id: 'pdf-m1', role: 'user', content: '帮我整理 Q4 用户行为分析报告，要 PDF 格式，包含数据图表和关键洞察。', timestamp: '15:10' },
+  { id: 'pdf-m2', role: 'agent', thinking: '需要从分析数据中提炼关键指标，按照标准报告格式生成 PDF：执行摘要、数据图表、关键发现、建议方案。', content: '我会生成一份结构化的 Q4 用户行为分析报告（PDF 格式），包含执行摘要、数据图表、关键发现和行动建议四个部分。', timestamp: '15:10' },
+  { id: 'pdf-m3', role: 'agent', toolCall: { name: 'query analytics: Q4 user behavior data', status: 'done', duration: '3.4s' }, content: '数据已提取：\n• 月活跃用户 (MAU): 124,800\n• 用户留存率：D1 68%, D7 42%, D30 28%\n• 平均会话时长：4分32秒\n• 转化漏斗：访问 → 注册 → 付费 = 100% → 18% → 3.2%\n• 内容偏好 TOP3: 教程类(42%), 案例分析(28%), 行业动态(18%)', timestamp: '15:11' },
+  { id: 'pdf-m4', role: 'agent', toolCall: { name: 'analyze trends: cohort retention', status: 'done', duration: '2.8s' }, content: 'Cohort 分析显示：\n• 新用户首日跳出率从 Q3 的 38% 降至 32% (改善 6pp)\n• D30 留存提升 4pp，主要来自付费用户群\n• 流失高峰在第 8-14 天，建议设计 D7 唤醒机制', timestamp: '15:12' },
+  { id: 'pdf-m5', role: 'agent', toolCall: { name: 'generate charts: 8 figures', status: 'done', duration: '4.5s' }, content: '已生成 8 个数据可视化图表：MAU 趋势、留存漏斗、Cohort 热力图、用户路径桑基图、行为偏好雷达图、转化率对比、流失曲线、收入构成。', timestamp: '15:13' },
+  { id: 'pdf-m6', role: 'agent', toolCall: { name: 'write reports/Q4-user-behavior-report.pdf', status: 'done', duration: '6.2s' }, content: 'PDF 报告已生成：18 页，包含 8 张图表、3 个数据表格、24 个关键指标。文件大小 2.4 MB。', timestamp: '15:14' },
+  { id: 'pdf-m7', role: 'agent', content: 'Q4 用户行为分析报告已完成。核心结论：\n\n**1. 用户规模稳健增长** — MAU 同比 +24%，环比 +8%\n**2. 留存改善显著** — D30 留存达 28%，超过行业均值 6pp\n**3. 付费转化是机会点** — 当前 3.2% 远低于头部水平 8%\n\n关键建议已在报告"行动方案"章节展开，包含 7 项可执行优化。\n\nPDF 不便于精确批注，也提供下面两种「可批注原稿」格式，可直接在右侧划词加批注后让我改：', timestamp: '15:14', alternateArtifacts: [
+    { kind: 'markdown', label: 'Markdown 草稿', name: 'Q4 报告.md', markdownContent: SESSION_PDF_REPORT_MD },
+    { kind: 'html', label: 'HTML 网页版', name: 'Q4 报告.html', previewHtml: SESSION_PDF_REPORT_HTML },
+  ] },
+];
+
+const SESSION_PDF_STEPS: WorkflowStep[] = [
+  { id: 'pdf-s1', label: '提取 Q4 用户行为数据', status: 'done' },
+  { id: 'pdf-s2', label: 'Cohort 留存分析', status: 'done' },
+  { id: 'pdf-s3', label: '生成数据可视化图表', status: 'done' },
+  { id: 'pdf-s4', label: '撰写报告正文与建议', status: 'done' },
+  { id: 'pdf-s5', label: '导出 PDF', status: 'done' },
+];
+
 const SESSION_MD_MESSAGES: AgentChatMessage[] = [
   { id: 'md-m1', role: 'user', content: '为我们的内部 SDK 生成一份完整的 API 文档，要支持自动目录、代码示例。', timestamp: '13:08' },
   { id: 'md-m2', role: 'agent', thinking: '需要扫描 SDK 源码、提取注释、生成结构化的 Markdown 文档。', content: '我会先扫描 SDK 的导出 API，然后基于 JSDoc / 类型注释生成包含目录、代码示例和参数表的 Markdown 文档。', timestamp: '13:09' },
@@ -1317,6 +1432,46 @@ const SESSION_MD_STEPS: WorkflowStep[] = [
   { id: 'md-s2', label: '提取 JSDoc 注释', status: 'done' },
   { id: 'md-s3', label: '生成 Markdown 文档', status: 'done' },
 ];
+
+// Markdown weekly report used for the in-message annotation demo
+// (cherry-studio#15607). Intentionally contains a few numbers / phrasings
+// that beg to be marked up so reviewers can try the annotation flow.
+const SESSION_MD_REPORT = `# Q3 产品周报 · 用户增长与商业化
+
+## 摘要
+
+> 这一周 Cherry Studio 的整体活跃度延续上扬，新功能上线带来的 retention 抬升明显。商业化侧，**Q3 营收同比增长 12%**，主要由企业版续费贡献；社区版渗透继续扩大但变现仍未启动。
+
+## 关键指标
+
+- **DAU**：本周日均 18.4w，环比 +6.8%。
+- **新增用户**：本周 +2.3w，环比 +12%。
+- **留存（D7）**：38.5% → 41.2%，环比 +2.7pp。
+- **付费率**：企业版试用→付费 24.1%，环比基本持平。
+
+## 本周进展
+
+1. **Agent 模块**：完成 Plan / Auto-Edit / Full-Auto 三档权限模式上线，灰度 12% 用户。
+2. **协作 IM**：群组共享与「分享到群组」打通；群内 artifact 命中率 18%。
+3. **Library**：技能/插件商店分页，新增市场 bundle 8 个。
+4. **Launchpad**：HTML artifact pin 到工作台，使用率第一周即占 9.2%。
+
+## 风险与决策点
+
+- **海外社区版增长放缓**：日本市场环比 -3.4%，需在 Q4 投入本地化与社区运营。
+- **企业版客单价波动**：Q3 平均客单价较 Q2 下降 7%，与销售折扣策略变化有关。
+- **基础设施成本上行**：Vector DB 月成本同比 +28%，需要在 Q4 评估迁移方案。
+
+## 下周计划
+
+- 启动社区版付费实验（前 1w 用户开放小额订阅）。
+- 完成 Agent 「批注修订」体验上线（cherry-studio#15607）。
+- 海外渠道：与 ProductHunt 合作上一次 launch。
+
+---
+
+*报告周期：2026-09-23 ~ 2026-09-29 · 数据源：内部 BI（dash#23）*
+`;
 
 const SESSION_MD_PREVIEW = `<!DOCTYPE html>
 <html lang="zh"><head><meta charset="utf-8">
@@ -1598,6 +1753,9 @@ export const SESSION_DATA_MAP: Record<string, AgentSessionData> = {
     ],
     fileContents: {},
     previewHtml: SESSION_PDF_PREVIEW,
+    // PDF preview is not annotatable. The agent's reply surfaces Markdown /
+    // HTML alternates the user can pick to enable the annotation flow.
+    defaultArtifactAnnotatable: false,
     workDir: '~/reports/2026-q4',
   },
   'session-md': {
@@ -1605,11 +1763,12 @@ export const SESSION_DATA_MAP: Record<string, AgentSessionData> = {
     steps: SESSION_MD_STEPS,
     files: SHOWCASE_FILES,
     outputFiles: [
-      { id: 'om-1', name: 'api-reference.md', format: 'md', size: '38 KB', status: 'completed', timestamp: '13:10' },
-      { id: 'om-2', name: 'examples.zip', format: 'zip', size: '128 KB', status: 'completed', timestamp: '13:10' },
+      { id: 'om-1', name: 'Q3-weekly-report.md', format: 'md', size: '6 KB', status: 'completed', timestamp: '13:10' },
+      { id: 'om-2', name: 'metrics-export.csv', format: 'csv', size: '32 KB', status: 'completed', timestamp: '13:10' },
     ],
     fileContents: {},
-    previewHtml: SESSION_MD_PREVIEW,
+    markdownContent: SESSION_MD_REPORT,
+    artifactName: 'Q3 周报.md',
     workDir: '~/projects/cherry-sdk',
   },
   'session-slides': {

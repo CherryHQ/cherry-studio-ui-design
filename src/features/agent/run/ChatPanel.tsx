@@ -156,6 +156,9 @@ export interface ChatPanelProps {
   onResolveUI?: (msgId: string, value: string) => void;
   onAvatarClick?: () => void;
   onOpenArtifact?: (filePath: string) => void;
+  /** Pick an annotatable Markdown / HTML source the agent offered in its
+   *  reply (e.g. for a non-annotatable PDF artifact). */
+  onPickAlternateArtifact?: (alt: { kind: 'markdown' | 'html'; label: string; name?: string; markdownContent?: string; previewHtml?: string }) => void;
   /** Slot rendered first inside the composer's left toolbar
    *  (e.g. agent picker + model picker pulled in from the page header). */
   headerControls?: React.ReactNode;
@@ -163,6 +166,10 @@ export interface ChatPanelProps {
    *  the input area — used by the "Save as Skill" guidance callout
    *  (cherry-studio#15029). */
   taskCompleteCallout?: React.ReactNode;
+  /** Slot rendered directly above the composer's input box. Used for the
+   *  pending artifact-annotation attachments strip so the user sees what
+   *  will be sent along with the typed message. */
+  composerAttachments?: React.ReactNode;
 }
 
 export function ChatPanel({
@@ -172,8 +179,10 @@ export function ChatPanel({
   onResolveUI,
   onAvatarClick,
   onOpenArtifact,
+  onPickAlternateArtifact,
   headerControls,
   taskCompleteCallout,
+  composerAttachments,
 }: ChatPanelProps) {
   const [input, setInput] = useState('');
   const [showPlusMenu, setShowPlusMenu] = useState(false);
@@ -308,6 +317,7 @@ export function ChatPanel({
               onResolve={onResolveUI ?? (() => {})}
               onAvatarClick={onAvatarClick}
               onOpenArtifact={onOpenArtifact}
+              onPickAlternateArtifact={onPickAlternateArtifact}
               isRunning={group.msgs.some(m => m.toolCall?.status === 'running' || (m.thinking && !m.content))}
             />
           );
@@ -398,6 +408,7 @@ export function ChatPanel({
             </div>
           ) : (
         <div key="input" className="flex flex-col gap-1.5">
+        {composerAttachments}
         <div ref={containerRef} className="relative rounded-2xl border border-border/40 bg-muted/30 shadow-sm focus-within:border-border/50 transition-all duration-150">
           {/* Popup Cards */}
           <AnimatePresence>
