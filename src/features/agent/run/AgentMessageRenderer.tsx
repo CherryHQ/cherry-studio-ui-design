@@ -526,10 +526,98 @@ export function PermissionApprovalCard({
 }
 
 // ===========================
+// Annotation Request Bubble — compact, Codex-style
+// ===========================
+
+function AnnotationRequestBubble({ request }: { request: NonNullable<AgentChatMessage['annotationRequest']> }) {
+  const { artifactKind, artifactName, annotations, extraInstruction } = request;
+  const [hoveredId, setHoveredId] = useState<string | null>(null);
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 4 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.15 }}
+      className="flex justify-end"
+    >
+      <div className="max-w-[85%] inline-flex flex-col gap-1 rounded-[var(--radius-button)] rounded-br-[var(--radius-dot)] border border-amber-500/25 bg-amber-500/[0.05] px-3 py-2">
+        {/* Header — single compact line */}
+        <div className="flex items-center gap-1.5 text-[11px] leading-none">
+          <span className="inline-flex items-center justify-center w-3.5 h-3.5 rounded-full bg-amber-500 text-white text-[9px] leading-none">✎</span>
+          <span className="text-amber-800 dark:text-amber-200 font-medium">修改请求 · {annotations.length} 处</span>
+          {artifactName && (
+            <>
+              <span className="text-amber-700/40 dark:text-amber-300/40">·</span>
+              <span className="text-amber-700/70 dark:text-amber-300/70 truncate max-w-[180px]" title={artifactName}>
+                {artifactKind === 'markdown' ? '📄' : '🌐'} {artifactName}
+              </span>
+            </>
+          )}
+        </div>
+
+        {/* Optional extra user instruction */}
+        {extraInstruction && (
+          <div className="text-xs text-foreground leading-[1.55] whitespace-pre-wrap mt-0.5">
+            {extraInstruction}
+          </div>
+        )}
+
+        {/* Numbered annotation chips — hover for detail */}
+        <div className="flex items-center gap-1 flex-wrap mt-0.5">
+          {annotations.map((a, i) => {
+            const active = hoveredId === a.id;
+            return (
+              <span
+                key={a.id}
+                onMouseEnter={() => setHoveredId(a.id)}
+                onMouseLeave={() => setHoveredId(prev => (prev === a.id ? null : prev))}
+                className="relative"
+              >
+                <span
+                  className={`inline-flex items-center justify-center w-[18px] h-[18px] rounded-full text-[10px] font-medium leading-none cursor-default transition-colors ${
+                    active
+                      ? 'bg-amber-500 text-white'
+                      : 'bg-amber-500/15 text-amber-700 dark:text-amber-300 hover:bg-amber-500/25'
+                  }`}
+                  title={a.comment}
+                >
+                  {i + 1}
+                </span>
+                {active && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 2 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.1 }}
+                    className="absolute top-full right-0 mt-1.5 z-30 w-[280px] rounded-lg border border-border bg-background shadow-lg p-2.5 text-left pointer-events-none"
+                  >
+                    <div className="flex items-center gap-1.5 mb-1">
+                      <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-amber-500 text-white text-[10px] leading-none">{i + 1}</span>
+                      <span className="text-[10px] text-muted-foreground">原文摘录</span>
+                    </div>
+                    <div className="rounded border-l-2 border-amber-400/60 bg-muted/40 px-2 py-1 mb-1.5">
+                      <span className="block text-[11px] text-foreground/85 leading-[1.5] line-clamp-3">“{a.anchor.excerpt}”</span>
+                    </div>
+                    <div className="text-xs text-foreground leading-[1.55] whitespace-pre-wrap">{a.comment}</div>
+                  </motion.div>
+                )}
+              </span>
+            );
+          })}
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
+// ===========================
 // User Message
 // ===========================
 
 export function UserMessage({ msg }: { msg: AgentChatMessage }) {
+  // Structured "revision request" assembled from artifact annotations.
+  if (msg.annotationRequest) {
+    return <AnnotationRequestBubble request={msg.annotationRequest} />;
+  }
   return (
     <motion.div
       initial={{ opacity: 0, y: 4 }}
@@ -596,11 +684,16 @@ function ArtifactCard({ filePath, onOpen }: { filePath: string; onOpen?: (filePa
 // Agent Message Group
 // ===========================
 
-export function AgentMessageGroup({ msgs, onResolve, onAvatarClick, onOpenArtifact, isRunning = true }: {
+export function AgentMessageGroup({ msgs, onResolve, onAvatarClick, onOpenArtifact, onPickAlternateArtifact, isRunning = true }: {
   msgs: AgentChatMessage[];
   onResolve: (msgId: string, value: string) => void;
   onAvatarClick?: () => void;
   onOpenArtifact?: (filePath: string) => void;
+  /** Called when the user clicks an "annotatable source" chip on an agent
+   *  message (e.g. the Markdown / HTML alternates the agent surfaces for a
+   *  PDF or otherwise non-annotatable artifact). The host should swap the
+   *  artifact viewer to this representation. */
+  onPickAlternateArtifact?: (alt: { kind: 'markdown' | 'html'; label: string; name?: string; markdownContent?: string; previewHtml?: string }) => void;
   isRunning?: boolean;
 }) {
   const [processExpanded, setProcessExpanded] = useState(false);
@@ -682,7 +775,28 @@ export function AgentMessageGroup({ msgs, onResolve, onAvatarClick, onOpenArtifa
             transition={{ duration: 0.15 }}
             className="text-xs text-foreground leading-[1.7] py-1 px-1"
           >
-            {msg.content}
+            <div className="whitespace-pre-wrap">{msg.content}</div>
+            {msg.alternateArtifacts && msg.alternateArtifacts.length > 0 && (
+              <div className="flex items-center gap-1.5 flex-wrap mt-1.5">
+                {msg.alternateArtifacts.map((alt, i) => (
+                  <button
+                    key={i}
+                    type="button"
+                    onClick={() => onPickAlternateArtifact?.(alt)}
+                    className="group inline-flex items-center gap-1.5 h-6 px-2 rounded-md border border-border/50 bg-background hover:bg-accent/40 hover:border-border transition-colors text-[11px] text-foreground"
+                    title={`在右侧查看 ${alt.label}`}
+                  >
+                    <span className={alt.kind === 'markdown' ? 'text-info' : 'text-accent-violet'}>
+                      {alt.kind === 'markdown' ? '📄' : '🌐'}
+                    </span>
+                    <span>{alt.label}</span>
+                    {alt.name && (
+                      <span className="text-muted-foreground/60 text-[10px] truncate max-w-[100px]">{alt.name}</span>
+                    )}
+                  </button>
+                ))}
+              </div>
+            )}
           </motion.div>
         ))}
 

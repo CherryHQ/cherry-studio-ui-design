@@ -599,19 +599,6 @@ export function StarterCardsCarousel({
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
-      {/* Header: Shuffle pinned to top-right (cards are the centerpiece) */}
-      <div className="flex items-center justify-end mb-1.5">
-        <Button
-          variant="ghost"
-          size="xs"
-          onClick={handleShuffle}
-          className="h-6 px-2 gap-1 text-[11px] text-muted-foreground/70 hover:text-foreground rounded-full"
-        >
-          <Shuffle size={11} strokeWidth={1.6} />
-          <span>换一批</span>
-        </Button>
-      </div>
-
       {/* Cards row */}
       <div
         className="relative overflow-hidden"
@@ -653,6 +640,18 @@ export function StarterCardsCarousel({
         </AnimatePresence>
       </div>
 
+      {/* Shuffle — bottom-right under the cards */}
+      <div className="mt-2 flex items-center justify-end">
+        <Button
+          variant="ghost"
+          size="xs"
+          onClick={handleShuffle}
+          className="h-6 px-2 gap-1 text-[11px] text-muted-foreground/70 hover:text-foreground rounded-full"
+        >
+          <Shuffle size={11} strokeWidth={1.6} />
+          <span>换一批</span>
+        </Button>
+      </div>
     </div>
   );
 }
