@@ -20,7 +20,7 @@ import { copyToClipboard } from '@/app/utils/clipboard';
 import { highlightLine } from '@/app/utils/syntaxHighlight';
 import { getFileIcon } from '@/app/utils/fileIcons';
 import { ChatInterface } from '@/app/components/shared/Chat/ChatInterface';
-import { ThinkingBlock, InlineCodeBlock, MermaidBlock, ImageGallery } from '@/app/components/shared/Chat/components/MessageComponents';
+import { ThinkingBlock, InlineCodeBlock, MermaidBlock, ImageGallery, VideoGallery } from '@/app/components/shared/Chat/components/MessageComponents';
 import { AttachmentList } from '@/app/components/shared/Chat/AttachmentList';
 import { Tooltip } from '@/app/components/Tooltip';
 import {
@@ -1322,8 +1322,8 @@ function MessageBubble({ msg, onOpenPanel, onAvatarClick, onOpenArtifact, assist
   // === User Message ===
   if (msg.role === 'user') {
     return (
-      <motion.div initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.15 }} className="flex justify-end">
-        <div className="max-w-[85%]">
+      <motion.div initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.15 }} className="flex justify-end min-w-0 max-w-full" style={{ width: '100%' }}>
+        <div className="max-w-[85%] min-w-0" style={{ wordBreak: 'break-word', overflowWrap: 'anywhere' }}>
           {/* Attachments above bubble — clickable to open in artifact viewer */}
           {msg.attachments && msg.attachments.length > 0 && (
             <div className="flex justify-end mb-1">
@@ -1347,7 +1347,7 @@ function MessageBubble({ msg, onOpenPanel, onAvatarClick, onOpenArtifact, assist
               />
             </div>
           )}
-          <div className="px-3.5 py-2.5 rounded-[var(--radius-button)] rounded-br-[var(--radius-dot)] bg-muted/50 text-foreground text-xs leading-[1.65]">
+          <div className="px-3.5 py-2.5 rounded-[var(--radius-button)] rounded-br-[var(--radius-dot)] bg-muted/50 text-foreground text-xs leading-[1.65] break-all whitespace-pre-wrap">
             {msg.content}
           </div>
           <MessageActionBar
@@ -1432,6 +1432,9 @@ function MessageBubble({ msg, onOpenPanel, onAvatarClick, onOpenArtifact, assist
 
         {/* Generated images */}
         {msg.images && msg.images.length > 0 && <ImageGallery images={msg.images} />}
+
+        {/* Generated videos */}
+        {msg.videos && msg.videos.length > 0 && <VideoGallery videos={msg.videos} />}
 
         {(displayMsg.errorMessage || displayMsg.error || displayMsg.metadata?.status === 'error') && (
           <MessageErrorBlock

@@ -13,24 +13,20 @@ import {
 } from '@/app/config/constants';
 
 // Agent-produced HTML artifacts (reports, summaries, dashboards) appear as
-// additional launcher tiles in the NewTabDialog grid. Clicking one opens an
-// inline preview rather than creating a tab (see handleDialogCreateTab).
-// We map the emoji avatar to a tiny inline component so it satisfies
-// AppIconItem.icon (React.ElementType) without changing the dialog's render
-// contract.
-function makeEmojiIcon(emoji: string): React.ElementType {
-  const C: React.FC = () => <span className="text-[16px] leading-none">{emoji}</span>;
-  C.displayName = `EmojiIcon(${emoji})`;
-  return C;
-}
+// additional launcher tiles in the NewTabDialog grid. Clicking one opens the
+// artifact in a new top-bar tab (see handleDialogCreateTab). All artifact
+// tiles share a single generic icon — they're typed by being artifacts, not
+// by their topic — so the visual scan reads as one bucket.
+const ArtifactTileIcon: React.ElementType = (props: { size?: number; strokeWidth?: number; className?: string }) =>
+  <Globe size={props.size} strokeWidth={props.strokeWidth ?? 1.6} className={props.className} />;
 
 const dialogAppIconsWithAgents = [
   ...dialogAppIcons,
   ...Object.entries(newTabHtmlPreviews).map(([key, preview]) => ({
     id: `html:${key}`,
     label: preview.label,
-    icon: makeEmojiIcon(preview.emoji),
-    color: 'text-foreground',
+    icon: ArtifactTileIcon,
+    color: 'text-accent-violet',
     bg: 'bg-accent-violet/15',
   })),
 ];
@@ -50,6 +46,8 @@ import { useTabDrag } from '@/app/hooks/useTabDrag';
 import { CollabProvider, useCollab } from '@/features/collaboration/CollabContext';
 import { UserInfoPopup } from '@/features/collaboration/components/UserInfoPopup';
 import { usePinnedArtifacts, findPinnedArtifact } from '@/app/stores/sharedArtifactsStore';
+import { miniAppList } from '@/features/miniapp/MiniAppsPage';
+import { DEFAULT_ARTIFACT_ICON_NAME } from '@/app/utils/artifactIcons';
 
 // ===========================
 // Main UI
@@ -67,12 +65,10 @@ function CherryStudioInner() {
   const [newTabSearch, setNewTabSearch] = useState('');
   const [newTabManageMode, setNewTabManageMode] = useState(false);
   const [searchDialogOpen, setSearchDialogOpen] = useState(false);
-  // Library is intentionally NOT hidden — it's now the home of custom
-  // resource management (assistants / agents / skills / prompts / etc.)
-  // after main moved "管理我的资源" out of the Market page. Without a
-  // visible Library entry in the sidebar, users have no way to reach
-  // their resources and the recycle-bin delete flow is unreachable.
-  const [hiddenApps, setHiddenApps] = useState<Set<string>>(new Set(['explore', 'knowledge', 'file', 'code', 'note', 'extensions']));
+  // Library is hidden from the sidebar — reached via the "我的" button
+  // in the Market page top-bar instead, so resource management lives one
+  // click in from the market rather than as a separate top-level entry.
+  const [hiddenApps, setHiddenApps] = useState<Set<string>>(new Set(['explore', 'library', 'knowledge', 'file', 'code', 'note', 'extensions']));
   const [appOrder, setAppOrder] = useState<string[]>(() => dialogAppIconsWithAgents.map(a => a.id));
 
   // Runtime-pinned HTML artifacts (from ArtifactViewer's "Pin 到工作台").
@@ -83,13 +79,22 @@ function CherryStudioInner() {
     ...pinnedArtifacts.map(a => ({
       id: `html:pinned:${a.id}`,
       label: a.label,
-      icon: makeEmojiIcon(a.emoji),
-      color: 'text-foreground',
+      icon: ArtifactTileIcon,
+      color: 'text-accent-violet',
       bg: 'bg-accent-violet/15',
     })),
   ], [pinnedArtifacts]);
   const [annotationListOpen, setAnnotationListOpen] = useState(false);
-  const [showMigration, setShowMigration] = useState(false);
+  // Show the V1→V2 migration overlay on first launch (and again on
+  // every refresh in this design-prototype) until the user reaches a
+  // terminal state — completed / declined are persisted to
+  // localStorage; postponed only suppresses for the current session.
+  const [showMigration, setShowMigration] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    const persisted = window.localStorage.getItem('cherry:v2-migration');
+    const session = window.sessionStorage.getItem('cherry:v2-migration-postponed');
+    return persisted !== 'completed' && persisted !== 'declined' && persisted !== 'no-v1' && session !== '1';
+  });
 
   // Surface annotation persistence failures (quota exceeded, etc.) so the
   // user knows their comment wasn't actually saved — previously this failed
@@ -158,6 +163,10 @@ function CherryStudioInner() {
     navigateToMenuTab('library');
   }, [tabs]);
 
+  const handleNavigateToMarket = useCallback(() => {
+    navigateToMenuTab('market');
+  }, [tabs]);
+
   const handleLibraryReturn = useCallback(() => {
     const returnTo = libraryReturnTo;
     setLibraryCreateType(null);
@@ -202,7 +211,9 @@ function CherryStudioInner() {
     .filter(id => !hiddenApps.has(id))
     .map(id => menuItems.find(m => m.id === id))
     .filter((m): m is MenuItem => !!m);
-  const unmanagedItems = menuItems.filter(m => !managedIds.has(m.id) && m.id !== 'empty-preview');
+  // launchpad never shows in the sidebar — it's reached only via the
+  // tab-bar "+" button. empty-preview is a dev-only surface.
+  const unmanagedItems = menuItems.filter(m => !managedIds.has(m.id) && m.id !== 'empty-preview' && m.id !== 'launchpad');
   const visibleMenuItems = [...orderedVisible, ...unmanagedItems];
 
   // ===========================
@@ -299,21 +310,117 @@ function CherryStudioInner() {
   // ===========================
   // GlobalActionContext value
   // ===========================
+  // iPhone-style sidebar pinning. Three kinds, three storage paths:
+  //   - function : un-hide in `hiddenApps` (existing state)
+  //   - miniapp  : append to `sidebarMiniapps` (richer payload, looked up
+  //                from miniAppList by id at pin time)
+  //   - artifact : append to `sidebarArtifacts` (key = static id like
+  //                "weekly-report" OR "pinned:<id>" for runtime ones)
+  const [sidebarMiniapps, setSidebarMiniapps] = useState<Array<{ id: string; name: string; color: string; initial: string; url: string; logoUrl?: string }>>([]);
+  const [sidebarArtifacts, setSidebarArtifacts] = useState<Array<{ key: string; label: string; iconName?: string }>>([]);
+
+  const pinToSidebar = useCallback((kind: 'function' | 'miniapp' | 'artifact', id: string, label?: string) => {
+    if (kind === 'function') {
+      setHiddenApps(prev => {
+        if (!prev.has(id)) return prev;
+        const next = new Set(prev);
+        next.delete(id);
+        return next;
+      });
+      toast.success(`已固定到侧边栏：${label ?? id}`);
+    } else if (kind === 'miniapp') {
+      const app = miniAppList.find(a => a.id === id);
+      if (!app) return;
+      setSidebarMiniapps(prev => prev.some(p => p.id === id) ? prev : [...prev, app]);
+      toast.success(`已固定到侧边栏：${app.name}`);
+    } else {
+      // artifact — look up label + iconName based on key flavor
+      const isPinned = id.startsWith('pinned:');
+      let resolvedLabel = label ?? '产物';
+      let iconName: string | undefined = DEFAULT_ARTIFACT_ICON_NAME;
+      if (isPinned) {
+        const art = findPinnedArtifact(id.slice('pinned:'.length));
+        if (!art) return;
+        resolvedLabel = art.label;
+        iconName = art.iconName ?? DEFAULT_ARTIFACT_ICON_NAME;
+      } else {
+        const preview = newTabHtmlPreviews[id];
+        if (!preview) return;
+        resolvedLabel = preview.label;
+      }
+      setSidebarArtifacts(prev => prev.some(p => p.key === id)
+        ? prev
+        : [...prev, { key: id, label: resolvedLabel, iconName }]);
+      toast.success(`已固定到侧边栏：${resolvedLabel}`);
+    }
+  }, []);
+
+  const unpinFromSidebar = useCallback((kind: 'function' | 'miniapp' | 'artifact', id: string) => {
+    if (kind === 'function') {
+      setHiddenApps(prev => prev.has(id) ? prev : new Set([...prev, id]));
+    } else if (kind === 'miniapp') {
+      setSidebarMiniapps(prev => prev.filter(p => p.id !== id));
+    } else {
+      setSidebarArtifacts(prev => prev.filter(p => p.key !== id));
+    }
+  }, []);
+
+  // iPhone-jiggle "edit home screen" mode for the launchpad. Triggered
+  // from sidebar's right-click 管理; LaunchpadPage reads this from
+  // GlobalActions state and renders delete badges + a 完成 exit button.
+  const [launchpadEditMode, setLaunchpadEditMode] = useState(false);
+
+  const openLaunchpad = useCallback((editMode = false) => {
+    setLaunchpadEditMode(editMode);
+    setActiveItem('launchpad');
+    const existing = tabs.find(t => t.menuItemId === 'launchpad');
+    if (existing) setActiveTabId(existing.id);
+    else createTabForMenuItem('launchpad');
+  }, [tabs, createTabForMenuItem, setActiveTabId]);
+
+  // Tiles the user has explicitly removed from the launchpad — keyed as
+  // `${kind}:${id}` (e.g. `miniapp:gemini`, `artifact:roadmap`). Filtered
+  // out of the launchpad grids in LaunchpadPage.
+  const [removedFromLaunchpad, setRemovedFromLaunchpad] = useState<Set<string>>(new Set());
+
+  const removeFromLaunchpad = useCallback((kind: 'miniapp' | 'artifact', id: string) => {
+    setRemovedFromLaunchpad(prev => {
+      const next = new Set(prev);
+      next.add(`${kind}:${id}`);
+      return next;
+    });
+  }, []);
+
   const globalActions = useMemo<GlobalActions>(() => ({
     openMiniApp: handleOpenMiniApp,
     pinTab: handlePinTab,
     editAssistantInLibrary: handleEditAssistantInLibrary,
     navigateToKnowledge: handleNavigateToKnowledge,
     navigateToLibrary: handleNavigateToLibrary,
+    navigateToMarket: handleNavigateToMarket,
     libraryReturn: handleLibraryReturn,
     changeTabTitle: handleTabTitleChange,
     openSettings: (section?: string) => { setSettingsInitialSection(section); setSettingsOpen(true); },
+    launchpadOpen: handleDialogCreateTab,
+    pinToSidebar,
+    unpinFromSidebar,
+    openLaunchpad,
+    removeFromLaunchpad,
     libraryEditResourceId,
     libraryCreateType,
+    removedFromLaunchpad,
+    launchpadEditMode,
+    setLaunchpadEditMode,
+    hiddenSidebarApps: hiddenApps,
+    sidebarMiniapps,
+    sidebarArtifacts,
   }), [
     handleOpenMiniApp, handlePinTab, handleEditAssistantInLibrary,
-    handleNavigateToKnowledge, handleNavigateToLibrary, handleLibraryReturn,
-    handleTabTitleChange, libraryEditResourceId, libraryCreateType,
+    handleNavigateToKnowledge, handleNavigateToLibrary, handleNavigateToMarket, handleLibraryReturn,
+    handleTabTitleChange, handleDialogCreateTab,
+    pinToSidebar, unpinFromSidebar, openLaunchpad, removeFromLaunchpad,
+    libraryEditResourceId, libraryCreateType, removedFromLaunchpad,
+    launchpadEditMode, hiddenApps, sidebarMiniapps, sidebarArtifacts,
   ]);
 
   // ===========================
@@ -351,7 +458,7 @@ function CherryStudioInner() {
               e.preventDefault();
               setContextMenu({ open: true, x: e.clientX, y: e.clientY, tabId });
             }}
-            onNewTab={() => { setNewTabSearch(''); setNewTabManageMode(false); setNewTabDialogOpen(true); }}
+            onNewTab={() => navigateToMenuTab('launchpad')}
             onManageShortcuts={() => { setNewTabSearch(''); setNewTabManageMode(true); setNewTabDialogOpen(true); }}
             startTabDrag={onStartTabDrag}
           />
@@ -485,7 +592,20 @@ function CherryStudioInner() {
         <AnnotationList open={annotationListOpen} onClose={() => setAnnotationListOpen(false)} />
 
         {showMigration && (
-          <DataMigrationOverlay onComplete={() => setShowMigration(false)} />
+          <DataMigrationOverlay
+            onClose={(reason) => {
+              // 'no-v1' (fresh install) persists like a completed
+              // migration — there's nothing to retry, future launches
+              // skip the overlay entirely. 'postponed' only suppresses
+              // for this session so a refresh re-shows the wizard.
+              if (reason === 'completed' || reason === 'declined' || reason === 'no-v1') {
+                try { window.localStorage.setItem('cherry:v2-migration', reason); } catch { /* quota */ }
+              } else {
+                try { window.sessionStorage.setItem('cherry:v2-migration-postponed', '1'); } catch { /* quota */ }
+              }
+              setShowMigration(false);
+            }}
+          />
         )}
       </div>
       </AnnotationProvider>

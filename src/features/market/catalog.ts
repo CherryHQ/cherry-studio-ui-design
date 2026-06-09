@@ -8,11 +8,13 @@ export const SIDEBAR_KINDS: (ResourceKind | 'all')[] = [
 ];
 
 // Built-in subscription feeds. Users can add more via the "+" button.
-export const BUILTIN_FEEDS: { id: string; label: string }[] = [
+// `kinds` gates which resource-type tabs a feed appears under.
+// Omitted = always visible (e.g. Cherry 精选 is a curated cross-kind feed).
+export const BUILTIN_FEEDS: { id: string; label: string; kinds?: string[] }[] = [
   { id: 'cherry',      label: 'Cherry 精选' },
-  { id: 'skill-hub',   label: 'Skill Hub' },
-  { id: 'claude',      label: 'Claude Skill' },
-  { id: 'awesome-mcp', label: 'Awesome MCP' },
+  { id: 'skill-hub',   label: 'Skill Hub',   kinds: ['skill'] },
+  { id: 'claude',      label: 'Claude Skill', kinds: ['skill'] },
+  { id: 'awesome-mcp', label: 'Awesome MCP', kinds: ['mcp'] },
 ];
 
 // Per-integration product logo via the Simple Icons CDN with the brand's

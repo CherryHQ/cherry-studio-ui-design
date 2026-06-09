@@ -103,7 +103,9 @@ export function TopicView({ group, onOpenGroupSettings, onClickNewTopic, onClick
       authorName: '从智能体分享',
       time: formatTime(a.sharedAt),
       topicId: `shared:${a.id}`,
-      topicTitle: '分享文件',
+      // When the user typed a comment in the share dialog, surface it as
+      // the row's secondary line (where topicTitle normally renders).
+      topicTitle: a.comment?.trim() ? a.comment.trim() : '分享文件',
     }));
     return [...synthetic, ...base];
   }, [group, sharedFromAgent]);

@@ -6,7 +6,7 @@ import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useGlobalActions } from '@/app/context/GlobalActionContext';
 import { copyToClipboard } from '@/app/utils/clipboard';
-import { Button, Textarea, EmptyState, ToggleGroup, ToggleGroupItem, Popover, PopoverTrigger, PopoverContent, BrandLogo, ModelPickerPanel } from '@cherry-studio/ui';
+import { Button, Textarea, EmptyState, ToggleGroup, ToggleGroupItem, Popover, PopoverTrigger, PopoverContent, BrandLogo, ModelPickerPanel, Switch, DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from '@cherry-studio/ui';
 import type { ModelInfo } from '@cherry-studio/ui';
 import {
   Sparkles, Settings, Download, X, Copy, Check, Heart,
@@ -17,6 +17,7 @@ import {
   MousePointer2, Undo2, Redo2, Crop, Play, Plus,
   Share2, ArrowLeft, PanelRightClose, PanelRightOpen,
   Image as ImageIcon, ExternalLink, AlertTriangle, RefreshCw, Trash2,
+  Video, Volume2, Mic, Globe, Music, Upload, Layers, BarChart3, Zap,
 } from 'lucide-react';
 import type {
   GeneratedImage, ImageMode, AspectRatio, ImageSize, GenerationParams,
@@ -47,8 +48,11 @@ const IMAGE_PROVIDER_COLORS: Record<string, string> = {
 // Main Page
 // ===========================
 
+type CreationKind = 'image' | 'video';
+
 export function ImagePage() {
   const { openSettings: onOpenSettings } = useGlobalActions();
+  const [kind, setKind] = useState<CreationKind>('image');
   const [view, setView] = useState<'create' | 'gallery'>('create');
   const [images, setImages] = useState<GeneratedImage[]>(MOCK_IMAGES);
   const [selectedImage, setSelectedImage] = useState<GeneratedImage>(MOCK_IMAGES[0]);
@@ -249,60 +253,828 @@ export function ImagePage() {
 
   return (
     <div className="flex flex-col h-full bg-background overflow-hidden relative">
-      <TopToolbar view={view} onViewChange={setView} />
+      <TopToolbar kind={kind} onKindChange={setKind} view={view} onViewChange={setView} />
 
-      <div className="flex-1 flex overflow-hidden relative">
-        {view === 'create' ? (
-          <div className="contents">
-            <VerticalToolHandle
-              showRightPanel={showRightPanel}
-              onToggleRightPanel={() => setShowRightPanel(!showRightPanel)}
-            />
-
-            <CanvasArea
-              image={selectedImage}
-              images={images}
-              currentIndex={selectedIdx}
-              onNavigate={navigateImage}
-              onClickImage={handleImageClick}
-              onSelectImage={handleSelectRecent}
-            />
-
-            <HistoryStrip
-              images={images}
-              selectedId={selectedImage?.id}
-              onSelect={handleSelectRecent}
-            />
-
-            <AnimatePresence>
-              {showRightPanel && (
-                <ControlPanel
-                  params={params}
-                  onChange={setParams}
-                  onClose={() => setShowRightPanel(false)}
+      {kind === 'video' ? (
+        <VideoMode />
+      ) : (
+        <>
+          <div className="flex-1 flex overflow-hidden relative">
+            {view === 'create' ? (
+              <div className="contents">
+                <VerticalToolHandle
+                  showRightPanel={showRightPanel}
+                  onToggleRightPanel={() => setShowRightPanel(!showRightPanel)}
                 />
-              )}
-            </AnimatePresence>
-          </div>
-        ) : (
-          <GalleryGrid
-            images={images}
-            onSelect={handleImageClick}
-            onToggleFavorite={toggleFavorite}
-            onDelete={handleDeletePainting}
-          />
-        )}
-      </div>
 
-      {view === 'create' && (
-        <PromptBar
-          params={params}
-          onChange={setParams}
-          onGenerate={handleGenerate}
-          isGenerating={isGenerating}
-        />
+                <CanvasArea
+                  image={selectedImage}
+                  images={images}
+                  currentIndex={selectedIdx}
+                  onNavigate={navigateImage}
+                  onClickImage={handleImageClick}
+                  onSelectImage={handleSelectRecent}
+                />
+
+                <HistoryStrip
+                  images={images}
+                  selectedId={selectedImage?.id}
+                  onSelect={handleSelectRecent}
+                />
+
+                <AnimatePresence>
+                  {showRightPanel && (
+                    <ControlPanel
+                      params={params}
+                      onChange={setParams}
+                      onClose={() => setShowRightPanel(false)}
+                    />
+                  )}
+                </AnimatePresence>
+              </div>
+            ) : (
+              <GalleryGrid
+                images={images}
+                onSelect={handleImageClick}
+                onToggleFavorite={toggleFavorite}
+                onDelete={handleDeletePainting}
+              />
+            )}
+          </div>
+
+          {view === 'create' && (
+            <PromptBar
+              params={params}
+              onChange={setParams}
+              onGenerate={handleGenerate}
+              isGenerating={isGenerating}
+            />
+          )}
+        </>
       )}
     </div>
+  );
+}
+
+// ===========================
+// Video mode — full creation surface
+// ===========================
+//
+// Mirrors the image-mode shell (left handle / center canvas / right control
+// panel / bottom prompt bar) so the user feels at home. Mock-only: clicking
+// "generate" simulates a progress curve like the image flow.
+
+type VideoAspect = 'auto' | '16:9' | '4:3' | '1:1' | '3:4' | '9:16' | '21:9';
+type VideoDuration = 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15;
+type VideoResolution = '480p' | '720p' | '1080p';
+type VideoMotion = 'low' | 'medium' | 'high';
+type GenerateMethod = 'reference' | 'edit' | 'frames';
+type CreationKindInBar = 'video' | 'image' | 'audio';
+
+interface VideoModel {
+  id: string;
+  name: string;
+  provider: string;
+  tier: string;
+}
+
+interface GeneratedVideo {
+  id: string;
+  poster: string;            // still-frame URL acting as preview
+  prompt: string;
+  model: string;
+  aspect: VideoAspect;
+  duration: VideoDuration;
+  resolution: VideoResolution;
+  motion: VideoMotion;
+  createdAt: string;
+  status: 'generating' | 'completed' | 'failed';
+  progress?: number;
+  favorite?: boolean;
+}
+
+const VIDEO_MODELS: VideoModel[] = [
+  { id: 'sora-1',       name: 'Sora',         provider: 'OpenAI',  tier: 'Pro' },
+  { id: 'runway-gen3',  name: 'Gen-3 Alpha',  provider: 'Runway',  tier: 'Pro' },
+  { id: 'veo-2',        name: 'Veo 2',        provider: 'Google',  tier: 'Pro' },
+  { id: 'kling-1.5',    name: 'Kling 1.5',    provider: 'Kling',   tier: 'Std' },
+  { id: 'minimax-h-01', name: 'Hailuo 01',    provider: 'MiniMax', tier: 'Std' },
+  { id: 'pika-2',       name: 'Pika 2.0',     provider: 'Pika',    tier: 'Std' },
+];
+
+const VIDEO_PROVIDER_COLORS: Record<string, string> = {
+  OpenAI:  'bg-emerald-600',
+  Runway:  'bg-zinc-700',
+  Google:  'bg-blue-500',
+  Kling:   'bg-fuchsia-500',
+  MiniMax: 'bg-orange-500',
+  Pika:    'bg-violet-500',
+};
+
+// Poster frames — Unsplash cinematic stills. Same imagery style as the
+// image-mode mocks so the visual language stays consistent.
+const VIDEO_POSTERS = [
+  'https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=900&auto=format',
+  'https://images.unsplash.com/photo-1502134249126-9f3755a50d78?w=900&auto=format',
+  'https://images.unsplash.com/photo-1454789548928-9efd52dc4031?w=900&auto=format',
+  'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=900&auto=format',
+  'https://images.unsplash.com/photo-1493514789931-586cb221d7a7?w=900&auto=format',
+  'https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=900&auto=format',
+];
+
+const VIDEO_PROMPTS = [
+  'Slow dolly through a neon-lit Tokyo alley after rain, reflections shimmering',
+  'Aerial shot over a snowy mountain range at golden hour, lens flare',
+  'Cinematic close-up: hand pouring espresso into a glass, steam rising',
+  'Cyberpunk hover-car drifting between skyscrapers, motion blur',
+  'Time-lapse of clouds rolling over a coastal lighthouse',
+  'Macro: water droplets falling on a leaf, sunlight refracting',
+];
+
+const MOCK_VIDEOS: GeneratedVideo[] = VIDEO_POSTERS.map((url, i) => ({
+  id: `vid-${i}`,
+  poster: url,
+  prompt: VIDEO_PROMPTS[i],
+  model: VIDEO_MODELS[i % VIDEO_MODELS.length].id,
+  aspect: (['16:9', '9:16', '16:9', '1:1', '16:9', '4:3'] as VideoAspect[])[i],
+  duration: ([5, 4, 10, 6, 8, 5] as VideoDuration[])[i],
+  resolution: (['1080p', '720p', '1080p', '720p', '1080p', '720p'] as VideoResolution[])[i],
+  motion: (['medium', 'high', 'low', 'medium', 'high', 'low'] as VideoMotion[])[i],
+  createdAt: new Date(Date.now() - i * 3600_000).toISOString(),
+  status: 'completed',
+  favorite: i === 0,
+}));
+
+const ASPECT_DIMENSIONS: Record<VideoAspect, { w: number; h: number }> = {
+  'auto': { w: 1920, h: 1080 },
+  '16:9': { w: 1920, h: 1080 },
+  '4:3':  { w: 1440, h: 1080 },
+  '1:1':  { w: 1080, h: 1080 },
+  '3:4':  { w: 1080, h: 1440 },
+  '9:16': { w: 1080, h: 1920 },
+  '21:9': { w: 2520, h: 1080 },
+};
+
+const ALL_DURATIONS: VideoDuration[] = [4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15];
+
+interface VideoParams {
+  model: string;
+  method: GenerateMethod;
+  aspect: VideoAspect;
+  duration: VideoDuration;
+  resolution: VideoResolution;
+  motion: VideoMotion;
+  audio: boolean;
+  webSearch: boolean;
+  startFrame: string | null;
+  endFrame: string | null;
+  inputKind: CreationKindInBar;
+  prompt: string;
+}
+
+function VideoMode() {
+  const [videos, setVideos] = useState<GeneratedVideo[]>(MOCK_VIDEOS);
+  const [selected, setSelected] = useState<GeneratedVideo>(MOCK_VIDEOS[0]);
+  const [showRightPanel, setShowRightPanel] = useState(true);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [params, setParams] = useState<VideoParams>({
+    model: 'sora-1',
+    method: 'reference',
+    aspect: '16:9',
+    duration: 5,
+    resolution: '720p',
+    motion: 'medium',
+    audio: true,
+    webSearch: false,
+    startFrame: null,
+    endFrame: null,
+    inputKind: 'video',
+    prompt: '',
+  });
+
+  const selectedIdx = videos.findIndex(v => v.id === selected?.id);
+  const navigate = useCallback((dir: -1 | 1) => {
+    const next = selectedIdx + dir;
+    if (next >= 0 && next < videos.length) setSelected(videos[next]);
+  }, [selectedIdx, videos]);
+
+  const handleGenerate = useCallback(() => {
+    if (!params.prompt.trim() || isGenerating) return;
+    const id = `gen-vid-${Date.now()}`;
+    const poster = VIDEO_POSTERS[Math.floor(Math.random() * VIDEO_POSTERS.length)];
+    const generating: GeneratedVideo = {
+      id, poster: '', prompt: params.prompt, model: params.model,
+      aspect: params.aspect, duration: params.duration,
+      resolution: params.resolution, motion: params.motion,
+      createdAt: new Date().toISOString(),
+      status: 'generating', progress: 0,
+    };
+    setVideos(prev => [generating, ...prev]);
+    setSelected(generating);
+    setIsGenerating(true);
+
+    let progress = 0;
+    const tick = setInterval(() => {
+      progress += 4 + Math.random() * 8;
+      if (progress >= 100) {
+        clearInterval(tick);
+        setVideos(prev => prev.map(v => v.id === id ? { ...v, status: 'completed', progress: undefined, poster } : v));
+        setSelected(prev => prev?.id === id ? { ...prev, status: 'completed', progress: undefined, poster } : prev);
+        setIsGenerating(false);
+      } else {
+        setVideos(prev => prev.map(v => v.id === id ? { ...v, progress } : v));
+        setSelected(prev => prev?.id === id ? { ...prev, progress } : prev);
+      }
+    }, 280);
+  }, [params, isGenerating]);
+
+  return (
+    <>
+      <div className="flex-1 flex overflow-hidden relative">
+        {/* Left vertical tool handle (decorative — mirrors image mode) */}
+        <div className="w-[44px] shrink-0 flex flex-col items-center py-3 gap-1.5 border-r border-border/30 bg-background">
+          {[Wand2, Brush, Crop, Shuffle].map((Icon, i) => (
+            <Button key={i} variant="ghost" size="icon-sm" className="rounded-lg text-muted-foreground/50 hover:text-foreground hover:bg-accent/40">
+              <Icon size={13} />
+            </Button>
+          ))}
+        </div>
+
+        <VideoCanvas video={selected} videos={videos} currentIndex={selectedIdx} onNavigate={navigate} />
+
+        <VideoHistoryStrip videos={videos} selectedId={selected?.id} onSelect={setSelected} />
+
+        <AnimatePresence>
+          {showRightPanel && (
+            <VideoControlPanel params={params} onChange={setParams} onClose={() => setShowRightPanel(false)} />
+          )}
+        </AnimatePresence>
+      </div>
+
+      <VideoPromptBar params={params} onChange={setParams} onGenerate={handleGenerate} isGenerating={isGenerating} />
+    </>
+  );
+}
+
+function VideoCanvas({ video, videos, currentIndex, onNavigate }: {
+  video: GeneratedVideo | null;
+  videos: GeneratedVideo[];
+  currentIndex: number;
+  onNavigate: (dir: -1 | 1) => void;
+}) {
+  return (
+    <div className="flex-1 flex flex-col items-center justify-center relative overflow-hidden">
+      <div className="absolute inset-0 opacity-[0.03]"
+        style={{
+          backgroundImage: 'radial-gradient(circle, currentColor 0.5px, transparent 0.5px)',
+          backgroundSize: '20px 20px',
+        }}
+      />
+
+      {video ? (
+        <div className="relative flex items-center justify-center flex-1 w-full px-16">
+          {currentIndex > 0 && (
+            <Button variant="outline" size="icon-sm" onClick={() => onNavigate(-1)}
+              className="absolute left-4 z-10 p-1.5 rounded-full bg-background/80 border-border/40 shadow-lg text-muted-foreground/50 hover:text-foreground hover:bg-background">
+              <ChevronLeft size={16} />
+            </Button>
+          )}
+          {currentIndex < videos.length - 1 && (
+            <Button variant="outline" size="icon-sm" onClick={() => onNavigate(1)}
+              className="absolute right-14 z-10 p-1.5 rounded-full bg-background/80 border-border/40 shadow-lg text-muted-foreground/50 hover:text-foreground hover:bg-background">
+              <ChevronRight size={16} />
+            </Button>
+          )}
+
+          <motion.div
+            key={video.id}
+            initial={{ opacity: 0, scale: 0.97 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.35, ease: 'easeOut' }}
+            className="relative"
+          >
+            {video.status === 'generating' ? (
+              <div className="rounded-2xl bg-muted/15 border border-cherry-ring shadow-2xl shadow-black/10 flex flex-col items-center justify-center gap-3 px-16 py-16 aspect-video w-[640px]">
+                <div className="relative w-12 h-12">
+                  <motion.div className="absolute inset-0 rounded-full border-2 border-cherry-ring"
+                    animate={{ rotate: 360 }} transition={{ duration: 2, repeat: Infinity, ease: 'linear' }} />
+                  <motion.div className="absolute inset-1 rounded-full border-2 border-t-cherry-primary border-r-transparent border-b-transparent border-l-transparent"
+                    animate={{ rotate: -360 }} transition={{ duration: 1.5, repeat: Infinity, ease: 'linear' }} />
+                </div>
+                <div className="text-xs text-muted-foreground/60">视频渲染中…</div>
+                <div className="w-40 h-[3px] rounded-full bg-muted/40 overflow-hidden">
+                  <motion.div className="h-full bg-cherry-primary rounded-full transition-all duration-300"
+                    style={{ width: `${Math.min(video.progress || 0, 100)}%` }} />
+                </div>
+                <div className="text-xs text-muted-foreground/50 tabular-nums">{Math.min(Math.round(video.progress || 0), 100)}%</div>
+              </div>
+            ) : video.status === 'failed' ? (
+              <div className="rounded-2xl bg-muted/15 border border-destructive/20 shadow-2xl shadow-black/10 flex flex-col items-center justify-center gap-3 px-12 py-16 aspect-video w-[640px]">
+                <AlertTriangle size={20} className="text-destructive" />
+                <div className="text-xs text-muted-foreground">渲染失败</div>
+                <Button variant="ghost" size="xs" className="mt-1 gap-1.5 px-3 rounded-lg bg-destructive/10 text-destructive text-xs hover:bg-destructive/20">
+                  <RefreshCw size={9} />Retry
+                </Button>
+              </div>
+            ) : (
+              <div className="rounded-2xl overflow-hidden shadow-2xl shadow-black/10 bg-muted/10 relative group">
+                <img src={video.poster} alt={video.prompt}
+                  className="max-h-[calc(100vh-260px)] max-w-full object-contain"
+                  style={{ aspectRatio: video.aspect.replace(':', ' / ') }} />
+                {/* Play overlay */}
+                <button className="absolute inset-0 flex items-center justify-center bg-black/0 group-hover:bg-black/20 transition-colors">
+                  <span className="w-14 h-14 rounded-full bg-white/95 text-foreground flex items-center justify-center shadow-2xl group-hover:scale-110 transition-transform">
+                    <Play size={20} className="ml-0.5" fill="currentColor" />
+                  </span>
+                </button>
+                {/* Bottom meta strip */}
+                <div className="absolute left-0 right-0 bottom-0 px-4 py-2.5 bg-gradient-to-t from-black/55 to-transparent text-white text-xs flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="px-1.5 py-0.5 rounded bg-white/15 backdrop-blur">{video.duration}s</span>
+                    <span className="px-1.5 py-0.5 rounded bg-white/15 backdrop-blur">{video.resolution}</span>
+                    <span className="px-1.5 py-0.5 rounded bg-white/15 backdrop-blur">{video.aspect}</span>
+                  </div>
+                  <span className="text-white/80">{VIDEO_MODELS.find(m => m.id === video.model)?.name}</span>
+                </div>
+              </div>
+            )}
+          </motion.div>
+        </div>
+      ) : (
+        <div className="flex flex-col items-center gap-3 text-muted-foreground/50">
+          <Video size={36} strokeWidth={1} />
+          <span className="text-xs">输入提示词开始视频创作</span>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function VideoHistoryStrip({ videos, selectedId, onSelect }: {
+  videos: GeneratedVideo[];
+  selectedId?: string;
+  onSelect: (v: GeneratedVideo) => void;
+}) {
+  const [hoveredId, setHoveredId] = useState<string | null>(null);
+  return (
+    <div className="w-[54px] shrink-0 flex flex-col items-center py-2 gap-1 bg-background overflow-y-auto scrollbar-hide">
+      <Button variant="ghost" size="icon-sm" className="rounded-full bg-muted/30 text-muted-foreground/40 hover:bg-accent/40 hover:text-foreground mb-1">
+        <Clock size={12} />
+      </Button>
+      {videos.map(v => (
+        <div key={v.id} className="relative">
+          <Button variant="ghost" size="icon-sm"
+            onClick={() => onSelect(v)}
+            onMouseEnter={() => setHoveredId(v.id)}
+            onMouseLeave={() => setHoveredId(null)}
+            className={`w-9 h-9 rounded-xl overflow-hidden shrink-0 transition-all duration-150 relative ${
+              selectedId === v.id
+                ? 'ring-[1.5px] ring-cherry-primary/60 ring-offset-1 ring-offset-background scale-105'
+                : 'opacity-70 hover:opacity-100 hover:scale-105'
+            }`}
+          >
+            {v.status === 'generating' ? (
+              <div className="w-full h-full bg-cherry-active-bg flex items-center justify-center">
+                <Loader2 size={10} className="text-cherry-primary animate-spin" />
+              </div>
+            ) : v.status === 'failed' ? (
+              <div className="w-full h-full bg-destructive/10 flex items-center justify-center">
+                <AlertTriangle size={10} className="text-destructive" />
+              </div>
+            ) : (
+              <div className="relative w-full h-full">
+                <img src={v.poster} alt="" className="w-full h-full object-cover" />
+                <span className="absolute inset-0 flex items-center justify-center bg-black/15">
+                  <Play size={10} className="text-white" fill="currentColor" />
+                </span>
+              </div>
+            )}
+          </Button>
+
+          <AnimatePresence>
+            {hoveredId === v.id && v.status === 'completed' && (
+              <motion.div
+                initial={{ opacity: 0, x: 4, scale: 0.9 }}
+                animate={{ opacity: 1, x: 0, scale: 1 }}
+                exit={{ opacity: 0, x: 4, scale: 0.9 }}
+                transition={{ duration: 0.15 }}
+                className="absolute right-[46px] top-1/2 -translate-y-1/2 z-[var(--z-popover)] pointer-events-none"
+              >
+                <div className="w-[200px] rounded-xl overflow-hidden shadow-2xl shadow-black/20 border border-border/40 bg-background">
+                  <div className="relative">
+                    <img src={v.poster} alt="" className="w-full aspect-video object-cover" />
+                    <span className="absolute right-2 bottom-2 px-1.5 py-0.5 rounded bg-black/70 text-white text-xs">{v.duration}s</span>
+                  </div>
+                  <div className="px-2.5 py-2 border-t border-border/30">
+                    <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">{v.prompt}</p>
+                    <div className="flex items-center gap-2 mt-1.5">
+                      <span className="text-xs text-muted-foreground/50">{v.aspect}</span>
+                      <span className="text-xs text-muted-foreground/50">{v.resolution}</span>
+                      <span className="text-xs text-cherry-primary/70">{VIDEO_MODELS.find(m => m.id === v.model)?.name}</span>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function VideoControlPanel({ params, onChange, onClose }: {
+  params: VideoParams;
+  onChange: (p: VideoParams) => void;
+  onClose: () => void;
+}) {
+  const [modelOpen, setModelOpen] = useState(false);
+  const selectedModel = VIDEO_MODELS.find(m => m.id === params.model);
+
+  // The Size grid renders 7 tiles: Auto + 6 aspect ratios. Each shows a
+  // mini ratio glyph (drawn as a div proportioned to the actual ratio).
+  const sizeTiles: { value: VideoAspect; label: string }[] = [
+    { value: 'auto', label: 'Auto' },
+    { value: '16:9', label: '16:9' },
+    { value: '4:3',  label: '4:3' },
+    { value: '1:1',  label: '1:1' },
+    { value: '3:4',  label: '3:4' },
+    { value: '9:16', label: '9:16' },
+    { value: '21:9', label: '21:9' },
+  ];
+
+  return (
+    <motion.div
+      initial={{ x: 16, opacity: 0 }}
+      animate={{ x: 0, opacity: 1 }}
+      exit={{ x: 16, opacity: 0 }}
+      transition={{ duration: 0.2 }}
+      className="absolute right-3 top-3 bottom-3 z-[var(--z-dropdown)] w-[280px] bg-background/95 backdrop-blur-xl rounded-2xl shadow-2xl shadow-black/12 border border-border/40 flex flex-col overflow-hidden"
+    >
+      <div className="flex items-center justify-between px-4 pt-3 pb-2">
+        <span className="text-xs text-foreground tracking-wider">Generate method</span>
+        <Button variant="ghost" size="icon-xs" onClick={onClose} className="p-0.5 text-muted-foreground/60 hover:text-foreground">
+          <X size={11} />
+        </Button>
+      </div>
+
+      {/* Method tabs — Reference / Edit / Frames */}
+      <div className="px-4 pb-3">
+        <div className="flex items-center gap-0.5 bg-muted/40 rounded-lg p-0.5">
+          {(['reference', 'edit', 'frames'] as GenerateMethod[]).map(m => (
+            <Button size="inline" key={m} variant="ghost"
+              onClick={() => onChange({ ...params, method: m })}
+              className={`flex-1 px-3 py-[5px] text-xs transition-all duration-150 capitalize ${
+                params.method === m
+                  ? 'bg-background text-foreground shadow-sm'
+                  : 'text-muted-foreground/60 hover:text-foreground'
+              }`}
+            >
+              {m}
+            </Button>
+          ))}
+        </div>
+      </div>
+
+      <div className="flex-1 overflow-y-auto px-4 pb-4 space-y-4 scrollbar-thin-xs">
+        {/* Model — kept as the first param even though not in reference,
+            because every video model has very different output character. */}
+        <PanelSection label="Model">
+          <Popover open={modelOpen} onOpenChange={setModelOpen}>
+            <PopoverTrigger asChild>
+              <Button size="inline" variant="ghost"
+                className="w-full flex items-center justify-between gap-2 px-2.5 py-[6px] rounded-lg bg-muted/35 hover:bg-accent/40 text-xs"
+              >
+                <div className="flex items-center gap-1.5 min-w-0">
+                  <span className={`w-3.5 h-3.5 rounded shrink-0 ${VIDEO_PROVIDER_COLORS[selectedModel?.provider || ''] || 'bg-muted'}`} />
+                  <span className="text-foreground truncate">{selectedModel?.name}</span>
+                </div>
+                <ChevronDown size={9} className={`text-muted-foreground/40 transition-transform ${modelOpen ? 'rotate-180' : ''}`} />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent align="start" className="p-1 w-[var(--radix-popover-trigger-width)] min-w-[200px]">
+              {VIDEO_MODELS.map(m => (
+                <Button key={m.id} size="inline" variant="ghost"
+                  onClick={() => { onChange({ ...params, model: m.id }); setModelOpen(false); }}
+                  className={`w-full flex items-center gap-2 justify-start px-2 py-[6px] text-xs rounded-md ${
+                    params.model === m.id ? 'bg-cherry-active-bg text-cherry-primary-dark' : 'text-foreground hover:bg-accent/40'
+                  }`}
+                >
+                  <span className={`w-3.5 h-3.5 rounded shrink-0 ${VIDEO_PROVIDER_COLORS[m.provider]}`} />
+                  <span className="flex-1 text-left">{m.name}</span>
+                  <span className="text-xs text-muted-foreground/50">{m.tier}</span>
+                </Button>
+              ))}
+            </PopoverContent>
+          </Popover>
+        </PanelSection>
+
+        {/* Size — 3-col grid of ratio tiles with mini glyph */}
+        <PanelSection label="Size">
+          <div className="grid grid-cols-3 gap-1.5">
+            {sizeTiles.map(tile => (
+              <Button size="inline" key={tile.value} variant="ghost"
+                onClick={() => onChange({ ...params, aspect: tile.value })}
+                className={`flex flex-col items-center gap-1.5 py-2 rounded-lg transition-all duration-150 ${
+                  params.aspect === tile.value
+                    ? 'bg-cherry-active-bg text-cherry-primary-dark ring-1 ring-cherry-ring'
+                    : 'bg-muted/25 text-muted-foreground/70 hover:bg-accent/40 hover:text-foreground'
+                }`}
+              >
+                <AspectGlyph value={tile.value} active={params.aspect === tile.value} />
+                <span className="text-xs">{tile.label}</span>
+              </Button>
+            ))}
+          </div>
+        </PanelSection>
+
+        {/* Resolution */}
+        <PanelSection label="Resolution">
+          <ToggleGroup type="single" size="xs" value={params.resolution}
+            onValueChange={(v) => v && onChange({ ...params, resolution: v as VideoResolution })}
+            className="w-full"
+          >
+            <ToggleGroupItem value="480p"  className="flex-1 text-xs">480p</ToggleGroupItem>
+            <ToggleGroupItem value="720p"  className="flex-1 text-xs">720p</ToggleGroupItem>
+            <ToggleGroupItem value="1080p" className="flex-1 text-xs">1080p</ToggleGroupItem>
+          </ToggleGroup>
+        </PanelSection>
+
+        {/* Duration — 4×3 grid of seconds tiles 4s..15s */}
+        <PanelSection label="Duration">
+          <div className="grid grid-cols-4 gap-1.5">
+            {ALL_DURATIONS.map(d => (
+              <Button size="inline" key={d} variant="ghost"
+                onClick={() => onChange({ ...params, duration: d })}
+                className={`py-1.5 rounded-lg text-xs transition-all duration-150 ${
+                  params.duration === d
+                    ? 'bg-cherry-active-bg text-cherry-primary-dark ring-1 ring-cherry-ring'
+                    : 'bg-muted/25 text-muted-foreground/60 hover:bg-accent/40 hover:text-foreground'
+                }`}
+              >
+                {d}s
+              </Button>
+            ))}
+          </div>
+        </PanelSection>
+
+        {/* Audio toggle */}
+        <div className="flex items-center justify-between py-1.5">
+          <div className="flex items-center gap-2">
+            <Volume2 size={13} className="text-muted-foreground/70" />
+            <span className="text-xs text-foreground">Audio</span>
+          </div>
+          <Switch
+            checked={params.audio}
+            onCheckedChange={(v) => onChange({ ...params, audio: v })}
+          />
+        </div>
+
+        {/* Web search toggle */}
+        <div className="flex items-center justify-between py-1.5 border-t border-border/30 pt-3">
+          <div className="flex items-center gap-2">
+            <Globe size={13} className="text-muted-foreground/70" />
+            <span className="text-xs text-foreground">Web search</span>
+          </div>
+          <Switch
+            checked={params.webSearch}
+            onCheckedChange={(v) => onChange({ ...params, webSearch: v })}
+          />
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
+/** Mini visual glyph showing the aspect ratio as a proportional rectangle. */
+function AspectGlyph({ value, active }: { value: VideoAspect; active: boolean }) {
+  if (value === 'auto') {
+    return (
+      <div className={`w-5 h-4 rounded-[3px] border-[1.5px] border-dashed flex items-center justify-center ${
+        active ? 'border-cherry-primary-dark' : 'border-muted-foreground/40'
+      }`}>
+        <span className="text-[7px] leading-none font-medium">A</span>
+      </div>
+    );
+  }
+  // Drive box size from the actual ratio so the proportions read correctly.
+  const ratios: Record<Exclude<VideoAspect, 'auto'>, { w: number; h: number }> = {
+    '16:9': { w: 22, h: 12 },
+    '4:3':  { w: 20, h: 15 },
+    '1:1':  { w: 16, h: 16 },
+    '3:4':  { w: 12, h: 16 },
+    '9:16': { w: 10, h: 18 },
+    '21:9': { w: 24, h: 10 },
+  };
+  const { w, h } = ratios[value as Exclude<VideoAspect, 'auto'>];
+  return (
+    <div
+      style={{ width: `${w}px`, height: `${h}px` }}
+      className={`rounded-[3px] border-[1.5px] ${active ? 'border-cherry-primary-dark bg-cherry-primary/10' : 'border-muted-foreground/40'}`}
+    />
+  );
+}
+
+function VideoPromptBar({ params, onChange, onGenerate, isGenerating }: {
+  params: VideoParams;
+  onChange: (p: VideoParams) => void;
+  onGenerate: () => void;
+  isGenerating: boolean;
+}) {
+  const selectedModel = VIDEO_MODELS.find(m => m.id === params.model);
+  const credits = 90;
+
+  // Frame slots are meaningful for the Frames method (start + end frame),
+  // and the Reference method also accepts a reference image (single slot).
+  // For Edit we hide them — you edit the existing canvas selection.
+  const showFrames = params.method === 'frames';
+  const showReferenceSlot = params.method === 'reference';
+
+  return (
+    <div className="shrink-0 flex justify-center px-6 pb-4 pt-2">
+      <div className="relative w-full max-w-[680px] rounded-2xl border border-border/50 bg-background shadow-lg shadow-black/8 overflow-hidden">
+        {/* Asset Library notice strip */}
+        <div className="flex items-center justify-between gap-3 px-4 py-2.5 border-b border-border/40 bg-muted/30">
+          <span className="text-xs text-muted-foreground leading-relaxed">
+            Character assets must be approved via the Asset Library.
+          </span>
+          <Button variant="outline" size="xs" className="gap-1.5 shrink-0 border-border/50 text-xs">
+            <Upload size={11} />
+            Upload
+          </Button>
+        </div>
+
+        {/* Frame slots — Start + End, or single Reference */}
+        {(showFrames || showReferenceSlot) && (
+          <div className="flex items-center gap-2 px-4 pt-3">
+            {showFrames ? (
+              <>
+                <FrameSlot label="Start Frame" value={params.startFrame} onChange={(v) => onChange({ ...params, startFrame: v })} />
+                <FrameSlot label="End Frame"   value={params.endFrame}   onChange={(v) => onChange({ ...params, endFrame:   v })} />
+              </>
+            ) : (
+              <FrameSlot label="Reference" value={params.startFrame} onChange={(v) => onChange({ ...params, startFrame: v })} />
+            )}
+          </div>
+        )}
+
+        <Textarea
+          value={params.prompt}
+          onChange={e => onChange({ ...params, prompt: e.target.value })}
+          placeholder="What are we creating today"
+          rows={1}
+          onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); onGenerate(); } }}
+          className="w-full bg-transparent px-4 pt-3 pb-1.5 text-xs text-foreground placeholder:text-muted-foreground/60 resize-none outline-none"
+        />
+
+        {/* Bottom action row */}
+        <div className="flex items-center justify-between gap-2 px-3.5 pb-3 pt-1">
+          <div className="flex items-center gap-1">
+            {/* Video Gen dropdown — switches input kind between Video/Image/Audio */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button size="inline" variant="ghost"
+                  className="gap-1.5 px-2 py-1 text-xs text-foreground hover:bg-accent/40"
+                >
+                  <InputKindIcon kind={params.inputKind} />
+                  <span>{params.inputKind === 'video' ? 'Video Gen' : params.inputKind === 'image' ? 'Image Gen' : 'Audio Gen'}</span>
+                  <ChevronDown size={9} className="text-muted-foreground/40" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" side="top" className="min-w-[180px]">
+                <DropdownMenuItem onClick={() => onChange({ ...params, inputKind: 'video' })}>
+                  <Video size={12} /> Video
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => onChange({ ...params, inputKind: 'image' })}>
+                  <ImageIcon size={12} /> Image
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => onChange({ ...params, inputKind: 'audio' })}>
+                  <Music size={12} /> Audio
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem>
+                  <Layers size={12} /> Select from Assets Library
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            {/* Settings — opens the Generate-method panel (right column). */}
+            <Button variant="ghost" size="icon-xs" className="p-1.5 text-muted-foreground/60 hover:text-foreground hover:bg-accent/40" title="Generate method">
+              <SlidersHorizontal size={12} />
+            </Button>
+
+            {/* Camera — capture/import */}
+            <Button variant="ghost" size="icon-xs" className="p-1.5 text-muted-foreground/60 hover:text-foreground hover:bg-accent/40" title="Camera">
+              <Video size={12} />
+            </Button>
+          </div>
+
+          <div className="flex items-center gap-2">
+            {/* Stats */}
+            <Button variant="ghost" size="icon-xs" className="p-1.5 text-muted-foreground/60 hover:text-foreground hover:bg-accent/40" title="Usage">
+              <BarChart3 size={12} />
+            </Button>
+
+            {/* Credit badge */}
+            <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-muted/40 text-xs text-muted-foreground">
+              <Zap size={10} className="text-amber-500 fill-amber-500" />
+              <span className="tabular-nums">{credits}</span>
+            </div>
+
+            {/* Model selector */}
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button size="inline" variant="ghost"
+                  className="gap-1 px-2 py-1 text-xs text-muted-foreground hover:bg-accent/40"
+                >
+                  <span className={`w-3 h-3 rounded ${VIDEO_PROVIDER_COLORS[selectedModel?.provider || ''] || 'bg-muted'}`} />
+                  <span>{selectedModel?.name}</span>
+                  <ChevronDown size={8} className="text-muted-foreground/40" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent side="top" align="end" className="p-1 w-[220px]">
+                {VIDEO_MODELS.map(m => (
+                  <Button key={m.id} size="inline" variant="ghost"
+                    onClick={() => onChange({ ...params, model: m.id })}
+                    className={`w-full flex items-center gap-2 justify-start px-2 py-[6px] text-xs rounded-md ${
+                      params.model === m.id ? 'bg-cherry-active-bg text-cherry-primary-dark' : 'text-foreground hover:bg-accent/40'
+                    }`}
+                  >
+                    <span className={`w-3.5 h-3.5 rounded shrink-0 ${VIDEO_PROVIDER_COLORS[m.provider]}`} />
+                    <span className="flex-1 text-left">{m.name}</span>
+                    <span className="text-xs text-muted-foreground/50">{m.tier}</span>
+                  </Button>
+                ))}
+              </PopoverContent>
+            </Popover>
+
+            {/* Generate */}
+            <Button variant="default" size="icon-sm"
+              onClick={onGenerate}
+              disabled={!params.prompt.trim() || isGenerating}
+              className="p-1.5 rounded-lg disabled:opacity-30"
+            >
+              {isGenerating ? <Loader2 size={13} className="animate-spin" /> : <ArrowUpRight size={13} />}
+            </Button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function InputKindIcon({ kind }: { kind: CreationKindInBar }) {
+  const cls = "text-muted-foreground";
+  if (kind === 'video') return <Play size={11} className={cls} fill="currentColor" />;
+  if (kind === 'image') return <ImageIcon size={11} className={cls} />;
+  return <Music size={11} className={cls} />;
+}
+
+function FrameSlot({ label, value, onChange }: {
+  label: string;
+  value: string | null;
+  onChange: (v: string | null) => void;
+}) {
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <button
+          className={`relative w-[88px] h-[64px] rounded-lg border border-dashed flex flex-col items-center justify-center gap-1 transition-colors ${
+            value
+              ? 'border-cherry-ring bg-cherry-active-bg/40'
+              : 'border-border/60 bg-muted/25 hover:bg-muted/40 hover:border-border'
+          }`}
+        >
+          {value ? (
+            <img src={value} alt={label} className="absolute inset-0 w-full h-full object-cover rounded-lg" />
+          ) : (
+            <>
+              <ImageIcon size={14} className="text-muted-foreground/50" />
+              <span className="text-xs text-muted-foreground/60 leading-tight text-center">{label}</span>
+            </>
+          )}
+        </button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="start" side="top" className="min-w-[200px]">
+        <DropdownMenuItem>
+          <Upload size={12} /> Upload Image
+        </DropdownMenuItem>
+        <DropdownMenuItem>
+          <Layers size={12} /> Select from Assets Library
+        </DropdownMenuItem>
+        <DropdownMenuItem>
+          <ImageIcon size={12} /> Select from Canvas
+        </DropdownMenuItem>
+        {value && (
+          <>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={() => onChange(null)} variant="destructive">
+              <Trash2 size={12} /> Remove
+            </DropdownMenuItem>
+          </>
+        )}
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }
 
@@ -310,27 +1082,65 @@ export function ImagePage() {
 // Top Toolbar
 // ===========================
 
-function TopToolbar({ view, onViewChange }: {
+function TopToolbar({ kind, onKindChange, view, onViewChange }: {
+  kind: CreationKind;
+  onKindChange: (k: CreationKind) => void;
   view: 'create' | 'gallery';
   onViewChange: (v: 'create' | 'gallery') => void;
 }) {
+  // Asset kind \u2192 drawing vs. video. Primary axis: which kind of media the
+  // user is creating. Sub-tabs (create / gallery) only apply to drawing
+  // mode; video shows a coming-soon panel.
+  const kindOptions: { value: CreationKind; label: string; icon: typeof Brush }[] = [
+    { value: 'image', label: '\u7ed8\u753b', icon: Brush },
+    { value: 'video', label: '\u89c6\u9891', icon: Video },
+  ];
+
   return (
-    <div className="flex items-center justify-between px-3 h-[40px] bg-background shrink-0">
-      <div className="flex items-center gap-0.5 bg-muted/40 rounded-lg p-0.5">
-        {(['create', 'gallery'] as const).map(tab => (
-          <Button size="inline"
-            key={tab}
-            variant="ghost"
-            onClick={() => onViewChange(tab)}
-            className={`px-3 py-[4px] text-xs transition-all duration-150 ${
-              view === tab
-                ? 'bg-background text-foreground shadow-sm'
-                : 'text-muted-foreground/60 hover:text-foreground'
-            }`}
-          >
-            {tab === 'create' ? '\u521b\u4f5c' : '\u753b\u5eca'}
-          </Button>
-        ))}
+    <div className="flex items-center justify-between px-3 h-[40px] bg-background shrink-0 gap-3">
+      <div className="flex items-center gap-2">
+        {/* Kind switch \u2014 \u7ed8\u753b / \u89c6\u9891 */}
+        <div className="flex items-center gap-0.5 bg-muted/40 rounded-lg p-0.5">
+          {kindOptions.map(opt => {
+            const Icon = opt.icon;
+            const active = kind === opt.value;
+            return (
+              <Button size="inline"
+                key={opt.value}
+                variant="ghost"
+                onClick={() => onKindChange(opt.value)}
+                className={`gap-1 px-2.5 py-[4px] text-xs transition-all duration-150 ${
+                  active
+                    ? 'bg-background text-foreground shadow-sm'
+                    : 'text-muted-foreground/60 hover:text-foreground'
+                }`}
+              >
+                <Icon size={12} />
+                {opt.label}
+              </Button>
+            );
+          })}
+        </div>
+
+        {/* View sub-tabs (create / gallery) \u2014 only meaningful for \u7ed8\u753b */}
+        {kind === 'image' && (
+          <div className="flex items-center gap-0.5 bg-muted/40 rounded-lg p-0.5">
+            {(['create', 'gallery'] as const).map(tab => (
+              <Button size="inline"
+                key={tab}
+                variant="ghost"
+                onClick={() => onViewChange(tab)}
+                className={`px-3 py-[4px] text-xs transition-all duration-150 ${
+                  view === tab
+                    ? 'bg-background text-foreground shadow-sm'
+                    : 'text-muted-foreground/60 hover:text-foreground'
+                }`}
+              >
+                {tab === 'create' ? '\u521b\u4f5c' : '\u753b\u5eca'}
+              </Button>
+            ))}
+          </div>
+        )}
       </div>
       <div className="flex items-center gap-1">
         <Button variant="outline" size="xs" className="gap-1.5 px-3 border-border/50 text-xs text-foreground hover:bg-accent/40">

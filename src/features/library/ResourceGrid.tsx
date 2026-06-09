@@ -5,7 +5,7 @@ import {
   Pencil, Copy, FolderInput, Download, Trash2,
   Layers, ChevronDown, Upload, Tag,
   Check, X,
-  Filter, Sparkles,
+  Filter, Sparkles, Bot, Wand2,
 } from 'lucide-react';
 import { Button, Input, Popover, PopoverTrigger, PopoverContent, SearchInput, EmptyState, Badge } from '@cherry-studio/ui';
 import { Separator } from "@cherry-studio/ui";
@@ -39,6 +39,9 @@ interface Props {
   onTypeFilter: (type: ResourceType | null) => void;
   typeCounts: Record<string, number>;
   onBrowseTemplates?: () => void;
+  /** When the user picks "使用 Agent 帮我创建" from the Skill create
+   *  dropdown — opens an AI-assisted skill authoring flow. */
+  onCreateSkillWithAgent?: () => void;
 }
 
 // ===========================
@@ -77,6 +80,7 @@ export function ResourceGrid({
   tags, activeTags, onToggleTag, onClearTags, onAddTag, onDeleteTag, onUpdateResourceTags, allTagNames,
   activeType, onTypeFilter, typeCounts,
   onBrowseTemplates,
+  onCreateSkillWithAgent,
 }: Props) {
   const [showFilter, setShowFilter] = useState(false);
   const [showCreate, setShowCreate] = useState(false);
@@ -131,38 +135,100 @@ export function ResourceGrid({
 
         <Separator orientation="vertical" opacity={30} className="!h-4 flex-shrink-0" />
 
-        <Popover open={showCreate} onOpenChange={(v) => { setShowCreate(v); if (v) setShowFilter(false); }}>
-          <PopoverTrigger asChild>
-            <Button variant="default" size="xs"
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs transition-colors active:scale-[0.97]">
-              <Plus size={11} /><span>新建资源</span>
-              <ChevronDown size={9} className={`transition-transform ${showCreate ? 'rotate-180' : ''}`} />
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent align="end" className="p-1 min-w-[150px] w-auto">
-            {(['prompt', 'assistant', 'agent'] as const).map(t => {
-              const cfg = RESOURCE_TYPE_CONFIG[t];
-              const Icon = cfg.icon;
-              return (
-                <Button variant="ghost" size="xs" key={t} onClick={() => { onCreate(t); setShowCreate(false); }}
-                  className="flex items-center justify-start gap-2.5 w-full px-2.5 py-[6px] rounded-lg text-xs text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-colors">
-                  <div className={`w-5 h-5 rounded-md flex items-center justify-center flex-shrink-0 ${cfg.color}`}>
-                    <Icon size={10} />
-                  </div>
-                  <span className="text-left">新建{cfg.label}</span>
-                </Button>
-              );
-            })}
-            <Separator opacity={30} className="my-0.5 mx-1" />
-            <Button variant="ghost" size="xs" onClick={() => { onCreate('skill'); setShowCreate(false); }}
-              className="flex items-center justify-start gap-2.5 w-full px-2.5 py-[6px] rounded-lg text-xs text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-colors">
-              <div className={`w-5 h-5 rounded-md flex items-center justify-center flex-shrink-0 ${RESOURCE_TYPE_CONFIG.skill.color}`}>
-                <Upload size={10} />
-              </div>
-              <span className="text-left">导入Skill</span>
-            </Button>
-          </PopoverContent>
-        </Popover>
+        {/* When a single resource type is active in the sidebar:
+            • Skill gets a 2-option dropdown (manual create / AI-assisted).
+            • Other types get a direct "新建{label}" button.
+            For the "全部" view the multi-choice popover stays so users
+            can still pick which type to create. */}
+        {activeType === 'skill' ? (
+          <Popover open={showCreate} onOpenChange={(v) => { setShowCreate(v); if (v) setShowFilter(false); }}>
+            <PopoverTrigger asChild>
+              <Button variant="default" size="xs"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs transition-colors active:scale-[0.97]">
+                <Plus size={11} /><span>新建技能</span>
+                <ChevronDown size={9} className={`transition-transform ${showCreate ? 'rotate-180' : ''}`} />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent align="end" className="p-1 min-w-[200px] w-auto">
+              <Button variant="ghost" size="xs"
+                onClick={() => { onCreate('skill'); setShowCreate(false); }}
+                className="flex items-center justify-start gap-2.5 w-full px-2.5 py-[6px] rounded-lg text-xs text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-colors">
+                <div className={`w-5 h-5 rounded-md flex items-center justify-center flex-shrink-0 ${RESOURCE_TYPE_CONFIG.skill.color}`}>
+                  <Plus size={10} />
+                </div>
+                <div className="flex flex-col items-start text-left min-w-0">
+                  <span>手动创建</span>
+                </div>
+              </Button>
+              <Button variant="ghost" size="xs"
+                onClick={() => { onCreateSkillWithAgent?.(); setShowCreate(false); }}
+                disabled={!onCreateSkillWithAgent}
+                className="flex items-center justify-start gap-2.5 w-full px-2.5 py-[6px] rounded-lg text-xs text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-colors">
+                <div className="w-5 h-5 rounded-md flex items-center justify-center flex-shrink-0 bg-cherry-primary/10 text-cherry-primary">
+                  <Wand2 size={10} />
+                </div>
+                <div className="flex flex-col items-start text-left min-w-0">
+                  <span>使用 Agent 帮我创建</span>
+                  <span className="text-[10px] text-muted-foreground/60 mt-0.5">在对话中描述需求，Agent 自动生成</span>
+                </div>
+              </Button>
+              <Separator opacity={30} className="my-0.5 mx-1" />
+              <Button variant="ghost" size="xs"
+                onClick={() => { onCreate('skill'); setShowCreate(false); }}
+                className="flex items-center justify-start gap-2.5 w-full px-2.5 py-[6px] rounded-lg text-xs text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-colors">
+                <div className={`w-5 h-5 rounded-md flex items-center justify-center flex-shrink-0 ${RESOURCE_TYPE_CONFIG.skill.color}`}>
+                  <Upload size={10} />
+                </div>
+                <div className="flex flex-col items-start text-left min-w-0">
+                  <span>从文件导入</span>
+                </div>
+              </Button>
+            </PopoverContent>
+          </Popover>
+        ) : activeType ? (
+          <Button
+            variant="default"
+            size="xs"
+            onClick={() => onCreate(activeType)}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs transition-colors active:scale-[0.97]"
+          >
+            <Plus size={11} />
+            <span>新建{RESOURCE_TYPE_CONFIG[activeType].label}</span>
+          </Button>
+        ) : (
+          <Popover open={showCreate} onOpenChange={(v) => { setShowCreate(v); if (v) setShowFilter(false); }}>
+            <PopoverTrigger asChild>
+              <Button variant="default" size="xs"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs transition-colors active:scale-[0.97]">
+                <Plus size={11} /><span>新建资源</span>
+                <ChevronDown size={9} className={`transition-transform ${showCreate ? 'rotate-180' : ''}`} />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent align="end" className="p-1 min-w-[150px] w-auto">
+              {(['prompt', 'assistant', 'agent'] as const).map(t => {
+                const cfg = RESOURCE_TYPE_CONFIG[t];
+                const Icon = cfg.icon;
+                return (
+                  <Button variant="ghost" size="xs" key={t} onClick={() => { onCreate(t); setShowCreate(false); }}
+                    className="flex items-center justify-start gap-2.5 w-full px-2.5 py-[6px] rounded-lg text-xs text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-colors">
+                    <div className={`w-5 h-5 rounded-md flex items-center justify-center flex-shrink-0 ${cfg.color}`}>
+                      <Icon size={10} />
+                    </div>
+                    <span className="text-left">新建{cfg.label}</span>
+                  </Button>
+                );
+              })}
+              <Separator opacity={30} className="my-0.5 mx-1" />
+              <Button variant="ghost" size="xs" onClick={() => { onCreate('skill'); setShowCreate(false); }}
+                className="flex items-center justify-start gap-2.5 w-full px-2.5 py-[6px] rounded-lg text-xs text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-colors">
+                <div className={`w-5 h-5 rounded-md flex items-center justify-center flex-shrink-0 ${RESOURCE_TYPE_CONFIG.skill.color}`}>
+                  <Upload size={10} />
+                </div>
+                <span className="text-left">导入Skill</span>
+              </Button>
+            </PopoverContent>
+          </Popover>
+        )}
       </div>
 
       {/* Content */}

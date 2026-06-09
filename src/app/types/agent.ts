@@ -34,6 +34,7 @@ export interface AgentChatMessage {
   toolCall?: ToolCallData;
   generativeUI?: GenerativeUIData;
   permissionRequest?: PermissionRequest;
+  videos?: import('./chat').VideoClip[];
   timestamp: string;
 }
 

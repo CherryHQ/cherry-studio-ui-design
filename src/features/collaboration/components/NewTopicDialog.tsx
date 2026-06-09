@@ -12,18 +12,33 @@ import {
   ScrollArea,
 } from '@cherry-studio/ui';
 import { toast } from 'sonner';
-import { Smile, AtSign, Image as ImageIcon, Paperclip, Send, Bot } from 'lucide-react';
+import { Smile, AtSign, Image as ImageIcon, Paperclip, Send, Bot, FileCode, X } from 'lucide-react';
 import { CollabMember, Group, findMember, isAgent } from '../data';
 import { Avatar } from './Avatar';
+
+export interface AttachedArtifact {
+  fileName: string;
+  label: string;
+  emoji: string;
+  html: string;
+}
 
 interface NewTopicDialogProps {
   open: boolean;
   group: Group | null;
   onClose: () => void;
+  /**
+   * When set, the dialog opens as a "share-into-group" composer: the
+   * artifact is pre-attached and displayed below the text area. On send,
+   * `onSubmit(text, artifact)` fires so callers can persist both pieces.
+   */
+  attachedArtifact?: AttachedArtifact;
+  onSubmit?: (text: string, artifact: AttachedArtifact | null) => void;
 }
 
-export function NewTopicDialog({ open, group, onClose }: NewTopicDialogProps) {
+export function NewTopicDialog({ open, group, onClose, attachedArtifact, onSubmit }: NewTopicDialogProps) {
   const [draft, setDraft] = useState('');
+  const [keepArtifact, setKeepArtifact] = useState(true);
   const [mentionOpen, setMentionOpen] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   // Track caret across focus changes so popover selections insert in the right place.
@@ -32,6 +47,7 @@ export function NewTopicDialog({ open, group, onClose }: NewTopicDialogProps) {
   useEffect(() => {
     if (open) {
       setDraft('');
+      setKeepArtifact(true);
       caretRef.current = { start: 0, end: 0 };
       const t = window.setTimeout(() => textareaRef.current?.focus(), 60);
       return () => window.clearTimeout(t);
@@ -64,13 +80,20 @@ export function NewTopicDialog({ open, group, onClose }: NewTopicDialogProps) {
     });
   };
 
-  const canSend = draft.trim().length > 0;
+  // With an attached artifact, an empty comment still counts as a valid
+  // share (the artifact itself carries the content).
+  const canSend = draft.trim().length > 0 || (!!attachedArtifact && keepArtifact);
 
   const handleSend = () => {
     if (!canSend) return;
-    toast.success('已发起话题', {
-      description: group ? `话题已发布到「${group.name}」` : undefined,
-    });
+    const artifact = attachedArtifact && keepArtifact ? attachedArtifact : null;
+    if (onSubmit) {
+      onSubmit(draft.trim(), artifact);
+    } else {
+      toast.success('已发起话题', {
+        description: group ? `话题已发布到「${group.name}」` : undefined,
+      });
+    }
     onClose();
   };
 
@@ -112,10 +135,30 @@ export function NewTopicDialog({ open, group, onClose }: NewTopicDialogProps) {
                 handleSend();
               }
             }}
-            placeholder="分享你的想法…"
-            rows={8}
+            placeholder={attachedArtifact ? '写点什么再分享…（选填）' : '分享你的想法…'}
+            rows={attachedArtifact ? 5 : 8}
             className="w-full resize-none bg-transparent text-[13px] leading-relaxed text-foreground outline-none placeholder:text-muted-foreground/60"
           />
+          {attachedArtifact && keepArtifact && (
+            <div className="mt-2 flex items-center gap-2.5 px-2.5 py-2 rounded-lg border border-border/40 bg-accent/20">
+              <div className="w-8 h-8 rounded-md bg-accent-orange-muted text-accent-orange flex items-center justify-center flex-shrink-0">
+                <FileCode size={14} strokeWidth={1.6} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="text-[12.5px] text-foreground truncate">{attachedArtifact.fileName}</div>
+                <div className="text-[10.5px] text-muted-foreground/60">HTML 原型 · 从智能体分享</div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setKeepArtifact(false)}
+                aria-label="移除附件"
+                title="移除附件"
+                className="w-6 h-6 rounded flex items-center justify-center text-muted-foreground/50 hover:text-destructive hover:bg-destructive/10 transition-colors flex-shrink-0"
+              >
+                <X size={12} />
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Bottom toolbar — inline actions + send */}

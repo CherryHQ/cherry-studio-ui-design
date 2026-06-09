@@ -59,6 +59,31 @@ export const MOCK_SESSIONS: AgentSession[] = [
     group: '成果展示',
   },
   {
+    id: 'session-video',
+    title: '新品发布预热视频 · 丝绸光影',
+    agentName: '视频创作者',
+    agentIcon: '🎬',
+    lastMessage: '3 段 5 秒 1080p 视频已生成，含分镜脚本。',
+    timestamp: '16:18',
+    messageCount: 7,
+    status: 'completed',
+    pinned: true,
+    tags: ['视频', 'Sora'],
+    group: '成果展示',
+  },
+  {
+    id: 'session-video-single',
+    title: '咖啡冲泡延时视频',
+    agentName: '视频创作者',
+    agentIcon: '🎬',
+    lastMessage: '已生成 1 段 8 秒 1080p 视频，慢动作 + 热气特写。',
+    timestamp: '16:24',
+    messageCount: 5,
+    status: 'completed',
+    tags: ['视频', 'Sora'],
+    group: '成果展示',
+  },
+  {
     id: 'session-1',
     title: 'React + Vite + Tailwind 项目',
     agentName: '全栈工程师',
@@ -1547,6 +1572,159 @@ const SESSION_SLIDES_PREVIEW = `<!DOCTYPE html>
 
 </body></html>`;
 
+// ===========================
+// Session: 新品发布预热视频 (text-to-video)
+// ===========================
+const SESSION_VIDEO_MESSAGES: AgentChatMessage[] = [
+  {
+    id: 'sv-m1',
+    role: 'user',
+    content: '我们下周要发布新一季的丝绸围巾系列，帮我生成 3 段 5 秒的预热视频，主题是「轻盈飘逸的丝绸在阳光下展开」，分别用电影感、极简、未来感三种风格，最后还要一份分镜脚本。',
+    timestamp: '16:10',
+  },
+  {
+    id: 'sv-m2',
+    role: 'agent',
+    thinking: '需求拆解：\n- 内容主体：丝绸 / 阳光 / 飘逸感\n- 三个风格变体（电影感 / 极简 / 未来感）\n- 单段 5 秒，1080p\n- 配套分镜脚本（中文 + 镜头语言）\n\n执行计划：\n1. 起稿三段 prompt（结合参考画面、镜头运动、光线方向）\n2. 调 sora-1.5 文生视频 API，并行跑 3 个 job\n3. 等结果回来后做分镜脚本（按"镜头 / 时长 / 画面 / 转场"四列）\n4. 汇总成 final 输出',
+    content: '已拆解为三段 prompt + 一份分镜脚本，先并行跑视频生成。',
+    timestamp: '16:11',
+  },
+  {
+    id: 'sv-m3',
+    role: 'agent',
+    toolCall: { name: 'sora.generate · job=cinematic-silk', status: 'done', duration: '42s' },
+    timestamp: '16:11',
+  },
+  {
+    id: 'sv-m4',
+    role: 'agent',
+    toolCall: { name: 'sora.generate · job=minimal-silk', status: 'done', duration: '38s' },
+    timestamp: '16:11',
+  },
+  {
+    id: 'sv-m5',
+    role: 'agent',
+    toolCall: { name: 'sora.generate · job=futuristic-silk', status: 'done', duration: '46s' },
+    timestamp: '16:12',
+  },
+  {
+    id: 'sv-m6',
+    role: 'agent',
+    toolCall: { name: 'write storyboard/scenes.md', status: 'done', duration: '1.2s' },
+    timestamp: '16:13',
+  },
+  {
+    id: 'sv-m7',
+    role: 'agent',
+    content: '3 段视频和分镜脚本都已生成完毕：\n\n- **电影感 · 金色逆光**：4:3 letterbox，慢动作丝绸在午后阳光中展开\n- **极简 · 白底特写**：纯白背景 + 柔光，丝绸缓缓飘落\n- **未来感 · 冷调体积光**：冷蓝紫体积光穿过半透明丝绸，颗粒感极低\n\n所有片段都按「丝绸主体 + 阳光叙事」统一处理，可直接拼接成 15 秒预热长片。分镜脚本见 `storyboard/scenes.md`。',
+    timestamp: '16:14',
+    videos: [
+      {
+        url: 'https://cdn.pixabay.com/video/2024/07/22/223149_large.mp4',
+        poster: 'https://images.unsplash.com/photo-1612831197310-a3c70a8d7f53?auto=format&fit=crop&w=1080&q=80',
+        title: '电影感 · 金色逆光',
+        duration: '0:05',
+        resolution: '1080p',
+      },
+      {
+        url: 'https://cdn.pixabay.com/video/2022/12/18/142282-781658916_large.mp4',
+        poster: 'https://images.unsplash.com/photo-1604147495798-57beb5d6af73?auto=format&fit=crop&w=1080&q=80',
+        title: '极简 · 白底特写',
+        duration: '0:05',
+        resolution: '1080p',
+      },
+      {
+        url: 'https://cdn.pixabay.com/video/2023/10/27/186875-878258851_large.mp4',
+        poster: 'https://images.unsplash.com/photo-1644952349020-c30bef5deb1f?auto=format&fit=crop&w=1080&q=80',
+        title: '未来感 · 冷调体积光',
+        duration: '0:05',
+        resolution: '1080p',
+      },
+    ],
+  },
+];
+
+const SESSION_VIDEO_STEPS: WorkflowStep[] = [
+  { id: 'sv-s1', icon: 'review', label: '拆解需求 + 三个风格 prompt', status: 'done' },
+  { id: 'sv-s2', icon: 'paint',  label: '生成「电影感 · 金色逆光」', status: 'done' },
+  { id: 'sv-s3', icon: 'paint',  label: '生成「极简 · 白底特写」',   status: 'done' },
+  { id: 'sv-s4', icon: 'paint',  label: '生成「未来感 · 冷调体积光」', status: 'done' },
+  { id: 'sv-s5', icon: 'write',  label: '撰写分镜脚本',              status: 'done' },
+  { id: 'sv-s6', icon: 'finish', label: '汇总输出 + 预览',            status: 'done' },
+];
+
+// ===========================
+// Session: 咖啡冲泡延时视频 (single-clip text-to-video)
+// ===========================
+const SESSION_VIDEO_SINGLE_MESSAGES: AgentChatMessage[] = [
+  {
+    id: 'svs-m1',
+    role: 'user',
+    content: '帮我生成一段 8 秒的咖啡冲泡延时视频，奶白色背景，自然光，慢动作，结尾定格在杯口冒着热气的特写。',
+    timestamp: '16:20',
+  },
+  {
+    id: 'svs-m2',
+    role: 'agent',
+    thinking: '单镜头需求拆解：\n- 主体：咖啡冲泡 + 杯口热气\n- 时长：8s（慢动作 5s + 特写 3s）\n- 光：自然光，色温 ~5200K\n- 背景：奶白 (#F4EDE4)\n- 镜头：推镜 → 定格特写\n- 风格：纪实质感，不要 CG 感\n\n参数：sora-1.5，cfg=7.5，steps=40，1920×1080，fps=24，motion=低。',
+    content: '拆解完成，开始生成。',
+    timestamp: '16:20',
+  },
+  {
+    id: 'svs-m3',
+    role: 'agent',
+    toolCall: { name: 'sora.generate · job=coffee-pour-8s', status: 'done', duration: '48s' },
+    timestamp: '16:21',
+  },
+  {
+    id: 'svs-m4',
+    role: 'agent',
+    toolCall: { name: 'ffmpeg · color-grade + freeze-frame', status: 'done', duration: '4.1s' },
+    timestamp: '16:22',
+  },
+  {
+    id: 'svs-m5',
+    role: 'agent',
+    content: '已生成 1 段 8 秒 1080p 视频。0:00 – 0:05 慢动作冲泡，0:05 – 0:08 杯口热气定格特写。自然光带轻微暖色调，匹配「奶白色背景」描述。如需调整节奏或加品牌字幕，告诉我即可。',
+    timestamp: '16:23',
+    videos: [
+      {
+        url: 'https://cdn.pixabay.com/video/2020/06/20/42389-433931995_large.mp4',
+        poster: 'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=1080&q=80',
+        title: '咖啡冲泡 · 慢动作特写',
+        duration: '0:08',
+        resolution: '1080p',
+      },
+    ],
+  },
+];
+
+const SESSION_VIDEO_SINGLE_STEPS: WorkflowStep[] = [
+  { id: 'svs-s1', icon: 'review', label: '拆解需求 + 镜头分配',    status: 'done' },
+  { id: 'svs-s2', icon: 'paint',  label: '生成 8s 主片段',          status: 'done' },
+  { id: 'svs-s3', icon: 'build',  label: '调色 + 定格末帧',         status: 'done' },
+  { id: 'svs-s4', icon: 'finish', label: '输出 1080p MP4',          status: 'done' },
+];
+
+const SESSION_VIDEO_STORYBOARD = `# 新品发布预热 · 分镜脚本
+
+| 镜头 | 时长 | 风格 | 画面 | 镜头语言 | 转场 |
+|---|---|---|---|---|---|
+| 01 | 0:00 – 0:05 | 电影感 | 午后阳光斜射，金色丝绸在画面右侧缓缓展开 | 推镜，4:3 letterbox，f/1.8 浅景深 | 淡入 |
+| 02 | 0:05 – 0:10 | 极简 | 纯白背景，丝绸自上而下飘落，柔光均匀 | 固定机位，俯拍 30° | 直切 |
+| 03 | 0:10 – 0:15 | 未来感 | 冷蓝紫体积光穿透半透明丝绸，颗粒感低 | 环绕镜头，机器人轨道 | 淡出到品牌 logo |
+
+## 配乐建议
+- 0:00 – 0:08：弦乐 + 室内乐，建立氛围
+- 0:08 – 0:12：渐强电子音色，氛围转冷
+- 0:12 – 0:15：留白 + 一声轻击鼓点
+
+## 字幕（可选）
+- "光，让丝绸有了形状"
+- "Spring / 2026"
+- Cherry Atelier · 2026 春夏系列
+`;
+
 const SHOWCASE_FILES: FileNode[] = [
   { name: 'reports', type: 'folder', children: [
     { name: 'Q4-user-behavior-report.pdf', type: 'file' },
@@ -1624,6 +1802,32 @@ export const SESSION_DATA_MAP: Record<string, AgentSessionData> = {
     fileContents: {},
     previewHtml: SESSION_SLIDES_PREVIEW,
     workDir: '~/presentations/2026-trends',
+  },
+  'session-video': {
+    messages: SESSION_VIDEO_MESSAGES,
+    steps: SESSION_VIDEO_STEPS,
+    files: SHOWCASE_FILES,
+    outputFiles: [
+      { id: 'ov-1', name: 'cinematic-silk.mp4',    format: 'mp4', size: '8.4 MB', status: 'completed', timestamp: '16:12' },
+      { id: 'ov-2', name: 'minimal-silk.mp4',      format: 'mp4', size: '6.2 MB', status: 'completed', timestamp: '16:12' },
+      { id: 'ov-3', name: 'futuristic-silk.mp4',   format: 'mp4', size: '9.1 MB', status: 'completed', timestamp: '16:13' },
+      { id: 'ov-4', name: 'storyboard/scenes.md',  format: 'md',  size: '2.1 KB', status: 'completed', timestamp: '16:13' },
+      { id: 'ov-5', name: 'final-cut-15s.mp4',     format: 'mp4', size: '22 MB',  status: 'generating', timestamp: '' },
+    ],
+    fileContents: {
+      'storyboard/scenes.md': SESSION_VIDEO_STORYBOARD,
+    },
+    workDir: '~/video/2026-spring-silk',
+  },
+  'session-video-single': {
+    messages: SESSION_VIDEO_SINGLE_MESSAGES,
+    steps: SESSION_VIDEO_SINGLE_STEPS,
+    files: SHOWCASE_FILES,
+    outputFiles: [
+      { id: 'ovs-1', name: 'coffee-pour-8s.mp4', format: 'mp4', size: '11.6 MB', status: 'completed', timestamp: '16:23' },
+    ],
+    fileContents: {},
+    workDir: '~/video/coffee-shoot',
   },
   'session-1': {
     messages: SESSION_1_MESSAGES,

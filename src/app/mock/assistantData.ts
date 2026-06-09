@@ -1122,4 +1122,100 @@ export const MOCK_MULTI_ASSISTANT_MESSAGES: Message[] = [
     thinking: '综合三个角度的意见，给出结构化的最终方案。',
     assistantLabel: '产品经理',
   },
+
+  // ============================================================
+  // Video generation case — Sora-style text-to-video output
+  // ============================================================
+
+  // 21. User asks for a product launch teaser video
+  {
+    id: 'msg-21',
+    role: 'user',
+    content: '帮我生成 3 段 5 秒的新品发布预热视频，主题是「轻盈飘逸的丝绸在阳光下展开」，分别用电影感、极简、未来感三种风格。',
+    timestamp: '16:02',
+  },
+
+  // 22. Assistant returns a video gallery
+  {
+    id: 'msg-22',
+    role: 'assistant',
+    content: '已为你生成 3 段 5 秒 1080p 视频，分别对应电影感、极简、未来感三种风格。点击任意视频可放大预览或下载原片。所有片段都遵循「丝绸 + 阳光」的主视觉，可直接拼接为 15 秒预热长片。',
+    timestamp: '16:03',
+    thinking: '理解需求：\n- 主题：丝绸 / 阳光 / 飘逸\n- 时长：单段 5s\n- 风格：电影感 / 极简 / 未来感\n\n生成策略：\n1. 电影感：4:3 letterbox，金黄逆光，慢动作\n2. 极简：白底特写，淡阴影，留白构图\n3. 未来感：冷调蓝紫，体积光，颗粒感低\n\n模型：Sora 1.5 文生视频，参数 cfg=7.5，steps=40，分辨率 1920×1080。',
+    videos: [
+      {
+        url: 'https://cdn.pixabay.com/video/2024/07/22/223149_large.mp4',
+        poster: 'https://images.unsplash.com/photo-1612831197310-a3c70a8d7f53?auto=format&fit=crop&w=1080&q=80',
+        title: '电影感 · 金色逆光',
+        duration: '0:05',
+        resolution: '1080p',
+      },
+      {
+        url: 'https://cdn.pixabay.com/video/2022/12/18/142282-781658916_large.mp4',
+        poster: 'https://images.unsplash.com/photo-1604147495798-57beb5d6af73?auto=format&fit=crop&w=1080&q=80',
+        title: '极简 · 白底特写',
+        duration: '0:05',
+        resolution: '1080p',
+      },
+      {
+        url: 'https://cdn.pixabay.com/video/2023/10/27/186875-878258851_large.mp4',
+        poster: 'https://images.unsplash.com/photo-1644952349020-c30bef5deb1f?auto=format&fit=crop&w=1080&q=80',
+        title: '未来感 · 冷调体积光',
+        duration: '0:05',
+        resolution: '1080p',
+      },
+    ],
+    metadata: {
+      sessionId: 'a1b2c3d4e5f60011',
+      model: 'sora-1.5-text2video',
+      provider: 'openai',
+      status: 'success',
+      startTime: '2025-10-03 16:02',
+      duration: '1m 14s',
+      tokens: { input: 184, output: 0, thinking: 96 },
+      requestJson: '{ "prompt": "silk flowing in sunlight", "variations": 3, "duration": 5, "resolution": "1920x1080", "styles": ["cinematic", "minimal", "futuristic"] }',
+      responseJson: '{ "data": [{ "video_url": "..." }, { "video_url": "..." }, { "video_url": "..." }] }',
+    },
+  },
+
+  // ============================================================
+  // Single-video case — classic "one prompt → one video" flow
+  // ============================================================
+
+  // 23. User asks for a single product showcase clip
+  {
+    id: 'msg-23',
+    role: 'user',
+    content: '帮我生成一段 8 秒的咖啡冲泡延时视频，奶白色背景，自然光，慢动作，结尾定格在杯口冒着热气的特写。',
+    timestamp: '16:20',
+  },
+
+  // 24. Assistant returns a single video
+  {
+    id: 'msg-24',
+    role: 'assistant',
+    content: '已生成 1 段 8 秒 1080p 视频。整体节奏由远拉近，0:00 – 0:05 慢动作冲泡过程，0:05 – 0:08 定格在杯口热气特写，自然光带轻微暖色，匹配你描述的"奶白色背景"。如需调整节奏或加文案，我可以在原稿基础上重新渲染一版。',
+    timestamp: '16:21',
+    thinking: '单一镜头需求拆解：\n- 主体：咖啡冲泡 + 杯口热气\n- 时长 8s（慢动作 5s + 特写 3s）\n- 光：自然光，色温偏暖 (~5200K)\n- 背景：奶白色 (#F4EDE4)\n- 镜头：推镜 → 定格特写\n\n参数：cfg=7.5，steps=40，1920×1080，fps=24，motion=低。',
+    videos: [
+      {
+        url: 'https://cdn.pixabay.com/video/2020/06/20/42389-433931995_large.mp4',
+        poster: 'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=1080&q=80',
+        title: '咖啡冲泡 · 慢动作特写',
+        duration: '0:08',
+        resolution: '1080p',
+      },
+    ],
+    metadata: {
+      sessionId: 'a1b2c3d4e5f60012',
+      model: 'sora-1.5-text2video',
+      provider: 'openai',
+      status: 'success',
+      startTime: '2025-10-03 16:20',
+      duration: '48s',
+      tokens: { input: 124, output: 0, thinking: 72 },
+      requestJson: '{ "prompt": "slow-motion coffee pour, cream background, natural light, close-up steam at end", "duration": 8, "resolution": "1920x1080", "fps": 24 }',
+      responseJson: '{ "data": [{ "video_url": "..." }] }',
+    },
+  },
 ];

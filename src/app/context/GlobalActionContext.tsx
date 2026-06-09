@@ -26,12 +26,43 @@ export interface GlobalActionFunctions {
   navigateToKnowledge: (kbName: string) => void;
   /** Navigate to the Library page, optionally starting the create-flow for agent/assistant */
   navigateToLibrary: (createType?: 'agent' | 'assistant') => void;
+  /** Navigate to the Market page (resource marketplace) */
+  navigateToMarket: () => void;
   /** Return from Library back to the page that initiated the navigation */
   libraryReturn: () => void;
   /** Change the title of the currently-active tab */
   changeTabTitle: (title: string) => void;
   /** Open the global Settings overlay, optionally jumping to a specific section */
   openSettings: (section?: string) => void;
+  /**
+   * Open a tile from the Launchpad page. Target uses the same id namespace
+   * as the legacy new-tab dialog: built-in menu id ("chat"), agent id
+   * ("agent:<id>"), or html-artifact key ("html:pinned:<id>" /
+   * "html:<staticKey>").
+   */
+  launchpadOpen: (target: string) => void;
+  /**
+   * iPhone-style "add to dock": pin a Launchpad tile to the sidebar so
+   * the user can reach it without re-opening the Launchpad. For
+   * `function` kind the id is the menuItem id (un-hides in the sidebar);
+   * `miniapp` / `artifact` are surface placeholders for now.
+   */
+  pinToSidebar: (kind: 'function' | 'miniapp' | 'artifact', id: string, label?: string) => void;
+  /** Inverse of pinToSidebar — invoked from the sidebar's right-click. */
+  unpinFromSidebar: (kind: 'function' | 'miniapp' | 'artifact', id: string) => void;
+  /**
+   * Navigate to the Launchpad tab. When `editMode` is true, the
+   * launchpad enters iPhone-jiggle "edit home screen" mode — tiles
+   * grow a delete corner badge and the page shows a 完成 exit affordance.
+   * Wired to the sidebar item's right-click "管理" entry.
+   */
+  openLaunchpad: (editMode?: boolean) => void;
+  /**
+   * Hide a mini-app or artifact tile from the Launchpad. Functions stay
+   * built-in (only `hiddenApps` toggles their sidebar visibility, not
+   * launchpad visibility).
+   */
+  removeFromLaunchpad: (kind: 'miniapp' | 'artifact', id: string) => void;
 }
 
 /** Mutable state values consumed by pages */
@@ -40,6 +71,37 @@ export interface GlobalActionState {
   libraryEditResourceId: string | null;
   /** Pre-selected create type when Library was opened from agent/assistant run page */
   libraryCreateType: 'agent' | 'assistant' | null;
+  /**
+   * Namespaced ids of tiles the user has removed from the launchpad
+   * (e.g. `miniapp:gemini`, `artifact:roadmap`). The LaunchpadPage
+   * filters its grids against this set.
+   */
+  removedFromLaunchpad: Set<string>;
+  /**
+   * iPhone-jiggle edit mode for the launchpad — tiles grow a sidebar
+   * pin/unpin corner badge and shake. Toggled from the sidebar's
+   * right-click 管理.
+   */
+  launchpadEditMode: boolean;
+  /** Setter so LaunchpadPage's 完成 button can exit edit mode. */
+  setLaunchpadEditMode: (v: boolean) => void;
+  /**
+   * Menu item ids the user has hidden from the sidebar. Exposed so the
+   * Launchpad's edit mode can render each function tile's current
+   * "in sidebar?" state on the toggle badge.
+   */
+  hiddenSidebarApps: Set<string>;
+  /**
+   * Mini-apps the user pinned to the sidebar via launchpad → 添加至侧边栏.
+   * Rendered as rows below the standard menu items.
+   */
+  sidebarMiniapps: Array<{ id: string; name: string; color: string; initial: string; url: string; logoUrl?: string }>;
+  /**
+   * Agent artifacts the user pinned to the sidebar. `key` matches the
+   * id used by `pinToSidebar('artifact', key, …)` — either a static key
+   * like `weekly-report` or a runtime key like `pinned:<id>`.
+   */
+  sidebarArtifacts: Array<{ key: string; label: string; iconName?: string }>;
 }
 
 /** Combined interface for backward compatibility */
@@ -57,14 +119,26 @@ const defaultFunctions: GlobalActionFunctions = {
   editAssistantInLibrary: noop,
   navigateToKnowledge: noop,
   navigateToLibrary: noop,
+  navigateToMarket: noop,
   libraryReturn: noop,
   changeTabTitle: noop,
   openSettings: noop,
+  launchpadOpen: noop,
+  pinToSidebar: noop,
+  unpinFromSidebar: noop,
+  openLaunchpad: noop,
+  removeFromLaunchpad: noop,
 };
 
 const defaultState: GlobalActionState = {
   libraryEditResourceId: null,
   libraryCreateType: null,
+  removedFromLaunchpad: new Set<string>(),
+  launchpadEditMode: false,
+  setLaunchpadEditMode: noop,
+  hiddenSidebarApps: new Set<string>(),
+  sidebarMiniapps: [],
+  sidebarArtifacts: [],
 };
 
 const GlobalActionFunctionsContext = createContext<GlobalActionFunctions>(defaultFunctions);
@@ -92,20 +166,38 @@ export function GlobalActionProvider({ value, children }: GlobalActionProviderPr
     editAssistantInLibrary: value.editAssistantInLibrary,
     navigateToKnowledge: value.navigateToKnowledge,
     navigateToLibrary: value.navigateToLibrary,
+    navigateToMarket: value.navigateToMarket,
     libraryReturn: value.libraryReturn,
     changeTabTitle: value.changeTabTitle,
     openSettings: value.openSettings,
+    launchpadOpen: value.launchpadOpen,
+    pinToSidebar: value.pinToSidebar,
+    unpinFromSidebar: value.unpinFromSidebar,
+    openLaunchpad: value.openLaunchpad,
+    removeFromLaunchpad: value.removeFromLaunchpad,
   }), [
     value.openMiniApp, value.pinTab, value.editAssistantInLibrary,
-    value.navigateToKnowledge, value.navigateToLibrary, value.libraryReturn,
-    value.changeTabTitle, value.openSettings,
+    value.navigateToKnowledge, value.navigateToLibrary, value.navigateToMarket, value.libraryReturn,
+    value.changeTabTitle, value.openSettings, value.launchpadOpen,
+    value.pinToSidebar, value.unpinFromSidebar, value.openLaunchpad,
+    value.removeFromLaunchpad,
   ]);
 
   // Extract state (changes when libraryEditResourceId or libraryCreateType change)
   const state = useMemo<GlobalActionState>(() => ({
     libraryEditResourceId: value.libraryEditResourceId,
     libraryCreateType: value.libraryCreateType,
-  }), [value.libraryEditResourceId, value.libraryCreateType]);
+    removedFromLaunchpad: value.removedFromLaunchpad,
+    launchpadEditMode: value.launchpadEditMode,
+    setLaunchpadEditMode: value.setLaunchpadEditMode,
+    hiddenSidebarApps: value.hiddenSidebarApps,
+    sidebarMiniapps: value.sidebarMiniapps,
+    sidebarArtifacts: value.sidebarArtifacts,
+  }), [
+    value.libraryEditResourceId, value.libraryCreateType, value.removedFromLaunchpad,
+    value.launchpadEditMode, value.setLaunchpadEditMode, value.hiddenSidebarApps,
+    value.sidebarMiniapps, value.sidebarArtifacts,
+  ]);
 
   return (
     <GlobalActionFunctionsContext.Provider value={functions}>

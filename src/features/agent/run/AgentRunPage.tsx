@@ -33,7 +33,7 @@ import { WorkflowPanel } from './WorkflowPanel';
 import type { AgentChatMessage, AgentSession, AgentSessionData } from '@/app/types/agent';
 import { SessionHistoryPage, type SessionDisplayMode } from './SessionHistoryPage';
 import { HistorySidebar } from '@/app/components/shared/HistorySidebar';
-import { CreateEntityDialog } from '@/app/components/shared/CreateEntityDialog';
+import { CreateAgentWizard } from '@/app/components/shared/CreateAgentWizard';
 import { RecycleBinConfirmDialog } from '@/app/components/shared/RecycleBinConfirmDialog';
 import { ResourceConfigDialog } from '@/app/components/shared/ResourceConfigDialog';
 import { useRecycleBin } from '@/app/context/RecycleBinContext';
@@ -2032,10 +2032,9 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
       />
 
       {/* ===== Create Agent Onboarding ===== */}
-      <CreateEntityDialog
+      <CreateAgentWizard
         open={showCreateAgent}
         onOpenChange={setShowCreateAgent}
-        variant="agent"
       />
 
       {/* ===== Recycle Bin: delete-session confirmation ===== */}

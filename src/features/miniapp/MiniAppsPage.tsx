@@ -13,7 +13,9 @@ import { motion, AnimatePresence } from 'motion/react';
 import { copyToClipboard } from '@/app/utils/clipboard';
 import { Button, Input, Switch, Slider, EmptyState, BrandLogo, SearchInput } from '@cherry-studio/ui';
 
-const miniAppList: { id: string; name: string; color: string; initial: string; url: string }[] = [
+export interface MiniAppEntry { id: string; name: string; color: string; initial: string; url: string }
+
+export const miniAppList: MiniAppEntry[] = [
   { id: 'chatgpt', name: 'ChatGPT', color: 'bg-accent-emerald', initial: 'G', url: 'https://chat.openai.com' },
   { id: 'gemini', name: 'Gemini', color: 'bg-accent-blue', initial: '\u2726', url: 'https://gemini.google.com' },
   { id: 'siliconflow', name: 'SiliconFlow', color: 'bg-accent-blue', initial: 'SF', url: 'https://siliconflow.cn' },

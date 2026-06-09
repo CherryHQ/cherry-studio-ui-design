@@ -46,7 +46,7 @@ interface Props { resource: ResourceItem; onBack: () => void; inModal?: boolean 
 // sub-tabs each become a separate sidebar item under it. Other entries
 // stay flat.
 type ToolchainTabId = 'tools' | 'mcp' | 'skills' | 'integrations';
-type Section = 'basic' | 'models' | 'prompt' | 'knowledge' | 'notes' | 'collaboration' | 'advanced' | `toolchain:${ToolchainTabId}`;
+type Section = 'basic' | 'models' | 'prompt' | 'knowledge' | 'collaboration' | 'advanced' | `toolchain:${ToolchainTabId}`;
 
 // 拓展 group children — Skills 排第一位（最高频）。Knowledge / notes
 // 走自己的 dedicated section；toolchain 四个子 tab 走 <ToolchainSection
@@ -57,7 +57,6 @@ const EXPANSION_CHILDREN: { id: Section; label: string; icon: React.ElementType 
   { id: 'toolchain:mcp',          label: 'MCP Server', icon: Cable },
   { id: 'toolchain:integrations', label: '连接器',     icon: Plug },
   { id: 'knowledge',              label: '知识库',     icon: BookOpen },
-  { id: 'notes',                  label: '笔记',       icon: FileEdit },
 ];
 
 // Flat top-level entries above the collapsible 拓展 group + the
@@ -189,7 +188,6 @@ export function AgentConfig({ resource, onBack, inModal = false }: Props) {
               {activeSection === 'models' && <AgentModelsSection />}
               {activeSection === 'prompt' && <AgentPromptSection />}
               {activeSection === 'knowledge' && <KnowledgeBaseSection />}
-              {activeSection === 'notes' && <AgentNotesSection />}
               {typeof activeSection === 'string' && activeSection.startsWith('toolchain:') && (
                 <ToolchainSection
                   onExplore={onBack}
@@ -202,17 +200,6 @@ export function AgentConfig({ resource, onBack, inModal = false }: Props) {
           </AnimatePresence>
         </div>
       </div>
-      {inModal && (
-        <div className="flex-shrink-0 flex items-center justify-end gap-2 px-4 py-2.5 border-t border-border/15 bg-background/95 backdrop-blur-sm">
-          <AnimatePresence>
-            {saved
-              ? <motion.span key="saved" initial={{ opacity: 0, x: 6 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0 }} className="text-xs text-cherry-primary mr-auto flex items-center gap-1"><CheckCircle2 size={11} />已保存</motion.span>
-              : <motion.span key="dirty" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="text-xs text-muted-foreground/50 mr-auto">有未保存的更改</motion.span>}
-          </AnimatePresence>
-          <Button variant="outline" size="xs" onClick={onBack} className="h-7 px-3 text-xs">取消</Button>
-          <Button size="xs" onClick={handleSave} className="h-7 px-3 text-xs gap-1.5"><Save size={11} />保存</Button>
-        </div>
-      )}
     </div>
   );
 }
@@ -436,9 +423,16 @@ const ALL_INTEGRATIONS_CATALOG: Omit<IntegrationItem, 'enabled'>[] = [
   { id: 'integ-linear',    name: 'Linear',       desc: '任务 / 项目 / 冲刺管理',                        icon: Layers,        tintCls: 'text-accent-violet' },
 ];
 
-const TOOL_CATEGORIES = ['执行环境', '计算资源', '文件操作', '网络与数据', '开发工具', '系统集成', '内容处理'] as const;
+const TOOL_CATEGORIES = ['Cherry CLI', '执行环境', '计算资源', '文件操作', '网络与数据', '开发工具', '系统集成', '内容处理'] as const;
 
 const ALL_TOOLS_CATALOG: ToolItem[] = [
+  // Cherry CLI — native command set shipped with Cherry Studio for
+  // first-class agent operations (sessions, skills, artifacts, etc.).
+  { id: 'cherry-session', name: 'cherry session', desc: '管理会话上下文与历史', icon: MessageSquare, enabled: true, category: 'Cherry CLI' },
+  { id: 'cherry-skill', name: 'cherry skill', desc: '调用 / 安装 Skill 资源', icon: Sparkles, enabled: true, category: 'Cherry CLI' },
+  { id: 'cherry-artifact', name: 'cherry artifact', desc: '导出 / 分享生成产物', icon: FileText, enabled: true, category: 'Cherry CLI' },
+  { id: 'cherry-note', name: 'cherry note', desc: '读写笔记库内容', icon: FileEdit, enabled: false, category: 'Cherry CLI' },
+  { id: 'cherry-kb', name: 'cherry kb', desc: '查询知识库 / 增量同步', icon: BookOpen, enabled: false, category: 'Cherry CLI' },
   { id: 'bash', name: 'Shell 终端', desc: '执行 Bash/Zsh 命令', icon: Terminal, enabled: true, category: '执行环境' },
   { id: 'code-exec', name: '代码执行', desc: 'Python/Node.js 沙箱', icon: Code2, enabled: true, category: '执行环境' },
   { id: 'python-exec', name: 'Python 执行', desc: 'Python 运行环境', icon: Code2, enabled: true, category: '执行环境' },
@@ -766,6 +760,7 @@ function ToolchainSection({ onExplore, controlledTab }: { onExplore: () => void;
   const toggleSkill = (id: string) => setSkills(prev => prev.map(s => s.id === id ? { ...s, enabled: !s.enabled } : s));
   const removeSkill = (id: string) => setSkills(prev => prev.filter(s => s.id !== id));
   const toggleIntegration = (id: string) => setIntegrations(prev => prev.map(i => i.id === id ? { ...i, enabled: !i.enabled } : i));
+  const removeIntegration = (id: string) => setIntegrations(prev => prev.filter(i => i.id !== id));
   const handleIntegrationClick = (integ: IntegrationItem) => {
     if (integ.enabled) {
       // Already connected → disconnect inline.
@@ -856,31 +851,7 @@ function ToolchainSection({ onExplore, controlledTab }: { onExplore: () => void;
   return (
     <div>
       <div className="space-y-6 max-w-3xl">
-        {/* Header — search + add. Section title and tab bar are owned
-            by the sidebar when controlledTab is set, so we drop them. */}
-        <div className="flex items-center justify-end gap-2">
-          <SearchInput value={search} onChange={setSearch} placeholder="搜索…"
-            wrapperClassName="w-[200px] flex items-center gap-1.5 px-2 h-7 rounded-md bg-muted/30 border border-border/20" />
-          <Popover open={showAddPanel} onOpenChange={setShowAddPanel}>
-            <PopoverTrigger asChild>
-              <Button variant="ghost" size="xs"
-                className={`gap-1 h-7 px-2.5 rounded-md text-xs border border-border/30 ${
-                  showAddPanel ? 'text-foreground bg-accent/25 border-border/50' : 'text-muted-foreground/80 hover:text-foreground hover:bg-accent/40'
-                }`}>
-                <Plus size={11} />
-                <span>添加</span>
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent align="end" side="bottom" sideOffset={6} className="p-0 w-[280px] overflow-hidden">
-              <AddResourcePanel activeTab={activeTab} addedIds={addedIds} onAdd={handleAdd} onClose={() => setShowAddPanel(false)} onExplore={onExplore} />
-            </PopoverContent>
-          </Popover>
-          <Button variant="ghost" size="xs" onClick={onExplore}
-            className="gap-1 h-7 px-2.5 rounded-md text-xs border border-border/30 text-muted-foreground/80 hover:text-foreground hover:bg-accent/40">
-            <ExternalLink size={11} />
-            <span>去市场浏览</span>
-          </Button>
-        </div>
+        {/* Section header dropped — resources are added from Market. */}
         {!controlledTab && (
           <div className="flex items-center border-b border-border/15">
             {tabs.map(tab => (
@@ -913,7 +884,7 @@ function ToolchainSection({ onExplore, controlledTab }: { onExplore: () => void;
                       return (
                         <div key={tool.id}
                           onClick={() => toggleTool(tool.id)}
-                          className={`group/tool flex items-center gap-2.5 px-3 py-2 rounded-xl border border-border/30 bg-accent/15 hover:border-border/50 hover:bg-accent/40 transition-all cursor-pointer ${tool.enabled ? '' : 'opacity-55'}`}>
+                          className={`flex items-center gap-2.5 px-3 py-2 rounded-xl border border-border/30 bg-accent/15 hover:border-border/50 hover:bg-accent/40 transition-all cursor-pointer ${tool.enabled ? '' : 'opacity-55'}`}>
                           <div className="w-7 h-7 rounded-md bg-accent/40 flex items-center justify-center flex-shrink-0">
                             <ToolIcon size={13} className="text-muted-foreground/70" />
                           </div>
@@ -921,12 +892,13 @@ function ToolchainSection({ onExplore, controlledTab }: { onExplore: () => void;
                             <div className="text-sm text-foreground truncate">{tool.name}</div>
                             <div className="text-xs text-muted-foreground/55 truncate">{tool.desc}</div>
                           </div>
-                          <Button variant="ghost" size="icon-xs"
-                            onClick={e => { e.stopPropagation(); removeTool(tool.id); }}
-                            title="移除"
-                            className="text-muted-foreground/40 hover:text-destructive hover:bg-destructive/10 opacity-0 group-hover/tool:opacity-100 transition-opacity flex-shrink-0">
-                            <Trash2 size={11} />
-                          </Button>
+                          <Switch
+                            size="sm"
+                            checked={tool.enabled}
+                            onCheckedChange={() => toggleTool(tool.id)}
+                            onClick={e => e.stopPropagation()}
+                            className="flex-shrink-0"
+                          />
                         </div>
                       );
                     })}
@@ -962,7 +934,7 @@ function ToolchainSection({ onExplore, controlledTab }: { onExplore: () => void;
                     {filteredIntegrations.map(integ => { const Icon = integ.icon; const brand = INTEGRATION_LOGO[integ.id]; return (
                       <div key={integ.id}
                         onClick={() => handleIntegrationClick(integ)}
-                        className={`flex items-center gap-3 px-3 py-2.5 rounded-xl border border-border/15 bg-accent/15 hover:bg-accent/40 transition-all cursor-pointer ${integ.enabled ? '' : 'opacity-70'}`}>
+                        className={`group/integ flex items-center gap-3 px-3 py-2.5 rounded-xl border border-border/30 bg-accent/15 hover:border-border/50 hover:bg-accent/40 transition-all cursor-pointer ${integ.enabled ? '' : 'opacity-70'}`}>
                         {brand ? (
                           <div className="w-7 h-7 rounded-md bg-muted/40 border border-border/20 flex items-center justify-center flex-shrink-0 overflow-hidden">
                             <img src={`https://cdn.simpleicons.org/${brand.slug}/${brand.color}`} alt="" className="w-4 h-4" draggable={false} />
@@ -975,7 +947,12 @@ function ToolchainSection({ onExplore, controlledTab }: { onExplore: () => void;
                           <div className="text-xs text-muted-foreground/50 truncate">{integ.desc}</div>
                         </div>
                         {integ.enabled ? (
-                          <Switch size="sm" checked className="pointer-events-none flex-shrink-0" />
+                          <Button variant="ghost" size="icon-xs"
+                            onClick={e => { e.stopPropagation(); removeIntegration(integ.id); }}
+                            title="移除"
+                            className="text-muted-foreground/40 hover:text-destructive hover:bg-destructive/10 opacity-0 group-hover/integ:opacity-100 transition-opacity flex-shrink-0">
+                            <Trash2 size={11} />
+                          </Button>
                         ) : (
                           <span className="text-xs text-muted-foreground/50 flex-shrink-0 px-1.5">未连接</span>
                         )}
@@ -996,7 +973,7 @@ function ToolchainSection({ onExplore, controlledTab }: { onExplore: () => void;
                       return (
                         <div key={skill.id}
                           onClick={() => toggleSkill(skill.id)}
-                          className={`group/skill flex items-center gap-2.5 px-3 py-2 rounded-xl border border-border/30 bg-accent/15 hover:border-border/50 hover:bg-accent/40 transition-all cursor-pointer ${skill.enabled ? '' : 'opacity-55'}`}>
+                          className={`flex items-center gap-2.5 px-3 py-2 rounded-xl border border-border/30 bg-accent/15 hover:border-border/50 hover:bg-accent/40 transition-all cursor-pointer ${skill.enabled ? '' : 'opacity-55'}`}>
                           <div className="w-7 h-7 rounded-md bg-accent/40 flex items-center justify-center flex-shrink-0">
                             <SkillIcon size={13} className="text-muted-foreground/70" />
                           </div>
@@ -1004,12 +981,13 @@ function ToolchainSection({ onExplore, controlledTab }: { onExplore: () => void;
                             <div className="text-sm text-foreground truncate">{skill.name}</div>
                             <div className="text-xs text-muted-foreground/55 truncate">{skill.desc}</div>
                           </div>
-                          <Button variant="ghost" size="icon-xs"
-                            onClick={e => { e.stopPropagation(); removeSkill(skill.id); }}
-                            title="移除"
-                            className="text-muted-foreground/40 hover:text-destructive hover:bg-destructive/10 opacity-0 group-hover/skill:opacity-100 transition-opacity flex-shrink-0">
-                            <Trash2 size={11} />
-                          </Button>
+                          <Switch
+                            size="sm"
+                            checked={skill.enabled}
+                            onCheckedChange={() => toggleSkill(skill.id)}
+                            onClick={e => e.stopPropagation()}
+                            className="flex-shrink-0"
+                          />
                         </div>
                       );
                     })}
@@ -1082,10 +1060,6 @@ function KnowledgeBaseSection() {
   // 知识库识别 — 'off' / 'on' segment, matches Cherry Studio source's
   // AssistantKnowledgeBaseSettings.knowledgeRecognition.
   const [recognition, setRecognition] = useState<'off' | 'on'>('off');
-  // 自动关联 — when ON, Cherry picks relevant KBs per query and the
-  // manual list below is hidden. When OFF, fall back to the manual
-  // "已关联知识库" picker.
-  const [autoLink, setAutoLink] = useState(true);
 
   const linkedIds = useMemo(() => new Set(linkedKBs.map(k => k.id)), [linkedKBs]);
 
@@ -1107,28 +1081,8 @@ function KnowledgeBaseSection() {
 
   return (
     <div className="max-w-3xl space-y-3">
-      {/* 自动关联 — top-level toggle. When on, Cherry decides per query;
-          when off, user manually curates the list below. */}
-      <div className="flex items-center justify-between gap-3">
-        <div className="flex items-center gap-1.5 min-w-0">
-          <label className="text-sm text-muted-foreground">自动关联</label>
-          <SimpleTooltip
-            content="开启后 Cherry 自动判断当前消息需要哪些知识库；关闭后由你手动选择固定关联的知识库。"
-            side="top"
-            sideOffset={6}
-          >
-            <button type="button" tabIndex={-1}
-              className="inline-flex items-center text-muted-foreground/40 hover:text-muted-foreground cursor-help"
-              aria-label="什么是自动关联">
-              <Info size={12} />
-            </button>
-          </SimpleTooltip>
-        </div>
-        <Switch checked={autoLink} onCheckedChange={setAutoLink} className="flex-shrink-0" />
-      </div>
-
-      {/* Manual KB list — only shown when 自动关联 is off. */}
-      {!autoLink && (
+      {/* Manual KB list — always visible. The Agent picks from these
+          per-query (no separate auto-link toggle anymore). */}
       <div>
         <div className="flex items-center justify-between mb-2">
           <label className="text-sm text-muted-foreground">已关联知识库</label>
@@ -1199,7 +1153,6 @@ function KnowledgeBaseSection() {
         )}
 
       </div>
-      )}
 
       {/* 知识库识别 — Switch row, matches Cherry Studio source pattern
           (knowledgeRecognition off/on Segmented + question tooltip).

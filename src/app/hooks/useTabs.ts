@@ -228,7 +228,11 @@ export function useTabs(): UseTabsReturn {
     setTabs(prev => prev.map(t => t.id === tabId ? { ...t, sidebarDocked: false } : t));
   }, []);
 
-  const dockedTabs = tabs.filter(t => t.sidebarDocked);
+  // Mini-app tabs (`miniAppId` set) are intentionally excluded — they live
+  // in the top tab bar only. Docking them to the side rail double-surfaces
+  // the same embed and feels wrong; if a user wants quick access, they pin
+  // the tab instead.
+  const dockedTabs = tabs.filter(t => t.sidebarDocked && !t.miniAppId);
 
   return {
     tabs,
