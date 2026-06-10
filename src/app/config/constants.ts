@@ -33,6 +33,7 @@ export const menuItems: MenuItem[] = [
   { id: 'note', label: '笔记', icon: NotebookPen },
   { id: 'extensions', label: '扩展', icon: Blocks },
   { id: 'empty-preview', label: 'Empty State', icon: Layers },
+  { id: 'error-toast-preview', label: 'Error Toasts', icon: Layers },
 ];
 
 // Multi-instance types: clicking sidebar always creates a new tab
