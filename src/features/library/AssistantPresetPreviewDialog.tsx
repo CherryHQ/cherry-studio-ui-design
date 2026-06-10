@@ -1,4 +1,4 @@
-import { ArrowRight, Check, X } from 'lucide-react';
+import { ArrowRight, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button, Dialog, DialogContent, DialogHeader, DialogTitle } from '@cherry-studio/ui';
 import { useGlobalActions } from '@/app/context/GlobalActionContext';
@@ -14,22 +14,27 @@ interface Props {
 /**
  * 极简的助手预设预览弹窗——对齐真实产品（截图 DJ7hg0）。
  *
- * 添加路径走"成功态原地切换"：
- *   - 未添加：底部「取消 + 添加」
- *   - 已添加：底部「关闭 + ✓已添加 + 立即聊天 →」
+ * Dialog 里的「添加」语义：**添加 + 立即跳转到 chat**——把"添加 → 自己去
+ * 助手列表找 → 开聊"四步合成一步。
  *
- * 「立即聊天」帮用户省掉"添加 → 自己去助手列表里找 → 点开 → 开聊"四步路。
+ * 已添加的情况下按钮变「立即聊天」：只跳转，不重复添加。
+ *
+ * 卡片上的「添加」按钮维持 silent 添加（不跳转），支持"逛逛收着"场景；
+ * 两个入口因此有差异化语义。
  */
 export function AssistantPresetPreviewDialog({ preset, installed, onClose, onAdd }: Props) {
   const { navigateToChat } = useGlobalActions();
 
-  const handleChatNow = () => {
+  const handlePrimary = () => {
     if (!preset) return;
+    if (!installed) onAdd(preset);
     // 原型阶段：chat 模块按 UI-TEAM-SPEC §6 处于冻结状态，
     // 不做 sidebar 自动选中。用 success toast 表达跳转 + 选中意图。
     navigateToChat();
     toast.success(`${preset.emoji} 已切换到「${preset.name}」`, {
-      description: '已加入你的助手列表，可以直接开始对话',
+      description: installed
+        ? '已是你的助手，可以直接开始对话'
+        : '已加入你的助手列表，可以直接开始对话',
       duration: 5000,
     });
     onClose();
@@ -88,30 +93,13 @@ export function AssistantPresetPreviewDialog({ preset, installed, onClose, onAdd
               </section>
             </div>
 
-            {/* Footer —— 成功态原地 swap */}
+            {/* Footer —— 添加 = 添加并跳转聊天 */}
             <div className="flex items-center justify-end gap-2 px-5 py-3 border-t border-border bg-muted">
-              {!installed ? (
-                <>
-                  <Button variant="ghost" size="sm" onClick={onClose}>取消</Button>
-                  <Button size="sm" onClick={() => onAdd(preset)}>
-                    添加
-                  </Button>
-                </>
-              ) : (
-                <>
-                  <Button variant="ghost" size="sm" onClick={onClose}>关闭</Button>
-                  {/* 「已添加」用 outline 静态展示而非 disabled button——
-                      避免 §7 disabled opacity-40 把成功反馈视觉打弱。 */}
-                  <div className="inline-flex items-center gap-1.5 h-8 px-3 rounded-md border border-border text-sm text-muted-foreground select-none">
-                    <Check size={12} className="text-success" />
-                    已添加
-                  </div>
-                  <Button size="sm" onClick={handleChatNow} className="gap-1">
-                    立即聊天
-                    <ArrowRight />
-                  </Button>
-                </>
-              )}
+              <Button variant="ghost" size="sm" onClick={onClose}>取消</Button>
+              <Button size="sm" onClick={handlePrimary} className="gap-1">
+                {installed ? '立即聊天' : '添加并聊天'}
+                <ArrowRight />
+              </Button>
             </div>
           </>
         )}
