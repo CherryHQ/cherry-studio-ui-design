@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { Plus, Upload, Star, Briefcase, Building2, Wrench, Languages, ClipboardList, Sparkles, User } from 'lucide-react';
 import { Button, SearchInput, EmptyState } from '@cherry-studio/ui';
 import {
-  ASSISTANT_PRESETS, CATEGORY_LABEL, CATEGORY_COUNTS, MY_PRESET_IDS,
+  ASSISTANT_PRESETS, CATEGORY_COUNTS, MY_PRESET_IDS,
   type AssistantPreset, type PresetCategory,
 } from './assistantPresets';
 import { AssistantPresetPreviewDialog } from './AssistantPresetPreviewDialog';
@@ -63,27 +63,27 @@ export function AssistantResourcePage() {
   return (
     <div className="flex-1 flex flex-col min-h-0 bg-background">
       {/* Top bar — search + actions */}
-      <div className="flex items-center gap-3 px-6 pt-4 pb-3 flex-shrink-0">
+      <div className="flex items-center gap-3 px-6 pt-4 pb-3 shrink-0">
         <SearchInput
           value={search}
           onChange={setSearch}
           placeholder="搜索资源名称、描述..."
           iconSize={12}
-          wrapperClassName="flex items-center gap-1.5 px-2.5 py-[6px] rounded-lg bg-muted/40 border border-border/30 flex-1 max-w-[460px]"
+          wrapperClassName="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-muted border border-border flex-1 max-w-md"
         />
         <div className="flex-1" />
         <Button size="sm" className="gap-1.5">
-          <Plus size={12} />
+          <Plus />
           新建助手
         </Button>
         <Button variant="outline" size="sm" className="gap-1.5">
-          <Upload size={12} />
+          <Upload />
           导入助手
         </Button>
       </div>
 
       {/* Category tabs */}
-      <div className="flex items-center gap-0.5 px-6 pb-3 overflow-x-auto scrollbar-thin flex-shrink-0">
+      <div className="flex items-center gap-0.5 px-6 pb-3 overflow-x-auto scrollbar-thin shrink-0">
         {TABS.map(t => {
           const isActive = tab === t.id;
           const Icon = t.icon;
@@ -91,15 +91,16 @@ export function AssistantResourcePage() {
             <button
               key={t.id}
               onClick={() => setTab(t.id)}
-              className={`flex items-center gap-1.5 px-3 h-8 rounded-md text-xs whitespace-nowrap transition-colors ${
+              aria-pressed={isActive}
+              className={`flex items-center gap-1.5 px-3 h-8 rounded-md text-xs whitespace-nowrap transition-colors focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none ${
                 isActive
                   ? 'text-foreground border-b-2 border-foreground'
-                  : 'text-muted-foreground/60 hover:text-foreground border-b-2 border-transparent'
+                  : 'text-muted-foreground hover:text-foreground border-b-2 border-transparent'
               }`}
             >
               <Icon size={11} strokeWidth={1.6} />
               <span>{t.label}</span>
-              <span className={`tabular-nums text-xs ${isActive ? 'text-muted-foreground' : 'text-muted-foreground/40'}`}>
+              <span className="tabular-nums text-xs text-muted-foreground">
                 {counts[t.id]}
               </span>
             </button>
@@ -114,7 +115,7 @@ export function AssistantResourcePage() {
             <EmptyState preset={search ? 'no-result' : 'no-resource'} compact />
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-3">
             {filtered.map(p => (
               <PresetCard
                 key={p.id}
@@ -131,9 +132,8 @@ export function AssistantResourcePage() {
       <AssistantPresetPreviewDialog
         preset={previewing}
         installed={previewing ? installed.has(previewing.id) : false}
-        hasAnyInstalled={installed.size > 0}
         onClose={() => setPreviewing(null)}
-        onAdd={(p) => { addPreset(p); setPreviewing(null); }}
+        onAdd={(p) => addPreset(p)}
       />
     </div>
   );
@@ -148,30 +148,32 @@ function PresetCard({ preset, installed, onPreview, onAdd }: {
   return (
     <div
       onClick={onPreview}
-      className="group relative rounded-xl border border-border/25 bg-card hover:border-border/50 hover:shadow-sm transition-all cursor-pointer p-4 flex flex-col gap-3 min-h-[128px]"
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onPreview(); } }}
+      className="group relative rounded-xl border border-border bg-card hover:bg-accent transition-colors cursor-pointer p-4 flex flex-col gap-3 min-h-32 focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none"
     >
       <div className="flex items-start gap-2.5">
-        <div className={`w-9 h-9 rounded-lg flex items-center justify-center text-lg flex-shrink-0 ${preset.avatarBg}`}>
+        <div className={`size-9 rounded-lg flex items-center justify-center text-lg shrink-0 ${preset.avatarBg}`}>
           {preset.emoji}
         </div>
         <div className="flex-1 min-w-0 pt-0.5">
           <div className="text-sm font-medium text-foreground truncate">{preset.name}</div>
           {preset.featured && (
-            <div className="text-xs text-muted-foreground/60 mt-0.5">精选</div>
+            <div className="text-xs text-muted-foreground mt-0.5">精选</div>
           )}
         </div>
       </div>
 
-      <p className="text-xs text-muted-foreground/70 leading-relaxed line-clamp-2 flex-1">
+      <p className="text-xs text-muted-foreground leading-relaxed line-clamp-2 flex-1">
         {preset.description}
       </p>
 
-      <div className="flex justify-end -mt-1">
+      <div className="flex justify-end">
         <Button
           size="xs"
           onClick={(e) => { e.stopPropagation(); onAdd(); }}
           disabled={installed}
-          className="h-7 px-3 rounded-md text-xs"
         >
           {installed ? '已添加' : '添加'}
         </Button>

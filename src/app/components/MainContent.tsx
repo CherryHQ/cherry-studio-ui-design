@@ -15,8 +15,6 @@ import { LibraryPage } from '@/features/library/LibraryPage';
 import { MarketPage } from '@/features/market/MarketPage';
 import { AgentRunPage } from '@/features/agent/run/AgentRunPage';
 import { AssistantRunPage } from '@/app/components/assistant/AssistantRunPage';
-import { TrialChatPage } from '@/features/chat/TrialChatPage';
-import { useTrial } from '@/app/stores/trialAssistantStore';
 import { ImagePage } from '@/features/painting/ImagePage';
 import { FilePage } from '@/features/file/FilePage';
 import { ModelServicePage } from '@/app/components/settings/ModelServicePage';
@@ -90,12 +88,11 @@ export function MainContent({ tabs, activeTabId }: MainContentProps) {
  */
 const TabContent = React.memo(function TabContent({ tab, isActive }: { tab: Tab; isActive: boolean }) {
   const actions = useGlobalActions();
-  const trial = useTrial();
   const menuItemId = tab.menuItemId;
 
   return (
     <ErrorBoundary>
-      {menuItemId === 'chat' ? (trial ? <TrialChatPage /> : <AssistantRunPage />)
+      {menuItemId === 'chat' ? <AssistantRunPage />
         : menuItemId === 'agent' ? <AgentRunPage />
         : menuItemId === 'models' ? <ModelServicePage />
         : menuItemId === 'painting' ? <ImagePage />
