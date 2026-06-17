@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { X, ChevronLeft, ChevronRight, Check, HelpCircle, Search } from 'lucide-react';
+import { X, ChevronLeft, ChevronRight, Check, HelpCircle, Search, Sparkles } from 'lucide-react';
 import {
   Dialog, DialogContent, DialogTitle,
   Button, Input, Textarea,
@@ -8,39 +8,37 @@ import {
   SimpleTooltip,
 } from '@cherry-studio/ui';
 import { motion, AnimatePresence } from 'motion/react';
-import { AGENT_MODELS } from '@/app/config/models';
+import { ASSISTANT_MODELS } from '@/app/config/models';
 import { AVATAR_OPTIONS } from '@/app/config/constants';
-import { SKILLS_CATALOG } from '@/app/config/agentTools';
-import type { AgentSkillItem } from '@/app/config/agentTools';
+import { MOCK_KNOWLEDGE_BASE_LIST } from '@/app/mock/knowledgeData';
 
 // ===========================
-// CreateAgentWizard
+// CreateAssistantWizard
 // ===========================
-// A 4-step guided flow for creating a new Agent. Mirrors the existing
-// AgentConfig design language (cherry-primary accents, dense rows,
-// border/15 + bg-accent/15 surfaces) so it doesn't feel like a foreign
-// dialog grafted in.
+// A 3-step guided flow for creating a new Assistant. Mirrors the Agent
+// wizard's design language (left step-rail, neutral accent/foreground
+// selected states, dense rows, border/15 + bg-accent/15 surfaces) but
+// collects assistant-specific fields: an Assistant is a persona + system
+// prompt, not an autonomous multi-step workflow — so the steps are
+// 基础信息 / 设定人格 / 标签整理.
 // ===========================
 
-export interface CreateAgentResult {
+export interface CreateAssistantResult {
   name: string;
   emoji: string;
   model: string;
+  modelProvider: string;
   systemPrompt: string;
-  skillIds: string[];
-  soulMode: boolean;
-  workDir: string;
-  permissionMode: 'full-auto' | 'ask' | 'manual';
-  envVars: Array<{ key: string; value: string }>;
+  knowledgeBases: { id: string; name: string }[];
 }
 
-export interface CreateAgentWizardProps {
+export interface CreateAssistantWizardProps {
   open: boolean;
   onOpenChange: (v: boolean) => void;
-  onCreate?: (data: CreateAgentResult) => void;
+  onCreate?: (data: CreateAssistantResult) => void;
 }
 
-type StepId = 'basic' | 'role' | 'abilities';
+type StepId = 'basic' | 'persona' | 'knowledge';
 
 interface StepDef {
   id: StepId;
@@ -51,37 +49,27 @@ interface StepDef {
 }
 
 const STEPS: StepDef[] = [
-  { id: 'basic',     index: 1, label: '基础信息',     title: '基础信息',
-    description: '给智能体一个名字，再挑一个愿意托付核心工作的模型。之后随时可改。' },
-  { id: 'role',      index: 2, label: '塑造角色',     title: '塑造它的角色',
-    description: '这段内容会作为系统提示词写入 soul.md 基底。保持简短、明确、可执行。' },
-  { id: 'abilities', index: 3, label: '可用能力',     title: '选择可用能力',
-    description: '挑选这个智能体可以调用的 Skill。先开几个最常用的，后续可以随时增减。' },
+  { id: 'basic',   index: 1, label: '基础信息', title: '基础信息',
+    description: '给助手取个名字、挑个头像，再选一个驱动它的模型。之后随时可改。' },
+  { id: 'persona',   index: 2, label: '设定人格', title: '设定它的人格',
+    description: '这段系统提示词决定助手的语气、专长和回答方式。保持具体、明确。' },
+  { id: 'knowledge', index: 3, label: '添加知识库', title: '添加知识库',
+    description: '挂载知识库后，助手回答时会优先检索其中的内容。可多选，也可稍后再加。' },
 ];
 
-const DEFAULT_SOUL_MD = `You are "Cherry Studio Pi Agent", an AI agent running inside Cherry Studio Pi.
-Your configured display name is "Cherry Studio Pi Agent". When the user asks your name or identity, answer with this name.
-Pi is only your internal agent runtime. Do not introduce yourself as Pi unless the user explicitly asks about the underlying engine or runtime.
-Help the user complete coding, workspace, and agent tasks.`;
+const DEFAULT_PROMPT = `你是一个专业、友好的 AI 助手。
+回答时保持简洁清晰，必要时给出可执行的步骤或示例。
+当问题不明确时，先简短澄清再作答。`;
 
-const DEFAULT_AGENT_MODEL_ID = AGENT_MODELS[0]?.id ?? 'claude-4-sonnet';
-
-export function CreateAgentWizard({ open, onOpenChange, onCreate }: CreateAgentWizardProps) {
+export function CreateAssistantWizard({ open, onOpenChange, onCreate }: CreateAssistantWizardProps) {
   const [stepId, setStepId] = useState<StepId>('basic');
-  const [name, setName] = useState('Cherry Studio Pi Agent');
+  const [name, setName] = useState('');
   const [emoji, setEmoji] = useState('🤖');
+  const [modelId, setModelId] = useState(ASSISTANT_MODELS[0]?.id ?? '');
+  const [systemPrompt, setSystemPrompt] = useState(DEFAULT_PROMPT);
+  const [kbIds, setKbIds] = useState<Set<string>>(new Set());
   const [emojiSearch, setEmojiSearch] = useState('');
-  const [modelId, setModelId] = useState(DEFAULT_AGENT_MODEL_ID);
-  const [systemPrompt, setSystemPrompt] = useState(DEFAULT_SOUL_MD);
-  const [skillIds, setSkillIds] = useState<Set<string>>(
-    () => new Set(SKILLS_CATALOG.filter(s => s.enabled).map(s => s.id)),
-  );
-  const [skillFilter, setSkillFilter] = useState<'all' | AgentSkillItem['source']>('all');
-  const [skillSearch, setSkillSearch] = useState('');
-  const [soulMode, setSoulMode] = useState(true);
-  const [workDir, setWorkDir] = useState('');
-  const [permissionMode, setPermissionMode] = useState<CreateAgentResult['permissionMode']>('full-auto');
-  const [envVars, setEnvVars] = useState<CreateAgentResult['envVars']>([]);
+  const [kbSearch, setKbSearch] = useState('');
 
   const stepIndex = STEPS.findIndex(s => s.id === stepId);
   const step = STEPS[stepIndex];
@@ -90,24 +78,19 @@ export function CreateAgentWizard({ open, onOpenChange, onCreate }: CreateAgentW
 
   const canProceed = useMemo(() => {
     if (stepId === 'basic') return name.trim().length > 0 && !!modelId;
-    if (stepId === 'role') return systemPrompt.trim().length > 0;
+    if (stepId === 'persona') return systemPrompt.trim().length > 0;
     return true;
   }, [stepId, name, modelId, systemPrompt]);
 
   const reset = () => {
     setStepId('basic');
-    setName('Cherry Studio Pi Agent');
+    setName('');
     setEmoji('🤖');
+    setModelId(ASSISTANT_MODELS[0]?.id ?? '');
+    setSystemPrompt(DEFAULT_PROMPT);
+    setKbIds(new Set());
     setEmojiSearch('');
-    setModelId(DEFAULT_AGENT_MODEL_ID);
-    setSystemPrompt(DEFAULT_SOUL_MD);
-    setSkillIds(new Set(SKILLS_CATALOG.filter(s => s.enabled).map(s => s.id)));
-    setSkillFilter('all');
-    setSkillSearch('');
-    setSoulMode(true);
-    setWorkDir('');
-    setPermissionMode('full-auto');
-    setEnvVars([]);
+    setKbSearch('');
   };
 
   const close = (next: boolean) => {
@@ -117,16 +100,16 @@ export function CreateAgentWizard({ open, onOpenChange, onCreate }: CreateAgentW
 
   const next = () => {
     if (isLast) {
+      const model = ASSISTANT_MODELS.find(m => m.id === modelId);
       onCreate?.({
         name: name.trim(),
         emoji,
-        model: modelId,
+        model: model?.name ?? modelId,
+        modelProvider: model?.provider ?? '',
         systemPrompt: systemPrompt.trim(),
-        skillIds: [...skillIds],
-        soulMode,
-        workDir: workDir.trim(),
-        permissionMode,
-        envVars: envVars.filter(e => e.key.trim() !== ''),
+        knowledgeBases: MOCK_KNOWLEDGE_BASE_LIST
+          .filter(kb => kbIds.has(kb.id))
+          .map(kb => ({ id: kb.id, name: kb.name })),
       });
       close(false);
       return;
@@ -139,27 +122,24 @@ export function CreateAgentWizard({ open, onOpenChange, onCreate }: CreateAgentW
     setStepId(STEPS[stepIndex - 1].id);
   };
 
-  const toggleSkill = (id: string) => {
-    setSkillIds(prev => {
+  const toggleKb = (id: string) => {
+    setKbIds(prev => {
       const n = new Set(prev);
       if (n.has(id)) n.delete(id); else n.add(id);
       return n;
     });
   };
 
-  const filteredSkills = useMemo(() => {
-    const lc = skillSearch.trim().toLowerCase();
-    return SKILLS_CATALOG.filter(s => {
-      if (skillFilter !== 'all' && s.source !== skillFilter) return false;
-      if (lc && !s.name.toLowerCase().includes(lc) && !s.desc.toLowerCase().includes(lc)) return false;
-      return true;
-    });
-  }, [skillFilter, skillSearch]);
+  const filteredKbs = useMemo(() => {
+    const q = kbSearch.trim().toLowerCase();
+    if (!q) return MOCK_KNOWLEDGE_BASE_LIST;
+    return MOCK_KNOWLEDGE_BASE_LIST.filter(kb => kb.name.toLowerCase().includes(q));
+  }, [kbSearch]);
 
   const filteredEmojis = useMemo(() => {
     if (!emojiSearch.trim()) return AVATAR_OPTIONS;
-    // Emojis aren't text-searchable; treat the query as a literal include over
-    // the glyphs so a pasted emoji can be located. Otherwise show all.
+    // Emojis aren't searchable by text; treat search as a simple include over
+    // the raw glyphs so a pasted emoji can be located. Otherwise show all.
     return AVATAR_OPTIONS.filter(e => e.includes(emojiSearch.trim()));
   }, [emojiSearch]);
 
@@ -169,15 +149,15 @@ export function CreateAgentWizard({ open, onOpenChange, onCreate }: CreateAgentW
         showCloseButton={false}
         className="!max-w-[720px] sm:!max-w-[720px] !w-[min(720px,86vw)] !h-[min(540px,80vh)] !rounded-2xl !p-0 !gap-0 !grid-cols-1 overflow-hidden border border-border/20 shadow-xl flex flex-col"
       >
-        <DialogTitle className="sr-only">添加 Agent</DialogTitle>
+        <DialogTitle className="sr-only">添加助手</DialogTitle>
 
-        {/* Header — matches LibraryPage modal header style */}
+        {/* Header */}
         <div className="flex items-center gap-3 px-5 h-14 border-b border-border/15 flex-shrink-0">
           <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 bg-cherry-primary/10 text-cherry-primary text-lg">
             {emoji}
           </div>
           <div className="min-w-0 flex-1">
-            <div className="text-sm font-semibold text-foreground">添加 Agent</div>
+            <div className="text-sm font-semibold text-foreground">添加助手</div>
             <div className="text-xs text-muted-foreground/60 mt-0.5">引导式创建 · 第 {step.index} / {STEPS.length} 步</div>
           </div>
           <Button variant="ghost" size="icon-sm" onClick={() => close(false)}
@@ -289,12 +269,13 @@ export function CreateAgentWizard({ open, onOpenChange, onCreate }: CreateAgentW
                             autoFocus
                             value={name}
                             onChange={(e) => setName(e.target.value)}
-                            placeholder="例如：Cherry Studio Pi Agent"
+                            placeholder="例如：写作助手"
                             className="flex-1 h-9 px-3 py-1.5 rounded-lg border border-border/60 bg-accent/15 text-xs text-foreground focus-visible:border-border focus-visible:ring-0 shadow-none"
                           />
                         </div>
                       </div>
 
+                      {/* Model */}
                       <div>
                         <label className="flex items-center gap-1 text-sm text-muted-foreground mb-1.5">
                           模型 <span className="text-destructive">*</span>
@@ -307,7 +288,7 @@ export function CreateAgentWizard({ open, onOpenChange, onCreate }: CreateAgentW
                             <SelectValue placeholder="选择模型" />
                           </SelectTrigger>
                           <SelectContent>
-                            {AGENT_MODELS.map(m => (
+                            {ASSISTANT_MODELS.map(m => (
                               <SelectItem key={m.id} value={m.id}>
                                 <span className="flex items-center gap-2">
                                   <span>{m.name}</span>
@@ -321,67 +302,47 @@ export function CreateAgentWizard({ open, onOpenChange, onCreate }: CreateAgentW
                     </div>
                   )}
 
-                  {stepId === 'role' && (
+                  {stepId === 'persona' && (
                     <div>
                       <label className="flex items-center gap-1.5 text-sm text-muted-foreground mb-1.5">
-                        系统提示词 <span className="text-muted-foreground/40 text-xs">soul.md</span>
+                        系统提示词 <span className="text-muted-foreground/40 text-xs">system prompt</span>
                       </label>
                       <Textarea
                         value={systemPrompt}
                         onChange={(e) => setSystemPrompt(e.target.value)}
-                        rows={16}
-                        className="w-full px-3 py-2 rounded-lg border border-border/60 bg-accent/15 font-mono text-xs leading-[1.7] text-foreground shadow-none focus-visible:border-border focus-visible:ring-0 resize-y min-h-[220px]"
+                        rows={14}
+                        className="w-full px-3 py-2 rounded-lg border border-border/60 bg-accent/15 text-xs leading-[1.7] text-foreground shadow-none focus-visible:border-border focus-visible:ring-0 resize-y min-h-[200px]"
                       />
-                      <div className="text-xs text-muted-foreground/50 mt-1.5">描述智能体的角色、工作方式，以及最重要的执行边界。</div>
+                      <div className="text-xs text-muted-foreground/50 mt-1.5">描述助手的角色、语气和擅长的场景，越具体表现越稳定。</div>
                     </div>
                   )}
 
-                  {stepId === 'abilities' && (
+                  {stepId === 'knowledge' && (
                     <div>
-                      {/* Filter chips + search + count */}
+                      {/* Search + selected count */}
                       <div className="flex items-center gap-2 mb-3">
-                        <div className="flex items-center gap-0.5 p-0.5 rounded-md bg-accent/30 border border-border/30">
-                          {([
-                            { id: 'all',     label: '全部' },
-                            { id: 'builtin', label: 'Skill' },
-                            { id: 'custom',  label: '工具' },
-                            { id: 'market',  label: 'MCP' },
-                          ] as const).map(opt => (
-                            <button
-                              key={opt.id}
-                              onClick={() => setSkillFilter(opt.id)}
-                              className={`px-2 h-6 rounded text-[11px] transition-colors ${
-                                skillFilter === opt.id
-                                  ? 'bg-background text-foreground shadow-sm'
-                                  : 'text-muted-foreground hover:text-foreground'
-                              }`}
-                            >
-                              {opt.label}
-                            </button>
-                          ))}
-                        </div>
                         <div className="relative flex-1">
                           <Search size={11} className="absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground/40" />
                           <Input
-                            value={skillSearch}
-                            onChange={(e) => setSkillSearch(e.target.value)}
-                            placeholder="搜索 Skill"
+                            value={kbSearch}
+                            onChange={(e) => setKbSearch(e.target.value)}
+                            placeholder="搜索知识库"
                             className="h-7 pl-6 pr-2 text-xs border border-border/40 bg-accent/15 focus-visible:ring-0 shadow-none"
                           />
                         </div>
                         <div className="text-[11px] text-muted-foreground/60 tabular-nums flex-shrink-0 px-1">
-                          已选 <span className="text-foreground font-medium">{skillIds.size}</span>
+                          已选 <span className="text-foreground font-medium">{kbIds.size}</span>
                         </div>
                       </div>
 
-                      {/* Skill grid — same row style as AgentConfig toolchain */}
+                      {/* Knowledge base list — same selected-state language as the agent skill grid */}
                       <div className="grid grid-cols-2 gap-2">
-                        {filteredSkills.map(s => {
-                          const checked = skillIds.has(s.id);
+                        {filteredKbs.map(kb => {
+                          const checked = kbIds.has(kb.id);
                           return (
                             <button
-                              key={s.id}
-                              onClick={() => toggleSkill(s.id)}
+                              key={kb.id}
+                              onClick={() => toggleKb(kb.id)}
                               className={`flex items-center gap-2.5 px-3 py-2 rounded-xl border text-left transition-all ${
                                 checked
                                   ? 'border-foreground/10 bg-accent/60'
@@ -393,19 +354,20 @@ export function CreateAgentWizard({ open, onOpenChange, onCreate }: CreateAgentW
                               }`}>
                                 {checked && <Check size={9} className="text-background" strokeWidth={3.5} />}
                               </span>
+                              <span className="text-base leading-none flex-shrink-0">{kb.icon}</span>
                               <div className="flex-1 min-w-0">
-                                <span className="text-sm text-foreground truncate block">{s.name}</span>
+                                <span className="text-sm text-foreground truncate block">{kb.name}</span>
+                                <span className="text-[11px] text-muted-foreground/60 truncate block">{kb.docCount} 个文档</span>
                               </div>
                             </button>
                           );
                         })}
                       </div>
-                      {filteredSkills.length === 0 && (
-                        <div className="text-center py-10 text-xs text-muted-foreground/50">没有匹配的 Skill</div>
+                      {filteredKbs.length === 0 && (
+                        <div className="text-center py-10 text-xs text-muted-foreground/50">没有匹配的知识库</div>
                       )}
                     </div>
                   )}
-
                 </motion.div>
               </AnimatePresence>
             </div>
@@ -432,7 +394,12 @@ export function CreateAgentWizard({ open, onOpenChange, onCreate }: CreateAgentW
                   disabled={!canProceed}
                   className="h-7 px-3 text-xs"
                 >
-                  {isLast ? '完成创建' : (
+                  {isLast ? (
+                    <>
+                      <Sparkles size={11} className="mr-0.5" />
+                      完成创建
+                    </>
+                  ) : (
                     <>
                       下一步
                       <ChevronRight size={11} className="ml-0.5" />

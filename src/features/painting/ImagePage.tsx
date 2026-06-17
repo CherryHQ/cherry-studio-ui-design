@@ -6,8 +6,9 @@ import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useGlobalActions } from '@/app/context/GlobalActionContext';
 import { copyToClipboard } from '@/app/utils/clipboard';
-import { Button, Textarea, EmptyState, ToggleGroup, ToggleGroupItem, Popover, PopoverTrigger, PopoverContent, BrandLogo, ModelPickerPanel, Switch, DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from '@cherry-studio/ui';
+import { Button, Textarea, EmptyState, ToggleGroup, ToggleGroupItem, Popover, PopoverTrigger, PopoverContent, BrandLogo, Switch, DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from '@cherry-studio/ui';
 import type { ModelInfo } from '@cherry-studio/ui';
+import { ModelPickerPanel } from '@/app/components/shared/ModelPickerPanel';
 import {
   Sparkles, Settings, Download, X, Copy, Check, Heart,
   Wand2, Send, ChevronDown, ChevronLeft, ChevronRight,

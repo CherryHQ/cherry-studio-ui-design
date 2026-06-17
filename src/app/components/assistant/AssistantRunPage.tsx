@@ -13,7 +13,7 @@ import {
   Search, Paperclip, Hammer, Link, Zap,
   Settings2, NotebookPen, PenTool, Lightbulb, ScanLine, Eraser,
   PanelLeftOpen, PanelLeftClose,
-  MessageCircle, Image as ImageIcon,
+  MessageCircle, Image as ImageIcon, PlugZap, FlaskConical,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { copyToClipboard } from '@/app/utils/clipboard';
@@ -72,7 +72,8 @@ import { ChatSettingsPanel } from '@/features/assistant/ChatSettingsPanel';
 import { AtMentionPicker } from '@/app/components/shared/AtMentionPicker';
 import { ModelPickerPanel } from '@/app/components/shared/ModelPickerPanel';
 import { AssistantPickerPanel } from '@/app/components/shared/AssistantPickerPanel';
-import { CreateEntityDialog } from '@/app/components/shared/CreateEntityDialog';
+import { CreateAssistantWizard } from '@/app/components/shared/CreateAssistantWizard';
+import { openQuickProviderSetup } from '@/features/chat/QuickProviderSetup/quickProviderSetupStore';
 import { HistorySidebar } from '@/app/components/shared/HistorySidebar';
 import { RecycleBinConfirmDialog } from '@/app/components/shared/RecycleBinConfirmDialog';
 import { ResourceConfigDialog } from '@/app/components/shared/ResourceConfigDialog';
@@ -1517,7 +1518,7 @@ type SelectMode = 'assistant' | 'model';
 function MultiSelectPicker({
   mode, selectedAssistants, selectedModels, onSelectAssistant, onSelectModel, onChangeMode,
   multiAssistant, multiModel, onToggleMultiAssistant, onToggleMultiModel,
-  onCreateAssistant, onConfigureAssistant,
+  onCreateAssistant, onConfigureAssistant, onConnectProvider,
 }: {
   mode: SelectMode;
   selectedAssistants: string[];
@@ -1531,6 +1532,7 @@ function MultiSelectPicker({
   onToggleMultiModel: () => void;
   onCreateAssistant?: () => void;
   onConfigureAssistant?: (id: string) => void;
+  onConnectProvider?: () => void;
 }) {
   const [open, setOpen] = useState(false);
   const activeAssistant = MOCK_ASSISTANTS.find(a => a.id === selectedAssistants[0]);
@@ -1598,6 +1600,7 @@ function MultiSelectPicker({
             multiModel={multiModel}
             onToggleMultiModel={onToggleMultiModel}
             onClose={() => setOpen(false)}
+            onConnectProvider={onConnectProvider ? () => { setOpen(false); onConnectProvider(); } : undefined}
           />
         </PopoverContent>
       </Popover>
@@ -1755,6 +1758,12 @@ export function AssistantRunPage() {
   }, [artifactPanelWidth]);
   const historySidebar = useHistorySidebar('compact');
   const [showCreateAssistant, setShowCreateAssistant] = useState(false);
+  // "No model configured" demo state; connecting a provider flips it back.
+  const [modelConfigured, setModelConfigured] = useState(true);
+  const openProviderSetup = useCallback(
+    () => openQuickProviderSetup({ onSaved: () => setModelConfigured(true) }),
+    [],
+  );
   const [showBranchTree, setShowBranchTree] = useState(false);
   const [showChatSettings, setShowChatSettings] = useState(false);
   const [minimalInput, setMinimalInput] = useState(true);
@@ -2298,9 +2307,16 @@ export function AssistantRunPage() {
           // Picker 中的 bolt 配置按钮 → 在当前页面弹出 AssistantConfig，
           // 不跳到资源库（同 cherry-studio#15029 spec）。
           onConfigureAssistant={(id) => { setSelectedAssistants([id]); setRightPanel('assistantInfo'); }}
+          onConnectProvider={openProviderSetup}
         />
         <div className="flex-1" />
         <div className="flex items-center gap-0.5">
+          <Tooltip content={modelConfigured ? '演示：切到「未配置模型」状态' : '演示：恢复已配置状态'} side="bottom">
+            <Button variant="ghost" size="icon-xs" onClick={() => setModelConfigured(v => !v)}
+              className={`p-1.5 w-auto h-auto ${modelConfigured ? 'text-muted-foreground/40 hover:text-foreground hover:bg-accent/40' : 'text-foreground bg-accent/25'}`}>
+              <FlaskConical size={12} />
+            </Button>
+          </Tooltip>
           {hasMessages && (
             <>
               <div className="relative">
@@ -2355,6 +2371,23 @@ export function AssistantRunPage() {
             hasMessages={hasMessages}
             messageListClassName="px-5"
             emptyState={
+              !modelConfigured ? (
+                <div className="flex-1 flex flex-col items-center justify-center">
+                  <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}
+                    className="flex flex-col items-center max-w-[380px] w-full">
+                    <div className="w-14 h-14 rounded-2xl bg-gradient-to-b from-primary/15 to-primary/5 border border-primary/20 flex items-center justify-center mb-5">
+                      <PlugZap size={22} strokeWidth={1.4} className="text-primary/70" />
+                    </div>
+                    <h2 className="text-sm text-foreground tracking-[-0.01em]">还没有可用的模型</h2>
+                    <p className="text-xs text-muted-foreground/60 text-center leading-[1.6] mt-1.5">
+                      连接一个服务商即可开始对话，填入 API Key 会自动拉取可用模型。
+                    </p>
+                    <Button variant="default" size="sm" onClick={openProviderSetup} className="mt-4 text-xs gap-1.5">
+                      <Plus size={13} />连接服务商
+                    </Button>
+                  </motion.div>
+                </div>
+              ) : (
               <div className="flex-1 flex flex-col items-center justify-center">
                 <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}
                   className="flex flex-col items-center max-w-[360px] w-full">
@@ -2367,6 +2400,7 @@ export function AssistantRunPage() {
                   </p>
                 </motion.div>
               </div>
+              )
             }
             customComposer={
               <>
@@ -2988,10 +3022,9 @@ export function AssistantRunPage() {
       </AnimatePresence>
 
       {/* ===== Create Assistant Onboarding ===== */}
-      <CreateEntityDialog
+      <CreateAssistantWizard
         open={showCreateAssistant}
         onOpenChange={setShowCreateAssistant}
-        variant="assistant"
       />
 
       {/* ===== Recycle Bin: delete-topic confirmation ===== */}
