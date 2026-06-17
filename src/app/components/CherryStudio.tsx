@@ -45,6 +45,7 @@ import { useFloatingWindows } from '@/app/hooks/useFloatingWindows';
 import { useTabDrag } from '@/app/hooks/useTabDrag';
 import { CollabProvider, useCollab } from '@/features/collaboration/CollabContext';
 import { UserInfoPopup } from '@/features/collaboration/components/UserInfoPopup';
+import { QuickProviderSetupHost } from '@/features/chat/QuickProviderSetup/QuickProviderSetupHost';
 import { usePinnedArtifacts, findPinnedArtifact } from '@/app/stores/sharedArtifactsStore';
 import { miniAppList } from '@/features/miniapp/MiniAppsPage';
 import { DEFAULT_ARTIFACT_ICON_NAME } from '@/app/utils/artifactIcons';
@@ -583,6 +584,8 @@ function CherryStudioInner() {
           onClose={() => { setSettingsOpen(false); setSettingsInitialSection(undefined); }}
           initialSection={settingsInitialSection}
         />
+
+        <QuickProviderSetupHost />
 
         <AnnotationOverlay />
         <AnnotationToggle
