@@ -1,7 +1,7 @@
 import { useState, useMemo, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, Pin, Trash2, Tag, MoreHorizontal, Check, ChevronDown, FolderOpen, MessageCircle, History, List, LayoutGrid, ArrowUpDown, Edit3, Plus } from 'lucide-react';
-import { Button, Input, EmptyState, SearchInput, Popover, PopoverTrigger, PopoverContent, ContextMenu, ContextMenuTrigger, ContextMenuContent, ContextMenuItem, ContextMenuSeparator , Checkbox} from '@cherry-studio/ui';
+import { Button, Input, EmptyState, SearchInput, Popover, PopoverTrigger, PopoverContent, ContextMenu, ContextMenuTrigger, ContextMenuContent, ContextMenuItem, ContextMenuSeparator , Checkbox, Separator} from '@cherry-studio/ui';
 import { Tooltip } from '@/app/components/Tooltip';
 import type { AgentSession } from './SessionSidebar';
 
