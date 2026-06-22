@@ -72,6 +72,7 @@ import { ChatSettingsPanel } from '@/features/assistant/ChatSettingsPanel';
 import { AtMentionPicker } from '@/app/components/shared/AtMentionPicker';
 import { ModelPickerPanel } from '@/app/components/shared/ModelPickerPanel';
 import { AssistantPickerPanel } from '@/app/components/shared/AssistantPickerPanel';
+import { EntityRail, TopicPanelButton } from '@/app/components/shared/EntityNav';
 import { CreateAssistantWizard } from '@/app/components/shared/CreateAssistantWizard';
 import { openQuickProviderSetup } from '@/features/chat/QuickProviderSetup/quickProviderSetupStore';
 import { HistorySidebar } from '@/app/components/shared/HistorySidebar';
@@ -1692,6 +1693,15 @@ export function AssistantRunPage() {
   }, [newTopicCounter]);
 
   const currentAssistant = useMemo(() => MOCK_ASSISTANTS.find(a => a.id === selectedAssistants[0]) || MOCK_ASSISTANTS[0], [selectedAssistants]);
+  const assistantRailItems = useMemo(
+    () => MOCK_ASSISTANTS.map(a => ({ id: a.id, name: a.name, avatar: ASSISTANT_EMOJI_MAP[a.name] || '🤖', tags: a.tags, updatedAt: a.updatedAt })),
+    [],
+  );
+  // Topics belong to the selected assistant — switching assistants changes the list.
+  const assistantTopics = useMemo(
+    () => topics.filter(t => t.assistantName === currentAssistant.name),
+    [topics, currentAssistant],
+  );
   const currentModel = useMemo(() => ASSISTANT_MODELS.find(m => m.id === selectedModels[0]) || ASSISTANT_MODELS[0], [selectedModels]);
   const currentAssistantEmoji = ASSISTANT_EMOJI_MAP[currentAssistant.name] || '🤖';
   const currentModelDisplayName = currentModel.name.split('/').pop() || currentModel.name;
@@ -2252,7 +2262,7 @@ export function AssistantRunPage() {
 
   return (
     <div className="flex h-full bg-background select-none relative">
-      {/* ===== Left: History Sidebar (compact) ===== */}
+      {/* ===== Left: Assistant list rail (compact) ===== */}
       <AnimatePresence initial={false}>
         {historySidebar.isCompact && (
           <motion.div
@@ -2263,19 +2273,13 @@ export function AssistantRunPage() {
             className="flex-shrink-0 min-w-0 overflow-hidden h-full"
             style={{ width: 220 }}
           >
-            <HistorySidebar
-              items={topics}
-              activeItemId={activeTopicId}
-              onSelectItem={handleSelectTopic}
-              onDeleteItem={handleDeleteTopic}
-              onUpdateItem={handleUpdateTopic}
-              onNewItem={handleNewTopic}
-              onExpand={() => { setHistoryInitialAssistant(null); historySidebar.expand(); }}
-              onClose={historySidebar.hide}
-              entityLabel="话题"
-              onRenameGroup={(oldName, newName) => {
-                setTopics(prev => prev.map(t => t.group === oldName ? { ...t, group: newName } : t));
-              }}
+            <EntityRail
+              title="助手"
+              items={assistantRailItems}
+              activeId={selectedAssistants[0]}
+              onSelect={handleSelectAssistant}
+              onNew={() => setShowCreateAssistant(true)}
+              onConfigure={(id) => { setSelectedAssistants([id]); setRightPanel('assistantInfo'); }}
             />
           </motion.div>
         )}
@@ -2285,32 +2289,33 @@ export function AssistantRunPage() {
       <div className="flex flex-col flex-1 min-w-0 min-h-0 relative">
         {/* ===== Header ===== */}
         <header className="flex items-center px-3 flex-shrink-0 h-[40px]">
-          {/* History sidebar toggle */}
-          <Tooltip content={historySidebar.isCompact ? '收起话题列表' : '展开话题列表'} side="bottom">
+          {/* Assistant list rail toggle */}
+          <Tooltip content={historySidebar.isCompact ? '收起助手列表' : '展开助手列表'} side="bottom">
             <Button variant="ghost" size="icon-xs" onClick={() => historySidebar.toggle()}
               className={`p-1.5 w-auto h-auto mr-1 ${historySidebar.isCompact ? 'text-muted-foreground hover:text-foreground hover:bg-accent/40' : 'text-muted-foreground/40 hover:text-foreground hover:bg-accent/40'}`}>
               {historySidebar.isCompact ? <PanelLeftClose size={13} /> : <PanelLeftOpen size={13} />}
             </Button>
           </Tooltip>
-          <MultiSelectPicker
-          mode={selectMode}
-          selectedAssistants={selectedAssistants}
-          selectedModels={selectedModels}
-          onSelectAssistant={handleSelectAssistant}
-          onSelectModel={handleSelectModel}
-          onChangeMode={setSelectMode}
-          multiAssistant={multiAssistant}
-          multiModel={multiModel}
-          onToggleMultiAssistant={handleToggleMultiAssistant}
-          onToggleMultiModel={handleToggleMultiModel}
-          onCreateAssistant={() => setShowCreateAssistant(true)}
-          // Picker 中的 bolt 配置按钮 → 在当前页面弹出 AssistantConfig，
-          // 不跳到资源库（同 cherry-studio#15029 spec）。
-          onConfigureAssistant={(id) => { setSelectedAssistants([id]); setRightPanel('assistantInfo'); }}
-          onConnectProvider={openProviderSetup}
-        />
         <div className="flex-1" />
         <div className="flex items-center gap-0.5">
+          {/* Topics for the selected assistant — floating panel (浮窗) on the right */}
+          <TopicPanelButton label="话题" count={assistantTopics.filter(t => !t.archived).length}>
+            {(close) => (
+              <HistorySidebar
+                items={assistantTopics}
+                activeItemId={activeTopicId}
+                onSelectItem={(id) => { handleSelectTopic(id); close(); }}
+                onDeleteItem={handleDeleteTopic}
+                onUpdateItem={handleUpdateTopic}
+                onNewItem={() => { handleNewTopic(); close(); }}
+                onExpand={() => { setHistoryInitialAssistant(null); historySidebar.expand(); close(); }}
+                onClose={close}
+                entityLabel="话题"
+                hideGroupBy
+              />
+            )}
+          </TopicPanelButton>
+          <div className="w-px h-3.5 bg-border/30 mx-0.5" />
           <Tooltip content={modelConfigured ? '演示：切到「未配置模型」状态' : '演示：恢复已配置状态'} side="bottom">
             <Button variant="ghost" size="icon-xs" onClick={() => setModelConfigured(v => !v)}
               className={`p-1.5 w-auto h-auto ${modelConfigured ? 'text-muted-foreground/40 hover:text-foreground hover:bg-accent/40' : 'text-foreground bg-accent/25'}`}>
@@ -2865,6 +2870,23 @@ export function AssistantRunPage() {
                           </Tooltip>
                         );
                       })()}
+                      {/* Assistant + model selectors — after the + / tools */}
+                      <div className="w-px h-3.5 bg-border/40 mx-0.5" />
+                      <MultiSelectPicker
+                        mode={selectMode}
+                        selectedAssistants={selectedAssistants}
+                        selectedModels={selectedModels}
+                        onSelectAssistant={handleSelectAssistant}
+                        onSelectModel={handleSelectModel}
+                        onChangeMode={setSelectMode}
+                        multiAssistant={multiAssistant}
+                        multiModel={multiModel}
+                        onToggleMultiAssistant={handleToggleMultiAssistant}
+                        onToggleMultiModel={handleToggleMultiModel}
+                        onCreateAssistant={() => setShowCreateAssistant(true)}
+                        onConfigureAssistant={(id) => { setSelectedAssistants([id]); setRightPanel('assistantInfo'); }}
+                        onConnectProvider={openProviderSetup}
+                      />
                     </div>
                     <div className="flex items-center gap-2">
                       <div className="flex items-center gap-2.5 text-xs text-muted-foreground">

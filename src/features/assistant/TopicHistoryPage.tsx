@@ -6,7 +6,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Tooltip } from '@/app/components/Tooltip';
-import { Button, Input, SearchInput, EmptyState, Dialog, DialogContent, Popover, PopoverTrigger, PopoverContent, ContextMenu, ContextMenuTrigger, ContextMenuContent, ContextMenuItem, ContextMenuSeparator, Badge , Checkbox} from '@cherry-studio/ui';
+import { Button, Input, SearchInput, EmptyState, Dialog, DialogContent, Popover, PopoverTrigger, PopoverContent, ContextMenu, ContextMenuTrigger, ContextMenuContent, ContextMenuItem, ContextMenuSeparator, Badge , Checkbox, Separator} from '@cherry-studio/ui';
 import type { AssistantTopic } from '@/app/types/assistant';
 
 type SortKey = 'time' | 'name' | 'messages';

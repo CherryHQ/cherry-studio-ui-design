@@ -2,6 +2,7 @@ import React, { useState, useMemo, useCallback, useRef, useEffect } from 'react'
 import {
   Trash2, Pin, Plus, Pencil, Sparkles, Archive, Tag,
   Clock, Maximize2, ListFilter, ChevronDown, ChevronRight, ChevronsDown, Check, FolderOpen,
+  MessageCircle, MoreHorizontal,
 } from 'lucide-react';
 import { Button, SearchInput, EmptyState, Popover, PopoverTrigger, PopoverContent } from '@cherry-studio/ui';
 import { motion, AnimatePresence } from 'motion/react';
@@ -77,6 +78,8 @@ interface HistorySidebarProps<T extends HistoryItem> {
    * onQuickStart with that option's id. */
   quickStartOptions?: { id: string; label: string; avatar?: string; description?: string }[];
   onQuickStart?: (id: string) => void;
+  /** Hide the 展示方式 (group-by) control — used in the scoped floating panel. */
+  hideGroupBy?: boolean;
 }
 
 // ===========================
@@ -227,7 +230,7 @@ function TaskProgressRing({ progress, size = 13 }: { progress: number; size?: nu
   );
 }
 
-function SidebarItem<T extends HistoryItem>({ item, isActive, isEditing, onClick, onContextMenu, onCommitEdit, onArchive, showStatusDot, onDragStart, onDragOver, onDrop }: {
+function SidebarItem<T extends HistoryItem>({ item, isActive, isEditing, onClick, onContextMenu, onCommitEdit, onArchive, onTogglePin, showStatusDot, onDragStart, onDragOver, onDrop }: {
   item: T;
   isActive: boolean;
   isEditing?: boolean;
@@ -235,6 +238,7 @@ function SidebarItem<T extends HistoryItem>({ item, isActive, isEditing, onClick
   onContextMenu: (e: React.MouseEvent) => void;
   onCommitEdit?: (newTitle: string) => void;
   onArchive?: () => void;
+  onTogglePin?: () => void;
   showStatusDot?: boolean;
   onDragStart?: (e: React.DragEvent) => void;
   onDragOver?: (e: React.DragEvent) => void;
@@ -280,39 +284,72 @@ function SidebarItem<T extends HistoryItem>({ item, isActive, isEditing, onClick
   }
 
   return (
-    <div className="group/item flex items-center">
-      <Button size="inline"
-        variant="ghost"
+    <div className="group/item relative mb-0.5">
+      <button
+        type="button"
         onClick={onClick}
         onContextMenu={onContextMenu}
         draggable={!!onDragStart}
         onDragStart={onDragStart}
         onDragOver={onDragOver}
         onDrop={onDrop}
-        className={`flex-1 min-w-0 px-2.5 py-[5px] font-normal rounded-md justify-start gap-1.5 ${
+        className={`w-full min-w-0 flex items-center gap-2 px-2 py-[6px] pr-[70px] rounded-lg text-left transition-colors ${
           isActive
-            ? 'bg-accent/25 text-foreground'
-            : 'text-foreground hover:bg-accent/40 hover:text-foreground'
+            ? 'bg-accent/60 text-foreground'
+            : 'text-foreground/90 hover:bg-accent/30'
         }`}
       >
-        <span className="text-sm truncate flex-1 text-left">
+        {/* Leading chat-bubble icon */}
+        <span className={`w-[22px] h-[22px] rounded-md flex items-center justify-center flex-shrink-0 transition-colors ${
+          isActive ? 'bg-background/70 text-foreground' : 'bg-muted/50 text-muted-foreground/60'
+        }`}>
+          <MessageCircle size={12} strokeWidth={1.8} />
+        </span>
+        <span className={`text-sm truncate flex-1 min-w-0 ${isActive ? 'font-medium' : ''}`}>
           {item.title}
         </span>
+      </button>
+      {/* Trailing indicator (default) — fades out when hover actions appear */}
+      <span className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none flex items-center group-hover/item:opacity-0 transition-opacity">
         {item.kind === 'task' && item.status === 'active' && typeof item.progress === 'number' ? (
           <TaskProgressRing progress={item.progress} />
-        ) : (statusCfg && item.unread && !isActive && (
-          <span className={`w-[5px] h-[5px] rounded-full flex-shrink-0 ${statusCfg.className} ${statusCfg.animate ? 'animate-pulse' : ''}`} />
-        ))}
-      </Button>
-      {onArchive && (
+        ) : isActive ? (
+          <span className="w-[6px] h-[6px] rounded-full bg-success" />
+        ) : (statusCfg && item.unread ? (
+          <span className={`w-[5px] h-[5px] rounded-full ${statusCfg.className} ${statusCfg.animate ? 'animate-pulse' : ''}`} />
+        ) : null)}
+      </span>
+      {/* Hover actions inside the pill: 置顶 + 归档 quick actions + "…" overflow */}
+      <div className="absolute right-1 top-1/2 -translate-y-1/2 flex items-center gap-0.5 opacity-0 group-hover/item:opacity-100 transition-opacity">
+        {onTogglePin && (
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); onTogglePin(); }}
+            title={item.pinned ? '取消置顶' : '置顶'}
+            className={`p-0.5 rounded hover:text-foreground hover:bg-accent/70 transition-colors ${item.pinned ? 'text-foreground' : 'text-muted-foreground/40'}`}
+          >
+            <Pin size={12} className={item.pinned ? '' : '-rotate-45'} />
+          </button>
+        )}
+        {onArchive && (
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); onArchive(); }}
+            title="归档"
+            className="p-0.5 rounded text-muted-foreground/40 hover:text-foreground hover:bg-accent/70 transition-colors"
+          >
+            <Archive size={12} />
+          </button>
+        )}
         <button
-          onClick={(e) => { e.stopPropagation(); onArchive(); }}
-          className="p-0.5 flex-shrink-0 text-muted-foreground/30 hover:text-foreground opacity-0 group-hover/item:opacity-100 transition-opacity"
-          title="归档"
+          type="button"
+          onClick={(e) => { e.stopPropagation(); onContextMenu(e); }}
+          title="更多"
+          className="p-0.5 rounded text-muted-foreground/40 hover:text-foreground hover:bg-accent/70 transition-colors"
         >
-          <Archive size={11} />
+          <MoreHorizontal size={13} />
         </button>
-      )}
+      </div>
     </div>
   );
 }
@@ -410,6 +447,7 @@ function GroupSection<T extends HistoryItem>({
   editingItemId,
   onCommitEdit,
   onArchiveItem,
+  onTogglePinItem,
 }: {
   groupLabel: string;
   groupItems: T[];
@@ -434,6 +472,7 @@ function GroupSection<T extends HistoryItem>({
   editingItemId: string | null;
   onCommitEdit: (id: string, newTitle: string) => void;
   onArchiveItem?: (id: string) => void;
+  onTogglePinItem?: (id: string) => void;
 }) {
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState(groupLabel);
@@ -524,6 +563,7 @@ function GroupSection<T extends HistoryItem>({
               onContextMenu={(e) => onContextMenu(e, item.id)}
               onCommitEdit={(newTitle) => onCommitEdit(item.id, newTitle)}
               onArchive={onArchiveItem ? () => onArchiveItem(item.id) : undefined}
+              onTogglePin={onTogglePinItem ? () => onTogglePinItem(item.id) : undefined}
               showStatusDot={showStatusDot}
             />
           ))}
@@ -563,6 +603,7 @@ export function HistorySidebar<T extends HistoryItem>({
   onRenameGroup,
   quickStartOptions,
   onQuickStart,
+  hideGroupBy,
 }: HistorySidebarProps<T>) {
   const [searchQuery, setSearchQuery] = useState('');
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number; itemId: string } | null>(null);
@@ -765,7 +806,7 @@ export function HistorySidebar<T extends HistoryItem>({
                 entityLabel={entityLabel}
               />
             )}
-            {(showStatusDot || hasItemMetadata) && (
+            {(showStatusDot || hasItemMetadata) && !hideGroupBy && (
               <Popover>
                 <PopoverTrigger asChild>
                   <Button variant="ghost" size="icon-xs"
@@ -825,6 +866,7 @@ export function HistorySidebar<T extends HistoryItem>({
                 onContextMenu={(e) => handleContextMenu(e, item.id)}
                 onCommitEdit={(newTitle) => { onUpdateItem(item.id, { title: newTitle } as Partial<T>); setEditingItemId(null); }}
                 onArchive={() => onUpdateItem(item.id, { archived: true } as Partial<T>)}
+                onTogglePin={() => onUpdateItem(item.id, { pinned: !item.pinned } as Partial<T>)}
                 showStatusDot={showStatusDot}
               />
             ))}
@@ -861,6 +903,7 @@ export function HistorySidebar<T extends HistoryItem>({
                 editingItemId={editingItemId}
                 onCommitEdit={(id, newTitle) => { onUpdateItem(id, { title: newTitle } as Partial<T>); setEditingItemId(null); }}
                 onArchiveItem={(id) => onUpdateItem(id, { archived: true } as Partial<T>)}
+                onTogglePinItem={(id) => { const it = items.find(s => s.id === id); if (it) onUpdateItem(id, { pinned: !it.pinned } as Partial<T>); }}
               />
             );
           })
@@ -883,6 +926,7 @@ export function HistorySidebar<T extends HistoryItem>({
                 onContextMenu={(e) => handleContextMenu(e, item.id)}
                 onCommitEdit={(newTitle) => { onUpdateItem(item.id, { title: newTitle } as Partial<T>); setEditingItemId(null); }}
                 onArchive={() => onUpdateItem(item.id, { archived: true } as Partial<T>)}
+                onTogglePin={() => onUpdateItem(item.id, { pinned: !item.pinned } as Partial<T>)}
                 showStatusDot={showStatusDot}
               />
             ))}

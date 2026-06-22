@@ -33,6 +33,7 @@ import { WorkflowPanel } from './WorkflowPanel';
 import type { AgentChatMessage, AgentSession, AgentSessionData } from '@/app/types/agent';
 import { SessionHistoryPage, type SessionDisplayMode } from './SessionHistoryPage';
 import { HistorySidebar } from '@/app/components/shared/HistorySidebar';
+import { EntityRail, TopicPanelButton } from '@/app/components/shared/EntityNav';
 import { CreateAgentWizard } from '@/app/components/shared/CreateAgentWizard';
 import { RecycleBinConfirmDialog } from '@/app/components/shared/RecycleBinConfirmDialog';
 import { ResourceConfigDialog } from '@/app/components/shared/ResourceConfigDialog';
@@ -1445,6 +1446,15 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
   const messages = localMessages[activeSessionId || ''] ?? sessionData.messages;
   const hasMessages = messages.length > 0;
   const activeSession = sessions.find(s => s.id === activeSessionId);
+  const agentRailItems = useMemo(
+    () => AVAILABLE_AGENTS.map(a => ({ id: a.id, name: a.name, avatar: a.avatar, tags: a.tags, updatedAt: a.updatedAt })),
+    [],
+  );
+  // Sessions belong to the selected agent — switching agents changes the list.
+  const agentSessions = useMemo(
+    () => sessions.filter(s => s.agentName === selectedAgent.name),
+    [sessions, selectedAgent],
+  );
 
   // Sync session name to tab title
   useEffect(() => {
@@ -1705,8 +1715,8 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
           </Button>
         )}
 
-        {/* History sidebar toggle */}
-        <Tooltip content={historySidebar.isCompact ? '收起会话列表' : '展开会话列表'} side="bottom">
+        {/* Agent list rail toggle */}
+        <Tooltip content={historySidebar.isCompact ? '收起 Agent 列表' : '展开 Agent 列表'} side="bottom">
           <Button variant="ghost" size="icon-xs" onClick={() => historySidebar.toggle()}
             className={`p-1.5 w-auto h-auto mr-0.5 ${historySidebar.isCompact ? 'text-muted-foreground hover:text-foreground hover:bg-accent/40' : 'text-muted-foreground/40 hover:text-foreground hover:bg-accent/40'}`}>
             {historySidebar.isCompact ? <PanelLeftClose size={13} /> : <PanelLeftOpen size={13} />}
@@ -1716,6 +1726,26 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
       </div>
 
       <div className="flex items-center gap-0.5">
+        {/* Sessions for the selected agent — floating panel (浮窗) on the right */}
+        <TopicPanelButton label="会话" count={agentSessions.filter(s => !s.archived).length}>
+          {(close) => (
+            <HistorySidebar
+              items={agentSessions}
+              activeItemId={activeSessionId}
+              onSelectItem={(id) => { handleSelectSession(id); close(); }}
+              onDeleteItem={handleDeleteSession}
+              onUpdateItem={handleUpdateSession}
+              onNewItem={() => { handleNewSessionForAgent(selectedAgent.name); close(); }}
+              onExpand={() => { historySidebar.expand(); close(); }}
+              onClose={close}
+              entityLabel="会话"
+              showStatusDot
+              hideGroupBy
+            />
+          )}
+        </TopicPanelButton>
+        <div className="w-px h-3.5 bg-border/30 mx-0.5" />
+
         {/* "保存为 Skill" is no longer a chrome button — the in-chat
             SaveAsSkillCallout (rendered above the composer) drives
             discovery now. This slot only shows the create_skill job
@@ -1845,33 +1875,13 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
             className="flex-shrink-0 min-w-0 overflow-hidden h-full"
             style={{ width: 220 }}
           >
-            <HistorySidebar
-              items={sessions}
-              activeItemId={activeSessionId}
-              onSelectItem={handleSelectSession}
-              onDeleteItem={handleDeleteSession}
-              onUpdateItem={handleUpdateSession}
-              onNewItem={handleNewSession}
-              onExpand={() => historySidebar.expand()}
-              onClose={historySidebar.hide}
-              entityLabel="会话"
-              showStatusDot
-              customGroupBy={{
-                label: '智能体',
-                getGroupKey: (item) => item.agentName,
-              }}
-              onNewItemForGroup={handleNewSessionForAgent}
-              onRenameGroup={handleRenameGroup}
-              quickStartOptions={AVAILABLE_AGENTS.map(a => ({
-                id: a.id,
-                label: a.name,
-                avatar: a.avatar,
-                description: a.desc,
-              }))}
-              onQuickStart={(id) => {
-                const agent = AVAILABLE_AGENTS.find(a => a.id === id);
-                if (agent) handleNewSessionForAgent(agent.name);
-              }}
+            <EntityRail
+              title="Agent"
+              items={agentRailItems}
+              activeId={selectedAgent.id}
+              onSelect={(id) => { const agent = AVAILABLE_AGENTS.find(a => a.id === id); if (agent) setSelectedAgent(agent); }}
+              onNew={() => setShowCreateAgent(true)}
+              onConfigure={(id) => { const agent = AVAILABLE_AGENTS.find(a => a.id === id); if (agent) { setSelectedAgent(agent); setShowAgentInfo(true); } }}
             />
           </motion.div>
         )}
