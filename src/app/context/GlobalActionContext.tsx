@@ -30,6 +30,8 @@ export interface GlobalActionFunctions {
   navigateToMarket: () => void;
   /** Return from Library back to the page that initiated the navigation */
   libraryReturn: () => void;
+  /** Navigate to the Chat tab (used by Trial Chat flow) */
+  navigateToChat: () => void;
   /** Change the title of the currently-active tab */
   changeTabTitle: (title: string) => void;
   /** Open the global Settings overlay, optionally jumping to a specific section */
@@ -121,6 +123,7 @@ const defaultFunctions: GlobalActionFunctions = {
   navigateToLibrary: noop,
   navigateToMarket: noop,
   libraryReturn: noop,
+  navigateToChat: noop,
   changeTabTitle: noop,
   openSettings: noop,
   launchpadOpen: noop,
@@ -168,6 +171,7 @@ export function GlobalActionProvider({ value, children }: GlobalActionProviderPr
     navigateToLibrary: value.navigateToLibrary,
     navigateToMarket: value.navigateToMarket,
     libraryReturn: value.libraryReturn,
+    navigateToChat: value.navigateToChat,
     changeTabTitle: value.changeTabTitle,
     openSettings: value.openSettings,
     launchpadOpen: value.launchpadOpen,
@@ -178,7 +182,7 @@ export function GlobalActionProvider({ value, children }: GlobalActionProviderPr
   }), [
     value.openMiniApp, value.pinTab, value.editAssistantInLibrary,
     value.navigateToKnowledge, value.navigateToLibrary, value.navigateToMarket, value.libraryReturn,
-    value.changeTabTitle, value.openSettings, value.launchpadOpen,
+    value.navigateToChat, value.changeTabTitle, value.openSettings, value.launchpadOpen,
     value.pinToSidebar, value.unpinFromSidebar, value.openLaunchpad,
     value.removeFromLaunchpad,
   ]);
