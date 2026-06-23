@@ -1,5 +1,5 @@
-import React, { useMemo, useState } from 'react';
-import { Plus, Settings, MessageSquare, ChevronDown, ListFilter, Check, MoreHorizontal, Pencil, Copy, Trash2 } from 'lucide-react';
+import React, { useMemo, useState, useRef } from 'react';
+import { Plus, SlidersHorizontal, MessageSquare, ChevronDown, ListFilter, Check, MoreHorizontal, Pencil, Copy, Trash2 } from 'lucide-react';
 import { motion } from 'motion/react';
 import {
   Button, SearchInput, Popover, PopoverTrigger, PopoverContent,
@@ -86,7 +86,7 @@ export function EntityRail({ title, items, activeId, onSelect, onNew, onConfigur
               title="配置"
               className="p-1 rounded text-muted-foreground/50 hover:text-foreground hover:bg-accent/70 transition-colors"
             >
-              <Settings size={12} />
+              <SlidersHorizontal size={12} />
             </button>
           )}
           <DropdownMenu>
@@ -208,46 +208,117 @@ export function EntityRail({ title, items, activeId, onSelect, onNew, onConfigur
 // (浮窗) of the page content holding the topic/session list (HistorySidebar)
 // for the selected entity. The panel is positioned `absolute` so it stays
 // inside the app window (the nearest `relative` ancestor — the content
-// column — not the viewport). The child is a render-prop receiving `close`
-// so selecting a topic can dismiss the panel.
+// column — not the viewport). It can be pinned (固定) to the right side so it
+// stays put instead of closing on click-away. The child is a render-prop
+// receiving `{ close, pinned, togglePin }`.
 
 export interface TopicPanelButtonProps {
   label: string;
   count: number;
-  children: (close: () => void) => React.ReactNode;
+  /** Controlled pin: lift the pinned (固定) state to the parent so it can dock
+   * the panel into a shared module (e.g. tabbed with artifacts). When provided,
+   * this component renders only the floating popover; the parent renders the
+   * pinned/docked panel itself. */
+  pinned?: boolean;
+  onPinnedChange?: (pinned: boolean) => void;
+  /** Leading icon — defaults to a chat bubble; pass e.g. <History/> for the
+   * agent session list. */
+  icon?: React.ReactNode;
+  children: (api: { close: () => void; pinned: boolean; togglePin: () => void }) => React.ReactNode;
 }
 
-export function TopicPanelButton({ label, count, children }: TopicPanelButtonProps) {
+export function TopicPanelButton({ label, count, pinned: pinnedProp, onPinnedChange, icon, children }: TopicPanelButtonProps) {
+  const controlled = onPinnedChange !== undefined;
   const [open, setOpen] = useState(false);
-  const close = () => setOpen(false);
+  const [internalPinned, setInternalPinned] = useState(false);
+  const pinned = controlled ? !!pinnedProp : internalPinned;
+
+  // Selecting an item / pressing close only dismisses the panel when unpinned.
+  const close = () => { if (!pinned) setOpen(false); };
+  const togglePin = () => {
+    if (controlled) { onPinnedChange!(!pinned); setOpen(false); }
+    else setInternalPinned((v) => !v);
+  };
+  // In controlled mode the parent renders the pinned panel, so here we only
+  // render the floating popover.
+  const showPanel = controlled ? (open && !pinned) : (open || internalPinned);
+  const active = open || pinned;
+  const handleTrigger = () => {
+    if (controlled && pinned) onPinnedChange!(false);
+    else setOpen((v) => !v);
+  };
+
+  // The floating panel is freely resizable from its bottom-left corner. It is
+  // anchored top-right, so dragging the corner left widens it and dragging it
+  // down makes it taller. Defaults to a compact size so it doesn't cover the
+  // chat; capped to the column height via maxHeight.
+  const [panelWidth, setPanelWidth] = useState(300);
+  const [panelHeight, setPanelHeight] = useState(500);
+  const resizing = useRef(false);
+  const handleResizeStart = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    resizing.current = true;
+    const startX = e.clientX;
+    const startY = e.clientY;
+    const startW = panelWidth;
+    const rect = (e.currentTarget as HTMLElement).parentElement?.getBoundingClientRect();
+    const startH = rect ? rect.height : 600;
+    const top = rect ? rect.top : 46;
+    const maxH = window.innerHeight - top - 8;
+    const onMove = (ev: MouseEvent) => {
+      if (!resizing.current) return;
+      setPanelWidth(Math.max(260, Math.min(720, startW - (ev.clientX - startX))));
+      setPanelHeight(Math.max(240, Math.min(maxH, startH + (ev.clientY - startY))));
+    };
+    const onUp = () => {
+      resizing.current = false;
+      document.removeEventListener('mousemove', onMove);
+      document.removeEventListener('mouseup', onUp);
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+    };
+    document.body.style.cursor = 'nesw-resize';
+    document.body.style.userSelect = 'none';
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onUp);
+  };
 
   return (
     <>
       <Button
         variant="ghost"
         size="xs"
-        onClick={() => setOpen((v) => !v)}
+        onClick={handleTrigger}
         className={`gap-1.5 px-2 py-[4px] text-xs ${
-          open ? 'bg-accent/25 text-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-accent/40'
+          active ? 'bg-accent/25 text-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-accent/40'
         }`}
       >
-        <MessageSquare size={13} strokeWidth={1.6} />
+        {icon ?? <MessageSquare size={13} strokeWidth={1.6} />}
         <span>{label}</span>
         <span className="tabular-nums text-muted-foreground/50">{count}</span>
         <ChevronDown size={11} />
       </Button>
-      {open && (
+      {showPanel && (
         <>
-          {/* click-away layer — covers the content column */}
-          <div className="absolute inset-0 z-[var(--z-modal)]" onClick={close} />
-          {/* Far-right floating window, docked to the content column's right edge */}
+          {/* click-away layer — only when floating (unpinned) */}
+          {!pinned && <div className="absolute inset-0 z-[var(--z-modal)]" onClick={() => setOpen(false)} />}
+          {/* Far-right floating/pinned panel, docked to the content column's right edge */}
           <motion.div
             initial={{ opacity: 0, x: 16 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.16, ease: [0.4, 0, 0.2, 1] }}
-            className="absolute right-2 top-[46px] bottom-2 z-[var(--z-modal)] w-[300px] rounded-xl border border-border/40 bg-popover shadow-xl shadow-black/10 overflow-hidden flex flex-col"
+            style={{ width: panelWidth, height: panelHeight, maxHeight: 'calc(100% - 54px)' }}
+            className="absolute right-2 top-[46px] z-[var(--z-modal)] rounded-xl border border-border/40 bg-popover shadow-xl shadow-black/10 overflow-hidden flex flex-col"
           >
-            {children(close)}
+            {children({ close, pinned, togglePin })}
+            {/* Bottom-left corner drag handle — resize width + height. No
+                visible mark; the resize cursor on hover is the affordance. */}
+            <div
+              onMouseDown={handleResizeStart}
+              title="拖拽调整大小"
+              className="absolute left-0 bottom-0 w-4 h-4 cursor-nesw-resize z-20"
+            />
           </motion.div>
         </>
       )}

@@ -482,13 +482,14 @@ function FileHistoryDropdown({ onSelect, onClose, anchorRight, selectedTitle, ha
 // Artifacts Panel
 // ===========================
 
-function ArtifactsPanel({ artifact, isFullscreen, onToggleFullscreen, onClose, onSelectArtifact, hasTopic }: {
+function ArtifactsPanel({ artifact, isFullscreen, onToggleFullscreen, onClose, onSelectArtifact, hasTopic, tabSlot }: {
   artifact: ArtifactData | null;
   isFullscreen: boolean;
   onToggleFullscreen: () => void;
   onClose: () => void;
   onSelectArtifact: (artifact: ArtifactData) => void;
   hasTopic: boolean;
+  tabSlot?: React.ReactNode;
 }) {
   const [tab, setTab] = useState<ArtifactTab>('document');
   const [copied, setCopied] = useState(false);
@@ -536,7 +537,7 @@ function ArtifactsPanel({ artifact, isFullscreen, onToggleFullscreen, onClose, o
     return (
       <div className="flex flex-col h-full">
         <div className="flex items-center justify-between px-3 h-[38px] border-b border-border/30 flex-shrink-0">
-          <span className="text-xs text-muted-foreground/50">内容预览</span>
+          {tabSlot ?? <span className="text-xs text-muted-foreground/50">内容预览</span>}
           <div className="flex items-center gap-0.5">
             <Tooltip content="关闭" side="bottom"><Button variant="ghost" size="icon-xs" onClick={onClose} className="p-1.5 w-auto h-auto text-muted-foreground/40 hover:text-foreground hover:bg-accent/40">
               <X size={11} />
@@ -574,6 +575,8 @@ function ArtifactsPanel({ artifact, isFullscreen, onToggleFullscreen, onClose, o
     <div className="flex flex-col h-full">
       <div className="flex items-center justify-between px-3 h-[38px] border-b border-border/30 flex-shrink-0">
         <div className="flex items-center gap-1">
+          {tabSlot}
+          {tabSlot && availableTabs.length > 0 && <div className="w-px h-3.5 bg-border/30 mx-1" />}
           {availableTabs.map(t => (
             <Button variant="ghost" size="inline" key={t.key} onClick={() => setTab(t.key)}
               className={`gap-1.5 px-2.5 py-[5px] text-xs transition-all duration-100 ${tab === t.key ? 'bg-accent/50 text-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-accent/40'}`}>
@@ -1739,6 +1742,10 @@ export function AssistantRunPage() {
   const [showArtifacts, setShowArtifacts] = useState(false);
   const [artifactFullscreen, setArtifactFullscreen] = useState(false);
   const [artifactPanelWidth, setArtifactPanelWidth] = useState(420);
+  // The right dock is a shared module — 话题 / 文件 / 侧边聊天 / 浏览器 / 终端,
+  // switched by a vertical tab rail on its right edge. null = hidden.
+  type DockTab = 'topics' | 'artifacts';
+  const [dockTab, setDockTab] = useState<DockTab | null>(null);
   const artifactResizing = useRef(false);
   const artifactContainerRef = useRef<HTMLDivElement>(null);
 
@@ -1920,11 +1927,13 @@ export function AssistantRunPage() {
     setActiveArtifact(artifact);
     setShowArtifacts(true);
     setArtifactFullscreen(false);
+    setDockTab('artifacts');
   }, []);
 
   const handleCloseArtifacts = useCallback(() => {
     setShowArtifacts(false);
     setArtifactFullscreen(false);
+    setDockTab((d) => (d === 'artifacts' ? null : d));
   }, []);
 
   // Header file history dropdown
@@ -2260,6 +2269,51 @@ export function AssistantRunPage() {
     );
   }
 
+  // 话题 / 创作物 tab switcher — injected into the docked panel header so the
+  // two views share one tab bar (only shown when docked, not in the popover).
+  const dockTabs = (
+    <div className="flex items-center gap-0.5">
+      {([
+        { id: 'topics', label: '话题', Icon: MessageCircle },
+        { id: 'artifacts', label: '创作物', Icon: FileText },
+      ] as const).map(({ id, label, Icon }) => {
+        const active = dockTab === id;
+        return (
+          <button
+            key={id}
+            type="button"
+            onClick={() => setDockTab(id)}
+            className={`flex items-center gap-1 px-2 py-[3px] rounded-md text-xs transition-colors ${
+              active ? 'bg-accent/60 text-foreground' : 'text-muted-foreground/60 hover:text-foreground hover:bg-accent/30'
+            }`}
+          >
+            <Icon size={11} />{label}
+          </button>
+        );
+      })}
+    </div>
+  );
+
+  // Shared 话题 list — used by the header floating popover and the pinned
+  // right-dock tab, so both stay in sync.
+  const renderTopicList = ({ close, pinned, togglePin }: { close: () => void; pinned: boolean; togglePin: () => void }) => (
+    <HistorySidebar
+      items={assistantTopics}
+      activeItemId={activeTopicId}
+      onSelectItem={(id) => { handleSelectTopic(id); close(); }}
+      onDeleteItem={handleDeleteTopic}
+      onUpdateItem={handleUpdateTopic}
+      onNewItem={() => { handleNewTopic(); close(); }}
+      onExpand={() => { setHistoryInitialAssistant(null); historySidebar.expand(); close(); }}
+      onClose={close}
+      entityLabel="话题"
+      hideGroupBy
+      panelPinned={pinned}
+      onTogglePanelPin={togglePin}
+      tabSlot={pinned ? dockTabs : undefined}
+    />
+  );
+
   return (
     <div className="flex h-full bg-background select-none relative">
       {/* ===== Left: Assistant list rail (compact) ===== */}
@@ -2299,21 +2353,13 @@ export function AssistantRunPage() {
         <div className="flex-1" />
         <div className="flex items-center gap-0.5">
           {/* Topics for the selected assistant — floating panel (浮窗) on the right */}
-          <TopicPanelButton label="话题" count={assistantTopics.filter(t => !t.archived).length}>
-            {(close) => (
-              <HistorySidebar
-                items={assistantTopics}
-                activeItemId={activeTopicId}
-                onSelectItem={(id) => { handleSelectTopic(id); close(); }}
-                onDeleteItem={handleDeleteTopic}
-                onUpdateItem={handleUpdateTopic}
-                onNewItem={() => { handleNewTopic(); close(); }}
-                onExpand={() => { setHistoryInitialAssistant(null); historySidebar.expand(); close(); }}
-                onClose={close}
-                entityLabel="话题"
-                hideGroupBy
-              />
-            )}
+          <TopicPanelButton
+            label="话题"
+            count={assistantTopics.filter(t => !t.archived).length}
+            pinned={dockTab === 'topics'}
+            onPinnedChange={(v) => setDockTab(v ? 'topics' : null)}
+          >
+            {renderTopicList}
           </TopicPanelButton>
           <div className="w-px h-3.5 bg-border/30 mx-0.5" />
           <Tooltip content={modelConfigured ? '演示：切到「未配置模型」状态' : '演示：恢复已配置状态'} side="bottom">
@@ -2944,31 +2990,6 @@ export function AssistantRunPage() {
           </ChatInterface>
         </div>
 
-        {/* Right: Artifacts */}
-        <AnimatePresence initial={false}>
-          {showArtifacts && !artifactFullscreen && (
-            <motion.div
-              initial={{ width: 0, opacity: 0 }}
-              animate={{ width: artifactPanelWidth, opacity: 1 }}
-              exit={{ width: 0, opacity: 0 }}
-              transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
-              className="flex-shrink-0 min-w-0 relative flex"
-              style={{ width: artifactPanelWidth }}
-            >
-              {/* Resize handle */}
-              <div
-                onMouseDown={handleArtifactResizeStart}
-                className="w-[6px] flex-shrink-0 cursor-col-resize group flex items-center justify-center relative z-10"
-              >
-                <div className="w-[2px] h-8 rounded-full bg-border/0 group-hover:bg-border/50 group-active:bg-foreground/20 transition-colors" />
-              </div>
-              <div className="flex-1 min-w-0 m-2 ml-0 rounded-2xl border border-border/30 bg-background shadow-lg overflow-hidden">
-                <ArtifactsPanel artifact={activeArtifact} isFullscreen={false} onToggleFullscreen={() => setArtifactFullscreen(true)} onClose={handleCloseArtifacts} onSelectArtifact={handleOpenArtifact} hasTopic={activeTopicId !== null} />
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
         {/* Right: Chat Settings Panel */}
         <AnimatePresence>
           {showChatSettings && (
@@ -3060,6 +3081,37 @@ export function AssistantRunPage() {
       />
 
       </div>
+
+      {/* ===== Right dock panel — 话题 or 创作物 — docked to the app's far-right
+          edge, full height (one level out from the chat content column). ===== */}
+      <AnimatePresence initial={false}>
+        {dockTab !== null && !artifactFullscreen && (
+          <motion.div
+            initial={{ width: 0, opacity: 0 }}
+            animate={{ width: artifactPanelWidth, opacity: 1 }}
+            exit={{ width: 0, opacity: 0 }}
+            transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
+            className="flex-shrink-0 min-w-0 relative flex"
+            style={{ width: artifactPanelWidth }}
+          >
+            {/* Resize handle — doubles as the persistent divider line */}
+            <div
+              onMouseDown={handleArtifactResizeStart}
+              className="w-[7px] flex-shrink-0 cursor-col-resize group flex items-stretch justify-center relative z-10"
+            >
+              <div className="w-px bg-border/40 group-hover:bg-border/70 group-active:bg-foreground/30 transition-colors" />
+            </div>
+            {/* Panel content — 话题 or 创作物, flush, separated only by the divider */}
+            <div className="flex-1 min-w-0 bg-background overflow-hidden flex flex-col">
+              {dockTab === 'topics' ? (
+                renderTopicList({ close: () => {}, pinned: true, togglePin: () => setDockTab(null) })
+              ) : (
+                <ArtifactsPanel artifact={activeArtifact} isFullscreen={false} onToggleFullscreen={() => setArtifactFullscreen(true)} onClose={handleCloseArtifacts} onSelectArtifact={handleOpenArtifact} hasTopic={activeTopicId !== null} tabSlot={dockTabs} />
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
