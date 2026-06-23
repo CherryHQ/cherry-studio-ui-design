@@ -80,6 +80,16 @@ interface HistorySidebarProps<T extends HistoryItem> {
   onQuickStart?: (id: string) => void;
   /** Hide the 展示方式 (group-by) control — used in the scoped floating panel. */
   hideGroupBy?: boolean;
+  /** When set, renders a pin toggle in the header to dock the panel to the
+   * right side (固定). */
+  panelPinned?: boolean;
+  onTogglePanelPin?: () => void;
+  /** Replaces the header title (icon + label + count) with a custom node —
+   * used to inject the 话题/创作物 tab switcher when docked. */
+  tabSlot?: React.ReactNode;
+  /** Leading header icon — defaults to a clock. Pass the same icon as the
+   * trigger button so the popover header and trigger stay consistent. */
+  headerIcon?: React.ReactNode;
 }
 
 // ===========================
@@ -604,6 +614,10 @@ export function HistorySidebar<T extends HistoryItem>({
   quickStartOptions,
   onQuickStart,
   hideGroupBy,
+  panelPinned,
+  onTogglePanelPin,
+  tabSlot,
+  headerIcon,
 }: HistorySidebarProps<T>) {
   const [searchQuery, setSearchQuery] = useState('');
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number; itemId: string } | null>(null);
@@ -793,11 +807,13 @@ export function HistorySidebar<T extends HistoryItem>({
       {/* Header */}
       <div className="px-3 py-2.5 border-b border-border/15 flex-shrink-0">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-1.5">
-            <Clock size={12} className="text-muted-foreground/60" />
-            <span className="text-xs text-muted-foreground/60">{entityLabel}</span>
-            <span className="text-xs text-muted-foreground/40 tabular-nums">{items.length}</span>
-          </div>
+          {tabSlot ?? (
+            <div className="flex items-center gap-1.5">
+              {headerIcon ?? <Clock size={12} className="text-muted-foreground/60" />}
+              <span className="text-xs text-muted-foreground/60">{entityLabel}</span>
+              <span className="text-xs text-muted-foreground/40 tabular-nums">{items.length}</span>
+            </div>
+          )}
           <div className="flex items-center gap-0.5">
             {quickStartOptions && quickStartOptions.length > 0 && (
               <QuickStartPopover
@@ -827,6 +843,14 @@ export function HistorySidebar<T extends HistoryItem>({
                   ))}
                 </PopoverContent>
               </Popover>
+            )}
+            {onTogglePanelPin && (
+              <Tooltip content={panelPinned ? '取消固定' : '固定到右侧'} side="bottom">
+                <Button variant="ghost" size="icon-xs" onClick={onTogglePanelPin}
+                  className={`p-1 w-auto h-auto hover:bg-accent/40 ${panelPinned ? 'text-foreground' : 'text-muted-foreground/40 hover:text-foreground'}`}>
+                  <Pin size={11} className={panelPinned ? '' : '-rotate-45'} />
+                </Button>
+              </Tooltip>
             )}
             <Tooltip content="展开全部" side="bottom">
               <Button variant="ghost" size="icon-xs" onClick={onExpand}

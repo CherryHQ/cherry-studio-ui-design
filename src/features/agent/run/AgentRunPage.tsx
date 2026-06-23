@@ -5,7 +5,7 @@ import {
   Bot, Columns2,
   Sparkles, Plus, ArrowUp,
   FileText, Zap, Search as SearchIcon, BookOpen, History,
-  MessageCirclePlus,
+  MessageCirclePlus, MessageSquare,
   Code2, Folder, FolderPlus, FolderX, FolderPen, Tag, ListChecks,
   X,
   Check,
@@ -1422,12 +1422,46 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
   const [selectedFile, setSelectedFile] = useState<string | null>('src/App.tsx');
   const [showModelPicker, setShowModelPicker] = useState(false);
   const [selectedModel, setSelectedModel] = useState(MODELS[0]);
-  const [showExplorer, setShowExplorer] = useState(false);
-  const [showPreview, setShowPreview] = useState(false);
+  const [showExplorer, setShowExplorer] = useState(true);
+  // Single source of truth for the shared right dock: 会话 (session list),
+  // 文件 (artifact / file browser) or 状态 (run status), switchable by tab —
+  // mirrors the real Cherry Studio agent dock (Files / Status). `showPreview`
+  // is a derived alias for the 文件 view so the artifact-visibility checks
+  // below read naturally.
+  const [dockTab, setDockTab] = useState<'sessions' | 'files' | 'status' | null>(null);
+  const showPreview = dockTab === 'files';
+  const [dockWidth, setDockWidth] = useState(560);
+  const dockResizing = useRef(false);
+  const handleDockResizeStart = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    dockResizing.current = true;
+    const startX = e.clientX;
+    const startW = dockWidth;
+    const onMove = (ev: MouseEvent) => {
+      if (!dockResizing.current) return;
+      const next = Math.max(300, Math.min(900, startW - (ev.clientX - startX)));
+      setDockWidth(next);
+    };
+    const onUp = () => {
+      dockResizing.current = false;
+      document.removeEventListener('mousemove', onMove);
+      document.removeEventListener('mouseup', onUp);
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+    };
+    document.body.style.cursor = 'col-resize';
+    document.body.style.userSelect = 'none';
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onUp);
+  }, [dockWidth]);
   const historySidebar = useHistorySidebar('compact');
   const [historyDisplayMode, setHistoryDisplayMode] = useState<SessionDisplayMode>('floating');
   const [selectedAgent, setSelectedAgent] = useState(AVAILABLE_AGENTS[0]);
   const [previewMaximized, setPreviewMaximized] = useState(false);
+  // Maximize is an artifact-only mode — it must not gate the layout when the
+  // dock is showing 会话/状态, otherwise pinning the session panel from a
+  // maximized artifact silently fails (the dock stays hidden).
+  const isMaximized = previewMaximized && dockTab === 'files';
   const [showAgentInfo, setShowAgentInfo] = useState(false);
   const [showPlan, setShowPlan] = useState(false);
   const [showCreateAgent, setShowCreateAgent] = useState(false);
@@ -1472,17 +1506,23 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
   // Open an artifact in the right-side viewer (called from inline artifact card clicks)
   const handleOpenArtifact = useCallback((filePath: string) => {
     setSelectedFile(filePath);
-    setShowPreview(true);
+    setDockTab('files');
   }, []);
 
   // Auto-open the artifact viewer when the current session has a previewHtml
   // (i.e. produced visible deliverable). Runs only when session changes.
   useEffect(() => {
-    if (sessionData.previewHtml && !showPreview) {
-      setShowPreview(true);
+    if (sessionData.previewHtml && dockTab === null) {
+      setDockTab('files');
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeSessionId]);
+
+  // Maximize is artifact-only: drop it whenever the dock leaves the 文件 view
+  // so switching back later doesn't re-enter fullscreen unexpectedly.
+  useEffect(() => {
+    if (dockTab !== 'files' && previewMaximized) setPreviewMaximized(false);
+  }, [dockTab, previewMaximized]);
 
   const handleSelectSession = useCallback((id: string) => {
     setActiveSessionId(id);
@@ -1498,7 +1538,7 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
 
   const handleNewSession = useCallback(() => {
     setActiveSessionId(null);
-    setShowPreview(false);
+    setDockTab(null);
     setPreviewMaximized(false);
     setShowExplorer(false);
     setSelectedFile(null);
@@ -1521,7 +1561,7 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
     };
     setSessions(prev => [newSession, ...prev]);
     setActiveSessionId(newId);
-    setShowPreview(false);
+    setDockTab(null);
     setPreviewMaximized(false);
     setShowExplorer(false);
     setSelectedFile(null);
@@ -1534,7 +1574,7 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
     setSessions(prev => prev.filter(s => s.id !== session.id));
     if (activeSessionId === session.id) {
       setActiveSessionId(null);
-      setShowPreview(false);
+      setDockTab(null);
       setPreviewMaximized(false);
       setShowExplorer(false);
     }
@@ -1704,6 +1744,54 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
     </>
   );
 
+  // 会话 / 文件 / 状态 tab switcher — injected into the docked panel headers so
+  // the views share one tab bar (only shown when docked, not in the popover).
+  const dockTabs = (
+    <div className="flex items-center gap-0.5">
+      {([
+        { id: 'sessions', label: '会话', Icon: MessageSquare },
+        { id: 'files', label: '文件', Icon: FileText },
+        { id: 'status', label: '状态', Icon: ListChecks },
+      ] as const).map(({ id, label, Icon }) => {
+        const active = dockTab === id;
+        return (
+          <button
+            key={id}
+            type="button"
+            onClick={() => setDockTab(id)}
+            className={`flex items-center gap-1 px-2 py-[3px] rounded-md text-xs transition-colors ${
+              active ? 'bg-accent/60 text-foreground' : 'text-muted-foreground/60 hover:text-foreground hover:bg-accent/30'
+            }`}
+          >
+            <Icon size={11} />{label}
+          </button>
+        );
+      })}
+    </div>
+  );
+
+  // Shared 会话 list — used by the header floating popover and the pinned
+  // right-dock tab, so both stay in sync.
+  const renderSessionList = ({ close, pinned, togglePin }: { close: () => void; pinned: boolean; togglePin: () => void }) => (
+    <HistorySidebar
+      items={agentSessions}
+      activeItemId={activeSessionId}
+      onSelectItem={(id) => { handleSelectSession(id); close(); }}
+      onDeleteItem={handleDeleteSession}
+      onUpdateItem={handleUpdateSession}
+      onNewItem={() => { handleNewSessionForAgent(selectedAgent.name); close(); }}
+      onExpand={() => { historySidebar.expand(); close(); }}
+      onClose={close}
+      entityLabel="会话"
+      showStatusDot
+      hideGroupBy
+      panelPinned={pinned}
+      onTogglePanelPin={togglePin}
+      tabSlot={pinned ? dockTabs : undefined}
+      headerIcon={<History size={12} className="text-muted-foreground/60" />}
+    />
+  );
+
   // Extract header into reusable JSX so it can render in both normal and maximized layouts
   const headerJSX = (
     <header className="flex items-center justify-between px-3 border-b border-transparent flex-shrink-0 h-[40px]">
@@ -1726,23 +1814,16 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
       </div>
 
       <div className="flex items-center gap-0.5">
-        {/* Sessions for the selected agent — floating panel (浮窗) on the right */}
-        <TopicPanelButton label="会话" count={agentSessions.filter(s => !s.archived).length}>
-          {(close) => (
-            <HistorySidebar
-              items={agentSessions}
-              activeItemId={activeSessionId}
-              onSelectItem={(id) => { handleSelectSession(id); close(); }}
-              onDeleteItem={handleDeleteSession}
-              onUpdateItem={handleUpdateSession}
-              onNewItem={() => { handleNewSessionForAgent(selectedAgent.name); close(); }}
-              onExpand={() => { historySidebar.expand(); close(); }}
-              onClose={close}
-              entityLabel="会话"
-              showStatusDot
-              hideGroupBy
-            />
-          )}
+        {/* Sessions for the selected agent — floating panel (浮窗) that can be
+            pinned into the shared far-right dock. */}
+        <TopicPanelButton
+          label="会话"
+          count={agentSessions.filter(s => !s.archived).length}
+          icon={<History size={13} strokeWidth={1.6} />}
+          pinned={dockTab === 'sessions'}
+          onPinnedChange={(v) => setDockTab(v ? 'sessions' : null)}
+        >
+          {renderSessionList}
         </TopicPanelButton>
         <div className="w-px h-3.5 bg-border/30 mx-0.5" />
 
@@ -1791,7 +1872,7 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
         {!showPreview && (
           <div className="flex items-center gap-0.5">
             <div className="w-px h-3.5 bg-border/30 mx-0.5" />
-            <Tooltip content={"显示预览面板"} side="bottom"><Button variant="ghost" size="icon-xs" onClick={() => setShowPreview(true)}
+            <Tooltip content={"显示预览面板"} side="bottom"><Button variant="ghost" size="icon-xs" onClick={() => setDockTab('files')}
               className="p-1.5 w-auto h-auto text-muted-foreground hover:text-foreground hover:bg-accent/40">
               <Columns2 size={12} />
             </Button></Tooltip>
@@ -1802,7 +1883,7 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
   );
 
   // Maximized layout: header on top, artifact full width, compact input at bottom
-  if (previewMaximized && showPreview) {
+  if (isMaximized) {
     return (
       <div className="flex flex-col h-full bg-background select-none relative">
         {headerJSX}
@@ -1843,7 +1924,7 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
               showExplorer={showExplorer}
               onToggleExplorer={() => setShowExplorer(!showExplorer)}
               showPreview={showPreview}
-              onTogglePreview={() => { setShowPreview(false); setPreviewMaximized(false); }}
+              onTogglePreview={() => { setDockTab(null); setPreviewMaximized(false); }}
               maximized={previewMaximized}
               onToggleMaximize={() => setPreviewMaximized(!previewMaximized)}
             />
@@ -1866,7 +1947,7 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
     <div className="flex h-full bg-background select-none relative">
       {/* ===== Left: History Sidebar (compact) — auto-hides when artifact maximized ===== */}
       <AnimatePresence initial={false}>
-        {historySidebar.isCompact && !previewMaximized && (
+        {historySidebar.isCompact && !isMaximized && (
           <motion.div
             initial={{ width: 0, opacity: 0 }}
             animate={{ width: 220, opacity: 1 }}
@@ -1888,14 +1969,7 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
       </AnimatePresence>
 
       {/* ===== Right: Header + Content ===== */}
-      <div
-        className="flex flex-col min-w-0 min-h-0 relative flex-shrink-0"
-        style={
-          showPreview
-            ? { width: 480, flex: '0 0 auto' }
-            : { flex: '1 1 0%' }
-        }
-      >
+      <div className="flex flex-col flex-1 min-w-0 min-h-0 relative">
         {headerJSX}
 
       {/* ===== Main Content (chat panel only — artifact moved out) ===== */}
@@ -1946,49 +2020,90 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
       </div>
       </div>
 
-      {/* ===== Artifact Panel — moved to outer level, side-by-side with title section ===== */}
+      {/* ===== Shared right dock — 会话 (session list) / 文件 (artifact browser)
+          / 状态 (run status), switchable by tab, docked to the far-right edge
+          with a divider. Mirrors the real Cherry Studio agent dock. ===== */}
       <AnimatePresence initial={false}>
-        {showPreview && (
+        {dockTab !== null && !isMaximized && (
           <motion.div
-            initial={{ opacity: 0, marginLeft: -8 }}
-            animate={{ opacity: 1, marginLeft: 0 }}
-            exit={{ opacity: 0, marginLeft: -8 }}
+            initial={{ width: 0, opacity: 0 }}
+            animate={{ width: dockWidth, opacity: 1 }}
+            exit={{ width: 0, opacity: 0 }}
             transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
-            className="flex flex-1 min-w-0 my-1.5 mr-1 rounded-2xl border border-border/40 bg-card/50 shadow-sm shadow-black/5 overflow-hidden"
+            className="flex-shrink-0 min-w-0 relative flex"
+            style={{ width: dockWidth }}
           >
-            <AnimatePresence initial={false}>
-              {showExplorer && (
-                <motion.div
-                  initial={{ width: 0, opacity: 0 }}
-                  animate={{ width: 200, opacity: 1 }}
-                  exit={{ width: 0, opacity: 0 }}
-                  transition={{ duration: 0.15, ease: [0.4, 0, 0.2, 1] }}
-                  className="border-r border-border/30 flex-shrink-0 overflow-hidden"
-                >
-                  <FileExplorer
-                    files={sessionData.files.length > 0 ? sessionData.files : DEFAULT_INITIAL_FILES}
-                    outputFiles={sessionData.outputFiles}
-                    selectedFile={selectedFile}
-                    onSelectFile={handleSelectFile}
-                  />
-                </motion.div>
+            {/* Resize handle — doubles as the persistent divider line */}
+            <div
+              onMouseDown={handleDockResizeStart}
+              className="w-[7px] flex-shrink-0 cursor-col-resize group flex items-stretch justify-center relative z-10"
+            >
+              <div className="w-px bg-border/40 group-hover:bg-border/70 group-active:bg-foreground/30 transition-colors" />
+            </div>
+            {/* Panel content — flush, separated only by the divider */}
+            <div className="flex-1 min-w-0 bg-background overflow-hidden flex flex-col">
+              {dockTab === 'sessions' ? (
+                renderSessionList({ close: () => {}, pinned: true, togglePin: () => setDockTab(null) })
+              ) : dockTab === 'status' ? (
+                <div className="flex flex-col h-full">
+                  <div className="flex items-center justify-between px-2.5 flex-shrink-0 h-[36px] border-b border-border/30">
+                    {dockTabs}
+                    <Tooltip content="关闭" side="bottom"><Button variant="ghost" size="icon-xs" onClick={() => setDockTab(null)}
+                      className="text-muted-foreground/40 hover:text-foreground hover:bg-accent/40">
+                      <X size={11} />
+                    </Button></Tooltip>
+                  </div>
+                  <div className="flex-1 min-h-0 overflow-y-auto py-1">
+                    {sessionData.steps.length > 0 ? (
+                      <WorkflowPanel steps={sessionData.steps} inline />
+                    ) : (
+                      <EmptyState icon={ListChecks} title="暂无运行状态" description="智能体开始执行任务后，运行步骤与状态会显示在这里。" compact />
+                    )}
+                  </div>
+                </div>
+              ) : (
+                <div className="flex flex-col h-full min-w-0">
+                  {/* Tab header — spans the full dock width (above the tree + preview split) */}
+                  <div className="flex items-center px-2.5 flex-shrink-0 h-[36px] border-b border-border/30">
+                    {dockTabs}
+                  </div>
+                  <div className="flex flex-1 min-h-0 min-w-0">
+                    <AnimatePresence initial={false}>
+                      {showExplorer && (
+                        <motion.div
+                          initial={{ width: 0, opacity: 0 }}
+                          animate={{ width: 176, opacity: 1 }}
+                          exit={{ width: 0, opacity: 0 }}
+                          transition={{ duration: 0.15, ease: [0.4, 0, 0.2, 1] }}
+                          className="border-r border-border/30 flex-shrink-0 overflow-hidden"
+                        >
+                          <FileExplorer
+                            files={sessionData.files.length > 0 ? sessionData.files : DEFAULT_INITIAL_FILES}
+                            outputFiles={sessionData.outputFiles}
+                            selectedFile={selectedFile}
+                            onSelectFile={handleSelectFile}
+                          />
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                    <div className="flex-1 min-w-0 overflow-hidden">
+                      <ArtifactViewer
+                        fileContent={fileContent}
+                        fileName={selectedFile}
+                        previewUrl={null}
+                        hasArtifact={!!sessionData.previewHtml || !!fileContent}
+                        previewHtml={sessionData.previewHtml}
+                        showExplorer={showExplorer}
+                        onToggleExplorer={() => setShowExplorer(!showExplorer)}
+                        showPreview={showPreview}
+                        onTogglePreview={() => { setDockTab(null); setPreviewMaximized(false); }}
+                        maximized={previewMaximized}
+                        onToggleMaximize={() => setPreviewMaximized(!previewMaximized)}
+                      />
+                    </div>
+                  </div>
+                </div>
               )}
-            </AnimatePresence>
-
-            <div className="flex-1 min-w-0 overflow-hidden">
-              <ArtifactViewer
-                fileContent={fileContent}
-                fileName={selectedFile}
-                previewUrl={null}
-                hasArtifact={!!sessionData.previewHtml || !!fileContent}
-                previewHtml={sessionData.previewHtml}
-                showExplorer={showExplorer}
-                onToggleExplorer={() => setShowExplorer(!showExplorer)}
-                showPreview={showPreview}
-                onTogglePreview={() => { setShowPreview(false); setPreviewMaximized(false); }}
-                maximized={previewMaximized}
-                onToggleMaximize={() => setPreviewMaximized(!previewMaximized)}
-              />
             </div>
           </motion.div>
         )}

@@ -58,6 +58,9 @@ interface Props {
   onTogglePreview?: () => void;
   maximized?: boolean;
   onToggleMaximize?: () => void;
+  /** Injected 会话/产物 tab switcher, shown at the far left of the header
+   * when the artifact lives in the shared right dock. */
+  tabSlot?: React.ReactNode;
 }
 
 type ViewTab = 'preview' | 'code';
@@ -158,7 +161,7 @@ function CodeBlock({ code }: { code: string }) {
 // Artifact Viewer
 // ===========================
 
-export function ArtifactViewer({ fileContent, fileName, previewUrl, hasArtifact, previewHtml, showExplorer, onToggleExplorer, showPreview, onTogglePreview, maximized, onToggleMaximize }: Props) {
+export function ArtifactViewer({ fileContent, fileName, previewUrl, hasArtifact, previewHtml, showExplorer, onToggleExplorer, showPreview, onTogglePreview, maximized, onToggleMaximize, tabSlot }: Props) {
   const [activeTab, setActiveTab] = useState<ViewTab>('preview');
   const [device, setDevice] = useState<DeviceFrame>('desktop');
   const [copied, setCopied] = useState(false);
@@ -280,6 +283,8 @@ export function ArtifactViewer({ fileContent, fileName, previewUrl, hasArtifact,
       {/* Tab Bar — always visible */}
       <div className="flex items-center justify-between px-2.5 flex-shrink-0 h-[36px]">
         <div className="flex items-center gap-1.5">
+          {tabSlot}
+          {tabSlot && <div className="w-px h-3.5 bg-border/30 mx-0.5" />}
           {/* File tree toggle - left side */}
           {onToggleExplorer && (
             <Tooltip content="文件树" side="bottom"><Button variant="ghost" size="icon-xs" onClick={onToggleExplorer}

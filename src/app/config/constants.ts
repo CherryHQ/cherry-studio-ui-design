@@ -1,5 +1,5 @@
 import {
-  MessageCircle, Bot, Palette, Languages, Compass,
+  MessageCircle, MessageSquare, Bot, Palette, Languages, Compass,
   Library, BookOpen, FileText, Code2, Puzzle, NotebookPen, Layers,
   Sparkles, MousePointerClick, Blocks, ShoppingBag,
   Zap, Cloud, MessageSquareText,
@@ -18,7 +18,7 @@ import type {
 
 export const menuItems: MenuItem[] = [
   { id: 'launchpad', label: '启动页', icon: Layers },
-  { id: 'chat', label: '聊天', icon: MessageCircle },
+  { id: 'chat', label: '聊天', icon: MessageSquare },
   { id: 'agent', label: 'Agent', icon: MousePointerClick },
   { id: 'collaboration', label: '协作', icon: Users2 },
   { id: 'painting', label: '创作', icon: Palette },
