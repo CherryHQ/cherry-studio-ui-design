@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { Puzzle, Layers, Database, Globe } from 'lucide-react';
+import { Puzzle, Layers, Database, Globe, AlertTriangle } from 'lucide-react';
 import { Sidebar } from './layout/Sidebar';
 import { TabBar } from './layout/TabBar';
 import { TabContextMenu, FloatingWindow, NewTabDialog, SearchDialog, DragGhost, AnnotationProvider, AnnotationOverlay, AnnotationToggle, AnnotationList } from '@cherry-studio/ui';
@@ -213,8 +213,8 @@ function CherryStudioInner() {
     .map(id => menuItems.find(m => m.id === id))
     .filter((m): m is MenuItem => !!m);
   // launchpad never shows in the sidebar — it's reached only via the
-  // tab-bar "+" button. empty-preview is a dev-only surface.
-  const unmanagedItems = menuItems.filter(m => !managedIds.has(m.id) && m.id !== 'empty-preview' && m.id !== 'launchpad');
+  // tab-bar "+" button. empty-preview / error-toast-preview are dev-only surfaces.
+  const unmanagedItems = menuItems.filter(m => !managedIds.has(m.id) && m.id !== 'empty-preview' && m.id !== 'launchpad' && m.id !== 'error-toast-preview');
   const visibleMenuItems = [...orderedVisible, ...unmanagedItems];
 
   // ===========================
@@ -448,6 +448,15 @@ function CherryStudioInner() {
         >
           <Database size={11} />
           <span className="text-[10px] [writing-mode:vertical-rl]">Migration</span>
+        </button>
+        {/* Dev: Error Toasts Preview — outside app window */}
+        <button
+          onClick={() => navigateToMenuTab('error-toast-preview')}
+          className="absolute right-0 top-1/2 translate-y-32 flex items-center gap-1 px-1 py-3 rounded-l-lg bg-foreground/10 border border-border/30 border-r-0 text-muted-foreground/40 hover:text-foreground hover:bg-foreground/20 hover:px-1.5 transition-all"
+          title="Error Toasts Preview (#15651)"
+        >
+          <AlertTriangle size={11} />
+          <span className="text-[10px] [writing-mode:vertical-rl]">Toasts</span>
         </button>
         <div id="cherry-app-root" className="flex flex-col w-full h-full max-w-[1440px] max-h-[900px] bg-sidebar text-foreground rounded-2xl border border-border overflow-hidden shadow-2xl relative">
           <TabBar
