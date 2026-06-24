@@ -171,7 +171,7 @@ export function HomePage() {
                       <AtSign size={16} strokeWidth={1.6} />
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent side="top" align="start" className="w-[480px] p-0 rounded-xl overflow-hidden">
+                  <PopoverContent side="top" align="start" className="w-[420px] p-0 rounded-xl overflow-hidden">
                     <ModelPickerPanel
                       selectedModels={selectedModels}
                       onSelectModel={(id) => {

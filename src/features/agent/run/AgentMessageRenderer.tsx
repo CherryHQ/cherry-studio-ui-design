@@ -8,7 +8,7 @@ import {
   ArrowRight, AlertTriangle,
   ExternalLink, Eye as EyeIcon, FolderOpen as FolderOpenIcon, MousePointer2, TerminalSquare,
 } from 'lucide-react';
-import { Button, DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, MessageErrorBlock } from '@cherry-studio/ui';
+import { Button, DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, MessageErrorBlock } from '@cherry-studio/ui';
 import { motion, AnimatePresence } from 'motion/react';
 import type { AgentChatMessage } from '@/app/types/agent';
 import { GenUIButtons, GenUISelection, GenUIConfirmation } from './GenerativeUI';
@@ -568,32 +568,103 @@ const ARTIFACT_TYPE_STYLE: Record<string, { iconCls: string; tileCls: string }> 
   jpg:  { iconCls: 'text-accent-pink', tileCls: 'bg-accent-pink/10' },
 };
 
+// Human-readable kind label per extension — shown as the card subtitle
+// ("文档 · MD"), mirroring Codex's "Document · MD" deliverable rows.
+const FILE_KIND: Record<string, string> = {
+  md: '文档', markdown: '文档', txt: '文档', docx: '文档', doc: '文档', pdf: '文档', rtf: '文档',
+  html: '网页', htm: '网页',
+  pptx: '演示文稿', ppt: '演示文稿',
+  xlsx: '表格', xls: '表格', csv: '表格',
+  png: '图片', jpg: '图片', jpeg: '图片', svg: '图片', gif: '图片',
+  zip: '压缩包',
+  mp4: '视频', mov: '视频',
+};
+
 function ArtifactCard({ filePath, onOpen }: { filePath: string; onOpen?: (filePath: string) => void }) {
   const fileExt = (filePath.split('.').pop() || '').toLowerCase();
   const fileName = filePath.split('/').pop() || filePath;
   const fts = ARTIFACT_TYPE_STYLE[fileExt] || { iconCls: 'text-muted-foreground', tileCls: 'bg-muted/40' };
   const FileIcon = fileExt === 'html' ? Globe : (fileExt === 'zip' ? Package : FileText);
+  const kind = FILE_KIND[fileExt] || '文件';
 
   return (
-    <motion.button
-      type="button"
-      onClick={() => onOpen?.(filePath)}
+    <motion.div
       initial={{ opacity: 0, y: 4 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.15 }}
-      className="group/art flex items-center gap-2 px-2 py-1.5 rounded-lg border border-border/40 bg-card/60 hover:bg-accent/40 hover:border-border/50 active:scale-[0.97] transition-all max-w-[420px] text-left cursor-pointer"
-      title={`打开 ${fileName}`}
+      className="flex items-center gap-2.5 pl-2 pr-1.5 py-1.5 rounded-lg border border-border/40 bg-card/60 hover:border-border/60 transition-colors max-w-[460px]"
     >
-      <div className={`w-6 h-6 rounded-md flex items-center justify-center flex-shrink-0 ${fts.tileCls}`}>
-        <FileIcon size={11} className={fts.iconCls} />
-      </div>
-      <div className="flex-1 min-w-0 flex items-center gap-1.5">
-        <span className="text-xs text-foreground truncate" title={fileName}>{fileName}</span>
-        <span className="text-[10px] text-muted-foreground/40 flex-shrink-0">·</span>
-        <span className="text-[10px] uppercase text-muted-foreground/60 tracking-wide flex-shrink-0">{fileExt}</span>
-      </div>
-      <ExternalLink size={11} className="text-muted-foreground/50 flex-shrink-0 opacity-0 group-hover/art:opacity-100 transition-opacity" />
-    </motion.button>
+      {/* Icon + name + kind — clicking opens the deliverable in the preview panel. */}
+      <button
+        type="button"
+        onClick={() => onOpen?.(filePath)}
+        className="flex items-center gap-2.5 flex-1 min-w-0 text-left active:scale-[0.99] transition-transform"
+        title={`打开 ${fileName}`}
+      >
+        <div className={`w-7 h-7 rounded-md flex items-center justify-center flex-shrink-0 ${fts.tileCls}`}>
+          <FileIcon size={13} className={fts.iconCls} />
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="text-xs text-foreground truncate leading-tight" title={fileName}>{fileName}</div>
+          <div className="text-[10px] text-muted-foreground/55 truncate leading-tight mt-0.5">{kind} · {fileExt.toUpperCase()}</div>
+        </div>
+      </button>
+      {/* "打开" split button — open-in dropdown, one per deliverable. */}
+      <ArtifactOpenMenu fileName={fileName} onPreview={() => onOpen?.(filePath)} />
+    </motion.div>
+  );
+}
+
+// "打开 ▾" dropdown — the per-product open-in menu (apps + reveal in Finder),
+// modeled on Codex's "Open in" control.
+function ArtifactOpenMenu({ fileName, onPreview }: { fileName: string; onPreview?: () => void }) {
+  const ext = (fileName.split('.').pop() || '').toLowerCase();
+  const previewable = ['pdf', 'md', 'html', 'docx', 'png', 'jpg', 'jpeg', 'svg', 'pptx', 'txt', 'csv'].includes(ext);
+  const browserable = ['html', 'pdf', 'png', 'jpg', 'jpeg', 'svg', 'md'].includes(ext);
+  const editable = ['md', 'html', 'csv', 'txt', 'json', 'svg'].includes(ext);
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button
+          variant="ghost"
+          size="xs"
+          className="gap-1 px-2 py-1 h-auto text-xs text-muted-foreground hover:text-foreground hover:bg-accent/50 flex-shrink-0"
+        >
+          打开
+          <ChevronDown size={11} />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" side="bottom" className="w-[168px]">
+        {previewable && (
+          <DropdownMenuItem className="gap-2 px-2 py-[5px] text-xs" onSelect={() => onPreview?.()}>
+            <EyeIcon size={12} className="text-muted-foreground/80 flex-shrink-0" />
+            <span className="flex-1">预览</span>
+          </DropdownMenuItem>
+        )}
+        {browserable && (
+          <DropdownMenuItem className="gap-2 px-2 py-[5px] text-xs">
+            <Globe size={12} className="text-accent-violet flex-shrink-0" />
+            <span className="flex-1">浏览器</span>
+          </DropdownMenuItem>
+        )}
+        {editable && (
+          <DropdownMenuItem className="gap-2 px-2 py-[5px] text-xs">
+            <MousePointer2 size={12} className="text-foreground flex-shrink-0" />
+            <span className="flex-1">Cursor</span>
+          </DropdownMenuItem>
+        )}
+        <DropdownMenuSeparator />
+        <DropdownMenuItem className="gap-2 px-2 py-[5px] text-xs">
+          <TerminalSquare size={12} className="text-muted-foreground/80 flex-shrink-0" />
+          <span className="flex-1">终端</span>
+        </DropdownMenuItem>
+        <DropdownMenuItem className="gap-2 px-2 py-[5px] text-xs">
+          <FolderOpenIcon size={12} className="text-blue-500 flex-shrink-0" />
+          <span className="flex-1">在 Finder 中显示</span>
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }
 

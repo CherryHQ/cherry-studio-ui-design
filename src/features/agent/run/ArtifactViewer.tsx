@@ -1,46 +1,21 @@
 import React, { useState, useMemo } from 'react';
 import {
   Monitor, Code2, RotateCw, Smartphone, Tablet,
-  Copy, Check, ChevronRight, ChevronDown, Eye,
+  Copy, Check, ChevronRight, Eye,
   FolderOpen, X,
   Maximize2, Minimize2,
-  Share2, Pin, Users2,
-  FileText, Globe, MousePointer2, TerminalSquare, ExternalLink,
 } from 'lucide-react';
 import {
   Button, EmptyState,
-  DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator,
-  DropdownMenuSub, DropdownMenuSubTrigger, DropdownMenuSubContent,
-  Popover, PopoverAnchor, PopoverContent,
 } from '@cherry-studio/ui';
 import { MOCK_GROUPS } from '@/features/collaboration/data';
 import { pinArtifact, shareArtifactToGroup, updateArtifact, usePinnedArtifacts } from '@/app/stores/sharedArtifactsStore';
 import { DEFAULT_ARTIFACT_ICON_NAME } from '@/app/utils/artifactIcons';
-import { PinToWorkbenchForm } from '@/app/components/shared/PinToWorkbenchForm';
 import { NewTopicDialog, type AttachedArtifact } from '@/features/collaboration/components/NewTopicDialog';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'motion/react';
 import { copyToClipboard } from '@/app/utils/clipboard';
 import { Tooltip } from '@/app/components/Tooltip';
-
-// Mimics the macOS Finder dock icon — a two-tone rounded square with a face
-function FinderIcon({ size = 12 }: { size?: number }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-      <defs>
-        <linearGradient id="finderBg" x1="0%" y1="0%" x2="0%" y2="100%">
-          <stop offset="0%" stopColor="#9CC9F2" />
-          <stop offset="100%" stopColor="#3F8DD9" />
-        </linearGradient>
-      </defs>
-      <rect x="0.5" y="0.5" width="15" height="15" rx="3.5" fill="url(#finderBg)" stroke="rgba(0,0,0,0.08)" strokeWidth="0.5" />
-      <line x1="8" y1="2" x2="8" y2="14" stroke="rgba(255,255,255,0.35)" strokeWidth="0.5" />
-      <rect x="4.5" y="5" width="1" height="2.5" rx="0.4" fill="#0a2f5c" />
-      <rect x="10.5" y="5" width="1" height="2.5" rx="0.4" fill="#0a2f5c" />
-      <path d="M4.5 10.5 Q 8 12.5 11.5 10.5" stroke="#0a2f5c" strokeWidth="0.8" fill="none" strokeLinecap="round" />
-    </svg>
-  );
-}
 
 // ===========================
 // Types
@@ -285,13 +260,6 @@ export function ArtifactViewer({ fileContent, fileName, previewUrl, hasArtifact,
         <div className="flex items-center gap-1.5">
           {tabSlot}
           {tabSlot && <div className="w-px h-3.5 bg-border/30 mx-0.5" />}
-          {/* File tree toggle - left side */}
-          {onToggleExplorer && (
-            <Tooltip content="文件树" side="bottom"><Button variant="ghost" size="icon-xs" onClick={onToggleExplorer}
-              className={showExplorer ? 'text-foreground bg-accent/25' : 'text-muted-foreground hover:text-foreground'}>
-              <FolderOpen size={11} />
-            </Button></Tooltip>
-          )}
 
           {/* Mode toggle — single button showing current mode, click to flip */}
           <Tooltip content={activeTab === 'preview' ? '切换到代码' : '切换到预览'} side="bottom">
@@ -327,129 +295,14 @@ export function ArtifactViewer({ fileContent, fileName, previewUrl, hasArtifact,
             </Button>
           )}
 
-          {/* Open with — split button: Finder primary action + dropdown of local apps */}
+          {/* Open in folder (Finder) */}
           <div className="flex items-center">
             <div className="w-px h-3 bg-border/30 mx-1" />
-            <Tooltip content="在 Finder 中打开" side="bottom"><Button variant="ghost" size="icon-xs"
+            <Tooltip content="在文件夹里打开" side="bottom"><Button variant="ghost" size="icon-xs"
               className="text-muted-foreground hover:text-foreground">
-              <FinderIcon size={12} />
+              <FolderOpen size={11} />
             </Button></Tooltip>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon-xs"
-                  className="text-muted-foreground hover:text-foreground -ml-0.5"
-                  title="选择应用打开">
-                  <ChevronDown size={9} />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" side="bottom" className="w-[170px]">
-                <div className="px-2 py-1 text-xs text-muted-foreground/60">使用应用打开</div>
-                <DropdownMenuItem className="gap-2 px-2 py-[5px] text-xs">
-                  <Eye size={12} className="text-muted-foreground/80 flex-shrink-0" />
-                  <span className="flex-1">预览</span>
-                </DropdownMenuItem>
-                <DropdownMenuItem className="gap-2 px-2 py-[5px] text-xs">
-                  <FileText size={12} className="text-info flex-shrink-0" />
-                  <span className="flex-1">WPS Office</span>
-                </DropdownMenuItem>
-                <DropdownMenuItem className="gap-2 px-2 py-[5px] text-xs">
-                  <FileText size={12} className="text-accent-orange flex-shrink-0" />
-                  <span className="flex-1">Microsoft Word</span>
-                </DropdownMenuItem>
-                <DropdownMenuItem className="gap-2 px-2 py-[5px] text-xs">
-                  <Globe size={12} className="text-accent-violet flex-shrink-0" />
-                  <span className="flex-1">浏览器</span>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem className="gap-2 px-2 py-[5px] text-xs">
-                  <MousePointer2 size={12} className="text-foreground flex-shrink-0" />
-                  <span className="flex-1">Cursor</span>
-                </DropdownMenuItem>
-                <DropdownMenuItem className="gap-2 px-2 py-[5px] text-xs">
-                  <TerminalSquare size={12} className="text-muted-foreground/80 flex-shrink-0" />
-                  <span className="flex-1">Terminal</span>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem className="gap-2 px-2 py-[5px] text-xs">
-                  <ExternalLink size={12} className="text-muted-foreground/80 flex-shrink-0" />
-                  <span className="flex-1">其他应用…</span>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
           </div>
-
-          {/* Share — dropdown with workspace + link share targets */}
-          <div className="w-px h-3 bg-border/30 mx-1" />
-          <Popover open={pinPopoverOpen} onOpenChange={setPinPopoverOpen}>
-          <PopoverAnchor>
-          <DropdownMenu open={shareMenuOpen} onOpenChange={setShareMenuOpen}>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon-xs"
-                className="text-muted-foreground hover:text-foreground"
-                title="分享">
-                <Share2 size={11} />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" side="bottom" className="w-[180px]">
-              <DropdownMenuItem
-                className="gap-2 px-2 py-[5px] text-xs"
-                onSelect={(e) => { e.preventDefault(); handlePinToWorkbench(); }}
-              >
-                <Pin size={12} className="text-muted-foreground/80 flex-shrink-0" />
-                <span className="flex-1">{existingPinned ? '编辑工作台条目' : '添加至工作台'}</span>
-              </DropdownMenuItem>
-              <DropdownMenuSub>
-                <DropdownMenuSubTrigger className="gap-2 px-2 py-[5px] text-xs">
-                  <Users2 size={12} className="text-muted-foreground/80 flex-shrink-0" />
-                  <span className="flex-1">分享到群组</span>
-                </DropdownMenuSubTrigger>
-                <DropdownMenuSubContent className="w-[220px] max-h-[260px] overflow-y-auto">
-                  {MOCK_GROUPS.length === 0 ? (
-                    <div className="text-[11px] text-muted-foreground/50 px-2 py-2 text-center">暂无群组</div>
-                  ) : (
-                    MOCK_GROUPS.map(g => (
-                      <DropdownMenuItem key={g.id} className="gap-2 px-2 py-[6px] text-xs"
-                        onSelect={() => handleShareToGroup(g.id, g.name)}>
-                        <div className="w-6 h-6 rounded-md bg-accent/50 flex items-center justify-center flex-shrink-0 text-[11px] text-muted-foreground/70">
-                          {g.name.slice(0, 1)}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="truncate text-foreground">{g.name}</div>
-                          <div className="text-[10px] text-muted-foreground/55 truncate">
-                            {g.members.length} 成员 · {g.topics.length} 话题
-                          </div>
-                        </div>
-                      </DropdownMenuItem>
-                    ))
-                  )}
-                </DropdownMenuSubContent>
-              </DropdownMenuSub>
-            </DropdownMenuContent>
-          </DropdownMenu>
-          </PopoverAnchor>
-          <PopoverContent
-            side="bottom"
-            align="end"
-            sideOffset={6}
-            className="w-[300px] p-3"
-            onOpenAutoFocus={(e) => {
-              // Don't steal focus from the name Input on first open —
-              // popover would otherwise focus its container.
-              e.preventDefault();
-            }}
-          >
-            <PinToWorkbenchForm
-              title={editingExistingPinId ? '编辑工作台条目' : '添加至工作台'}
-              name={pinDraftName}
-              iconName={pinDraftIcon}
-              onNameChange={setPinDraftName}
-              onIconChange={setPinDraftIcon}
-              onConfirm={handlePinConfirm}
-              onCancel={() => setPinPopoverOpen(false)}
-              confirmLabel={editingExistingPinId ? '保存' : '添加'}
-            />
-          </PopoverContent>
-          </Popover>
 
           {/* Maximize toggle */}
           {onToggleMaximize && (

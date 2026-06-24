@@ -74,7 +74,7 @@ export function ModelSection() {
               <ChevronDown size={11} className="text-muted-foreground/50 flex-shrink-0" />
             </Button>
           </PopoverTrigger>
-          <PopoverContent align="end" className="p-0 w-[480px]">
+          <PopoverContent align="end" className="p-0 w-[420px]">
             <ModelPickerPanel
               selectedModels={[modelId]}
               onSelectModel={(id) => { setModelId(id); setModelPickerOpen(false); }}

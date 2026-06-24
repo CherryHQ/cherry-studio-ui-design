@@ -18,8 +18,8 @@ import type {
 
 export const menuItems: MenuItem[] = [
   { id: 'launchpad', label: '启动页', icon: Layers },
-  { id: 'chat', label: '聊天', icon: MessageSquare },
-  { id: 'agent', label: 'Agent', icon: MousePointerClick },
+  { id: 'chat', label: '对话', icon: MessageSquare },
+  { id: 'agent', label: '工作', icon: MousePointerClick },
   { id: 'collaboration', label: '协作', icon: Users2 },
   { id: 'painting', label: '创作', icon: Palette },
   { id: 'translate', label: '翻译', icon: Languages },
@@ -44,9 +44,10 @@ export const BP_VERTICAL_CARD = 65;
 export const BP_FULL = 170;
 
 export function getLayout(width: number): SidebarLayout {
+  // Two visible modes only: pure-icon, or expanded (icon left + label right).
+  // The old "vertical-card" (icon stacked over label) style was removed.
   if (width < 20) return 'hidden';
-  if (width < 58) return 'icon';
-  if (width < 120) return 'vertical-card';
+  if (width < BP_FULL) return 'icon';
   return 'full';
 }
 

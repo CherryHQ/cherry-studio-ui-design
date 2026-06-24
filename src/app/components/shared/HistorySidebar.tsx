@@ -90,6 +90,15 @@ interface HistorySidebarProps<T extends HistoryItem> {
   /** Leading header icon — defaults to a clock. Pass the same icon as the
    * trigger button so the popover header and trigger stay consistent. */
   headerIcon?: React.ReactNode;
+  /** Extra controls rendered at the FAR RIGHT of the header (before pin /
+   * maximize) — used to inject the Syncless-style 会话/状态/文件 view switcher so
+   * the icons sit top-right and the list shows directly below. */
+  headerActions?: React.ReactNode;
+  /** Minimal list style (used by the agent 会话 dock): one flat list with no
+   * group headers (置顶/今天/…), no per-item leading icon, and no 展开全部
+   * (maximize) control. Pinned items instead show a small pin glyph on the
+   * right, matching the V1 list. */
+  plainList?: boolean;
 }
 
 // ===========================
@@ -240,7 +249,7 @@ function TaskProgressRing({ progress, size = 13 }: { progress: number; size?: nu
   );
 }
 
-function SidebarItem<T extends HistoryItem>({ item, isActive, isEditing, onClick, onContextMenu, onCommitEdit, onArchive, onTogglePin, showStatusDot, onDragStart, onDragOver, onDrop }: {
+function SidebarItem<T extends HistoryItem>({ item, isActive, isEditing, onClick, onContextMenu, onCommitEdit, onArchive, onTogglePin, showStatusDot, plain, onDragStart, onDragOver, onDrop }: {
   item: T;
   isActive: boolean;
   isEditing?: boolean;
@@ -250,6 +259,8 @@ function SidebarItem<T extends HistoryItem>({ item, isActive, isEditing, onClick
   onArchive?: () => void;
   onTogglePin?: () => void;
   showStatusDot?: boolean;
+  /** Minimal row: no leading icon; pinned rows show a pin glyph on the right. */
+  plain?: boolean;
   onDragStart?: (e: React.DragEvent) => void;
   onDragOver?: (e: React.DragEvent) => void;
   onDrop?: (e: React.DragEvent) => void;
@@ -309,19 +320,23 @@ function SidebarItem<T extends HistoryItem>({ item, isActive, isEditing, onClick
             : 'text-foreground/90 hover:bg-accent/30'
         }`}
       >
-        {/* Leading chat-bubble icon */}
-        <span className={`w-[22px] h-[22px] rounded-md flex items-center justify-center flex-shrink-0 transition-colors ${
-          isActive ? 'bg-background/70 text-foreground' : 'bg-muted/50 text-muted-foreground/60'
-        }`}>
-          <MessageCircle size={12} strokeWidth={1.8} />
-        </span>
+        {/* Leading chat-bubble icon — omitted in plain (minimal) mode */}
+        {!plain && (
+          <span className={`w-[22px] h-[22px] rounded-md flex items-center justify-center flex-shrink-0 transition-colors ${
+            isActive ? 'bg-background/70 text-foreground' : 'bg-muted/50 text-muted-foreground/60'
+          }`}>
+            <MessageCircle size={12} strokeWidth={1.8} />
+          </span>
+        )}
         <span className={`text-sm truncate flex-1 min-w-0 ${isActive ? 'font-medium' : ''}`}>
           {item.title}
         </span>
       </button>
       {/* Trailing indicator (default) — fades out when hover actions appear */}
       <span className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none flex items-center group-hover/item:opacity-0 transition-opacity">
-        {item.kind === 'task' && item.status === 'active' && typeof item.progress === 'number' ? (
+        {plain ? (
+          item.pinned ? <Pin size={11} className="text-muted-foreground/40 -rotate-45" /> : null
+        ) : item.kind === 'task' && item.status === 'active' && typeof item.progress === 'number' ? (
           <TaskProgressRing progress={item.progress} />
         ) : isActive ? (
           <span className="w-[6px] h-[6px] rounded-full bg-success" />
@@ -329,9 +344,11 @@ function SidebarItem<T extends HistoryItem>({ item, isActive, isEditing, onClick
           <span className={`w-[5px] h-[5px] rounded-full ${statusCfg.className} ${statusCfg.animate ? 'animate-pulse' : ''}`} />
         ) : null)}
       </span>
-      {/* Hover actions inside the pill: 置顶 + 归档 quick actions + "…" overflow */}
+      {/* Hover actions inside the pill: 置顶 + 归档 quick actions + "…" overflow.
+          In plain (minimal) mode only the "…" overflow is shown — 置顶/归档 still
+          live inside its menu. */}
       <div className="absolute right-1 top-1/2 -translate-y-1/2 flex items-center gap-0.5 opacity-0 group-hover/item:opacity-100 transition-opacity">
-        {onTogglePin && (
+        {!plain && onTogglePin && (
           <button
             type="button"
             onClick={(e) => { e.stopPropagation(); onTogglePin(); }}
@@ -341,7 +358,7 @@ function SidebarItem<T extends HistoryItem>({ item, isActive, isEditing, onClick
             <Pin size={12} className={item.pinned ? '' : '-rotate-45'} />
           </button>
         )}
-        {onArchive && (
+        {!plain && onArchive && (
           <button
             type="button"
             onClick={(e) => { e.stopPropagation(); onArchive(); }}
@@ -618,6 +635,8 @@ export function HistorySidebar<T extends HistoryItem>({
   onTogglePanelPin,
   tabSlot,
   headerIcon,
+  headerActions,
+  plainList,
 }: HistorySidebarProps<T>) {
   const [searchQuery, setSearchQuery] = useState('');
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number; itemId: string } | null>(null);
@@ -815,6 +834,7 @@ export function HistorySidebar<T extends HistoryItem>({
             </div>
           )}
           <div className="flex items-center gap-0.5">
+            {headerActions}
             {quickStartOptions && quickStartOptions.length > 0 && (
               <QuickStartPopover
                 options={quickStartOptions}
@@ -852,12 +872,14 @@ export function HistorySidebar<T extends HistoryItem>({
                 </Button>
               </Tooltip>
             )}
-            <Tooltip content="展开全部" side="bottom">
-              <Button variant="ghost" size="icon-xs" onClick={onExpand}
-                className="p-1 w-auto h-auto text-muted-foreground/40 hover:text-foreground hover:bg-accent/40">
-                <Maximize2 size={11} />
-              </Button>
-            </Tooltip>
+            {!plainList && (
+              <Tooltip content="展开全部" side="bottom">
+                <Button variant="ghost" size="icon-xs" onClick={onExpand}
+                  className="p-1 w-auto h-auto text-muted-foreground/40 hover:text-foreground hover:bg-accent/40">
+                  <Maximize2 size={11} />
+                </Button>
+              </Tooltip>
+            )}
           </div>
         </div>
       </div>
@@ -876,10 +898,12 @@ export function HistorySidebar<T extends HistoryItem>({
         {/* Pinned */}
         {filteredPinned.length > 0 && (
           <div className="mb-1">
-            <div className="flex items-center gap-1 px-2.5 py-1">
-              <Pin size={9} className="text-muted-foreground/40 -rotate-45" />
-              <span className="text-xs text-muted-foreground/40">已置顶</span>
-            </div>
+            {!plainList && (
+              <div className="flex items-center gap-1 px-2.5 py-1">
+                <Pin size={9} className="text-muted-foreground/40 -rotate-45" />
+                <span className="text-xs text-muted-foreground/40">已置顶</span>
+              </div>
+            )}
             {filteredPinned.map(item => (
               <SidebarItem
                 key={item.id}
@@ -892,13 +916,14 @@ export function HistorySidebar<T extends HistoryItem>({
                 onArchive={() => onUpdateItem(item.id, { archived: true } as Partial<T>)}
                 onTogglePin={() => onUpdateItem(item.id, { pinned: !item.pinned } as Partial<T>)}
                 showStatusDot={showStatusDot}
+                plain={plainList}
               />
             ))}
           </div>
         )}
 
         {/* Recent */}
-        {sortedGroupEntries ? (
+        {!plainList && sortedGroupEntries ? (
           /* Grouped mode */
           sortedGroupEntries.map(([groupLabel, groupItems]: [string, T[]]) => {
             // Only user-authored "项目文件" group names are renameable; time/status/
@@ -934,7 +959,7 @@ export function HistorySidebar<T extends HistoryItem>({
         ) : (
           /* Flat mode */
           <>
-            {filteredPinned.length > 0 && filteredRecent.length > 0 && (
+            {!plainList && filteredPinned.length > 0 && filteredRecent.length > 0 && (
               <div className="flex items-center gap-1 px-2.5 py-1">
                 <Clock size={9} className="text-muted-foreground/40" />
                 <span className="text-xs text-muted-foreground/40">最近</span>
@@ -952,6 +977,7 @@ export function HistorySidebar<T extends HistoryItem>({
                 onArchive={() => onUpdateItem(item.id, { archived: true } as Partial<T>)}
                 onTogglePin={() => onUpdateItem(item.id, { pinned: !item.pinned } as Partial<T>)}
                 showStatusDot={showStatusDot}
+                plain={plainList}
               />
             ))}
           </>
