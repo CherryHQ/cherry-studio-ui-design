@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import {
-  Plus, X, ChevronDown, PanelLeft, Eye,
+  Plus, X, ChevronDown, PanelLeft, Eye, Search,
 } from 'lucide-react';
 import { Button, Popover, PopoverTrigger, PopoverContent } from '@cherry-studio/ui';
 import { Tooltip } from '@/app/components/Tooltip';
@@ -14,6 +14,7 @@ interface TabBarProps {
   onTabContext: (e: React.MouseEvent, tabId: string) => void;
   onNewTab: () => void;
   onManageShortcuts?: () => void;
+  onSearchClick?: () => void;
   startTabDrag: (e: React.MouseEvent, tabId: string) => void;
 }
 
@@ -25,6 +26,7 @@ export function TabBar({
   onTabContext,
   onNewTab,
   onManageShortcuts,
+  onSearchClick,
   startTabDrag,
 }: TabBarProps) {
   const pinnedTabs = tabs.filter(t => t.pinned && t.id !== 'home' && !t.sidebarDocked);
@@ -124,8 +126,21 @@ export function TabBar({
         </Button>
       </div>
 
-      {/* Right: All tabs dropdown */}
-      <div className="flex items-center px-2.5 flex-shrink-0">
+      {/* Right: search + all tabs dropdown */}
+      <div className="flex items-center gap-0.5 px-2.5 flex-shrink-0">
+        {onSearchClick && (
+          <Tooltip content="搜索">
+            <Button
+              variant="ghost"
+              size="icon-xs"
+              onClick={onSearchClick}
+              className="w-7 h-7 text-muted-foreground hover:text-sidebar-foreground hover:bg-sidebar-accent"
+              title="搜索"
+            >
+              <Search size={15} strokeWidth={1.6} />
+            </Button>
+          </Tooltip>
+        )}
         <Popover open={tabListOpen} onOpenChange={setTabListOpen}>
           <PopoverTrigger asChild>
             <Button

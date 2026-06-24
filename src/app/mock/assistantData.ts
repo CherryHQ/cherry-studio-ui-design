@@ -730,6 +730,38 @@ function StatsRow() {
     },
   },
 
+  // 10b. User asks for a Markdown guide document
+  {
+    id: 'msg-10b',
+    role: 'user',
+    content: '再帮我整理一份 React Hooks 的完整指南，输出成 Markdown 文档方便归档。',
+    timestamp: '14:39',
+  },
+
+  // 10c. Assistant with Markdown document artifact
+  {
+    id: 'msg-10c',
+    role: 'assistant',
+    content: '已整理好《React Hooks 完全指南》的 Markdown 文档，点击右侧 Artifacts 面板即可查看完整内容并导出。\n\n文档覆盖：\n- **基础 Hooks** — useState / useEffect / useContext\n- **自定义 Hooks** — 复用状态逻辑\n- **性能优化 Hooks** — useMemo / useCallback / useTransition\n- **最佳实践** — Hooks 调用规则',
+    timestamp: '14:39',
+    artifact: {
+      type: 'document',
+      title: 'React Hooks 完全指南.md',
+      content: REACT_HOOKS_ARTICLE,
+    },
+    metadata: {
+      sessionId: 'a1b2c3d4e5f6000b',
+      model: 'anthropic/claude-4-sonnet',
+      provider: 'anthropic',
+      status: 'success',
+      startTime: '2025-10-03 14:38',
+      duration: '8.7s',
+      tokens: { input: 320, output: 1460 },
+      requestJson: MOCK_REQUEST_JSON,
+      responseJson: MOCK_RESPONSE_JSON,
+    },
+  },
+
   // 11. User asks for parallel comparison
   {
     id: 'msg-11',

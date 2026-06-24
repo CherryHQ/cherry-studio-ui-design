@@ -33,7 +33,7 @@ function ModelSelector({ selectedId, onSelect }: { selectedId: string; onSelect:
           <ChevronDown size={9} className={`text-muted-foreground/40 transition-transform ${open ? 'rotate-180' : ''}`} />
         </Button>
       </PopoverTrigger>
-      <PopoverContent align="start" className="p-0 w-[480px]">
+      <PopoverContent align="start" className="p-0 w-[420px]">
         <ModelPickerPanel
           models={ASSISTANT_MODELS}
           selectedModels={[selectedId]}

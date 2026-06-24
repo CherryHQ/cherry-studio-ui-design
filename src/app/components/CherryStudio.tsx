@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { Puzzle, Layers, Database, Globe } from 'lucide-react';
 import { Sidebar } from './layout/Sidebar';
 import { TabBar } from './layout/TabBar';
@@ -135,6 +135,11 @@ function CherryStudioInner() {
     dragGhost, sidebarContainerRef, startTabDrag, startSidebarDrag,
   } = useTabDrag();
 
+  // Remember the last-active tab id per module, so returning to a module from
+  // the sidebar reactivates the exact tab the user left (which keep-alive
+  // preserves) rather than the first tab of that type.
+  const lastActiveTabByMenu = useRef<Record<string, string>>({});
+
   // ===========================
   // Sync sidebar highlight with active tab
   // ===========================
@@ -142,6 +147,7 @@ function CherryStudioInner() {
     const tab = tabs.find(t => t.id === activeTabId);
     if (tab?.menuItemId) {
       setActiveItem(tab.menuItemId);
+      lastActiveTabByMenu.current[tab.menuItemId] = tab.id;
     } else if (tab?.id === 'home') {
       setActiveItem('');
     }
@@ -222,9 +228,16 @@ function CherryStudioInner() {
   // ===========================
   const handleSidebarItemClick = useCallback((menuItemId: string) => {
     setActiveItem(menuItemId);
-    const existing = tabs.find(t => t.menuItemId === menuItemId);
-    if (existing && !['chat', 'agent'].includes(menuItemId)) {
-      setActiveTabId(existing.id);
+    // Re-activate the tab the user last had open for this module — including
+    // chat/agent — so switching modules and back preserves the open session
+    // (the keep-alive tab keeps its state). Fall back to the first tab of that
+    // type, then to creating a fresh one. A new session is started via the
+    // module's own "new" affordance, not by re-clicking the sidebar.
+    const lastId = lastActiveTabByMenu.current[menuItemId];
+    const target = (lastId && tabs.find(t => t.id === lastId))
+      || tabs.find(t => t.menuItemId === menuItemId);
+    if (target) {
+      setActiveTabId(target.id);
     } else {
       createTabForMenuItem(menuItemId);
     }
@@ -461,6 +474,7 @@ function CherryStudioInner() {
             }}
             onNewTab={() => navigateToMenuTab('launchpad')}
             onManageShortcuts={() => { setNewTabSearch(''); setNewTabManageMode(true); setNewTabDialogOpen(true); }}
+            onSearchClick={() => setSearchDialogOpen(true)}
             startTabDrag={onStartTabDrag}
           />
 

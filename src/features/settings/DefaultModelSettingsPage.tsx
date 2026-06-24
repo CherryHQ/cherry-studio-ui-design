@@ -43,7 +43,7 @@ function ModelPickerButton({ value, onChange }: { value: string; onChange: (v: s
           <ChevronDown size={9} className={`text-muted-foreground/40 transition-transform flex-shrink-0 ${open ? 'rotate-180' : ''}`} />
         </Button>
       </PopoverTrigger>
-      <PopoverContent align="end" className="p-0 w-[480px]">
+      <PopoverContent align="end" className="p-0 w-[420px]">
         <ModelPickerPanel
           models={ASSISTANT_MODELS}
           selectedModels={[value]}
