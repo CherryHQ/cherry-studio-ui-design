@@ -66,6 +66,7 @@ export interface Topic {
 export interface Group {
   id: string;
   name: string;
+  avatarEmoji?: string;    // emoji icon shown in the merged 工作 list (private chat + group)
   description?: string;    // group description shown in settings drawer
   ownerId?: string;        // member id of the group owner; defaults to first member
   memberLimit?: number;    // max members allowed; defaults to 50
@@ -249,6 +250,7 @@ export const MOCK_GROUPS: Group[] = [
   {
     id: 'g-product',
     name: '产品方案讨论组',
+    avatarEmoji: '📋',
     description: '讨论 Cherry Studio 协作模块的产品方案，每条结论沉淀到对应话题里。',
     ownerId: 'me',
     memberLimit: 500,
@@ -539,6 +541,7 @@ export const MOCK_GROUPS: Group[] = [
   {
     id: 'g-marketing',
     name: '市场协作组',
+    avatarEmoji: '📣',
     ownerId: 'u-wangwu',
     memberLimit: 500,
     members: ['me', 'u-wangwu', 'a-codebot'],
@@ -713,6 +716,7 @@ export const MOCK_GROUPS: Group[] = [
   {
     id: 'g-dyad-lisi',
     name: '与李四的协作',
+    avatarEmoji: '🤝',
     members: ['me', 'u-lisi'],
     unread: 0,
     lastActivityLabel: '聊了 Agent 克隆方案',
@@ -820,6 +824,7 @@ export const MOCK_GROUPS: Group[] = [
   {
     id: 'g-customer-feedback',
     name: '客户反馈跟进',
+    avatarEmoji: '📮',
     description: '集中处理 Cherry Studio 早期用户的反馈和 bug 报告。',
     ownerId: 'me',
     members: ['me', 'u-zhangsan', 'u-wangwu', 'a-stella'],
@@ -858,6 +863,7 @@ export const MOCK_GROUPS: Group[] = [
   {
     id: 'g-agent-weekly',
     name: 'Agent 周会',
+    avatarEmoji: '📅',
     description: '每周三 14:00 同步 Agent 协作功能进展。',
     ownerId: 'u-zhangsan',
     members: ['me', 'u-zhangsan', 'u-lisi', 'u-wangwu', 'a-stella', 'a-codebot', 'a-mine'],
@@ -928,6 +934,7 @@ export const MOCK_GROUPS: Group[] = [
   {
     id: 'g-dyad-wangwu',
     name: '与王五的协作',
+    avatarEmoji: '🤝',
     description: '我和王五的二人协作群。',
     ownerId: 'me',
     members: ['me', 'u-wangwu'],
@@ -971,6 +978,7 @@ export const MOCK_GROUPS: Group[] = [
   {
     id: 'g-email-integration',
     name: '邮箱接入小组',
+    avatarEmoji: '📧',
     description: '专门讨论 SMTP/IMAP 协议接入相关细节。',
     ownerId: 'u-lisi',
     members: ['me', 'u-lisi', 'u-wangwu', 'a-stella'],
@@ -1013,6 +1021,7 @@ export const MOCK_GROUPS: Group[] = [
   {
     id: 'g-design-review',
     name: '设计评审组',
+    avatarEmoji: '🎨',
     description: '产品设计稿评审与迭代。',
     ownerId: 'u-zhangsan',
     members: ['me', 'u-zhangsan', 'u-lisi', 'u-zhaoliu', 'a-stella'],
@@ -1064,6 +1073,7 @@ export const MOCK_GROUPS: Group[] = [
   {
     id: 'g-dyad-zhaoliu',
     name: '与赵六的协作',
+    avatarEmoji: '🤝',
     description: '我和赵六的二人协作群。',
     ownerId: 'me',
     members: ['me', 'u-zhaoliu'],
@@ -1162,6 +1172,7 @@ export function getOrCreateDyadGroupWithAgent(agent: CollabAgent): string {
   const newGroup: Group = {
     id: `g-dyad-${agent.id}`,
     name: `与 ${agent.name} 的协作`,
+    avatarEmoji: '🤝',
     members: ['me', agent.id],
     topics: [],
     agentMentionConfig: { ownerCanMention: true, othersCanMentionMyAgent: false },

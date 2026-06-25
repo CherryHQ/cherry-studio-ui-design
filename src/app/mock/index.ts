@@ -37,6 +37,13 @@ export {
   AGENT_MODEL_CAPABILITY_LABELS,
 } from './agentData';
 
+// --- Scheduled tasks (定时任务) mock data ---
+export { MOCK_SCHEDULED_TASKS } from './scheduledTaskData';
+export type {
+  ScheduledTask, ScheduledTaskStatus, ScheduledTaskRunMode,
+  ScheduledTaskRun, ScheduledTaskRunStatus,
+} from './scheduledTaskData';
+
 // --- Agent types (re-export from central types) ---
 export type {
   AgentSession, AgentChatMessage, AgentSessionData,

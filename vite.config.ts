@@ -2,6 +2,7 @@ import { defineConfig } from 'vite'
 import path from 'path'
 import tailwindcss from '@tailwindcss/vite'
 import react from '@vitejs/plugin-react'
+import { annotationsPlugin, annotationsDataLocBabelPlugin } from './vite-plugin-annotations'
 
 const uiSrc = path.resolve(__dirname, 'packages/ui/src')
 const v2UiSrc = path.resolve(__dirname, 'packages/cherry-v2-ui/src')
@@ -24,13 +25,25 @@ function figmaAssetStub() {
   }
 }
 
-export default defineConfig({
+export default defineConfig(({ command }) => {
+  const isDev = command === 'serve'
+  return {
   plugins: [
     figmaAssetStub(),
     // The React and Tailwind plugins are both required for Make, even if
     // Tailwind is not being actively used – do not remove them
-    react(),
+    react(
+      isDev
+        ? {
+            // Dev-only: stamp data-loc onto host JSX elements so the
+            // in-browser annotation overlay can resolve clicks → source.
+            babel: { plugins: [[annotationsDataLocBabelPlugin, { root: __dirname }]] },
+          }
+        : undefined,
+    ),
     tailwindcss(),
+    // Dev-only annotation channel (.context/annotations.json + overlay).
+    isDev && annotationsPlugin(),
   ],
   resolve: {
     alias: {
@@ -59,4 +72,5 @@ export default defineConfig({
 
   // File types to support raw imports. Never add .css, .tsx, or .ts files to this.
   assetsInclude: ['**/*.svg', '**/*.csv'],
+  }
 })

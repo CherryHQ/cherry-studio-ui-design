@@ -21,6 +21,11 @@ export interface EntityRailItem {
   tags?: string[];
   /** Used by the "按时间" sort (most recent first). */
   updatedAt?: string;
+  /** Trailing count shown at the row's right edge (e.g. a 群聊's member count).
+   * Private-chat (Agent) rows leave this undefined so only groups show a number. */
+  count?: number;
+  /** Unread badge count (IM-style). Bumps the row's text to full opacity. */
+  unread?: number;
 }
 
 export interface EntityRailProps {
@@ -41,9 +46,28 @@ export interface EntityRailProps {
   /** Render the "new" action as the first row of the list (Codex "New chat"
    * style) instead of a header button, and hide the title/count header. */
   newAsRow?: boolean;
+  /** When provided, the "new" (+) action opens a dropdown of these choices
+   * instead of calling onNew directly — e.g. 创建 Agent / 创建项目组. */
+  newActions?: {
+    id: string;
+    label: string;
+    icon: React.ComponentType<{ size?: number; className?: string }>;
+    onClick: () => void;
+  }[];
+  /** Fixed nav rows pinned directly under the "new" row (e.g. a 定时任务
+   * entry on the Agent rail). Rendered above the entity list; never filtered
+   * by search. */
+  navEntries?: {
+    id: string;
+    label: string;
+    icon: React.ComponentType<{ size?: number; className?: string }>;
+    count?: number;
+    active?: boolean;
+    onClick: () => void;
+  }[];
 }
 
-export function EntityRail({ title, items, activeId, onSelect, onNew, onEdit, searchable = true, filterable = true, newLabel, newAsRow }: EntityRailProps) {
+export function EntityRail({ title, items, activeId, onSelect, onNew, onEdit, searchable = true, filterable = true, newLabel, newAsRow, newActions, navEntries }: EntityRailProps) {
   const [query, setQuery] = useState('');
   const [groupByTag, setGroupByTag] = useState(false);
   const [sort, setSort] = useState<'default' | 'time' | 'name'>('default');
@@ -86,7 +110,13 @@ export function EntityRail({ title, items, activeId, onSelect, onNew, onEdit, se
           }`}
         >
           <span className="text-base leading-none flex-shrink-0">{item.avatar}</span>
-          <span className={`text-sm truncate flex-1 min-w-0 ${active ? 'font-medium' : ''}`}>{item.name}</span>
+          <span className={`text-sm truncate flex-1 min-w-0 ${active ? 'font-medium' : (item.unread ? 'text-foreground' : '')}`}>{item.name}</span>
+          {/* Trailing slot: a small, low-key unread (message) count. Kept
+              subtle on purpose — a soft pill rather than a bold filled badge —
+              so it informs without shouting. */}
+          {item.unread ? (
+            <span className="min-w-[14px] h-[14px] px-1 rounded-full bg-primary/12 text-primary/80 text-[9px] leading-[14px] text-center font-medium tabular-nums flex-shrink-0 group-hover/row:opacity-0 transition-opacity">{item.unread}</span>
+          ) : null}
         </button>
         {/* Hover actions, inside the pill: "…" overflow */}
         <div className="absolute right-1 top-1/2 -translate-y-1/2 flex items-center gap-0.5 opacity-0 group-hover/row:opacity-100 has-[[data-state=open]]:opacity-100 transition-opacity">
@@ -189,16 +219,66 @@ export function EntityRail({ title, items, activeId, onSelect, onNew, onEdit, se
 
       {/* List */}
       <div className="flex-1 overflow-y-auto px-1.5 py-1 [&::-webkit-scrollbar]:w-[2px] [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-transparent [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-foreground/10">
-        {/* Codex-style "new" row pinned above the list. */}
-        {newAsRow && onNew && (
-          <button
-            type="button"
-            onClick={onNew}
-            className="w-full min-w-0 flex items-center gap-2 px-2.5 py-[6px] rounded-md text-left text-foreground/80 hover:bg-accent/40 transition-colors mb-0.5"
-          >
-            <Plus size={16} strokeWidth={1.75} className="flex-shrink-0 text-muted-foreground" />
-            <span className="text-sm truncate flex-1 min-w-0">{newLabel ?? `新建${title}`}</span>
-          </button>
+        {/* Codex-style "new" row pinned above the list. With newActions it opens
+            a dropdown (创建 Agent / 创建项目组); otherwise it fires onNew. */}
+        {newAsRow && (newActions?.length || onNew) && (
+          newActions?.length ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  type="button"
+                  className="w-full min-w-0 flex items-center gap-2 px-2.5 py-[6px] rounded-md text-left text-foreground/80 hover:bg-accent/40 transition-colors mb-0.5"
+                >
+                  <Plus size={16} strokeWidth={1.75} className="flex-shrink-0 text-muted-foreground" />
+                  <span className="text-sm truncate flex-1 min-w-0">{newLabel ?? `新建${title}`}</span>
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="w-40">
+                {newActions.map((a) => {
+                  const Icon = a.icon;
+                  return (
+                    <DropdownMenuItem key={a.id} className="gap-2 text-xs" onClick={a.onClick}>
+                      <Icon size={13} className="text-muted-foreground" />
+                      {a.label}
+                    </DropdownMenuItem>
+                  );
+                })}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            <button
+              type="button"
+              onClick={onNew}
+              className="w-full min-w-0 flex items-center gap-2 px-2.5 py-[6px] rounded-md text-left text-foreground/80 hover:bg-accent/40 transition-colors mb-0.5"
+            >
+              <Plus size={16} strokeWidth={1.75} className="flex-shrink-0 text-muted-foreground" />
+              <span className="text-sm truncate flex-1 min-w-0">{newLabel ?? `新建${title}`}</span>
+            </button>
+          )
+        )}
+        {/* Fixed nav entries (e.g. 定时任务) — pinned right under the "new" row. */}
+        {navEntries && navEntries.length > 0 && (
+          <div className="mb-0.5 space-y-px">
+            {navEntries.map((entry) => {
+              const Icon = entry.icon;
+              return (
+                <button
+                  key={entry.id}
+                  type="button"
+                  onClick={entry.onClick}
+                  className={`w-full min-w-0 flex items-center gap-2 px-2.5 py-[6px] rounded-md text-left transition-colors ${
+                    entry.active ? 'bg-accent/40 text-foreground' : 'text-foreground/80 hover:bg-accent/40'
+                  }`}
+                >
+                  <Icon size={15} className={entry.active ? 'text-cherry-primary flex-shrink-0' : 'text-muted-foreground flex-shrink-0'} />
+                  <span className="text-sm truncate flex-1 min-w-0">{entry.label}</span>
+                  {typeof entry.count === 'number' && (
+                    <span className="text-xs text-muted-foreground/40 tabular-nums">{entry.count}</span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
         )}
         {filtered.length === 0 ? (
           <div className="px-3 py-6 text-center text-sm text-muted-foreground/40">无匹配结果</div>

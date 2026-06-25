@@ -49,7 +49,10 @@ export function TopicDetail({ group, topic, onBack }: TopicDetailProps) {
         >
           <ArrowLeft size={14} strokeWidth={1.8} />
         </button>
-        <span className="text-[12px] text-muted-foreground"># {group.name}</span>
+        <span className="text-[12px] text-muted-foreground flex items-center gap-1">
+          <span className="text-[13px] leading-none">{group.avatarEmoji ?? '💬'}</span>
+          {group.name}
+        </span>
       </div>
 
       {/* Scrollable body */}

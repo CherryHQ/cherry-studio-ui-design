@@ -28,6 +28,7 @@ import { ArchiveManagePage } from './ArchiveManagePage';
 import { RecycleBinPage } from './RecycleBinPage';
 import { DefaultModelSettingsPage } from './DefaultModelSettingsPage';
 import { ChannelsPage } from './ChannelsPage';
+import { TeammatesPage } from './TeammatesPage';
 import { ScheduledTasksPage } from './ScheduledTasksPage';
 import { DependenciesPage } from './DependenciesPage';
 import { InlineSelect, SectionCard } from './shared';
@@ -42,7 +43,7 @@ type SettingsSection =
   | 'general' | 'data-settings' | 'archive' | 'recycle-bin' | 'api-gateway' | 'shortcuts' | 'about' | 'dashboard'
   | 'models' | 'default-model' | 'mcp' | 'search' | 'documents'
   | 'quick-assistant' | 'selection-assistant'
-  | 'channels' | 'scheduled-tasks'
+  | 'channels' | 'scheduled-tasks' | 'teammates'
   | 'dependencies' | 'integrations';
 
 interface NavGroup {
@@ -104,6 +105,7 @@ const NAV_GROUPS: NavGroup[] = [
   {
     label: '效率',
     items: [
+      { id: 'teammates', label: '队友', icon: Users },
       { id: 'channels', label: '频道', icon: Radio },
       { id: 'scheduled-tasks', label: '定时任务', icon: CalendarClock },
       { id: 'selection-assistant', label: '划词助手', icon: MousePointer },
@@ -941,7 +943,7 @@ export function SettingsPage({ open, onClose, initialSection }: { open: boolean;
 
           {/* Content Area */}
           <div className="flex-1 flex flex-col min-w-0 overflow-hidden mr-2 mb-2 mt-2 ml-0 bg-content-bg border border-content-border rounded-2xl">
-            {activeSection === 'models' || activeSection === 'default-model' || activeSection === 'search' || activeSection === 'documents' || activeSection === 'data-settings' || activeSection === 'archive' || activeSection === 'recycle-bin' || activeSection === 'api-gateway' || activeSection === 'shortcuts' || activeSection === 'selection-assistant' || activeSection === 'quick-assistant' || activeSection === 'general' || activeSection === 'mcp' || activeSection === 'dashboard' || activeSection === 'channels' || activeSection === 'scheduled-tasks' || activeSection === 'dependencies' ? (
+            {activeSection === 'models' || activeSection === 'default-model' || activeSection === 'search' || activeSection === 'documents' || activeSection === 'data-settings' || activeSection === 'archive' || activeSection === 'recycle-bin' || activeSection === 'api-gateway' || activeSection === 'shortcuts' || activeSection === 'selection-assistant' || activeSection === 'quick-assistant' || activeSection === 'general' || activeSection === 'mcp' || activeSection === 'dashboard' || activeSection === 'channels' || activeSection === 'scheduled-tasks' || activeSection === 'teammates' || activeSection === 'dependencies' ? (
               activeSection === 'models' ? <ModelServicePage />
                 : activeSection === 'default-model' ? <DefaultModelSettingsPage />
                 : activeSection === 'search' ? <WebSearchPage />
@@ -956,6 +958,7 @@ export function SettingsPage({ open, onClose, initialSection }: { open: boolean;
                 : activeSection === 'general' ? <GeneralSettingsPage />
                 : activeSection === 'dashboard' ? <DashboardPage />
                 : activeSection === 'channels' ? <ChannelsPage />
+                : activeSection === 'teammates' ? <TeammatesPage />
                 : activeSection === 'scheduled-tasks' ? <ScheduledTasksPage />
                 : activeSection === 'integrations' ? <DataSettingsPage />
                 : activeSection === 'dependencies' ? <DependenciesPage />

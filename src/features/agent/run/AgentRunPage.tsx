@@ -16,6 +16,7 @@ import {
   SquarePlus, RefreshCw, TerminalSquare, Lightbulb, Scan, Languages,
   Hand, ShieldAlert, MoreHorizontal, MousePointer2, Mountain, ExternalLink,
   Package, Eye as EyeIcon, FileImage, Table2, LayoutGrid, Presentation, Monitor,
+  Users2,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Tooltip } from '@/app/components/Tooltip';
@@ -31,9 +32,14 @@ import { useActiveSkillJob } from '@/app/stores/skillJobStore';
 import { WorkflowPanel } from './WorkflowPanel';
 import type { AgentChatMessage, AgentSession, AgentSessionData } from '@/app/types/agent';
 import { SessionHistoryPage, type SessionDisplayMode } from './SessionHistoryPage';
+import { ScheduledTasksPage } from './ScheduledTasksPage';
+import { TaskBoardPage } from './TaskBoardPage';
 import { HistorySidebar } from '@/app/components/shared/HistorySidebar';
-import { EntityRail } from '@/app/components/shared/EntityNav';
+import { EntityRail, type EntityRailItem } from '@/app/components/shared/EntityNav';
 import { CreateAgentWizard } from '@/app/components/shared/CreateAgentWizard';
+import { GroupChatPane } from './GroupChatPane';
+import { MOCK_GROUPS } from '@/features/collaboration/data';
+import { NewGroupDialog } from '@/features/collaboration/components/NewGroupDialog';
 import { RecycleBinConfirmDialog } from '@/app/components/shared/RecycleBinConfirmDialog';
 import { ResourceConfigDialog } from '@/app/components/shared/ResourceConfigDialog';
 import { useRecycleBin } from '@/app/context/RecycleBinContext';
@@ -56,10 +62,12 @@ function agentToResource(a: typeof AVAILABLE_AGENTS[0]): ResourceItem {
     updatedAt: a.updatedAt,
   };
 }
+import { toast } from 'sonner';
 import {
   MOCK_SESSIONS, MODELS, SESSION_DATA_MAP, EMPTY_SESSION_DATA,
   DEFAULT_INITIAL_FILES,
   DEMO_OUTPUT_FILES, DEMO_FILE_CONTENTS, DEMO_PREVIEWS,
+  MOCK_SCHEDULED_TASKS, type ScheduledTask,
 } from '@/app/mock';
 
 // Backward-compatible aliases
@@ -1151,6 +1159,50 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
   const [showPlan, setShowPlan] = useState(false);
   const [showCreateAgent, setShowCreateAgent] = useState(false);
   const [showSaveAsSkill, setShowSaveAsSkill] = useState(false);
+  // 定时任务 view — reached from the entry pinned under "添加智能体" on the
+  // agent rail. When showing, the content column renders ScheduledTasksPage
+  // instead of the chat.
+  const [showScheduledTasks, setShowScheduledTasks] = useState(false);
+  // When set, the 定时任务 view opens straight into that task's detail
+  // (used by the "来自定时任务" return bar). null = land on the list.
+  const [scheduledDetailId, setScheduledDetailId] = useState<string | null>(null);
+  const openScheduledTasks = useCallback((detailId: string | null = null) => {
+    setDockTab(null);
+    setPreviewMaximized(false);
+    setShowExplorer(false);
+    setShowTaskBoard(false);
+    setSelectedGroupId(null);
+    setScheduledDetailId(detailId);
+    setShowScheduledTasks(true);
+  }, []);
+  // 任务管理 view — a global, read-only kanban of all sessions by status.
+  // Pinned under "添加智能体" alongside 定时任务; takes over the content area.
+  const [showTaskBoard, setShowTaskBoard] = useState(false);
+  const openTaskBoard = useCallback(() => {
+    setDockTab(null);
+    setPreviewMaximized(false);
+    setShowExplorer(false);
+    setShowScheduledTasks(false);
+    setSelectedGroupId(null);
+    setShowTaskBoard(true);
+  }, []);
+  // 项目组 (群聊) — folded into the same rail as 私聊 (Agent). When a group is
+  // selected the content column renders GroupChatPane (collaboration's topic
+  // view) instead of the agent chat. null = a 私聊/Agent is active.
+  const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
+  const [newGroupOpen, setNewGroupOpen] = useState(false);
+  const openGroup = useCallback((id: string) => {
+    setShowScheduledTasks(false);
+    setShowTaskBoard(false);
+    setDockTab(null);
+    setPreviewMaximized(false);
+    setShowExplorer(false);
+    setSelectedGroupId(id);
+  }, []);
+  const selectedGroup = useMemo(
+    () => (selectedGroupId ? MOCK_GROUPS.find(g => g.id === selectedGroupId) ?? null : null),
+    [selectedGroupId],
+  );
   const activeSkillJob = useActiveSkillJob();
   // Sessions where the user dismissed the inline "Save as Skill?"
   // callout. Per cherry-studio#15029 we surface this contextually after
@@ -1165,10 +1217,31 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
   const messages = localMessages[activeSessionId || ''] ?? sessionData.messages;
   const hasMessages = messages.length > 0;
   const activeSession = sessions.find(s => s.id === activeSessionId);
-  const agentRailItems = useMemo(
-    () => AVAILABLE_AGENTS.map(a => ({ id: a.id, name: a.name, avatar: a.avatar, tags: a.tags, updatedAt: a.updatedAt })),
-    [],
-  );
+  // Merged rail: 私聊 (Agent) + 群聊 (项目组) in one flat, IM-style list.
+  // Groups with unread bubble to the top; the rest interleave agent/group so
+  // the two kinds read as one mixed conversation list. Group rows carry a
+  // member-count number (the only visual cue separating them from 私聊).
+  const groupIdSet = useMemo(() => new Set(MOCK_GROUPS.map(g => g.id)), []);
+  const agentRailItems = useMemo<EntityRailItem[]>(() => {
+    const agentItems: EntityRailItem[] = AVAILABLE_AGENTS.map(a => ({
+      id: a.id, name: a.name, avatar: a.avatar, tags: a.tags, updatedAt: a.updatedAt,
+    }));
+    const groupItems: EntityRailItem[] = MOCK_GROUPS.map(g => ({
+      id: g.id, name: g.name, avatar: g.avatarEmoji ?? '💬',
+      unread: g.unread,
+    }));
+    const unreadGroups = groupItems
+      .filter(g => (g.unread ?? 0) > 0)
+      .sort((a, b) => (b.unread ?? 0) - (a.unread ?? 0));
+    const restGroups = groupItems.filter(g => !((g.unread ?? 0) > 0));
+    const interleaved: EntityRailItem[] = [];
+    const max = Math.max(agentItems.length, restGroups.length);
+    for (let i = 0; i < max; i++) {
+      if (agentItems[i]) interleaved.push(agentItems[i]);
+      if (restGroups[i]) interleaved.push(restGroups[i]);
+    }
+    return [...unreadGroups, ...interleaved];
+  }, []);
   // Sessions belong to the selected agent — switching agents changes the list.
   const agentSessions = useMemo(
     () => sessions.filter(s => s.agentName === selectedAgent.name),
@@ -1224,6 +1297,9 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
   }, [dockTab, previewMaximized]);
 
   const handleSelectSession = useCallback((id: string) => {
+    setShowScheduledTasks(false);
+    setShowTaskBoard(false);
+    setSelectedGroupId(null);
     setActiveSessionId(id);
     setSessions(prev => prev.map(s => s.id === id && s.unread ? { ...s, unread: false } : s));
     const data = SESSION_DATA_MAP[id];
@@ -1236,6 +1312,9 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
   }, []);
 
   const handleNewSession = useCallback(() => {
+    setShowScheduledTasks(false);
+    setShowTaskBoard(false);
+    setSelectedGroupId(null);
     setActiveSessionId(null);
     setDockTab(null);
     setPreviewMaximized(false);
@@ -1243,7 +1322,17 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
     setSelectedFile(null);
   }, []);
 
+  // Open a session from the task board: switch the rail to its owning agent,
+  // make it active, and close the board — landing on its chat.
+  const handleOpenSessionFromBoard = useCallback((session: AgentSession) => {
+    const agent = AVAILABLE_AGENTS.find(a => a.name === session.agentName);
+    if (agent) setSelectedAgent(agent);
+    handleSelectSession(session.id);
+  }, [handleSelectSession]);
+
   const handleNewSessionForAgent = useCallback((agentName: string) => {
+    setShowScheduledTasks(false);
+    setShowTaskBoard(false);
     const agent = AVAILABLE_AGENTS.find(a => a.name === agentName);
     if (agent) setSelectedAgent(agent);
     const newId = `new-${Date.now()}`;
@@ -1264,6 +1353,44 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
     setPreviewMaximized(false);
     setShowExplorer(false);
     setSelectedFile(null);
+  }, []);
+
+  // Fire a scheduled task once now: spin up a live session attached to the
+  // task's agent (so it groups under that agent in the list), seed it with the
+  // task prompt, then jump into it.
+  const handleRunScheduledTask = useCallback((task: ScheduledTask) => {
+    const agent = AVAILABLE_AGENTS.find(a => a.name === task.agentName);
+    if (agent) setSelectedAgent(agent);
+    const newId = `task-run-${Date.now()}`;
+    const ts = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
+    const newSession: AgentSession = {
+      id: newId,
+      title: task.name,
+      agentName: task.agentName,
+      agentIcon: agent?.avatar ?? task.agentAvatar,
+      lastMessage: task.prompt,
+      timestamp: ts,
+      messageCount: 1,
+      status: 'active',
+      kind: 'task',
+      progress: 8,
+      unread: true,
+      group: task.runMode === 'channel' ? task.channel : undefined,
+      scheduledTaskId: task.id,
+      scheduledTaskName: task.name,
+    };
+    setSessions(prev => [newSession, ...prev]);
+    setLocalMessages(prev => ({
+      ...prev,
+      [newId]: [{ id: `${newId}-u`, role: 'user', content: task.prompt, timestamp: ts }],
+    }));
+    setActiveSessionId(newId);
+    setShowScheduledTasks(false);
+    setDockTab(null);
+    setPreviewMaximized(false);
+    setShowExplorer(false);
+    setSelectedFile(null);
+    toast.success(`已启动「${task.name}」`, { description: `已在「${task.agentName}」下新建运行会话` });
   }, []);
 
   const { moveToBin: moveToRecycleBin, retentionDays: recycleRetentionDays } = useRecycleBin();
@@ -1655,16 +1782,38 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
             style={{ width: 220 }}
           >
             <EntityRail
-              title="Agent"
+              title="对话"
               searchable={false}
               filterable={false}
-              newLabel="添加智能体"
+              newLabel="新建"
               newAsRow
+              newActions={[
+                { id: 'agent', label: '创建 Agent', icon: Bot, onClick: () => setShowCreateAgent(true) },
+                { id: 'group', label: '创建项目组', icon: Users2, onClick: () => setNewGroupOpen(true) },
+              ]}
+              navEntries={[{
+                id: 'task-board',
+                label: '任务管理',
+                icon: ListChecks,
+                count: sessions.length,
+                active: showTaskBoard,
+                onClick: openTaskBoard,
+              }, {
+                id: 'scheduled-tasks',
+                label: '自动化',
+                icon: Clock,
+                count: MOCK_SCHEDULED_TASKS.length,
+                active: showScheduledTasks,
+                onClick: () => openScheduledTasks(null),
+              }]}
               items={agentRailItems}
-              activeId={selectedAgent.id}
-              onSelect={(id) => { const agent = AVAILABLE_AGENTS.find(a => a.id === id); if (agent) setSelectedAgent(agent); }}
-              onNew={() => setShowCreateAgent(true)}
-              onConfigure={(id) => { const agent = AVAILABLE_AGENTS.find(a => a.id === id); if (agent) { setSelectedAgent(agent); setShowAgentInfo(true); } }}
+              activeId={showScheduledTasks || showTaskBoard ? null : (selectedGroupId ?? selectedAgent.id)}
+              onSelect={(id) => {
+                // 群聊 → open the group pane; 私聊 (Agent) → switch the active agent.
+                if (groupIdSet.has(id)) { openGroup(id); return; }
+                setShowScheduledTasks(false); setShowTaskBoard(false); setSelectedGroupId(null);
+                const agent = AVAILABLE_AGENTS.find(a => a.id === id); if (agent) setSelectedAgent(agent);
+              }}
               onEdit={(id) => { const agent = AVAILABLE_AGENTS.find(a => a.id === id); if (agent) { setSelectedAgent(agent); setShowAgentInfo(true); } }}
             />
           </motion.div>
@@ -1673,7 +1822,32 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
 
       {/* ===== Right: Header + Content ===== */}
       <div className="flex flex-col flex-1 min-w-0 min-h-0 relative">
+        {selectedGroup ? (
+          <GroupChatPane key={selectedGroup.id} group={selectedGroup} />
+        ) : showTaskBoard ? (
+          <TaskBoardPage sessions={sessions} onOpenSession={handleOpenSessionFromBoard} />
+        ) : showScheduledTasks ? (
+          <ScheduledTasksPage onRunTask={handleRunScheduledTask} initialDetailId={scheduledDetailId} />
+        ) : (
+        <>
         {headerJSX}
+
+      {/* ===== "来自定时任务" return bar — only on sessions spawned by a run ===== */}
+      {activeSession?.scheduledTaskId && (
+        <div className="px-3 pt-2 pb-0.5 flex-shrink-0">
+          <button
+            onClick={() => openScheduledTasks(activeSession.scheduledTaskId ?? null)}
+            className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl border border-border/40 bg-muted/20 hover:bg-accent/40 transition-colors text-left group"
+          >
+            <Clock size={14} className="text-muted-foreground/60 flex-shrink-0" />
+            <span className="text-sm text-foreground/80 flex-1 truncate">
+              来自自动化
+              {activeSession.scheduledTaskName ? <span className="text-muted-foreground/50"> · {activeSession.scheduledTaskName}</span> : null}
+            </span>
+            <ChevronRight size={14} className="text-muted-foreground/40 group-hover:text-muted-foreground/70 transition-colors" />
+          </button>
+        </div>
+      )}
 
       {/* ===== Main Content (chat panel only — artifact moved out) ===== */}
       <div className="flex flex-1 min-h-0 pl-2 min-w-0">
@@ -1722,6 +1896,8 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
           )}
         </div>
       </div>
+        </>
+        )}
       </div>
 
       {/* ===== Shared right dock — 会话 (session list) / 文件 (artifact browser)
@@ -1878,6 +2054,13 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
       <CreateAgentWizard
         open={showCreateAgent}
         onOpenChange={setShowCreateAgent}
+      />
+
+      {/* ===== Create 项目组 (群聊) — picks members from teammates + my Agents ===== */}
+      <NewGroupDialog
+        open={newGroupOpen}
+        onClose={() => setNewGroupOpen(false)}
+        onManageTeammates={() => { setNewGroupOpen(false); onOpenSettings('teammates'); }}
       />
 
       {/* ===== Recycle Bin: delete-session confirmation ===== */}
