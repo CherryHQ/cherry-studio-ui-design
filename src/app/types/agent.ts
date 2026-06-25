@@ -47,7 +47,9 @@ export interface AgentSession {
   lastMessage: string;
   timestamp: string;
   messageCount: number;
-  status: 'active' | 'completed' | 'error' | 'paused';
+  /** 'awaiting' = agent paused mid-run waiting on the user (回复/确认下一步);
+   *  surfaced as the 待确认 column on the task board. */
+  status: 'active' | 'completed' | 'error' | 'paused' | 'awaiting';
   pinned?: boolean;
   unread?: boolean;
   tags?: string[];
@@ -57,6 +59,10 @@ export interface AgentSession {
   kind?: 'chat' | 'task';
   /** 0-100. Only consulted for kind === 'task' && status === 'active'. */
   progress?: number;
+  /** Set when this session was spawned by running a scheduled task — drives
+   *  the "来自定时任务" return bar atop the conversation. */
+  scheduledTaskId?: string;
+  scheduledTaskName?: string;
 }
 
 // --- File Explorer ---

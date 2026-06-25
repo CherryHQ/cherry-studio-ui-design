@@ -120,8 +120,12 @@ export function TopicView({ group, onOpenGroupSettings, onClickNewTopic, onClick
       {/* Group header */}
       <div className="flex items-center justify-between px-5 py-3 border-b border-border/40">
         <div className="flex items-center gap-1.5 min-w-0">
+          {/* Emoji icon — same glyph the merged 工作 list uses for this group,
+              so the row icon and the header icon stay consistent (private chat
+              shows its Agent's emoji the same way). */}
+          <span className="text-[15px] leading-none flex-shrink-0">{group.avatarEmoji ?? '💬'}</span>
           <span className="text-[14px] text-foreground truncate">
-            # {group.name}
+            {group.name}
           </span>
           <span className="text-[11px] text-muted-foreground">({group.members.length})</span>
         </div>
