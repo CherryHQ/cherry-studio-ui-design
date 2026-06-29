@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
 import {
-  ChevronDown, X, Check, Code2, ExternalLink,
-  Server, Download, ArrowUpCircle,
+  ChevronDown, EyeOff, X, Check, Code2, ExternalLink,
+  Server, Download, ArrowUpCircle, GripVertical, RotateCcw, Play,
   FlaskConical, ListPlus, Wand2,
 } from 'lucide-react';
 import { motion } from 'motion/react';
 import { Tooltip } from '@/app/components/Tooltip';
 import { MOCK_RESOURCES } from '@/app/config/constants';
-import { Button, Input, SearchInput, Textarea, Checkbox, Switch, BrandLogo, Popover, PopoverTrigger, PopoverContent } from '@cherry-studio/ui';
+import { Button, Input, SearchInput, Textarea, Checkbox, Switch, BrandLogo, Popover, PopoverTrigger, PopoverContent, ContextMenu, ContextMenuTrigger, ContextMenuContent, ContextMenuItem } from '@cherry-studio/ui';
 
 // ===========================
 // Data
@@ -340,6 +340,32 @@ export function CodeToolPage() {
   const [geminiJson, setGeminiJson] = useState(DEFAULT_GEMINI_SETTINGS);
   const [genericModel, setGenericModel] = useState('');
   const [genericJson, setGenericJson] = useState(DEFAULT_GENERIC_SETTINGS);
+  const [providerOrder, setProviderOrder] = useState(configuredProviders.map(p => p.id));
+  const [collapsedProviders, setCollapsedProviders] = useState<Set<string>>(new Set());
+  const [collapsedSectionOpen, setCollapsedSectionOpen] = useState(true);
+  const [dragProvider, setDragProvider] = useState<string | null>(null);
+  const [installedOverride, setInstalledOverride] = useState<Set<string>>(new Set());
+  const [launchState, setLaunchState] = useState<'idle' | 'launching' | 'launched'>('idle');
+  const handleLaunchCli = () => {
+    if (launchState === 'launching') return;
+    setLaunchState('launching');
+    setTimeout(() => { setLaunchState('launched'); setTimeout(() => setLaunchState('idle'), 2200); }, 1400);
+  };
+  const orderedProviders = providerOrder
+    .map(id => configuredProviders.find(p => p.id === id))
+    .filter((p): p is ConfiguredProvider => Boolean(p));
+  const handleProviderDrop = (targetId: string) => {
+    if (!dragProvider || dragProvider === targetId) { setDragProvider(null); return; }
+    setProviderOrder(prev => {
+      const arr = prev.filter(id => id !== dragProvider);
+      const ti = arr.indexOf(targetId);
+      arr.splice(ti < 0 ? arr.length : ti, 0, dragProvider);
+      return arr;
+    });
+    setDragProvider(null);
+  };
+  const toggleProviderCollapsed = (id: string) =>
+    setCollapsedProviders(prev => { const n = new Set(prev); if (n.has(id)) n.delete(id); else n.add(id); return n; });
   // Get or create config for a CLI tool
   const getConfig = (cliId: string) => {
     if (configState[cliId]) return configState[cliId];
@@ -427,9 +453,9 @@ export function CodeToolPage() {
                     <div className="min-w-0 flex-1">
                       <div className="text-[13px] text-foreground truncate">{tool.name}</div>
                       <div className="flex items-center gap-1.5">
-                        {cliStatus[tool.id]?.installed === false
+                        {cliStatus[tool.id]?.installed === false && !installedOverride.has(tool.id)
                           ? <span className="text-[11px] text-muted-foreground/55 truncate">未安装</span>
-                          : <span className="text-[11px] text-muted-foreground/50 font-mono truncate">v{cliStatus[tool.id]?.current ?? tool.version.replace(/^v/, '')}</span>}
+                          : <span className="text-[11px] text-muted-foreground/50 font-mono truncate">v{cliStatus[tool.id]?.installed ? cliStatus[tool.id]?.current : (cliStatus[tool.id]?.latest ?? tool.version.replace(/^v/, ''))}</span>}
                         {cliStatus[tool.id]?.installed && cliStatus[tool.id]?.canUpgrade && <Tooltip content="可升级" side="top"><ArrowUpCircle size={12} className="text-warning flex-shrink-0" /></Tooltip>}
                       </div>
                     </div>
@@ -444,11 +470,13 @@ export function CodeToolPage() {
         <div className="flex-1 min-w-0 flex flex-col min-h-0">
           {selectedCli && selectedTool && config ? (
           <>
-          <div className="flex-1 overflow-y-auto px-6 py-5 scrollbar-thin">
+          <div className="flex-1 overflow-y-auto px-6 pt-2.5 pb-5 scrollbar-thin">
             <div className="max-w-2xl mx-auto space-y-5">
               {/* 版本状态卡片 */}
               {(() => {
                 const st = cliStatus[selectedCli] ?? { installed: true, current: selectedTool.version, latest: selectedTool.version, canUpgrade: false };
+                const isInstalled = st.installed || installedOverride.has(selectedCli);
+                const canUpgrade = st.installed && st.canUpgrade;
                 return (
                   <div className="rounded-lg border border-border/40 bg-card px-4 py-3">
                     <div className="flex items-center gap-3">
@@ -457,24 +485,30 @@ export function CodeToolPage() {
                         <div className="flex items-center gap-2">
                           <span className="text-sm text-foreground font-medium truncate">{selectedTool.name}</span>
                           <span className="text-[10px] px-1.5 py-0.5 rounded bg-accent/50 text-muted-foreground/60 flex-shrink-0">macOS</span>
-                          {!st.installed ? (
+                          {!isInstalled ? (
                             <span className="text-[10px] px-1.5 py-0.5 rounded bg-accent/60 text-muted-foreground/70 flex-shrink-0">未安装</span>
-                          ) : st.canUpgrade ? (
-                            <span className="text-[10px] px-1.5 py-0.5 rounded bg-warning/15 text-warning flex-shrink-0">可升级</span>
+                          ) : canUpgrade ? (
+                            <Button size="inline" variant="ghost" className="gap-1 px-1.5 py-0 h-auto text-[10px] rounded text-warning hover:text-warning hover:bg-warning/10 flex-shrink-0"><ArrowUpCircle size={10} /> 升级</Button>
                           ) : (
                             <span className="text-[10px] px-1.5 py-0.5 rounded bg-success/15 text-success flex-shrink-0">已是最新</span>
                           )}
                         </div>
                         <div className="flex items-center gap-1.5 text-xs text-muted-foreground/60 mt-1">
-                          <span className="font-mono">{st.installed ? `v${st.current}` : `最新 v${st.latest}`}</span>
-                          {st.installed && st.canUpgrade && <><ArrowUpCircle size={11} className="text-warning flex-shrink-0" /><span className="font-mono text-warning">v{st.latest}</span></>}
+                          <span className="font-mono">{isInstalled ? `v${st.installed ? st.current : st.latest}` : `最新 v${st.latest}`}</span>
+                          {canUpgrade && <><ArrowUpCircle size={11} className="text-warning flex-shrink-0" /><span className="font-mono text-warning">v{st.latest}</span></>}
                         </div>
                       </div>
-                      {!st.installed ? (
-                        <Button size="inline" variant="ghost" className="gap-1.5 px-3 py-1.5 text-xs rounded-md border border-border/60 flex-shrink-0"><Download size={12} /> 安装</Button>
-                      ) : st.canUpgrade ? (
-                        <Button size="inline" variant="ghost" className="gap-1.5 px-3 py-1.5 text-xs rounded-md border border-border/60 text-muted-foreground hover:text-foreground flex-shrink-0"><ArrowUpCircle size={12} className="text-muted-foreground/70" /> 升级</Button>
-                      ) : null}
+                      {!isInstalled ? (
+                        <Button size="inline" variant="ghost" onClick={() => setInstalledOverride(prev => new Set(prev).add(selectedCli))} className="gap-1.5 px-3 py-1.5 text-xs rounded-md border border-border/60 text-muted-foreground hover:text-foreground flex-shrink-0"><Download size={12} /> 安装</Button>
+                      ) : (
+                        <Button size="inline" variant="ghost" onClick={handleLaunchCli} disabled={launchState === 'launching'} className="gap-1.5 px-3 py-1.5 text-xs rounded-md border border-border/60 text-muted-foreground hover:text-foreground flex-shrink-0">
+                          {launchState === 'launched'
+                            ? <><Check size={12} className="text-success" /> 已启动</>
+                            : launchState === 'launching'
+                            ? <><span className="w-3 h-3 border-2 border-muted-foreground/30 border-t-foreground rounded-full animate-spin" /> 启动中</>
+                            : <><Play size={12} /> 启动</>}
+                        </Button>
+                      )}
                     </div>
                   </div>
                 );
@@ -487,33 +521,88 @@ export function CodeToolPage() {
                   <span className="text-sm text-foreground">服务商</span>
                 </div>
                 <div className="space-y-2">
-                  {configuredProviders.map(p => {
+                  {orderedProviders.filter(p => !collapsedProviders.has(p.id)).map(p => {
                     const isActive = activeProfile?.primary === p.id;
                     return (
-                      <div key={p.id} className={`rounded-xl border p-3.5 transition-colors ${isActive ? 'border-success/50 bg-success/[0.04]' : 'border-border/40 hover:border-border'}`}>
-                        <div className="flex items-center gap-3">
-                          <Tooltip content={healthMeta[p.health].label} side="top"><span className={`w-2 h-2 rounded-full flex-shrink-0 ${healthMeta[p.health].dot}`} /></Tooltip>
-                          <div className="min-w-0 flex-1">
-                            <div className="flex items-center gap-2">
-                              <span className="text-sm text-foreground truncate">{p.name}</span>
-                              <span className="text-[10px] px-1.5 py-0.5 rounded bg-accent/60 text-muted-foreground/60 flex-shrink-0">{p.type}</span>
-                              {isActive && <span className="text-[10px] px-1.5 py-0.5 rounded bg-success/15 text-success flex-shrink-0">已启用</span>}
+                      <ContextMenu key={p.id}>
+                        <ContextMenuTrigger asChild>
+                          <div
+                            draggable
+                            onDragStart={() => setDragProvider(p.id)}
+                            onDragEnd={() => setDragProvider(null)}
+                            onDragOver={(e) => e.preventDefault()}
+                            onDrop={() => handleProviderDrop(p.id)}
+                            className={`rounded-xl border p-3.5 transition-colors ${isActive ? 'border-success/50 bg-success/[0.04]' : 'border-border/40 hover:border-border'} ${dragProvider === p.id ? 'opacity-50' : ''}`}
+                          >
+                            <div className="flex items-center gap-3">
+                              <GripVertical size={13} className="text-muted-foreground/25 hover:text-muted-foreground/55 cursor-grab active:cursor-grabbing flex-shrink-0" />
+                              <Tooltip content={healthMeta[p.health].label} side="top"><span className={`w-2 h-2 rounded-full flex-shrink-0 ${healthMeta[p.health].dot}`} /></Tooltip>
+                              <div className="min-w-0 flex-1">
+                                <div className="flex items-center gap-2">
+                                  <span className="text-sm text-foreground truncate">{p.name}</span>
+                                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-accent/60 text-muted-foreground/60 flex-shrink-0">{p.type}</span>
+                                  {isActive && <span className="text-[10px] px-1.5 py-0.5 rounded bg-success/15 text-success flex-shrink-0">已启用</span>}
+                                </div>
+                                <div className="text-[11px] text-muted-foreground/50 font-mono truncate mt-0.5">{p.apiHost}</div>
+                              </div>
+                              <div className="flex items-center gap-1.5 flex-shrink-0">
+                                <Button variant="ghost" size="inline" onClick={() => { setConfigProvider(p.id); setConfigOpen(true); }} className="gap-1 px-2.5 py-1 text-xs rounded-md border border-border/50">配置</Button>
+                                {isActive ? (
+                                  <Button variant="ghost" size="inline" onClick={() => updateActiveProfile({ primary: '' })} className="gap-1 px-2.5 py-1 text-xs rounded-md border border-border/50 text-muted-foreground">禁用</Button>
+                                ) : (
+                                  <Button variant="ghost" size="inline" onClick={() => updateActiveProfile({ primary: p.id })} className="gap-1 px-2.5 py-1 text-xs rounded-md border border-border/50 text-foreground">启用</Button>
+                                )}
+                              </div>
                             </div>
-                            <div className="text-[11px] text-muted-foreground/50 font-mono truncate mt-0.5">{p.apiHost}</div>
                           </div>
-                          <div className="flex items-center gap-1.5 flex-shrink-0">
-                            <Button variant="ghost" size="inline" onClick={() => { setConfigProvider(p.id); setConfigOpen(true); }} className="gap-1 px-2.5 py-1 text-xs rounded-md border border-border/50">配置</Button>
-                            {!isActive && (
-                              <Button variant="default" size="inline" onClick={() => updateActiveProfile({ primary: p.id })} className="gap-1 px-2.5 py-1 text-xs rounded-md">启用</Button>
-                            )}
-                          </div>
-                        </div>
-                      </div>
+                        </ContextMenuTrigger>
+                        <ContextMenuContent className="w-32 p-1">
+                          <ContextMenuItem onClick={() => toggleProviderCollapsed(p.id)} className="text-xs py-1 gap-1.5">
+                            <EyeOff size={11} /> 折叠隐藏
+                          </ContextMenuItem>
+                        </ContextMenuContent>
+                      </ContextMenu>
                     );
                   })}
+
                   <button type="button" className="w-full flex items-center justify-center gap-1 py-2 rounded-xl border border-dashed border-border/50 text-xs text-muted-foreground/55 hover:text-foreground hover:border-border transition-colors">
                     在 设置 → 模型服务 添加服务商 <ExternalLink size={10} />
                   </button>
+
+                  {/* 折叠分割线 + 折叠的服务商 */}
+                  {orderedProviders.some(p => collapsedProviders.has(p.id)) && (
+                    <div className="pt-1.5 space-y-1.5">
+                      <button type="button" onClick={() => setCollapsedSectionOpen(v => !v)} className="w-full flex items-center gap-2 group">
+                        <div className="flex-1 h-px bg-border/40" />
+                        <span className="flex items-center gap-1 text-[10px] text-muted-foreground/40 group-hover:text-muted-foreground/70 transition-colors flex-shrink-0">
+                          <ChevronDown size={10} className={`transition-transform ${collapsedSectionOpen ? '' : '-rotate-90'}`} />
+                          已折叠 {orderedProviders.filter(p => collapsedProviders.has(p.id)).length}
+                        </span>
+                        <div className="flex-1 h-px bg-border/40" />
+                      </button>
+                      {collapsedSectionOpen && orderedProviders.filter(p => collapsedProviders.has(p.id)).map(p => {
+                        const isActive = activeProfile?.primary === p.id;
+                        return (
+                          <ContextMenu key={p.id}>
+                            <ContextMenuTrigger asChild>
+                              <div className="flex items-center gap-2.5 px-3 py-1.5 rounded-lg border border-border/30 bg-muted/15 hover:bg-accent/25 transition-colors">
+                                <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${healthMeta[p.health].dot}`} />
+                                <span className="text-xs text-foreground truncate">{p.name}</span>
+                                <span className="text-[10px] px-1.5 py-0.5 rounded bg-accent/50 text-muted-foreground/50 flex-shrink-0">{p.type}</span>
+                                {isActive && <span className="text-[10px] text-success flex-shrink-0">已启用</span>}
+                                <Button variant="ghost" size="inline" onClick={() => toggleProviderCollapsed(p.id)} className="ml-auto gap-1 px-2 py-0.5 text-[11px] rounded-md text-muted-foreground/55 hover:text-foreground flex-shrink-0"><RotateCcw size={10} /> 恢复</Button>
+                              </div>
+                            </ContextMenuTrigger>
+                            <ContextMenuContent className="w-32 p-1">
+                              <ContextMenuItem onClick={() => toggleProviderCollapsed(p.id)} className="text-xs py-1 gap-1.5">
+                                <RotateCcw size={11} /> 恢复显示
+                              </ContextMenuItem>
+                            </ContextMenuContent>
+                          </ContextMenu>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

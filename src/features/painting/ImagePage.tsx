@@ -58,7 +58,6 @@ export function ImagePage() {
   const [images, setImages] = useState<GeneratedImage[]>(MOCK_IMAGES);
   const [selectedImage, setSelectedImage] = useState<GeneratedImage>(MOCK_IMAGES[0]);
   const [previewMode, setPreviewMode] = useState(false);
-  const [showRightPanel, setShowRightPanel] = useState(true);
   const [detailImage, setDetailImage] = useState<GeneratedImage | null>(null);
 
   const [params, setParams] = useState<GenerationParams>({
@@ -263,10 +262,7 @@ export function ImagePage() {
           <div className="flex-1 flex overflow-hidden relative">
             {view === 'create' ? (
               <div className="contents">
-                <VerticalToolHandle
-                  showRightPanel={showRightPanel}
-                  onToggleRightPanel={() => setShowRightPanel(!showRightPanel)}
-                />
+                <VerticalToolHandle />
 
                 <CanvasArea
                   image={selectedImage}
@@ -282,16 +278,6 @@ export function ImagePage() {
                   selectedId={selectedImage?.id}
                   onSelect={handleSelectRecent}
                 />
-
-                <AnimatePresence>
-                  {showRightPanel && (
-                    <ControlPanel
-                      params={params}
-                      onChange={setParams}
-                      onClose={() => setShowRightPanel(false)}
-                    />
-                  )}
-                </AnimatePresence>
               </div>
             ) : (
               <GalleryGrid
@@ -436,7 +422,6 @@ interface VideoParams {
 function VideoMode() {
   const [videos, setVideos] = useState<GeneratedVideo[]>(MOCK_VIDEOS);
   const [selected, setSelected] = useState<GeneratedVideo>(MOCK_VIDEOS[0]);
-  const [showRightPanel, setShowRightPanel] = useState(true);
   const [isGenerating, setIsGenerating] = useState(false);
   const [params, setParams] = useState<VideoParams>({
     model: 'sora-1',
@@ -504,12 +489,6 @@ function VideoMode() {
         <VideoCanvas video={selected} videos={videos} currentIndex={selectedIdx} onNavigate={navigate} />
 
         <VideoHistoryStrip videos={videos} selectedId={selected?.id} onSelect={setSelected} />
-
-        <AnimatePresence>
-          {showRightPanel && (
-            <VideoControlPanel params={params} onChange={setParams} onClose={() => setShowRightPanel(false)} />
-          )}
-        </AnimatePresence>
       </div>
 
       <VideoPromptBar params={params} onChange={setParams} onGenerate={handleGenerate} isGenerating={isGenerating} />
@@ -684,169 +663,6 @@ function VideoHistoryStrip({ videos, selectedId, onSelect }: {
   );
 }
 
-function VideoControlPanel({ params, onChange, onClose }: {
-  params: VideoParams;
-  onChange: (p: VideoParams) => void;
-  onClose: () => void;
-}) {
-  const [modelOpen, setModelOpen] = useState(false);
-  const selectedModel = VIDEO_MODELS.find(m => m.id === params.model);
-
-  // The Size grid renders 7 tiles: Auto + 6 aspect ratios. Each shows a
-  // mini ratio glyph (drawn as a div proportioned to the actual ratio).
-  const sizeTiles: { value: VideoAspect; label: string }[] = [
-    { value: 'auto', label: 'Auto' },
-    { value: '16:9', label: '16:9' },
-    { value: '4:3',  label: '4:3' },
-    { value: '1:1',  label: '1:1' },
-    { value: '3:4',  label: '3:4' },
-    { value: '9:16', label: '9:16' },
-    { value: '21:9', label: '21:9' },
-  ];
-
-  return (
-    <motion.div
-      initial={{ x: 16, opacity: 0 }}
-      animate={{ x: 0, opacity: 1 }}
-      exit={{ x: 16, opacity: 0 }}
-      transition={{ duration: 0.2 }}
-      className="absolute right-3 top-3 bottom-3 z-[var(--z-dropdown)] w-[280px] bg-background/95 backdrop-blur-xl rounded-2xl shadow-2xl shadow-black/12 border border-border/40 flex flex-col overflow-hidden"
-    >
-      <div className="flex items-center justify-between px-4 pt-3 pb-2">
-        <span className="text-xs text-foreground tracking-wider">Generate method</span>
-        <Button variant="ghost" size="icon-xs" onClick={onClose} className="p-0.5 text-muted-foreground/60 hover:text-foreground">
-          <X size={11} />
-        </Button>
-      </div>
-
-      {/* Method tabs — Reference / Edit / Frames */}
-      <div className="px-4 pb-3">
-        <div className="flex items-center gap-0.5 bg-muted/40 rounded-lg p-0.5">
-          {(['reference', 'edit', 'frames'] as GenerateMethod[]).map(m => (
-            <Button size="inline" key={m} variant="ghost"
-              onClick={() => onChange({ ...params, method: m })}
-              className={`flex-1 px-3 py-[5px] text-xs transition-all duration-150 capitalize ${
-                params.method === m
-                  ? 'bg-background text-foreground shadow-sm'
-                  : 'text-muted-foreground/60 hover:text-foreground'
-              }`}
-            >
-              {m}
-            </Button>
-          ))}
-        </div>
-      </div>
-
-      <div className="flex-1 overflow-y-auto px-4 pb-4 space-y-4 scrollbar-thin-xs">
-        {/* Model — kept as the first param even though not in reference,
-            because every video model has very different output character. */}
-        <PanelSection label="Model">
-          <Popover open={modelOpen} onOpenChange={setModelOpen}>
-            <PopoverTrigger asChild>
-              <Button size="inline" variant="ghost"
-                className="w-full flex items-center justify-between gap-2 px-2.5 py-[6px] rounded-lg bg-muted/35 hover:bg-accent/40 text-xs"
-              >
-                <div className="flex items-center gap-1.5 min-w-0">
-                  <span className={`w-3.5 h-3.5 rounded shrink-0 ${VIDEO_PROVIDER_COLORS[selectedModel?.provider || ''] || 'bg-muted'}`} />
-                  <span className="text-foreground truncate">{selectedModel?.name}</span>
-                </div>
-                <ChevronDown size={9} className={`text-muted-foreground/40 transition-transform ${modelOpen ? 'rotate-180' : ''}`} />
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent align="start" className="p-1 w-[var(--radix-popover-trigger-width)] min-w-[200px]">
-              {VIDEO_MODELS.map(m => (
-                <Button key={m.id} size="inline" variant="ghost"
-                  onClick={() => { onChange({ ...params, model: m.id }); setModelOpen(false); }}
-                  className={`w-full flex items-center gap-2 justify-start px-2 py-[6px] text-xs rounded-md ${
-                    params.model === m.id ? 'bg-cherry-active-bg text-cherry-primary-dark' : 'text-foreground hover:bg-accent/40'
-                  }`}
-                >
-                  <span className={`w-3.5 h-3.5 rounded shrink-0 ${VIDEO_PROVIDER_COLORS[m.provider]}`} />
-                  <span className="flex-1 text-left">{m.name}</span>
-                  <span className="text-xs text-muted-foreground/50">{m.tier}</span>
-                </Button>
-              ))}
-            </PopoverContent>
-          </Popover>
-        </PanelSection>
-
-        {/* Size — 3-col grid of ratio tiles with mini glyph */}
-        <PanelSection label="Size">
-          <div className="grid grid-cols-3 gap-1.5">
-            {sizeTiles.map(tile => (
-              <Button size="inline" key={tile.value} variant="ghost"
-                onClick={() => onChange({ ...params, aspect: tile.value })}
-                className={`flex flex-col items-center gap-1.5 py-2 rounded-lg transition-all duration-150 ${
-                  params.aspect === tile.value
-                    ? 'bg-cherry-active-bg text-cherry-primary-dark ring-1 ring-cherry-ring'
-                    : 'bg-muted/25 text-muted-foreground/70 hover:bg-accent/40 hover:text-foreground'
-                }`}
-              >
-                <AspectGlyph value={tile.value} active={params.aspect === tile.value} />
-                <span className="text-xs">{tile.label}</span>
-              </Button>
-            ))}
-          </div>
-        </PanelSection>
-
-        {/* Resolution */}
-        <PanelSection label="Resolution">
-          <ToggleGroup type="single" size="xs" value={params.resolution}
-            onValueChange={(v) => v && onChange({ ...params, resolution: v as VideoResolution })}
-            className="w-full"
-          >
-            <ToggleGroupItem value="480p"  className="flex-1 text-xs">480p</ToggleGroupItem>
-            <ToggleGroupItem value="720p"  className="flex-1 text-xs">720p</ToggleGroupItem>
-            <ToggleGroupItem value="1080p" className="flex-1 text-xs">1080p</ToggleGroupItem>
-          </ToggleGroup>
-        </PanelSection>
-
-        {/* Duration — 4×3 grid of seconds tiles 4s..15s */}
-        <PanelSection label="Duration">
-          <div className="grid grid-cols-4 gap-1.5">
-            {ALL_DURATIONS.map(d => (
-              <Button size="inline" key={d} variant="ghost"
-                onClick={() => onChange({ ...params, duration: d })}
-                className={`py-1.5 rounded-lg text-xs transition-all duration-150 ${
-                  params.duration === d
-                    ? 'bg-cherry-active-bg text-cherry-primary-dark ring-1 ring-cherry-ring'
-                    : 'bg-muted/25 text-muted-foreground/60 hover:bg-accent/40 hover:text-foreground'
-                }`}
-              >
-                {d}s
-              </Button>
-            ))}
-          </div>
-        </PanelSection>
-
-        {/* Audio toggle */}
-        <div className="flex items-center justify-between py-1.5">
-          <div className="flex items-center gap-2">
-            <Volume2 size={13} className="text-muted-foreground/70" />
-            <span className="text-xs text-foreground">Audio</span>
-          </div>
-          <Switch
-            checked={params.audio}
-            onCheckedChange={(v) => onChange({ ...params, audio: v })}
-          />
-        </div>
-
-        {/* Web search toggle */}
-        <div className="flex items-center justify-between py-1.5 border-t border-border/30 pt-3">
-          <div className="flex items-center gap-2">
-            <Globe size={13} className="text-muted-foreground/70" />
-            <span className="text-xs text-foreground">Web search</span>
-          </div>
-          <Switch
-            checked={params.webSearch}
-            onCheckedChange={(v) => onChange({ ...params, webSearch: v })}
-          />
-        </div>
-      </div>
-    </motion.div>
-  );
-}
-
 /** Mini visual glyph showing the aspect ratio as a proportional rectangle. */
 function AspectGlyph({ value, active }: { value: VideoAspect; active: boolean }) {
   if (value === 'auto') {
@@ -890,6 +706,15 @@ function VideoPromptBar({ params, onChange, onGenerate, isGenerating }: {
   // For Edit we hide them — you edit the existing canvas selection.
   const showFrames = params.method === 'frames';
   const showReferenceSlot = params.method === 'reference';
+  const sizeTiles: { value: VideoAspect; label: string }[] = [
+    { value: 'auto', label: 'Auto' },
+    { value: '16:9', label: '16:9' },
+    { value: '4:3', label: '4:3' },
+    { value: '1:1', label: '1:1' },
+    { value: '3:4', label: '3:4' },
+    { value: '9:16', label: '9:16' },
+    { value: '21:9', label: '21:9' },
+  ];
 
   return (
     <div className="shrink-0 flex justify-center px-6 pb-4 pt-2">
@@ -959,10 +784,95 @@ function VideoPromptBar({ params, onChange, onGenerate, isGenerating }: {
               </DropdownMenuContent>
             </DropdownMenu>
 
-            {/* Settings — opens the Generate-method panel (right column). */}
-            <Button variant="ghost" size="icon-xs" className="p-1.5 text-muted-foreground/60 hover:text-foreground hover:bg-accent/40" title="Generate method">
-              <SlidersHorizontal size={12} />
-            </Button>
+            {/* 分辨率 — Size + Resolution */}
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button size="inline" variant="ghost" className="gap-1 px-2 py-1 text-xs text-muted-foreground hover:text-foreground hover:bg-accent/40">
+                  <span>{params.aspect === 'auto' ? 'Auto' : params.aspect}</span>
+                  <span className="text-muted-foreground/40">·</span>
+                  <span>{params.resolution}</span>
+                  <ChevronDown size={8} className="text-muted-foreground/40" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent align="start" side="top" className="p-3 w-[260px] space-y-3">
+                <div>
+                  <p className="text-xs text-muted-foreground/50 mb-1.5">尺寸</p>
+                  <div className="grid grid-cols-3 gap-1.5">
+                    {sizeTiles.map(tile => (
+                      <Button size="inline" key={tile.value} variant="ghost"
+                        onClick={() => onChange({ ...params, aspect: tile.value })}
+                        className={`flex flex-col items-center gap-1.5 py-2 rounded-lg transition-all duration-150 ${
+                          params.aspect === tile.value
+                            ? 'bg-cherry-active-bg text-cherry-primary-dark ring-1 ring-cherry-ring'
+                            : 'bg-muted/25 text-muted-foreground/70 hover:bg-accent/40 hover:text-foreground'
+                        }`}
+                      >
+                        <AspectGlyph value={tile.value} active={params.aspect === tile.value} />
+                        <span className="text-xs">{tile.label}</span>
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground/50 mb-1.5">分辨率</p>
+                  <ToggleGroup type="single" size="xs" value={params.resolution}
+                    onValueChange={(v) => v && onChange({ ...params, resolution: v as VideoResolution })} className="w-full">
+                    <ToggleGroupItem value="480p" className="flex-1 text-xs">480p</ToggleGroupItem>
+                    <ToggleGroupItem value="720p" className="flex-1 text-xs">720p</ToggleGroupItem>
+                    <ToggleGroupItem value="1080p" className="flex-1 text-xs">1080p</ToggleGroupItem>
+                  </ToggleGroup>
+                </div>
+              </PopoverContent>
+            </Popover>
+
+            {/* 更多配置 — Method + Duration + Audio + Web search */}
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="ghost" size="icon-xs" className="p-1.5 text-muted-foreground/60 hover:text-foreground hover:bg-accent/40" title="更多配置">
+                  <SlidersHorizontal size={12} />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent align="start" side="top" className="p-3 w-[260px] space-y-3">
+                <div>
+                  <p className="text-xs text-muted-foreground/50 mb-1.5">Generate method</p>
+                  <div className="flex items-center gap-0.5 bg-muted/40 rounded-lg p-0.5">
+                    {(['reference', 'edit', 'frames'] as GenerateMethod[]).map(m => (
+                      <Button size="inline" key={m} variant="ghost"
+                        onClick={() => onChange({ ...params, method: m })}
+                        className={`flex-1 px-3 py-[5px] text-xs transition-all duration-150 capitalize ${
+                          params.method === m ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground/60 hover:text-foreground'
+                        }`}
+                      >
+                        {m}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground/50 mb-1.5">Duration</p>
+                  <div className="grid grid-cols-4 gap-1.5">
+                    {ALL_DURATIONS.map(d => (
+                      <Button size="inline" key={d} variant="ghost"
+                        onClick={() => onChange({ ...params, duration: d })}
+                        className={`py-1.5 rounded-lg text-xs transition-all duration-150 ${
+                          params.duration === d ? 'bg-cherry-active-bg text-cherry-primary-dark ring-1 ring-cherry-ring' : 'bg-muted/25 text-muted-foreground/60 hover:bg-accent/40 hover:text-foreground'
+                        }`}
+                      >
+                        {d}s
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+                <div className="flex items-center justify-between py-1">
+                  <div className="flex items-center gap-2"><Volume2 size={13} className="text-muted-foreground/70" /><span className="text-xs text-foreground">Audio</span></div>
+                  <Switch checked={params.audio} onCheckedChange={(v) => onChange({ ...params, audio: v })} />
+                </div>
+                <div className="flex items-center justify-between py-1 border-t border-border/30 pt-2.5">
+                  <div className="flex items-center gap-2"><Globe size={13} className="text-muted-foreground/70" /><span className="text-xs text-foreground">Web search</span></div>
+                  <Switch checked={params.webSearch} onCheckedChange={(v) => onChange({ ...params, webSearch: v })} />
+                </div>
+              </PopoverContent>
+            </Popover>
 
             {/* Camera — capture/import */}
             <Button variant="ghost" size="icon-xs" className="p-1.5 text-muted-foreground/60 hover:text-foreground hover:bg-accent/40" title="Camera">
@@ -1225,163 +1135,6 @@ function HistoryStrip({ images, selectedId, onSelect }: {
 }
 
 // ===========================
-// Right Floating Control Panel
-// ===========================
-
-function ControlPanel({ params, onChange, onClose }: {
-  params: GenerationParams;
-  onChange: (p: GenerationParams) => void;
-  onClose: () => void;
-}) {
-  const [modelOpen, setModelOpen] = useState(false);
-  const selectedModel = IMAGE_MODELS.find(m => m.id === params.model);
-
-  const ratioIcons: Record<AspectRatio, React.ReactNode> = {
-    '1:1': <Square size={11} />,
-    '16:9': <RectangleHorizontal size={11} />,
-    '9:16': <RectangleVertical size={11} />,
-    '4:3': <Maximize2 size={11} />,
-  };
-
-  return (
-    <motion.div
-      initial={{ x: 16, opacity: 0 }}
-      animate={{ x: 0, opacity: 1 }}
-      exit={{ x: 16, opacity: 0 }}
-      transition={{ duration: 0.2 }}
-      className="absolute right-3 top-3 bottom-3 z-[var(--z-dropdown)] w-[230px] bg-background/95 backdrop-blur-xl rounded-2xl shadow-2xl shadow-black/12 border border-border/40 flex flex-col overflow-hidden"
-    >
-      <div className="flex items-center justify-between px-4 pt-3 pb-2">
-        <span className="text-xs text-foreground tracking-wider">{'\u53c2\u6570\u8bbe\u7f6e'}</span>
-        <Button variant="ghost" size="icon-xs" onClick={onClose} className="p-0.5 text-muted-foreground/60 hover:text-foreground">
-          <X size={11} />
-        </Button>
-      </div>
-
-      <div className="flex-1 overflow-y-auto px-4 pb-4 space-y-4 scrollbar-thin-xs">
-        <PanelSection label="Model">
-          <Popover open={modelOpen} onOpenChange={setModelOpen}>
-            <PopoverTrigger asChild>
-              <Button size="inline"
-                variant="ghost"
-                className="w-full flex items-center justify-between gap-2 px-2.5 py-[6px] rounded-lg bg-muted/35 hover:bg-accent/40 text-xs"
-              >
-                <div className="flex items-center gap-1.5 min-w-0">
-                  <BrandLogo id={selectedModel?.provider?.toLowerCase() || ''} fallbackLetter={selectedModel?.provider?.[0] || '?'} size={14} className="shrink-0" />
-                  <span className="text-foreground">{selectedModel?.name}</span>
-                </div>
-                <ChevronDown size={9} className={`text-muted-foreground/40 transition-transform ${modelOpen ? 'rotate-180' : ''}`} />
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent align="start" className="p-0 w-[420px]">
-              <ModelPickerPanel
-                models={IMAGE_MODELS_AS_MODEL_INFO}
-                selectedModels={[params.model]}
-                onSelectModel={(id) => onChange({ ...params, model: id })}
-                multiModel={false}
-                onToggleMultiModel={() => {}}
-                providerColors={IMAGE_PROVIDER_COLORS}
-                onClose={() => setModelOpen(false)}
-                showMultiModelToggle={false}
-              />
-            </PopoverContent>
-          </Popover>
-        </PanelSection>
-
-        <PanelSection label="Mode">
-          <ToggleGroup type="single" size="xs" value={params.mode} onValueChange={(v) => v && onChange({ ...params, mode: v as typeof params.mode })} className="w-full">
-            <ToggleGroupItem value="standard" className="flex-1 text-xs">Standard</ToggleGroupItem>
-            <ToggleGroupItem value="quality" className="flex-1 text-xs">Quality</ToggleGroupItem>
-            <ToggleGroupItem value="speed" className="flex-1 text-xs">Speed</ToggleGroupItem>
-          </ToggleGroup>
-        </PanelSection>
-
-        <PanelSection label="Dimensions">
-          <div className="grid grid-cols-4 gap-1.5">
-            {(Object.keys(ratioIcons) as AspectRatio[]).map(ratio => (
-              <Button size="inline"
-                key={ratio}
-                variant="ghost"
-                onClick={() => onChange({ ...params, ratio })}
-                className={`flex flex-col items-center gap-1 py-1.5 rounded-lg transition-all duration-150 ${
-                  params.ratio === ratio
-                    ? 'bg-cherry-active-bg text-cherry-primary-dark ring-1 ring-cherry-ring'
-                    : 'bg-muted/25 text-muted-foreground/60 hover:bg-accent/40 hover:text-foreground'
-                }`}
-              >
-                {ratioIcons[ratio]}
-                <span className="text-xs">{ratio}</span>
-              </Button>
-            ))}
-          </div>
-          <div className="text-xs text-muted-foreground/60 mt-1.5 text-center">
-            {RATIO_DIMENSIONS[params.ratio].w} x {RATIO_DIMENSIONS[params.ratio].h}
-          </div>
-        </PanelSection>
-
-        <PanelSection label="Size">
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button size="inline"
-                variant="ghost"
-                className="w-full flex items-center justify-between gap-2 px-2.5 py-[6px] rounded-lg bg-muted/35 hover:bg-accent/40 text-xs"
-              >
-                <span className="text-foreground">{SIZE_LABELS[params.size]}</span>
-                <ChevronDown size={9} className="text-muted-foreground/40" />
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent align="start" className="p-1 w-[var(--radix-popover-trigger-width)]">
-              {(['small', 'medium', 'large'] as const).map(size => (
-                <Button size="inline"
-                  key={size}
-                  variant="ghost"
-                  onClick={() => onChange({ ...params, size })}
-                  className={`w-full px-3 py-[6px] text-xs transition-colors ${
-                    params.size === size
-                      ? 'bg-cherry-active-bg text-cherry-primary-dark'
-                      : 'text-muted-foreground hover:bg-accent/40'
-                  }`}
-                >
-                  {SIZE_LABELS[size]}
-                </Button>
-              ))}
-            </PopoverContent>
-          </Popover>
-        </PanelSection>
-
-        <PanelSection label="Count">
-          <div className="flex items-center gap-1.5">
-            {[1, 2, 3, 4].map(n => (
-              <Button size="inline"
-                key={n}
-                variant="ghost"
-                onClick={() => onChange({ ...params, count: n })}
-                className={`flex-1 py-[5px] rounded-lg text-xs transition-all duration-150 ${
-                  params.count === n
-                    ? 'bg-cherry-active-bg text-cherry-primary-dark ring-1 ring-cherry-ring'
-                    : 'bg-muted/25 text-muted-foreground/40 hover:bg-accent/40 hover:text-foreground'
-                }`}
-              >
-                {n}
-              </Button>
-            ))}
-          </div>
-        </PanelSection>
-      </div>
-    </motion.div>
-  );
-}
-
-function PanelSection({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <div>
-      <div className="text-xs text-foreground uppercase tracking-wider mb-1.5">{label}</div>
-      {children}
-    </div>
-  );
-}
-
-// ===========================
 // Canvas Area (Center)
 // ===========================
 
@@ -1545,6 +1298,12 @@ function PromptBar({ params, onChange, onGenerate, isGenerating }: {
 }) {
   const [modelDropdownOpen, setModelDropdownOpen] = useState(false);
   const selectedModel = IMAGE_MODELS.find(m => m.id === params.model);
+  const ratioIcons: Record<AspectRatio, React.ReactNode> = {
+    '1:1': <Square size={11} />,
+    '16:9': <RectangleHorizontal size={11} />,
+    '9:16': <RectangleVertical size={11} />,
+    '4:3': <Maximize2 size={11} />,
+  };
 
   return (
     <div className="shrink-0 flex justify-center px-6 pb-4 pt-2">
@@ -1579,6 +1338,95 @@ function PromptBar({ params, onChange, onGenerate, isGenerating }: {
                     {p}
                   </Button>
                 ))}
+              </PopoverContent>
+            </Popover>
+
+            {/* 分辨率 */}
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="ghost" size="xs" className="gap-1 px-2 text-xs text-muted-foreground hover:text-foreground hover:bg-accent/40">
+                  {ratioIcons[params.ratio]}
+                  <span>{params.ratio}</span>
+                  <ChevronDown size={8} className="text-muted-foreground/40" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent align="start" side="top" className="p-3 w-[248px] space-y-3">
+                <div>
+                  <p className="text-xs text-muted-foreground/50 mb-1.5">比例</p>
+                  <div className="grid grid-cols-4 gap-1.5">
+                    {(Object.keys(ratioIcons) as AspectRatio[]).map(ratio => (
+                      <Button size="inline" key={ratio} variant="ghost"
+                        onClick={() => onChange({ ...params, ratio })}
+                        className={`flex flex-col items-center gap-1 py-1.5 rounded-lg transition-all duration-150 ${
+                          params.ratio === ratio
+                            ? 'bg-cherry-active-bg text-cherry-primary-dark ring-1 ring-cherry-ring'
+                            : 'bg-muted/25 text-muted-foreground/60 hover:bg-accent/40 hover:text-foreground'
+                        }`}
+                      >
+                        {ratioIcons[ratio]}
+                        <span className="text-xs">{ratio}</span>
+                      </Button>
+                    ))}
+                  </div>
+                  <div className="text-xs text-muted-foreground/60 mt-1.5 text-center">
+                    {RATIO_DIMENSIONS[params.ratio].w} x {RATIO_DIMENSIONS[params.ratio].h}
+                  </div>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground/50 mb-1.5">尺寸</p>
+                  <div className="grid grid-cols-3 gap-1.5">
+                    {(['small', 'medium', 'large'] as const).map(size => (
+                      <Button size="inline" key={size} variant="ghost"
+                        onClick={() => onChange({ ...params, size })}
+                        className={`py-1.5 rounded-lg text-xs transition-all duration-150 ${
+                          params.size === size
+                            ? 'bg-cherry-active-bg text-cherry-primary-dark ring-1 ring-cherry-ring'
+                            : 'bg-muted/25 text-muted-foreground/60 hover:bg-accent/40 hover:text-foreground'
+                        }`}
+                      >
+                        {SIZE_LABELS[size]}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+              </PopoverContent>
+            </Popover>
+
+            {/* 更多配置 */}
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="ghost" size="xs" className="gap-1 px-2 text-xs text-muted-foreground hover:text-foreground hover:bg-accent/40">
+                  <SlidersHorizontal size={10} />
+                  <span>更多</span>
+                  <ChevronDown size={8} className="text-muted-foreground/40" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent align="start" side="top" className="p-3 w-[240px] space-y-3">
+                <div>
+                  <p className="text-xs text-muted-foreground/50 mb-1.5">Mode</p>
+                  <ToggleGroup type="single" size="xs" value={params.mode} onValueChange={(v) => v && onChange({ ...params, mode: v as typeof params.mode })} className="w-full">
+                    <ToggleGroupItem value="standard" className="flex-1 text-xs">Standard</ToggleGroupItem>
+                    <ToggleGroupItem value="quality" className="flex-1 text-xs">Quality</ToggleGroupItem>
+                    <ToggleGroupItem value="speed" className="flex-1 text-xs">Speed</ToggleGroupItem>
+                  </ToggleGroup>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground/50 mb-1.5">数量</p>
+                  <div className="flex items-center gap-1.5">
+                    {[1, 2, 3, 4].map(n => (
+                      <Button size="inline" key={n} variant="ghost"
+                        onClick={() => onChange({ ...params, count: n })}
+                        className={`flex-1 py-[5px] rounded-lg text-xs transition-all duration-150 ${
+                          params.count === n
+                            ? 'bg-cherry-active-bg text-cherry-primary-dark ring-1 ring-cherry-ring'
+                            : 'bg-muted/25 text-muted-foreground/40 hover:bg-accent/40 hover:text-foreground'
+                        }`}
+                      >
+                        {n}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
               </PopoverContent>
             </Popover>
           </div>
@@ -2016,15 +1864,10 @@ function MetaRow({ label, value, mono }: { label: string; value: string; mono?: 
 // Vertical Tool Handle
 // ===========================
 
-function VerticalToolHandle({ showRightPanel, onToggleRightPanel }: {
-  showRightPanel: boolean;
-  onToggleRightPanel: () => void;
-}) {
+function VerticalToolHandle() {
   const [activeTool, setActiveTool] = useState<string>('select');
 
   const tools = [
-    { id: 'panel', icon: <SlidersHorizontal size={13} />, label: showRightPanel ? 'Hide Parameters' : 'Show Parameters', action: onToggleRightPanel },
-    { id: 'divider' },
     { id: 'select', icon: <MousePointer2 size={13} />, label: 'Select' },
     { id: 'crop', icon: <Crop size={13} />, label: 'Crop' },
     { id: 'brush', icon: <Brush size={13} />, label: 'Inpaint' },
@@ -2040,7 +1883,7 @@ function VerticalToolHandle({ showRightPanel, onToggleRightPanel }: {
         if (tool.id.startsWith('divider')) {
           return <div key={tool.id} className="w-5 h-px bg-border/30 my-1" />;
         }
-        const isActive = tool.id !== 'panel' && tool.id !== 'undo' && tool.id !== 'redo' && activeTool === tool.id;
+        const isActive = tool.id !== 'undo' && tool.id !== 'redo' && activeTool === tool.id;
         return (
           <Button
             key={tool.id}
@@ -2048,9 +1891,7 @@ function VerticalToolHandle({ showRightPanel, onToggleRightPanel }: {
             size="icon-xs"
             title={tool.label}
             onClick={() => {
-              if (tool.action) {
-                tool.action();
-              } else if (tool.id !== 'undo' && tool.id !== 'redo') {
+              if (tool.id !== 'undo' && tool.id !== 'redo') {
                 setActiveTool(tool.id);
               }
             }}
