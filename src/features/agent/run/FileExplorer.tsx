@@ -6,7 +6,7 @@ import {
   Eye, Globe, MousePointer2, TerminalSquare, ExternalLink, FolderOpen as FolderOpenIcon,
 } from 'lucide-react';
 import {
-  Button, EmptyState, SearchInput,
+  Button, EmptyState,
   ContextMenu, ContextMenuTrigger, ContextMenuContent, ContextMenuItem, ContextMenuSeparator,
 } from '@cherry-studio/ui';
 import { motion, AnimatePresence } from 'motion/react';
@@ -25,6 +25,10 @@ interface Props {
   selectedFile: string | null;
   onSelectFile: (path: string) => void;
 }
+
+// Only document deliverables that can be previewed inline are listed.
+// Code / archives / media (zip, mp4, …) are intentionally excluded.
+const PREVIEWABLE_FORMATS = ['md', 'markdown', 'html', 'htm', 'ppt', 'pptx', 'pdf', 'doc', 'docx', 'txt', 'csv'];
 
 // ===========================
 // Icon Resolver (Monochrome)
@@ -226,78 +230,30 @@ function OutputFileItem({ file, isSelected, onSelect }: {
 // File Explorer
 // ===========================
 
-export function FileExplorer({ files, outputFiles = [], selectedFile, onSelectFile }: Props) {
-  const [query, setQuery] = useState('');
-  const q = query.trim().toLowerCase();
-
-  // Prune the tree to matching nodes, keeping ancestor folders so the path
-  // to a hit stays visible.
-  const filteredFiles = useMemo(() => {
-    if (!q) return files;
-    const walk = (list: FileNode[]): FileNode[] =>
-      list.reduce<FileNode[]>((acc, n) => {
-        if (n.type === 'folder') {
-          const kids = n.children ? walk(n.children) : [];
-          if (kids.length > 0 || n.name.toLowerCase().includes(q)) {
-            acc.push({ ...n, children: kids.length > 0 ? kids : n.children });
-          }
-        } else if (n.name.toLowerCase().includes(q)) {
-          acc.push(n);
-        }
-        return acc;
-      }, []);
-    return walk(files);
-  }, [files, q]);
-
-  const filteredOutputs = useMemo(
-    () => (!q ? outputFiles : outputFiles.filter(f => f.name.toLowerCase().includes(q))),
-    [outputFiles, q],
+export function FileExplorer({ outputFiles = [], selectedFile, onSelectFile }: Props) {
+  // Flat list of previewable document deliverables only (md / html / ppt / …).
+  // Clicking one opens the preview, which covers this list.
+  const previewable = useMemo(
+    () => outputFiles.filter(f => PREVIEWABLE_FORMATS.includes((f.format || '').toLowerCase())),
+    [outputFiles],
   );
-
-  const hasResults = filteredFiles.length > 0 || filteredOutputs.length > 0;
 
   return (
     <div className="flex flex-col h-full select-none">
-      {/* Search */}
-      <div className="px-2.5 pt-2.5 pb-1.5 flex-shrink-0">
-        <SearchInput value={query} onChange={setQuery} placeholder="搜索文件..." />
-      </div>
-
-      {/* Content — 结果 (deliverables) section + the workspace file tree.
-          Keyed on search-vs-browse so folders re-open when filtering. */}
-      <div key={q ? 'search' : 'browse'} className="flex-1 overflow-y-auto scrollbar-thin-xs">
-        {!hasResults ? (
-          <EmptyState preset={q ? 'no-result' : 'no-file'} compact />
+      <div className="flex-1 overflow-y-auto scrollbar-thin-xs px-1.5 py-2">
+        {previewable.length === 0 ? (
+          <EmptyState preset="no-file" compact />
         ) : (
-          <>
-            {filteredOutputs.length > 0 && (
-              <div className="py-1.5 px-1.5">
-                <div className="px-1.5 pb-1 text-[11px] text-muted-foreground/50">结果</div>
-                <div className="space-y-[2px]">
-                  {filteredOutputs.map(f => (
-                    <OutputFileItem
-                      key={f.id}
-                      file={f}
-                      isSelected={selectedFile === `output:${f.id}`}
-                      onSelect={() => onSelectFile(`output:${f.id}`)}
-                    />
-                  ))}
-                </div>
-              </div>
-            )}
-            {filteredFiles.length > 0 && (
-              <div className="py-1 px-1">
-                {filteredOutputs.length > 0 && (
-                  <div className="px-1.5 pt-1 pb-1 text-[11px] text-muted-foreground/50">文件</div>
-                )}
-                {filteredFiles.map((node, i) => (
-                  <TreeNode key={`${node.name}-${i}`} node={node} depth={0} path=""
-                    selectedFile={selectedFile} onSelectFile={onSelectFile}
-                    defaultOpen forceOpen={!!q} />
-                ))}
-              </div>
-            )}
-          </>
+          <div className="space-y-[2px]">
+            {previewable.map(f => (
+              <OutputFileItem
+                key={f.id}
+                file={f}
+                isSelected={selectedFile === `output:${f.id}`}
+                onSelect={() => onSelectFile(`output:${f.id}`)}
+              />
+            ))}
+          </div>
         )}
       </div>
     </div>

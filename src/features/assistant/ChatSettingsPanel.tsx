@@ -27,7 +27,7 @@ function Section({ title, defaultOpen = true, children }: { title: string; defau
 // ===========================
 // ChatSettingsPanel
 // ===========================
-export function ChatSettingsPanel({ onClose, minimalInput, onMinimalInputChange }: { onClose: () => void; minimalInput?: boolean; onMinimalInputChange?: (v: boolean) => void }) {
+export function ChatSettingsPanel({ onClose, minimalInput, onMinimalInputChange, docked }: { onClose: () => void; minimalInput?: boolean; onMinimalInputChange?: (v: boolean) => void; docked?: boolean }) {
   // OpenAI Settings
   const [serviceLevel, setServiceLevel] = useState('忽略');
   const [summaryMode, setSummaryMode] = useState('关闭');
@@ -80,28 +80,44 @@ export function ChatSettingsPanel({ onClose, minimalInput, onMinimalInputChange 
 
   const toOpts = (arr: string[]) => arr.map(v => ({ value: v, label: v }));
 
-  return (
-    <motion.div
-      initial={{ opacity: 0, x: 20 }}
-      animate={{ opacity: 1, x: 0 }}
-      exit={{ opacity: 0, x: 20 }}
-      transition={{ type: 'spring', damping: 25, stiffness: 350 }}
-      className="absolute top-2 right-2 bottom-2 w-[340px] z-[var(--z-overlay)] slide-panel"
-    >
-      {/* Header */}
-      <div className="h-[38px] flex items-center justify-between px-3 flex-shrink-0 border-b border-section-border">
-        <span className="text-xs text-foreground flex items-center gap-1.5">
-          <SlidersHorizontal size={11} className="text-muted-foreground/60" />
-          参数设置
-        </span>
-        <Button
-          variant="ghost"
-          onClick={onClose}
-          className="w-6 h-6 rounded-md p-0 text-muted-foreground/50 hover:text-foreground hover:bg-accent/50"
+  const header = (
+    /* Header */
+    <div className="h-[38px] flex items-center justify-between px-3 flex-shrink-0 border-b border-section-border">
+      <span className="text-xs text-foreground flex items-center gap-1.5">
+        <SlidersHorizontal size={11} className="text-muted-foreground/60" />
+        参数设置
+      </span>
+      <Button
+        variant="ghost"
+        onClick={onClose}
+        className="w-6 h-6 rounded-md p-0 text-muted-foreground/50 hover:text-foreground hover:bg-accent/50"
+      >
+        <X size={12} />
+      </Button>
+    </div>
+  );
+
+  // Docked: fills the shared right dock (the parent animates width). Floating:
+  // a self-animating overlay panel.
+  const Wrapper = docked
+    ? ({ children }: { children: React.ReactNode }) => (
+        <div className="flex flex-col h-full w-full bg-background">{children}</div>
+      )
+    : ({ children }: { children: React.ReactNode }) => (
+        <motion.div
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={{ opacity: 0, x: 20 }}
+          transition={{ type: 'spring', damping: 25, stiffness: 350 }}
+          className="absolute top-2 right-2 bottom-2 w-[340px] z-[var(--z-overlay)] slide-panel"
         >
-          <X size={12} />
-        </Button>
-      </div>
+          {children}
+        </motion.div>
+      );
+
+  return (
+    <Wrapper>
+      {header}
 
       {/* Content — compact spacing via CSS variable override */}
       <div className="flex-1 overflow-y-auto px-3 py-1.5 scrollbar-thin [&_[data-slot=form-row]]:py-[4px] [&_[data-slot=form-row]]:gap-3">
@@ -210,6 +226,6 @@ export function ChatSettingsPanel({ onClose, minimalInput, onMinimalInputChange 
         {/* Bottom spacer */}
         <div className="h-2" />
       </div>
-    </motion.div>
+    </Wrapper>
   );
 }

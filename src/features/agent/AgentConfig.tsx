@@ -224,7 +224,7 @@ function ModelSelector({ label, value, onChange, hint }: { label: string; value:
             <span className="truncate">{selected?.name || value}</span><ChevronDown size={10} className="text-muted-foreground/40 flex-shrink-0" />
           </Button>
         </PopoverTrigger>
-        <PopoverContent align="start" className="p-0 w-[480px]">
+        <PopoverContent align="start" className="p-0 w-[420px]">
           <ModelPickerPanel
             selectedModels={[value]}
             onSelectModel={onChange}

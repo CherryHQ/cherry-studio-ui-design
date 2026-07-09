@@ -1,6 +1,6 @@
 import React, { useRef, useCallback, useState } from 'react';
 import {
-  Search, X, ChevronRight, Settings, PinOff, LayoutGrid,
+  X, ChevronRight, Settings, PinOff, LayoutGrid,
 } from 'lucide-react';
 // `LayoutGrid` is the 管理 icon used inside the right-click menu — kept
 // here so the context-menu item icon doesn't drift from how the
@@ -8,7 +8,7 @@ import {
 import cherryLogoImg from "@/assets/cherry-icon.png";
 import { Button, ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from '@cherry-studio/ui';
 import { Tooltip } from '@/app/components/Tooltip';
-import { BP_ICON, BP_VERTICAL_CARD, BP_FULL, getLayout } from '@/app/config/constants';
+import { BP_ICON, BP_FULL, getLayout } from '@/app/config/constants';
 import type { MenuItem, Tab } from '@/app/types';
 import { useCollab } from '@/features/collaboration/CollabContext';
 import { useGlobalActions } from '@/app/context/GlobalActionContext';
@@ -333,8 +333,7 @@ export function Sidebar({
       if (!isResizing.current) return;
       const newW = ev.clientX - containerLeft;
       if (newW < 15) setWidth(0);
-      else if (newW < 42) setWidth(BP_ICON);
-      else if (newW < 90) setWidth(BP_VERTICAL_CARD);
+      else if (newW < 90) setWidth(BP_ICON);
       else setWidth(Math.min(280, Math.max(BP_FULL, newW)));
     };
     const onMouseUp = () => {
@@ -383,14 +382,6 @@ export function Sidebar({
           <div className="flex items-center h-14 px-4 gap-2.5 flex-shrink-0">
             <CherryLogo size="md" />
             <span className="text-sm text-sidebar-foreground truncate">Cherry Studio</span>
-          </div>
-
-          {/* Search */}
-          <div className="px-3 py-2 flex-shrink-0">
-            <div onClick={() => { onSearchClick(); handleDismiss(); }} className="flex items-center gap-2 px-2.5 py-1.5 rounded-md bg-sidebar-accent/50 text-muted-foreground text-xs cursor-pointer hover:bg-accent transition-colors">
-              <Search size={13} />
-              <span>搜索</span>
-            </div>
           </div>
 
           {/* Menu items */}
@@ -457,7 +448,7 @@ export function Sidebar({
   // ===========================
   // Normal visible modes (icon / vertical-card / full)
   // ===========================
-  const actualWidth = layout === 'icon' ? BP_ICON : layout === 'vertical-card' ? BP_VERTICAL_CARD : width;
+  const actualWidth = layout === 'icon' ? BP_ICON : width;
 
   return (
     <div
@@ -474,24 +465,6 @@ export function Sidebar({
           <span className="text-sm text-sidebar-foreground truncate">Cherry Studio</span>
         )}
       </div>
-
-      {/* Search */}
-      {layout === 'full' ? (
-        <div className="px-3 py-2 flex-shrink-0">
-          <div onClick={onSearchClick} className="flex items-center gap-2 px-2.5 py-1.5 rounded-md bg-sidebar-accent text-muted-foreground text-xs cursor-pointer hover:bg-accent transition-colors">
-            <Search size={13} />
-            <span>搜索</span>
-          </div>
-        </div>
-      ) : (
-        <div className="flex justify-center py-1.5 flex-shrink-0">
-          <Tooltip content="搜索">
-            <Button variant="ghost" size="icon-sm" onClick={onSearchClick} className="text-muted-foreground hover:text-foreground hover:bg-accent/50">
-              <Search size={16} strokeWidth={1.6} />
-            </Button>
-          </Tooltip>
-        </div>
-      )}
 
       {/* Menu items */}
       <div className="flex-1 overflow-y-auto scrollbar-hide py-1">

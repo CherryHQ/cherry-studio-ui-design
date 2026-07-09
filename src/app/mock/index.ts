@@ -30,9 +30,19 @@ export {
   SESSION_DATA_MAP,
   EMPTY_SESSION_DATA,
   DEFAULT_INITIAL_FILES,
+  DEMO_OUTPUT_FILES,
+  DEMO_FILE_CONTENTS,
+  DEMO_PREVIEWS,
   MODELS,
   AGENT_MODEL_CAPABILITY_LABELS,
 } from './agentData';
+
+// --- Scheduled tasks (定时任务) mock data ---
+export { MOCK_SCHEDULED_TASKS } from './scheduledTaskData';
+export type {
+  ScheduledTask, ScheduledTaskStatus, ScheduledTaskRunMode,
+  ScheduledTaskRun, ScheduledTaskRunStatus,
+} from './scheduledTaskData';
 
 // --- Agent types (re-export from central types) ---
 export type {

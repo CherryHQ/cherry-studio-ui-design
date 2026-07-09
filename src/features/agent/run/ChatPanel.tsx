@@ -1,16 +1,16 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import {
-  Plus, Paperclip, Code2, FolderOpen, Folder, FolderPlus, FolderX, FileText, AtSign, LayoutGrid, Table2, Presentation, Monitor, Wrench,
+  Plus, Paperclip, Code2, FolderOpen, Folder, FileText, AtSign, LayoutGrid, Table2, Presentation, Monitor, Wrench,
   Globe, Hammer, Brain, MoreHorizontal,
   Maximize2, RotateCcw, RefreshCw, ChevronDown, Clock, X, Trash2, Workflow, FolderPen,
   TerminalSquare, Zap, Lightbulb,
-  ArrowUp, Languages, Check, Hand, ShieldAlert, Pencil, Compass,
+  ArrowUp, Languages, Check, Hand, ShieldAlert, Pencil, Compass, MessageSquarePlus,
 } from 'lucide-react';
 import {
   Button, Textarea,
   DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator,
   DropdownMenuSub, DropdownMenuSubTrigger, DropdownMenuSubContent,
-  Popover, PopoverTrigger, PopoverContent, BrandLogo, SearchInput,
+  Popover, PopoverTrigger, PopoverContent, BrandLogo,
 } from '@cherry-studio/ui';
 import { Separator } from "@cherry-studio/ui";
 import { MessageList } from '@cherry-studio/ui';
@@ -47,14 +47,6 @@ const PERMISSION_MODES: { id: string; label: string; desc: string; icon: React.C
   { id: 'plan',      label: '计划模式',     desc: '只读规划，不编辑文件、不执行命令', icon: Workflow,  color: 'text-amber-500' },
   { id: 'auto-edit', label: '自动编辑模式', desc: '自动读写文件，执行命令前询问',     icon: FolderPen, color: 'text-emerald-500' },
   { id: 'full-auto', label: '全自动模式',   desc: '可执行任何操作，请谨慎使用',       icon: RefreshCw, color: 'text-violet-500' },
-];
-
-// ===========================
-// Project / WorkDir Config
-// ===========================
-const PROJECTS: { id: string; label: string }[] = [
-  { id: 'work', label: 'Work' },
-  { id: 'new', label: 'New project' },
 ];
 
 // ===========================
@@ -159,6 +151,8 @@ export interface ChatPanelProps {
   /** Slot rendered first inside the composer's left toolbar
    *  (e.g. agent picker + model picker pulled in from the page header). */
   headerControls?: React.ReactNode;
+  /** Starts a new (empty) session — wired to the far-left "新建会话" button. */
+  onNewSession?: () => void;
   /** Inline affordance rendered just below the last message and above
    *  the input area — used by the "Save as Skill" guidance callout
    *  (cherry-studio#15029). */
@@ -173,6 +167,7 @@ export function ChatPanel({
   onAvatarClick,
   onOpenArtifact,
   headerControls,
+  onNewSession,
   taskCompleteCallout,
 }: ChatPanelProps) {
   const [input, setInput] = useState('');
@@ -180,11 +175,8 @@ export function ChatPanel({
   const [activeMode, setActiveMode] = useState('normal');
   const [activePopup, setActivePopup] = useState<string | null>(null);
   const [activeThinking, setActiveThinking] = useState('default');
-  const [activeProject, setActiveProject] = useState<string | null>('work');
-  const [showProjectMenu, setShowProjectMenu] = useState(false);
   const [showModelMenu, setShowModelMenu] = useState(false);
   const [showSkillMenu, setShowSkillMenu] = useState(false);
-  const [projectQuery, setProjectQuery] = useState('');
   const [queuedMessages, setQueuedMessages] = useState<{ id: string; text: string }[]>([]);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -195,9 +187,6 @@ export function ChatPanel({
       (m.thinking && !m.content && m.role === 'agent')
     );
   }, [messages]);
-
-  const currentProject = PROJECTS.find(p => p.id === activeProject) ?? null;
-  const filteredProjects = PROJECTS.filter(p => !projectQuery || p.label.toLowerCase().includes(projectQuery.toLowerCase()));
 
   // Collect ALL unresolved generativeUI messages for pagination
   const pendingUIs = useMemo(() => {
@@ -498,7 +487,7 @@ export function ChatPanel({
           </AnimatePresence>
 
           <Textarea
-            className="w-full bg-transparent text-sm text-foreground placeholder:text-muted-foreground/50 outline-none resize-none min-h-[36px] max-h-[140px] leading-[1.6] px-3.5 pt-[10px] pb-2 border-transparent focus-visible:border-transparent focus-visible:ring-0 shadow-none"
+            className="w-full bg-transparent text-sm text-foreground placeholder:text-muted-foreground/50 outline-none resize-none min-h-[64px] max-h-[140px] leading-[1.6] px-3.5 pt-[10px] pb-2 border-transparent focus-visible:border-transparent focus-visible:ring-0 shadow-none"
             placeholder={
               isAgentBusy
                 ? '智能体执行中，发送的消息将加入队列…'
@@ -527,7 +516,110 @@ export function ChatPanel({
           <div className="px-2 pb-2 flex items-center justify-between gap-2">
             {/* Left: + menu and permission selector */}
             <div className="flex items-center gap-0.5 min-w-0">
-              {/* Plus / Insert */}
+              {/* 新建会话 — 最左侧 */}
+              {onNewSession && (
+                <Button variant="ghost" size="icon-sm" className={toolbarBtnClass} onClick={onNewSession} title="新建会话">
+                  <MessageSquarePlus size={16} strokeWidth={1.5} />
+                </Button>
+              )}
+
+              {headerControls}
+
+              {/* Thinking effort selector */}
+              <Popover open={showModelMenu} onOpenChange={setShowModelMenu}>
+                <PopoverTrigger asChild>
+                  <Button variant="ghost" size="inline"
+                    className={`flex items-center gap-1 px-1.5 py-[4px] rounded-md text-xs transition-colors ${
+                      showModelMenu
+                        ? 'bg-accent/60 text-foreground'
+                        : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
+                    }`}
+                  >
+                    <Lightbulb size={13} className="text-muted-foreground/80" strokeWidth={1.5} />
+                    <span className="truncate">
+                      {THINKING_EFFORTS.find(e => e.id === activeThinking)?.label ?? '默认'}
+                    </span>
+                    <ChevronDown size={9} className={`transition-transform duration-100 ${showModelMenu ? 'rotate-180' : ''}`} />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent side="top" align="start" className="w-[200px] p-1">
+                  <div className="px-2 py-1 text-xs text-muted-foreground/60">思维链长度</div>
+                  {THINKING_EFFORTS.map(mode => {
+                    const isActive = activeThinking === mode.id;
+                    return (
+                      <button
+                        key={mode.id}
+                        type="button"
+                        onClick={() => { setActiveThinking(mode.id); setShowModelMenu(false); }}
+                        className={`w-full flex items-center gap-2 px-2 py-[6px] rounded-md text-left text-xs transition-colors ${
+                          isActive ? 'bg-accent/40 text-foreground' : 'text-muted-foreground/80 hover:bg-accent/40'
+                        }`}
+                      >
+                        <Lightbulb size={12} strokeWidth={1.5} className={`flex-shrink-0 ${isActive ? 'text-warning' : 'text-muted-foreground/80'}`} />
+                        <span className="flex-1">{mode.label}</span>
+                        {isActive && <Check size={11} className="text-foreground flex-shrink-0" />}
+                      </button>
+                    );
+                  })}
+                </PopoverContent>
+              </Popover>
+
+              {/* Skill picker — quick access to installed skills */}
+              <Popover open={showSkillMenu} onOpenChange={setShowSkillMenu}>
+                <PopoverTrigger asChild>
+                  <Button variant="ghost" size="inline"
+                    className={`flex items-center gap-1 px-1.5 py-[4px] rounded-md text-xs transition-colors ${
+                      showSkillMenu
+                        ? 'bg-accent/60 text-foreground'
+                        : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
+                    }`}
+                  >
+                    <LayoutGrid size={13} className="text-muted-foreground/80" strokeWidth={1.5} />
+                    <span className="truncate">技能</span>
+                    <ChevronDown size={9} className={`transition-transform duration-100 ${showSkillMenu ? 'rotate-180' : ''}`} />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent side="top" align="start" className="w-[220px] p-1">
+                  <div className="px-2 py-1 text-xs text-muted-foreground/60">已安装技能</div>
+                  {[
+                    { id: 'docs',    label: 'Documents',     icon: FileText,     color: 'text-info' },
+                    { id: 'sheets',  label: 'Spreadsheets',  icon: Table2,       color: 'text-success' },
+                    { id: 'slides',  label: 'Presentations', icon: Presentation, color: 'text-warning' },
+                    { id: 'browser', label: '浏览器',         icon: Compass,      color: 'text-info' },
+                    { id: 'desktop', label: '电脑',           icon: Monitor,      color: 'text-accent-violet' },
+                  ].map(s => {
+                    const Icon = s.icon;
+                    return (
+                      <button key={s.id} type="button"
+                        onClick={() => setShowSkillMenu(false)}
+                        className="w-full flex items-center gap-2 px-2 py-[6px] rounded-md text-left text-xs text-muted-foreground/80 hover:bg-accent/40 transition-colors"
+                      >
+                        <Icon size={12} strokeWidth={1.5} className={`flex-shrink-0 ${s.color}`} />
+                        <span className="flex-1 truncate">{s.label}</span>
+                      </button>
+                    );
+                  })}
+                  <Separator opacity={40} className="my-1" />
+                  <button type="button"
+                    onClick={() => setShowSkillMenu(false)}
+                    className="w-full flex items-center gap-2 px-2 py-[6px] rounded-md text-left text-xs text-muted-foreground hover:bg-accent/40 hover:text-foreground transition-colors"
+                  >
+                    <Wrench size={12} strokeWidth={1.5} className="flex-shrink-0" />
+                    <span className="flex-1 truncate">管理技能…</span>
+                  </button>
+                  <button type="button"
+                    onClick={() => setShowSkillMenu(false)}
+                    className="w-full flex items-center gap-2 px-2 py-[6px] rounded-md text-left text-xs text-muted-foreground hover:bg-accent/40 hover:text-foreground transition-colors"
+                  >
+                    <Plus size={12} strokeWidth={1.5} className="flex-shrink-0" />
+                    <span className="flex-1 truncate">添加技能</span>
+                  </button>
+                </PopoverContent>
+              </Popover>
+            </div>
+
+            {/* Right: send */}
+            <div className="flex items-center gap-1">
               <DropdownMenu open={showPlusMenu} onOpenChange={setShowPlusMenu}>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="icon-sm" className={showPlusMenu ? toolbarBtnActiveClass : toolbarBtnClass}>
@@ -640,104 +732,6 @@ export function ChatPanel({
                   </DropdownMenuSub>
                 </DropdownMenuContent>
               </DropdownMenu>
-
-              {headerControls}
-
-              {/* Thinking effort selector */}
-              <Popover open={showModelMenu} onOpenChange={setShowModelMenu}>
-                <PopoverTrigger asChild>
-                  <Button variant="ghost" size="inline"
-                    className={`flex items-center gap-1 px-1.5 py-[4px] rounded-md text-xs transition-colors ${
-                      showModelMenu
-                        ? 'bg-accent/60 text-foreground'
-                        : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
-                    }`}
-                  >
-                    <Lightbulb size={13} className="text-muted-foreground/80" strokeWidth={1.5} />
-                    <span className="truncate">
-                      {THINKING_EFFORTS.find(e => e.id === activeThinking)?.label ?? '默认'}
-                    </span>
-                    <ChevronDown size={9} className={`transition-transform duration-100 ${showModelMenu ? 'rotate-180' : ''}`} />
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent side="top" align="start" className="w-[200px] p-1">
-                  <div className="px-2 py-1 text-xs text-muted-foreground/60">思维链长度</div>
-                  {THINKING_EFFORTS.map(mode => {
-                    const isActive = activeThinking === mode.id;
-                    return (
-                      <button
-                        key={mode.id}
-                        type="button"
-                        onClick={() => { setActiveThinking(mode.id); setShowModelMenu(false); }}
-                        className={`w-full flex items-center gap-2 px-2 py-[6px] rounded-md text-left text-xs transition-colors ${
-                          isActive ? 'bg-accent/40 text-foreground' : 'text-muted-foreground/80 hover:bg-accent/40'
-                        }`}
-                      >
-                        <Lightbulb size={12} strokeWidth={1.5} className={`flex-shrink-0 ${isActive ? 'text-warning' : 'text-muted-foreground/80'}`} />
-                        <span className="flex-1">{mode.label}</span>
-                        {isActive && <Check size={11} className="text-foreground flex-shrink-0" />}
-                      </button>
-                    );
-                  })}
-                </PopoverContent>
-              </Popover>
-
-              {/* Skill picker — quick access to installed skills */}
-              <Popover open={showSkillMenu} onOpenChange={setShowSkillMenu}>
-                <PopoverTrigger asChild>
-                  <Button variant="ghost" size="inline"
-                    className={`flex items-center gap-1 px-1.5 py-[4px] rounded-md text-xs transition-colors ${
-                      showSkillMenu
-                        ? 'bg-accent/60 text-foreground'
-                        : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
-                    }`}
-                  >
-                    <LayoutGrid size={13} className="text-muted-foreground/80" strokeWidth={1.5} />
-                    <span className="truncate">技能</span>
-                    <ChevronDown size={9} className={`transition-transform duration-100 ${showSkillMenu ? 'rotate-180' : ''}`} />
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent side="top" align="start" className="w-[220px] p-1">
-                  <div className="px-2 py-1 text-xs text-muted-foreground/60">已安装技能</div>
-                  {[
-                    { id: 'docs',    label: 'Documents',     icon: FileText,     color: 'text-info' },
-                    { id: 'sheets',  label: 'Spreadsheets',  icon: Table2,       color: 'text-success' },
-                    { id: 'slides',  label: 'Presentations', icon: Presentation, color: 'text-warning' },
-                    { id: 'browser', label: '浏览器',         icon: Compass,      color: 'text-info' },
-                    { id: 'desktop', label: '电脑',           icon: Monitor,      color: 'text-accent-violet' },
-                  ].map(s => {
-                    const Icon = s.icon;
-                    return (
-                      <button key={s.id} type="button"
-                        onClick={() => setShowSkillMenu(false)}
-                        className="w-full flex items-center gap-2 px-2 py-[6px] rounded-md text-left text-xs text-muted-foreground/80 hover:bg-accent/40 transition-colors"
-                      >
-                        <Icon size={12} strokeWidth={1.5} className={`flex-shrink-0 ${s.color}`} />
-                        <span className="flex-1 truncate">{s.label}</span>
-                      </button>
-                    );
-                  })}
-                  <Separator opacity={40} className="my-1" />
-                  <button type="button"
-                    onClick={() => setShowSkillMenu(false)}
-                    className="w-full flex items-center gap-2 px-2 py-[6px] rounded-md text-left text-xs text-muted-foreground hover:bg-accent/40 hover:text-foreground transition-colors"
-                  >
-                    <Wrench size={12} strokeWidth={1.5} className="flex-shrink-0" />
-                    <span className="flex-1 truncate">管理技能…</span>
-                  </button>
-                  <button type="button"
-                    onClick={() => setShowSkillMenu(false)}
-                    className="w-full flex items-center gap-2 px-2 py-[6px] rounded-md text-left text-xs text-muted-foreground hover:bg-accent/40 hover:text-foreground transition-colors"
-                  >
-                    <Plus size={12} strokeWidth={1.5} className="flex-shrink-0" />
-                    <span className="flex-1 truncate">添加技能</span>
-                  </button>
-                </PopoverContent>
-              </Popover>
-            </div>
-
-            {/* Right: send */}
-            <div className="flex items-center gap-1">
               {/* Send */}
               <Button
                 variant="default"
@@ -751,85 +745,6 @@ export function ChatPanel({
               </Button>
             </div>
           </div>
-        </div>
-
-        {/* Project / WorkDir selector — below input */}
-        <div className="flex items-center px-1">
-          <Popover open={showProjectMenu} onOpenChange={(open) => { setShowProjectMenu(open); if (!open) setProjectQuery(''); }}>
-            <PopoverTrigger asChild>
-              <Button variant="ghost" size="inline"
-                className={`flex items-center gap-1.5 px-2 py-[3px] rounded-md text-xs transition-colors ${
-                  showProjectMenu
-                    ? 'bg-accent/60 text-foreground'
-                    : 'text-muted-foreground/80 hover:text-foreground hover:bg-accent/40'
-                }`}
-              >
-                {currentProject ? (
-                  <Folder size={12} className="text-muted-foreground/80" strokeWidth={1.5} />
-                ) : (
-                  <FolderX size={12} className="text-muted-foreground/80" strokeWidth={1.5} />
-                )}
-                <span>{currentProject ? currentProject.label : '不使用项目'}</span>
-                <ChevronDown size={9} className={`transition-transform duration-100 ${showProjectMenu ? 'rotate-180' : ''}`} />
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent side="top" align="start" className="w-[240px] p-1">
-              {/* Search */}
-              <div className="px-1 py-1">
-                <SearchInput
-                  value={projectQuery}
-                  onChange={setProjectQuery}
-                  placeholder="搜索项目"
-                  iconSize={11}
-                  wrapperClassName="px-2 py-[4px] rounded-md bg-accent/15 border border-border/20"
-                />
-              </div>
-              {/* Project list */}
-              <div className="py-0.5">
-                {filteredProjects.length === 0 && (
-                  <div className="px-2 py-2 text-xs text-muted-foreground/50 text-center">无匹配项目</div>
-                )}
-                {filteredProjects.map(p => {
-                  const isActive = activeProject === p.id;
-                  return (
-                    <button
-                      key={p.id}
-                      type="button"
-                      onClick={() => { setActiveProject(p.id); setShowProjectMenu(false); }}
-                      className={`w-full flex items-center gap-2 px-2 py-[6px] rounded-md text-left text-xs transition-colors ${
-                        isActive ? 'bg-accent/40 text-foreground' : 'text-muted-foreground/80 hover:bg-accent/40'
-                      }`}
-                    >
-                      <Folder size={12} className="text-muted-foreground/80 flex-shrink-0" strokeWidth={1.5} />
-                      <span className="flex-1 truncate">{p.label}</span>
-                      {isActive && <Check size={11} className="text-foreground flex-shrink-0" />}
-                    </button>
-                  );
-                })}
-              </div>
-              <Separator opacity={30} className="my-0.5" />
-              {/* Add new project */}
-              <button
-                type="button"
-                className="w-full flex items-center gap-2 px-2 py-[6px] rounded-md text-left text-xs text-muted-foreground/80 hover:bg-accent/40 transition-colors"
-              >
-                <FolderPlus size={12} className="text-muted-foreground/80 flex-shrink-0" strokeWidth={1.5} />
-                <span>添加新项目</span>
-              </button>
-              {/* No project */}
-              <button
-                type="button"
-                onClick={() => { setActiveProject(null); setShowProjectMenu(false); }}
-                className={`w-full flex items-center gap-2 px-2 py-[6px] rounded-md text-left text-xs transition-colors ${
-                  activeProject === null ? 'bg-accent/40 text-foreground' : 'text-muted-foreground/80 hover:bg-accent/40'
-                }`}
-              >
-                <FolderX size={12} className="text-muted-foreground/80 flex-shrink-0" strokeWidth={1.5} />
-                <span className="flex-1">不使用项目</span>
-                {activeProject === null && <Check size={11} className="text-foreground flex-shrink-0" />}
-              </button>
-            </PopoverContent>
-          </Popover>
         </div>
         </div>
           )}

@@ -124,7 +124,7 @@ export const RichComposer = React.forwardRef<RichComposerHandle, RichComposerPro
           // Replicates the old textarea visual exactly (no border — parent
           // owns the bordered container).
           "w-full bg-transparent text-sm text-foreground outline-none",
-          "min-h-[36px] max-h-[140px] leading-[1.6] px-3.5 pt-[10px] pb-[36px]",
+          "min-h-[88px] max-h-[140px] leading-[1.6] px-3.5 pt-[10px] pb-[36px]",
           "overflow-y-auto scrollbar-thin",
           // Empty-state placeholder using `before:content` driven by data attribute.
           "empty:before:content-[attr(data-placeholder)] empty:before:text-muted-foreground/60 empty:before:pointer-events-none",

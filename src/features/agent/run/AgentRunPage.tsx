@@ -5,8 +5,8 @@ import {
   Bot, Columns2,
   Sparkles, Plus, ArrowUp,
   FileText, Zap, Search as SearchIcon, BookOpen, History,
-  MessageCirclePlus, MessageSquare,
-  Code2, Folder, FolderPlus, FolderX, FolderPen, Tag, ListChecks,
+  MessageCirclePlus, MessageSquarePlus,
+  Code2, Folder, FolderPen, Tag, ListChecks,
   X,
   Check,
   Edit3, Clock,
@@ -16,12 +16,12 @@ import {
   SquarePlus, RefreshCw, TerminalSquare, Lightbulb, Scan, Languages,
   Hand, ShieldAlert, MoreHorizontal, MousePointer2, Mountain, ExternalLink,
   Package, Eye as EyeIcon, FileImage, Table2, LayoutGrid, Presentation, Monitor,
+  Users2,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Tooltip } from '@/app/components/Tooltip';
 import { Button, Switch, Textarea, EmptyState, Popover, PopoverTrigger, PopoverContent, SearchInput, Typography, BrandLogo, Separator, ScrollArea, DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuSub, DropdownMenuSubTrigger, DropdownMenuSubContent } from '@cherry-studio/ui';
 import { ModelPickerPanel } from '@/app/components/shared/ModelPickerPanel';
-import { usePinnedAgents } from '@/app/hooks/usePinnedAgents';
 import { FileExplorer } from './FileExplorer';
 import { ArtifactViewer } from './ArtifactViewer';
 import { ChatPanel } from './ChatPanel';
@@ -32,10 +32,14 @@ import { useActiveSkillJob } from '@/app/stores/skillJobStore';
 import { WorkflowPanel } from './WorkflowPanel';
 import type { AgentChatMessage, AgentSession, AgentSessionData } from '@/app/types/agent';
 import { SessionHistoryPage, type SessionDisplayMode } from './SessionHistoryPage';
+import { ScheduledTasksPage } from './ScheduledTasksPage';
+import { TaskBoardPage } from './TaskBoardPage';
 import { HistorySidebar } from '@/app/components/shared/HistorySidebar';
-import { EntityRail, TopicPanelButton } from '@/app/components/shared/EntityNav';
-import { MentionPickerPanel } from '@/app/components/shared/MentionPickerPanel';
+import { EntityRail, type EntityRailItem } from '@/app/components/shared/EntityNav';
 import { CreateAgentWizard } from '@/app/components/shared/CreateAgentWizard';
+import { GroupChatPane } from './GroupChatPane';
+import { MOCK_GROUPS } from '@/features/collaboration/data';
+import { NewGroupDialog } from '@/features/collaboration/components/NewGroupDialog';
 import { RecycleBinConfirmDialog } from '@/app/components/shared/RecycleBinConfirmDialog';
 import { ResourceConfigDialog } from '@/app/components/shared/ResourceConfigDialog';
 import { useRecycleBin } from '@/app/context/RecycleBinContext';
@@ -58,9 +62,12 @@ function agentToResource(a: typeof AVAILABLE_AGENTS[0]): ResourceItem {
     updatedAt: a.updatedAt,
   };
 }
+import { toast } from 'sonner';
 import {
   MOCK_SESSIONS, MODELS, SESSION_DATA_MAP, EMPTY_SESSION_DATA,
   DEFAULT_INITIAL_FILES,
+  DEMO_OUTPUT_FILES, DEMO_FILE_CONTENTS, DEMO_PREVIEWS,
+  MOCK_SCHEDULED_TASKS, type ScheduledTask,
 } from '@/app/mock';
 
 // Backward-compatible aliases
@@ -77,252 +84,13 @@ import {
 } from '@/app/config/agentTools';
 
 // ===========================
-// Agent Picker Dropdown
-// ===========================
-
-function AgentPicker({
-  selectedAgent,
-  onSelectAgent,
-  onCreateNew,
-  onAvatarClick,
-  onConfigureAgent,
-  pinnedIds = [],
-  onTogglePin,
-}: {
-  selectedAgent: typeof AVAILABLE_AGENTS[0];
-  onSelectAgent: (agent: typeof AVAILABLE_AGENTS[0]) => void;
-  onCreateNew: () => void;
-  onAvatarClick?: () => void;
-  onConfigureAgent?: (agent: typeof AVAILABLE_AGENTS[0]) => void;
-  pinnedIds?: string[];
-  onTogglePin?: (id: string) => void;
-}) {
-  const [open, setOpen] = useState(false);
-  const [search, setSearch] = useState('');
-  const [activeTag, setActiveTag] = useState<string | null>(null);
-  const [showFilter, setShowFilter] = useState(false);
-  const [sortOrder, setSortOrder] = useState<'recent' | 'oldest' | null>(null);
-  const [contextMenu, setContextMenu] = useState<{ x: number; y: number; id: string } | null>(null);
-
-  const pinnedSet = useMemo(() => new Set(pinnedIds), [pinnedIds]);
-
-
-  const { pinned, unpinned } = useMemo(() => {
-    let filtered = AVAILABLE_AGENTS.filter(a => {
-      const matchSearch = !search || a.name.toLowerCase().includes(search.toLowerCase()) || a.desc.toLowerCase().includes(search.toLowerCase());
-      const matchTag = !activeTag || a.tags.includes(activeTag);
-      return matchSearch && matchTag;
-    });
-    if (sortOrder) {
-      filtered = [...filtered].sort((a, b) => {
-        const ta = a.createdAt || '';
-        const tb = b.createdAt || '';
-        return sortOrder === 'recent' ? tb.localeCompare(ta) : ta.localeCompare(tb);
-      });
-    }
-    return {
-      pinned: filtered.filter(a => pinnedSet.has(a.id)),
-      unpinned: filtered.filter(a => !pinnedSet.has(a.id)),
-    };
-  }, [search, activeTag, sortOrder, pinnedSet]);
-
-  const handleOpen = () => {
-    setOpen(!open);
-    if (!open) { setSearch(''); setActiveTag(null); }
-  };
-
-  const handleContextMenu = useCallback((e: React.MouseEvent, id: string) => {
-    if (!onTogglePin && !onConfigureAgent) return;
-    e.preventDefault();
-    setContextMenu({ x: e.clientX, y: e.clientY, id });
-  }, [onTogglePin, onConfigureAgent]);
-
-  const renderAgentRow = (a: typeof AVAILABLE_AGENTS[0]) => {
-    const isSelected = selectedAgent.id === a.id;
-    const isPinned = pinnedSet.has(a.id);
-    return (
-      <button
-        key={a.id}
-        onClick={() => { onSelectAgent(a); if (!isSelected) setOpen(false); }}
-        onContextMenu={(e) => handleContextMenu(e, a.id)}
-        className={`group w-full flex items-center gap-2.5 px-3 py-[5px] mb-0.5 text-left transition-all duration-[var(--duration-fast)] rounded-lg cursor-pointer ${
-          isSelected ? 'bg-accent/40 text-foreground' : 'text-muted-foreground/80 hover:bg-accent/40'
-        }`}
-      >
-        <span className="w-4 flex items-center justify-center flex-shrink-0">
-          {isSelected ? (
-            <Check size={12} className="text-muted-foreground/50" />
-          ) : isPinned ? (
-            <button
-              onClick={(e) => { e.stopPropagation(); onTogglePin?.(a.id); }}
-              className="text-muted-foreground/40 hover:text-destructive/60 transition-colors"
-              title="取消固定"
-            >
-              <Pin size={10} />
-            </button>
-          ) : null}
-        </span>
-        <span className="text-base leading-none flex-shrink-0">{a.avatar}</span>
-        <div className="flex items-center min-w-0 flex-1">
-          <span className={`text-sm truncate ${isSelected ? 'font-medium' : ''}`}>{a.name}</span>
-        </div>
-        {onConfigureAgent && (
-          <button
-            onClick={(e) => { e.stopPropagation(); onConfigureAgent(a); setOpen(false); }}
-            className="w-5 h-5 flex items-center justify-center flex-shrink-0 text-muted-foreground/30 opacity-0 group-hover:opacity-100 hover:text-muted-foreground/40 transition-all"
-          >
-            <Bolt size={13} />
-          </button>
-        )}
-      </button>
-    );
-  };
-
-  return (
-    <div className="relative flex items-center">
-      <Tooltip content="智能体信息" side="bottom">
-        <Button variant="ghost" size="icon-xs"
-          onClick={(e) => { e.stopPropagation(); onAvatarClick?.(); }}
-          className="w-6 h-6 rounded-lg bg-gradient-to-br from-accent/30 to-accent/10 border border-border/20 text-sm flex-shrink-0 hover:from-accent/50 hover:to-accent/25 hover:border-border/40 active:scale-[0.97] mr-1 p-0"
-        >
-          {selectedAgent.avatar}
-        </Button>
-      </Tooltip>
-
-      <Popover open={open} onOpenChange={(v) => { if (v) handleOpen(); else setOpen(false); }}>
-        <PopoverTrigger asChild>
-          <Button size="inline" variant="ghost"
-            className={`gap-1 px-1.5 py-[3px] text-xs ${open ? 'bg-accent/25 text-foreground' : 'text-foreground hover:text-foreground hover:bg-accent/40'}`}
-          >
-            <span className="truncate max-w-[160px]">{selectedAgent.name}</span>
-            <ChevronDown size={8} className={`text-muted-foreground/50 flex-shrink-0 transition-transform duration-100 ${open ? 'rotate-180' : ''}`} />
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent align="start" className="p-0 w-[380px]" onPointerDownOutside={(e) => { if ((e.target as HTMLElement)?.closest('[data-context-menu]')) e.preventDefault(); }}>
-          {/* Search + Filter toggle */}
-          <div className="px-3 pt-3 pb-2">
-            <div className="flex items-center gap-2 px-2.5 py-[7px] rounded-xl bg-muted/40">
-              <SearchIcon size={14} className="text-muted-foreground/40 flex-shrink-0" />
-              <input value={search} onChange={e => setSearch(e.target.value)} placeholder="搜索智能体..." autoFocus
-                className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground/30 min-w-0" />
-              {search && (
-                <button onClick={() => setSearch('')} className="w-4 h-4 text-muted-foreground/40 hover:text-muted-foreground/60 transition-colors">
-                  <X size={12} />
-                </button>
-              )}
-              <button
-                onClick={() => setShowFilter(v => !v)}
-                className={`w-5 h-5 flex items-center justify-center rounded transition-colors flex-shrink-0 ${
-                  showFilter ? 'text-muted-foreground/60 bg-accent/40' : 'text-muted-foreground/30 hover:text-muted-foreground/50'
-                }`}
-              >
-                <Filter size={12} />
-              </button>
-            </div>
-          </div>
-
-          {/* Filter panel */}
-          {showFilter && (
-            <div className="px-3 pb-2 space-y-1.5">
-              <div className="flex items-center gap-1.5 flex-wrap">
-                {AGENT_TAGS.map(tag => (
-                  <button key={tag} onClick={() => setActiveTag(activeTag === tag ? null : tag)}
-                    className={`px-2 py-[3px] rounded-full text-xs border transition-colors cursor-pointer ${
-                      activeTag === tag
-                        ? 'bg-foreground/10 text-muted-foreground/80 border-border/50'
-                        : 'bg-transparent text-muted-foreground/50 border-border/40 hover:bg-accent/40 hover:text-muted-foreground/80'
-                    }`}>{tag}</button>
-                ))}
-              </div>
-              <div className="flex items-center gap-1.5">
-                <span className="text-xs text-muted-foreground/40">排序</span>
-                <button onClick={() => setSortOrder(sortOrder === 'recent' ? null : 'recent')}
-                  className={`inline-flex items-center gap-1 px-2 py-[3px] rounded-full text-xs border transition-colors cursor-pointer ${
-                    sortOrder === 'recent' ? 'bg-foreground/10 text-muted-foreground/80 border-border/50' : 'bg-transparent text-muted-foreground/50 border-border/40 hover:bg-accent/40'
-                  }`}><ArrowDown size={10} /><span>最近</span></button>
-                <button onClick={() => setSortOrder(sortOrder === 'oldest' ? null : 'oldest')}
-                  className={`inline-flex items-center gap-1 px-2 py-[3px] rounded-full text-xs border transition-colors cursor-pointer ${
-                    sortOrder === 'oldest' ? 'bg-foreground/10 text-muted-foreground/80 border-border/50' : 'bg-transparent text-muted-foreground/50 border-border/40 hover:bg-accent/40'
-                  }`}><ArrowUp size={10} /><span>最早</span></button>
-              </div>
-            </div>
-          )}
-
-
-          <Separator className="bg-border/20" />
-
-          <ScrollArea className="h-[300px]">
-            <div className="py-1 px-1.5">
-              {pinned.length === 0 && unpinned.length === 0 ? (
-                <div className="px-3 py-4 text-center text-sm text-muted-foreground/40">无匹配结果</div>
-              ) : (
-                <>
-                  {pinned.length > 0 && (
-                    <>
-                      <div className="text-xs text-muted-foreground/40 px-3 pt-2 pb-1">已固定</div>
-                      {pinned.map(renderAgentRow)}
-                    </>
-                  )}
-                  {unpinned.map(renderAgentRow)}
-                </>
-              )}
-            </div>
-          </ScrollArea>
-
-          <Separator className="bg-border/20" />
-          <div className="px-1.5 py-1">
-            <button onClick={() => { setOpen(false); onCreateNew(); }}
-              className="w-full flex items-center gap-2.5 px-3 py-[5px] text-left text-sm text-muted-foreground hover:text-foreground hover:bg-accent/40 rounded-lg transition-colors cursor-pointer">
-              <Plus size={14} className="flex-shrink-0" />
-              <span className="flex-1">新建 Agent</span>
-              <ChevronRight size={12} className="text-muted-foreground/40" />
-            </button>
-          </div>
-        </PopoverContent>
-      </Popover>
-      {/* Context menu — rendered outside Popover to avoid focus issues */}
-      {contextMenu && (
-        <>
-          <div className="fixed inset-0 z-[9998]" data-context-menu onMouseDown={() => setContextMenu(null)} />
-          <div
-            className="fixed z-[9999] bg-popover border border-border rounded-lg shadow-popover p-0.5 min-w-0 animate-in fade-in zoom-in-95 duration-100"
-            style={{ left: contextMenu.x, top: contextMenu.y }}
-            data-context-menu
-          >
-            <button onMouseDown={(e) => {
-              e.stopPropagation();
-              const agent = AVAILABLE_AGENTS.find(a => a.id === contextMenu.id);
-              if (agent && onConfigureAgent) { onConfigureAgent(agent); setOpen(false); }
-              setContextMenu(null);
-            }}
-              className="flex items-center gap-1.5 px-2 py-[3px] text-xs text-foreground hover:bg-accent/40 rounded-md transition-colors cursor-pointer w-full text-left">
-              <Pencil size={10} />
-              <span>编辑</span>
-            </button>
-            <button onMouseDown={(e) => {
-              e.stopPropagation();
-              onTogglePin?.(contextMenu.id);
-              setContextMenu(null);
-            }}
-              className="flex items-center gap-1.5 px-2 py-[3px] text-xs text-foreground hover:bg-accent/40 rounded-md transition-colors cursor-pointer w-full text-left">
-              <Pin size={10} className={pinnedSet.has(contextMenu.id) ? 'rotate-45' : ''} />
-              <span>{pinnedSet.has(contextMenu.id) ? '取消固定' : '固定'}</span>
-            </button>
-          </div>
-        </>
-      )}
-    </div>
-  );
-}
-
-// ===========================
 // Compact Input Bar — used when artifact is fullscreen-maximized
 // ===========================
 
-function CompactInputBar({ onSendMessage, agentName, headerControls }: { onSendMessage: (text: string) => void; agentName?: string; headerControls?: React.ReactNode }) {
+function CompactInputBar({ onSendMessage, agentName, headerControls, onNewSession }: { onSendMessage: (text: string) => void; agentName?: string; headerControls?: React.ReactNode; onNewSession?: () => void }) {
   return (
     <div className="flex-shrink-0 px-3 pb-3 pt-1.5">
-      <CodexStyleInput onSendMessage={onSendMessage} placeholder={`继续与 ${agentName || '智能体'} 对话...`} headerControls={headerControls} />
+      <CodexStyleInput onSendMessage={onSendMessage} placeholder={`继续与 ${agentName || '智能体'} 对话...`} headerControls={headerControls} onNewSession={onNewSession} />
     </div>
   );
 }
@@ -342,11 +110,6 @@ const NEW_PERMISSION_MODES: { id: string; label: string; icon: React.ComponentTy
   { id: 'full-auto', label: '全自动模式',   icon: RefreshCw, color: 'text-violet-500' },
 ];
 
-const NEW_PROJECTS: { id: string; label: string }[] = [
-  { id: 'work', label: 'Work' },
-  { id: 'new', label: 'New project' },
-];
-
 // Slash & mention items shared across CodexStyleInput instances
 const CSI_SLASH_COMMANDS = [
   { id: 'clear', label: '/clear', desc: '清除会话历史' },
@@ -358,16 +121,17 @@ const CSI_SLASH_COMMANDS = [
 // The @ mention catalog (助手 / 模型 / 文件 / MCP) lives inside the shared
 // MentionPickerPanel — the inline groups that used to live here are gone.
 
-function CodexStyleInput({ onSendMessage, autoFocus = false, placeholder, headerControls }: {
+function CodexStyleInput({ onSendMessage, autoFocus = false, placeholder, headerControls, onNewSession }: {
   onSendMessage: (text: string) => void;
   autoFocus?: boolean;
   placeholder?: string;
   /** Same as ChatPanel.headerControls — agent + model pickers, etc. */
   headerControls?: React.ReactNode;
+  /** Starts a new (empty) session — wired to the far-left "新建会话" button. */
+  onNewSession?: () => void;
 }) {
   const [input, setInput] = useState('');
   const [activeMode, setActiveMode] = useState('normal');
-  const [activeProject, setActiveProject] = useState<string | null>('work');
   const [showModelMenu, setShowModelMenu] = useState(false);
   // Thinking effort selector — kept in sync with the popover and surfaced
   // inside the composer (chip above the textarea) so the user can see the
@@ -377,14 +141,9 @@ function CodexStyleInput({ onSendMessage, autoFocus = false, placeholder, header
   const THINKING_LABELS: Record<ThinkingEffort, string> = { default: '默认', low: '浮想', mid: '斟酌', high: '沉思' };
   const [showSkillMenu, setShowSkillMenu] = useState(false);
   const [skillSearch, setSkillSearch] = useState('');
-  const [showProjectMenu, setShowProjectMenu] = useState(false);
   const [showSlash, setShowSlash] = useState(false);
   const [showMention, setShowMention] = useState(false);
-  const [projectQuery, setProjectQuery] = useState('');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-
-  const currentProject = NEW_PROJECTS.find(p => p.id === activeProject) ?? null;
-  const filteredProjects = NEW_PROJECTS.filter(p => !projectQuery || p.label.toLowerCase().includes(projectQuery.toLowerCase()));
 
   const handleSend = () => {
     if (input.trim()) {
@@ -487,88 +246,17 @@ function CodexStyleInput({ onSendMessage, autoFocus = false, placeholder, header
           placeholder={placeholder || '可向智能体询问任何事。输入 / 使用斜杠命令，输入 @ 提及文件'}
           rows={1}
           autoFocus={autoFocus}
-          className="w-full bg-transparent text-sm text-foreground placeholder:text-muted-foreground/50 outline-none resize-none min-h-[36px] max-h-[140px] leading-[1.6] px-3.5 pt-[10px] pb-2 border-transparent focus-visible:border-transparent focus-visible:ring-0 shadow-none"
+          className="w-full bg-transparent text-sm text-foreground placeholder:text-muted-foreground/50 outline-none resize-none min-h-[64px] max-h-[140px] leading-[1.6] px-3.5 pt-[10px] pb-2 border-transparent focus-visible:border-transparent focus-visible:ring-0 shadow-none"
         />
         <div className="px-2 pb-2 flex items-center justify-between gap-2">
           {/* Left */}
           <div className="flex items-center gap-0.5 min-w-0">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon-sm" className="p-[5px] w-auto h-auto text-muted-foreground/80 hover:text-foreground hover:bg-accent/50">
-                  <Plus size={16} strokeWidth={1.5} />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent side="top" align="start" className="w-48">
-                {/* Permission modes — cascaded submenu */}
-                {(() => {
-                  const active = NEW_PERMISSION_MODES.find(m => m.id === activeMode) ?? NEW_PERMISSION_MODES[0];
-                  const ActiveIcon = active.icon;
-                  return (
-                    <DropdownMenuSub>
-                      <DropdownMenuSubTrigger className="gap-2 px-2 py-[5px] text-xs">
-                        <ActiveIcon size={13} strokeWidth={1.5} className={`flex-shrink-0 ${active.color}`} />
-                        <span className="flex-1 text-left">{active.label}</span>
-                      </DropdownMenuSubTrigger>
-                      <DropdownMenuSubContent>
-                        {NEW_PERMISSION_MODES.map(mode => {
-                          const Icon = mode.icon;
-                          const isActive = activeMode === mode.id;
-                          return (
-                            <DropdownMenuItem
-                              key={mode.id}
-                              onClick={() => setActiveMode(mode.id)}
-                              className={`gap-2 px-2 py-[5px] text-xs ${isActive ? 'bg-accent/40' : ''}`}
-                            >
-                              <Icon size={13} strokeWidth={1.5} className={`flex-shrink-0 ${mode.color}`} />
-                              <span className="flex-1 text-left">{mode.label}</span>
-                              {isActive && <Check size={11} className="text-foreground flex-shrink-0" />}
-                            </DropdownMenuItem>
-                          );
-                        })}
-                      </DropdownMenuSubContent>
-                    </DropdownMenuSub>
-                  );
-                })()}
-                <DropdownMenuSeparator />
-                <DropdownMenuItem className="gap-2 px-2 py-[5px] text-xs"><Paperclip size={13} strokeWidth={1.5} className="text-muted-foreground flex-shrink-0" /><span className="flex-1 text-left">添加图片或附件</span></DropdownMenuItem>
-                <DropdownMenuItem className="gap-2 px-2 py-[5px] text-xs"><Folder size={13} strokeWidth={1.5} className="text-muted-foreground flex-shrink-0" /><span className="flex-1 text-left">添加文件夹</span></DropdownMenuItem>
-                <DropdownMenuItem className="gap-2 px-2 py-[5px] text-xs"><Globe size={13} strokeWidth={1.5} className="text-muted-foreground flex-shrink-0" /><span className="flex-1 text-left">网络搜索</span></DropdownMenuItem>
-                <DropdownMenuSeparator />
-                {/* Skills/Plugins — cascaded submenu */}
-                <DropdownMenuSub>
-                  <DropdownMenuSubTrigger className="gap-2 px-2 py-[5px] text-xs">
-                    <LayoutGrid size={13} strokeWidth={1.5} className="text-muted-foreground flex-shrink-0" />
-                    <span className="flex-1 text-left">插件</span>
-                  </DropdownMenuSubTrigger>
-                  <DropdownMenuSubContent className="w-[200px]">
-                    <div className="px-2 py-1 text-xs text-muted-foreground/60">5 个已安装插件</div>
-                    <DropdownMenuItem className="gap-2 px-2 py-[5px] text-xs">
-                      <FileText size={13} strokeWidth={1.5} className="text-info flex-shrink-0" />
-                      <span className="flex-1 text-left">Documents</span>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem className="gap-2 px-2 py-[5px] text-xs">
-                      <Table2 size={13} strokeWidth={1.5} className="text-success flex-shrink-0" />
-                      <span className="flex-1 text-left">Spreadsheets</span>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem className="gap-2 px-2 py-[5px] text-xs">
-                      <Presentation size={13} strokeWidth={1.5} className="text-warning flex-shrink-0" />
-                      <span className="flex-1 text-left">Presentations</span>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem className="gap-2 px-2 py-[5px] text-xs">
-                      <Compass size={13} strokeWidth={1.5} className="text-info flex-shrink-0" />
-                      <span className="flex-1 text-left">浏览器</span>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem className="gap-2 px-2 py-[5px] text-xs">
-                      <Monitor size={13} strokeWidth={1.5} className="text-accent-violet flex-shrink-0" />
-                      <span className="flex-1 text-left">电脑</span>
-                    </DropdownMenuItem>
-                  </DropdownMenuSubContent>
-                </DropdownMenuSub>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem className="gap-2 px-2 py-[5px] text-xs"><TerminalSquare size={13} strokeWidth={1.5} className="text-muted-foreground flex-shrink-0" /><span className="flex-1 text-left">斜杠命令</span></DropdownMenuItem>
-                <DropdownMenuItem className="gap-2 px-2 py-[5px] text-xs"><Zap size={13} strokeWidth={1.5} className="text-muted-foreground flex-shrink-0" /><span className="flex-1 text-left">快捷短语</span></DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            {/* 新建会话 — 最左侧 */}
+            {onNewSession && (
+              <Button variant="ghost" size="icon-sm" onClick={onNewSession} title="新建会话" className="p-[5px] w-auto h-auto text-muted-foreground/80 hover:text-foreground hover:bg-accent/50">
+                <MessageSquarePlus size={16} strokeWidth={1.5} />
+              </Button>
+            )}
 
             {headerControls}
 
@@ -601,7 +289,6 @@ function CodexStyleInput({ onSendMessage, autoFocus = false, placeholder, header
                       onClick={() => { setThinkingEffort(t.id); setShowModelMenu(false); }}
                       className={`w-full flex items-center gap-2 px-2 py-[6px] rounded-md text-left text-xs transition-colors ${active ? 'bg-accent/40 text-foreground' : 'text-muted-foreground/80 hover:bg-accent/40'}`}
                     >
-                      <Lightbulb size={12} strokeWidth={1.5} className={`flex-shrink-0 ${active ? 'text-success' : 'text-muted-foreground/80'}`} />
                       <span className="flex-1">{t.label}</span>
                       {active && <Check size={10} className="text-primary flex-shrink-0" />}
                     </button>
@@ -691,6 +378,83 @@ function CodexStyleInput({ onSendMessage, autoFocus = false, placeholder, header
 
           {/* Right: send */}
           <div className="flex items-center gap-1">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon-sm" className="p-[5px] w-auto h-auto text-muted-foreground/80 hover:text-foreground hover:bg-accent/50">
+                  <Plus size={16} strokeWidth={1.5} />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent side="top" align="start" className="w-48">
+                {/* Permission modes — cascaded submenu */}
+                {(() => {
+                  const active = NEW_PERMISSION_MODES.find(m => m.id === activeMode) ?? NEW_PERMISSION_MODES[0];
+                  const ActiveIcon = active.icon;
+                  return (
+                    <DropdownMenuSub>
+                      <DropdownMenuSubTrigger className="gap-2 px-2 py-[5px] text-xs">
+                        <ActiveIcon size={13} strokeWidth={1.5} className={`flex-shrink-0 ${active.color}`} />
+                        <span className="flex-1 text-left">{active.label}</span>
+                      </DropdownMenuSubTrigger>
+                      <DropdownMenuSubContent>
+                        {NEW_PERMISSION_MODES.map(mode => {
+                          const Icon = mode.icon;
+                          const isActive = activeMode === mode.id;
+                          return (
+                            <DropdownMenuItem
+                              key={mode.id}
+                              onClick={() => setActiveMode(mode.id)}
+                              className={`gap-2 px-2 py-[5px] text-xs ${isActive ? 'bg-accent/40' : ''}`}
+                            >
+                              <Icon size={13} strokeWidth={1.5} className={`flex-shrink-0 ${mode.color}`} />
+                              <span className="flex-1 text-left">{mode.label}</span>
+                              {isActive && <Check size={11} className="text-foreground flex-shrink-0" />}
+                            </DropdownMenuItem>
+                          );
+                        })}
+                      </DropdownMenuSubContent>
+                    </DropdownMenuSub>
+                  );
+                })()}
+                <DropdownMenuSeparator />
+                <DropdownMenuItem className="gap-2 px-2 py-[5px] text-xs"><Paperclip size={13} strokeWidth={1.5} className="text-muted-foreground flex-shrink-0" /><span className="flex-1 text-left">添加图片或附件</span></DropdownMenuItem>
+                <DropdownMenuItem className="gap-2 px-2 py-[5px] text-xs"><Folder size={13} strokeWidth={1.5} className="text-muted-foreground flex-shrink-0" /><span className="flex-1 text-left">添加文件夹</span></DropdownMenuItem>
+                <DropdownMenuItem className="gap-2 px-2 py-[5px] text-xs"><Globe size={13} strokeWidth={1.5} className="text-muted-foreground flex-shrink-0" /><span className="flex-1 text-left">网络搜索</span></DropdownMenuItem>
+                <DropdownMenuSeparator />
+                {/* Skills/Plugins — cascaded submenu */}
+                <DropdownMenuSub>
+                  <DropdownMenuSubTrigger className="gap-2 px-2 py-[5px] text-xs">
+                    <LayoutGrid size={13} strokeWidth={1.5} className="text-muted-foreground flex-shrink-0" />
+                    <span className="flex-1 text-left">插件</span>
+                  </DropdownMenuSubTrigger>
+                  <DropdownMenuSubContent className="w-[200px]">
+                    <div className="px-2 py-1 text-xs text-muted-foreground/60">5 个已安装插件</div>
+                    <DropdownMenuItem className="gap-2 px-2 py-[5px] text-xs">
+                      <FileText size={13} strokeWidth={1.5} className="text-info flex-shrink-0" />
+                      <span className="flex-1 text-left">Documents</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem className="gap-2 px-2 py-[5px] text-xs">
+                      <Table2 size={13} strokeWidth={1.5} className="text-success flex-shrink-0" />
+                      <span className="flex-1 text-left">Spreadsheets</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem className="gap-2 px-2 py-[5px] text-xs">
+                      <Presentation size={13} strokeWidth={1.5} className="text-warning flex-shrink-0" />
+                      <span className="flex-1 text-left">Presentations</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem className="gap-2 px-2 py-[5px] text-xs">
+                      <Compass size={13} strokeWidth={1.5} className="text-info flex-shrink-0" />
+                      <span className="flex-1 text-left">浏览器</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem className="gap-2 px-2 py-[5px] text-xs">
+                      <Monitor size={13} strokeWidth={1.5} className="text-accent-violet flex-shrink-0" />
+                      <span className="flex-1 text-left">电脑</span>
+                    </DropdownMenuItem>
+                  </DropdownMenuSubContent>
+                </DropdownMenuSub>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem className="gap-2 px-2 py-[5px] text-xs"><TerminalSquare size={13} strokeWidth={1.5} className="text-muted-foreground flex-shrink-0" /><span className="flex-1 text-left">斜杠命令</span></DropdownMenuItem>
+                <DropdownMenuItem className="gap-2 px-2 py-[5px] text-xs"><Zap size={13} strokeWidth={1.5} className="text-muted-foreground flex-shrink-0" /><span className="flex-1 text-left">快捷短语</span></DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
             <Button
               variant="default"
               size="icon-sm"
@@ -703,82 +467,11 @@ function CodexStyleInput({ onSendMessage, autoFocus = false, placeholder, header
           </div>
         </div>
       </div>
-
-      {/* Project / WorkDir selector */}
-      <div className="flex items-center px-1">
-        <Popover open={showProjectMenu} onOpenChange={(open) => { setShowProjectMenu(open); if (!open) setProjectQuery(''); }}>
-          <PopoverTrigger asChild>
-            <Button variant="ghost" size="inline"
-              className={`flex items-center gap-1.5 px-2 py-[3px] rounded-md text-xs transition-colors ${
-                showProjectMenu
-                  ? 'bg-accent/60 text-foreground'
-                  : 'text-muted-foreground/80 hover:text-foreground hover:bg-accent/40'
-              }`}
-            >
-              {currentProject ? (
-                <Folder size={12} className="text-muted-foreground/80" strokeWidth={1.5} />
-              ) : (
-                <FolderX size={12} className="text-muted-foreground/80" strokeWidth={1.5} />
-              )}
-              <span>{currentProject ? currentProject.label : '不使用项目'}</span>
-              <ChevronDown size={9} className={`transition-transform duration-100 ${showProjectMenu ? 'rotate-180' : ''}`} />
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent side="top" align="start" className="w-[240px] p-1">
-            <div className="px-1 py-1">
-              <SearchInput
-                value={projectQuery}
-                onChange={setProjectQuery}
-                placeholder="搜索项目"
-                iconSize={11}
-                wrapperClassName="px-2 py-[4px] rounded-md bg-accent/15 border border-border/20"
-              />
-            </div>
-            <div className="py-0.5">
-              {filteredProjects.length === 0 && (
-                <div className="px-2 py-2 text-xs text-muted-foreground/50 text-center">无匹配项目</div>
-              )}
-              {filteredProjects.map(p => {
-                const isActive = activeProject === p.id;
-                return (
-                  <button key={p.id} type="button"
-                    onClick={() => { setActiveProject(p.id); setShowProjectMenu(false); }}
-                    className={`w-full flex items-center gap-2 px-2 py-[6px] rounded-md text-left text-xs transition-colors ${
-                      isActive ? 'bg-accent/40 text-foreground' : 'text-muted-foreground/80 hover:bg-accent/40'
-                    }`}
-                  >
-                    <Folder size={12} className="text-muted-foreground/80 flex-shrink-0" strokeWidth={1.5} />
-                    <span className="flex-1 truncate">{p.label}</span>
-                    {isActive && <Check size={11} className="text-foreground flex-shrink-0" />}
-                  </button>
-                );
-              })}
-            </div>
-            <Separator opacity={30} className="my-0.5" />
-            <button type="button"
-              className="w-full flex items-center gap-2 px-2 py-[6px] rounded-md text-left text-xs text-muted-foreground/80 hover:bg-accent/40 transition-colors"
-            >
-              <FolderPlus size={12} className="text-muted-foreground/80 flex-shrink-0" strokeWidth={1.5} />
-              <span>添加新项目</span>
-            </button>
-            <button type="button"
-              onClick={() => { setActiveProject(null); setShowProjectMenu(false); }}
-              className={`w-full flex items-center gap-2 px-2 py-[6px] rounded-md text-left text-xs transition-colors ${
-                activeProject === null ? 'bg-accent/40 text-foreground' : 'text-muted-foreground/80 hover:bg-accent/40'
-              }`}
-            >
-              <FolderX size={12} className="text-muted-foreground/80 flex-shrink-0" strokeWidth={1.5} />
-              <span className="flex-1">不使用项目</span>
-              {activeProject === null && <Check size={11} className="text-foreground flex-shrink-0" />}
-            </button>
-          </PopoverContent>
-        </Popover>
-      </div>
     </div>
   );
 }
 
-function NewSessionEmpty({ onSendMessage, agentName, headerControls }: { onSendMessage: (text: string) => void; agentName?: string; headerControls?: React.ReactNode }) {
+function NewSessionEmpty({ onSendMessage, agentName, headerControls, onNewSession }: { onSendMessage: (text: string) => void; agentName?: string; headerControls?: React.ReactNode; onNewSession?: () => void }) {
   return (
     <div className="flex flex-col h-full w-full">
       {/* Centered empty state */}
@@ -797,7 +490,7 @@ function NewSessionEmpty({ onSendMessage, agentName, headerControls }: { onSendM
 
       {/* Input bar at bottom */}
       <div className="flex-shrink-0 px-4 pb-3 pt-2">
-        <CodexStyleInput onSendMessage={onSendMessage} autoFocus headerControls={headerControls} />
+        <CodexStyleInput onSendMessage={onSendMessage} autoFocus headerControls={headerControls} onNewSession={onNewSession} />
       </div>
     </div>
   );
@@ -1402,7 +1095,6 @@ function AgentInfoPanel({ agent, onClose, onEdit }: {
 export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
   const { navigateToLibrary: _navLib, editAssistantInLibrary, changeTabTitle: onTabTitleChange, openSettings: onOpenSettings } = useGlobalActions();
   const onNavigateToLibrary = () => _navLib('agent');
-  const { pinnedIds: pinnedAgentIds, togglePin: togglePinAgent } = usePinnedAgents();
   const [sessions, setSessions] = useState<AgentSession[]>(MOCK_SESSIONS);
   const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
   const [localMessages, setLocalMessages] = useState<Record<string, AgentChatMessage[]>>({});
@@ -1461,6 +1153,50 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
   const [showPlan, setShowPlan] = useState(false);
   const [showCreateAgent, setShowCreateAgent] = useState(false);
   const [showSaveAsSkill, setShowSaveAsSkill] = useState(false);
+  // 定时任务 view — reached from the entry pinned under "添加智能体" on the
+  // agent rail. When showing, the content column renders ScheduledTasksPage
+  // instead of the chat.
+  const [showScheduledTasks, setShowScheduledTasks] = useState(false);
+  // When set, the 定时任务 view opens straight into that task's detail
+  // (used by the "来自定时任务" return bar). null = land on the list.
+  const [scheduledDetailId, setScheduledDetailId] = useState<string | null>(null);
+  const openScheduledTasks = useCallback((detailId: string | null = null) => {
+    setDockTab(null);
+    setPreviewMaximized(false);
+    setShowExplorer(false);
+    setShowTaskBoard(false);
+    setSelectedGroupId(null);
+    setScheduledDetailId(detailId);
+    setShowScheduledTasks(true);
+  }, []);
+  // 任务管理 view — a global, read-only kanban of all sessions by status.
+  // Pinned under "添加智能体" alongside 定时任务; takes over the content area.
+  const [showTaskBoard, setShowTaskBoard] = useState(false);
+  const openTaskBoard = useCallback(() => {
+    setDockTab(null);
+    setPreviewMaximized(false);
+    setShowExplorer(false);
+    setShowScheduledTasks(false);
+    setSelectedGroupId(null);
+    setShowTaskBoard(true);
+  }, []);
+  // 项目组 (群聊) — folded into the same rail as 私聊 (Agent). When a group is
+  // selected the content column renders GroupChatPane (collaboration's topic
+  // view) instead of the agent chat. null = a 私聊/Agent is active.
+  const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
+  const [newGroupOpen, setNewGroupOpen] = useState(false);
+  const openGroup = useCallback((id: string) => {
+    setShowScheduledTasks(false);
+    setShowTaskBoard(false);
+    setDockTab(null);
+    setPreviewMaximized(false);
+    setShowExplorer(false);
+    setSelectedGroupId(id);
+  }, []);
+  const selectedGroup = useMemo(
+    () => (selectedGroupId ? MOCK_GROUPS.find(g => g.id === selectedGroupId) ?? null : null),
+    [selectedGroupId],
+  );
   const activeSkillJob = useActiveSkillJob();
   // Sessions where the user dismissed the inline "Save as Skill?"
   // callout. Per cherry-studio#15029 we surface this contextually after
@@ -1475,10 +1211,31 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
   const messages = localMessages[activeSessionId || ''] ?? sessionData.messages;
   const hasMessages = messages.length > 0;
   const activeSession = sessions.find(s => s.id === activeSessionId);
-  const agentRailItems = useMemo(
-    () => AVAILABLE_AGENTS.map(a => ({ id: a.id, name: a.name, avatar: a.avatar, tags: a.tags, updatedAt: a.updatedAt })),
-    [],
-  );
+  // Merged rail: 私聊 (Agent) + 群聊 (项目组) in one flat, IM-style list.
+  // Groups with unread bubble to the top; the rest interleave agent/group so
+  // the two kinds read as one mixed conversation list. Group rows carry a
+  // member-count number (the only visual cue separating them from 私聊).
+  const groupIdSet = useMemo(() => new Set(MOCK_GROUPS.map(g => g.id)), []);
+  const agentRailItems = useMemo<EntityRailItem[]>(() => {
+    const agentItems: EntityRailItem[] = AVAILABLE_AGENTS.map(a => ({
+      id: a.id, name: a.name, avatar: a.avatar, tags: a.tags, updatedAt: a.updatedAt,
+    }));
+    const groupItems: EntityRailItem[] = MOCK_GROUPS.map(g => ({
+      id: g.id, name: g.name, avatar: g.avatarEmoji ?? '💬',
+      unread: g.unread,
+    }));
+    const unreadGroups = groupItems
+      .filter(g => (g.unread ?? 0) > 0)
+      .sort((a, b) => (b.unread ?? 0) - (a.unread ?? 0));
+    const restGroups = groupItems.filter(g => !((g.unread ?? 0) > 0));
+    const interleaved: EntityRailItem[] = [];
+    const max = Math.max(agentItems.length, restGroups.length);
+    for (let i = 0; i < max; i++) {
+      if (agentItems[i]) interleaved.push(agentItems[i]);
+      if (restGroups[i]) interleaved.push(restGroups[i]);
+    }
+    return [...unreadGroups, ...interleaved];
+  }, []);
   // Sessions belong to the selected agent — switching agents changes the list.
   const agentSessions = useMemo(
     () => sessions.filter(s => s.agentName === selectedAgent.name),
@@ -1492,16 +1249,30 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
     }
   }, [activeSession, onTabTitleChange]);
 
-  const fileContent = selectedFile ? (sessionData.fileContents[selectedFile] || null) : null;
+  // When the active session has no deliverables of its own, fall back to a
+  // demo set so the file panel is never empty and the preview flow stays
+  // explorable. Sessions with real outputs are untouched.
+  const useDemoFiles = sessionData.outputFiles.length === 0;
+  const panelOutputFiles = useDemoFiles ? DEMO_OUTPUT_FILES : sessionData.outputFiles;
+  const panelFileContents = useDemoFiles ? DEMO_FILE_CONTENTS : sessionData.fileContents;
+  const panelPreviewHtml = useDemoFiles
+    ? (selectedFile ? DEMO_PREVIEWS[selectedFile] : undefined)
+    : sessionData.previewHtml;
+
+  const fileContent = selectedFile ? (panelFileContents[selectedFile] || null) : null;
 
   const handleSelectFile = useCallback((path: string) => {
     setSelectedFile(path);
+    // Previewing a file fully replaces the folder list (no side-by-side),
+    // so the reading area gets the full panel width.
+    setShowExplorer(false);
   }, []);
 
   // Open an artifact in the right-side viewer (called from inline artifact card clicks)
   const handleOpenArtifact = useCallback((filePath: string) => {
     setSelectedFile(filePath);
     setDockTab('files');
+    setShowExplorer(false);
   }, []);
 
   // Auto-open the artifact viewer when the current session has a previewHtml
@@ -1520,6 +1291,9 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
   }, [dockTab, previewMaximized]);
 
   const handleSelectSession = useCallback((id: string) => {
+    setShowScheduledTasks(false);
+    setShowTaskBoard(false);
+    setSelectedGroupId(null);
     setActiveSessionId(id);
     setSessions(prev => prev.map(s => s.id === id && s.unread ? { ...s, unread: false } : s));
     const data = SESSION_DATA_MAP[id];
@@ -1532,6 +1306,9 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
   }, []);
 
   const handleNewSession = useCallback(() => {
+    setShowScheduledTasks(false);
+    setShowTaskBoard(false);
+    setSelectedGroupId(null);
     setActiveSessionId(null);
     setDockTab(null);
     setPreviewMaximized(false);
@@ -1539,7 +1316,17 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
     setSelectedFile(null);
   }, []);
 
+  // Open a session from the task board: switch the rail to its owning agent,
+  // make it active, and close the board — landing on its chat.
+  const handleOpenSessionFromBoard = useCallback((session: AgentSession) => {
+    const agent = AVAILABLE_AGENTS.find(a => a.name === session.agentName);
+    if (agent) setSelectedAgent(agent);
+    handleSelectSession(session.id);
+  }, [handleSelectSession]);
+
   const handleNewSessionForAgent = useCallback((agentName: string) => {
+    setShowScheduledTasks(false);
+    setShowTaskBoard(false);
     const agent = AVAILABLE_AGENTS.find(a => a.name === agentName);
     if (agent) setSelectedAgent(agent);
     const newId = `new-${Date.now()}`;
@@ -1560,6 +1347,44 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
     setPreviewMaximized(false);
     setShowExplorer(false);
     setSelectedFile(null);
+  }, []);
+
+  // Fire a scheduled task once now: spin up a live session attached to the
+  // task's agent (so it groups under that agent in the list), seed it with the
+  // task prompt, then jump into it.
+  const handleRunScheduledTask = useCallback((task: ScheduledTask) => {
+    const agent = AVAILABLE_AGENTS.find(a => a.name === task.agentName);
+    if (agent) setSelectedAgent(agent);
+    const newId = `task-run-${Date.now()}`;
+    const ts = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
+    const newSession: AgentSession = {
+      id: newId,
+      title: task.name,
+      agentName: task.agentName,
+      agentIcon: agent?.avatar ?? task.agentAvatar,
+      lastMessage: task.prompt,
+      timestamp: ts,
+      messageCount: 1,
+      status: 'active',
+      kind: 'task',
+      progress: 8,
+      unread: true,
+      group: task.runMode === 'channel' ? task.channel : undefined,
+      scheduledTaskId: task.id,
+      scheduledTaskName: task.name,
+    };
+    setSessions(prev => [newSession, ...prev]);
+    setLocalMessages(prev => ({
+      ...prev,
+      [newId]: [{ id: `${newId}-u`, role: 'user', content: task.prompt, timestamp: ts }],
+    }));
+    setActiveSessionId(newId);
+    setShowScheduledTasks(false);
+    setDockTab(null);
+    setPreviewMaximized(false);
+    setShowExplorer(false);
+    setSelectedFile(null);
+    toast.success(`已启动「${task.name}」`, { description: `已在「${task.agentName}」下新建运行会话` });
   }, []);
 
   const { moveToBin: moveToRecycleBin, retentionDays: recycleRetentionDays } = useRecycleBin();
@@ -1708,12 +1533,11 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
               ? 'bg-accent/25 text-foreground'
               : 'text-muted-foreground hover:text-foreground hover:bg-accent/40'
           }`}>
-            <BrandLogo id={selectedModel.provider.toLowerCase()} fallbackLetter={selectedModel.provider[0]} size={14} className="shrink-0" />
             <span>{selectedModel.name}</span>
             <ChevronDown size={7} className={`text-muted-foreground/50 transition-transform duration-100 ${showModelPicker ? 'rotate-180' : ''}`} />
           </Button>
         </PopoverTrigger>
-        <PopoverContent align="start" side="top" className="p-0 w-[480px]">
+        <PopoverContent align="start" side="top" className="p-0 w-[420px]">
           <ModelPickerPanel
             models={MODELS}
             selectedModels={[selectedModel.id]}
@@ -1730,51 +1554,62 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
     </>
   );
 
-  // 会话 / 文件 / 状态 tab switcher — injected into the docked panel headers so
-  // the views share one tab bar (only shown when docked, not in the popover).
-  // 会话 lives in its own pin-out popover; the artifact dock rail only
-  // switches between 文件 and 状态.
+  // 会话 / 状态 / 文件 view switcher — Syncless-style icon toggles docked at the
+  // panel's TOP-RIGHT. Clicking an icon selects it (highlighted) and shows that
+  // view's list/content directly below it in the SAME panel; the others stay in
+  // their resting state. This is the single entry point for all three views —
+  // there is no separate session-list panel elsewhere.
   const dockTabs = (
     <div className="flex items-center gap-0.5">
       {([
-        { id: 'files', label: '文件', Icon: FileText },
+        { id: 'sessions', label: '会话', Icon: History },
         { id: 'status', label: '状态', Icon: ListChecks },
+        { id: 'files', label: '文件', Icon: FileText },
       ] as const).map(({ id, label, Icon }) => {
         const active = dockTab === id;
         return (
-          <button
-            key={id}
-            type="button"
-            onClick={() => setDockTab(id)}
-            className={`flex items-center gap-1 px-2 py-[3px] rounded-md text-xs transition-colors ${
-              active ? 'bg-accent/60 text-foreground' : 'text-muted-foreground/60 hover:text-foreground hover:bg-accent/30'
-            }`}
-          >
-            <Icon size={11} />{label}
-          </button>
+          <Tooltip key={id} content={label} side="bottom">
+            <button
+              type="button"
+              onClick={() => setDockTab(id)}
+              className={`p-1.5 rounded-md transition-colors ${
+                active ? 'bg-accent/70 text-foreground' : 'text-muted-foreground/50 hover:text-foreground hover:bg-accent/40'
+              }`}
+            >
+              <Icon size={13} />
+            </button>
+          </Tooltip>
         );
       })}
     </div>
   );
 
-  // Shared 会话 list — used by the header floating popover and the pinned
-  // right-dock tab, so both stay in sync.
-  const renderSessionList = ({ close, pinned, togglePin }: { close: () => void; pinned: boolean; togglePin: () => void }) => (
+  // 会话 list — a minimal, narrow dock: just the close button at the top-right;
+  // the flat list shows directly below (no group headers, no per-row icon,
+  // pinned rows flagged with a pin glyph on the right). Selecting a session
+  // keeps the panel open.
+  const renderSessionList = () => (
     <HistorySidebar
       items={agentSessions}
       activeItemId={activeSessionId}
-      onSelectItem={(id) => { handleSelectSession(id); close(); }}
+      onSelectItem={(id) => handleSelectSession(id)}
       onDeleteItem={handleDeleteSession}
       onUpdateItem={handleUpdateSession}
-      onNewItem={() => { handleNewSessionForAgent(selectedAgent.name); close(); }}
-      onExpand={() => { historySidebar.expand(); close(); }}
-      onClose={close}
+      onNewItem={() => handleNewSessionForAgent(selectedAgent.name)}
+      onExpand={() => { historySidebar.expand(); setDockTab(null); }}
+      onClose={() => setDockTab(null)}
       entityLabel="会话"
       showStatusDot
       hideGroupBy
-      panelPinned={pinned}
-      onTogglePanelPin={togglePin}
-      headerIcon={<History size={12} className="text-muted-foreground/60" />}
+      plainList
+      headerActions={
+        <Tooltip content="关闭" side="bottom">
+          <Button variant="ghost" size="icon-xs" onClick={() => setDockTab(null)}
+            className="text-muted-foreground/40 hover:text-foreground hover:bg-accent/40">
+            <X size={11} />
+          </Button>
+        </Tooltip>
+      }
     />
   );
 
@@ -1800,17 +1635,22 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
       </div>
 
       <div className="flex items-center gap-0.5">
-        {/* Sessions for the selected agent — floating panel (浮窗) that can be
-            pinned into the shared far-right dock. */}
-        <TopicPanelButton
-          label="会话"
-          count={agentSessions.filter(s => !s.archived).length}
-          icon={<History size={13} strokeWidth={1.6} />}
-          pinned={dockTab === 'sessions'}
-          onPinnedChange={(v) => setDockTab(v ? 'sessions' : null)}
-        >
-          {renderSessionList}
-        </TopicPanelButton>
+        {/* Sessions for the selected agent — opens the right dock to the 会话
+            view (the dock's own top-right switcher handles 会话/状态/文件). */}
+        <Tooltip content="会话" side="bottom">
+          <Button
+            variant="ghost"
+            size="xs"
+            onClick={() => setDockTab(dockTab === 'sessions' ? null : 'sessions')}
+            className={`gap-1.5 px-2 py-[4px] text-xs ${
+              dockTab === 'sessions' ? 'bg-accent/25 text-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-accent/40'
+            }`}
+          >
+            <History size={13} strokeWidth={1.6} />
+            <span>会话</span>
+            <span className="tabular-nums text-muted-foreground/50">{agentSessions.filter(s => !s.archived).length}</span>
+          </Button>
+        </Tooltip>
         <div className="w-px h-3.5 bg-border/30 mx-0.5" />
 
         {/* "保存为 Skill" is no longer a chrome button — the in-chat
@@ -1858,7 +1698,7 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
         {!showPreview && (
           <div className="flex items-center gap-0.5">
             <div className="w-px h-3.5 bg-border/30 mx-0.5" />
-            <Tooltip content={"显示预览面板"} side="bottom"><Button variant="ghost" size="icon-xs" onClick={() => setDockTab('files')}
+            <Tooltip content={"显示预览面板"} side="bottom"><Button variant="ghost" size="icon-xs" onClick={() => { setDockTab('files'); setShowExplorer(true); }}
               className="p-1.5 w-auto h-auto text-muted-foreground hover:text-foreground hover:bg-accent/40">
               <Columns2 size={12} />
             </Button></Tooltip>
@@ -1881,44 +1721,38 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
           transition={{ duration: 0.15 }}
           className="flex flex-1 min-h-0 min-w-0 mx-2 mb-1 rounded-2xl border border-border/40 bg-card/50 shadow-sm shadow-black/5 overflow-hidden"
         >
-          <AnimatePresence initial={false}>
-            {showExplorer && (
-              <motion.div
-                initial={{ width: 0, opacity: 0 }}
-                animate={{ width: 200, opacity: 1 }}
-                exit={{ width: 0, opacity: 0 }}
-                transition={{ duration: 0.15, ease: [0.4, 0, 0.2, 1] }}
-                className="border-r border-border/30 flex-shrink-0 overflow-hidden"
-              >
-                <FileExplorer
-                  files={sessionData.files.length > 0 ? sessionData.files : DEFAULT_INITIAL_FILES}
-                  outputFiles={sessionData.outputFiles}
-                  selectedFile={selectedFile}
-                  onSelectFile={handleSelectFile}
-                />
-              </motion.div>
-            )}
-          </AnimatePresence>
-
-          <div className="flex-1 min-w-0 overflow-hidden">
-            <ArtifactViewer
-              fileContent={fileContent}
-              fileName={selectedFile}
-              previewUrl={null}
-              hasArtifact={!!sessionData.previewHtml || !!fileContent}
-              previewHtml={sessionData.previewHtml}
-              showExplorer={showExplorer}
-              onToggleExplorer={() => setShowExplorer(!showExplorer)}
-              showPreview={showPreview}
-              onTogglePreview={() => { setDockTab(null); setPreviewMaximized(false); }}
-              maximized={previewMaximized}
-              onToggleMaximize={() => setPreviewMaximized(!previewMaximized)}
-            />
-          </div>
+          {/* Folder list and preview are mutually exclusive — opening a file
+              covers the folder so reading gets the full width. */}
+          {showExplorer ? (
+            <div className="flex-1 min-w-0 overflow-hidden">
+              <FileExplorer
+                files={sessionData.files.length > 0 ? sessionData.files : DEFAULT_INITIAL_FILES}
+                outputFiles={panelOutputFiles}
+                selectedFile={selectedFile}
+                onSelectFile={handleSelectFile}
+              />
+            </div>
+          ) : (
+            <div className="flex-1 min-w-0 overflow-hidden">
+              <ArtifactViewer
+                fileContent={fileContent}
+                fileName={selectedFile}
+                previewUrl={null}
+                hasArtifact={!!panelPreviewHtml || !!fileContent}
+                previewHtml={panelPreviewHtml}
+                showExplorer={showExplorer}
+                onToggleExplorer={() => setShowExplorer(!showExplorer)}
+                showPreview={showPreview}
+                onTogglePreview={() => { setDockTab(null); setPreviewMaximized(false); }}
+                maximized={previewMaximized}
+                onToggleMaximize={() => setPreviewMaximized(!previewMaximized)}
+              />
+            </div>
+          )}
         </motion.div>
 
         {/* Compact input bar at the bottom */}
-        <CompactInputBar onSendMessage={handleSendMessage} agentName={selectedAgent.name} headerControls={composerHeaderControls} />
+        <CompactInputBar onSendMessage={handleSendMessage} agentName={selectedAgent.name} headerControls={composerHeaderControls} onNewSession={handleNewSession} />
 
         {/* Agent configuration dialog — same modal used in LibraryPage. */}
         <ResourceConfigDialog
@@ -1939,16 +1773,43 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
             animate={{ width: 220, opacity: 1 }}
             exit={{ width: 0, opacity: 0 }}
             transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
-            className="flex-shrink-0 min-w-0 overflow-hidden h-full"
+            className="flex-shrink-0 min-w-0 overflow-hidden h-full border-r border-border/40 bg-foreground/[0.015]"
             style={{ width: 220 }}
           >
             <EntityRail
-              title="Agent"
+              title="对话"
+              searchable={false}
+              filterable={false}
+              newLabel="新建"
+              newAsRow
+              newActions={[
+                { id: 'agent', label: '创建 Agent', icon: Bot, onClick: () => setShowCreateAgent(true) },
+                { id: 'group', label: '创建项目组', icon: Users2, onClick: () => setNewGroupOpen(true) },
+              ]}
+              navEntries={[{
+                id: 'task-board',
+                label: '任务管理',
+                icon: ListChecks,
+                count: sessions.length,
+                active: showTaskBoard,
+                onClick: openTaskBoard,
+              }, {
+                id: 'scheduled-tasks',
+                label: '自动化',
+                icon: Clock,
+                count: MOCK_SCHEDULED_TASKS.length,
+                active: showScheduledTasks,
+                onClick: () => openScheduledTasks(null),
+              }]}
               items={agentRailItems}
-              activeId={selectedAgent.id}
-              onSelect={(id) => { const agent = AVAILABLE_AGENTS.find(a => a.id === id); if (agent) setSelectedAgent(agent); }}
-              onNew={() => setShowCreateAgent(true)}
-              onConfigure={(id) => { const agent = AVAILABLE_AGENTS.find(a => a.id === id); if (agent) { setSelectedAgent(agent); setShowAgentInfo(true); } }}
+              activeId={showScheduledTasks || showTaskBoard ? null : (selectedGroupId ?? selectedAgent.id)}
+              onSelect={(id) => {
+                // 群聊 → open the group pane; 私聊 (Agent) → switch the active agent.
+                if (groupIdSet.has(id)) { openGroup(id); return; }
+                setShowScheduledTasks(false); setShowTaskBoard(false); setSelectedGroupId(null);
+                const agent = AVAILABLE_AGENTS.find(a => a.id === id); if (agent) setSelectedAgent(agent);
+              }}
+              onEdit={(id) => { const agent = AVAILABLE_AGENTS.find(a => a.id === id); if (agent) { setSelectedAgent(agent); setShowAgentInfo(true); } }}
             />
           </motion.div>
         )}
@@ -1956,13 +1817,38 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
 
       {/* ===== Right: Header + Content ===== */}
       <div className="flex flex-col flex-1 min-w-0 min-h-0 relative">
+        {selectedGroup ? (
+          <GroupChatPane key={selectedGroup.id} group={selectedGroup} />
+        ) : showTaskBoard ? (
+          <TaskBoardPage sessions={sessions} onOpenSession={handleOpenSessionFromBoard} />
+        ) : showScheduledTasks ? (
+          <ScheduledTasksPage onRunTask={handleRunScheduledTask} initialDetailId={scheduledDetailId} />
+        ) : (
+        <>
         {headerJSX}
+
+      {/* ===== "来自定时任务" return bar — only on sessions spawned by a run ===== */}
+      {activeSession?.scheduledTaskId && (
+        <div className="px-3 pt-2 pb-0.5 flex-shrink-0">
+          <button
+            onClick={() => openScheduledTasks(activeSession.scheduledTaskId ?? null)}
+            className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl border border-border/40 bg-muted/20 hover:bg-accent/40 transition-colors text-left group"
+          >
+            <Clock size={14} className="text-muted-foreground/60 flex-shrink-0" />
+            <span className="text-sm text-foreground/80 flex-1 truncate">
+              来自自动化
+              {activeSession.scheduledTaskName ? <span className="text-muted-foreground/50"> · {activeSession.scheduledTaskName}</span> : null}
+            </span>
+            <ChevronRight size={14} className="text-muted-foreground/40 group-hover:text-muted-foreground/70 transition-colors" />
+          </button>
+        </div>
+      )}
 
       {/* ===== Main Content (chat panel only — artifact moved out) ===== */}
       <div className="flex flex-1 min-h-0 pl-2 min-w-0">
         <div className="min-h-0 h-full flex-1 min-w-0">
           {!hasMessages ? (
-            <NewSessionEmpty onSendMessage={handleSendMessage} agentName={selectedAgent.name} headerControls={composerHeaderControls} />
+            <NewSessionEmpty onSendMessage={handleSendMessage} agentName={selectedAgent.name} headerControls={composerHeaderControls} onNewSession={handleNewSession} />
           ) : (
             <ChatPanel
               messages={messages}
@@ -1972,6 +1858,7 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
               onAvatarClick={() => setShowAgentInfo(true)}
               onOpenArtifact={handleOpenArtifact}
               headerControls={composerHeaderControls}
+              onNewSession={handleNewSession}
               taskCompleteCallout={(() => {
                 // Show only after a workflow run actually finished or the
                 // user racked up a meaningful conversation, and only
@@ -2004,49 +1891,47 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
           )}
         </div>
       </div>
+        </>
+        )}
       </div>
 
       {/* ===== Shared right dock — 会话 (session list) / 文件 (artifact browser)
           / 状态 (run status), switchable by tab, docked to the far-right edge
           with a divider. Mirrors the real Cherry Studio agent dock. ===== */}
       <AnimatePresence initial={false}>
-        {dockTab !== null && !isMaximized && (
+        {dockTab !== null && !isMaximized && (() => {
+          // The 会话 list and the 文件 folder-list are compact, fixed-width rails;
+          // only the 状态 panel and the file *preview* keep the wide, resizable width.
+          const isSessions = dockTab === 'sessions';
+          const isFolderList = dockTab === 'files' && showExplorer;
+          const isNarrowRail = isSessions || isFolderList;
+          const effectiveWidth = isNarrowRail ? 260 : dockWidth;
+          return (
           <motion.div
             initial={{ width: 0, opacity: 0 }}
-            animate={{ width: dockTab === 'sessions' ? topicDockWidth : dockWidth, opacity: 1 }}
+            animate={{ width: effectiveWidth, opacity: 1 }}
             exit={{ width: 0, opacity: 0 }}
             transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
             className="flex-shrink-0 min-w-0 relative flex"
-            style={{ width: dockTab === 'sessions' ? topicDockWidth : dockWidth }}
+            style={{ width: effectiveWidth }}
           >
-            {dockTab === 'sessions' ? (
-              <>
-                {/* Invisible left-edge resize handle — keeps the panel resizable
-                    without a flush divider line. */}
-                <div
-                  onMouseDown={handleDockResizeStart}
-                  className="w-[7px] flex-shrink-0 cursor-col-resize relative z-10"
-                />
-                {/* 浮窗 styled session panel — rounded card with margin & shadow.
-                    The chat content reflows around the reserved width. */}
-                <div className="flex-1 min-w-0 my-2 mr-2 rounded-xl border border-border/40 bg-popover shadow-xl shadow-black/10 overflow-hidden flex flex-col">
-                  {renderSessionList({ close: () => {}, pinned: true, togglePin: () => setDockTab(null) })}
-                </div>
-              </>
-            ) : (
-              <>
-                {/* Resize handle — doubles as the persistent divider line */}
-                <div
-                  onMouseDown={handleDockResizeStart}
-                  className="w-[7px] flex-shrink-0 cursor-col-resize group flex items-stretch justify-center relative z-10"
-                >
-                  <div className="w-px bg-border/40 group-hover:bg-border/70 group-active:bg-foreground/30 transition-colors" />
-                </div>
-                <div className="flex-1 min-w-0 bg-background overflow-hidden flex flex-col">
-                  {dockTab === 'status' ? (
+            {/* Resize handle — doubles as the persistent divider line. The
+                fixed-width rails (会话 / 文件列表) only show the divider (no drag). */}
+            <div
+              onMouseDown={isNarrowRail ? undefined : handleDockResizeStart}
+              className={`w-[7px] flex-shrink-0 group flex items-stretch justify-center relative z-10 ${isNarrowRail ? '' : 'cursor-col-resize'}`}
+            >
+              <div className="w-px bg-border/40 group-hover:bg-border/70 group-active:bg-foreground/30 transition-colors" />
+            </div>
+            {/* Panel content — flush, separated only by the divider */}
+            <div className="flex-1 min-w-0 bg-background overflow-hidden flex flex-col">
+              {dockTab === 'sessions' ? (
+                renderSessionList()
+              ) : dockTab === 'status' ? (
                 <div className="flex flex-col h-full">
-                  <div className="flex items-center justify-between px-2.5 flex-shrink-0 h-[36px] border-b border-border/30">
+                  <div className="flex items-center justify-end gap-1 px-2.5 flex-shrink-0 h-[36px] border-b border-border/30">
                     {dockTabs}
+                    <div className="w-px h-3.5 bg-border/30 mx-0.5" />
                     <Tooltip content="关闭" side="bottom"><Button variant="ghost" size="icon-xs" onClick={() => setDockTab(null)}
                       className="text-muted-foreground/40 hover:text-foreground hover:bg-accent/40">
                       <X size={11} />
@@ -2062,52 +1947,55 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
                 </div>
               ) : (
                 <div className="flex flex-col h-full min-w-0">
-                  {/* Tab header — spans the full dock width (above the tree + preview split) */}
-                  <div className="flex items-center px-2.5 flex-shrink-0 h-[36px] border-b border-border/30">
-                    {dockTabs}
-                  </div>
-                  <div className="flex flex-1 min-h-0 min-w-0">
-                    <AnimatePresence initial={false}>
-                      {showExplorer && (
-                        <motion.div
-                          initial={{ width: 0, opacity: 0 }}
-                          animate={{ width: 176, opacity: 1 }}
-                          exit={{ width: 0, opacity: 0 }}
-                          transition={{ duration: 0.15, ease: [0.4, 0, 0.2, 1] }}
-                          className="border-r border-border/30 flex-shrink-0 overflow-hidden"
-                        >
-                          <FileExplorer
-                            files={sessionData.files.length > 0 ? sessionData.files : DEFAULT_INITIAL_FILES}
-                            outputFiles={sessionData.outputFiles}
-                            selectedFile={selectedFile}
-                            onSelectFile={handleSelectFile}
-                          />
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                    <div className="flex-1 min-w-0 overflow-hidden">
-                      <ArtifactViewer
-                        fileContent={fileContent}
-                        fileName={selectedFile}
-                        previewUrl={null}
-                        hasArtifact={!!sessionData.previewHtml || !!fileContent}
-                        previewHtml={sessionData.previewHtml}
-                        showExplorer={showExplorer}
-                        onToggleExplorer={() => setShowExplorer(!showExplorer)}
-                        showPreview={showPreview}
-                        onTogglePreview={() => { setDockTab(null); setPreviewMaximized(false); }}
-                        maximized={previewMaximized}
-                        onToggleMaximize={() => setPreviewMaximized(!previewMaximized)}
-                      />
+                  {/* Single-row header. In the folder view it carries the close
+                      button; in the preview view the ArtifactViewer supplies its
+                      own header row, so this one is hidden to avoid two rows. */}
+                  {showExplorer && (
+                    <div className="flex items-center justify-end gap-1 px-2.5 flex-shrink-0 h-[36px] border-b border-border/30">
+                      <Tooltip content="关闭" side="bottom"><Button variant="ghost" size="icon-xs" onClick={() => { setDockTab(null); setPreviewMaximized(false); }}
+                        className="text-muted-foreground/40 hover:text-foreground hover:bg-accent/40">
+                        <X size={11} />
+                      </Button></Tooltip>
                     </div>
+                  )}
+                  <div className="flex flex-1 min-h-0 min-w-0">
+                    {/* Folder list and preview are mutually exclusive — opening a
+                        file covers the folder so reading gets the full width. */}
+                    {showExplorer ? (
+                      <div className="flex-1 min-w-0 overflow-hidden">
+                        <FileExplorer
+                          files={sessionData.files.length > 0 ? sessionData.files : DEFAULT_INITIAL_FILES}
+                          outputFiles={panelOutputFiles}
+                          selectedFile={selectedFile}
+                          onSelectFile={handleSelectFile}
+                        />
+                      </div>
+                    ) : (
+                      <div className="flex-1 min-w-0 overflow-hidden">
+                        <ArtifactViewer
+                          fileContent={fileContent}
+                          fileName={selectedFile}
+                          previewUrl={null}
+                          hasArtifact={!!panelPreviewHtml || !!fileContent}
+                          previewHtml={panelPreviewHtml}
+                          showExplorer={showExplorer}
+                          onToggleExplorer={() => setShowExplorer(!showExplorer)}
+                          showPreview={showPreview}
+                          // Closing a previewed file returns to the folder list
+                          // rather than dismissing the whole dock.
+                          onTogglePreview={() => { setShowExplorer(true); setPreviewMaximized(false); }}
+                          maximized={previewMaximized}
+                          onToggleMaximize={() => setPreviewMaximized(!previewMaximized)}
+                        />
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
                 </div>
-              </>
-            )}
           </motion.div>
-        )}
+          );
+        })()}
       </AnimatePresence>
 
 
@@ -2161,6 +2049,13 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
       <CreateAgentWizard
         open={showCreateAgent}
         onOpenChange={setShowCreateAgent}
+      />
+
+      {/* ===== Create 项目组 (群聊) — picks members from teammates + my Agents ===== */}
+      <NewGroupDialog
+        open={newGroupOpen}
+        onClose={() => setNewGroupOpen(false)}
+        onManageTeammates={() => { setNewGroupOpen(false); onOpenSettings('teammates'); }}
       />
 
       {/* ===== Recycle Bin: delete-session confirmation ===== */}

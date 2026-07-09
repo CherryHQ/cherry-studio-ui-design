@@ -228,10 +228,10 @@ export const MOCK_SESSIONS: AgentSession[] = [
     id: 'session-13',
     title: '实时协作白板应用',
     agentName: '全栈工程师',
-    lastMessage: 'CRDT 协作引擎和画布组件开发中。',
+    lastMessage: '协作冲突策略有两种方案，需要你确认采用哪一种再继续。',
     timestamp: '16:52',
     messageCount: 42,
-    status: 'active',
+    status: 'awaiting',
     kind: 'task',
     progress: 72,
     unread: true,
@@ -364,10 +364,10 @@ export const MOCK_SESSIONS: AgentSession[] = [
     title: '用户行为漏斗分析',
     agentName: '数据分析师',
     agentIcon: '📈',
-    lastMessage: '注册→激活→付费转化漏斗和留存曲线已输出。',
+    lastMessage: '漏斗已初步跑出，是否按渠道继续拆分？等待你的回复。',
     timestamp: '09:45',
     messageCount: 18,
-    status: 'active',
+    status: 'awaiting',
     unread: true,
     tags: ['数据', '分析'],
     group: '数据分析',
@@ -388,10 +388,10 @@ export const MOCK_SESSIONS: AgentSession[] = [
     id: 'session-28',
     title: 'Next.js App Router 迁移',
     agentName: '全栈工程师',
-    lastMessage: 'Pages Router → App Router 迁移完成，SSR 性能提升 40%。',
+    lastMessage: '有 3 个动态路由需要你确认重定向规则后才能收尾。',
     timestamp: '10:15',
     messageCount: 44,
-    status: 'active',
+    status: 'awaiting',
     tags: ['前端', 'React'],
     group: '项目开发',
   },
@@ -1922,6 +1922,142 @@ export const SESSION_DATA_MAP: Record<string, AgentSessionData> = {
     fileContents: {},
     workDir: '~/projects/collab-whiteboard',
   },
+};
+
+// ===========================
+// Demo deliverables
+// ===========================
+// Shown in the file panel whenever a session has no outputFiles of its own,
+// so the "click a file → preview covers the list" flow is always explorable.
+const DEMO_MD_SOURCE = `# 产品需求文档 · 智能周报助手
+
+## 1. 背景
+团队每周需要手动汇总各渠道数据，耗时且易出错。本功能用 Agent 自动拉取、清洗并生成结构化周报。
+
+## 2. 目标
+- 自动聚合 5 个数据源（GA / 数据库 / 飞书 / GitHub / 客服系统）
+- 一键生成可编辑的周报草稿
+- 支持导出为 Markdown / PDF / PPT
+
+## 3. 核心流程
+1. 选择数据源与时间范围
+2. Agent 拉取并清洗数据
+3. 生成图表与摘要
+4. 人工微调后导出
+
+## 4. 验收标准
+| 项 | 指标 |
+| --- | --- |
+| 生成耗时 | < 30s |
+| 数据准确率 | > 99% |
+| 导出格式 | md / pdf / pptx |
+`;
+
+const DEMO_HTML_SOURCE = `<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Aurora · 落地页</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, 'Segoe UI', sans-serif; color: #1a1a2e; }
+    .hero { min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center;
+      background: linear-gradient(160deg, #f5f3ff 0%, #ede9fe 50%, #fae8ff 100%); text-align: center; padding: 24px; }
+    .badge { font-size: 13px; color: #7c3aed; background: #fff; padding: 6px 14px; border-radius: 999px;
+      box-shadow: 0 2px 12px rgba(124,58,237,.12); margin-bottom: 28px; }
+    h1 { font-size: 56px; line-height: 1.1; letter-spacing: -.02em; margin-bottom: 18px; }
+    h1 span { background: linear-gradient(90deg,#7c3aed,#db2777); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    p { font-size: 18px; color: #555; max-width: 520px; margin-bottom: 32px; }
+    .cta { display: inline-flex; gap: 12px; }
+    .btn { padding: 14px 28px; border-radius: 12px; font-size: 15px; font-weight: 600; cursor: pointer; border: none; }
+    .btn-primary { background: #7c3aed; color: #fff; }
+    .btn-ghost { background: #fff; color: #7c3aed; }
+    .stats { display: flex; gap: 48px; margin-top: 64px; }
+    .stat b { display: block; font-size: 32px; color: #7c3aed; }
+    .stat span { font-size: 13px; color: #888; }
+  </style>
+</head>
+<body>
+  <section class="hero">
+    <div class="badge">✨ 全新 2026 版本</div>
+    <h1>用 AI 把想法<br/><span>变成产品</span></h1>
+    <p>Aurora 帮你在几分钟内生成网站、文档与演示文稿，专注创意，把重复交给智能体。</p>
+    <div class="cta">
+      <button class="btn btn-primary">免费开始</button>
+      <button class="btn btn-ghost">观看演示</button>
+    </div>
+    <div class="stats">
+      <div class="stat"><b>12k+</b><span>团队在用</span></div>
+      <div class="stat"><b>98%</b><span>满意度</span></div>
+      <div class="stat"><b>30s</b><span>平均生成</span></div>
+    </div>
+  </section>
+</body>
+</html>`;
+
+const DEMO_MD_PREVIEW = `<!DOCTYPE html>
+<html lang="zh"><head><meta charset="utf-8" /><style>
+  body { font-family: -apple-system, 'Segoe UI', sans-serif; color: #24292f; max-width: 720px; margin: 0 auto; padding: 40px 32px; line-height: 1.7; }
+  h1 { font-size: 28px; border-bottom: 1px solid #eaecef; padding-bottom: 10px; }
+  h2 { font-size: 20px; margin-top: 28px; }
+  table { border-collapse: collapse; width: 100%; margin-top: 12px; }
+  th, td { border: 1px solid #d0d7de; padding: 7px 12px; text-align: left; font-size: 14px; }
+  th { background: #f6f8fa; }
+  ol, ul { padding-left: 22px; }
+  li { margin: 4px 0; }
+</style></head><body>
+  <h1>产品需求文档 · 智能周报助手</h1>
+  <h2>1. 背景</h2>
+  <p>团队每周需要手动汇总各渠道数据，耗时且易出错。本功能用 Agent 自动拉取、清洗并生成结构化周报。</p>
+  <h2>2. 目标</h2>
+  <ul><li>自动聚合 5 个数据源（GA / 数据库 / 飞书 / GitHub / 客服系统）</li><li>一键生成可编辑的周报草稿</li><li>支持导出为 Markdown / PDF / PPT</li></ul>
+  <h2>3. 核心流程</h2>
+  <ol><li>选择数据源与时间范围</li><li>Agent 拉取并清洗数据</li><li>生成图表与摘要</li><li>人工微调后导出</li></ol>
+  <h2>4. 验收标准</h2>
+  <table><tr><th>项</th><th>指标</th></tr><tr><td>生成耗时</td><td>&lt; 30s</td></tr><tr><td>数据准确率</td><td>&gt; 99%</td></tr><tr><td>导出格式</td><td>md / pdf / pptx</td></tr></table>
+</body></html>`;
+
+const DEMO_PPT_PREVIEW = `<!DOCTYPE html>
+<html lang="zh"><head><meta charset="utf-8" /><style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family: -apple-system,'Segoe UI',sans-serif; background:#0f172a; padding:24px; }
+  .slide { aspect-ratio: 16/9; background: linear-gradient(135deg,#1e293b,#0f172a); border-radius:14px; color:#e2e8f0;
+    display:flex; flex-direction:column; justify-content:center; padding:48px; box-shadow:0 12px 40px rgba(0,0,0,.4); }
+  .kicker { color:#38bdf8; font-size:14px; letter-spacing:.18em; text-transform:uppercase; margin-bottom:18px; }
+  h1 { font-size:40px; line-height:1.15; margin-bottom:20px; }
+  .row { display:flex; gap:40px; margin-top:18px; }
+  .metric b { display:block; font-size:34px; color:#38bdf8; }
+  .metric span { font-size:13px; color:#94a3b8; }
+</style></head><body>
+  <div class="slide">
+    <div class="kicker">2026 · Q1 季度汇报</div>
+    <h1>增长加速：渗透加速期的<br/>三个关键拐点</h1>
+    <div class="row">
+      <div class="metric"><b>+110%</b><span>季度装机增速</span></div>
+      <div class="metric"><b>4.8k</b><span>新增企业客户</span></div>
+      <div class="metric"><b>92%</b><span>留存率</span></div>
+    </div>
+  </div>
+</body></html>`;
+
+export const DEMO_OUTPUT_FILES: OutputFile[] = [
+  { id: 'demo-md', name: '产品需求文档.md', format: 'md', size: '12 KB', status: 'completed', timestamp: '10:24' },
+  { id: 'demo-html', name: 'landing-page.html', format: 'html', size: '18 KB', status: 'completed', timestamp: '10:25' },
+  { id: 'demo-ppt', name: '季度汇报.pptx', format: 'pptx', size: '2.1 MB', status: 'completed', timestamp: '10:26' },
+];
+
+// Source shown in the 代码 tab, keyed by the `output:<id>` selection key.
+export const DEMO_FILE_CONTENTS: Record<string, string> = {
+  'output:demo-md': DEMO_MD_SOURCE,
+  'output:demo-html': DEMO_HTML_SOURCE,
+};
+
+// Rendered HTML shown in the 预览 tab, keyed by the `output:<id>` selection key.
+export const DEMO_PREVIEWS: Record<string, string> = {
+  'output:demo-md': DEMO_MD_PREVIEW,
+  'output:demo-html': DEMO_HTML_SOURCE,
+  'output:demo-ppt': DEMO_PPT_PREVIEW,
 };
 
 // Empty session data

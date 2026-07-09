@@ -3,7 +3,7 @@ import { useGlobalActions } from '@/app/context/GlobalActionContext';
 import {
   ChevronDown, ChevronRight, ChevronLeft, ChevronUp, X, Copy, Check, Maximize2, Minimize2,
   Bot, Plus, ArrowUp, FileText, Code2, Eye, BookOpen,
-  Clock, Settings, History, MessageCirclePlus, AtSign,
+  Clock, Settings, History, MessageCirclePlus, MessageSquarePlus, AtSign,
   ExternalLink, File, Globe,
   Layers, Activity, Database, Info, Languages,
   Trash2, Bookmark, Share2, MoreHorizontal,
@@ -71,8 +71,7 @@ import { BranchTreePanel } from '@/features/assistant/BranchTreePanel';
 import { ChatSettingsPanel } from '@/features/assistant/ChatSettingsPanel';
 import { MentionPickerPanel } from '@/app/components/shared/MentionPickerPanel';
 import { ModelPickerPanel } from '@/app/components/shared/ModelPickerPanel';
-import { AssistantPickerPanel } from '@/app/components/shared/AssistantPickerPanel';
-import { EntityRail, TopicPanelButton } from '@/app/components/shared/EntityNav';
+import { EntityRail } from '@/app/components/shared/EntityNav';
 import { CreateAssistantWizard } from '@/app/components/shared/CreateAssistantWizard';
 import { openQuickProviderSetup } from '@/features/chat/QuickProviderSetup/quickProviderSetupStore';
 import { HistorySidebar } from '@/app/components/shared/HistorySidebar';
@@ -80,6 +79,7 @@ import { RecycleBinConfirmDialog } from '@/app/components/shared/RecycleBinConfi
 import { ResourceConfigDialog } from '@/app/components/shared/ResourceConfigDialog';
 import { useRecycleBin } from '@/app/context/RecycleBinContext';
 import { useHistorySidebar } from '@/app/hooks/useHistorySidebar';
+import { useDockPreference } from '@/app/hooks/useDockPreference';
 import type { ResourceItem } from '@/app/types';
 
 // Convert the runtime AssistantInfo + emoji into the ResourceItem the
@@ -1520,9 +1520,7 @@ function TopicBreadcrumb({ activeTopic }: {
 type SelectMode = 'assistant' | 'model';
 
 function MultiSelectPicker({
-  mode, selectedAssistants, selectedModels, onSelectAssistant, onSelectModel, onChangeMode,
-  multiAssistant, multiModel, onToggleMultiAssistant, onToggleMultiModel,
-  onCreateAssistant, onConfigureAssistant, onConnectProvider,
+  selectedModels, onSelectModel, multiModel, onToggleMultiModel, onConnectProvider,
 }: {
   mode: SelectMode;
   selectedAssistants: string[];
@@ -1539,65 +1537,25 @@ function MultiSelectPicker({
   onConnectProvider?: () => void;
 }) {
   const [open, setOpen] = useState(false);
-  const activeAssistant = MOCK_ASSISTANTS.find(a => a.id === selectedAssistants[0]);
   const activeModel = ASSISTANT_MODELS.find(m => m.id === selectedModels[0]);
-
-  const handleOpenAssistant = () => {
-    const nextOpen = !(open && mode === 'assistant');
-    setOpen(nextOpen);
-    onChangeMode('assistant');
-  };
-
-  const handleOpenModel = () => {
-    const nextOpen = !(open && mode === 'model');
-    setOpen(nextOpen);
-    onChangeMode('model');
-  };
 
   return (
     <div className="flex items-center gap-1.5">
-      <Popover open={open && mode === 'assistant'} onOpenChange={(v) => { if (v) handleOpenAssistant(); else setOpen(false); }}>
-        <PopoverTrigger asChild>
-          <Button variant="ghost" size="inline"
-            className={`gap-1.5 px-2 py-[4px] text-xs ${
-              open && mode === 'assistant' ? 'bg-accent/25 text-foreground' : 'text-foreground hover:text-foreground hover:bg-accent/40'
-            }`}>
-            <span className="text-sm leading-none flex-shrink-0">{activeAssistant ? (ASSISTANT_EMOJI_MAP[activeAssistant.name] || '\uD83E\uDD16') : '\uD83E\uDD16'}</span>
-            <span className="truncate max-w-[100px]">
-              {selectedAssistants.length > 1 ? `${selectedAssistants.length} 个助手` : activeAssistant?.name || '选择助手'}
-            </span>
-            {selectedAssistants.length > 1 && <span className="w-4 h-4 rounded-full bg-muted text-muted-foreground text-xs flex items-center justify-center flex-shrink-0">{selectedAssistants.length}</span>}
-            <ChevronDown size={8} className={`text-muted-foreground/50 flex-shrink-0 transition-transform duration-100 ${open && mode === 'assistant' ? 'rotate-180' : ''}`} />
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent align="start" className="p-0 w-[380px]" onPointerDownOutside={(e) => { if ((e.target as HTMLElement)?.closest('[data-context-menu]')) e.preventDefault(); }}>
-          <AssistantPickerPanel
-            selectedAssistants={selectedAssistants}
-            onSelectAssistant={onSelectAssistant}
-            multiAssistant={multiAssistant}
-            onToggleMultiAssistant={onToggleMultiAssistant}
-            onClose={() => setOpen(false)}
-            onCreateAssistant={onCreateAssistant}
-            onConfigureAssistant={onConfigureAssistant}
-          />
-        </PopoverContent>
-      </Popover>
-      <div className="w-px h-3.5 bg-border/30" />
-      <Popover open={open && mode === 'model'} onOpenChange={(v) => { if (v) handleOpenModel(); else setOpen(false); }}>
+      <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
           <Button variant="ghost" size="inline"
             className={`gap-1.5 px-1.5 py-[3px] text-xs ${
-              open && mode === 'model' ? 'bg-accent/25 text-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-accent/40'
+              open ? 'bg-accent/25 text-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-accent/40'
             }`}>
             {activeModel && <BrandLogo id={activeModel.provider.toLowerCase()} fallbackLetter={activeModel.provider[0]} size={14} className="shrink-0" />}
             <span className="truncate max-w-[240px]">
               {selectedModels.length > 1 ? `${selectedModels.length} 个模型` : activeModel?.name || '选择模型'}
             </span>
             {selectedModels.length > 1 && <span className="w-4 h-4 rounded-full bg-muted text-muted-foreground text-xs flex items-center justify-center flex-shrink-0">{selectedModels.length}</span>}
-            <ChevronDown size={7} className={`text-muted-foreground/50 transition-transform duration-100 ${open && mode === 'model' ? 'rotate-180' : ''}`} />
+            <ChevronDown size={7} className={`text-muted-foreground/50 transition-transform duration-100 ${open ? 'rotate-180' : ''}`} />
           </Button>
         </PopoverTrigger>
-        <PopoverContent align="start" className="p-0 w-[480px]">
+        <PopoverContent align="start" className="p-0 w-[420px]">
           <ModelPickerPanel
             selectedModels={selectedModels}
             onSelectModel={onSelectModel}
@@ -1672,7 +1630,6 @@ export function AssistantRunPage() {
       setArtifactFullscreen(false);
       setRightPanel(null);
       setShowBranchTree(false);
-      setShowChatSettings(false);
       return;
     }
     const newId = `new-topic-${Date.now()}-${newTopicCounter}`;
@@ -1693,7 +1650,6 @@ export function AssistantRunPage() {
     setArtifactFullscreen(false);
     setRightPanel(null);
     setShowBranchTree(false);
-    setShowChatSettings(false);
     setNewTopicCounter(c => c + 1);
   }, [newTopicCounter]);
 
@@ -1749,8 +1705,11 @@ export function AssistantRunPage() {
   const [topicPanelWidth, setTopicPanelWidth] = useState(320);
   // The right dock is a shared module — 话题 / 文件 / 侧边聊天 / 浏览器 / 终端,
   // switched by a vertical tab rail on its right edge. null = hidden.
-  type DockTab = 'topics' | 'artifacts';
-  const [dockTab, setDockTab] = useState<DockTab | null>(null);
+  type DockTab = 'topics' | 'artifacts' | 'settings';
+  // Remember whether the 话题 list was left docked open (per the Syncless-style
+  // persistent side panel). Restored on page entry.
+  const [topicsDockPref, setTopicsDockPref] = useDockPreference('cherry-chat-topics-dock');
+  const [dockTab, setDockTab] = useState<DockTab | null>(topicsDockPref ? 'topics' : null);
   const artifactResizing = useRef(false);
   const artifactContainerRef = useRef<HTMLDivElement>(null);
 
@@ -1791,7 +1750,6 @@ export function AssistantRunPage() {
     [],
   );
   const [showBranchTree, setShowBranchTree] = useState(false);
-  const [showChatSettings, setShowChatSettings] = useState(false);
   const [minimalInput, setMinimalInput] = useState(true);
   const [toolbarExpanded, setToolbarExpanded] = useState(true);
   const [composerModelOpen, setComposerModelOpen] = useState(false);
@@ -1919,7 +1877,6 @@ export function AssistantRunPage() {
     setArtifactFullscreen(false);
     setRightPanel(null);
     setShowBranchTree(false);
-    setShowChatSettings(false);
     // Load parallel messages for the multi-model / multi-assistant topics
     if (id === 'topic-11') {
       setMessages(MOCK_PARALLEL_MESSAGES);
@@ -2008,7 +1965,6 @@ export function AssistantRunPage() {
   const [showPlusMore, setShowPlusMore] = useState(false);
   const [showAtMenu, setShowAtMenu] = useState(false);
   const [showSlashMenu, setShowSlashMenu] = useState(false);
-  const [translateLang, setTranslateLang] = useState<'en' | 'zh' | 'ja'>('en');
   const plusBtnRef = useRef<HTMLButtonElement>(null);
   const plusMenuRef = useRef<HTMLDivElement>(null);
 
@@ -2289,27 +2245,32 @@ export function AssistantRunPage() {
     );
   }
 
-  // 话题 lives in its own pin-out popover and 创作物 is the only dock
-  // content, so no shared tab rail is needed anymore. Kept the variable for
-  // back-compat with downstream call sites (passed as `undefined`).
-  const dockTabs: React.ReactNode = undefined;
-
-  // Shared 话题 list — used by the header floating popover and the pinned
-  // right-dock tab, so both stay in sync.
-  const renderTopicList = ({ close, pinned, togglePin }: { close: () => void; pinned: boolean; togglePin: () => void }) => (
+  // 话题 list — a minimal, narrow dock that mirrors the 工作 (agent) 会话 list:
+  // just a close button at the top-right; the flat list shows directly below
+  // (no group headers, no per-row icon, pinned rows flagged with a pin glyph on
+  // the right, only the "…" hover action). Selecting a topic keeps it open.
+  const closeTopicDock = () => { setDockTab(null); setTopicsDockPref(false); };
+  const renderTopicList = () => (
     <HistorySidebar
       items={assistantTopics}
       activeItemId={activeTopicId}
-      onSelectItem={(id) => { handleSelectTopic(id); close(); }}
+      onSelectItem={(id) => handleSelectTopic(id)}
       onDeleteItem={handleDeleteTopic}
       onUpdateItem={handleUpdateTopic}
-      onNewItem={() => { handleNewTopic(); close(); }}
-      onExpand={() => { setHistoryInitialAssistant(null); historySidebar.expand(); close(); }}
-      onClose={close}
+      onNewItem={() => handleNewTopic()}
+      onExpand={() => { setHistoryInitialAssistant(null); historySidebar.expand(); closeTopicDock(); }}
+      onClose={closeTopicDock}
       entityLabel="话题"
       hideGroupBy
-      panelPinned={pinned}
-      onTogglePanelPin={togglePin}
+      plainList
+      headerActions={
+        <Tooltip content="关闭" side="bottom">
+          <Button variant="ghost" size="icon-xs" onClick={closeTopicDock}
+            className="text-muted-foreground/40 hover:text-foreground hover:bg-accent/40">
+            <X size={11} />
+          </Button>
+        </Tooltip>
+      }
     />
   );
 
@@ -2323,16 +2284,21 @@ export function AssistantRunPage() {
             animate={{ width: 220, opacity: 1 }}
             exit={{ width: 0, opacity: 0 }}
             transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
-            className="flex-shrink-0 min-w-0 overflow-hidden h-full"
+            className="flex-shrink-0 min-w-0 overflow-hidden h-full border-r border-border/40 bg-foreground/[0.015]"
             style={{ width: 220 }}
           >
             <EntityRail
               title="助手"
+              searchable={false}
+              filterable={false}
+              newLabel="添加助手"
+              newAsRow
               items={assistantRailItems}
               activeId={selectedAssistants[0]}
               onSelect={handleSelectAssistant}
               onNew={() => setShowCreateAssistant(true)}
               onConfigure={(id) => { setSelectedAssistants([id]); setRightPanel('assistantInfo'); }}
+              onEdit={(id) => { setSelectedAssistants([id]); setRightPanel('assistantInfo'); }}
             />
           </motion.div>
         )}
@@ -2351,15 +2317,22 @@ export function AssistantRunPage() {
           </Tooltip>
         <div className="flex-1" />
         <div className="flex items-center gap-0.5">
-          {/* Topics for the selected assistant — floating panel (浮窗) on the right */}
-          <TopicPanelButton
-            label="话题"
-            count={assistantTopics.filter(t => !t.archived).length}
-            pinned={dockTab === 'topics'}
-            onPinnedChange={(v) => setDockTab(v ? 'topics' : null)}
-          >
-            {renderTopicList}
-          </TopicPanelButton>
+          {/* Topics for the selected assistant — opens the right dock to the
+              话题 list (mirrors the 工作 module's 会话 toggle). */}
+          <Tooltip content="话题" side="bottom">
+            <Button
+              variant="ghost"
+              size="xs"
+              onClick={() => { const open = dockTab !== 'topics'; setDockTab(open ? 'topics' : null); setTopicsDockPref(open); }}
+              className={`gap-1.5 px-2 py-[4px] text-xs ${
+                dockTab === 'topics' ? 'bg-accent/25 text-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-accent/40'
+              }`}
+            >
+              <MessageCircle size={13} strokeWidth={1.6} />
+              <span>话题</span>
+              <span className="tabular-nums text-muted-foreground/50">{assistantTopics.filter(t => !t.archived).length}</span>
+            </Button>
+          </Tooltip>
           <div className="w-px h-3.5 bg-border/30 mx-0.5" />
           <Tooltip content={modelConfigured ? '演示：切到「未配置模型」状态' : '演示：恢复已配置状态'} side="bottom">
             <Button variant="ghost" size="icon-xs" onClick={() => setModelConfigured(v => !v)}
@@ -2393,8 +2366,8 @@ export function AssistantRunPage() {
               <div className="w-px h-3.5 bg-border/30 mx-0.5" />
             </>
           )}
-          <Tooltip content="参数设置" side="bottom"><Button variant="ghost" size="icon-xs" onClick={() => setShowChatSettings(v => !v)}
-            className={`p-1.5 w-auto h-auto ${showChatSettings ? 'text-foreground bg-accent/25' : 'text-muted-foreground hover:text-foreground hover:bg-accent/40'}`}>
+          <Tooltip content="参数设置" side="bottom"><Button variant="ghost" size="icon-xs" onClick={() => { const open = dockTab !== 'settings'; setDockTab(open ? 'settings' : null); if (open) setTopicsDockPref(false); }}
+            className={`p-1.5 w-auto h-auto ${dockTab === 'settings' ? 'text-foreground bg-accent/25' : 'text-muted-foreground hover:text-foreground hover:bg-accent/40'}`}>
             <Settings2 size={12} />
           </Button></Tooltip>
         </div>
@@ -2577,154 +2550,13 @@ export function AssistantRunPage() {
                   )}
                   <div className="absolute bottom-[7px] left-2.5 right-2.5 flex items-center justify-between">
                     <div className="flex items-center gap-0.5">
-                      {minimalInput ? (
-                        /* Minimal mode: plus dropdown only */
-                        <DropdownMenu open={showPlusMenu} onOpenChange={(v) => { setShowPlusMenu(v); if (v) setShowAtMenu(false); }}>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon-sm" ref={plusBtnRef}
-                              className={`p-[5px] w-auto h-auto transition-colors ${
-                                showPlusMenu ? 'bg-accent text-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
-                              }`}><Plus size={14} /></Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent side="top" align="start" className="w-44">
-                            {plusMenuItems.map((item, idx) => {
-                              const Icon = item.icon;
-                              if (item.id === 'genimg') {
-                                return (
-                                  <DropdownMenuSub key={item.id}>
-                                    <DropdownMenuSubTrigger className="gap-2 px-2 py-[5px] text-xs">
-                                      <Icon size={13} strokeWidth={1.5} className="text-muted-foreground flex-shrink-0" />
-                                      <span className="flex-1 text-left">{item.label}</span>
-                                    </DropdownMenuSubTrigger>
-                                    <DropdownMenuSubContent className="w-[280px] p-3 space-y-3">
-                                      <div>
-                                        <div className="text-xs text-muted-foreground/80 mb-1.5">Resolution</div>
-                                        <div className="flex items-center gap-1.5">
-                                          {(['1K', '2K', '4K'] as const).map(r => {
-                                            const active = imgResolution === r;
-                                            return (
-                                              <button key={r} type="button"
-                                                onClick={() => setImgResolution(r)}
-                                                className={`flex-1 py-1.5 rounded-md text-xs transition-colors border ${
-                                                  active
-                                                    ? 'bg-accent/40 border-border text-foreground'
-                                                    : 'border-border/30 text-muted-foreground/80 hover:bg-accent/40 hover:text-foreground'
-                                                }`}>{r}</button>
-                                            );
-                                          })}
-                                        </div>
-                                      </div>
-                                      <div>
-                                        <div className="text-xs text-muted-foreground/80 mb-1.5">Size</div>
-                                        <div className="grid grid-cols-3 gap-1.5">
-                                          {[
-                                            { ratio: '21:9', w: 28, h: 12 },
-                                            { ratio: '16:9', w: 26, h: 14 },
-                                            { ratio: '4:3',  w: 24, h: 18 },
-                                            { ratio: '5:4',  w: 22, h: 18 },
-                                            { ratio: '1:1',  w: 20, h: 20 },
-                                            { ratio: '4:5',  w: 18, h: 22 },
-                                            { ratio: '3:4',  w: 18, h: 24 },
-                                            { ratio: '2:3',  w: 14, h: 21 },
-                                            { ratio: '9:16', w: 14, h: 26 },
-                                          ].map(s => {
-                                            const active = imgAspect === s.ratio;
-                                            return (
-                                              <button key={s.ratio} type="button"
-                                                onClick={() => setImgAspect(s.ratio)}
-                                                className={`flex flex-col items-center justify-center gap-1 py-2 rounded-md transition-colors border ${
-                                                  active
-                                                    ? 'bg-accent/40 border-border text-foreground'
-                                                    : 'border-border/30 text-muted-foreground/80 hover:bg-accent/40 hover:text-foreground'
-                                                }`}>
-                                                <span className="rounded-[3px] border border-current/70"
-                                                  style={{ width: s.w, height: s.h }} />
-                                                <span className="text-[10px] tabular-nums">{s.ratio}</span>
-                                              </button>
-                                            );
-                                          })}
-                                        </div>
-                                      </div>
-                                      <div>
-                                        <div className="text-xs text-muted-foreground/80 mb-1.5">数量</div>
-                                        <div className="grid grid-cols-4 gap-1.5">
-                                          {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(n => {
-                                            const active = imgCount === n;
-                                            return (
-                                              <button key={n} type="button"
-                                                onClick={() => setImgCount(n)}
-                                                className={`py-1.5 rounded-md text-xs transition-colors border ${
-                                                  active
-                                                    ? 'bg-accent/40 border-border text-foreground'
-                                                    : 'border-border/30 text-muted-foreground/80 hover:bg-accent/40 hover:text-foreground'
-                                                }`}>{n} img</button>
-                                            );
-                                          })}
-                                        </div>
-                                      </div>
-                                    </DropdownMenuSubContent>
-                                  </DropdownMenuSub>
-                                );
-                              }
-                              return (
-                                <div key={item.id}>
-                                  <DropdownMenuItem className="gap-2 px-2 py-[5px] text-xs">
-                                    <Icon size={13} strokeWidth={1.5} className="text-muted-foreground flex-shrink-0" />
-                                    <span className="flex-1 text-left">{item.label}</span>
-                                  </DropdownMenuItem>
-                                  {(item as { separator?: boolean }).separator && idx < plusMenuItems.length - 1 && (
-                                    <DropdownMenuSeparator />
-                                  )}
-                                </div>
-                              );
-                            })}
-                            {/* 思考 — cascade with effort options */}
-                            <DropdownMenuSub>
-                              <DropdownMenuSubTrigger className="gap-2 px-2 py-[5px] text-xs">
-                                <Brain size={13} strokeWidth={1.5} className="text-muted-foreground flex-shrink-0" />
-                                <span className="flex-1 text-left">思考</span>
-                              </DropdownMenuSubTrigger>
-                              <DropdownMenuSubContent>
-                                {thinkingEfforts.map(t => {
-                                  const Icon = t.Icon;
-                                  return (
-                                    <DropdownMenuItem
-                                      key={t.id}
-                                      className="gap-2 px-2 py-[5px] text-xs"
-                                      onSelect={() => setReasoningLevel(t.id === 'default' ? null : t.id)}
-                                    >
-                                      <Icon size={13} strokeWidth={1.5} className="text-muted-foreground flex-shrink-0" />
-                                      <span className="flex-1 text-left">{t.label}</span>
-                                      {((t.id === 'default' && reasoningLevel === null) || reasoningLevel === t.id) && (
-                                        <Check size={10} className="text-primary flex-shrink-0" />
-                                      )}
-                                    </DropdownMenuItem>
-                                  );
-                                })}
-                              </DropdownMenuSubContent>
-                            </DropdownMenuSub>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuSub>
-                              <DropdownMenuSubTrigger className="gap-2 px-2 py-[5px] text-xs text-muted-foreground">
-                                <MoreHorizontal size={13} strokeWidth={1.5} className="flex-shrink-0" />
-                                <span className="flex-1 text-left">更多</span>
-                              </DropdownMenuSubTrigger>
-                              <DropdownMenuSubContent>
-                                {plusMenuSecondary.map(item => {
-                                  const Icon = item.icon;
-                                  return (
-                                    <DropdownMenuItem key={item.id} className="gap-2 px-2 py-[5px] text-xs">
-                                      <Icon size={13} strokeWidth={1.5} className="text-muted-foreground flex-shrink-0" />
-                                      <span className="flex-1 text-left">{item.label}</span>
-                                      {item.shortcut && <span className="text-xs text-muted-foreground/60 tracking-wider">{item.shortcut}</span>}
-                                    </DropdownMenuItem>
-                                  );
-                                })}
-                              </DropdownMenuSubContent>
-                            </DropdownMenuSub>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      ) : (
+                      {/* 新建会话 — 最左侧 */}
+                      <Tooltip content="新建会话" side="top">
+                        <button onClick={handleNewTopic} className="flex items-center p-[5px] rounded-md text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-colors">
+                          <MessageSquarePlus size={14} strokeWidth={1.5} />
+                        </button>
+                      </Tooltip>
+                      {minimalInput ? null : (
                         /* Full toolbar mode */
                         <>
                           {/* Primary tools — always visible */}
@@ -2965,41 +2797,157 @@ export function AssistantRunPage() {
                             <span className="flex items-center gap-1 cursor-default"><Layers size={10} />{Math.ceil(input.length * 1.3)}</span>
                           </Tooltip>
                         )}
-                        <Popover>
-                          <PopoverTrigger asChild>
-                            <Tooltip content="翻译输入内容" side="top">
-                              <button className="flex items-center gap-1 hover:text-foreground transition-colors cursor-pointer">
-                                <Languages size={12} />
-                              </button>
-                            </Tooltip>
-                          </PopoverTrigger>
-                          <PopoverContent side="top" align="end" className="w-[160px] p-1">
-                            <div className="text-xs text-muted-foreground/60 px-2 py-1">翻译为</div>
-                            {([
-                              { key: 'en' as const, label: 'English' },
-                              { key: 'zh' as const, label: '简体中文' },
-                              { key: 'ja' as const, label: '日本語' },
-                            ]).map(lang => (
-                              <Button key={lang.key} variant="ghost" size="xs"
-                                onClick={() => {
-                                  if (input.trim()) {
-                                    const prefix = lang.key === 'en' ? '[Translated to English]\n' : lang.key === 'zh' ? '[已翻译为中文]\n' : '[日本語に翻訳]\n';
-                                    setInput(prev => prefix + prev);
-                                  }
-                                  setTranslateLang(lang.key);
-                                }}
-                                className={`w-full justify-start gap-2 px-2 ${translateLang === lang.key ? 'text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
-                              >
-                                <span className="flex-1 text-left">{lang.label}</span>
-                                {translateLang === lang.key && <Check size={10} className="text-primary flex-shrink-0" />}
-                              </Button>
-                            ))}
-                          </PopoverContent>
-                        </Popover>
                       </div>
+                      {minimalInput && (
+                        <DropdownMenu open={showPlusMenu} onOpenChange={(v) => { setShowPlusMenu(v); if (v) setShowAtMenu(false); }}>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon-sm" ref={plusBtnRef}
+                              className={`p-[5px] w-auto h-auto transition-colors ${
+                                showPlusMenu ? 'bg-accent text-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
+                              }`}><Plus size={14} /></Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent side="top" align="start" className="w-44">
+                            {plusMenuItems.map((item, idx) => {
+                              const Icon = item.icon;
+                              if (item.id === 'genimg') {
+                                return (
+                                  <DropdownMenuSub key={item.id}>
+                                    <DropdownMenuSubTrigger className="gap-2 px-2 py-[5px] text-xs">
+                                      <Icon size={13} strokeWidth={1.5} className="text-muted-foreground flex-shrink-0" />
+                                      <span className="flex-1 text-left">{item.label}</span>
+                                    </DropdownMenuSubTrigger>
+                                    <DropdownMenuSubContent className="w-[280px] p-3 space-y-3">
+                                      <div>
+                                        <div className="text-xs text-muted-foreground/80 mb-1.5">Resolution</div>
+                                        <div className="flex items-center gap-1.5">
+                                          {(['1K', '2K', '4K'] as const).map(r => {
+                                            const active = imgResolution === r;
+                                            return (
+                                              <button key={r} type="button"
+                                                onClick={() => setImgResolution(r)}
+                                                className={`flex-1 py-1.5 rounded-md text-xs transition-colors border ${
+                                                  active
+                                                    ? 'bg-accent/40 border-border text-foreground'
+                                                    : 'border-border/30 text-muted-foreground/80 hover:bg-accent/40 hover:text-foreground'
+                                                }`}>{r}</button>
+                                            );
+                                          })}
+                                        </div>
+                                      </div>
+                                      <div>
+                                        <div className="text-xs text-muted-foreground/80 mb-1.5">Size</div>
+                                        <div className="grid grid-cols-3 gap-1.5">
+                                          {[
+                                            { ratio: '21:9', w: 28, h: 12 },
+                                            { ratio: '16:9', w: 26, h: 14 },
+                                            { ratio: '4:3',  w: 24, h: 18 },
+                                            { ratio: '5:4',  w: 22, h: 18 },
+                                            { ratio: '1:1',  w: 20, h: 20 },
+                                            { ratio: '4:5',  w: 18, h: 22 },
+                                            { ratio: '3:4',  w: 18, h: 24 },
+                                            { ratio: '2:3',  w: 14, h: 21 },
+                                            { ratio: '9:16', w: 14, h: 26 },
+                                          ].map(s => {
+                                            const active = imgAspect === s.ratio;
+                                            return (
+                                              <button key={s.ratio} type="button"
+                                                onClick={() => setImgAspect(s.ratio)}
+                                                className={`flex flex-col items-center justify-center gap-1 py-2 rounded-md transition-colors border ${
+                                                  active
+                                                    ? 'bg-accent/40 border-border text-foreground'
+                                                    : 'border-border/30 text-muted-foreground/80 hover:bg-accent/40 hover:text-foreground'
+                                                }`}>
+                                                <span className="rounded-[3px] border border-current/70"
+                                                  style={{ width: s.w, height: s.h }} />
+                                                <span className="text-[10px] tabular-nums">{s.ratio}</span>
+                                              </button>
+                                            );
+                                          })}
+                                        </div>
+                                      </div>
+                                      <div>
+                                        <div className="text-xs text-muted-foreground/80 mb-1.5">数量</div>
+                                        <div className="grid grid-cols-4 gap-1.5">
+                                          {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(n => {
+                                            const active = imgCount === n;
+                                            return (
+                                              <button key={n} type="button"
+                                                onClick={() => setImgCount(n)}
+                                                className={`py-1.5 rounded-md text-xs transition-colors border ${
+                                                  active
+                                                    ? 'bg-accent/40 border-border text-foreground'
+                                                    : 'border-border/30 text-muted-foreground/80 hover:bg-accent/40 hover:text-foreground'
+                                                }`}>{n} img</button>
+                                            );
+                                          })}
+                                        </div>
+                                      </div>
+                                    </DropdownMenuSubContent>
+                                  </DropdownMenuSub>
+                                );
+                              }
+                              return (
+                                <div key={item.id}>
+                                  <DropdownMenuItem className="gap-2 px-2 py-[5px] text-xs">
+                                    <Icon size={13} strokeWidth={1.5} className="text-muted-foreground flex-shrink-0" />
+                                    <span className="flex-1 text-left">{item.label}</span>
+                                  </DropdownMenuItem>
+                                  {(item as { separator?: boolean }).separator && idx < plusMenuItems.length - 1 && (
+                                    <DropdownMenuSeparator />
+                                  )}
+                                </div>
+                              );
+                            })}
+                            {/* 思考 — cascade with effort options */}
+                            <DropdownMenuSub>
+                              <DropdownMenuSubTrigger className="gap-2 px-2 py-[5px] text-xs">
+                                <Brain size={13} strokeWidth={1.5} className="text-muted-foreground flex-shrink-0" />
+                                <span className="flex-1 text-left">思考</span>
+                              </DropdownMenuSubTrigger>
+                              <DropdownMenuSubContent>
+                                {thinkingEfforts.map(t => {
+                                  const Icon = t.Icon;
+                                  return (
+                                    <DropdownMenuItem
+                                      key={t.id}
+                                      className="gap-2 px-2 py-[5px] text-xs"
+                                      onSelect={() => setReasoningLevel(t.id === 'default' ? null : t.id)}
+                                    >
+                                      <Icon size={13} strokeWidth={1.5} className="text-muted-foreground flex-shrink-0" />
+                                      <span className="flex-1 text-left">{t.label}</span>
+                                      {((t.id === 'default' && reasoningLevel === null) || reasoningLevel === t.id) && (
+                                        <Check size={10} className="text-primary flex-shrink-0" />
+                                      )}
+                                    </DropdownMenuItem>
+                                  );
+                                })}
+                              </DropdownMenuSubContent>
+                            </DropdownMenuSub>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuSub>
+                              <DropdownMenuSubTrigger className="gap-2 px-2 py-[5px] text-xs text-muted-foreground">
+                                <MoreHorizontal size={13} strokeWidth={1.5} className="flex-shrink-0" />
+                                <span className="flex-1 text-left">更多</span>
+                              </DropdownMenuSubTrigger>
+                              <DropdownMenuSubContent>
+                                {plusMenuSecondary.map(item => {
+                                  const Icon = item.icon;
+                                  return (
+                                    <DropdownMenuItem key={item.id} className="gap-2 px-2 py-[5px] text-xs">
+                                      <Icon size={13} strokeWidth={1.5} className="text-muted-foreground flex-shrink-0" />
+                                      <span className="flex-1 text-left">{item.label}</span>
+                                      {item.shortcut && <span className="text-xs text-muted-foreground/60 tracking-wider">{item.shortcut}</span>}
+                                    </DropdownMenuItem>
+                                  );
+                                })}
+                              </DropdownMenuSubContent>
+                            </DropdownMenuSub>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      )}
                       <Button variant="default" size="icon" onClick={handleSend} disabled={!input.trim()}
-                        className="w-7 h-7 rounded-full">
-                        <ArrowUp size={14} strokeWidth={2} />
+                        className="w-6 h-6 rounded-full">
+                        <ArrowUp size={13} strokeWidth={2} />
                       </Button>
                     </div>
                   </div>
@@ -3013,13 +2961,6 @@ export function AssistantRunPage() {
             ))}
           </ChatInterface>
         </div>
-
-        {/* Right: Chat Settings Panel */}
-        <AnimatePresence>
-          {showChatSettings && (
-            <ChatSettingsPanel onClose={() => setShowChatSettings(false)} minimalInput={minimalInput} onMinimalInputChange={setMinimalInput} />
-          )}
-        </AnimatePresence>
 
         {/* Right: Branch Tree Panel */}
         <AnimatePresence initial={false}>
@@ -3112,44 +3053,43 @@ export function AssistantRunPage() {
           so the chat content reflows around it. 创作物 stays as a flush dock
           since it needs full-bleed canvas space. ===== */}
       <AnimatePresence initial={false}>
-        {dockTab !== null && !artifactFullscreen && (
+        {dockTab !== null && !artifactFullscreen && (() => {
+          // The 话题 list is a compact, fixed-width rail; 参数设置 a slightly wider
+          // fixed rail; 创作物 keeps the wide, resizable preview width.
+          const isTopics = dockTab === 'topics';
+          const isSettings = dockTab === 'settings';
+          const isFixed = isTopics || isSettings;
+          const effectiveWidth = isTopics ? 260 : isSettings ? 340 : artifactPanelWidth;
+          return (
           <motion.div
             initial={{ width: 0, opacity: 0 }}
-            animate={{ width: dockTab === 'topics' ? topicPanelWidth : artifactPanelWidth, opacity: 1 }}
+            animate={{ width: effectiveWidth, opacity: 1 }}
             exit={{ width: 0, opacity: 0 }}
             transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
             className="flex-shrink-0 min-w-0 relative flex"
-            style={{ width: dockTab === 'topics' ? topicPanelWidth : artifactPanelWidth }}
+            style={{ width: effectiveWidth }}
           >
-            {dockTab === 'topics' ? (
-              <>
-                {/* Invisible left-edge resize handle — keeps the panel resizable
-                    without showing a flush divider line. */}
-                <div
-                  onMouseDown={handleArtifactResizeStart}
-                  className="w-[7px] flex-shrink-0 cursor-col-resize relative z-10"
-                />
-                {/* 浮窗 styled topic panel — rounded card with margin & shadow. */}
-                <div className="flex-1 min-w-0 my-2 mr-2 rounded-xl border border-border/40 bg-popover shadow-xl shadow-black/10 overflow-hidden flex flex-col">
-                  {renderTopicList({ close: () => {}, pinned: true, togglePin: () => setDockTab(null) })}
-                </div>
-              </>
-            ) : (
-              <>
-                {/* Resize handle — doubles as the persistent divider line */}
-                <div
-                  onMouseDown={handleArtifactResizeStart}
-                  className="w-[7px] flex-shrink-0 cursor-col-resize group flex items-stretch justify-center relative z-10"
-                >
-                  <div className="w-px bg-border/40 group-hover:bg-border/70 group-active:bg-foreground/30 transition-colors" />
-                </div>
-                <div className="flex-1 min-w-0 bg-background overflow-hidden flex flex-col">
-                  <ArtifactsPanel artifact={activeArtifact} isFullscreen={false} onToggleFullscreen={() => setArtifactFullscreen(true)} onClose={handleCloseArtifacts} onSelectArtifact={handleOpenArtifact} hasTopic={activeTopicId !== null} tabSlot={dockTabs} />
-                </div>
-              </>
-            )}
+            {/* Resize handle — doubles as the persistent divider line. 话题 /
+                参数设置 are fixed-width, so they only show the divider (no drag). */}
+            <div
+              onMouseDown={isFixed ? undefined : handleArtifactResizeStart}
+              className={`w-[7px] flex-shrink-0 group flex items-stretch justify-center relative z-10 ${isFixed ? '' : 'cursor-col-resize'}`}
+            >
+              <div className="w-px bg-border/40 group-hover:bg-border/70 group-active:bg-foreground/30 transition-colors" />
+            </div>
+            {/* Panel content — 话题 / 参数设置 / 创作物, flush, separated only by the divider */}
+            <div className="flex-1 min-w-0 bg-background overflow-hidden flex flex-col">
+              {isTopics ? (
+                renderTopicList()
+              ) : isSettings ? (
+                <ChatSettingsPanel docked onClose={() => setDockTab(null)} minimalInput={minimalInput} onMinimalInputChange={setMinimalInput} />
+              ) : (
+                <ArtifactsPanel artifact={activeArtifact} isFullscreen={false} onToggleFullscreen={() => setArtifactFullscreen(true)} onClose={handleCloseArtifacts} onSelectArtifact={handleOpenArtifact} hasTopic={activeTopicId !== null} />
+              )}
+            </div>
           </motion.div>
-        )}
+          );
+        })()}
       </AnimatePresence>
     </div>
   );
