@@ -53,7 +53,7 @@ function ThinkingBlock({ content, duration, isStreaming = false, defaultOpen = f
             {(duration / 1000).toFixed(1)}s
           </span>
         )}
-        <span className="flex-1 text-xs text-muted-foreground/70 truncate">
+        <span className="flex-1 min-w-0 text-xs text-muted-foreground/70 truncate">
           {!expanded && preview + (content.length > 80 ? "..." : "")}
         </span>
         <ChevronRight

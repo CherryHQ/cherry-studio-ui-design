@@ -51,6 +51,8 @@ export interface RichComposerHandle {
   clearText: () => void;
   /** Get the current plain-text content typed by the user. */
   getText: () => string;
+  /** Append text to the editor at the caret (or at end if no selection). */
+  insertText: (text: string) => void;
 }
 
 export const RichComposer = React.forwardRef<RichComposerHandle, RichComposerProps>(function RichComposer(
@@ -77,6 +79,30 @@ export const RichComposer = React.forwardRef<RichComposerHandle, RichComposerPro
       el.textContent = "";
     },
     getText: () => editorRef.current?.textContent ?? "",
+    insertText: (text: string) => {
+      const el = editorRef.current;
+      if (!el) return;
+      el.focus();
+      const sel = window.getSelection();
+      // If there's no caret inside the editor yet, append at the end.
+      if (!sel || sel.rangeCount === 0 || !el.contains(sel.anchorNode)) {
+        el.appendChild(document.createTextNode(text));
+        const range = document.createRange();
+        range.selectNodeContents(el);
+        range.collapse(false);
+        sel?.removeAllRanges();
+        sel?.addRange(range);
+      } else {
+        const range = sel.getRangeAt(0);
+        range.deleteContents();
+        const node = document.createTextNode(text);
+        range.insertNode(node);
+        range.setStartAfter(node);
+        range.collapse(true);
+        sel.removeAllRanges();
+        sel.addRange(range);
+      }
+    },
   }), []);
 
   return (

@@ -48,6 +48,8 @@ export interface AssistantPickerPanelProps {
   pinnedIds?: string[];
   /** Callback when user pins/unpins an assistant */
   onTogglePin?: (id: string) => void;
+  /** When false, hide the multi-assistant Switch row (single-pick only UIs). */
+  showMultiAssistantToggle?: boolean;
 }
 
 export function AssistantPickerPanel({
@@ -64,6 +66,7 @@ export function AssistantPickerPanel({
   onConfigureAssistant,
   pinnedIds = [],
   onTogglePin,
+  showMultiAssistantToggle = true,
 }: AssistantPickerPanelProps) {
   const searchRef = useRef<HTMLInputElement>(null);
   const [search, setSearch] = useState('');
@@ -139,7 +142,7 @@ export function AssistantPickerPanel({
         )}
       >
         {multiAssistant ? (
-          <Checkbox checked={selected} className="size-3.5 pointer-events-none data-[state=checked]:border-cherry-primary data-[state=checked]:bg-cherry-primary flex-shrink-0" tabIndex={-1} />
+          <Checkbox checked={selected} className="size-3.5 rounded-[3px] pointer-events-none data-[state=checked]:border-cherry-primary data-[state=checked]:bg-cherry-primary flex-shrink-0" tabIndex={-1} />
         ) : (
           <span className="w-4 flex items-center justify-center flex-shrink-0">
             {selected ? (
@@ -254,10 +257,12 @@ export function AssistantPickerPanel({
       )}
 
       {/* Multi-assistant switch */}
-      <div className="px-3 pb-1.5 flex items-center justify-between">
-        <span className="text-xs text-muted-foreground/50">多助手同时回答</span>
-        <Switch checked={multiAssistant} onCheckedChange={() => onToggleMultiAssistant()} className="scale-75" />
-      </div>
+      {showMultiAssistantToggle && (
+        <div className="px-3 pb-1.5 flex items-center justify-between">
+          <span className="text-xs text-muted-foreground/50">多助手同时回答</span>
+          <Switch checked={multiAssistant} onCheckedChange={() => onToggleMultiAssistant()} className="scale-75" />
+        </div>
+      )}
 
       <Separator className="bg-border/20" />
 

@@ -5,7 +5,7 @@ import {
 } from 'lucide-react';
 import {
   Dialog, DialogContent, DialogTitle,
-  Button, Input, Switch, Skeleton, BrandLogo,
+  Button, Input, Skeleton, BrandLogo,
   Select, SelectTrigger, SelectValue, SelectContent, SelectItem,
 } from '@cherry-studio/ui';
 import { useQuickProviderSetup, type QuickProviderSavePayload } from './useQuickProviderSetup';
@@ -223,7 +223,7 @@ export function QuickProviderSetupDialog({ open, onOpenChange, onSave, onAdvance
 // Models section — reflects the fetch state machine.
 // ---------------------------------------------------------------------------
 function ModelsSection({ s }: { s: ReturnType<typeof useQuickProviderSetup> }) {
-  const { status, models, enabledCount } = s;
+  const { status, models } = s;
 
   if (status.kind === 'idle') {
     return (
@@ -287,32 +287,10 @@ function ModelsSection({ s }: { s: ReturnType<typeof useQuickProviderSetup> }) {
     );
   }
 
-  const allOn = enabledCount === models.length;
   return (
-    <div>
-      <div className="flex items-center justify-between mb-2">
-        <div className="text-xs text-muted-foreground/80">
-          可用模型 <span className="text-muted-foreground/50">· 已选 {enabledCount}/{models.length}</span>
-        </div>
-        <button
-          type="button"
-          onClick={() => s.setAllModels(!allOn)}
-          className="text-xs text-primary/70 hover:text-primary transition-colors"
-        >
-          {allOn ? '全不选' : '全选'}
-        </button>
-      </div>
-      <div className="space-y-1 max-h-[200px] overflow-y-auto scrollbar-thin pr-0.5">
-        {models.map((m) => (
-          <label
-            key={m.id}
-            className="flex items-center gap-2.5 px-2.5 py-1.5 rounded-md border border-border/30 hover:bg-accent/20 transition-colors cursor-pointer"
-          >
-            <span className="flex-1 min-w-0 text-sm text-foreground/90 truncate font-mono">{m.id}</span>
-            <Switch checked={m.enabled} onCheckedChange={() => s.toggleModel(m.id)} className="scale-[0.7]" />
-          </label>
-        ))}
-      </div>
+    <div className="flex items-center gap-1.5 px-0.5 py-0.5 text-xs text-success">
+      <Check size={12} className="flex-shrink-0" />
+      <span>连接成功 · 已添加 {models.length} 个模型</span>
     </div>
   );
 }

@@ -44,7 +44,7 @@ function MessageList({ scrollDeps = [], header, virtualize = false, className, c
   return (
     <div ref={ref} data-slot="message-list" className="flex-1 min-h-0 flex flex-col" {...props}>
       {header}
-      <ScrollArea ref={scrollRef} className={cn("flex-1", className)}>
+      <ScrollArea ref={scrollRef} className={cn("flex-1 [&_[data-slot=scroll-area-viewport]>div]:!block [&_[data-slot=scroll-area-viewport]>div]:!min-w-0", className)}>
         {virtualize ? (
           <div className="px-3.5 py-4" style={{ height: virtualizer.getTotalSize(), position: "relative" }}>
             {virtualizer.getVirtualItems().map((virtualItem) => (

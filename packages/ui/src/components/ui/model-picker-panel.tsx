@@ -176,7 +176,7 @@ export function ModelPickerPanel({
         )}
       >
         {multiModel && (
-          <Checkbox checked={isSelected} className="size-3.5 pointer-events-none data-[state=checked]:border-cherry-primary data-[state=checked]:bg-cherry-primary flex-shrink-0" tabIndex={-1} />
+          <Checkbox checked={isSelected} className="size-3.5 rounded-[3px] pointer-events-none data-[state=checked]:border-cherry-primary data-[state=checked]:bg-cherry-primary flex-shrink-0" tabIndex={-1} />
         )}
         {/* Provider icon */}
         <BrandLogo id={m.provider.toLowerCase()} fallbackLetter={m.provider[0]} size={16} className="flex-shrink-0" />
