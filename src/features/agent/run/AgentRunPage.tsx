@@ -118,13 +118,8 @@ const CSI_SLASH_COMMANDS = [
   { id: 'cost', label: '/cost', desc: '查看 Token 用量' },
   { id: 'todos', label: '/todos', desc: '列出当前 TODO' },
 ];
-const CSI_MENTIONS: { id: string; label: string; desc: string; icon: React.ComponentType<{ size?: number; className?: string }> }[] = [
-  { id: 'file-app', label: 'src/App.tsx', desc: '文件', icon: FileText },
-  { id: 'file-readme', label: 'README.md', desc: '文件', icon: FileText },
-  { id: 'folder-comp', label: 'src/components/', desc: '文件夹', icon: Folder },
-  { id: 'mcp-fs', label: 'filesystem', desc: 'MCP', icon: Wrench },
-  { id: 'mcp-search', label: 'web-search', desc: 'MCP', icon: Globe },
-];
+// The @ mention catalog (助手 / 模型 / 文件 / MCP) lives inside the shared
+// MentionPickerPanel — the inline groups that used to live here are gone.
 
 function CodexStyleInput({ onSendMessage, autoFocus = false, placeholder, headerControls, onNewSession }: {
   onSendMessage: (text: string) => void;
@@ -203,32 +198,23 @@ function CodexStyleInput({ onSendMessage, autoFocus = false, placeholder, header
           </div>
         )}
 
-        {/* @ mention popup */}
+        {/* @ mention popup — shared two-page panel with 助手 / 模型 / 文件 /
+            MCP categories. Each picks inserts an @<label> token. */}
         {showMention && (
           <div className="absolute bottom-full left-0 right-0 pb-2 z-10">
-            <div className="rounded-xl border border-border/40 bg-card shadow-lg overflow-hidden p-1">
-              <div className="px-2 py-1 text-xs text-muted-foreground/60">提及</div>
-              {CSI_MENTIONS.map(item => {
-                const Icon = item.icon;
-                return (
-                  <button key={item.id} type="button"
-                    onClick={() => {
-                      const idx = input.lastIndexOf('@');
-                      const before = idx >= 0 ? input.slice(0, idx) : input;
-                      setInput(`${before}@${item.label} `);
-                      setShowMention(false);
-                      textareaRef.current?.focus();
-                    }}
-                    className="w-full flex items-center justify-between gap-3 px-2 py-[5px] rounded-md text-left transition-colors hover:bg-accent/50"
-                  >
-                    <div className="flex items-center gap-2">
-                      <Icon size={12} className="text-muted-foreground/50 flex-shrink-0" />
-                      <span className="text-xs text-foreground">{item.label}</span>
-                    </div>
-                    <span className="text-xs text-muted-foreground/50">{item.desc}</span>
-                  </button>
-                );
-              })}
+            <div className="rounded-xl border border-border/40 bg-card shadow-lg overflow-hidden max-h-[360px]">
+              <MentionPickerPanel
+                disableMulti
+                assistantLabel="Agent"
+                onPick={(pick) => {
+                  const label = pick.type === 'assistant' || pick.type === 'model' ? pick.name : pick.label;
+                  const idx = input.lastIndexOf('@');
+                  const before = idx >= 0 ? input.slice(0, idx) : input;
+                  setInput(`${before}@${label} `);
+                  textareaRef.current?.focus();
+                }}
+                onClose={() => setShowMention(false)}
+              />
             </div>
           </div>
         )}
@@ -1124,16 +1110,24 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
   const [dockTab, setDockTab] = useState<'sessions' | 'files' | 'status' | null>(null);
   const showPreview = dockTab === 'files';
   const [dockWidth, setDockWidth] = useState(560);
+  // The pinned 会话 popover uses a narrower default so it reads as a popover
+  // (浮窗), not a flush full-width dock; sessions/artifacts/status each keep
+  // their own resize state.
+  const [topicDockWidth, setTopicDockWidth] = useState(320);
   const dockResizing = useRef(false);
   const handleDockResizeStart = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
     dockResizing.current = true;
     const startX = e.clientX;
-    const startW = dockWidth;
+    const isTopic = dockTab === 'sessions';
+    const startW = isTopic ? topicDockWidth : dockWidth;
+    const minW = isTopic ? 260 : 300;
+    const maxW = isTopic ? 560 : 900;
+    const setW = isTopic ? setTopicDockWidth : setDockWidth;
     const onMove = (ev: MouseEvent) => {
       if (!dockResizing.current) return;
-      const next = Math.max(300, Math.min(900, startW - (ev.clientX - startX)));
-      setDockWidth(next);
+      const next = Math.max(minW, Math.min(maxW, startW - (ev.clientX - startX)));
+      setW(next);
     };
     const onUp = () => {
       dockResizing.current = false;
@@ -1146,7 +1140,7 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
     document.body.style.userSelect = 'none';
     document.addEventListener('mousemove', onMove);
     document.addEventListener('mouseup', onUp);
-  }, [dockWidth]);
+  }, [dockTab, dockWidth, topicDockWidth]);
   const historySidebar = useHistorySidebar('compact');
   const [historyDisplayMode, setHistoryDisplayMode] = useState<SessionDisplayMode>('floating');
   const [selectedAgent, setSelectedAgent] = useState(AVAILABLE_AGENTS[0]);
@@ -1526,8 +1520,9 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
     );
   }
 
-  // Agent + Model picker pair — moved out of the page header into the
-  // composer toolbar. Built once here so it stays in scope of state.
+  // Model picker — moved out of the page header into the composer toolbar.
+  // The agent identity is already established by the surrounding Agent run
+  // page, so the in-composer AgentPicker is redundant and was removed.
   const composerHeaderControls = (
     <>
       <Popover open={showModelPicker} onOpenChange={setShowModelPicker}>
@@ -1997,7 +1992,7 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
                   </div>
                 </div>
               )}
-            </div>
+                </div>
           </motion.div>
           );
         })()}

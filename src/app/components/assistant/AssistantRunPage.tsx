@@ -69,7 +69,7 @@ import { ASSISTANT_MODELS } from '@/app/config/models';
 import { TopicHistoryPage } from '@/features/assistant/TopicHistoryPage';
 import { BranchTreePanel } from '@/features/assistant/BranchTreePanel';
 import { ChatSettingsPanel } from '@/features/assistant/ChatSettingsPanel';
-import { AtMentionPicker } from '@/app/components/shared/AtMentionPicker';
+import { MentionPickerPanel } from '@/app/components/shared/MentionPickerPanel';
 import { ModelPickerPanel } from '@/app/components/shared/ModelPickerPanel';
 import { EntityRail } from '@/app/components/shared/EntityNav';
 import { CreateAssistantWizard } from '@/app/components/shared/CreateAssistantWizard';
@@ -206,7 +206,7 @@ function ParallelResponsesBlock({ responses }: { responses: ParallelResponse[] }
       {/* Responses */}
       <div className={
         layout === 'vertical' ? 'space-y-2' :
-        layout === 'horizontal' ? 'flex gap-2 overflow-x-auto scrollbar-thin-xs pb-1' :
+        layout === 'horizontal' ? 'flex gap-2 overflow-x-auto scrollbar-thin-xs pb-1 min-w-0' :
         'grid grid-cols-2 gap-2'
       }>
         {responses.map(resp => {
@@ -1584,12 +1584,14 @@ export function AssistantRunPage() {
 
 
 
-  // Multi-select state
-  const [selectMode, setSelectMode] = useState<SelectMode>('assistant');
+  // Multi-select state — driven entirely by the @ mention picker
   const [selectedAssistants, setSelectedAssistants] = useState<string[]>(['ast-1']);
   const [selectedModels, setSelectedModels] = useState<string[]>(['gemini-3-pro-image']);
-  const [multiAssistant, setMultiAssistant] = useState(false);
-  const [multiModel, setMultiModel] = useState(false);
+  // Chat defaults to multi-select for both assistants and models so the @
+  // picker shows checkboxes immediately (single-pick remains available via
+  // the in-panel Switch).
+  const [multiAssistant, setMultiAssistant] = useState(true);
+  const [multiModel, setMultiModel] = useState(true);
 
   // Topics
   const [topics, setTopics] = useState<AssistantTopic[]>(MOCK_TOPICS);
@@ -1698,6 +1700,9 @@ export function AssistantRunPage() {
   const [showArtifacts, setShowArtifacts] = useState(false);
   const [artifactFullscreen, setArtifactFullscreen] = useState(false);
   const [artifactPanelWidth, setArtifactPanelWidth] = useState(420);
+  // Pinned 话题 popover uses a narrower default so it reads as a 浮窗, not a
+  // flush wide dock; topics and 创作物 each keep their own resize state.
+  const [topicPanelWidth, setTopicPanelWidth] = useState(320);
   // The right dock is a shared module — 话题 / 文件 / 侧边聊天 / 浏览器 / 终端,
   // switched by a vertical tab rail on its right edge. null = hidden.
   type DockTab = 'topics' | 'artifacts' | 'settings';
@@ -1712,13 +1717,17 @@ export function AssistantRunPage() {
     e.preventDefault();
     artifactResizing.current = true;
     const startX = e.clientX;
-    const startW = artifactPanelWidth;
+    const isTopic = dockTab === 'topics';
+    const startW = isTopic ? topicPanelWidth : artifactPanelWidth;
+    const setW = isTopic ? setTopicPanelWidth : setArtifactPanelWidth;
+    const minW = isTopic ? 260 : 280;
     const onMove = (ev: MouseEvent) => {
       if (!artifactResizing.current) return;
       const containerRect = artifactContainerRef.current?.getBoundingClientRect();
-      const maxW = containerRect ? containerRect.width * 0.65 : 800;
-      const newW = Math.max(280, Math.min(maxW, startW - (ev.clientX - startX)));
-      setArtifactPanelWidth(newW);
+      const containerCap = containerRect ? containerRect.width * 0.65 : 800;
+      const maxW = isTopic ? Math.min(560, containerCap) : containerCap;
+      const newW = Math.max(minW, Math.min(maxW, startW - (ev.clientX - startX)));
+      setW(newW);
     };
     const onUp = () => {
       artifactResizing.current = false;
@@ -1731,7 +1740,7 @@ export function AssistantRunPage() {
     document.body.style.userSelect = 'none';
     document.addEventListener('mousemove', onMove);
     document.addEventListener('mouseup', onUp);
-  }, [artifactPanelWidth]);
+  }, [dockTab, artifactPanelWidth, topicPanelWidth]);
   const historySidebar = useHistorySidebar('compact');
   const [showCreateAssistant, setShowCreateAssistant] = useState(false);
   // "No model configured" demo state; connecting a provider flips it back.
@@ -1743,6 +1752,7 @@ export function AssistantRunPage() {
   const [showBranchTree, setShowBranchTree] = useState(false);
   const [minimalInput, setMinimalInput] = useState(true);
   const [toolbarExpanded, setToolbarExpanded] = useState(true);
+  const [composerModelOpen, setComposerModelOpen] = useState(false);
   const [reasoningLevel, setReasoningLevel] = useState<string | null>(null);
 
   // Toolbar tool definitions — secondary tools are reorderable
@@ -2158,6 +2168,16 @@ export function AssistantRunPage() {
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Escape' && showAtMenu) { e.preventDefault(); setShowAtMenu(false); return; }
     if (e.key === 'Escape' && showSlashMenu) { e.preventDefault(); setShowSlashMenu(false); return; }
+    // @ opens the assistant/model picker (RichComposer doesn't expose an
+    // onChange, so we sniff the key directly). Consume the `@` so the picker
+    // is the sole affordance.
+    if (e.key === '@' && !e.metaKey && !e.ctrlKey) {
+      e.preventDefault();
+      setShowAtMenu(true);
+      setShowSlashMenu(false);
+      setShowPlusMenu(false);
+      return;
+    }
     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); }
   };
 
@@ -2467,7 +2487,7 @@ export function AssistantRunPage() {
                     ref={composerRef}
                     attachments={inlineAttachments}
                     onRemoveAttachment={removeInlineAttachment}
-                    placeholder={isResponding ? '助手回复中，发送的消息将加入队列…' : (minimalInput ? '在这里输入消息，附件可以与文字混合 — @ 选择助手 / 插入 Prompt' : '在这里输入消息，附件可以与文字混合插入')}
+                    placeholder={isResponding ? '助手回复中，发送的消息将加入队列…' : (minimalInput ? '在这里输入消息，附件可以与文字混合 — @ 选择助手 / 插入 Prompt' : '在这里输入消息 — @ 选择助手 / 模型 / 插入 Prompt')}
                     onKeyDown={handleKeyDown}
                   />
                   {/* / Slash Prompt Picker */}
@@ -2499,20 +2519,34 @@ export function AssistantRunPage() {
                       </div>
                     </div>
                   )}
-                  {/* @ Mention Picker */}
+                  {/* @ Mention Picker — shared two-page panel (助手 / 模型 /
+                      文件 / MCP). 助手 & 模型 picks update selection state;
+                      文件 & MCP picks insert an @<label> token into the
+                      composer. */}
                   {showAtMenu && (
-                    <AtMentionPicker
-                      selectedAssistants={selectedAssistants}
-                      selectedModels={selectedModels}
-                      onSelectAssistant={handleSelectAssistant}
-                      onSelectModel={handleSelectModel}
-                      multiAssistant={multiAssistant}
-                      multiModel={multiModel}
-                      onToggleMultiAssistant={handleToggleMultiAssistant}
-                      onToggleMultiModel={handleToggleMultiModel}
-                      onCreateAssistant={() => setShowCreateAssistant(true)}
-                      onClose={() => setShowAtMenu(false)}
-                    />
+                    <div className="absolute bottom-full left-0 right-0 mb-1 z-10">
+                      <div className="mx-2 rounded-xl border border-border/50 bg-popover shadow-lg overflow-hidden max-h-[360px]">
+                        <MentionPickerPanel
+                          selectedAssistantIds={selectedAssistants}
+                          selectedModelIds={selectedModels}
+                          multiAssistant={multiAssistant}
+                          multiModel={multiModel}
+                          onToggleMultiAssistant={handleToggleMultiAssistant}
+                          onToggleMultiModel={handleToggleMultiModel}
+                          onPick={(pick) => {
+                            if (pick.type === 'assistant') {
+                              handleSelectAssistant(pick.id);
+                            } else if (pick.type === 'model') {
+                              handleSelectModel(pick.id);
+                            } else {
+                              // file / mcp → insert @<label> into the composer text
+                              composerRef.current?.insertText(`@${pick.label} `);
+                            }
+                          }}
+                          onClose={() => setShowAtMenu(false)}
+                        />
+                      </div>
+                    </div>
                   )}
                   <div className="absolute bottom-[7px] left-2.5 right-2.5 flex items-center justify-between">
                     <div className="flex items-center gap-0.5">
@@ -2702,6 +2736,31 @@ export function AssistantRunPage() {
                           </Tooltip>
                         </>
                       )}
+                      {/* Model picker — sits next to the + */}
+                      <Popover open={composerModelOpen} onOpenChange={setComposerModelOpen}>
+                        <PopoverTrigger asChild>
+                          <Button variant="ghost" size="inline" className="gap-1 px-1.5 py-1 ml-0.5 text-xs text-muted-foreground hover:text-foreground hover:bg-accent/50 rounded-md">
+                            {(() => {
+                              const am = ASSISTANT_MODELS.find(m => m.id === selectedModels[0]);
+                              return (<>
+                                {am && <BrandLogo id={am.provider.toLowerCase()} fallbackLetter={am.provider[0]} size={13} className="shrink-0" />}
+                                <span className="truncate max-w-[130px]">{selectedModels.length > 1 ? `${selectedModels.length} 个模型` : am?.name || '选择模型'}</span>
+                                <ChevronDown size={9} className={`text-muted-foreground/40 transition-transform ${composerModelOpen ? 'rotate-180' : ''}`} />
+                              </>);
+                            })()}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent side="top" align="start" className="p-0 w-[480px]">
+                          <ModelPickerPanel
+                            selectedModels={selectedModels}
+                            onSelectModel={handleSelectModel}
+                            multiModel={multiModel}
+                            onToggleMultiModel={handleToggleMultiModel}
+                            onClose={() => setComposerModelOpen(false)}
+                            onConnectProvider={() => { setComposerModelOpen(false); openProviderSetup(); }}
+                          />
+                        </PopoverContent>
+                      </Popover>
                       {/* Thinking level pill — matches the cascade icons:
                           Brain / BrainCircuit / BrainCog ramp by depth. */}
                       {reasoningLevel && (() => {
@@ -2727,23 +2786,9 @@ export function AssistantRunPage() {
                           </Tooltip>
                         );
                       })()}
-                      {/* Assistant + model selectors — after the + / tools */}
-                      <div className="w-px h-3.5 bg-border/40 mx-0.5" />
-                      <MultiSelectPicker
-                        mode={selectMode}
-                        selectedAssistants={selectedAssistants}
-                        selectedModels={selectedModels}
-                        onSelectAssistant={handleSelectAssistant}
-                        onSelectModel={handleSelectModel}
-                        onChangeMode={setSelectMode}
-                        multiAssistant={multiAssistant}
-                        multiModel={multiModel}
-                        onToggleMultiAssistant={handleToggleMultiAssistant}
-                        onToggleMultiModel={handleToggleMultiModel}
-                        onCreateAssistant={() => setShowCreateAssistant(true)}
-                        onConfigureAssistant={(id) => { setSelectedAssistants([id]); setRightPanel('assistantInfo'); }}
-                        onConnectProvider={openProviderSetup}
-                      />
+                      {/* Assistant + model selection moved to @ mention —
+                          users type `@` to open a picker that supports
+                          multi-select for both assistants and models. */}
                     </div>
                     <div className="flex items-center gap-2">
                       <div className="flex items-center gap-2.5 text-xs text-muted-foreground">
@@ -3003,7 +3048,10 @@ export function AssistantRunPage() {
       </div>
 
       {/* ===== Right dock panel — 话题 or 创作物 — docked to the app's far-right
-          edge, full height (one level out from the chat content column). ===== */}
+          edge. 话题 renders as a 浮窗 (floating popover with rounded corners,
+          shadow and a margin from the edges) while still reserving flex width
+          so the chat content reflows around it. 创作物 stays as a flush dock
+          since it needs full-bleed canvas space. ===== */}
       <AnimatePresence initial={false}>
         {dockTab !== null && !artifactFullscreen && (() => {
           // The 话题 list is a compact, fixed-width rail; 参数设置 a slightly wider
