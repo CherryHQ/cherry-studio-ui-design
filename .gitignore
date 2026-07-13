@@ -17,3 +17,6 @@ src/imports/
 
 # dev-annotator 运行时生成的标注数据
 .context/
+
+# Claude Code 会话工作树等本地数据
+.claude/worktrees/
