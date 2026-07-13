@@ -1833,7 +1833,7 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
         {onBack && (
           <Button variant="ghost" size="icon-xs" onClick={onBack}
             className="p-1.5 w-auto h-auto text-muted-foreground hover:text-foreground hover:bg-accent/50">
-            <ArrowLeft size={18} strokeWidth={1.6} />
+            <ArrowLeft className="size-[18px]" strokeWidth={1.6} />
           </Button>
         )}
 
@@ -1841,7 +1841,7 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
         <Tooltip content={historySidebar.isCompact ? '收起 Agent 列表' : '展开 Agent 列表'} side="bottom">
           <Button variant="ghost" size="icon-xs" onClick={() => historySidebar.toggle()}
             className={`p-1.5 w-auto h-auto mr-0.5 ${historySidebar.isCompact ? 'text-muted-foreground hover:text-foreground hover:bg-accent/40' : 'text-muted-foreground/40 hover:text-foreground hover:bg-accent/40'}`}>
-            {historySidebar.isCompact ? <PanelLeftClose size={18} strokeWidth={1.6} /> : <PanelLeftOpen size={18} strokeWidth={1.6} />}
+            {historySidebar.isCompact ? <PanelLeftClose className="size-[18px]" strokeWidth={1.6} /> : <PanelLeftOpen className="size-[18px]" strokeWidth={1.6} />}
           </Button>
         </Tooltip>
 
@@ -1859,7 +1859,7 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
               dockTab === 'sessions' ? 'bg-accent/25 text-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-accent/40'
             }`}
           >
-            <History size={18} strokeWidth={1.6} />
+            <History className="size-[18px]" strokeWidth={1.6} />
           </Button>
         </Tooltip>
         <div className="w-px h-3.5 bg-border/30 mx-0.5" />
@@ -1882,7 +1882,7 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
             <PopoverTrigger asChild>
               <Button variant="ghost" size="icon-xs"
                 className={`relative p-1.5 w-auto h-auto ${showPlan ? 'text-foreground bg-accent/25' : 'text-muted-foreground hover:text-foreground hover:bg-accent/40'}`}>
-                <ListChecks size={18} strokeWidth={1.6} />
+                <ListChecks className="size-[18px]" strokeWidth={1.6} />
                 {sessionData.steps.some(s => s.status === 'running') && (
                   <span className="absolute top-[2px] right-[2px] w-[5px] h-[5px] rounded-full bg-warning animate-pulse" />
                 )}
@@ -1915,7 +1915,7 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
               else { setDockTab('files'); setShowExplorer(true); }
             }}
             className={`p-1.5 w-auto h-auto ${showPreview ? 'text-foreground bg-accent/25' : 'text-muted-foreground hover:text-foreground hover:bg-accent/40'}`}>
-            <PanelRightInsetIcon size={18} />
+            <PanelRightInsetIcon size={18} className="size-[18px]" />
           </Button></Tooltip>
         </div>
       </div>
