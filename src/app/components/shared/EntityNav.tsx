@@ -1,10 +1,12 @@
 import React, { useMemo, useState, useRef } from 'react';
-import { Plus, MessageSquare, ChevronDown, ListFilter, Check, MoreHorizontal, Pencil, Copy, Trash2, FolderOpen } from 'lucide-react';
+import { Plus, MessageSquare, ChevronDown, ListFilter, Check, MoreHorizontal, Pencil, Copy, Trash2, FolderOpen, Pin, ExternalLink, PictureInPicture2, PanelLeft } from 'lucide-react';
 import { motion } from 'motion/react';
 import {
   Button, SearchInput, Popover, PopoverTrigger, PopoverContent,
   DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem,
   DropdownMenuSeparator, DropdownMenuSub, DropdownMenuSubTrigger, DropdownMenuSubContent,
+  ContextMenu, ContextMenuTrigger, ContextMenuContent, ContextMenuItem,
+  ContextMenuSeparator, ContextMenuSub, ContextMenuSubTrigger, ContextMenuSubContent,
 } from '@cherry-studio/ui';
 
 // ===========================
@@ -27,6 +29,8 @@ export interface EntityRailItem {
   count?: number;
   /** Unread badge count (IM-style). Bumps the row's text to full opacity. */
   unread?: number;
+  /** 置顶任务 — 行首显示一枚小图钉。 */
+  pinned?: boolean;
 }
 
 export interface EntityRailProps {
@@ -77,6 +81,17 @@ export interface EntityRailProps {
   onReorderGroups?: (orderedKeys: string[]) => void;
   /** 手动排序 drag: reorder flat list rows. Dragging enabled when set. */
   onReorderItems?: (orderedIds: string[]) => void;
+  /** 任务行右键菜单（重命名/置顶/新标签页/新窗口/删除；position 提供时
+   * 追加「会话位置 ▸ 左侧/右侧」子菜单 — 专家列表视图）。 */
+  rowContextMenu?: {
+    onRename: (id: string) => void;
+    isPinned?: (id: string) => boolean;
+    onTogglePin: (id: string) => void;
+    onOpenInNewTab: (id: string) => void;
+    onOpenInNewWindow: (id: string) => void;
+    position?: { get: (id: string) => 'left' | 'right'; set: (id: string, pos: 'left' | 'right') => void };
+    onDelete: (id: string) => void;
+  };
   /** Rich filter menu at the right edge of the "new" row (newAsRow only).
    * Sections render in order: 展示方式 / 排序方式 / 全部展开收起 / actions.
    * Codex-style single layer: left check column, no icons, closes on select. */
@@ -105,7 +120,7 @@ export interface EntityRailTreeGroup {
   children: EntityRailItem[];
 }
 
-export function EntityRail({ title, items, activeId, onSelect, onNew, onEdit, searchable = true, filterable = true, newLabel, newAsRow, newActions, navEntries, treeGroups, onGroupSelect, activeGroupKey, onReorderGroups, onReorderItems, railMenu }: EntityRailProps) {
+export function EntityRail({ title, items, activeId, onSelect, onNew, onEdit, searchable = true, filterable = true, newLabel, newAsRow, newActions, navEntries, treeGroups, onGroupSelect, activeGroupKey, onReorderGroups, onReorderItems, rowContextMenu, railMenu }: EntityRailProps) {
   const [query, setQuery] = useState('');
   const [groupByTag, setGroupByTag] = useState(false);
   const [sort, setSort] = useState<'default' | 'time' | 'name'>('default');
@@ -169,9 +184,8 @@ export function EntityRail({ title, items, activeId, onSelect, onNew, onEdit, se
     // 平铺行可拖；树形子行也可拖，但只允许在同一组内落下。
     const draggable = !!onReorderItems && (!!opts?.groupKey || !opts?.indent);
     const canDropHere = dragKind === 'row' && dragKey && dragKey !== item.id && dragGroup === opts?.groupKey;
-    return (
+    const row = (
       <div
-        key={item.id}
         className={`group/row relative ${dropKey === item.id ? 'border-t-2 border-cherry-primary/60' : ''}`}
         draggable={draggable}
         onDragStart={draggable ? (e) => { e.stopPropagation(); setDragKey(item.id); setDragKind('row'); setDragGroup(opts?.groupKey); } : undefined}
@@ -197,6 +211,7 @@ export function EntityRail({ title, items, activeId, onSelect, onNew, onEdit, se
           }`}
         >
           {item.avatar ? <span className="text-base leading-none flex-shrink-0">{item.avatar}</span> : null}
+          {item.pinned && <Pin size={9} className="-rotate-45 text-muted-foreground/50 flex-shrink-0" />}
           <span className={`text-sm truncate flex-1 min-w-0 ${active ? 'font-medium' : (item.unread ? 'text-foreground' : '')}`}>{item.name}</span>
           {/* Trailing slot: a small, low-key unread (message) count. Kept
               subtle on purpose — a soft pill rather than a bold filled badge —
@@ -226,6 +241,43 @@ export function EntityRail({ title, items, activeId, onSelect, onNew, onEdit, se
           </DropdownMenu>
         </div>
       </div>
+    );
+    if (!rowContextMenu) return <React.Fragment key={item.id}>{row}</React.Fragment>;
+    const pinned = rowContextMenu.isPinned?.(item.id) ?? false;
+    const pos = rowContextMenu.position?.get(item.id) ?? 'left';
+    return (
+      <ContextMenu key={item.id}>
+        <ContextMenuTrigger asChild>{row}</ContextMenuTrigger>
+        <ContextMenuContent className="w-44">
+          <ContextMenuItem className="gap-2" onClick={() => rowContextMenu.onRename(item.id)}>
+            <Pencil size={13} />重命名
+          </ContextMenuItem>
+          <ContextMenuItem className="gap-2" onClick={() => rowContextMenu.onTogglePin(item.id)}>
+            <Pin size={13} className={pinned ? '' : '-rotate-45'} />{pinned ? '取消置顶' : '置顶任务'}
+          </ContextMenuItem>
+          <ContextMenuItem className="gap-2" onClick={() => rowContextMenu.onOpenInNewTab(item.id)}>
+            <ExternalLink size={13} />在新标签页打开
+          </ContextMenuItem>
+          <ContextMenuItem className="gap-2" onClick={() => rowContextMenu.onOpenInNewWindow(item.id)}>
+            <PictureInPicture2 size={13} />从新窗口打开
+          </ContextMenuItem>
+          {rowContextMenu.position && (
+            <ContextMenuSub>
+              <ContextMenuSubTrigger className="gap-2">
+                <PanelLeft size={13} />会话位置
+              </ContextMenuSubTrigger>
+              <ContextMenuSubContent className="w-24">
+                <ContextMenuItem disabled={pos === 'left'} onClick={() => rowContextMenu.position!.set(item.id, 'left')}>左侧</ContextMenuItem>
+                <ContextMenuItem disabled={pos === 'right'} onClick={() => rowContextMenu.position!.set(item.id, 'right')}>右侧</ContextMenuItem>
+              </ContextMenuSubContent>
+            </ContextMenuSub>
+          )}
+          <ContextMenuSeparator />
+          <ContextMenuItem className="gap-2 text-destructive focus:text-destructive" onClick={() => rowContextMenu.onDelete(item.id)}>
+            <Trash2 size={13} />删除
+          </ContextMenuItem>
+        </ContextMenuContent>
+      </ContextMenu>
     );
   };
 
