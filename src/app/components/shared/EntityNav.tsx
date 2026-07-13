@@ -109,10 +109,14 @@ export function EntityRail({ title, items, activeId, onSelect, onNew, onEdit, se
   // this set.
   const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(() => new Set());
   const [menuOpen, setMenuOpen] = useState(false);
-  // 手动排序 drag state — group headers and flat rows share the indicator
-  // style (a top border on the current drop target).
+  // 手动排序 drag state — group headers and rows share the indicator style
+  // (a top border on the current drop target). kind 区分拖的是组头还是行，
+  // group 记录被拖行所属的组（树形子行只允许同组内重排）。
   const [dragKey, setDragKey] = useState<string | null>(null);
+  const [dragKind, setDragKind] = useState<'group' | 'row' | null>(null);
+  const [dragGroup, setDragGroup] = useState<string | undefined>(undefined);
   const [dropKey, setDropKey] = useState<string | null>(null);
+  const clearDrag = () => { setDragKey(null); setDragKind(null); setDragGroup(undefined); setDropKey(null); };
 
   const hasTags = useMemo(() => items.some((i) => i.tags && i.tags.length > 0), [items]);
 
@@ -157,22 +161,30 @@ export function EntityRail({ title, items, activeId, onSelect, onNew, onEdit, se
 
   const menuActive = sort !== 'default' || groupByTag;
 
-  const renderRow = (item: EntityRailItem, opts?: { indent?: boolean }) => {
+  const renderRow = (item: EntityRailItem, opts?: { indent?: boolean; groupKey?: string }) => {
     const active = item.id === activeId;
-    const draggable = !!onReorderItems && !opts?.indent;
+    // 平铺行可拖；树形子行也可拖，但只允许在同一组内落下。
+    const draggable = !!onReorderItems && (!!opts?.groupKey || !opts?.indent);
+    const canDropHere = dragKind === 'row' && dragKey && dragKey !== item.id && dragGroup === opts?.groupKey;
     return (
       <div
         key={item.id}
         className={`group/row relative ${dropKey === item.id ? 'border-t-2 border-cherry-primary/60' : ''}`}
         draggable={draggable}
-        onDragStart={draggable ? () => setDragKey(item.id) : undefined}
-        onDragOver={draggable ? (e) => { e.preventDefault(); if (dragKey && dragKey !== item.id) setDropKey(item.id); } : undefined}
+        onDragStart={draggable ? (e) => { e.stopPropagation(); setDragKey(item.id); setDragKind('row'); setDragGroup(opts?.groupKey); } : undefined}
+        onDragOver={draggable ? (e) => { if (canDropHere) { e.preventDefault(); setDropKey(item.id); } } : undefined}
         onDragLeave={draggable ? () => setDropKey(k => (k === item.id ? null : k)) : undefined}
         onDrop={draggable ? () => {
-          if (dragKey && dragKey !== item.id) onReorderItems!(reorder(filtered.map(i => i.id), dragKey, item.id));
-          setDragKey(null); setDropKey(null);
+          if (canDropHere) {
+            // 树形模式下重排的是全量话题的扁平顺序（同组内移动不打散分组）。
+            const ids = treeGroups
+              ? treeGroups.flatMap(g => g.children.map(c => c.id))
+              : filtered.map(i => i.id);
+            onReorderItems!(reorder(ids, dragKey!, item.id));
+          }
+          clearDrag();
         } : undefined}
-        onDragEnd={draggable ? () => { setDragKey(null); setDropKey(null); } : undefined}
+        onDragEnd={draggable ? clearDrag : undefined}
       >
         <button
           type="button"
@@ -436,22 +448,23 @@ export function EntityRail({ title, items, activeId, onSelect, onNew, onEdit, se
               const isCollapsed = collapsedGroups.has(g.key);
               const headerActive = g.key === activeGroupKey;
               const groupDraggable = !!onReorderGroups;
+              const canDropGroup = dragKind === 'group' && dragKey && dragKey !== g.key;
               const foldable = g.children.length > 0;
               return (
-                <div
-                  key={g.key}
-                  className={`mb-px ${dropKey === g.key ? 'border-t-2 border-cherry-primary/60' : ''}`}
-                  draggable={groupDraggable}
-                  onDragStart={groupDraggable ? () => setDragKey(g.key) : undefined}
-                  onDragOver={groupDraggable ? (e) => { e.preventDefault(); if (dragKey && dragKey !== g.key) setDropKey(g.key); } : undefined}
-                  onDragLeave={groupDraggable ? () => setDropKey(k => (k === g.key ? null : k)) : undefined}
-                  onDrop={groupDraggable ? () => {
-                    if (dragKey && dragKey !== g.key) onReorderGroups!(reorder(treeGroups.map(t => t.key), dragKey, g.key));
-                    setDragKey(null); setDropKey(null);
-                  } : undefined}
-                  onDragEnd={groupDraggable ? () => { setDragKey(null); setDropKey(null); } : undefined}
-                >
-                  <div className={`flex items-center rounded-md transition-colors ${headerActive ? 'bg-accent/40' : 'hover:bg-accent/40'}`}>
+                <div key={g.key} className="mb-px">
+                  {/* 只有组头可拖（重排专家顺序）——子行有自己的同组内拖拽。 */}
+                  <div
+                    className={`flex items-center rounded-md transition-colors ${headerActive ? 'bg-accent/40' : 'hover:bg-accent/40'} ${dropKey === g.key ? 'border-t-2 border-cherry-primary/60' : ''}`}
+                    draggable={groupDraggable}
+                    onDragStart={groupDraggable ? () => { setDragKey(g.key); setDragKind('group'); setDragGroup(undefined); } : undefined}
+                    onDragOver={groupDraggable ? (e) => { if (canDropGroup) { e.preventDefault(); setDropKey(g.key); } } : undefined}
+                    onDragLeave={groupDraggable ? () => setDropKey(k => (k === g.key ? null : k)) : undefined}
+                    onDrop={groupDraggable ? () => {
+                      if (canDropGroup) onReorderGroups!(reorder(treeGroups.map(t => t.key), dragKey!, g.key));
+                      clearDrag();
+                    } : undefined}
+                    onDragEnd={groupDraggable ? clearDrag : undefined}
+                  >
                     {foldable ? (
                       <button
                         type="button"
@@ -479,7 +492,7 @@ export function EntityRail({ title, items, activeId, onSelect, onNew, onEdit, se
                     </button>
                   </div>
                   {foldable && !isCollapsed && (
-                    <div className="space-y-px">{g.children.map((c) => renderRow(c, { indent: true }))}</div>
+                    <div className="space-y-px">{g.children.map((c) => renderRow(c, { indent: true, groupKey: g.key }))}</div>
                   )}
                 </div>
               );
