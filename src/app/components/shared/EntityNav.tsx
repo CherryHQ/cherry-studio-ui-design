@@ -65,12 +65,32 @@ export interface EntityRailProps {
     active?: boolean;
     onClick: () => void;
   }[];
+  /** Force tag-grouping of the list (each item shows under its tags) with
+   * collapsible section headers — the 工作目录 display mode on the Agent rail. */
+  grouped?: boolean;
+  /** Rich filter menu at the right edge of the "new" row (newAsRow only).
+   * Sections render in order: 展示方式 / 排序方式 / 全部展开收起 / actions. */
+  railMenu?: {
+    displayModes?: { options: { id: string; label: string }[]; value: string; onChange: (id: string) => void };
+    sortModes?: { options: { id: string; label: string }[]; value: string; onChange: (id: string) => void };
+    /** Show 全部展开 / 全部收起 rows — they act on the grouped section headers. */
+    expandCollapse?: boolean;
+    actions?: {
+      id: string;
+      label: string;
+      icon: React.ComponentType<{ size?: number; className?: string }>;
+      onClick: () => void;
+    }[];
+  };
 }
 
-export function EntityRail({ title, items, activeId, onSelect, onNew, onEdit, searchable = true, filterable = true, newLabel, newAsRow, newActions, navEntries }: EntityRailProps) {
+export function EntityRail({ title, items, activeId, onSelect, onNew, onEdit, searchable = true, filterable = true, newLabel, newAsRow, newActions, navEntries, grouped, railMenu }: EntityRailProps) {
   const [query, setQuery] = useState('');
   const [groupByTag, setGroupByTag] = useState(false);
   const [sort, setSort] = useState<'default' | 'time' | 'name'>('default');
+  // Collapsed section headers in the grouped view. 全部展开/收起 in the
+  // railMenu act on this set.
+  const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(() => new Set());
 
   const hasTags = useMemo(() => items.some((i) => i.tags && i.tags.length > 0), [items]);
 
@@ -84,7 +104,7 @@ export function EntityRail({ title, items, activeId, onSelect, onNew, onEdit, se
 
   // When grouping by tag, an entity shows under each of its tags.
   const groups = useMemo(() => {
-    if (!groupByTag) return null;
+    if (!groupByTag && !grouped) return null;
     const map = new Map<string, EntityRailItem[]>();
     filtered.forEach((item) => {
       const tags = item.tags && item.tags.length > 0 ? item.tags : ['未分类'];
@@ -94,7 +114,15 @@ export function EntityRail({ title, items, activeId, onSelect, onNew, onEdit, se
       });
     });
     return Array.from(map.entries());
-  }, [filtered, groupByTag]);
+  }, [filtered, groupByTag, grouped]);
+
+  const toggleGroup = (tag: string) => setCollapsedGroups((prev) => {
+    const next = new Set(prev);
+    if (next.has(tag)) next.delete(tag); else next.add(tag);
+    return next;
+  });
+  const expandAllGroups = () => setCollapsedGroups(new Set());
+  const collapseAllGroups = () => setCollapsedGroups(new Set((groups ?? []).map(([tag]) => tag)));
 
   const menuActive = sort !== 'default' || groupByTag;
 
@@ -219,42 +247,129 @@ export function EntityRail({ title, items, activeId, onSelect, onNew, onEdit, se
 
       {/* List */}
       <div className="flex-1 overflow-y-auto px-1.5 py-1 [&::-webkit-scrollbar]:w-[2px] [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-transparent [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-foreground/10">
-        {/* Codex-style "new" row pinned above the list. With newActions it opens
-            a dropdown (创建 Agent / 创建项目组); otherwise it fires onNew. */}
-        {newAsRow && (newActions?.length || onNew) && (
-          newActions?.length ? (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button
-                  type="button"
-                  className="w-full min-w-0 flex items-center gap-2 px-2.5 py-[6px] rounded-md text-left text-foreground/80 hover:bg-accent/40 transition-colors mb-0.5"
-                >
-                  <Plus size={16} strokeWidth={1.75} className="flex-shrink-0 text-muted-foreground" />
-                  <span className="text-sm truncate flex-1 min-w-0">{newLabel ?? `新建${title}`}</span>
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="start" className="w-40">
-                {newActions.map((a) => {
-                  const Icon = a.icon;
-                  return (
-                    <DropdownMenuItem key={a.id} className="gap-2 text-xs" onClick={a.onClick}>
-                      <Icon size={13} className="text-muted-foreground" />
-                      {a.label}
-                    </DropdownMenuItem>
-                  );
-                })}
-              </DropdownMenuContent>
-            </DropdownMenu>
-          ) : (
-            <button
-              type="button"
-              onClick={onNew}
-              className="w-full min-w-0 flex items-center gap-2 px-2.5 py-[6px] rounded-md text-left text-foreground/80 hover:bg-accent/40 transition-colors mb-0.5"
-            >
-              <Plus size={16} strokeWidth={1.75} className="flex-shrink-0 text-muted-foreground" />
-              <span className="text-sm truncate flex-1 min-w-0">{newLabel ?? `新建${title}`}</span>
-            </button>
-          )
+        {/* Codex-style "new" row pinned above the list. Multiple newActions
+            open a dropdown; a single action (or onNew) fires directly. The
+            railMenu filter icon docks at the row's right edge. */}
+        {newAsRow && (newActions?.length || onNew || railMenu) && (
+          <div className="flex items-center gap-0.5 mb-0.5">
+            {newActions && newActions.length > 1 ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button
+                    type="button"
+                    className="flex-1 min-w-0 flex items-center gap-2 px-2.5 py-[6px] rounded-md text-left text-foreground/80 hover:bg-accent/40 transition-colors"
+                  >
+                    <Plus size={16} strokeWidth={1.75} className="flex-shrink-0 text-muted-foreground" />
+                    <span className="text-sm truncate flex-1 min-w-0">{newLabel ?? `新建${title}`}</span>
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="w-40">
+                  {newActions.map((a) => {
+                    const Icon = a.icon;
+                    return (
+                      <DropdownMenuItem key={a.id} className="gap-2 text-xs" onClick={a.onClick}>
+                        <Icon size={13} className="text-muted-foreground" />
+                        {a.label}
+                      </DropdownMenuItem>
+                    );
+                  })}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (newActions?.length || onNew) ? (
+              <button
+                type="button"
+                onClick={newActions?.length === 1 ? newActions[0].onClick : onNew}
+                className="flex-1 min-w-0 flex items-center gap-2 px-2.5 py-[6px] rounded-md text-left text-foreground/80 hover:bg-accent/40 transition-colors"
+              >
+                <Plus size={16} strokeWidth={1.75} className="flex-shrink-0 text-muted-foreground" />
+                <span className="text-sm truncate flex-1 min-w-0">{newLabel ?? `新建${title}`}</span>
+              </button>
+            ) : <div className="flex-1" />}
+            {railMenu && (
+              <Popover>
+                <PopoverTrigger asChild>
+                  <button
+                    type="button"
+                    title="筛选"
+                    className="p-1.5 rounded-md flex-shrink-0 text-muted-foreground/60 hover:text-foreground hover:bg-accent/40 transition-colors"
+                  >
+                    <ListFilter size={14} />
+                  </button>
+                </PopoverTrigger>
+                <PopoverContent align="end" sideOffset={4} className="w-[176px] p-1">
+                  {railMenu.displayModes && (
+                    <>
+                      <div className="px-2 pt-1.5 pb-0.5 text-[11px] text-muted-foreground/50">展示方式</div>
+                      {railMenu.displayModes.options.map((opt) => {
+                        const active = railMenu.displayModes!.value === opt.id;
+                        return (
+                          <Button
+                            key={opt.id}
+                            variant="ghost"
+                            size="xs"
+                            onClick={() => railMenu.displayModes!.onChange(opt.id)}
+                            className={`w-full justify-start gap-2 px-2 ${active ? 'text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+                          >
+                            <span className="flex-1 text-left">{opt.label}</span>
+                            {active && <Check size={10} className="text-primary flex-shrink-0" />}
+                          </Button>
+                        );
+                      })}
+                    </>
+                  )}
+                  {railMenu.sortModes && (
+                    <>
+                      <div className="my-1 h-px bg-border/40" />
+                      <div className="px-2 pt-0.5 pb-0.5 text-[11px] text-muted-foreground/50">排序方式</div>
+                      {railMenu.sortModes.options.map((opt) => {
+                        const active = railMenu.sortModes!.value === opt.id;
+                        return (
+                          <Button
+                            key={opt.id}
+                            variant="ghost"
+                            size="xs"
+                            onClick={() => railMenu.sortModes!.onChange(opt.id)}
+                            className={`w-full justify-start gap-2 px-2 ${active ? 'text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+                          >
+                            <span className="flex-1 text-left">{opt.label}</span>
+                            {active && <Check size={10} className="text-primary flex-shrink-0" />}
+                          </Button>
+                        );
+                      })}
+                    </>
+                  )}
+                  {railMenu.expandCollapse && (
+                    <>
+                      <div className="my-1 h-px bg-border/40" />
+                      <Button variant="ghost" size="xs" onClick={expandAllGroups}
+                        className="w-full justify-start gap-2 px-2 text-muted-foreground hover:text-foreground">
+                        <span className="flex-1 text-left">全部展开</span>
+                      </Button>
+                      <Button variant="ghost" size="xs" onClick={collapseAllGroups}
+                        className="w-full justify-start gap-2 px-2 text-muted-foreground hover:text-foreground">
+                        <span className="flex-1 text-left">全部收起</span>
+                      </Button>
+                    </>
+                  )}
+                  {railMenu.actions && railMenu.actions.length > 0 && (
+                    <>
+                      <div className="my-1 h-px bg-border/40" />
+                      {railMenu.actions.map((a) => {
+                        const Icon = a.icon;
+                        return (
+                          <Button key={a.id} variant="ghost" size="xs" onClick={a.onClick}
+                            className="w-full justify-start gap-2 px-2 text-muted-foreground hover:text-foreground">
+                            <Icon size={12} className="flex-shrink-0" />
+                            <span className="flex-1 text-left">{a.label}</span>
+                          </Button>
+                        );
+                      })}
+                    </>
+                  )}
+                </PopoverContent>
+              </Popover>
+            )}
+          </div>
         )}
         {/* Fixed nav entries (e.g. 定时任务) — pinned right under the "new" row. */}
         {navEntries && navEntries.length > 0 && (
@@ -283,15 +398,23 @@ export function EntityRail({ title, items, activeId, onSelect, onNew, onEdit, se
         {filtered.length === 0 ? (
           <div className="px-3 py-6 text-center text-sm text-muted-foreground/40">无匹配结果</div>
         ) : groups ? (
-          groups.map(([tag, rows]) => (
-            <div key={tag} className="mb-1">
-              <div className="flex items-center gap-1 px-2.5 py-1">
-                <span className="text-xs text-muted-foreground/40">{tag}</span>
-                <span className="text-xs text-muted-foreground/30 tabular-nums">{rows.length}</span>
+          groups.map(([tag, rows]) => {
+            const isCollapsed = collapsedGroups.has(tag);
+            return (
+              <div key={tag} className="mb-1">
+                <button
+                  type="button"
+                  onClick={() => toggleGroup(tag)}
+                  className="w-full min-w-0 flex items-center gap-1 px-2.5 py-1 rounded-md hover:bg-accent/30 transition-colors group/hdr"
+                >
+                  <ChevronDown size={10} className={`flex-shrink-0 text-muted-foreground/40 transition-transform ${isCollapsed ? '-rotate-90' : ''}`} />
+                  <span className="text-xs text-muted-foreground/40 truncate">{tag}</span>
+                  <span className="text-xs text-muted-foreground/30 tabular-nums">{rows.length}</span>
+                </button>
+                {!isCollapsed && rows.map(renderRow)}
               </div>
-              {rows.map(renderRow)}
-            </div>
-          ))
+            );
+          })
         ) : (
           <div className="space-y-px">{filtered.map(renderRow)}</div>
         )}

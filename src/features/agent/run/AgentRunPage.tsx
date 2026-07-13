@@ -16,7 +16,7 @@ import {
   SquarePlus, RefreshCw, TerminalSquare, Lightbulb, Scan, Languages,
   Hand, ShieldAlert, MoreHorizontal, MousePointer2, Mountain, ExternalLink,
   Package, Eye as EyeIcon, FileImage, Table2, LayoutGrid, Presentation, Monitor,
-  Users2,
+  Users2, History, UserCog,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Tooltip } from '@/app/components/Tooltip';
@@ -1238,6 +1238,29 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
     }
     return [...unreadGroups, ...interleaved];
   }, []);
+  // 「筛选」菜单（创建专家行右侧）的展示/排序状态。展示方式决定 rail 列的
+  // 内容：专家 = Agent 列表（默认）；话题 = 全部 session 平铺；工作目录 =
+  // session 按所属专家的 workDir 分组（可折叠）。
+  const [railDisplay, setRailDisplay] = useState<'topics' | 'experts' | 'workdir'>('experts');
+  const [railSort, setRailSort] = useState<'created' | 'updated' | 'manual'>('manual');
+  const sessionRailItems = useMemo<EntityRailItem[]>(() => sessions.map(s => {
+    const agent = AVAILABLE_AGENTS.find(a => a.name === s.agentName);
+    return {
+      id: s.id, name: s.title,
+      avatar: s.agentIcon ?? agent?.avatar ?? '💬',
+      updatedAt: s.timestamp,
+      tags: railDisplay === 'workdir' ? [agent?.workDir ?? '未设置工作目录'] : undefined,
+    };
+  }), [sessions, railDisplay]);
+  const railItems = useMemo<EntityRailItem[]>(() => {
+    const base = railDisplay === 'experts' ? agentRailItems : sessionRailItems;
+    // mock 的 updatedAt 是人读文案（"2 小时前"），列表本身已按最近使用排序，
+    // 所以「更新时间」「手动排序」保持原序；「创建时间」按 createdAt 倒序。
+    if (railSort !== 'created' || railDisplay !== 'experts') return base;
+    const createdMap = new Map(AVAILABLE_AGENTS.map(a => [a.id, a.createdAt ?? '']));
+    return [...base].sort((x, y) => (createdMap.get(y.id) ?? '').localeCompare(createdMap.get(x.id) ?? ''));
+  }, [agentRailItems, sessionRailItems, railDisplay, railSort]);
+
   // Sessions belong to the selected agent — switching agents changes the list.
   const agentSessions = useMemo(
     () => sessions.filter(s => s.agentName === selectedAgent.name),
@@ -1782,12 +1805,38 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
               title="对话"
               searchable={false}
               filterable={false}
-              newLabel="新建"
+              newLabel="创建专家"
               newAsRow
               newActions={[
-                { id: 'agent', label: '创建 Agent', icon: Bot, onClick: () => setShowCreateAgent(true) },
+                { id: 'agent', label: '创建专家', icon: Bot, onClick: () => setShowCreateAgent(true) },
                 ...(WORK_PLUS ? [{ id: 'group', label: '创建项目组', icon: Users2, onClick: () => setNewGroupOpen(true) }] : []),
               ]}
+              railMenu={{
+                displayModes: {
+                  options: [
+                    { id: 'topics', label: '话题' },
+                    { id: 'experts', label: '专家' },
+                    { id: 'workdir', label: '工作目录' },
+                  ],
+                  value: railDisplay,
+                  onChange: (id) => setRailDisplay(id as 'topics' | 'experts' | 'workdir'),
+                },
+                sortModes: {
+                  options: [
+                    { id: 'created', label: '创建时间' },
+                    { id: 'updated', label: '更新时间' },
+                    { id: 'manual', label: '手动排序' },
+                  ],
+                  value: railSort,
+                  onChange: (id) => setRailSort(id as 'created' | 'updated' | 'manual'),
+                },
+                expandCollapse: true,
+                actions: [
+                  { id: 'history', label: '历史记录', icon: History, onClick: () => { historySidebar.expand(); setDockTab(null); } },
+                  { id: 'manage', label: '管理专家', icon: UserCog, onClick: () => setShowAgentInfo(true) },
+                ],
+              }}
+              grouped={railDisplay === 'workdir'}
               navEntries={WORK_PLUS ? [{
                 id: 'task-board',
                 label: '任务管理',
@@ -1803,9 +1852,17 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
                 active: showScheduledTasks,
                 onClick: () => openScheduledTasks(null),
               }] : undefined}
-              items={agentRailItems}
-              activeId={showScheduledTasks || showTaskBoard ? null : (selectedGroupId ?? selectedAgent.id)}
+              items={railItems}
+              activeId={showScheduledTasks || showTaskBoard ? null
+                : railDisplay !== 'experts' ? activeSessionId
+                : (selectedGroupId ?? selectedAgent.id)}
               onSelect={(id) => {
+                // 话题 / 工作目录展示方式下，行是 session — 直接打开它。
+                if (railDisplay !== 'experts') {
+                  const session = sessions.find(s => s.id === id);
+                  if (session) handleOpenSessionFromBoard(session);
+                  return;
+                }
                 // 群聊 → open the group pane; 私聊 (Agent) → switch the active agent.
                 if (groupIdSet.has(id)) { openGroup(id); return; }
                 setShowScheduledTasks(false); setShowTaskBoard(false); setSelectedGroupId(null);
