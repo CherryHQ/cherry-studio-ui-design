@@ -314,7 +314,7 @@ function SidebarItem<T extends HistoryItem>({ item, isActive, isEditing, onClick
         onDragStart={onDragStart}
         onDragOver={onDragOver}
         onDrop={onDrop}
-        className={`w-full min-w-0 flex items-center gap-2 px-2 py-[6px] pr-[70px] rounded-lg text-left transition-colors ${
+        className={`w-full min-w-0 flex items-center gap-2 px-2 py-[6px] rounded-lg text-left transition-colors ${
           isActive
             ? 'bg-accent/60 text-foreground'
             : 'text-foreground/90 hover:bg-accent/30'
@@ -328,7 +328,16 @@ function SidebarItem<T extends HistoryItem>({ item, isActive, isEditing, onClick
             <MessageCircle size={12} strokeWidth={1.8} />
           </span>
         )}
-        <span className={`text-sm truncate flex-1 min-w-0 ${isActive ? 'font-medium' : ''}`}>
+        {/* 标题尽量占满整行，右端渐变淡出（Codex 式）而不是提前打省略号；
+            状态点/hover 图标浮在淡出区上。hover 时淡出区加宽给图标让位
+            （plain 模式只有一枚「…」，非 plain 有置顶/归档/… 三枚）。 */}
+        <span
+          className={`text-sm overflow-hidden whitespace-nowrap flex-1 min-w-0 [mask-image:linear-gradient(to_right,#000_calc(100%_-_28px),transparent)] ${
+            plain
+              ? 'group-hover/item:[mask-image:linear-gradient(to_right,#000_calc(100%_-_40px),transparent_calc(100%_-_16px))]'
+              : 'group-hover/item:[mask-image:linear-gradient(to_right,#000_calc(100%_-_76px),transparent_calc(100%_-_52px))]'
+          } ${isActive ? 'font-medium' : ''}`}
+        >
           {item.title}
         </span>
       </button>
