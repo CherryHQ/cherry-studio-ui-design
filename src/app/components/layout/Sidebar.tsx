@@ -1,6 +1,6 @@
 import React, { useRef, useCallback, useState } from 'react';
 import {
-  X, ChevronRight, Settings, PinOff, LayoutGrid,
+  X, ChevronRight, Settings, PinOff, LayoutGrid, User,
 } from 'lucide-react';
 // `LayoutGrid` is the 管理 icon used inside the right-click menu — kept
 // here so the context-menu item icon doesn't drift from how the
@@ -22,6 +22,27 @@ function CherryLogo({ size = 'md' }: { size?: 'sm' | 'md' }) {
 }
 
 export { CherryLogo };
+
+/** 侧边栏顶部的用户头像 — 未设置头像时展示占位图，点击打开个人信息 */
+function UserAvatar({ size = 'md', avatarUrl }: { size?: 'sm' | 'md'; avatarUrl?: string }) {
+  const { openUserInfo } = useCollab();
+  const s = size === 'sm' ? 'w-7 h-7' : 'w-8 h-8';
+  return (
+    <button
+      onClick={openUserInfo}
+      title="个人信息"
+      className={`${s} rounded-full overflow-hidden ring-1 ring-border flex-shrink-0 cursor-pointer hover:ring-primary/40 transition-shadow`}
+    >
+      {avatarUrl ? (
+        <img src={avatarUrl} alt="用户头像" className="w-full h-full object-cover" />
+      ) : (
+        <div className="w-full h-full bg-muted flex items-center justify-center text-muted-foreground">
+          <User size={size === 'sm' ? 15 : 17} strokeWidth={1.8} />
+        </div>
+      )}
+    </button>
+  );
+}
 
 // ===========================
 // Shared internal components
@@ -225,29 +246,14 @@ function FullDockedTabs({
   );
 }
 
-/** Full-layout bottom section — horizontal avatar + icons */
+/** Full-layout bottom section — 用户信息已移到顶部头像，这里只留设置 */
 function FullBottomSection({ onSettingsClick }: {
   onSettingsClick?: () => void;
   isDark?: boolean;
   onToggleTheme?: () => void;
 }) {
-  const { openUserInfo } = useCollab();
   return (
     <div className="px-2.5 py-2.5 space-y-1">
-      <button
-        onClick={openUserInfo}
-        className="flex items-center gap-2.5 w-full rounded-lg px-1.5 py-1.5 -mx-1 text-sidebar-foreground/80 hover:text-sidebar-foreground hover:bg-accent/30 transition-colors cursor-pointer"
-        title="个人信息"
-      >
-        <div className="w-6 h-6 rounded-full overflow-hidden ring-1 ring-border flex-shrink-0">
-          <div className="w-full h-full bg-gradient-to-br from-blue-400 to-indigo-500 flex items-center justify-center text-white text-[10px]">S</div>
-        </div>
-        <div className="flex-1 min-w-0 text-left">
-          <div className="text-xs text-sidebar-foreground truncate">Siin</div>
-          <div className="text-[10px] text-muted-foreground truncate">siin@gmail.com</div>
-        </div>
-      </button>
-
       {/* Bottom bar: settings shortcut */}
       <button
         onClick={() => onSettingsClick?.()}
@@ -378,10 +384,10 @@ export function Sidebar({
             </div>
           </div>
 
-          {/* Logo area */}
+          {/* User avatar area */}
           <div className="flex items-center h-14 px-4 gap-2.5 flex-shrink-0">
-            <CherryLogo size="md" />
-            <span className="text-sm text-sidebar-foreground truncate">Cherry Studio</span>
+            <UserAvatar size="md" />
+            <span className="text-sm text-sidebar-foreground truncate">Siin</span>
           </div>
 
           {/* Menu items */}
@@ -456,13 +462,13 @@ export function Sidebar({
       style={{ width: actualWidth }}
       className="h-full bg-sidebar flex flex-col flex-shrink-0 relative group/sidebar z-[var(--z-sticky)] select-none"
     >
-      {/* Logo area */}
+      {/* User avatar area */}
       <div className={`flex items-center flex-shrink-0 ${
         layout === 'full' ? 'h-14 px-4 gap-2.5' : 'h-14 justify-center'
       }`}>
-        <CherryLogo size={layout === 'full' ? 'md' : 'sm'} />
+        <UserAvatar size={layout === 'full' ? 'md' : 'sm'} />
         {layout === 'full' && (
-          <span className="text-sm text-sidebar-foreground truncate">Cherry Studio</span>
+          <span className="text-sm text-sidebar-foreground truncate">Siin</span>
         )}
       </div>
 
