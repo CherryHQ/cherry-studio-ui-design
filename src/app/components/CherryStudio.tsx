@@ -5,7 +5,7 @@ import { TabBar } from './layout/TabBar';
 import { TabContextMenu, FloatingWindow, NewTabDialog, SearchDialog, DragGhost, AnnotationProvider, AnnotationOverlay, AnnotationToggle, AnnotationList } from '@cherry-studio/ui';
 import { MainContent } from './MainContent';
 import {
-  menuItems, getLayout,
+  menuItems, getLayout, BP_ICON,
   dialogAppIcons, dialogFilterTabs,
   newTabHistoryItems, newTabFileItems, dialogQuickActions, newTabHtmlPreviews,
   searchFilterTabs, searchRecentItems, searchFileItems, searchQuickActions,
@@ -56,7 +56,8 @@ import { DEFAULT_ARTIFACT_ICON_NAME } from '@/app/utils/artifactIcons';
 function CherryStudioInner() {
   const { resolvedTheme, updateSetting } = useSettings();
   const isDark = resolvedTheme === 'dark';
-  const [sidebarWidth, setSidebarWidth] = useState(170);
+  // 默认收起为纯图标模式，拖动右缘可展开
+  const [sidebarWidth, setSidebarWidth] = useState(BP_ICON);
   const [activeItem, setActiveItem] = useState('chat');
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [settingsInitialSection, setSettingsInitialSection] = useState<string | undefined>();
@@ -69,7 +70,8 @@ function CherryStudioInner() {
   // Library is hidden from the sidebar — reached via the "我的" button
   // in the Market page top-bar instead, so resource management lives one
   // click in from the market rather than as a separate top-level entry.
-  const [hiddenApps, setHiddenApps] = useState<Set<string>>(new Set(['explore', 'library', 'knowledge', 'file', 'code', 'note', 'extensions']));
+  // 默认只保留 对话 / 工作 / 创作 / 翻译 / 知识库 五个模块
+  const [hiddenApps, setHiddenApps] = useState<Set<string>>(new Set(['explore', 'library', 'market', 'file', 'code', 'miniapp', 'note', 'extensions']));
   const [appOrder, setAppOrder] = useState<string[]>(() => dialogAppIconsWithAgents.map(a => a.id));
 
   // Runtime-pinned HTML artifacts (from ArtifactViewer's "Pin 到工作台").

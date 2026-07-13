@@ -1,5 +1,5 @@
 import React, { useMemo, useState, useRef } from 'react';
-import { Plus, MessageSquare, ChevronDown, ListFilter, Check, MoreHorizontal, FolderOpen, Pin, Archive, Loader2 } from 'lucide-react';
+import { Plus, MessageSquare, ChevronDown, ListFilter, Check, MoreHorizontal, FolderOpen, Pin, Archive, Loader2, MessageSquarePlus, Bot } from 'lucide-react';
 import { motion } from 'motion/react';
 import {
   Button, SearchInput, Popover, PopoverTrigger, PopoverContent,
@@ -11,7 +11,12 @@ import {
 
 // 本文件所有菜单（筛选/右键/行内 … /新建下拉）共用的排版：紧凑 13px。
 // 行操作类菜单一律纯文字不带图标（Codex 式）；字重沿用组件基线 font-medium。
-const RAIL_MENU_ITEM = 'text-[13px]';
+// 桌面端菜单排版规范（macOS/Codex 式）：菜单字号比列表正文（14px）小一级，
+// 用 13px regular——菜单是瞬态控件，不需要 medium 字重强调；行高收紧到
+// ~28px（py-[5px]），子菜单箭头随字号缩到 16px。容器内边距 6px、圆角 14px，
+// 覆盖组件库偏大的默认（p-2 / 24px 卡片圆角）。
+const RAIL_MENU_ITEM = "text-[13px] font-normal px-2 py-[5px] [&>svg:not([class*='size-'])]:size-4";
+const RAIL_MENU_CONTENT = 'p-1.5 rounded-[14px]';
 
 // ===========================
 // EntityRail
@@ -128,6 +133,22 @@ export interface EntityRailProps {
     position?: { get: (id: string) => 'left' | 'right'; set: (id: string, pos: 'left' | 'right') => void };
     onDelete: (id: string) => void;
   };
+  /** 组头 hover 操作（Codex 式）：「…」菜单 + 新会话按钮。菜单按组类型
+   * 区分：专家组=编辑/置顶/专家图标▸/删除；文件夹组=访达打开/重命名/删除。 */
+  groupHoverMenu?: {
+    onNewSession: (key: string) => void;
+    expert?: {
+      onEdit: (key: string) => void;
+      onPinTop: (key: string) => void;
+      iconMode: { get: (key: string) => 'emoji' | 'model' | 'none'; set: (key: string, mode: 'emoji' | 'model' | 'none') => void };
+      onDelete: (key: string) => void;
+    };
+    folder?: {
+      onOpenInFinder: (key: string) => void;
+      onRename: (key: string) => void;
+      onDelete: (key: string) => void;
+    };
+  };
   /** Rich filter menu at the right edge of the "new" row (newAsRow only).
    * Sections render in order: 展示方式 / 排序方式 / 全部展开收起 / actions.
    * Codex-style single layer: left check column, no icons, closes on select. */
@@ -156,7 +177,7 @@ export interface EntityRailTreeGroup {
   children: EntityRailItem[];
 }
 
-export function EntityRail({ title, items, activeId, onSelect, onNew, onEdit, searchable = true, filterable = true, newLabel, newAsRow, newActions, navEntries, sections, persistKey, treeGroups, onGroupSelect, activeGroupKey, onReorderGroups, onReorderItems, rowContextMenu, railMenu }: EntityRailProps) {
+export function EntityRail({ title, items, activeId, onSelect, onNew, onEdit, searchable = true, filterable = true, newLabel, newAsRow, newActions, navEntries, sections, persistKey, treeGroups, onGroupSelect, activeGroupKey, onReorderGroups, onReorderItems, rowContextMenu, groupHoverMenu, railMenu }: EntityRailProps) {
   const [query, setQuery] = useState('');
   const [groupByTag, setGroupByTag] = useState(false);
   const [sort, setSort] = useState<'default' | 'time' | 'name'>('default');
@@ -350,7 +371,7 @@ export function EntityRail({ title, items, activeId, onSelect, onNew, onEdit, se
                   <MoreHorizontal size={12} />
                 </button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-32">
+              <DropdownMenuContent align="end" className={`w-32 ${RAIL_MENU_CONTENT}`}>
                 <DropdownMenuItem className={RAIL_MENU_ITEM} onClick={() => onEdit?.(item.id)}>编辑</DropdownMenuItem>
                 <DropdownMenuItem className={RAIL_MENU_ITEM}>复制</DropdownMenuItem>
                 <DropdownMenuItem className={RAIL_MENU_ITEM} variant="destructive">删除</DropdownMenuItem>
@@ -365,7 +386,7 @@ export function EntityRail({ title, items, activeId, onSelect, onNew, onEdit, se
     return (
       <ContextMenu key={item.id}>
         <ContextMenuTrigger asChild>{row}</ContextMenuTrigger>
-        <ContextMenuContent className="w-40">
+        <ContextMenuContent className={`w-40 ${RAIL_MENU_CONTENT}`}>
           <ContextMenuItem className={RAIL_MENU_ITEM} onClick={() => rowContextMenu.onRename(item.id)}>重命名</ContextMenuItem>
           <ContextMenuItem className={RAIL_MENU_ITEM} onClick={() => rowContextMenu.onTogglePin(item.id)}>{pinned ? '取消置顶' : '置顶任务'}</ContextMenuItem>
           {rowContextMenu.onArchive && (
@@ -376,7 +397,7 @@ export function EntityRail({ title, items, activeId, onSelect, onNew, onEdit, se
           {rowContextMenu.position && (
             <ContextMenuSub>
               <ContextMenuSubTrigger className={RAIL_MENU_ITEM}>会话位置</ContextMenuSubTrigger>
-              <ContextMenuSubContent className="w-24">
+              <ContextMenuSubContent className={`w-24 ${RAIL_MENU_CONTENT}`}>
                 <ContextMenuItem className={RAIL_MENU_ITEM} disabled={pos === 'left'} onClick={() => rowContextMenu.position!.set(item.id, 'left')}>左侧</ContextMenuItem>
                 <ContextMenuItem className={RAIL_MENU_ITEM} disabled={pos === 'right'} onClick={() => rowContextMenu.position!.set(item.id, 'right')}>右侧</ContextMenuItem>
               </ContextMenuSubContent>
@@ -430,7 +451,7 @@ export function EntityRail({ title, items, activeId, onSelect, onNew, onEdit, se
       <div key={g.key} className="mb-px">
         {/* 只有组头可拖（重排专家顺序）——子行有自己的同组内拖拽。 */}
         <div
-          className={`flex items-center rounded-md transition-colors ${headerActive ? 'bg-accent/40' : 'hover:bg-accent/40'} ${dropKey === g.key ? 'border-t-2 border-cherry-primary/60' : ''}`}
+          className={`group/ghdr flex items-center rounded-md transition-colors ${headerActive ? 'bg-accent/40' : 'hover:bg-accent/40'} ${dropKey === g.key ? 'border-t-2 border-cherry-primary/60' : ''}`}
           draggable={groupDraggable}
           onDragStart={groupDraggable ? () => { setDragKey(g.key); setDragKind('group'); setDragGroup(undefined); } : undefined}
           onDragOver={groupDraggable ? (e) => { if (canDropGroup) { e.preventDefault(); setDropKey(g.key); } } : undefined}
@@ -449,14 +470,79 @@ export function EntityRail({ title, items, activeId, onSelect, onNew, onEdit, se
           >
             {g.variant === 'folder' ? (
               <FolderOpen size={14} strokeWidth={1.75} className="flex-shrink-0 text-muted-foreground/60" />
-            ) : g.avatar ? (
-              <span className="text-base leading-none flex-shrink-0">{g.avatar}</span>
-            ) : null}
+            ) : (() => {
+              // 专家图标显示模式（… 菜单里可切）：Emoji / 模型图标 / 不显示。
+              const iconMode = groupHoverMenu?.expert?.iconMode.get(g.key) ?? 'emoji';
+              if (iconMode === 'none') return null;
+              if (iconMode === 'model') return <Bot size={15} className="flex-shrink-0 text-muted-foreground/70" />;
+              return g.avatar ? <span className="text-base leading-none flex-shrink-0">{g.avatar}</span> : null;
+            })()}
             <span className={`text-sm truncate flex-1 min-w-0 ${headerActive ? 'font-medium text-foreground' : g.variant === 'folder' ? 'text-foreground/70' : 'text-foreground/85'}`}>{g.name}</span>
             {g.unread ? (
               <span className="min-w-[14px] h-[14px] px-1 rounded-full bg-primary/12 text-primary/80 text-[9px] leading-[14px] text-center font-medium tabular-nums flex-shrink-0">{g.unread}</span>
             ) : null}
           </button>
+          {/* Hover 操作：「…」菜单 + 新会话（Codex 式，hover 或菜单打开时可见）。 */}
+          {groupHoverMenu && (
+            <div
+              className="flex items-center gap-0.5 mr-0.5 flex-shrink-0 opacity-0 group-hover/ghdr:opacity-100 has-[[data-state=open]]:opacity-100 transition-opacity"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button
+                    type="button"
+                    title="更多"
+                    className="p-1 rounded text-muted-foreground/50 hover:text-foreground hover:bg-accent/70 transition-colors"
+                  >
+                    <MoreHorizontal size={13} />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className={`w-36 ${RAIL_MENU_CONTENT}`}>
+                  {g.variant === 'folder' && groupHoverMenu.folder ? (
+                    <>
+                      <DropdownMenuItem className={RAIL_MENU_ITEM} onClick={() => groupHoverMenu.folder!.onOpenInFinder(g.key)}>在 访达 中打开</DropdownMenuItem>
+                      <DropdownMenuItem className={RAIL_MENU_ITEM} onClick={() => groupHoverMenu.folder!.onRename(g.key)}>重命名工作目录</DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem className={RAIL_MENU_ITEM} variant="destructive" onClick={() => groupHoverMenu.folder!.onDelete(g.key)}>删除工作目录</DropdownMenuItem>
+                    </>
+                  ) : groupHoverMenu.expert ? (
+                    <>
+                      <DropdownMenuItem className={RAIL_MENU_ITEM} onClick={() => groupHoverMenu.expert!.onEdit(g.key)}>编辑专家</DropdownMenuItem>
+                      <DropdownMenuItem className={RAIL_MENU_ITEM} onClick={() => groupHoverMenu.expert!.onPinTop(g.key)}>置顶专家</DropdownMenuItem>
+                      <DropdownMenuSub>
+                        <DropdownMenuSubTrigger className={RAIL_MENU_ITEM}>专家图标</DropdownMenuSubTrigger>
+                        <DropdownMenuSubContent className={`w-32 ${RAIL_MENU_CONTENT}`} sideOffset={4}>
+                          {([['emoji', 'Emoji 表情'], ['model', '模型图标'], ['none', '不显示']] as const).map(([mode, label]) => (
+                            <DropdownMenuItem
+                              key={mode}
+                              className={`gap-0 ${RAIL_MENU_ITEM}`}
+                              onClick={() => groupHoverMenu.expert!.iconMode.set(g.key, mode)}
+                            >
+                              <span className="w-6 flex-shrink-0 flex items-center">
+                                {groupHoverMenu.expert!.iconMode.get(g.key) === mode && <Check size={13} className="text-foreground" />}
+                              </span>
+                              {label}
+                            </DropdownMenuItem>
+                          ))}
+                        </DropdownMenuSubContent>
+                      </DropdownMenuSub>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem className={RAIL_MENU_ITEM} variant="destructive" onClick={() => groupHoverMenu.expert!.onDelete(g.key)}>删除专家</DropdownMenuItem>
+                    </>
+                  ) : null}
+                </DropdownMenuContent>
+              </DropdownMenu>
+              <button
+                type="button"
+                title="新会话"
+                onClick={() => groupHoverMenu.onNewSession(g.key)}
+                className="p-1 rounded text-muted-foreground/50 hover:text-foreground hover:bg-accent/70 transition-colors"
+              >
+                <MessageSquarePlus size={13} />
+              </button>
+            </div>
+          )}
           {foldable && (
             <button
               type="button"
@@ -610,7 +696,7 @@ export function EntityRail({ title, items, activeId, onSelect, onNew, onEdit, se
                     <span className="text-sm truncate flex-1 min-w-0">{newLabel ?? `新建${title}`}</span>
                   </button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="start" className="w-40">
+                <DropdownMenuContent align="start" className={`w-40 ${RAIL_MENU_CONTENT}`}>
                   {newActions.map((a) => (
                     <DropdownMenuItem key={a.id} className={RAIL_MENU_ITEM} onClick={a.onClick}>
                       {a.label}
@@ -642,11 +728,11 @@ export function EntityRail({ title, items, activeId, onSelect, onNew, onEdit, se
                 <DropdownMenuSub>
                   <DropdownMenuSubTrigger className={RAIL_MENU_ITEM}>
                     <span className="flex-1">{label}</span>
-                    <span className="font-normal text-muted-foreground/70">
+                    <span className="text-xs font-normal text-muted-foreground/70">
                       {modes.options.find(o => o.id === modes.value)?.label}
                     </span>
                   </DropdownMenuSubTrigger>
-                  <DropdownMenuSubContent className="w-32" sideOffset={4}>
+                  <DropdownMenuSubContent className={`w-32 ${RAIL_MENU_CONTENT}`} sideOffset={4}>
                     {modes.options.map((opt) => optionItem(opt, modes.value === opt.id, modes.onChange))}
                   </DropdownMenuSubContent>
                 </DropdownMenuSub>
@@ -662,7 +748,7 @@ export function EntityRail({ title, items, activeId, onSelect, onNew, onEdit, se
                       <ListFilter size={14} />
                     </button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" sideOffset={4} className="w-48">
+                  <DropdownMenuContent align="end" sideOffset={4} className={`w-48 ${RAIL_MENU_CONTENT}`}>
                     {railMenu.displayModes && subMenu('展示方式', railMenu.displayModes)}
                     {railMenu.sortModes && subMenu('排序方式', railMenu.sortModes)}
                     {railMenu.expandCollapse && (() => {

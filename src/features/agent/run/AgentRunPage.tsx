@@ -1290,11 +1290,28 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
       .map(([it]) => it);
   }, []);
 
+  // ===== 组头「…」菜单的支撑状态（专家图标模式 / 删除专家 / 目录重命名与删除） =====
+  const [expertIconModes, setExpertIconModes] = useState<Record<string, 'emoji' | 'model' | 'none'>>(() => {
+    try { return JSON.parse(localStorage.getItem('cherry-agent-rail-icon-modes') || '{}'); } catch { return {}; }
+  });
+  const setExpertIconMode = useCallback((key: string, mode: 'emoji' | 'model' | 'none') => {
+    setExpertIconModes(prev => {
+      const next = { ...prev, [key]: mode };
+      try { localStorage.setItem('cherry-agent-rail-icon-modes', JSON.stringify(next)); } catch { /* 忽略 */ }
+      return next;
+    });
+  }, []);
+  const [hiddenAgents, setHiddenAgents] = useState<Set<string>>(() => new Set());
+  const [dirRenames, setDirRenames] = useState<Record<string, string>>({});
+  const [deletedDirs, setDeletedDirs] = useState<Set<string>>(() => new Set());
+  const [renameDirTarget, setRenameDirTarget] = useState<string | null>(null);
+  const [renameDirValue, setRenameDirValue] = useState('');
+
   // 专家顺序独立于「排序方式」：始终跟随用户拖拽的手动顺序（拖动专家时
   // 其下任务整组随之移动）。「排序方式」只作用于任务列表。
   const orderedAgents = useMemo(
-    () => applyOrder(AVAILABLE_AGENTS, agentOrder),
-    [agentOrder, applyOrder],
+    () => applyOrder(AVAILABLE_AGENTS.filter(a => !hiddenAgents.has(a.id)), agentOrder),
+    [agentOrder, applyOrder, hiddenAgents],
   );
   const orderedSessions = useMemo(() => {
     // 归档的任务不进左栏（历史任务页仍可见）。
@@ -1351,25 +1368,30 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
   }, [orderedAgents, unpinnedSessions]);
   // 工作目录视图「项目」段：每个 workDir 一个文件夹组（组名只取末级文件夹
   // 名，完整路径进 tooltip）；无工作目录的散任务归入「任务」段。
+  // 删除的目录其任务落回「任务」段；重命名只改显示名（完整路径仍在 tooltip）。
+  const effectiveDirOf = useCallback((s: AgentSession) => {
+    const dir = AVAILABLE_AGENTS.find(a => a.name === s.agentName)?.workDir;
+    return dir && !deletedDirs.has(dir) ? dir : undefined;
+  }, [deletedDirs]);
   const workdirTreeGroups = useMemo<EntityRailTreeGroup[]>(() => {
     const map = new Map<string, AgentSession[]>();
     unpinnedSessions.forEach(s => {
-      const dir = AVAILABLE_AGENTS.find(a => a.name === s.agentName)?.workDir;
+      const dir = effectiveDirOf(s);
       if (!dir) return;
       map.set(dir, [...(map.get(dir) ?? []), s]);
     });
     return Array.from(map.entries()).map(([dir, list]) => ({
       key: dir,
-      name: dir.split('/').filter(Boolean).pop() ?? dir,
+      name: dirRenames[dir] ?? (dir.split('/').filter(Boolean).pop() ?? dir),
       title: dir,
       selectable: false,
       variant: 'folder' as const,
       children: list.map(sessionToChildRow),
     }));
-  }, [unpinnedSessions]);
+  }, [unpinnedSessions, effectiveDirOf, dirRenames]);
   const looseTaskItems = useMemo<EntityRailItem[]>(() => unpinnedSessions
-    .filter(s => !AVAILABLE_AGENTS.find(a => a.name === s.agentName)?.workDir)
-    .map(s => ({ id: s.id, name: s.title, avatar: '', unreadDot: s.unread })), [unpinnedSessions]);
+    .filter(s => !effectiveDirOf(s))
+    .map(sessionToRow), [unpinnedSessions, effectiveDirOf]);
 
   // ===== Codex 式三段结构：置顶 / 任务 / 专家 | 项目（按视图组合） =====
   const railSections = useMemo<EntityRailSection[]>(() => {
@@ -2030,6 +2052,37 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
                 // 「会话位置」子菜单只在专家列表视图出现。
                 position: railDisplay === 'experts' ? sessionPositionApi : undefined,
               }}
+              groupHoverMenu={{
+                // 新会话：专家组 = 挂到该专家；文件夹组 = 挂到该目录下的专家。
+                onNewSession: (key) => {
+                  const agent = railDisplay === 'experts'
+                    ? AVAILABLE_AGENTS.find(a => a.id === key)
+                    : AVAILABLE_AGENTS.find(a => a.workDir === key);
+                  if (agent) handleNewSessionForAgent(agent.name);
+                  else handleNewSession();
+                },
+                expert: {
+                  onEdit: (key) => {
+                    const a = AVAILABLE_AGENTS.find(x => x.id === key);
+                    if (a) { setSelectedAgent(a); setShowAgentInfo(true); }
+                  },
+                  onPinTop: (key) => setAgentOrder([key, ...orderedAgents.map(a => a.id).filter(id => id !== key)]),
+                  iconMode: {
+                    get: (key) => expertIconModes[key] ?? 'emoji',
+                    set: setExpertIconMode,
+                  },
+                  onDelete: (key) => setHiddenAgents(prev => new Set(prev).add(key)),
+                },
+                folder: {
+                  // 原型：访达打开是桌面端行为，浏览器内不做实际动作。
+                  onOpenInFinder: () => {},
+                  onRename: (key) => {
+                    setRenameDirTarget(key);
+                    setRenameDirValue(dirRenames[key] ?? (key.split('/').filter(Boolean).pop() ?? key));
+                  },
+                  onDelete: (key) => setDeletedDirs(prev => new Set(prev).add(key)),
+                },
+              }}
               navEntries={WORK_PLUS ? [{
                 id: 'task-board',
                 label: '任务管理',
@@ -2333,6 +2386,39 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
                 if (renameTarget && renameValue.trim()) {
                   handleUpdateSession(renameTarget.id, { title: renameValue.trim() });
                   setRenameTarget(null);
+                }
+              }}
+            >
+              确定
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* ===== 工作目录重命名（组头 … 菜单） ===== */}
+      <Dialog open={!!renameDirTarget} onOpenChange={(open) => { if (!open) setRenameDirTarget(null); }}>
+        <DialogContent className="w-[360px] p-5">
+          <div className="text-sm font-medium mb-3">重命名工作目录</div>
+          <Input
+            value={renameDirValue}
+            onChange={(e) => setRenameDirValue(e.target.value)}
+            autoFocus
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && renameDirTarget && renameDirValue.trim()) {
+                setDirRenames(prev => ({ ...prev, [renameDirTarget]: renameDirValue.trim() }));
+                setRenameDirTarget(null);
+              }
+            }}
+          />
+          <div className="flex justify-end gap-2 mt-4">
+            <Button variant="outline" size="sm" onClick={() => setRenameDirTarget(null)}>取消</Button>
+            <Button
+              size="sm"
+              disabled={!renameDirValue.trim()}
+              onClick={() => {
+                if (renameDirTarget && renameDirValue.trim()) {
+                  setDirRenames(prev => ({ ...prev, [renameDirTarget]: renameDirValue.trim() }));
+                  setRenameDirTarget(null);
                 }
               }}
             >
