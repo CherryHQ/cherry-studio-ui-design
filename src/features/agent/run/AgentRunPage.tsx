@@ -16,7 +16,7 @@ import {
   SquarePlus, RefreshCw, TerminalSquare, Lightbulb, Scan, Languages,
   Hand, ShieldAlert, MoreHorizontal, MousePointer2, Mountain, ExternalLink,
   Package, Eye as EyeIcon, FileImage, Table2, LayoutGrid, Presentation, Monitor,
-  Users2, History, UserCog,
+  Users2, UserCog,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Tooltip } from '@/app/components/Tooltip';
