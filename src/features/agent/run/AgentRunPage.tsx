@@ -1922,7 +1922,12 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
                 }
               }}
               onReorderGroups={railDisplay === 'experts' ? setAgentOrder : undefined}
-              onReorderItems={railSort === 'manual' ? setTopicOrder : undefined}
+              onReorderItems={(ids) => {
+                // 任务任何时候都可拖；拖动即隐式切到「手动排序」（Codex 式），
+                // 拖出的顺序以当前显示顺序为基准记录。
+                setTopicOrder(ids);
+                if (railSort !== 'manual') setRailSort('manual');
+              }}
               navEntries={WORK_PLUS ? [{
                 id: 'task-board',
                 label: '任务管理',
