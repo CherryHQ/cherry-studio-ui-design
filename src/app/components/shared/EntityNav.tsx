@@ -183,10 +183,10 @@ export function EntityRail({ title, items, activeId, onSelect, onNew, onEdit, se
 
   const menuActive = sort !== 'default' || groupByTag;
 
-  const renderRow = (item: EntityRailItem, opts?: { indent?: boolean; groupKey?: string }) => {
+  const renderRow = (item: EntityRailItem, opts?: { indent?: boolean; groupKey?: string; noDrag?: boolean }) => {
     const active = item.id === activeId;
-    // 平铺行可拖；树形子行也可拖，但只允许在同一组内落下。
-    const draggable = !!onReorderItems && (!!opts?.groupKey || !opts?.indent);
+    // 平铺行可拖；树形子行也可拖，但只允许在同一组内落下。置顶条不可拖。
+    const draggable = !!onReorderItems && !opts?.noDrag && (!!opts?.groupKey || !opts?.indent);
     const canDropHere = dragKind === 'row' && dragKey && dragKey !== item.id && dragGroup === opts?.groupKey;
     const row = (
       <div
@@ -477,7 +477,12 @@ export function EntityRail({ title, items, activeId, onSelect, onNew, onEdit, se
           </div>
         )}
         {treeGroups ? (
-          treeGroups.length === 0 ? (
+          <>
+            {/* 置顶任务悬浮在所有分组之上（IM 惯例），带所属实体图标保留上下文。 */}
+            {filtered.length > 0 && (
+              <div className="space-y-px mb-0.5">{filtered.map((i) => renderRow(i, { noDrag: true }))}</div>
+            )}
+            {treeGroups.length === 0 && filtered.length === 0 ? (
             <div className="px-3 py-6 text-center text-sm text-muted-foreground/40">暂无内容</div>
           ) : (
             treeGroups.map((g) => {
@@ -537,7 +542,8 @@ export function EntityRail({ title, items, activeId, onSelect, onNew, onEdit, se
                 </div>
               );
             })
-          )
+          )}
+          </>
         ) : filtered.length === 0 ? (
           <div className="px-3 py-6 text-center text-sm text-muted-foreground/40">无匹配结果</div>
         ) : groups ? (
