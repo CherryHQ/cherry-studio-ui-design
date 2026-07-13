@@ -1278,15 +1278,12 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
       .map(([it]) => it);
   }, []);
 
-  const orderedAgents = useMemo(() => {
-    // mock 的 updatedAt 是人读文案（"2 小时前"），列表本身已按最近使用排序，
-    // 所以「更新时间」保持原序；「创建时间」按 createdAt 倒序。
-    if (railSort === 'created') {
-      return [...AVAILABLE_AGENTS].sort((a, b) => (b.createdAt ?? '').localeCompare(a.createdAt ?? ''));
-    }
-    if (railSort === 'manual') return applyOrder(AVAILABLE_AGENTS, agentOrder);
-    return AVAILABLE_AGENTS;
-  }, [railSort, agentOrder, applyOrder]);
+  // 专家顺序独立于「排序方式」：始终跟随用户拖拽的手动顺序（拖动专家时
+  // 其下任务整组随之移动）。「排序方式」只作用于任务列表。
+  const orderedAgents = useMemo(
+    () => applyOrder(AVAILABLE_AGENTS, agentOrder),
+    [agentOrder, applyOrder],
+  );
   const orderedSessions = useMemo(() => {
     if (railSort === 'manual') return applyOrder(sessions, topicOrder);
     return sessions; // 创建/更新时间：mock 时间戳为人读文案，保持默认序（已按最近排列）
@@ -1924,7 +1921,7 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
                   setSelectedAgent(agent);
                 }
               }}
-              onReorderGroups={railSort === 'manual' && railDisplay === 'experts' ? setAgentOrder : undefined}
+              onReorderGroups={railDisplay === 'experts' ? setAgentOrder : undefined}
               onReorderItems={railSort === 'manual' ? setTopicOrder : undefined}
               navEntries={WORK_PLUS ? [{
                 id: 'task-board',
