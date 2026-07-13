@@ -430,7 +430,7 @@ export function DataMigrationOverlay({ onClose }: { onClose: (reason: MigrationC
                       lives on the version-incompatible gate, not here. */}
                   <button
                     type="button"
-                    onClick={() => { if (window.confirm('暂不迁移？你可以继续使用当前版本，下次启动会再次提示迁移。')) onClose('postponed'); }}
+                    onClick={() => onClose('postponed')}
                     className="block mx-auto text-[11px] text-muted-foreground/55 hover:text-foreground transition-colors"
                   >
                     暂不迁移
@@ -742,7 +742,7 @@ export function DataMigrationOverlay({ onClose }: { onClose: (reason: MigrationC
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => { if (window.confirm('忽略迁移并使用默认配置？V1 数据不会被导入。')) onClose('declined'); }}
+                    onClick={() => onClose('declined')}
                     className="flex-1 text-destructive/80 hover:text-destructive hover:bg-destructive/8 border-destructive/30"
                   >
                     忽略并使用默认值

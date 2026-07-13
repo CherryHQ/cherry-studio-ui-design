@@ -25,7 +25,7 @@ export function BranchPreviewSwitcher() {
       <PopoverTrigger asChild>
         <button
           title="分支预览"
-          className={`fixed bottom-2 left-2 z-[95] flex items-center gap-1 h-6 px-1.5 rounded-full border text-[10px] transition-all
+          className={`fixed bottom-2 left-24 z-[95] flex items-center gap-1 h-6 px-1.5 rounded-full border text-[10px] transition-all
             ${WORK_PLUS_OVERRIDDEN
               ? 'border-cherry-primary/50 bg-cherry-active-bg text-cherry-primary opacity-90'
               : 'border-border/50 bg-background/80 text-muted-foreground/60 opacity-50 hover:opacity-100'}
