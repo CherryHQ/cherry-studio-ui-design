@@ -378,13 +378,23 @@ export function EntityRail({ title, items, activeId, onSelect, onNew, onEdit, se
                   <DropdownMenuContent align="end" sideOffset={4} className="w-[168px]">
                     {railMenu.displayModes && subMenu('展示方式', railMenu.displayModes)}
                     {railMenu.sortModes && subMenu('排序方式', railMenu.sortModes)}
-                    {railMenu.expandCollapse && (
-                      <>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem className="text-xs" disabled={!hasFoldableGroups} onClick={expandAllGroups}>全部展开</DropdownMenuItem>
-                        <DropdownMenuItem className="text-xs" disabled={!hasFoldableGroups} onClick={collapseAllGroups}>全部收起</DropdownMenuItem>
-                      </>
-                    )}
+                    {railMenu.expandCollapse && (() => {
+                      // 单按钮切换：只要还有展开的分组就提供「全部收起」，
+                      // 全收起后变为「全部展开」。
+                      const anyExpanded = (treeGroups ?? []).some(g => g.children.length > 0 && !collapsedGroups.has(g.key));
+                      return (
+                        <>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem
+                            className="text-xs"
+                            disabled={!hasFoldableGroups}
+                            onClick={anyExpanded ? collapseAllGroups : expandAllGroups}
+                          >
+                            {anyExpanded ? '全部收起' : '全部展开'}
+                          </DropdownMenuItem>
+                        </>
+                      );
+                    })()}
                     {railMenu.actions && railMenu.actions.length > 0 && (
                       <>
                         <DropdownMenuSeparator />
