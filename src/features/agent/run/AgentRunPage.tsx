@@ -1323,6 +1323,7 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
       name: dir ? (dir.split('/').filter(Boolean).pop() ?? dir) : '未设置工作目录',
       title: dir || undefined,
       selectable: false,
+      variant: 'folder' as const,
       children: list.map(sessionToChildRow),
     }));
   }, [orderedSessions]);

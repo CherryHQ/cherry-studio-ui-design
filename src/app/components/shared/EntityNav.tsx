@@ -1,5 +1,5 @@
 import React, { useMemo, useState, useRef } from 'react';
-import { Plus, MessageSquare, ChevronDown, ListFilter, Check, MoreHorizontal, Pencil, Copy, Trash2 } from 'lucide-react';
+import { Plus, MessageSquare, ChevronDown, ListFilter, Check, MoreHorizontal, Pencil, Copy, Trash2, FolderOpen } from 'lucide-react';
 import { motion } from 'motion/react';
 import {
   Button, SearchInput, Popover, PopoverTrigger, PopoverContent,
@@ -98,6 +98,9 @@ export interface EntityRailTreeGroup {
   avatar?: string;
   /** false = header is fold-only (工作目录); default true (专家/群聊). */
   selectable?: boolean;
+  /** 'folder' = 工作目录组头：文件夹图标 + muted 目录名（比任务文字浅一档，
+   * 参考 Codex）。默认为实体组头（emoji 头像 + 常规前景色）。 */
+  variant?: 'folder';
   unread?: number;
   children: EntityRailItem[];
 }
@@ -475,8 +478,12 @@ export function EntityRail({ title, items, activeId, onSelect, onNew, onEdit, se
                       className="flex-1 min-w-0 flex items-center gap-2 py-[6px] pr-2 text-left"
                       title={g.title}
                     >
-                      {g.avatar && <span className="text-base leading-none flex-shrink-0">{g.avatar}</span>}
-                      <span className={`text-sm truncate flex-1 min-w-0 ${headerActive ? 'font-medium text-foreground' : 'text-foreground/85'}`}>{g.name}</span>
+                      {g.variant === 'folder' ? (
+                        <FolderOpen size={14} strokeWidth={1.75} className="flex-shrink-0 text-muted-foreground/60" />
+                      ) : g.avatar ? (
+                        <span className="text-base leading-none flex-shrink-0">{g.avatar}</span>
+                      ) : null}
+                      <span className={`text-sm truncate flex-1 min-w-0 ${headerActive ? 'font-medium text-foreground' : g.variant === 'folder' ? 'text-muted-foreground' : 'text-foreground/85'}`}>{g.name}</span>
                       {g.unread ? (
                         <span className="min-w-[14px] h-[14px] px-1 rounded-full bg-primary/12 text-primary/80 text-[9px] leading-[14px] text-center font-medium tabular-nums flex-shrink-0">{g.unread}</span>
                       ) : foldable ? (
