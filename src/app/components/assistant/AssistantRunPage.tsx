@@ -29,7 +29,7 @@ import {
   DropdownMenuSub, DropdownMenuSubTrigger, DropdownMenuSubContent,
   Popover, PopoverTrigger, PopoverContent,
   HoverCard, HoverCardTrigger, HoverCardContent, BrandLogo,
-  MessageErrorBlock,
+  MessageErrorBlock, Dialog, DialogContent, Input,
   RichComposer, type RichComposerHandle, type ComposerAttachment,
 } from '@cherry-studio/ui';
 import type { AssistantInfo, AssistantTopic } from '@/app/types/assistant';
@@ -71,7 +71,10 @@ import { BranchTreePanel } from '@/features/assistant/BranchTreePanel';
 import { ChatSettingsPanel } from '@/features/assistant/ChatSettingsPanel';
 import { MentionPickerPanel } from '@/app/components/shared/MentionPickerPanel';
 import { ModelPickerPanel } from '@/app/components/shared/ModelPickerPanel';
-import { EntityRail } from '@/app/components/shared/EntityNav';
+import { EntityRail, PanelRightInsetIcon, type EntityRailItem, type EntityRailTreeGroup, type EntityRailSection } from '@/app/components/shared/EntityNav';
+import { AssistantManagePage } from '@/features/assistant/AssistantManagePage';
+import { usePersistedState } from '@/app/hooks/usePersistedState';
+import { applyOrder } from '@/app/utils/applyOrder';
 import { CreateAssistantWizard } from '@/app/components/shared/CreateAssistantWizard';
 import { openQuickProviderSetup } from '@/features/chat/QuickProviderSetup/quickProviderSetupStore';
 import { HistorySidebar } from '@/app/components/shared/HistorySidebar';
@@ -1575,7 +1578,7 @@ function MultiSelectPicker({
 // ===========================
 
 export function AssistantRunPage() {
-  const { editAssistantInLibrary: onEditAssistantInLibrary, navigateToKnowledge: onNavigateToKnowledge, navigateToLibrary: _navLib, changeTabTitle: onTabTitleChange, openSettings: onOpenSettings } = useGlobalActions();
+  const { editAssistantInLibrary: onEditAssistantInLibrary, navigateToKnowledge: onNavigateToKnowledge, navigateToLibrary: _navLib, changeTabTitle: onTabTitleChange, openSettings: onOpenSettings, launchpadOpen } = useGlobalActions();
   const onNavigateToLibrary = () => _navLib('assistant');
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
@@ -1598,13 +1601,14 @@ export function AssistantRunPage() {
   const [activeTopicId, setActiveTopicId] = useState<string | null>('new-topic-init');
   const [newTopicCounter, setNewTopicCounter] = useState(1);
 
-  // Ensure there's always an initial "新话题"
+  // Ensure there's always an initial "新话题" — 挂到默认助手名下，保证
+  // 左栏助手树里能看到它（挂在不存在的助手下会从树形视图消失）。
   useEffect(() => {
     if (!topics.find(t => t.id === 'new-topic-init')) {
       setTopics(prev => [{
         id: 'new-topic-init',
         title: '新话题',
-        assistantName: '通用助手',
+        assistantName: MOCK_ASSISTANTS[0].name,
         lastMessage: '',
         timestamp: '刚刚',
         messageCount: 0,
@@ -1616,6 +1620,9 @@ export function AssistantRunPage() {
   const activeTopic = useMemo(() => topics.find(t => t.id === activeTopicId), [topics, activeTopicId]);
 
   const handleNewTopic = useCallback(() => {
+    // \u65b0\u8bdd\u9898\u6302\u5230\u5f53\u524d\u9009\u4e2d\u52a9\u624b\u540d\u4e0b\uff08\u5de6\u680f\u52a9\u624b\u6811\u6309 assistantName \u5f52\u7ec4\uff0c\u6302\u5728
+    // \u4e0d\u5b58\u5728\u7684\u52a9\u624b\u4e0b\u4f1a\u4ece\u6811\u5f62\u89c6\u56fe\u6d88\u5931\uff09\u3002
+    const ownerName = (MOCK_ASSISTANTS.find(a => a.id === selectedAssistants[0]) || MOCK_ASSISTANTS[0]).name;
     // If the active topic is already a new/empty topic, don't create another
     if (activeTopic && activeTopic.title === '\u65b0\u8bdd\u9898' && activeTopic.messageCount === 0) {
       return;
@@ -1636,7 +1643,7 @@ export function AssistantRunPage() {
     const newTopic: AssistantTopic = {
       id: newId,
       title: '新话题',
-      assistantName: '通用助手',
+      assistantName: ownerName,
       lastMessage: '',
       timestamp: '刚刚',
       messageCount: 0,
@@ -1651,13 +1658,9 @@ export function AssistantRunPage() {
     setRightPanel(null);
     setShowBranchTree(false);
     setNewTopicCounter(c => c + 1);
-  }, [newTopicCounter]);
+  }, [newTopicCounter, selectedAssistants, activeTopic, topics]);
 
   const currentAssistant = useMemo(() => MOCK_ASSISTANTS.find(a => a.id === selectedAssistants[0]) || MOCK_ASSISTANTS[0], [selectedAssistants]);
-  const assistantRailItems = useMemo(
-    () => MOCK_ASSISTANTS.map(a => ({ id: a.id, name: a.name, avatar: ASSISTANT_EMOJI_MAP[a.name] || '🤖', tags: a.tags, updatedAt: a.updatedAt })),
-    [],
-  );
   // Topics belong to the selected assistant — switching assistants changes the list.
   const assistantTopics = useMemo(
     () => topics.filter(t => t.assistantName === currentAssistant.name),
@@ -1886,6 +1889,164 @@ export function AssistantRunPage() {
       setMessages(MOCK_MESSAGES);
     }
   }, []);
+
+  // ===== 左栏（EntityRail）状态 — 与工作模块同构：展示方式/排序/手动顺序/
+  // 标签分组/助手图标模式，全部按 localStorage 持久化 =====
+  // 话题列表 = 全部话题平铺；助手列表 = 助手为组头、其下挂话题的树形。
+  const [railDisplay, setRailDisplay] = usePersistedState<'topics' | 'assistants'>('cherry-chat-rail-display', 'assistants');
+  const [railSort, setRailSort] = usePersistedState<'created' | 'updated' | 'manual'>('cherry-chat-rail-sort', 'manual');
+  const [assistantOrder, setAssistantOrder] = usePersistedState<string[]>('cherry-chat-rail-assistant-order', []);
+  const [topicOrder, setTopicOrder] = usePersistedState<string[]>('cherry-chat-rail-topic-order', []);
+  // 标签分组 — 仅助手视图生效（Cherry 真实行为）：标签为段头、段内挂助手树。
+  const [tagGrouping, setTagGrouping] = usePersistedState<boolean>('cherry-chat-rail-tag-group', true);
+  const [assistantIconModes, setAssistantIconModes] = usePersistedState<Record<string, 'emoji' | 'model' | 'none'>>('cherry-chat-rail-icon-modes', {});
+  const [hiddenAssistants, setHiddenAssistants] = useState<Set<string>>(() => new Set());
+  // 管理助手页（筛选菜单进入），接管内容区。
+  const [showAssistantManage, setShowAssistantManage] = useState(false);
+  // 话题重命名（行右键菜单）。
+  const [renameTopicTarget, setRenameTopicTarget] = useState<AssistantTopic | null>(null);
+  const [renameTopicValue, setRenameTopicValue] = useState('');
+  // 话题列表位置（左/右）— 布局级全局开关：话题要么挂在左栏（助手树下 +
+  // 置顶段），要么整体进右侧「话题」面板。选右侧时左栏只当助手目录。
+  const [topicListPosition, setTopicListPositionRaw] = usePersistedState<'left' | 'right'>('cherry-chat-topic-list-position', 'left');
+  const setTopicListPosition = useCallback((pos: 'left' | 'right') => {
+    setTopicListPositionRaw(pos);
+    // 切到右侧立即展开右栏话题面板（让用户看到列表去了哪）；切回左侧时收起。
+    if (pos === 'right') { setDockTab('topics'); setTopicsDockPref(true); }
+    else { setDockTab(prev => (prev === 'topics' ? null : prev)); setTopicsDockPref(false); }
+  }, [setTopicListPositionRaw, setTopicsDockPref]);
+
+  // ===== 左栏数据组装（与工作模块 railSections 同构） =====
+  const visibleAssistants = useMemo(
+    () => applyOrder(MOCK_ASSISTANTS.filter(a => !hiddenAssistants.has(a.id)), assistantOrder),
+    [hiddenAssistants, assistantOrder],
+  );
+  const orderedTopics = useMemo(() => {
+    // 归档的话题不进左栏（话题历史页仍可见）。
+    const visible = topics.filter(t => !t.archived);
+    const base = railSort === 'manual'
+      ? applyOrder(visible, topicOrder)
+      : visible; // 创建/更新时间：mock 时间戳为人读文案，保持默认序（已按最近排列）
+    // 置顶话题冒泡到最前（树形视图下即各自分组内的最前），相对顺序不变。
+    return [...base.filter(t => t.pinned), ...base.filter(t => !t.pinned)];
+  }, [topics, railSort, topicOrder]);
+  const unpinnedTopics = useMemo(() => orderedTopics.filter(t => !t.pinned), [orderedTopics]);
+  // 话题行一律纯文字（Codex 式）——归属信息由段/分组表达。
+  const topicToRow = (t: AssistantTopic): EntityRailItem => ({ id: t.id, name: t.title, avatar: '' });
+  const pinnedTopicRows = useMemo<EntityRailItem[]>(
+    () => orderedTopics.filter(t => t.pinned).map(topicToRow),
+    [orderedTopics],
+  );
+  // 助手树形分组：助手组头 + 其话题子行。
+  const assistantTreeGroups = useMemo<EntityRailTreeGroup[]>(
+    () => visibleAssistants.map(a => ({
+      key: a.id,
+      name: a.name,
+      avatar: ASSISTANT_EMOJI_MAP[a.name] || '🤖',
+      children: unpinnedTopics.filter(t => t.assistantName === a.name).map(topicToRow),
+    })),
+    [visibleAssistants, unpinnedTopics],
+  );
+  const chatRailSections = useMemo<EntityRailSection[]>(() => {
+    const pinnedSection: EntityRailSection = {
+      key: 'pinned', label: '置顶', items: pinnedTopicRows, rowsDraggable: false, limitRows: false,
+    };
+    if (railDisplay === 'topics') {
+      return [pinnedSection, { key: 'topics', label: '话题', items: unpinnedTopics.map(topicToRow) }];
+    }
+    // 助手视图。话题列表在右侧时左栏只当「助手目录」：不再重复展示话题，
+    // 置顶段（属于话题列表的一部分）也一并隐藏。
+    const emptied = topicListPosition === 'right';
+    const groupsOf = (gs: EntityRailTreeGroup[]) => (emptied ? gs.map(g => ({ ...g, children: [] })) : gs);
+    if (!tagGrouping) {
+      const sec: EntityRailSection = { key: 'assistants', label: '助手', groups: groupsOf(assistantTreeGroups) };
+      return emptied ? [sec] : [pinnedSection, sec];
+    }
+    // 标签分组：每个标签一段（段头即标签名），段内挂该标签下的助手树；
+    // 多标签助手在每个标签下都出现；无标签助手归入「未分组」。
+    const byTag = new Map<string, EntityRailTreeGroup[]>();
+    visibleAssistants.forEach((a, i) => {
+      const g = assistantTreeGroups[i];
+      const tags = a.tags.length > 0 ? a.tags : ['未分组'];
+      tags.forEach(tag => byTag.set(tag, [...(byTag.get(tag) ?? []), g]));
+    });
+    const tagSections: EntityRailSection[] = Array.from(byTag.entries()).map(([tag, gs]) => ({
+      key: `tag-${tag}`, label: tag, groups: groupsOf(gs),
+    }));
+    return emptied ? tagSections : [pinnedSection, ...tagSections];
+  }, [railDisplay, tagGrouping, topicListPosition, pinnedTopicRows, unpinnedTopics, assistantTreeGroups, visibleAssistants]);
+
+  // ===== 左栏菜单处理器 =====
+  // 新话题挂到指定助手（组头 hover 的新会话按钮）——同时切到该助手。
+  const handleNewTopicFor = useCallback((assistant: AssistantInfo) => {
+    setSelectedAssistants([assistant.id]);
+    const existingNew = topics.find(t => t.title === '新话题' && t.messageCount === 0 && t.assistantName === assistant.name);
+    const reset = () => {
+      setMessages([]);
+      setActiveArtifact(null);
+      setShowArtifacts(false);
+      setArtifactFullscreen(false);
+      setRightPanel(null);
+      setShowBranchTree(false);
+    };
+    if (existingNew) { setActiveTopicId(existingNew.id); reset(); return; }
+    const newId = `new-topic-${Date.now()}-${assistant.id}`;
+    setTopics(prev => [{
+      id: newId, title: '新话题', assistantName: assistant.name,
+      lastMessage: '', timestamp: '刚刚', messageCount: 0, status: 'active' as const,
+    }, ...prev]);
+    setActiveTopicId(newId);
+    reset();
+  }, [topics]);
+  // 清空该助手名下的全部话题（组头「…」菜单）。
+  const handleClearTopicsOf = useCallback((assistantId: string) => {
+    const a = MOCK_ASSISTANTS.find(x => x.id === assistantId);
+    if (!a) return;
+    const clearingActive = !!activeTopic && activeTopic.assistantName === a.name;
+    setTopics(prev => prev.filter(t => t.assistantName !== a.name));
+    if (clearingActive) handleNewTopic();
+  }, [activeTopic, handleNewTopic]);
+  const handlePinTopAssistant = useCallback((id: string) => {
+    setAssistantOrder([id, ...visibleAssistants.map(a => a.id).filter(x => x !== id)]);
+  }, [visibleAssistants, setAssistantOrder]);
+  const setAssistantIconMode = useCallback((key: string, mode: 'emoji' | 'model' | 'none') => {
+    setAssistantIconModes({ ...assistantIconModes, [key]: mode });
+  }, [assistantIconModes, setAssistantIconModes]);
+  const handleDeleteAssistant = useCallback((id: string) => {
+    setHiddenAssistants(prev => new Set(prev).add(id));
+    // 删除的是当前助手时退到列表里第一个其它助手。
+    setSelectedAssistants(prev => {
+      const rest = prev.filter(x => x !== id);
+      if (rest.length > 0) return rest;
+      const fallback = MOCK_ASSISTANTS.find(a => a.id !== id && !hiddenAssistants.has(a.id));
+      return fallback ? [fallback.id] : prev;
+    });
+  }, [hiddenAssistants]);
+  // 话题列表位置的读写句柄（右键菜单 & 筛选菜单共用；id 参数仅为
+  // EntityRail 行级接口兼容，实际是全局开关）。
+  const topicPositionApi = useMemo(() => ({
+    get: (_id: string): 'left' | 'right' => topicListPosition,
+    set: (_id: string, pos: 'left' | 'right') => setTopicListPosition(pos),
+  }), [topicListPosition, setTopicListPosition]);
+  // 话题行右键菜单（重命名/置顶/归档/新标签页/新窗口/话题列表位置/删除）。
+  const topicContextMenu = useMemo(() => ({
+    rowLabel: '话题',
+    positionLabel: '话题列表位置',
+    onRename: (id: string) => {
+      const t = topics.find(x => x.id === id);
+      if (t) { setRenameTopicTarget(t); setRenameTopicValue(t.title); }
+    },
+    isPinned: (id: string) => !!topics.find(x => x.id === id)?.pinned,
+    onTogglePin: (id: string) => {
+      const t = topics.find(x => x.id === id);
+      if (t) handleUpdateTopic(id, { pinned: !t.pinned });
+    },
+    onArchive: (id: string) => handleUpdateTopic(id, { archived: true }),
+    // 原型行为：新标签页 = 应用内再开一个「对话」tab；新窗口 = 浏览器新窗口。
+    onOpenInNewTab: (_id: string) => launchpadOpen('chat'),
+    onOpenInNewWindow: (_id: string) => { window.open(window.location.href, '_blank', 'width=1280,height=800'); },
+    onDelete: (id: string) => handleDeleteTopic(id),
+  }), [topics, handleUpdateTopic, handleDeleteTopic, launchpadOpen]);
 
   // Active artifact — opened by clicking artifact indicators in messages
   const [activeArtifact, setActiveArtifact] = useState<ArtifactData | null>(null);
@@ -2291,13 +2452,97 @@ export function AssistantRunPage() {
               title="助手"
               searchable={false}
               filterable={false}
-              newLabel="添加助手"
+              newLabel={railDisplay === 'assistants' ? '添加助手' : '新建话题'}
               newAsRow
-              items={assistantRailItems}
-              activeId={selectedAssistants[0]}
-              onSelect={handleSelectAssistant}
-              onNew={() => setShowCreateAssistant(true)}
-              onConfigure={(id) => { setSelectedAssistants([id]); setRightPanel('assistantInfo'); }}
+              newActions={railDisplay === 'assistants' ? [
+                { id: 'assistant', label: '添加助手', icon: Bot, onClick: () => setShowCreateAssistant(true) },
+              ] : [
+                { id: 'topic', label: '新建话题', icon: MessageSquarePlus, onClick: handleNewTopic },
+              ]}
+              railMenu={{
+                displayModes: {
+                  options: [
+                    { id: 'topics', label: '话题列表' },
+                    { id: 'assistants', label: '助手列表' },
+                  ],
+                  value: railDisplay,
+                  onChange: (id) => setRailDisplay(id as 'topics' | 'assistants'),
+                },
+                sortModes: {
+                  options: [
+                    { id: 'created', label: '创建时间' },
+                    { id: 'updated', label: '更新时间' },
+                    { id: 'manual', label: '手动排序' },
+                  ],
+                  value: railSort,
+                  onChange: (id) => setRailSort(id as 'created' | 'updated' | 'manual'),
+                },
+                ...(railDisplay === 'assistants' ? {
+                  taskPosition: {
+                    label: '话题列表位置',
+                    options: [
+                      { id: 'left', label: '左侧' },
+                      { id: 'right', label: '右侧' },
+                    ],
+                    value: topicListPosition,
+                    onChange: (id: string) => setTopicListPosition(id as 'left' | 'right'),
+                  },
+                } : {}),
+                expandCollapse: true,
+                actions: [
+                  { id: 'history', label: '历史话题', onClick: () => { setHistoryInitialAssistant(null); historySidebar.expand(); } },
+                  { id: 'manage', label: '管理助手', onClick: () => setShowAssistantManage(true) },
+                ],
+              }}
+              sections={chatRailSections}
+              persistKey="chat"
+              activeGroupKey={railDisplay === 'assistants' && !showAssistantManage ? selectedAssistants[0] : null}
+              onGroupSelect={(key) => {
+                // 助手组头 → 切换当前助手。
+                setShowAssistantManage(false);
+                setSelectedAssistants([key]);
+              }}
+              onReorderGroups={railDisplay === 'assistants' ? setAssistantOrder : undefined}
+              onReorderItems={(ids) => {
+                // 话题任何时候都可拖；拖动即隐式切到「手动排序」（Codex 式）。
+                setTopicOrder(ids);
+                if (railSort !== 'manual') setRailSort('manual');
+              }}
+              rowContextMenu={{
+                ...topicContextMenu,
+                // 「话题列表位置」子菜单只在助手列表视图出现。
+                position: railDisplay === 'assistants' ? topicPositionApi : undefined,
+              }}
+              groupHoverMenu={{
+                onNewSession: (key) => {
+                  const a = MOCK_ASSISTANTS.find(x => x.id === key);
+                  if (a) handleNewTopicFor(a); else handleNewTopic();
+                },
+                expert: {
+                  label: '助手',
+                  onEdit: (key) => { setShowAssistantManage(false); setSelectedAssistants([key]); setRightPanel('assistantInfo'); },
+                  onPinTop: handlePinTopAssistant,
+                  onClearTopics: handleClearTopicsOf,
+                  iconMode: {
+                    get: (key) => assistantIconModes[key] ?? 'emoji',
+                    set: setAssistantIconMode,
+                  },
+                  // 标签分组开关 — 仅助手视图下出现在组头菜单里。
+                  tagGrouping: { enabled: tagGrouping, onToggle: () => setTagGrouping(!tagGrouping) },
+                  onDelete: handleDeleteAssistant,
+                },
+              }}
+              items={[]}
+              activeId={showAssistantManage ? null : activeTopicId}
+              onSelect={(id) => {
+                // 所有行都是话题——打开话题并切到其所属助手。
+                const t = topics.find(x => x.id === id);
+                if (!t) return;
+                const owner = MOCK_ASSISTANTS.find(a => a.name === t.assistantName);
+                if (owner) setSelectedAssistants([owner.id]);
+                setShowAssistantManage(false);
+                handleSelectTopic(id);
+              }}
               onEdit={(id) => { setSelectedAssistants([id]); setRightPanel('assistantInfo'); }}
             />
           </motion.div>
@@ -2306,38 +2551,47 @@ export function AssistantRunPage() {
 
       {/* ===== Right: Header + Content ===== */}
       <div className="flex flex-col flex-1 min-w-0 min-h-0 relative">
+        {/* 管理助手页（筛选菜单进入）接管内容区；向导/回收站等弹窗不受影响。 */}
+        {showAssistantManage ? (
+          <AssistantManagePage
+            assistants={visibleAssistants}
+            emojiOf={(name) => ASSISTANT_EMOJI_MAP[name] || '🤖'}
+            onBack={() => setShowAssistantManage(false)}
+            onOpen={(id) => { setSelectedAssistants([id]); setShowAssistantManage(false); }}
+            onEdit={(id) => { setSelectedAssistants([id]); setShowAssistantManage(false); setRightPanel('assistantInfo'); }}
+            onCreate={() => setShowCreateAssistant(true)}
+          />
+        ) : (<>
         {/* ===== Header ===== */}
         <header className="flex items-center px-3 flex-shrink-0 h-[40px]">
           {/* Assistant list rail toggle */}
           <Tooltip content={historySidebar.isCompact ? '收起助手列表' : '展开助手列表'} side="bottom">
             <Button variant="ghost" size="icon-xs" onClick={() => historySidebar.toggle()}
               className={`p-1.5 w-auto h-auto mr-1 ${historySidebar.isCompact ? 'text-muted-foreground hover:text-foreground hover:bg-accent/40' : 'text-muted-foreground/40 hover:text-foreground hover:bg-accent/40'}`}>
-              {historySidebar.isCompact ? <PanelLeftClose size={18} strokeWidth={1.6} /> : <PanelLeftOpen size={18} strokeWidth={1.6} />}
+              {historySidebar.isCompact ? <PanelLeftClose size={16} strokeWidth={1.6} /> : <PanelLeftOpen size={16} strokeWidth={1.6} />}
             </Button>
           </Tooltip>
         <div className="flex-1" />
         <div className="flex items-center gap-0.5">
           {/* Topics for the selected assistant — opens the right dock to the
-              话题 list (mirrors the 工作 module's 会话 toggle). */}
-          <Tooltip content="话题" side="bottom">
+              话题 list. icon-only（与工作模块的会话按钮同构）。 */}
+          <Tooltip content={dockTab === 'topics' ? '收起话题列表' : '话题列表'} side="bottom">
             <Button
               variant="ghost"
-              size="xs"
+              size="icon-xs"
               onClick={() => { const open = dockTab !== 'topics'; setDockTab(open ? 'topics' : null); setTopicsDockPref(open); }}
-              className={`gap-1.5 px-2 py-[4px] text-xs ${
+              className={`p-1.5 w-auto h-auto ${
                 dockTab === 'topics' ? 'bg-accent/25 text-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-accent/40'
               }`}
             >
-              <MessageCircle size={18} strokeWidth={1.6} />
-              <span>话题</span>
-              <span className="tabular-nums text-muted-foreground/50">{assistantTopics.filter(t => !t.archived).length}</span>
+              <MessageCircle size={16} strokeWidth={1.6} />
             </Button>
           </Tooltip>
           <div className="w-px h-3.5 bg-border/30 mx-0.5" />
           <Tooltip content={modelConfigured ? '演示：切到「未配置模型」状态' : '演示：恢复已配置状态'} side="bottom">
             <Button variant="ghost" size="icon-xs" onClick={() => setModelConfigured(v => !v)}
               className={`p-1.5 w-auto h-auto ${modelConfigured ? 'text-muted-foreground/40 hover:text-foreground hover:bg-accent/40' : 'text-foreground bg-accent/25'}`}>
-              <FlaskConical size={18} strokeWidth={1.6} />
+              <FlaskConical size={16} strokeWidth={1.6} />
             </Button>
           </Tooltip>
           {hasMessages && (
@@ -2345,7 +2599,7 @@ export function AssistantRunPage() {
               <div className="relative">
                 <Tooltip content="历史文件" side="bottom"><Button variant="ghost" size="icon-xs" onClick={() => setShowHeaderFileHistory(v => !v)}
                   className={`p-1.5 w-auto h-auto ${showHeaderFileHistory ? 'text-foreground bg-accent/25' : 'text-muted-foreground hover:text-foreground hover:bg-accent/40'}`}>
-                  <File size={18} strokeWidth={1.6} />
+                  <File size={16} strokeWidth={1.6} />
                 </Button></Tooltip>
                 <AnimatePresence>
                   {showHeaderFileHistory && (
@@ -2361,15 +2615,25 @@ export function AssistantRunPage() {
               </div>
               <Tooltip content="分支管理" side="bottom"><Button variant="ghost" size="icon-xs" onClick={() => setShowBranchTree(!showBranchTree)}
                 className={`p-1.5 w-auto h-auto ${showBranchTree ? 'text-foreground bg-accent/25' : 'text-muted-foreground hover:text-foreground hover:bg-accent/40'}`}>
-                <GitBranch size={18} strokeWidth={1.6} />
+                <GitBranch size={16} strokeWidth={1.6} />
               </Button></Tooltip>
               <div className="w-px h-3.5 bg-border/30 mx-0.5" />
             </>
           )}
           <Tooltip content="参数设置" side="bottom"><Button variant="ghost" size="icon-xs" onClick={() => { const open = dockTab !== 'settings'; setDockTab(open ? 'settings' : null); if (open) setTopicsDockPref(false); }}
             className={`p-1.5 w-auto h-auto ${dockTab === 'settings' ? 'text-foreground bg-accent/25' : 'text-muted-foreground hover:text-foreground hover:bg-accent/40'}`}>
-            <Settings2 size={18} strokeWidth={1.6} />
+            <Settings2 size={16} strokeWidth={1.6} />
           </Button></Tooltip>
+          {/* 产物面板开关 — 常驻最右缘（与工作模块的预览面板按钮同构）。
+              助手生成的 md/html 等产物在右侧面板浏览。 */}
+          <div className="w-px h-3.5 bg-border/30 mx-0.5" />
+          <Tooltip content={dockTab === 'artifacts' ? '收起产物面板' : '显示产物面板'} side="bottom">
+            <Button variant="ghost" size="icon-xs"
+              onClick={() => { const open = dockTab !== 'artifacts'; setDockTab(open ? 'artifacts' : null); if (open) setTopicsDockPref(false); }}
+              className={`p-1.5 w-auto h-auto ${dockTab === 'artifacts' ? 'text-foreground bg-accent/25' : 'text-muted-foreground hover:text-foreground hover:bg-accent/40'}`}>
+              <PanelRightInsetIcon size={16} className="size-4" />
+            </Button>
+          </Tooltip>
         </div>
       </header>
 
@@ -3013,6 +3277,7 @@ export function AssistantRunPage() {
         </AnimatePresence>
 
       </div>
+      </>)}
 
       {/* ===== History Overlay (fullscreen only) ===== */}
       <AnimatePresence>
@@ -3045,6 +3310,39 @@ export function AssistantRunPage() {
         }}
       />
 
+      {/* ===== 话题重命名（行右键菜单） ===== */}
+      <Dialog open={!!renameTopicTarget} onOpenChange={(open) => { if (!open) setRenameTopicTarget(null); }}>
+        <DialogContent className="w-[360px] p-5">
+          <div className="text-sm font-medium mb-3">重命名话题</div>
+          <Input
+            value={renameTopicValue}
+            onChange={(e) => setRenameTopicValue(e.target.value)}
+            autoFocus
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && renameTopicTarget && renameTopicValue.trim()) {
+                handleUpdateTopic(renameTopicTarget.id, { title: renameTopicValue.trim() });
+                setRenameTopicTarget(null);
+              }
+            }}
+          />
+          <div className="flex justify-end gap-2 mt-4">
+            <Button variant="outline" size="sm" onClick={() => setRenameTopicTarget(null)}>取消</Button>
+            <Button
+              size="sm"
+              disabled={!renameTopicValue.trim()}
+              onClick={() => {
+                if (renameTopicTarget && renameTopicValue.trim()) {
+                  handleUpdateTopic(renameTopicTarget.id, { title: renameTopicValue.trim() });
+                  setRenameTopicTarget(null);
+                }
+              }}
+            >
+              确定
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       </div>
 
       {/* ===== Right dock panel — 话题 or 创作物 — docked to the app's far-right
@@ -3059,7 +3357,8 @@ export function AssistantRunPage() {
           const isTopics = dockTab === 'topics';
           const isSettings = dockTab === 'settings';
           const isFixed = isTopics || isSettings;
-          const effectiveWidth = isTopics ? 260 : isSettings ? 340 : artifactPanelWidth;
+          // 话题列表与左侧助手栏同宽（220），把空间让给中间对话区。
+          const effectiveWidth = isTopics ? 220 : isSettings ? 340 : artifactPanelWidth;
           return (
           <motion.div
             initial={{ width: 0, opacity: 0 }}

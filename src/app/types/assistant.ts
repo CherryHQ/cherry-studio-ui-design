@@ -51,6 +51,8 @@ export interface AssistantTopic {
   messageCount: number;
   status: 'active' | 'completed';
   pinned?: boolean;
+  /** 归档的话题不进左栏列表（话题历史页仍可见）。 */
+  archived?: boolean;
   tags?: string[];
   group?: string;
 }
