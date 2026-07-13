@@ -14,6 +14,7 @@ import {
   Settings2, NotebookPen, PenTool, Lightbulb, ScanLine, Eraser,
   PanelLeftOpen, PanelLeftClose,
   MessageCircle, Image as ImageIcon, PlugZap, FlaskConical,
+  Tag as TagIcon, Pencil,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { copyToClipboard } from '@/app/utils/clipboard';
@@ -29,7 +30,7 @@ import {
   DropdownMenuSub, DropdownMenuSubTrigger, DropdownMenuSubContent,
   Popover, PopoverTrigger, PopoverContent,
   HoverCard, HoverCardTrigger, HoverCardContent, BrandLogo,
-  MessageErrorBlock, Dialog, DialogContent, Input,
+  MessageErrorBlock, Dialog, DialogContent, DialogTitle, DialogDescription, Input,
   RichComposer, type RichComposerHandle, type ComposerAttachment,
 } from '@cherry-studio/ui';
 import type { AssistantInfo, AssistantTopic } from '@/app/types/assistant';
@@ -71,7 +72,8 @@ import { BranchTreePanel } from '@/features/assistant/BranchTreePanel';
 import { ChatSettingsPanel } from '@/features/assistant/ChatSettingsPanel';
 import { MentionPickerPanel } from '@/app/components/shared/MentionPickerPanel';
 import { ModelPickerPanel } from '@/app/components/shared/ModelPickerPanel';
-import { EntityRail, PanelRightInsetIcon, type EntityRailItem, type EntityRailTreeGroup, type EntityRailSection } from '@/app/components/shared/EntityNav';
+import { EntityRail, NewSessionIcon, PanelRightInsetIcon, type EntityRailItem, type EntityRailTreeGroup, type EntityRailSection } from '@/app/components/shared/EntityNav';
+import { InputDialog } from '@/app/components/shared/InputDialog';
 import { AssistantManagePage } from '@/features/assistant/AssistantManagePage';
 import { usePersistedState } from '@/app/hooks/usePersistedState';
 import { applyOrder } from '@/app/utils/applyOrder';
@@ -1899,7 +1901,64 @@ export function AssistantRunPage() {
   const [topicOrder, setTopicOrder] = usePersistedState<string[]>('cherry-chat-rail-topic-order', []);
   // 标签分组 — 仅助手视图生效（Cherry 真实行为）：标签为段头、段内挂助手树。
   const [tagGrouping, setTagGrouping] = usePersistedState<boolean>('cherry-chat-rail-tag-group', true);
+  // 助手组头图标模式（组头「…」菜单「助手图标 ▸」，与工作模块「专家图标」同构）：
+  // Emoji 表情 / 模型图标 / 不显示，按助手分别记忆。
   const [assistantIconModes, setAssistantIconModes] = usePersistedState<Record<string, 'emoji' | 'model' | 'none'>>('cherry-chat-rail-icon-modes', {});
+  // ===== 助手标签（企业微信式）：全局标签库 + 每助手多选 =====
+  // tagList = 标签库（初始为 mock 助手标签并集）；assistantTagMap = 每助手
+  // 覆盖（未记录回落 mock 默认）。重命名/删除级联更新所有助手。
+  const [tagList, setTagList] = usePersistedState<string[]>(
+    'cherry-chat-tag-list-v2',
+    Array.from(new Set(MOCK_ASSISTANTS.flatMap(a => a.tags))),
+  );
+  const [assistantTagMap, setAssistantTagMap] = usePersistedState<Record<string, string[]>>('cherry-chat-assistant-tags-v2', {});
+  const tagsOf = useCallback(
+    (id: string) => assistantTagMap[id] ?? MOCK_ASSISTANTS.find(a => a.id === id)?.tags ?? [],
+    [assistantTagMap],
+  );
+  const toggleAssistantTag = useCallback((id: string, tag: string) => {
+    const cur = tagsOf(id);
+    setAssistantTagMap({ ...assistantTagMap, [id]: cur.includes(tag) ? cur.filter(t => t !== tag) : [...cur, tag] });
+  }, [tagsOf, assistantTagMap, setAssistantTagMap]);
+  const createTag = useCallback((name: string, applyTo?: string) => {
+    const n = name.trim();
+    if (!n) return;
+    if (!tagList.includes(n)) setTagList([...tagList, n]);
+    // 企微行为：从某个助手的菜单新建的标签，随手打给该助手。
+    if (applyTo && !tagsOf(applyTo).includes(n)) {
+      setAssistantTagMap({ ...assistantTagMap, [applyTo]: [...tagsOf(applyTo), n] });
+    }
+  }, [tagList, setTagList, tagsOf, assistantTagMap, setAssistantTagMap]);
+  const renameTag = useCallback((from: string, to: string) => {
+    const n = to.trim();
+    if (!n || n === from) return;
+    // 撞名即合并（去重）。
+    setTagList(Array.from(new Set(tagList.map(t => (t === from ? n : t)))));
+    const next: Record<string, string[]> = { ...assistantTagMap };
+    MOCK_ASSISTANTS.forEach(a => {
+      const cur = next[a.id] ?? a.tags;
+      if (cur.includes(from)) next[a.id] = Array.from(new Set(cur.map(t => (t === from ? n : t))));
+    });
+    setAssistantTagMap(next);
+  }, [tagList, setTagList, assistantTagMap, setAssistantTagMap]);
+  const deleteTag = useCallback((tag: string) => {
+    setTagList(tagList.filter(t => t !== tag));
+    const next: Record<string, string[]> = { ...assistantTagMap };
+    MOCK_ASSISTANTS.forEach(a => {
+      const cur = next[a.id] ?? a.tags;
+      if (cur.includes(tag)) next[a.id] = cur.filter(t => t !== tag);
+    });
+    setAssistantTagMap(next);
+  }, [tagList, setTagList, assistantTagMap, setAssistantTagMap]);
+  // 弹窗状态：新建标签（记住归属助手；'' = 来自标签管理、不归属）/ 标签管理 / 行内编辑。
+  const [newTagFor, setNewTagFor] = useState<string | null>(null);
+  const [newTagValue, setNewTagValue] = useState('');
+  const [showTagManage, setShowTagManage] = useState(false);
+  const [editingTag, setEditingTag] = useState<string | null>(null);
+  const [editingTagValue, setEditingTagValue] = useState('');
+  // 左栏标签段头（hover「…」/ 右键）的重命名弹窗。
+  const [renameTagTarget, setRenameTagTarget] = useState<string | null>(null);
+  const [renameTagValue, setRenameTagValue] = useState('');
   const [hiddenAssistants, setHiddenAssistants] = useState<Set<string>>(() => new Set());
   // 管理助手页（筛选菜单进入），接管内容区。
   const [showAssistantManage, setShowAssistantManage] = useState(false);
@@ -1915,6 +1974,12 @@ export function AssistantRunPage() {
     if (pos === 'right') { setDockTab('topics'); setTopicsDockPref(true); }
     else { setDockTab(prev => (prev === 'topics' ? null : prev)); setTopicsDockPref(false); }
   }, [setTopicListPositionRaw, setTopicsDockPref]);
+  // 右侧话题面板只在「助手视图 + 位置=右侧」时存在——话题已经挂在左栏时
+  // （话题列表视图，或位置=左侧），右侧不再重复一份话题列表。
+  const topicsDockAvailable = railDisplay === 'assistants' && topicListPosition === 'right';
+  useEffect(() => {
+    if (!topicsDockAvailable) setDockTab(prev => (prev === 'topics' ? null : prev));
+  }, [topicsDockAvailable]);
 
   // ===== 左栏数据组装（与工作模块 railSections 同构） =====
   const visibleAssistants = useMemo(
@@ -1967,14 +2032,20 @@ export function AssistantRunPage() {
     const byTag = new Map<string, EntityRailTreeGroup[]>();
     visibleAssistants.forEach((a, i) => {
       const g = assistantTreeGroups[i];
-      const tags = a.tags.length > 0 ? a.tags : ['未分组'];
+      const aTags = tagsOf(a.id);
+      const tags = aTags.length > 0 ? aTags : ['未分组'];
       tags.forEach(tag => byTag.set(tag, [...(byTag.get(tag) ?? []), g]));
     });
     const tagSections: EntityRailSection[] = Array.from(byTag.entries()).map(([tag, gs]) => ({
       key: `tag-${tag}`, label: tag, groups: groupsOf(gs),
+      // 「未分组」是无标签助手的虚拟段，不提供重命名/删除。
+      menu: tag === '未分组' ? undefined : { items: [
+        { id: 'rename', label: '重命名', onClick: () => { setRenameTagTarget(tag); setRenameTagValue(tag); } },
+        { id: 'delete', label: '删除标签', danger: true, onClick: () => deleteTag(tag) },
+      ] },
     }));
     return emptied ? tagSections : [pinnedSection, ...tagSections];
-  }, [railDisplay, tagGrouping, topicListPosition, pinnedTopicRows, unpinnedTopics, assistantTreeGroups, visibleAssistants]);
+  }, [railDisplay, tagGrouping, topicListPosition, pinnedTopicRows, unpinnedTopics, assistantTreeGroups, visibleAssistants, tagsOf, deleteTag]);
 
   // ===== 左栏菜单处理器 =====
   // 新话题挂到指定助手（组头 hover 的新会话按钮）——同时切到该助手。
@@ -2009,9 +2080,6 @@ export function AssistantRunPage() {
   const handlePinTopAssistant = useCallback((id: string) => {
     setAssistantOrder([id, ...visibleAssistants.map(a => a.id).filter(x => x !== id)]);
   }, [visibleAssistants, setAssistantOrder]);
-  const setAssistantIconMode = useCallback((key: string, mode: 'emoji' | 'model' | 'none') => {
-    setAssistantIconModes({ ...assistantIconModes, [key]: mode });
-  }, [assistantIconModes, setAssistantIconModes]);
   const handleDeleteAssistant = useCallback((id: string) => {
     setHiddenAssistants(prev => new Set(prev).add(id));
     // 删除的是当前助手时退到列表里第一个其它助手。
@@ -2477,18 +2545,9 @@ export function AssistantRunPage() {
                   value: railSort,
                   onChange: (id) => setRailSort(id as 'created' | 'updated' | 'manual'),
                 },
-                ...(railDisplay === 'assistants' ? {
-                  taskPosition: {
-                    label: '话题列表位置',
-                    options: [
-                      { id: 'left', label: '左侧' },
-                      { id: 'right', label: '右侧' },
-                    ],
-                    value: topicListPosition,
-                    onChange: (id: string) => setTopicListPosition(id as 'left' | 'right'),
-                  },
-                } : {}),
-                expandCollapse: true,
+                // 「话题列表位置」不进筛选菜单——由助手组头/话题行的右键菜单提供。
+                // 话题列表在右侧时左栏无话题行可展开，直接不提供该项。
+                expandCollapse: topicListPosition === 'left' ? '话题' : false,
                 actions: [
                   { id: 'history', label: '历史话题', onClick: () => { setHistoryInitialAssistant(null); historySidebar.expand(); } },
                   { id: 'manage', label: '管理助手', onClick: () => setShowAssistantManage(true) },
@@ -2523,12 +2582,26 @@ export function AssistantRunPage() {
                   onEdit: (key) => { setShowAssistantManage(false); setSelectedAssistants([key]); setRightPanel('assistantInfo'); },
                   onPinTop: handlePinTopAssistant,
                   onClearTopics: handleClearTopicsOf,
+                  // 「助手图标 ▸」— 与工作模块「专家图标」同款：Emoji/模型图标/不显示。
                   iconMode: {
                     get: (key) => assistantIconModes[key] ?? 'emoji',
-                    set: setAssistantIconMode,
+                    set: (key, mode) => setAssistantIconModes({ ...assistantIconModes, [key]: mode }),
+                  },
+                  // 标签（企微式）：二级菜单多选打钩 + 新建 + 标签管理。
+                  tags: {
+                    all: tagList,
+                    get: tagsOf,
+                    onToggle: toggleAssistantTag,
+                    onCreate: (key) => { setNewTagFor(key); setNewTagValue(''); },
+                    onManage: () => setShowTagManage(true),
                   },
                   // 标签分组开关 — 仅助手视图下出现在组头菜单里。
                   tagGrouping: { enabled: tagGrouping, onToggle: () => setTagGrouping(!tagGrouping) },
+                  position: {
+                    label: '话题列表位置',
+                    value: topicListPosition,
+                    onChange: (pos) => setTopicListPosition(pos),
+                  },
                   onDelete: handleDeleteAssistant,
                 },
               }}
@@ -2574,59 +2647,25 @@ export function AssistantRunPage() {
         <div className="flex-1" />
         <div className="flex items-center gap-0.5">
           {/* Topics for the selected assistant — opens the right dock to the
-              话题 list. icon-only（与工作模块的会话按钮同构）。 */}
-          <Tooltip content={dockTab === 'topics' ? '收起话题列表' : '话题列表'} side="bottom">
-            <Button
-              variant="ghost"
-              size="icon-xs"
-              onClick={() => { const open = dockTab !== 'topics'; setDockTab(open ? 'topics' : null); setTopicsDockPref(open); }}
-              className={`p-1.5 w-auto h-auto ${
-                dockTab === 'topics' ? 'bg-accent/25 text-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-accent/40'
-              }`}
-            >
-              <MessageCircle size={16} strokeWidth={1.6} />
-            </Button>
-          </Tooltip>
-          <div className="w-px h-3.5 bg-border/30 mx-0.5" />
-          <Tooltip content={modelConfigured ? '演示：切到「未配置模型」状态' : '演示：恢复已配置状态'} side="bottom">
-            <Button variant="ghost" size="icon-xs" onClick={() => setModelConfigured(v => !v)}
-              className={`p-1.5 w-auto h-auto ${modelConfigured ? 'text-muted-foreground/40 hover:text-foreground hover:bg-accent/40' : 'text-foreground bg-accent/25'}`}>
-              <FlaskConical size={16} strokeWidth={1.6} />
-            </Button>
-          </Tooltip>
-          {hasMessages && (
-            <>
-              <div className="relative">
-                <Tooltip content="历史文件" side="bottom"><Button variant="ghost" size="icon-xs" onClick={() => setShowHeaderFileHistory(v => !v)}
-                  className={`p-1.5 w-auto h-auto ${showHeaderFileHistory ? 'text-foreground bg-accent/25' : 'text-muted-foreground hover:text-foreground hover:bg-accent/40'}`}>
-                  <File size={16} strokeWidth={1.6} />
-                </Button></Tooltip>
-                <AnimatePresence>
-                  {showHeaderFileHistory && (
-                    <FileHistoryDropdown
-                      onSelect={(a) => { handleOpenArtifact(a); }}
-                      onClose={() => setShowHeaderFileHistory(false)}
-                      anchorRight
-                      selectedTitle={activeArtifact?.title}
-                      hasTopic={activeTopicId !== null}
-                    />
-                  )}
-                </AnimatePresence>
-              </div>
-              <Tooltip content="分支管理" side="bottom"><Button variant="ghost" size="icon-xs" onClick={() => setShowBranchTree(!showBranchTree)}
-                className={`p-1.5 w-auto h-auto ${showBranchTree ? 'text-foreground bg-accent/25' : 'text-muted-foreground hover:text-foreground hover:bg-accent/40'}`}>
-                <GitBranch size={16} strokeWidth={1.6} />
-              </Button></Tooltip>
-              <div className="w-px h-3.5 bg-border/30 mx-0.5" />
-            </>
+              话题 list. icon-only（与工作模块的会话按钮同构）。话题挂在左栏时
+              右侧没有话题面板，此按钮一并隐藏。 */}
+          {topicsDockAvailable && (
+            <Tooltip content={dockTab === 'topics' ? '收起话题列表' : '话题列表'} side="bottom">
+              <Button
+                variant="ghost"
+                size="icon-xs"
+                onClick={() => { const open = dockTab !== 'topics'; setDockTab(open ? 'topics' : null); setTopicsDockPref(open); }}
+                className={`p-1.5 w-auto h-auto ${
+                  dockTab === 'topics' ? 'bg-accent/25 text-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-accent/40'
+                }`}
+              >
+                <History className="size-4" strokeWidth={1.6} />
+              </Button>
+            </Tooltip>
           )}
-          <Tooltip content="参数设置" side="bottom"><Button variant="ghost" size="icon-xs" onClick={() => { const open = dockTab !== 'settings'; setDockTab(open ? 'settings' : null); if (open) setTopicsDockPref(false); }}
-            className={`p-1.5 w-auto h-auto ${dockTab === 'settings' ? 'text-foreground bg-accent/25' : 'text-muted-foreground hover:text-foreground hover:bg-accent/40'}`}>
-            <Settings2 size={16} strokeWidth={1.6} />
-          </Button></Tooltip>
           {/* 产物面板开关 — 常驻最右缘（与工作模块的预览面板按钮同构）。
-              助手生成的 md/html 等产物在右侧面板浏览。 */}
-          <div className="w-px h-3.5 bg-border/30 mx-0.5" />
+              助手生成的 md/html 等产物在右侧面板浏览。话题/产物同为面板
+              开关，同组相邻只留 gap 不加分隔线。 */}
           <Tooltip content={dockTab === 'artifacts' ? '收起产物面板' : '显示产物面板'} side="bottom">
             <Button variant="ghost" size="icon-xs"
               onClick={() => { const open = dockTab !== 'artifacts'; setDockTab(open ? 'artifacts' : null); if (open) setTopicsDockPref(false); }}
@@ -2817,7 +2856,7 @@ export function AssistantRunPage() {
                       {/* 新建会话 — 最左侧 */}
                       <Tooltip content="新建会话" side="top">
                         <button onClick={handleNewTopic} className="flex items-center p-[5px] rounded-md text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-colors">
-                          <MessageSquarePlus size={14} strokeWidth={1.5} />
+                          <NewSessionIcon size={14} />
                         </button>
                       </Tooltip>
                       {minimalInput ? null : (
@@ -3311,34 +3350,100 @@ export function AssistantRunPage() {
       />
 
       {/* ===== 话题重命名（行右键菜单） ===== */}
-      <Dialog open={!!renameTopicTarget} onOpenChange={(open) => { if (!open) setRenameTopicTarget(null); }}>
-        <DialogContent className="w-[360px] p-5">
-          <div className="text-sm font-medium mb-3">重命名话题</div>
-          <Input
-            value={renameTopicValue}
-            onChange={(e) => setRenameTopicValue(e.target.value)}
-            autoFocus
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' && renameTopicTarget && renameTopicValue.trim()) {
-                handleUpdateTopic(renameTopicTarget.id, { title: renameTopicValue.trim() });
-                setRenameTopicTarget(null);
+      <InputDialog
+        open={!!renameTopicTarget}
+        onOpenChange={(open) => { if (!open) setRenameTopicTarget(null); }}
+        title="重命名话题"
+        description="保持简短且易于识别"
+        initialValue={renameTopicValue}
+        onSubmit={(v) => { if (renameTopicTarget) handleUpdateTopic(renameTopicTarget.id, { title: v }); }}
+      />
+
+      {/* ===== 新建标签（助手菜单「标签 ▸ 新建标签」/ 标签管理底部） ===== */}
+      <InputDialog
+        open={newTagFor !== null}
+        onOpenChange={(open) => { if (!open) setNewTagFor(null); }}
+        title="新建标签"
+        description="用标签给助手分组管理"
+        placeholder="标签名称"
+        confirmLabel="创建"
+        onSubmit={(v) => createTag(v, newTagFor || undefined)}
+      />
+
+      {/* ===== 重命名标签（标签段头 hover「…」/ 右键） ===== */}
+      <InputDialog
+        open={renameTagTarget !== null}
+        onOpenChange={(open) => { if (!open) setRenameTagTarget(null); }}
+        title="重命名标签"
+        description="保持简短且易于识别"
+        initialValue={renameTagValue}
+        onSubmit={(v) => { if (renameTagTarget) renameTag(renameTagTarget, v); }}
+      />
+
+      {/* ===== 标签管理：列表 + 行内编辑 / 删除（级联所有助手） ===== */}
+      <Dialog open={showTagManage} onOpenChange={(open) => { if (!open) { setShowTagManage(false); setEditingTag(null); } }}>
+        {/* 与 InputDialog 同一桌面密度：p-4 / 14px 标题 / 13px 行 / 28px 按钮 / 无 X。
+            行尾编辑/删除常驻（弱化为 40% 灰，hover 行时提到 60%），不藏在 hover 后面。 */}
+        <DialogContent showCloseButton={false} className="w-[400px] gap-0 rounded-2xl p-4">
+          <DialogTitle className="text-sm font-medium mb-2">标签管理</DialogTitle>
+          <DialogDescription className="sr-only">编辑或删除已有标签</DialogDescription>
+          <div className="max-h-[320px] overflow-y-auto space-y-px -mx-1 px-1">
+            {tagList.length === 0 ? (
+              <div className="py-8 text-center text-[13px] text-muted-foreground/50">暂无标签</div>
+            ) : tagList.map(tag => {
+              if (editingTag === tag) {
+                const commit = () => { if (editingTagValue.trim()) renameTag(tag, editingTagValue); setEditingTag(null); };
+                return (
+                  <div key={tag} className="flex items-center gap-2 px-2 py-[3px]">
+                    <TagIcon size={12} className="text-muted-foreground/50 flex-shrink-0" />
+                    <Input
+                      value={editingTagValue}
+                      onChange={(e) => setEditingTagValue(e.target.value)}
+                      autoFocus
+                      className="h-[26px] rounded-[7px] border px-2 text-[13px]"
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') commit();
+                        if (e.key === 'Escape') setEditingTag(null);
+                      }}
+                      onBlur={commit}
+                    />
+                  </div>
+                );
               }
-            }}
-          />
-          <div className="flex justify-end gap-2 mt-4">
-            <Button variant="outline" size="sm" onClick={() => setRenameTopicTarget(null)}>取消</Button>
+              return (
+                <div key={tag} className="group/tag flex items-center gap-2 rounded-lg px-2 py-[5px] hover:bg-accent/40 transition-colors">
+                  <TagIcon size={12} className="text-muted-foreground/50 flex-shrink-0" />
+                  <span className="flex-1 truncate text-[13px]">{tag}</span>
+                  <button
+                    type="button"
+                    title="编辑标签"
+                    onClick={() => { setEditingTag(tag); setEditingTagValue(tag); }}
+                    className="p-1 rounded-md text-muted-foreground/40 group-hover/tag:text-muted-foreground/60 hover:!text-foreground hover:bg-accent/70 transition-colors"
+                  >
+                    <Pencil size={12} />
+                  </button>
+                  <button
+                    type="button"
+                    title="删除标签"
+                    onClick={() => deleteTag(tag)}
+                    className="p-1 rounded-md text-muted-foreground/40 group-hover/tag:text-muted-foreground/60 hover:!text-destructive hover:bg-destructive/10 transition-colors"
+                  >
+                    <Trash2 size={12} />
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+          <div className="flex items-center justify-between border-t border-border/40 mt-3 pt-3">
             <Button
-              size="sm"
-              disabled={!renameTopicValue.trim()}
-              onClick={() => {
-                if (renameTopicTarget && renameTopicValue.trim()) {
-                  handleUpdateTopic(renameTopicTarget.id, { title: renameTopicValue.trim() });
-                  setRenameTopicTarget(null);
-                }
-              }}
+              variant="ghost"
+              size="xs"
+              className="h-7 gap-1 px-2 text-xs text-muted-foreground hover:text-foreground"
+              onClick={() => { setNewTagFor(''); setNewTagValue(''); }}
             >
-              确定
+              <Plus size={13} /> 新建标签
             </Button>
+            <Button size="xs" className="h-7 px-3 text-xs" onClick={() => { setShowTagManage(false); setEditingTag(null); }}>完成</Button>
           </div>
         </DialogContent>
       </Dialog>

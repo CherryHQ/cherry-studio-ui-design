@@ -1,5 +1,5 @@
 import React, { useMemo, useState, useRef } from 'react';
-import { Plus, MessageSquare, ChevronDown, ListFilter, Check, MoreHorizontal, FolderOpen, Pin, Archive, Loader2, Bot } from 'lucide-react';
+import { Plus, MessageSquare, ChevronDown, ListFilter, Search, Check, MoreHorizontal, FolderOpen, Pin, Archive, Loader2, Bot } from 'lucide-react';
 import { motion } from 'motion/react';
 import {
   Button, SearchInput, Popover, PopoverTrigger, PopoverContent,
@@ -102,6 +102,9 @@ export interface EntityRailSection {
   /** false = 段内行不做「超过 5 条截断 + 查看更多」（置顶段——置顶即
    * 用户标记的重要任务，全量展示）。默认截断。 */
   limitRows?: boolean;
+  /** 段头操作菜单 — hover 时段头右缘出「…」按钮，右键段头出同一份菜单
+   * （如标签段的 重命名/删除标签）。不提供则段头无菜单。 */
+  menu?: { items: { id: string; label: string; danger?: boolean; onClick: () => void }[] };
 }
 
 export interface EntityRailProps {
@@ -186,9 +189,24 @@ export interface EntityRailProps {
       onPinTop: (key: string) => void;
       /** 清空该组下所有话题（对话模块）。提供时菜单显示「清空话题」。 */
       onClearTopics?: (key: string) => void;
-      iconMode: { get: (key: string) => 'emoji' | 'model' | 'none'; set: (key: string, mode: 'emoji' | 'model' | 'none') => void };
+      /** 组头图标模式切换（工作模块「专家图标 ▸」）。不提供则无此菜单项，
+       * 组头恒显 emoji 头像。 */
+      iconMode?: { get: (key: string) => 'emoji' | 'model' | 'none'; set: (key: string, mode: 'emoji' | 'model' | 'none') => void };
       /** 标签分组开关（对话模块，仅助手视图提供）。菜单显示「开启/关闭标签分组」。 */
       tagGrouping?: { enabled: boolean; onToggle: () => void };
+      /** 助手标签（企业微信式）：「标签 ▸」二级菜单——新建标签 / 标签列表
+       * （已打标签左列打钩，点击多选切换、菜单不关）/ 标签管理。 */
+      tags?: {
+        all: string[];
+        get: (key: string) => string[];
+        onToggle: (key: string, tag: string) => void;
+        /** 打开「新建标签」弹窗；新建的标签随即打给该助手（企微行为）。 */
+        onCreate: (key: string) => void;
+        onManage: () => void;
+      };
+      /** 任务/话题列表位置（左栏/右侧面板）— 布局级全局开关。列表在右侧时
+       * 左栏没有任务行可右键，组头菜单是切回左侧的常驻入口。 */
+      position?: { label?: string; value: 'left' | 'right'; onChange: (pos: 'left' | 'right') => void };
       onDelete: (key: string) => void;
     };
     folder?: {
@@ -208,7 +226,9 @@ export interface EntityRailProps {
     taskPosition?: { label?: string; options: { id: string; label: string }[]; value: string; onChange: (id: string) => void };
     /** Show 全部展开 / 全部收起 rows — enabled only when the current view has
      * collapsible groups (treeGroups); greyed out otherwise. */
-    expandCollapse?: boolean;
+    /** 展开/收起全部分组。传实体名（'任务'/'话题'）时文案为「展开任务/收起任务」；
+     * true 用默认「全部展开/收起」。列表位置在右侧时应传 false（左栏无行可展开）。 */
+    expandCollapse?: boolean | string;
     actions?: { id: string; label: string; onClick: () => void }[];
   };
 }
@@ -230,6 +250,11 @@ export interface EntityRailTreeGroup {
 
 export function EntityRail({ title, items, activeId, onSelect, onNew, onEdit, searchable = true, filterable = true, newLabel, newAsRow, newActions, navEntries, sections, persistKey, treeGroups, onGroupSelect, activeGroupKey, onReorderGroups, onReorderItems, rowContextMenu, groupHoverMenu, railMenu }: EntityRailProps) {
   const [query, setQuery] = useState('');
+  // newAsRow 头部的搜索框（点放大镜拉起/收起）。收起时清空关键词。
+  const [searchOpen, setSearchOpen] = useState(false);
+  // 搜索进行中：分组/段忽略折叠态全部铺开，行数截断（查看更多）也失效，
+  // 保证命中的行都可见。
+  const searching = query.trim().length > 0;
   const [groupByTag, setGroupByTag] = useState(false);
   const [sort, setSort] = useState<'default' | 'time' | 'name'>('default');
   // Collapsed headers in the tree view. 全部展开/收起 in the railMenu act on
@@ -247,6 +272,8 @@ export function EntityRail({ title, items, activeId, onSelect, onNew, onEdit, se
   // 手动排序 drag state — group headers and rows share the indicator style
   // (a top border on the current drop target). kind 区分拖的是组头还是行，
   // group 记录被拖行所属的组（树形子行只允许同组内重排）。
+  // 右击组头也能打开「…」菜单（受控 open；菜单仍锚在行尾按钮上）。
+  const [groupMenuKey, setGroupMenuKey] = useState<string | null>(null);
   const [dragKey, setDragKey] = useState<string | null>(null);
   const [dragKind, setDragKind] = useState<'section' | 'group' | 'row' | null>(null);
   const [dragGroup, setDragGroup] = useState<string | undefined>(undefined);
@@ -276,17 +303,38 @@ export function EntityRail({ title, items, activeId, onSelect, onNew, onEdit, se
     setSectionOrder(keys);
     if (persistKey) try { localStorage.setItem(sectionStore('order'), JSON.stringify(keys)); } catch { /* 忽略 */ }
   };
+  // 搜索过滤（树形分组）：组名命中保留整组；否则只留命中的子行；空组丢弃。
+  const searchGroups = (gs: EntityRailTreeGroup[], q: string) => gs
+    .map(g => (g.name.toLowerCase().includes(q) ? g : { ...g, children: g.children.filter(c => c.name.toLowerCase().includes(q)) }))
+    .filter(g => g.name.toLowerCase().includes(q) || g.children.length > 0);
+
   // 空段自动隐藏；按持久化顺序排列（未登记的段保持传入顺序排在其后）。
+  // 搜索时先按关键词过滤段内行/分组，再隐藏空段。
   const orderedSections = useMemo(() => {
     if (!sections) return null;
-    const visible = sections.filter(s => (s.items?.length ?? 0) > 0 || (s.groups?.length ?? 0) > 0);
+    const q = query.trim().toLowerCase();
+    const searched = q
+      ? sections.map(s => ({
+          ...s,
+          items: s.items?.filter(i => i.name.toLowerCase().includes(q)),
+          groups: s.groups ? searchGroups(s.groups, q) : undefined,
+        }))
+      : sections;
+    const visible = searched.filter(s => (s.items?.length ?? 0) > 0 || (s.groups?.length ?? 0) > 0);
     if (sectionOrder.length === 0) return visible;
     const pos = new Map(sectionOrder.map((k, i) => [k, i]));
     return visible
       .map((s, i) => [s, pos.has(s.key) ? (pos.get(s.key) as number) : sectionOrder.length + i] as const)
       .sort((a, b) => a[1] - b[1])
       .map(([s]) => s);
-  }, [sections, sectionOrder]);
+  }, [sections, sectionOrder, query]);
+
+  // 旧 treeGroups 模式的搜索过滤（重排作用域仍用原始 treeGroups）。
+  const displayTreeGroups = useMemo(() => {
+    if (!treeGroups) return null;
+    const q = query.trim().toLowerCase();
+    return q ? searchGroups(treeGroups, q) : treeGroups;
+  }, [treeGroups, query]);
 
   const hasTags = useMemo(() => items.some((i) => i.tags && i.tags.length > 0), [items]);
 
@@ -326,8 +374,11 @@ export function EntityRail({ title, items, activeId, onSelect, onNew, onEdit, se
     if (sections) persistCollapsedSections(new Set());
   };
   const collapseAllGroups = () => {
+    // 只收「最深一层可折叠物」：树形组折叠子行（组头仍可见——助手/专家
+    // 列表不消失），纯行段（置顶/话题）整段收起。带分组的段头保持展开，
+    // 否则「全部收起」后只剩标签/段名，列表主体消失。
     persistCollapsedGroups(new Set(allGroups.map(g => g.key)));
-    if (sections) persistCollapsedSections(new Set(sections.map(s => s.key)));
+    if (sections) persistCollapsedSections(new Set(sections.filter(s => (s.groups?.length ?? 0) === 0).map(s => s.key)));
   };
 
   // Reorder helper: move `from` right before `to` in the given key order.
@@ -369,13 +420,21 @@ export function EntityRail({ title, items, activeId, onSelect, onNew, onEdit, se
         <button
           type="button"
           onClick={() => onSelect(item.id)}
-          className={`w-full min-w-0 flex items-center gap-2 py-[6px] rounded-md text-left transition-colors ${rowContextMenu ? 'pr-12' : 'pr-9'} ${opts?.indent ? 'pl-8' : 'pl-2.5'} ${
+          className={`w-full min-w-0 flex items-center gap-2 py-[6px] pr-2 rounded-md text-left transition-colors ${opts?.indent ? 'pl-8' : 'pl-2.5'} ${
             active ? 'bg-accent/40 text-foreground' : 'text-foreground/80 hover:bg-accent/40'
           }`}
         >
           {item.pinned && <Pin size={9} className="-rotate-45 text-muted-foreground/50 flex-shrink-0" />}
           {item.avatar ? <span className="text-base leading-none flex-shrink-0">{item.avatar}</span> : null}
-          <span className={`text-sm truncate flex-1 min-w-0 ${active ? 'font-medium' : (item.unread ? 'text-foreground' : '')}`}>{item.name}</span>
+          {/* 标题尽量占满整行，右端渐变淡出（Codex 式）而不是提前打省略号；
+              状态点/hover 图标浮在淡出区上。hover 时淡出区加宽给图标让位。 */}
+          <span
+            className={`text-sm overflow-hidden whitespace-nowrap flex-1 min-w-0 [mask-image:linear-gradient(to_right,#000_calc(100%_-_28px),transparent)] ${
+              rowContextMenu
+                ? 'group-hover/row:[mask-image:linear-gradient(to_right,#000_calc(100%_-_72px),transparent_calc(100%_-_46px))]'
+                : 'group-hover/row:[mask-image:linear-gradient(to_right,#000_calc(100%_-_40px),transparent_calc(100%_-_16px))]'
+            } ${active ? 'font-medium' : (item.unread ? 'text-foreground' : '')}`}
+          >{item.name}</span>
         </button>
         {/* 状态/未读指示贴行右缘（Codex 式），hover 时让位给操作图标。
             进行中=转圈；待确认=橘点；失败=红点；已完成且未查看=绿点。 */}
@@ -487,7 +546,7 @@ export function EntityRail({ title, items, activeId, onSelect, onNew, onEdit, se
     render: (i: EntityRailItem) => React.ReactNode,
     indent?: boolean,
   ) => {
-    const expanded = expandedMore.has(key);
+    const expanded = searching || expandedMore.has(key);
     const visible = expanded ? rows : rows.slice(0, ROW_LIMIT);
     return (
       <>
@@ -507,18 +566,22 @@ export function EntityRail({ title, items, activeId, onSelect, onNew, onEdit, se
 
   // 树形分组（专家/项目文件夹）— 段模式与旧 treeGroups 模式共用。
   // scopeGroups 决定组头拖拽与子行重排的作用范围（同段/同视图内）。
-  const renderTreeGroup = (g: EntityRailTreeGroup, scopeGroups: EntityRailTreeGroup[]) => {
-    const isCollapsed = collapsedGroups.has(g.key);
+  const renderTreeGroup = (g: EntityRailTreeGroup, scopeGroups: EntityRailTreeGroup[], menuScope = '') => {
+    const isCollapsed = !searching && collapsedGroups.has(g.key);
     const headerActive = g.key === activeGroupKey;
     const groupDraggable = !!onReorderGroups;
     const canDropGroup = dragKind === 'group' && dragKey && dragKey !== g.key;
     const foldable = g.children.length > 0;
     const scopeIds = scopeGroups.flatMap(t => t.children.map(c => c.id));
+    // 标签分组下同一助手会出现在多个段里（g.key 相同）——菜单受控 key
+    // 必须带段前缀，否则右键会同时打开多份菜单。
+    const menuKey = `${menuScope}:${g.key}`;
     return (
       <div key={g.key} className="mb-px">
         {/* 只有组头可拖（重排专家顺序）——子行有自己的同组内拖拽。 */}
         <div
           className={`group/ghdr flex items-center rounded-md transition-colors ${headerActive ? 'bg-accent/40' : 'hover:bg-accent/40'} ${dropKey === g.key ? 'border-t-2 border-cherry-primary/60' : ''}`}
+          onContextMenu={groupHoverMenu ? (e) => { e.preventDefault(); setGroupMenuKey(menuKey); } : undefined}
           draggable={groupDraggable}
           onDragStart={groupDraggable ? () => { setDragKey(g.key); setDragKind('group'); setDragGroup(undefined); } : undefined}
           onDragOver={groupDraggable ? (e) => { if (canDropGroup) { e.preventDefault(); setDropKey(g.key); } } : undefined}
@@ -529,9 +592,14 @@ export function EntityRail({ title, items, activeId, onSelect, onNew, onEdit, se
           } : undefined}
           onDragEnd={groupDraggable ? clearDrag : undefined}
         >
+          {/* 点组头（图标/名字/空白区）直接锚定到该助手/专家的对话框，
+              方便立刻开聊；展开/收起话题列表只由右侧小箭头负责。 */}
           <button
             type="button"
-            onClick={() => { if (foldable) toggleGroup(g.key); else if (g.selectable !== false && onGroupSelect) onGroupSelect(g.key); }}
+            onClick={() => {
+              if (g.selectable !== false && onGroupSelect) onGroupSelect(g.key);
+              else if (foldable) toggleGroup(g.key);
+            }}
             className="flex-1 min-w-0 flex items-center gap-2 py-[6px] pl-2.5 pr-1 text-left"
             title={g.title}
           >
@@ -539,15 +607,23 @@ export function EntityRail({ title, items, activeId, onSelect, onNew, onEdit, se
               <FolderOpen size={14} strokeWidth={1.75} className="flex-shrink-0 text-muted-foreground/60" />
             ) : (() => {
               // 专家图标显示模式（… 菜单里可切）：Emoji / 模型图标 / 不显示。
-              const iconMode = groupHoverMenu?.expert?.iconMode.get(g.key) ?? 'emoji';
+              const iconMode = groupHoverMenu?.expert?.iconMode?.get(g.key) ?? 'emoji';
               if (iconMode === 'none') return null;
               if (iconMode === 'model') return <Bot size={15} className="flex-shrink-0 text-muted-foreground/70" />;
               return g.avatar ? <span className="text-base leading-none flex-shrink-0">{g.avatar}</span> : null;
             })()}
             <span className={`text-sm truncate min-w-0 ${headerActive ? 'font-medium text-foreground' : g.variant === 'folder' ? 'text-foreground/70' : 'text-foreground/85'}`}>{g.name}</span>
-            {/* 折叠箭头贴在名字右侧（Codex 式）；整行点击即展开/收起。 */}
+            {/* 折叠箭头贴在名字右侧（Codex 式）；只有点箭头才展开/收起，
+                点行其余部分是锚定对话框。仅 hover 时可见（opacity 占位不回流）。 */}
             {foldable && (
-              <ChevronDown size={11} className={`flex-shrink-0 text-muted-foreground/40 transition-transform ${isCollapsed ? '-rotate-90' : ''}`} />
+              <span
+                role="button"
+                title={isCollapsed ? '展开话题' : '收起话题'}
+                onClick={(e) => { e.stopPropagation(); toggleGroup(g.key); }}
+                className="flex-shrink-0 p-1 -m-1 rounded text-muted-foreground/40 hover:text-foreground/70 opacity-0 group-hover/ghdr:opacity-100 transition-all"
+              >
+                <ChevronDown size={11} className={`transition-transform ${isCollapsed ? '-rotate-90' : ''}`} />
+              </span>
             )}
             <span className="flex-1" />
             {g.unread ? (
@@ -560,7 +636,7 @@ export function EntityRail({ title, items, activeId, onSelect, onNew, onEdit, se
               className="flex items-center gap-0.5 mr-0.5 flex-shrink-0 opacity-0 group-hover/ghdr:opacity-100 has-[[data-state=open]]:opacity-100 transition-opacity"
               onClick={(e) => e.stopPropagation()}
             >
-              <DropdownMenu>
+              <DropdownMenu open={groupMenuKey === menuKey} onOpenChange={(o) => setGroupMenuKey(k => (o ? menuKey : (k === menuKey ? null : k)))}>
                 <DropdownMenuTrigger asChild>
                   <button
                     type="button"
@@ -585,28 +661,80 @@ export function EntityRail({ title, items, activeId, onSelect, onNew, onEdit, se
                       {groupHoverMenu.expert.onClearTopics && (
                         <DropdownMenuItem className={RAIL_MENU_ITEM} onClick={() => groupHoverMenu.expert!.onClearTopics!(g.key)}>清空话题</DropdownMenuItem>
                       )}
-                      <DropdownMenuSub>
-                        <DropdownMenuSubTrigger className={RAIL_MENU_ITEM}>{`${groupHoverMenu.expert.label ?? '专家'}图标`}</DropdownMenuSubTrigger>
-                        <DropdownMenuSubContent className={`w-32 ${RAIL_MENU_CONTENT}`} sideOffset={4}>
-                          {([['emoji', 'Emoji 表情'], ['model', '模型图标'], ['none', '不显示']] as const).map(([mode, label]) => (
-                            <DropdownMenuItem
-                              key={mode}
-                              className={`gap-0 ${RAIL_MENU_ITEM}`}
-                              onClick={() => groupHoverMenu.expert!.iconMode.set(g.key, mode)}
-                            >
-                              <span className="w-6 flex-shrink-0 flex items-center">
-                                {groupHoverMenu.expert!.iconMode.get(g.key) === mode && <Check size={13} className="text-foreground" />}
-                              </span>
-                              {label}
-                            </DropdownMenuItem>
-                          ))}
-                        </DropdownMenuSubContent>
-                      </DropdownMenuSub>
-                      {groupHoverMenu.expert.tagGrouping && (
-                        <DropdownMenuItem className={RAIL_MENU_ITEM} onClick={() => groupHoverMenu.expert!.tagGrouping!.onToggle()}>
-                          {groupHoverMenu.expert.tagGrouping.enabled ? '关闭标签分组' : '开启标签分组'}
-                        </DropdownMenuItem>
+                      {groupHoverMenu.expert.iconMode && (
+                        <DropdownMenuSub>
+                          <DropdownMenuSubTrigger className={RAIL_MENU_ITEM}>{`${groupHoverMenu.expert.label ?? '专家'}图标`}</DropdownMenuSubTrigger>
+                          <DropdownMenuSubContent className={`w-32 ${RAIL_MENU_CONTENT}`} sideOffset={4}>
+                            {([['emoji', 'Emoji 表情'], ['model', '模型图标'], ['none', '不显示']] as const).map(([mode, label]) => (
+                              <DropdownMenuItem
+                                key={mode}
+                                className={`gap-0 ${RAIL_MENU_ITEM}`}
+                                onClick={() => groupHoverMenu.expert!.iconMode!.set(g.key, mode)}
+                              >
+                                <span className="w-6 flex-shrink-0 flex items-center">
+                                  {groupHoverMenu.expert!.iconMode!.get(g.key) === mode && <Check size={13} className="text-foreground" />}
+                                </span>
+                                {label}
+                              </DropdownMenuItem>
+                            ))}
+                          </DropdownMenuSubContent>
+                        </DropdownMenuSub>
                       )}
+                      {groupHoverMenu.expert.tags && (() => {
+                        const t = groupHoverMenu.expert!.tags!;
+                        const applied = new Set(t.get(g.key));
+                        return (
+                          <DropdownMenuSub>
+                            <DropdownMenuSubTrigger className={RAIL_MENU_ITEM}>标签</DropdownMenuSubTrigger>
+                            {/* 结构：上半 = 具体标签（勾选多选）；下半 = 新建标签 /
+                                标签管理 / 展示·隐藏标签（标签分组开关挪到这里，
+                                不再占一级菜单）。 */}
+                            <DropdownMenuSubContent className={`w-36 ${RAIL_MENU_CONTENT}`} sideOffset={4}>
+                              {t.all.length > 0 && (
+                                <>
+                                  {t.all.map(tag => (
+                                    <DropdownMenuItem
+                                      key={tag}
+                                      className={`gap-0 ${RAIL_MENU_ITEM}`}
+                                      // preventDefault 保持菜单打开——标签是多选，方便连续勾选。
+                                      onSelect={(e) => { e.preventDefault(); t.onToggle(g.key, tag); }}
+                                    >
+                                      <span className="w-6 flex-shrink-0 flex items-center">{applied.has(tag) && <Check size={13} className="text-foreground" />}</span>
+                                      <span className="truncate">{tag}</span>
+                                    </DropdownMenuItem>
+                                  ))}
+                                  <DropdownMenuSeparator />
+                                </>
+                              )}
+                              <DropdownMenuItem className={RAIL_MENU_ITEM} onClick={() => t.onCreate(g.key)}>新建标签</DropdownMenuItem>
+                              <DropdownMenuItem className={RAIL_MENU_ITEM} onClick={() => t.onManage()}>标签管理</DropdownMenuItem>
+                              {groupHoverMenu.expert!.tagGrouping && (
+                                <DropdownMenuItem className={RAIL_MENU_ITEM} onClick={() => groupHoverMenu.expert!.tagGrouping!.onToggle()}>
+                                  {groupHoverMenu.expert!.tagGrouping.enabled ? '隐藏标签' : '展示标签'}
+                                </DropdownMenuItem>
+                              )}
+                            </DropdownMenuSubContent>
+                          </DropdownMenuSub>
+                        );
+                      })()}
+                      {groupHoverMenu.expert.position && (() => {
+                        const p = groupHoverMenu.expert!.position!;
+                        return (
+                          <DropdownMenuSub>
+                            <DropdownMenuSubTrigger className={RAIL_MENU_ITEM}>{p.label ?? '任务列表位置'}</DropdownMenuSubTrigger>
+                            <DropdownMenuSubContent className={`w-24 ${RAIL_MENU_CONTENT}`} sideOffset={4}>
+                              {([['left', '左侧'], ['right', '右侧']] as const).map(([pos, label]) => (
+                                <DropdownMenuItem key={pos} className={`gap-0 ${RAIL_MENU_ITEM}`} onClick={() => p.onChange(pos)}>
+                                  <span className="w-6 flex-shrink-0 flex items-center">
+                                    {p.value === pos && <Check size={13} className="text-foreground" />}
+                                  </span>
+                                  {label}
+                                </DropdownMenuItem>
+                              ))}
+                            </DropdownMenuSubContent>
+                          </DropdownMenuSub>
+                        );
+                      })()}
                       <DropdownMenuSeparator />
                       <DropdownMenuItem className={RAIL_MENU_ITEM} variant="destructive" onClick={() => groupHoverMenu.expert!.onDelete(g.key)}>{`删除${groupHoverMenu.expert.label ?? '专家'}`}</DropdownMenuItem>
                     </>
@@ -634,11 +762,10 @@ export function EntityRail({ title, items, activeId, onSelect, onNew, onEdit, se
   // Codex 式段头：muted 标签 + 折叠箭头；可拖拽重排段顺序；折叠且段内
   // 有未读时右侧亮蓝点。
   const renderSection = (sec: EntityRailSection) => {
-    const collapsed = collapsedSections.has(sec.key);
+    const collapsed = !searching && collapsedSections.has(sec.key);
     const canDropSection = dragKind === 'section' && dragKey && dragKey !== sec.key;
     const scopeIds = (sec.items ?? []).map(i => i.id);
-    return (
-      <div key={sec.key} className="mb-1.5">
+    const sectionHeader = (
         <div
           className={`group/sec flex items-center gap-1 pl-2.5 pr-2 py-1 rounded-md cursor-pointer hover:bg-accent/30 transition-colors ${dropKey === sec.key ? 'border-t-2 border-cherry-primary/60' : ''}`}
           draggable
@@ -653,21 +780,56 @@ export function EntityRail({ title, items, activeId, onSelect, onNew, onEdit, se
           onDragEnd={clearDrag}
         >
           <span className="text-sm text-muted-foreground">{sec.label}</span>
-          <ChevronDown size={11} className={`flex-shrink-0 text-muted-foreground/60 transition-transform ${collapsed ? '-rotate-90' : ''}`} />
+          {/* 折叠箭头仅 hover 时可见（opacity 占位不回流）。 */}
+          <ChevronDown size={11} className={`flex-shrink-0 text-muted-foreground/60 opacity-0 group-hover/sec:opacity-100 transition-all ${collapsed ? '-rotate-90' : ''}`} />
+          <span className="flex-1" />
           {collapsed && sec.dot ? (
-            <span className={`ml-auto w-1.5 h-1.5 rounded-full flex-shrink-0 ${
+            <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${
               sec.dot === 'red' ? 'bg-red-500' : sec.dot === 'amber' ? 'bg-amber-500' : 'bg-emerald-500'
             }`} />
           ) : collapsed && sec.unread ? (
-            <span className="ml-auto w-1.5 h-1.5 rounded-full bg-cherry-primary flex-shrink-0" />
+            <span className="w-1.5 h-1.5 rounded-full bg-cherry-primary flex-shrink-0" />
           ) : null}
+          {/* 段头「…」菜单 — hover 出现（菜单打开期间保持可见），与右键菜单同一份。 */}
+          {sec.menu && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon-xs"
+                  onClick={(e) => e.stopPropagation()}
+                  className="p-0.5 w-auto h-auto text-muted-foreground/60 hover:text-foreground hover:bg-accent/50 opacity-0 group-hover/sec:opacity-100 data-[state=open]:opacity-100 data-[state=open]:text-foreground data-[state=open]:bg-accent/50"
+                >
+                  <MoreHorizontal size={13} />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className={RAIL_MENU_CONTENT}>
+                {sec.menu.items.map(mi => (
+                  <DropdownMenuItem key={mi.id} className={RAIL_MENU_ITEM} variant={mi.danger ? 'destructive' : undefined} onClick={mi.onClick}>{mi.label}</DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
         </div>
+    );
+    return (
+      <div key={sec.key} className="mb-1.5">
+        {sec.menu ? (
+          <ContextMenu>
+            <ContextMenuTrigger asChild>{sectionHeader}</ContextMenuTrigger>
+            <ContextMenuContent className={RAIL_MENU_CONTENT}>
+              {sec.menu.items.map(mi => (
+                <ContextMenuItem key={mi.id} className={RAIL_MENU_ITEM} variant={mi.danger ? 'destructive' : undefined} onClick={mi.onClick}>{mi.label}</ContextMenuItem>
+              ))}
+            </ContextMenuContent>
+          </ContextMenu>
+        ) : sectionHeader}
         {!collapsed && (
           <div className="space-y-px">
             {sec.items && (sec.limitRows === false
               ? sec.items.map(i => renderRow(i, sec.rowsDraggable === false ? { noDrag: true } : { scopeIds }))
               : renderLimitedRows(sec.key, sec.items, i => renderRow(i, sec.rowsDraggable === false ? { noDrag: true } : { scopeIds })))}
-            {sec.groups?.map(g => renderTreeGroup(g, sec.groups!))}
+            {sec.groups?.map(g => renderTreeGroup(g, sec.groups!, sec.key))}
           </div>
         )}
       </div>
@@ -785,6 +947,17 @@ export function EntityRail({ title, items, activeId, onSelect, onNew, onEdit, se
                 <span className="text-sm truncate flex-1 min-w-0">{newLabel ?? `新建${title}`}</span>
               </button>
             ) : <div className="flex-1" />}
+            {/* 搜索图标（筛选左侧）——点击拉起/收起搜索框，收起时清空关键词。 */}
+            <button
+              type="button"
+              title="搜索"
+              onClick={() => setSearchOpen(v => { if (v) setQuery(''); return !v; })}
+              className={`p-1.5 rounded-md flex-shrink-0 transition-colors ${
+                searchOpen ? 'text-foreground bg-accent/40' : 'text-muted-foreground/60 hover:text-foreground hover:bg-accent/40'
+              }`}
+            >
+              <Search size={14} />
+            </button>
             {railMenu && (() => {
               // 二级菜单（Codex 式）：顶层只放「展示方式 ▸ / 排序方式 ▸」和
               // 动作项，选项收进子菜单；子菜单里当前值左侧打勾，顶层触发行
@@ -831,10 +1004,12 @@ export function EntityRail({ title, items, activeId, onSelect, onNew, onEdit, se
                         : (treeGroups ?? []).some(g => g.children.length > 0);
                       if (!hasGroupContent) return null;
                       // 单按钮切换：只要还有展开的段或分组就提供「全部收起」，
-                      // 全收起后变为「全部展开」。分段模式下段和组都要算。
+                      // 全收起后变为「全部展开」。分段模式下纯行段和组都要算；
+                      // 带分组的段头不参与（全部收起时它保持展开）。
                       const anyExpanded = sections
-                        ? (sections.some(s => !collapsedSections.has(s.key)) || allGroups.some(g => g.children.length > 0 && !collapsedGroups.has(g.key)))
+                        ? (sections.some(s => (s.groups?.length ?? 0) === 0 && !collapsedSections.has(s.key)) || allGroups.some(g => g.children.length > 0 && !collapsedGroups.has(g.key)))
                         : (treeGroups ?? []).some(g => g.children.length > 0 && !collapsedGroups.has(g.key));
+                      const entity = typeof railMenu.expandCollapse === 'string' ? railMenu.expandCollapse : null;
                       return (
                         <>
                           <DropdownMenuSeparator />
@@ -842,7 +1017,9 @@ export function EntityRail({ title, items, activeId, onSelect, onNew, onEdit, se
                             className={RAIL_MENU_ITEM}
                             onClick={anyExpanded ? collapseAllGroups : expandAllGroups}
                           >
-                            {anyExpanded ? '全部收起' : '全部展开'}
+                            {entity
+                              ? (anyExpanded ? `收起${entity}` : `展开${entity}`)
+                              : (anyExpanded ? '全部收起' : '全部展开')}
                           </DropdownMenuItem>
                         </>
                       );
@@ -859,6 +1036,18 @@ export function EntityRail({ title, items, activeId, onSelect, onNew, onEdit, se
                 </DropdownMenu>
               );
             })()}
+          </div>
+        )}
+        {/* 拉起的搜索框 — 贴在「新建」行下方；Esc 收起并清空。 */}
+        {newAsRow && searchOpen && (
+          <div className="px-1 pb-1 mb-0.5">
+            <SearchInput
+              value={query}
+              onChange={setQuery}
+              placeholder="搜索..."
+              autoFocus
+              onKeyDown={(e) => { if (e.key === 'Escape') { setQuery(''); setSearchOpen(false); } }}
+            />
           </div>
         )}
         {/* Fixed nav entries (e.g. 定时任务) — pinned right under the "new" row. */}
@@ -887,20 +1076,20 @@ export function EntityRail({ title, items, activeId, onSelect, onNew, onEdit, se
         )}
         {orderedSections ? (
           orderedSections.length === 0 ? (
-            <div className="px-3 py-6 text-center text-sm text-muted-foreground/40">暂无内容</div>
+            <div className="px-3 py-6 text-center text-sm text-muted-foreground/40">{searching ? '无匹配结果' : '暂无内容'}</div>
           ) : (
             orderedSections.map(renderSection)
           )
-        ) : treeGroups ? (
+        ) : displayTreeGroups ? (
           <>
             {/* 置顶任务悬浮在所有分组之上（IM 惯例），带所属实体图标保留上下文。 */}
             {filtered.length > 0 && (
               <div className="space-y-px mb-0.5">{filtered.map((i) => renderRow(i, { noDrag: true }))}</div>
             )}
-            {treeGroups.length === 0 && filtered.length === 0 ? (
-              <div className="px-3 py-6 text-center text-sm text-muted-foreground/40">暂无内容</div>
+            {displayTreeGroups.length === 0 && filtered.length === 0 ? (
+              <div className="px-3 py-6 text-center text-sm text-muted-foreground/40">{searching ? '无匹配结果' : '暂无内容'}</div>
             ) : (
-              treeGroups.map((g) => renderTreeGroup(g, treeGroups))
+              displayTreeGroups.map((g) => renderTreeGroup(g, treeGroups!))
             )}
           </>
         ) : filtered.length === 0 ? (

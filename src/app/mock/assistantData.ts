@@ -47,7 +47,7 @@ export const MOCK_ASSISTANTS: AssistantInfo[] = [
     model: 'openai/gpt-4.1',
     modelProvider: 'OpenAI',
     updatedAt: '2025-10-01 09:15',
-    tags: ['编程', '代码审查'],
+    tags: ['编程'],
     systemPrompt: '你是一位资深软件工程师，精通多种编程语言和框架。',
     knowledgeBases: [
       { id: 'kb-3', name: 'API Reference Docs' },
@@ -63,7 +63,7 @@ export const MOCK_ASSISTANTS: AssistantInfo[] = [
     model: 'google/gemini-3-flash',
     modelProvider: 'Google',
     updatedAt: '2025-09-25 11:20',
-    tags: ['翻译', '语言'],
+    tags: ['翻译'],
     systemPrompt: '你是一位精通中英日韩法德等多国语言的专业翻译，擅长保持原文风格和语境。',
     knowledgeBases: [],
     tools: [],
@@ -74,7 +74,7 @@ export const MOCK_ASSISTANTS: AssistantInfo[] = [
     model: 'openai/gpt-4.1',
     modelProvider: 'OpenAI',
     updatedAt: '2025-10-02 16:40',
-    tags: ['数据', '分析'],
+    tags: ['通用'],
     systemPrompt: '你是一位资深数据分析师，擅长数据清洗、统计分析和数据可视化。',
     knowledgeBases: [
       { id: 'kb-4', name: '数据分析方法论' },
@@ -89,7 +89,7 @@ export const MOCK_ASSISTANTS: AssistantInfo[] = [
     model: 'anthropic/claude-4-opus',
     modelProvider: 'Anthropic',
     updatedAt: '2025-09-30 08:55',
-    tags: ['学术', '写作'],
+    tags: ['写作'],
     systemPrompt: '你是一位学术写作专家，精通论文结构、文献综述和学术规范。',
     knowledgeBases: [
       { id: 'kb-5', name: '学术写作规范' },
@@ -102,7 +102,7 @@ export const MOCK_ASSISTANTS: AssistantInfo[] = [
     model: 'deepseek/deepseek-r1',
     modelProvider: 'DeepSeek',
     updatedAt: '2025-09-27 13:10',
-    tags: ['产品', '策划'],
+    tags: ['通用'],
     systemPrompt: '你是一位经验丰富的产品经理，擅长需求分析、PRD 撰写和用户体验设计。',
     knowledgeBases: [],
     tools: [
@@ -115,7 +115,7 @@ export const MOCK_ASSISTANTS: AssistantInfo[] = [
     model: 'qwen/qwen3-235b',
     modelProvider: 'Alibaba',
     updatedAt: '2025-09-22 10:30',
-    tags: ['法律', '合规'],
+    tags: ['通用'],
     systemPrompt: '你是一位专业法律顾问精通公司法、合同法和知识产权法。',
     knowledgeBases: [
       { id: 'kb-6', name: '法律法规库' },
@@ -128,7 +128,7 @@ export const MOCK_ASSISTANTS: AssistantInfo[] = [
     model: 'anthropic/claude-4-sonnet',
     modelProvider: 'Anthropic',
     updatedAt: '2025-10-01 17:25',
-    tags: ['设计', '创作'],
+    tags: ['创作'],
     systemPrompt: '你是一位资深 UI/UX 设计师，擅长界面设计、交互原型和设计系统。',
     knowledgeBases: [],
     tools: [
@@ -141,7 +141,7 @@ export const MOCK_ASSISTANTS: AssistantInfo[] = [
     model: 'openai/gpt-4.1-mini',
     modelProvider: 'OpenAI',
     updatedAt: '2025-09-20 09:00',
-    tags: ['教育', '语言'],
+    tags: ['通用'],
     systemPrompt: '你是一位专业的英语教师，擅长语法讲解、口语练习和写作批改。',
     knowledgeBases: [],
     tools: [],

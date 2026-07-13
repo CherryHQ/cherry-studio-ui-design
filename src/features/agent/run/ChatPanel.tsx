@@ -4,7 +4,7 @@ import {
   Globe, Hammer, Brain, MoreHorizontal,
   Maximize2, RotateCcw, RefreshCw, ChevronDown, Clock, X, Trash2, Workflow, FolderPen,
   TerminalSquare, Zap, Lightbulb,
-  ArrowUp, Languages, Check, Hand, ShieldAlert, Pencil, Compass, MessageSquarePlus,
+  ArrowUp, Languages, Check, Hand, ShieldAlert, Pencil, Compass,
 } from 'lucide-react';
 import {
   Button, Textarea,
@@ -15,6 +15,7 @@ import {
 import { Separator } from "@cherry-studio/ui";
 import { MessageList } from '@cherry-studio/ui';
 import { Tooltip } from '@/app/components/Tooltip';
+import { NewSessionIcon } from '@/app/components/shared/EntityNav';
 import { UserMessage, AgentMessageGroup, useGroupedMessages, PermissionApprovalCard } from './AgentMessageRenderer';
 import { WorkflowPanel } from './WorkflowPanel';
 import { GenUIOverlay } from './GenerativeUI';
@@ -519,7 +520,7 @@ export function ChatPanel({
               {/* 新建会话 — 最左侧 */}
               {onNewSession && (
                 <Button variant="ghost" size="icon-sm" className={toolbarBtnClass} onClick={onNewSession} title="新建会话">
-                  <MessageSquarePlus size={16} strokeWidth={1.5} />
+                  <NewSessionIcon size={16} />
                 </Button>
               )}
 

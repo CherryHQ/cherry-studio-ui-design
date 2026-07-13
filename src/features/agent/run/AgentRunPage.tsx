@@ -36,6 +36,7 @@ import { ScheduledTasksPage } from './ScheduledTasksPage';
 import { TaskBoardPage } from './TaskBoardPage';
 import { HistorySidebar } from '@/app/components/shared/HistorySidebar';
 import { EntityRail, NewSessionIcon, PanelRightInsetIcon, type EntityRailItem, type EntityRailTreeGroup, type EntityRailSection } from '@/app/components/shared/EntityNav';
+import { InputDialog } from '@/app/components/shared/InputDialog';
 import { HistoryManagePage } from './HistoryManagePage';
 import { CreateAgentWizard } from '@/app/components/shared/CreateAgentWizard';
 import { GroupChatPane } from './GroupChatPane';
@@ -1255,7 +1256,16 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
   const setRailDisplay = useCallback((v: 'topics' | 'experts' | 'workdir') => {
     setRailDisplayState(v);
     try { localStorage.setItem('cherry-agent-rail-display', v); } catch { /* 隐私模式下不持久化 */ }
-  }, []);
+    // 「任务列表在右侧」只在专家列表视图生效：任务/工作目录视图左栏本来
+    // 就展示任务，切过去时收起右侧任务面板避免左右两份列表；切回专家列表
+    // 时恢复右侧面板。
+    if (taskListPosition === 'right') {
+      if (v === 'experts') setDockTab('sessions');
+      else setDockTab(prev => (prev === 'sessions' ? null : prev));
+    }
+  }, [taskListPosition]);
+  // 任务列表实际落在右侧 = 位置开关选了右 且 当前是专家列表视图。
+  const taskListOnRight = taskListPosition === 'right' && railDisplay === 'experts';
   const [railSort, setRailSortState] = useState<'created' | 'updated' | 'manual'>(() => {
     try {
       const v = localStorage.getItem('cherry-agent-rail-sort');
@@ -1785,7 +1795,7 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
   const dockTabs = (
     <div className="flex items-center gap-0.5">
       {([
-        { id: 'sessions', label: taskListPosition === 'right' ? '任务' : '会话', Icon: History },
+        { id: 'sessions', label: taskListOnRight ? '任务' : '会话', Icon: History },
         { id: 'status', label: '状态', Icon: ListChecks },
         { id: 'files', label: '文件', Icon: FileText },
       ] as const).map(({ id, label, Icon }) => {
@@ -1821,7 +1831,7 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
       onNewItem={() => handleNewSessionForAgent(selectedAgent.name)}
       onExpand={() => { historySidebar.expand(); setDockTab(null); }}
       onClose={() => setDockTab(null)}
-      entityLabel={taskListPosition === 'right' ? '任务' : '会话'}
+      entityLabel={taskListOnRight ? '任务' : '会话'}
       showStatusDot
       hideGroupBy
       plainList
@@ -1858,9 +1868,10 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
       </div>
 
       <div className="flex items-center gap-0.5">
-        {/* 任务列表入口 — 仅当任务列表位置=右侧时出现（入口跟着内容走：
-            列表在左栏时右上角不需要重复入口）。点击展开右侧「任务」面板。 */}
-        {taskListPosition === 'right' && (
+        {/* 任务列表入口 — 仅当任务列表实际在右侧（位置=右 且 专家列表视图）
+            时出现（入口跟着内容走：列表在左栏时右上角不需要重复入口）。
+            点击展开右侧「任务」面板。 */}
+        {taskListOnRight && (
           <>
             <Tooltip content="任务" side="bottom">
               <Button
@@ -1874,7 +1885,11 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
                 <History className="size-4" strokeWidth={1.6} />
               </Button>
             </Tooltip>
-            <div className="w-px h-3.5 bg-border/30 mx-0.5" />
+            {/* 任务/预览都是右侧面板开关，同组相邻按钮只留 gap；分隔线仅在
+                中间真的有内容（Skill chip / 计划按钮）时出现。 */}
+            {(activeSkillJob || sessionData.steps.length > 0) && (
+              <div className="w-px h-3.5 bg-border/30 mx-0.5" />
+            )}
           </>
         )}
 
@@ -2039,17 +2054,8 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
                   value: railSort,
                   onChange: (id) => setRailSort(id as 'created' | 'updated' | 'manual'),
                 },
-                ...(railDisplay === 'experts' ? {
-                  taskPosition: {
-                    options: [
-                      { id: 'left', label: '左侧' },
-                      { id: 'right', label: '右侧' },
-                    ],
-                    value: taskListPosition,
-                    onChange: (id: string) => setTaskListPosition(id as 'left' | 'right'),
-                  },
-                } : {}),
-                expandCollapse: true,
+                // 任务列表在右侧时左栏无任务行可展开，直接不提供该项。
+                expandCollapse: taskListPosition === 'left' ? '任务' : false,
                 actions: [
                   { id: 'history', label: '历史任务', onClick: openHistoryManage },
                 ],
@@ -2099,6 +2105,11 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
                   iconMode: {
                     get: (key) => expertIconModes[key] ?? 'emoji',
                     set: setExpertIconMode,
+                  },
+                  position: {
+                    label: '任务列表位置',
+                    value: taskListPosition,
+                    onChange: (pos) => setTaskListPosition(pos),
                   },
                   onDelete: (key) => setHiddenAgents(prev => new Set(prev).add(key)),
                 },
@@ -2389,70 +2400,24 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
       />
 
       {/* ===== 任务重命名（右键菜单） ===== */}
-      <Dialog open={!!renameTarget} onOpenChange={(open) => { if (!open) setRenameTarget(null); }}>
-        <DialogContent className="w-[360px] p-5">
-          <div className="text-sm font-medium mb-3">重命名任务</div>
-          <Input
-            value={renameValue}
-            onChange={(e) => setRenameValue(e.target.value)}
-            autoFocus
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' && renameTarget && renameValue.trim()) {
-                handleUpdateSession(renameTarget.id, { title: renameValue.trim() });
-                setRenameTarget(null);
-              }
-            }}
-          />
-          <div className="flex justify-end gap-2 mt-4">
-            <Button variant="outline" size="sm" onClick={() => setRenameTarget(null)}>取消</Button>
-            <Button
-              size="sm"
-              disabled={!renameValue.trim()}
-              onClick={() => {
-                if (renameTarget && renameValue.trim()) {
-                  handleUpdateSession(renameTarget.id, { title: renameValue.trim() });
-                  setRenameTarget(null);
-                }
-              }}
-            >
-              确定
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <InputDialog
+        open={!!renameTarget}
+        onOpenChange={(open) => { if (!open) setRenameTarget(null); }}
+        title="重命名任务"
+        description="保持简短且易于识别"
+        initialValue={renameValue}
+        onSubmit={(v) => { if (renameTarget) handleUpdateSession(renameTarget.id, { title: v }); }}
+      />
 
       {/* ===== 工作目录重命名（组头 … 菜单） ===== */}
-      <Dialog open={!!renameDirTarget} onOpenChange={(open) => { if (!open) setRenameDirTarget(null); }}>
-        <DialogContent className="w-[360px] p-5">
-          <div className="text-sm font-medium mb-3">重命名工作目录</div>
-          <Input
-            value={renameDirValue}
-            onChange={(e) => setRenameDirValue(e.target.value)}
-            autoFocus
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' && renameDirTarget && renameDirValue.trim()) {
-                setDirRenames(prev => ({ ...prev, [renameDirTarget]: renameDirValue.trim() }));
-                setRenameDirTarget(null);
-              }
-            }}
-          />
-          <div className="flex justify-end gap-2 mt-4">
-            <Button variant="outline" size="sm" onClick={() => setRenameDirTarget(null)}>取消</Button>
-            <Button
-              size="sm"
-              disabled={!renameDirValue.trim()}
-              onClick={() => {
-                if (renameDirTarget && renameDirValue.trim()) {
-                  setDirRenames(prev => ({ ...prev, [renameDirTarget]: renameDirValue.trim() }));
-                  setRenameDirTarget(null);
-                }
-              }}
-            >
-              确定
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <InputDialog
+        open={!!renameDirTarget}
+        onOpenChange={(open) => { if (!open) setRenameDirTarget(null); }}
+        title="重命名工作目录"
+        description="只改列表里的显示名，完整路径不变"
+        initialValue={renameDirValue}
+        onSubmit={(v) => { if (renameDirTarget) setDirRenames(prev => ({ ...prev, [renameDirTarget]: v })); }}
+      />
 
       {/* ===== Recycle Bin: delete-session confirmation ===== */}
       <RecycleBinConfirmDialog
