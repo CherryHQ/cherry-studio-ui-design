@@ -464,7 +464,7 @@ function CherryStudioInner() {
           <Database size={11} />
           <span className="text-[10px] [writing-mode:vertical-rl]">Migration</span>
         </button>
-        <div id="cherry-app-root" className="flex flex-col w-full h-full max-w-[1440px] max-h-[900px] bg-sidebar text-foreground rounded-2xl border border-border overflow-hidden shadow-2xl relative">
+        <div id="cherry-app-root" className="flex flex-col h-full max-h-[900px] aspect-[1440/900] max-w-full bg-sidebar text-foreground rounded-2xl border border-border overflow-hidden shadow-2xl relative">
           <TabBar
             tabs={tabs}
             activeTabId={activeTabId}
