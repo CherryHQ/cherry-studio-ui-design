@@ -1,5 +1,5 @@
 import React, { useMemo, useState, useRef } from 'react';
-import { Plus, MessageSquare, ChevronDown, ListFilter, Check, MoreHorizontal, FolderOpen, Pin, Archive, Loader2, MessageSquarePlus, Bot } from 'lucide-react';
+import { Plus, MessageSquare, ChevronDown, ListFilter, Check, MoreHorizontal, FolderOpen, Pin, Archive, Loader2, Bot } from 'lucide-react';
 import { motion } from 'motion/react';
 import {
   Button, SearchInput, Popover, PopoverTrigger, PopoverContent,
@@ -464,7 +464,7 @@ export function EntityRail({ title, items, activeId, onSelect, onNew, onEdit, se
         >
           <button
             type="button"
-            onClick={() => { if (g.selectable !== false && onGroupSelect) onGroupSelect(g.key); else if (foldable) toggleGroup(g.key); }}
+            onClick={() => { if (foldable) toggleGroup(g.key); else if (g.selectable !== false && onGroupSelect) onGroupSelect(g.key); }}
             className="flex-1 min-w-0 flex items-center gap-2 py-[6px] pl-2.5 pr-1 text-left"
             title={g.title}
           >
@@ -477,7 +477,12 @@ export function EntityRail({ title, items, activeId, onSelect, onNew, onEdit, se
               if (iconMode === 'model') return <Bot size={15} className="flex-shrink-0 text-muted-foreground/70" />;
               return g.avatar ? <span className="text-base leading-none flex-shrink-0">{g.avatar}</span> : null;
             })()}
-            <span className={`text-sm truncate flex-1 min-w-0 ${headerActive ? 'font-medium text-foreground' : g.variant === 'folder' ? 'text-foreground/70' : 'text-foreground/85'}`}>{g.name}</span>
+            <span className={`text-sm truncate min-w-0 ${headerActive ? 'font-medium text-foreground' : g.variant === 'folder' ? 'text-foreground/70' : 'text-foreground/85'}`}>{g.name}</span>
+            {/* 折叠箭头贴在名字右侧（Codex 式）；整行点击即展开/收起。 */}
+            {foldable && (
+              <ChevronDown size={11} className={`flex-shrink-0 text-muted-foreground/40 transition-transform ${isCollapsed ? '-rotate-90' : ''}`} />
+            )}
+            <span className="flex-1" />
             {g.unread ? (
               <span className="min-w-[14px] h-[14px] px-1 rounded-full bg-primary/12 text-primary/80 text-[9px] leading-[14px] text-center font-medium tabular-nums flex-shrink-0">{g.unread}</span>
             ) : null}
@@ -539,18 +544,13 @@ export function EntityRail({ title, items, activeId, onSelect, onNew, onEdit, se
                 onClick={() => groupHoverMenu.onNewSession(g.key)}
                 className="p-1 rounded text-muted-foreground/50 hover:text-foreground hover:bg-accent/70 transition-colors"
               >
-                <MessageSquarePlus size={13} />
+                {/* 气泡 + 右上角加号（Codex 式新会话图标） */}
+                <span className="relative inline-flex">
+                  <MessageSquare size={13} />
+                  <Plus size={8} strokeWidth={3} className="absolute -top-[3px] -right-[3px]" />
+                </span>
               </button>
             </div>
-          )}
-          {foldable && (
-            <button
-              type="button"
-              onClick={() => toggleGroup(g.key)}
-              className="mr-1 p-[3px] flex-shrink-0 rounded border border-border/60 text-muted-foreground/45 hover:text-foreground hover:bg-accent/60 transition-colors"
-            >
-              <ChevronDown size={10} className={`transition-transform ${isCollapsed ? '-rotate-90' : ''}`} />
-            </button>
           )}
         </div>
         {foldable && !isCollapsed && (

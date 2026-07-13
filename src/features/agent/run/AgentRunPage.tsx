@@ -1907,16 +1907,19 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
           </Popover>
         )}
 
-        {/* Show preview toggle — only when artifact is closed, to bring it back */}
-        {!showPreview && (
-          <div className="flex items-center gap-0.5">
-            <div className="w-px h-3.5 bg-border/30 mx-0.5" />
-            <Tooltip content={"显示预览面板"} side="bottom"><Button variant="ghost" size="icon-xs" onClick={() => { setDockTab('files'); setShowExplorer(true); }}
-              className="p-1.5 w-auto h-auto text-muted-foreground hover:text-foreground hover:bg-accent/40">
-              <PanelRightInsetIcon size={15} />
-            </Button></Tooltip>
-          </div>
-        )}
+        {/* Preview panel toggle — 常驻在内容区头部最右缘（Claude 式）。面板展开时
+            按钮留在原位（此时紧贴面板左侧），再点即收起，不会消失或移进面板。 */}
+        <div className="flex items-center gap-0.5">
+          <div className="w-px h-3.5 bg-border/30 mx-0.5" />
+          <Tooltip content={showPreview ? '收起预览面板' : '显示预览面板'} side="bottom"><Button variant="ghost" size="icon-xs"
+            onClick={() => {
+              if (showPreview) { setDockTab(null); setPreviewMaximized(false); }
+              else { setDockTab('files'); setShowExplorer(true); }
+            }}
+            className={`p-1.5 w-auto h-auto ${showPreview ? 'text-foreground bg-accent/25' : 'text-muted-foreground hover:text-foreground hover:bg-accent/40'}`}>
+            <PanelRightInsetIcon size={15} />
+          </Button></Tooltip>
+        </div>
       </div>
     </header>
   );
@@ -2251,16 +2254,10 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
                 </div>
               ) : (
                 <div className="flex flex-col h-full min-w-0">
-                  {/* Single-row header. In the folder view it carries the close
-                      button; in the preview view the ArtifactViewer supplies its
-                      own header row, so this one is hidden to avoid two rows. */}
+                  {/* 面板的开关常驻在左侧内容区头部右缘（Claude 式），面板内不再
+                      放关闭钮；仅保留一条空头部行与内容区头部对齐。 */}
                   {showExplorer && (
-                    <div className="flex items-center justify-end gap-1 px-2.5 flex-shrink-0 h-[36px] border-b border-border/30">
-                      <Tooltip content="关闭" side="bottom"><Button variant="ghost" size="icon-xs" onClick={() => { setDockTab(null); setPreviewMaximized(false); }}
-                        className="text-muted-foreground/40 hover:text-foreground hover:bg-accent/40">
-                        <X size={11} />
-                      </Button></Tooltip>
-                    </div>
+                    <div className="flex-shrink-0 h-[36px] border-b border-border/30" />
                   )}
                   <div className="flex flex-1 min-h-0 min-w-0">
                     {/* Folder list and preview are mutually exclusive — opening a
