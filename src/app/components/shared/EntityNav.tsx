@@ -421,8 +421,8 @@ export function EntityRail({ title, items, activeId, onSelect, onNew, onEdit, se
           }}
           onDragEnd={clearDrag}
         >
-          <span className="text-xs text-muted-foreground/60">{sec.label}</span>
-          <ChevronDown size={10} className={`flex-shrink-0 text-muted-foreground/40 transition-transform ${collapsed ? '-rotate-90' : ''}`} />
+          <span className="text-sm text-muted-foreground/50">{sec.label}</span>
+          <ChevronDown size={11} className={`flex-shrink-0 text-muted-foreground/40 transition-transform ${collapsed ? '-rotate-90' : ''}`} />
           {collapsed && sec.unread && <span className="ml-auto w-1.5 h-1.5 rounded-full bg-cherry-primary flex-shrink-0" />}
         </div>
         {!collapsed && (

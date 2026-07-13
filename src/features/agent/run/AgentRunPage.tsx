@@ -1293,21 +1293,19 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
   }, [sessions, railSort, topicOrder, applyOrder]);
 
   const unpinnedSessions = useMemo(() => orderedSessions.filter(s => !s.pinned), [orderedSessions]);
-  // 任务列表视图「任务」段的行（带所属专家图标；置顶的在置顶段，不重复）。
-  const topicRailItems = useMemo<EntityRailItem[]>(() => unpinnedSessions.map(s => ({
-    id: s.id, name: s.title,
-    avatar: s.agentIcon ?? AVAILABLE_AGENTS.find(a => a.name === s.agentName)?.avatar ?? '💬',
-    updatedAt: s.timestamp,
-    unreadDot: s.unread,
-  })), [unpinnedSessions]);
-  const sessionToChildRow = (s: AgentSession): EntityRailItem => ({ id: s.id, name: s.title, avatar: '', unreadDot: s.unread });
-  // 「置顶」段：三种视图共用，带所属专家图标保留上下文；段内不可拖。
-  // 段头已写明「置顶」，行上不再重复图钉（Codex 式）。
-  const pinnedRailItems = useMemo<EntityRailItem[]>(() => orderedSessions.filter(s => s.pinned).map(s => ({
-    id: s.id, name: s.title,
-    avatar: s.agentIcon ?? AVAILABLE_AGENTS.find(a => a.name === s.agentName)?.avatar ?? '💬',
-    unreadDot: s.unread,
-  })), [orderedSessions]);
+  // 任务行一律纯文字（Codex 式）——不带 emoji，归属信息由段/分组表达。
+  const sessionToRow = (s: AgentSession): EntityRailItem => ({ id: s.id, name: s.title, avatar: '', unreadDot: s.unread });
+  // 任务列表视图「任务」段的行（置顶的在置顶段，不重复）。
+  const topicRailItems = useMemo<EntityRailItem[]>(
+    () => unpinnedSessions.map(sessionToRow),
+    [unpinnedSessions],
+  );
+  const sessionToChildRow = sessionToRow;
+  // 「置顶」段：三种视图共用；段内不可拖。
+  const pinnedRailItems = useMemo<EntityRailItem[]>(
+    () => orderedSessions.filter(s => s.pinned).map(sessionToRow),
+    [orderedSessions],
+  );
   // 专家树形视图：专家组头 + 其话题子行；WORK_PLUS 下群聊作为无子级的组头
   // 混入（未读的置顶）。
   const expertTreeGroups = useMemo<EntityRailTreeGroup[]>(() => {
