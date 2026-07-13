@@ -4,6 +4,7 @@ import { motion } from 'motion/react';
 import {
   Button, SearchInput, Popover, PopoverTrigger, PopoverContent,
   DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem,
+  DropdownMenuSeparator, DropdownMenuSub, DropdownMenuSubTrigger, DropdownMenuSubContent,
 } from '@cherry-studio/ui';
 
 // ===========================
@@ -108,7 +109,6 @@ export function EntityRail({ title, items, activeId, onSelect, onNew, onEdit, se
   // Collapsed headers in the tree view. 全部展开/收起 in the railMenu act on
   // this set.
   const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(() => new Set());
-  const [menuOpen, setMenuOpen] = useState(false);
   // 手动排序 drag state — group headers and rows share the indicator style
   // (a top border on the current drop target). kind 区分拖的是组头还是行，
   // group 记录被拖行所属的组（树形子行只允许同组内重排）。
@@ -342,37 +342,31 @@ export function EntityRail({ title, items, activeId, onSelect, onNew, onEdit, se
               </button>
             ) : <div className="flex-1" />}
             {railMenu && (() => {
-              // Every row commits its action and closes the menu (Codex-style
-              // single-layer menu: left check column, no icons).
-              const pick = (fn: () => void) => () => { fn(); setMenuOpen(false); };
-              const optionRow = (opt: { id: string; label: string }, active: boolean, onChange: (id: string) => void) => (
-                <Button
-                  key={opt.id}
-                  variant="ghost"
-                  size="xs"
-                  onClick={pick(() => onChange(opt.id))}
-                  className={`w-full justify-start gap-0 px-2 ${active ? 'text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
-                >
-                  <span className="w-5 flex-shrink-0 flex items-center">{active && <Check size={11} className="text-foreground" />}</span>
-                  <span className="flex-1 text-left">{opt.label}</span>
-                </Button>
+              // 二级菜单（Codex 式）：顶层只放「展示方式 ▸ / 排序方式 ▸」和
+              // 动作项，选项收进子菜单；子菜单里当前值左侧打勾，顶层触发行
+              // 右侧回显当前值。DropdownMenu 选中任意项后整个菜单自动关闭。
+              const optionItem = (opt: { id: string; label: string }, active: boolean, onChange: (id: string) => void) => (
+                <DropdownMenuItem key={opt.id} className="gap-0 text-xs" onClick={() => onChange(opt.id)}>
+                  <span className="w-5 flex-shrink-0 flex items-center">{active && <Check size={11} />}</span>
+                  {opt.label}
+                </DropdownMenuItem>
               );
-              const actionRow = (key: string, label: string, onClick: () => void, disabled = false) => (
-                <Button
-                  key={key}
-                  variant="ghost"
-                  size="xs"
-                  disabled={disabled}
-                  onClick={pick(onClick)}
-                  className={`w-full justify-start gap-0 px-2 ${disabled ? 'text-muted-foreground/35' : 'text-muted-foreground hover:text-foreground'}`}
-                >
-                  <span className="w-5 flex-shrink-0" />
-                  <span className="flex-1 text-left">{label}</span>
-                </Button>
+              const subMenu = (label: string, modes: { options: { id: string; label: string }[]; value: string; onChange: (id: string) => void }) => (
+                <DropdownMenuSub>
+                  <DropdownMenuSubTrigger className="gap-2 text-xs">
+                    <span className="flex-1">{label}</span>
+                    <span className="text-muted-foreground/60">
+                      {modes.options.find(o => o.id === modes.value)?.label}
+                    </span>
+                  </DropdownMenuSubTrigger>
+                  <DropdownMenuSubContent className="w-[120px]" sideOffset={4}>
+                    {modes.options.map((opt) => optionItem(opt, modes.value === opt.id, modes.onChange))}
+                  </DropdownMenuSubContent>
+                </DropdownMenuSub>
               );
               return (
-                <Popover open={menuOpen} onOpenChange={setMenuOpen}>
-                  <PopoverTrigger asChild>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
                     <button
                       type="button"
                       title="筛选"
@@ -380,38 +374,27 @@ export function EntityRail({ title, items, activeId, onSelect, onNew, onEdit, se
                     >
                       <ListFilter size={14} />
                     </button>
-                  </PopoverTrigger>
-                  <PopoverContent align="end" sideOffset={4} className="w-[172px] p-1">
-                    {railMenu.displayModes && (
-                      <>
-                        <div className="px-2 pt-1.5 pb-0.5 text-[11px] text-muted-foreground/70">展示方式</div>
-                        {railMenu.displayModes.options.map((opt) =>
-                          optionRow(opt, railMenu.displayModes!.value === opt.id, railMenu.displayModes!.onChange))}
-                      </>
-                    )}
-                    {railMenu.sortModes && (
-                      <>
-                        <div className="my-1 h-px bg-border/40" />
-                        <div className="px-2 pt-0.5 pb-0.5 text-[11px] text-muted-foreground/70">排序方式</div>
-                        {railMenu.sortModes.options.map((opt) =>
-                          optionRow(opt, railMenu.sortModes!.value === opt.id, railMenu.sortModes!.onChange))}
-                      </>
-                    )}
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" sideOffset={4} className="w-[168px]">
+                    {railMenu.displayModes && subMenu('展示方式', railMenu.displayModes)}
+                    {railMenu.sortModes && subMenu('排序方式', railMenu.sortModes)}
                     {railMenu.expandCollapse && (
                       <>
-                        <div className="my-1 h-px bg-border/40" />
-                        {actionRow('expand-all', '全部展开', expandAllGroups, !hasFoldableGroups)}
-                        {actionRow('collapse-all', '全部收起', collapseAllGroups, !hasFoldableGroups)}
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem className="text-xs" disabled={!hasFoldableGroups} onClick={expandAllGroups}>全部展开</DropdownMenuItem>
+                        <DropdownMenuItem className="text-xs" disabled={!hasFoldableGroups} onClick={collapseAllGroups}>全部收起</DropdownMenuItem>
                       </>
                     )}
                     {railMenu.actions && railMenu.actions.length > 0 && (
                       <>
-                        <div className="my-1 h-px bg-border/40" />
-                        {railMenu.actions.map((a) => actionRow(a.id, a.label, a.onClick))}
+                        <DropdownMenuSeparator />
+                        {railMenu.actions.map((a) => (
+                          <DropdownMenuItem key={a.id} className="text-xs" onClick={a.onClick}>{a.label}</DropdownMenuItem>
+                        ))}
                       </>
                     )}
-                  </PopoverContent>
-                </Popover>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               );
             })()}
           </div>
