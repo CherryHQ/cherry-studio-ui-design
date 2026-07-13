@@ -1,5 +1,5 @@
 import React, { useMemo, useState, useRef } from 'react';
-import { Plus, MessageSquare, ChevronDown, ListFilter, Check, MoreHorizontal, FolderOpen, Pin, Archive } from 'lucide-react';
+import { Plus, MessageSquare, ChevronDown, ListFilter, Check, MoreHorizontal, FolderOpen, Pin, Archive, Loader2 } from 'lucide-react';
 import { motion } from 'motion/react';
 import {
   Button, SearchInput, Popover, PopoverTrigger, PopoverContent,
@@ -35,6 +35,9 @@ export interface EntityRailItem {
   unread?: number;
   /** 未读小蓝点（任务行，Codex 式）— 与 unread 数字二选一。 */
   unreadDot?: boolean;
+  /** 任务状态指示（行右缘）：running=转圈 / awaiting=橘点（待确认）/
+   * error=红点 / done=绿点（已完成且未查看时才传，避免满屏绿点）。 */
+  status?: 'running' | 'awaiting' | 'error' | 'done';
   /** 置顶任务 — 行首显示一枚小图钉。 */
   pinned?: boolean;
 }
@@ -45,6 +48,9 @@ export interface EntityRailSection {
   label: string;
   /** 段内是否有未读 — 段折叠时段头右侧亮蓝点。 */
   unread?: boolean;
+  /** 段折叠时段头右侧的状态点颜色（按段内最高优先级：红=有失败 >
+   * 橘=有待确认 > 绿=有已完成未查看）。提供时优先于 unread 的蓝点。 */
+  dot?: 'red' | 'amber' | 'emerald';
   /** 平铺任务行（置顶段、任务段）。 */
   items?: EntityRailItem[];
   /** 树形分组（专家段、项目段）。 */
@@ -290,10 +296,19 @@ export function EntityRail({ title, items, activeId, onSelect, onNew, onEdit, se
           {item.avatar ? <span className="text-base leading-none flex-shrink-0">{item.avatar}</span> : null}
           <span className={`text-sm truncate flex-1 min-w-0 ${active ? 'font-medium' : (item.unread ? 'text-foreground' : '')}`}>{item.name}</span>
         </button>
-        {/* 未读标记贴行右缘（Codex 式），hover 时让位给操作图标。 */}
-        {(item.unread || item.unreadDot) && (
+        {/* 状态/未读指示贴行右缘（Codex 式），hover 时让位给操作图标。
+            进行中=转圈；待确认=橘点；失败=红点；已完成且未查看=绿点。 */}
+        {(item.status || item.unread || item.unreadDot) && (
           <span className="absolute right-2.5 top-1/2 -translate-y-1/2 flex items-center group-hover/row:opacity-0 transition-opacity pointer-events-none">
-            {item.unread ? (
+            {item.status === 'running' ? (
+              <Loader2 size={12} className="animate-spin text-muted-foreground/60" />
+            ) : item.status === 'awaiting' ? (
+              <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+            ) : item.status === 'error' ? (
+              <span className="w-1.5 h-1.5 rounded-full bg-red-500" />
+            ) : item.status === 'done' ? (
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+            ) : item.unread ? (
               <span className="min-w-[14px] h-[14px] px-1 rounded-full bg-primary/12 text-primary/80 text-[9px] leading-[14px] text-center font-medium tabular-nums">{item.unread}</span>
             ) : (
               <span className="w-1.5 h-1.5 rounded-full bg-cherry-primary" />
@@ -393,7 +408,7 @@ export function EntityRail({ title, items, activeId, onSelect, onNew, onEdit, se
           <button
             type="button"
             onClick={() => setExpandedMore(prev => new Set(prev).add(key))}
-            className={`w-full text-left py-[6px] text-sm text-muted-foreground/60 hover:text-muted-foreground transition-colors ${indent ? 'pl-8' : 'pl-2.5'}`}
+            className={`w-full text-left py-[6px] text-sm text-muted-foreground hover:text-foreground/80 transition-colors ${indent ? 'pl-8' : 'pl-2.5'}`}
           >
             查看更多
           </button>
@@ -482,9 +497,15 @@ export function EntityRail({ title, items, activeId, onSelect, onNew, onEdit, se
           }}
           onDragEnd={clearDrag}
         >
-          <span className="text-sm text-muted-foreground/50">{sec.label}</span>
-          <ChevronDown size={11} className={`flex-shrink-0 text-muted-foreground/40 transition-transform ${collapsed ? '-rotate-90' : ''}`} />
-          {collapsed && sec.unread && <span className="ml-auto w-1.5 h-1.5 rounded-full bg-cherry-primary flex-shrink-0" />}
+          <span className="text-sm text-muted-foreground">{sec.label}</span>
+          <ChevronDown size={11} className={`flex-shrink-0 text-muted-foreground/60 transition-transform ${collapsed ? '-rotate-90' : ''}`} />
+          {collapsed && sec.dot ? (
+            <span className={`ml-auto w-1.5 h-1.5 rounded-full flex-shrink-0 ${
+              sec.dot === 'red' ? 'bg-red-500' : sec.dot === 'amber' ? 'bg-amber-500' : 'bg-emerald-500'
+            }`} />
+          ) : collapsed && sec.unread ? (
+            <span className="ml-auto w-1.5 h-1.5 rounded-full bg-cherry-primary flex-shrink-0" />
+          ) : null}
         </div>
         {!collapsed && (
           <div className="space-y-px">

@@ -2,7 +2,7 @@ import React, { useState, useCallback, useMemo, useRef, useEffect } from 'react'
 import { useGlobalActions } from '@/app/context/GlobalActionContext';
 import {
   ArrowLeft, ChevronDown, ChevronRight, FolderOpen, Download,
-  Bot, Columns2,
+  Bot,
   Sparkles, Plus, ArrowUp,
   FileText, Zap, Search as SearchIcon, BookOpen, History,
   MessageCirclePlus, MessageSquarePlus,
@@ -100,6 +100,18 @@ function CompactInputBar({ onSendMessage, agentName, headerControls, onNewSessio
 // ===========================
 // New Session Empty State
 // ===========================
+
+// 圆角矩形 + 靠右短竖线的「侧栏预览」图标（lucide 无现成款）
+const PanelRightInsetIcon = ({ size = 12, className }: { size?: number; className?: string }) => (
+  <svg
+    width={size} height={size} viewBox="0 0 24 24" fill="none"
+    stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"
+    className={className}
+  >
+    <rect x="3" y="4.5" width="18" height="15" rx="4" />
+    <line x1="15.5" y1="9.5" x2="15.5" y2="14.5" />
+  </svg>
+);
 
 // ===========================
 // CodeX-style Input (shared between empty state and maximized)
@@ -1296,7 +1308,21 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
 
   const unpinnedSessions = useMemo(() => orderedSessions.filter(s => !s.pinned), [orderedSessions]);
   // 任务行一律纯文字（Codex 式）——不带 emoji，归属信息由段/分组表达。
-  const sessionToRow = (s: AgentSession): EntityRailItem => ({ id: s.id, name: s.title, avatar: '', unreadDot: s.unread });
+  // 行右缘状态指示：进行中=转圈；待确认=橘点；失败=红点；已完成只在
+  // 未查看时亮绿点（看过即消失，避免满屏绿点）。
+  const rowStatusOf = (s: AgentSession): EntityRailItem['status'] =>
+    s.status === 'active' ? 'running'
+    : (s.status === 'awaiting' || s.status === 'paused') ? 'awaiting'
+    : s.status === 'error' ? 'error'
+    : (s.status === 'completed' && s.unread) ? 'done'
+    : undefined;
+  const sessionToRow = (s: AgentSession): EntityRailItem => ({ id: s.id, name: s.title, avatar: '', status: rowStatusOf(s) });
+  // 段折叠时段头状态点：红（有失败）> 橘（有待确认）> 绿（有已完成未查看）。
+  const sectionDotOf = (list: AgentSession[]): EntityRailSection['dot'] =>
+    list.some(s => s.status === 'error') ? 'red'
+    : list.some(s => s.status === 'awaiting' || s.status === 'paused') ? 'amber'
+    : list.some(s => s.status === 'completed' && s.unread) ? 'emerald'
+    : undefined;
   // 任务列表视图「任务」段的行（置顶的在置顶段，不重复）。
   const topicRailItems = useMemo<EntityRailItem[]>(
     () => unpinnedSessions.map(sessionToRow),
@@ -1349,27 +1375,27 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
   const railSections = useMemo<EntityRailSection[]>(() => {
     const pinnedSection: EntityRailSection = {
       key: 'pinned', label: '置顶', items: pinnedRailItems, rowsDraggable: false, limitRows: false,
-      unread: orderedSessions.some(s => s.pinned && s.unread),
+      dot: sectionDotOf(orderedSessions.filter(s => s.pinned)),
     };
     if (railDisplay === 'topics') {
       return [pinnedSection, {
         key: 'tasks', label: '任务', items: topicRailItems,
-        unread: unpinnedSessions.some(s => s.unread),
+        dot: sectionDotOf(unpinnedSessions),
       }];
     }
     if (railDisplay === 'experts') {
       return [pinnedSection, {
         key: 'experts', label: '专家', groups: expertTreeGroups,
-        unread: unpinnedSessions.some(s => s.unread),
+        dot: sectionDotOf(unpinnedSessions),
       }];
     }
     const looseIds = new Set(looseTaskItems.map(i => i.id));
     return [pinnedSection, {
       key: 'tasks', label: '任务', items: looseTaskItems,
-      unread: unpinnedSessions.some(s => looseIds.has(s.id) && s.unread),
+      dot: sectionDotOf(unpinnedSessions.filter(s => looseIds.has(s.id))),
     }, {
       key: 'projects', label: '项目', groups: workdirTreeGroups,
-      unread: unpinnedSessions.some(s => !looseIds.has(s.id) && s.unread),
+      dot: sectionDotOf(unpinnedSessions.filter(s => !looseIds.has(s.id))),
     }];
   }, [railDisplay, pinnedRailItems, topicRailItems, expertTreeGroups, workdirTreeGroups, looseTaskItems, orderedSessions, unpinnedSessions]);
 
@@ -1865,7 +1891,7 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
             <div className="w-px h-3.5 bg-border/30 mx-0.5" />
             <Tooltip content={"显示预览面板"} side="bottom"><Button variant="ghost" size="icon-xs" onClick={() => { setDockTab('files'); setShowExplorer(true); }}
               className="p-1.5 w-auto h-auto text-muted-foreground hover:text-foreground hover:bg-accent/40">
-              <Columns2 size={12} />
+              <PanelRightInsetIcon size={13} />
             </Button></Tooltip>
           </div>
         )}
