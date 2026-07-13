@@ -8,4 +8,4 @@
 //   只呈现 V2.0 的 Agent-Agent session 管理。
 // - work-plus-preview 分支把它置为 true，获得独立的 Vercel 预览。
 //   同步方式：在该分支上 merge main 即可，此文件是两个分支唯一的 diff。
-export const WORK_PLUS: boolean = false;
+export const WORK_PLUS: boolean = true;
