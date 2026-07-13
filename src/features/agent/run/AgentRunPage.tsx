@@ -1876,19 +1876,19 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
               title="对话"
               searchable={false}
               filterable={false}
-              newLabel={railDisplay === 'experts' ? '创建专家' : '新建话题'}
+              newLabel={railDisplay === 'experts' ? '创建专家' : '新建任务'}
               newAsRow
               newActions={railDisplay === 'experts' ? [
                 { id: 'agent', label: '创建专家', icon: Bot, onClick: () => setShowCreateAgent(true) },
                 ...(WORK_PLUS ? [{ id: 'group', label: '创建项目组', icon: Users2, onClick: () => setNewGroupOpen(true) }] : []),
               ] : [
-                { id: 'topic', label: '新建话题', icon: MessageSquarePlus, onClick: handleNewSession },
+                { id: 'topic', label: '新建任务', icon: MessageSquarePlus, onClick: handleNewSession },
               ]}
               railMenu={{
                 displayModes: {
                   options: [
-                    { id: 'topics', label: '话题' },
-                    { id: 'experts', label: '专家' },
+                    { id: 'topics', label: '任务列表' },
+                    { id: 'experts', label: '专家列表' },
                     { id: 'workdir', label: '工作目录' },
                   ],
                   value: railDisplay,
@@ -1905,7 +1905,7 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
                 },
                 expandCollapse: true,
                 actions: [
-                  { id: 'history', label: '历史记录', onClick: openHistoryManage },
+                  { id: 'history', label: '历史任务', onClick: openHistoryManage },
                 ],
               }}
               treeGroups={railDisplay === 'experts' ? expertTreeGroups
