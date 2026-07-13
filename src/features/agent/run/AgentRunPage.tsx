@@ -1302,10 +1302,10 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
   })), [unpinnedSessions]);
   const sessionToChildRow = (s: AgentSession): EntityRailItem => ({ id: s.id, name: s.title, avatar: '', unreadDot: s.unread });
   // 「置顶」段：三种视图共用，带所属专家图标保留上下文；段内不可拖。
+  // 段头已写明「置顶」，行上不再重复图钉（Codex 式）。
   const pinnedRailItems = useMemo<EntityRailItem[]>(() => orderedSessions.filter(s => s.pinned).map(s => ({
     id: s.id, name: s.title,
     avatar: s.agentIcon ?? AVAILABLE_AGENTS.find(a => a.name === s.agentName)?.avatar ?? '💬',
-    pinned: true,
     unreadDot: s.unread,
   })), [orderedSessions]);
   // 专家树形视图：专家组头 + 其话题子行；WORK_PLUS 下群聊作为无子级的组头
