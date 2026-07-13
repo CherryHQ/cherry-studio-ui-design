@@ -97,7 +97,7 @@ export function HistoryManagePage({ sessions, onBack, onOpenSession, onUpdateSes
           className="p-1 w-auto h-auto text-muted-foreground hover:text-foreground hover:bg-accent/40">
           <ChevronLeft size={16} />
         </Button>
-        <span className="text-base font-semibold">历史记录</span>
+        <span className="text-base font-semibold">历史任务</span>
         <span className="text-sm text-muted-foreground/50">{sessions.length} 个任务</span>
       </div>
 
