@@ -14,3 +14,6 @@ src/imports/
 *.swp
 *.swo
 .vercel
+
+# dev-annotator 运行时生成的标注数据
+.context/
