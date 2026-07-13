@@ -7,6 +7,7 @@ import {
   DropdownMenuSeparator, DropdownMenuSub, DropdownMenuSubTrigger, DropdownMenuSubContent,
   ContextMenu, ContextMenuTrigger, ContextMenuContent, ContextMenuItem,
   ContextMenuSeparator, ContextMenuSub, ContextMenuSubTrigger, ContextMenuSubContent,
+  SimpleTooltip,
 } from '@cherry-studio/ui';
 
 // 本文件所有菜单（筛选/右键/行内 … /新建下拉）共用的排版：紧凑 13px。
@@ -20,7 +21,7 @@ const RAIL_MENU_CONTENT = 'p-1.5 rounded-[14px]';
 
 // 新会话图标（Codex 式）：气泡描边在右上角断开，加号嵌在缺口里。
 // lucide 无现成款，按其 24 网格 / stroke-2 / round 规范手绘。
-const NewSessionIcon = ({ size = 13 }: { size?: number }) => (
+const NewSessionIcon = ({ size = 14 }: { size?: number }) => (
   <svg
     width={size}
     height={size}
@@ -31,9 +32,11 @@ const NewSessionIcon = ({ size = 13 }: { size?: number }) => (
     strokeLinecap="round"
     strokeLinejoin="round"
   >
-    <path d="M13 3H5a2 2 0 0 0-2 2v16l4-4h12a2 2 0 0 0 2-2V9" />
-    <path d="M16 5h6" />
-    <path d="M19 2v6" />
+    {/* 气泡缩小偏左下，给右上角的加号留足呼吸空间 */}
+    <path d="M12 4H5a2 2 0 0 0-2 2v15l4-4h9a2 2 0 0 0 2-2V9.5" />
+    {/* 加号放大：十字臂 7 格，小尺寸下依然清晰 */}
+    <path d="M14.5 5h7" />
+    <path d="M18 1.5v7" />
   </svg>
 );
 
@@ -359,23 +362,25 @@ export function EntityRail({ title, items, activeId, onSelect, onNew, onEdit, se
         <div className="absolute right-1 top-1/2 -translate-y-1/2 flex items-center gap-0.5 opacity-0 group-hover/row:opacity-100 has-[[data-state=open]]:opacity-100 transition-opacity">
           {rowContextMenu ? (
             <>
-              <button
-                type="button"
-                title={pinned ? '取消置顶' : '置顶'}
-                onClick={(e) => { e.stopPropagation(); rowContextMenu.onTogglePin(item.id); }}
-                className={`p-1 rounded hover:bg-accent/70 transition-colors ${pinned ? 'text-foreground' : 'text-muted-foreground/50 hover:text-foreground'}`}
-              >
-                <Pin size={13} className={pinned ? 'fill-current' : '-rotate-45'} />
-              </button>
-              {rowContextMenu.onArchive && (
+              <SimpleTooltip content={pinned ? '取消置顶任务' : '置顶任务'} side="top" delayDuration={300}>
                 <button
                   type="button"
-                  title="归档"
-                  onClick={(e) => { e.stopPropagation(); rowContextMenu.onArchive!(item.id); }}
-                  className="p-1 rounded text-muted-foreground/50 hover:text-foreground hover:bg-accent/70 transition-colors"
+                  onClick={(e) => { e.stopPropagation(); rowContextMenu.onTogglePin(item.id); }}
+                  className={`p-1 rounded hover:bg-accent/70 transition-colors ${pinned ? 'text-foreground' : 'text-muted-foreground/50 hover:text-foreground'}`}
                 >
-                  <Archive size={13} />
+                  <Pin size={13} className={pinned ? 'fill-current' : '-rotate-45'} />
                 </button>
+              </SimpleTooltip>
+              {rowContextMenu.onArchive && (
+                <SimpleTooltip content="归档任务" side="top" delayDuration={300}>
+                  <button
+                    type="button"
+                    onClick={(e) => { e.stopPropagation(); rowContextMenu.onArchive!(item.id); }}
+                    className="p-1 rounded text-muted-foreground/50 hover:text-foreground hover:bg-accent/70 transition-colors"
+                  >
+                    <Archive size={13} />
+                  </button>
+                </SimpleTooltip>
               )}
             </>
           ) : (
@@ -563,7 +568,7 @@ export function EntityRail({ title, items, activeId, onSelect, onNew, onEdit, se
                 onClick={() => groupHoverMenu.onNewSession(g.key)}
                 className="p-1 rounded text-muted-foreground/50 hover:text-foreground hover:bg-accent/70 transition-colors"
               >
-                <NewSessionIcon size={13} />
+                <NewSessionIcon size={14} />
               </button>
             </div>
           )}
