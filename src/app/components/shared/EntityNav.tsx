@@ -233,10 +233,10 @@ export function EntityRail({ title, items, activeId, onSelect, onNew, onEdit, se
                 <MoreHorizontal size={12} />
               </button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-32">
-              <DropdownMenuItem className="gap-2 text-xs" onClick={() => onEdit?.(item.id)}><Pencil size={12} />编辑</DropdownMenuItem>
-              <DropdownMenuItem className="gap-2 text-xs"><Copy size={12} />复制</DropdownMenuItem>
-              <DropdownMenuItem className="gap-2 text-xs text-destructive focus:text-destructive"><Trash2 size={12} />删除</DropdownMenuItem>
+            <DropdownMenuContent align="end" className="w-36">
+              <DropdownMenuItem onClick={() => onEdit?.(item.id)}><Pencil />编辑</DropdownMenuItem>
+              <DropdownMenuItem><Copy />复制</DropdownMenuItem>
+              <DropdownMenuItem variant="destructive"><Trash2 />删除</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
@@ -248,33 +248,33 @@ export function EntityRail({ title, items, activeId, onSelect, onNew, onEdit, se
     return (
       <ContextMenu key={item.id}>
         <ContextMenuTrigger asChild>{row}</ContextMenuTrigger>
-        <ContextMenuContent className="w-44">
-          <ContextMenuItem className="gap-2" onClick={() => rowContextMenu.onRename(item.id)}>
-            <Pencil size={13} />重命名
+        <ContextMenuContent className="w-48">
+          <ContextMenuItem onClick={() => rowContextMenu.onRename(item.id)}>
+            <Pencil />重命名
           </ContextMenuItem>
-          <ContextMenuItem className="gap-2" onClick={() => rowContextMenu.onTogglePin(item.id)}>
-            <Pin size={13} className={pinned ? '' : '-rotate-45'} />{pinned ? '取消置顶' : '置顶任务'}
+          <ContextMenuItem onClick={() => rowContextMenu.onTogglePin(item.id)}>
+            <Pin className={pinned ? '' : '-rotate-45'} />{pinned ? '取消置顶' : '置顶任务'}
           </ContextMenuItem>
-          <ContextMenuItem className="gap-2" onClick={() => rowContextMenu.onOpenInNewTab(item.id)}>
-            <ExternalLink size={13} />在新标签页打开
+          <ContextMenuItem onClick={() => rowContextMenu.onOpenInNewTab(item.id)}>
+            <ExternalLink />在新标签页打开
           </ContextMenuItem>
-          <ContextMenuItem className="gap-2" onClick={() => rowContextMenu.onOpenInNewWindow(item.id)}>
-            <PictureInPicture2 size={13} />从新窗口打开
+          <ContextMenuItem onClick={() => rowContextMenu.onOpenInNewWindow(item.id)}>
+            <PictureInPicture2 />从新窗口打开
           </ContextMenuItem>
           {rowContextMenu.position && (
             <ContextMenuSub>
-              <ContextMenuSubTrigger className="gap-2">
-                <PanelLeft size={13} />会话位置
+              <ContextMenuSubTrigger>
+                <PanelLeft />会话位置
               </ContextMenuSubTrigger>
-              <ContextMenuSubContent className="w-24">
+              <ContextMenuSubContent className="w-28">
                 <ContextMenuItem disabled={pos === 'left'} onClick={() => rowContextMenu.position!.set(item.id, 'left')}>左侧</ContextMenuItem>
                 <ContextMenuItem disabled={pos === 'right'} onClick={() => rowContextMenu.position!.set(item.id, 'right')}>右侧</ContextMenuItem>
               </ContextMenuSubContent>
             </ContextMenuSub>
           )}
           <ContextMenuSeparator />
-          <ContextMenuItem className="gap-2 text-destructive focus:text-destructive" onClick={() => rowContextMenu.onDelete(item.id)}>
-            <Trash2 size={13} />删除
+          <ContextMenuItem variant="destructive" onClick={() => rowContextMenu.onDelete(item.id)}>
+            <Trash2 />删除
           </ContextMenuItem>
         </ContextMenuContent>
       </ContextMenu>
@@ -374,12 +374,12 @@ export function EntityRail({ title, items, activeId, onSelect, onNew, onEdit, se
                     <span className="text-sm truncate flex-1 min-w-0">{newLabel ?? `新建${title}`}</span>
                   </button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="start" className="w-40">
+                <DropdownMenuContent align="start" className="w-44">
                   {newActions.map((a) => {
                     const Icon = a.icon;
                     return (
-                      <DropdownMenuItem key={a.id} className="gap-2 text-xs" onClick={a.onClick}>
-                        <Icon size={13} className="text-muted-foreground" />
+                      <DropdownMenuItem key={a.id} onClick={a.onClick}>
+                        <Icon />
                         {a.label}
                       </DropdownMenuItem>
                     );
@@ -401,20 +401,20 @@ export function EntityRail({ title, items, activeId, onSelect, onNew, onEdit, se
               // 动作项，选项收进子菜单；子菜单里当前值左侧打勾，顶层触发行
               // 右侧回显当前值。DropdownMenu 选中任意项后整个菜单自动关闭。
               const optionItem = (opt: { id: string; label: string }, active: boolean, onChange: (id: string) => void) => (
-                <DropdownMenuItem key={opt.id} className="gap-0 text-xs" onClick={() => onChange(opt.id)}>
-                  <span className="w-5 flex-shrink-0 flex items-center">{active && <Check size={11} />}</span>
+                <DropdownMenuItem key={opt.id} className="gap-0" onClick={() => onChange(opt.id)}>
+                  <span className="w-6 flex-shrink-0 flex items-center">{active && <Check size={14} className="text-foreground" />}</span>
                   {opt.label}
                 </DropdownMenuItem>
               );
               const subMenu = (label: string, modes: { options: { id: string; label: string }[]; value: string; onChange: (id: string) => void }) => (
                 <DropdownMenuSub>
-                  <DropdownMenuSubTrigger className="gap-2 text-xs">
+                  <DropdownMenuSubTrigger>
                     <span className="flex-1">{label}</span>
-                    <span className="text-muted-foreground/60">
+                    <span className="font-normal text-muted-foreground/70">
                       {modes.options.find(o => o.id === modes.value)?.label}
                     </span>
                   </DropdownMenuSubTrigger>
-                  <DropdownMenuSubContent className="w-[120px]" sideOffset={4}>
+                  <DropdownMenuSubContent className="w-36" sideOffset={4}>
                     {modes.options.map((opt) => optionItem(opt, modes.value === opt.id, modes.onChange))}
                   </DropdownMenuSubContent>
                 </DropdownMenuSub>
@@ -430,7 +430,7 @@ export function EntityRail({ title, items, activeId, onSelect, onNew, onEdit, se
                       <ListFilter size={14} />
                     </button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" sideOffset={4} className="w-[168px]">
+                  <DropdownMenuContent align="end" sideOffset={4} className="w-48">
                     {railMenu.displayModes && subMenu('展示方式', railMenu.displayModes)}
                     {railMenu.sortModes && subMenu('排序方式', railMenu.sortModes)}
                     {railMenu.expandCollapse && (() => {
@@ -441,7 +441,6 @@ export function EntityRail({ title, items, activeId, onSelect, onNew, onEdit, se
                         <>
                           <DropdownMenuSeparator />
                           <DropdownMenuItem
-                            className="text-xs"
                             disabled={!hasFoldableGroups}
                             onClick={anyExpanded ? collapseAllGroups : expandAllGroups}
                           >
@@ -454,7 +453,7 @@ export function EntityRail({ title, items, activeId, onSelect, onNew, onEdit, se
                       <>
                         <DropdownMenuSeparator />
                         {railMenu.actions.map((a) => (
-                          <DropdownMenuItem key={a.id} className="text-xs" onClick={a.onClick}>{a.label}</DropdownMenuItem>
+                          <DropdownMenuItem key={a.id} onClick={a.onClick}>{a.label}</DropdownMenuItem>
                         ))}
                       </>
                     )}
