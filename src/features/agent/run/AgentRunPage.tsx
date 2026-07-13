@@ -1906,7 +1906,6 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
                 expandCollapse: true,
                 actions: [
                   { id: 'history', label: '历史记录', onClick: openHistoryManage },
-                  { id: 'manage', label: '管理专家', onClick: () => setShowAgentInfo(true) },
                 ],
               }}
               treeGroups={railDisplay === 'experts' ? expertTreeGroups
