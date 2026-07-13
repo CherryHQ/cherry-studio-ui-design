@@ -21,7 +21,7 @@ const RAIL_MENU_CONTENT = 'p-1.5 rounded-[14px]';
 
 // 新会话图标（Codex 式）：气泡描边在右上角断开，加号嵌在缺口里。
 // lucide 无现成款，按其 24 网格 / stroke-2 / round 规范手绘。
-const NewSessionIcon = ({ size = 14 }: { size?: number }) => (
+export const NewSessionIcon = ({ size = 14 }: { size?: number }) => (
   <svg
     width={size}
     height={size}
@@ -38,6 +38,20 @@ const NewSessionIcon = ({ size = 14 }: { size?: number }) => (
     {/* 加号：十字臂 7 格 */}
     <path d="M14.5 5h7" />
     <path d="M18 1.5v7" />
+  </svg>
+);
+
+// 圆角矩形 + 靠右短竖线的「侧栏预览」图标（lucide 无现成款）。
+// 几何与 lucide panel 系图标对齐：18×18 外框、1.6 描边，避免同排图标粗细/高度不一。
+// 工作/对话两个模块的内容区头部共用（预览面板 / 产物面板开关）。
+export const PanelRightInsetIcon = ({ size = 15, className }: { size?: number; className?: string }) => (
+  <svg
+    width={size} height={size} viewBox="0 0 24 24" fill="none"
+    stroke="currentColor" strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round"
+    className={className}
+  >
+    <rect x="3" y="3" width="18" height="18" rx="4.5" />
+    <line x1="15.5" y1="8.5" x2="15.5" y2="15.5" />
   </svg>
 );
 
@@ -144,8 +158,13 @@ export interface EntityRailProps {
   /** 手动排序 drag: reorder flat list rows. Dragging enabled when set. */
   onReorderItems?: (orderedIds: string[]) => void;
   /** 任务行右键菜单（重命名/置顶/新标签页/新窗口/删除；position 提供时
-   * 追加「会话位置 ▸ 左侧/右侧」子菜单 — 专家列表视图）。 */
+   * 追加「任务列表位置 ▸ 左侧/右侧」子菜单 — 专家列表视图。position 是
+   * 布局级全局开关（任务列表整体在左栏或右侧面板），id 参数仅为接口兼容）。 */
   rowContextMenu?: {
+    /** 行实体名（默认「任务」）— 置顶/归档等文案随之变化，如「置顶话题」。 */
+    rowLabel?: string;
+    /** position 子菜单标题（默认「任务列表位置」）。 */
+    positionLabel?: string;
     onRename: (id: string) => void;
     isPinned?: (id: string) => boolean;
     onTogglePin: (id: string) => void;
@@ -161,9 +180,15 @@ export interface EntityRailProps {
   groupHoverMenu?: {
     onNewSession: (key: string) => void;
     expert?: {
+      /** 组实体名（默认「专家」）— 菜单文案「编辑/置顶/图标/删除 {label}」随之变化。 */
+      label?: string;
       onEdit: (key: string) => void;
       onPinTop: (key: string) => void;
+      /** 清空该组下所有话题（对话模块）。提供时菜单显示「清空话题」。 */
+      onClearTopics?: (key: string) => void;
       iconMode: { get: (key: string) => 'emoji' | 'model' | 'none'; set: (key: string, mode: 'emoji' | 'model' | 'none') => void };
+      /** 标签分组开关（对话模块，仅助手视图提供）。菜单显示「开启/关闭标签分组」。 */
+      tagGrouping?: { enabled: boolean; onToggle: () => void };
       onDelete: (key: string) => void;
     };
     folder?: {
@@ -178,6 +203,9 @@ export interface EntityRailProps {
   railMenu?: {
     displayModes?: { options: { id: string; label: string }[]; value: string; onChange: (id: string) => void };
     sortModes?: { options: { id: string; label: string }[]; value: string; onChange: (id: string) => void };
+    /** 任务列表位置（左栏/右侧面板）。任务列表在右侧时左栏没有任务行可
+     * 右键，这里是切回左侧的常驻入口。label 缺省为「任务列表位置」。 */
+    taskPosition?: { label?: string; options: { id: string; label: string }[]; value: string; onChange: (id: string) => void };
     /** Show 全部展开 / 全部收起 rows — enabled only when the current view has
      * collapsible groups (treeGroups); greyed out otherwise. */
     expandCollapse?: boolean;
@@ -205,8 +233,17 @@ export function EntityRail({ title, items, activeId, onSelect, onNew, onEdit, se
   const [groupByTag, setGroupByTag] = useState(false);
   const [sort, setSort] = useState<'default' | 'time' | 'name'>('default');
   // Collapsed headers in the tree view. 全部展开/收起 in the railMenu act on
-  // this set.
-  const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(() => new Set());
+  // this set. 按 persistKey 持久化——点过「全部展开/收起」或手动折叠某组后，
+  // 下次进来保持原状（菜单文案也随之正确切换）。
+  const groupStoreKey = `cherry-rail-${persistKey}-groups-folded`;
+  const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(() => {
+    if (!persistKey) return new Set();
+    try { return new Set<string>(JSON.parse(localStorage.getItem(groupStoreKey) || '[]')); } catch { return new Set(); }
+  });
+  const persistCollapsedGroups = (next: Set<string>) => {
+    setCollapsedGroups(next);
+    if (persistKey) try { localStorage.setItem(groupStoreKey, JSON.stringify(Array.from(next))); } catch { /* 忽略 */ }
+  };
   // 手动排序 drag state — group headers and rows share the indicator style
   // (a top border on the current drop target). kind 区分拖的是组头还是行，
   // group 记录被拖行所属的组（树形子行只允许同组内重排）。
@@ -279,18 +316,17 @@ export function EntityRail({ title, items, activeId, onSelect, onNew, onEdit, se
     () => sections ? sections.flatMap(s => s.groups ?? []) : (treeGroups ?? []),
     [sections, treeGroups],
   );
-  const hasFoldableGroups = !!sections || allGroups.some(g => g.children.length > 0);
-  const toggleGroup = (key: string) => setCollapsedGroups((prev) => {
-    const next = new Set(prev);
+  const toggleGroup = (key: string) => {
+    const next = new Set(collapsedGroups);
     if (next.has(key)) next.delete(key); else next.add(key);
-    return next;
-  });
+    persistCollapsedGroups(next);
+  };
   const expandAllGroups = () => {
-    setCollapsedGroups(new Set());
+    persistCollapsedGroups(new Set());
     if (sections) persistCollapsedSections(new Set());
   };
   const collapseAllGroups = () => {
-    setCollapsedGroups(new Set(allGroups.map(g => g.key)));
+    persistCollapsedGroups(new Set(allGroups.map(g => g.key)));
     if (sections) persistCollapsedSections(new Set(sections.map(s => s.key)));
   };
 
@@ -310,6 +346,7 @@ export function EntityRail({ title, items, activeId, onSelect, onNew, onEdit, se
     const draggable = !!onReorderItems && !opts?.noDrag && (!!opts?.groupKey || !opts?.indent);
     const canDropHere = dragKind === 'row' && dragKey && dragKey !== item.id && dragGroup === opts?.groupKey;
     const pinned = rowContextMenu?.isPinned?.(item.id) ?? false;
+    const rowLabel = rowContextMenu?.rowLabel ?? '任务';
     const row = (
       <div
         className={`group/row relative ${dropKey === item.id ? 'border-t-2 border-cherry-primary/60' : ''}`}
@@ -363,7 +400,7 @@ export function EntityRail({ title, items, activeId, onSelect, onNew, onEdit, se
         <div className="absolute right-1 top-1/2 -translate-y-1/2 flex items-center gap-0.5 opacity-0 group-hover/row:opacity-100 has-[[data-state=open]]:opacity-100 transition-opacity">
           {rowContextMenu ? (
             <>
-              <SimpleTooltip content={pinned ? '取消置顶任务' : '置顶任务'} side="top" delayDuration={300}>
+              <SimpleTooltip content={pinned ? `取消置顶${rowLabel}` : `置顶${rowLabel}`} side="top" delayDuration={300}>
                 <button
                   type="button"
                   onClick={(e) => { e.stopPropagation(); rowContextMenu.onTogglePin(item.id); }}
@@ -373,7 +410,7 @@ export function EntityRail({ title, items, activeId, onSelect, onNew, onEdit, se
                 </button>
               </SimpleTooltip>
               {rowContextMenu.onArchive && (
-                <SimpleTooltip content="归档任务" side="top" delayDuration={300}>
+                <SimpleTooltip content={`归档${rowLabel}`} side="top" delayDuration={300}>
                   <button
                     type="button"
                     onClick={(e) => { e.stopPropagation(); rowContextMenu.onArchive!(item.id); }}
@@ -413,18 +450,23 @@ export function EntityRail({ title, items, activeId, onSelect, onNew, onEdit, se
         <ContextMenuTrigger asChild>{row}</ContextMenuTrigger>
         <ContextMenuContent className={`w-40 ${RAIL_MENU_CONTENT}`}>
           <ContextMenuItem className={RAIL_MENU_ITEM} onClick={() => rowContextMenu.onRename(item.id)}>重命名</ContextMenuItem>
-          <ContextMenuItem className={RAIL_MENU_ITEM} onClick={() => rowContextMenu.onTogglePin(item.id)}>{pinned ? '取消置顶' : '置顶任务'}</ContextMenuItem>
+          <ContextMenuItem className={RAIL_MENU_ITEM} onClick={() => rowContextMenu.onTogglePin(item.id)}>{pinned ? '取消置顶' : `置顶${rowLabel}`}</ContextMenuItem>
           {rowContextMenu.onArchive && (
-            <ContextMenuItem className={RAIL_MENU_ITEM} onClick={() => rowContextMenu.onArchive!(item.id)}>归档任务</ContextMenuItem>
+            <ContextMenuItem className={RAIL_MENU_ITEM} onClick={() => rowContextMenu.onArchive!(item.id)}>{`归档${rowLabel}`}</ContextMenuItem>
           )}
           <ContextMenuItem className={RAIL_MENU_ITEM} onClick={() => rowContextMenu.onOpenInNewTab(item.id)}>在新标签页打开</ContextMenuItem>
           <ContextMenuItem className={RAIL_MENU_ITEM} onClick={() => rowContextMenu.onOpenInNewWindow(item.id)}>从新窗口打开</ContextMenuItem>
           {rowContextMenu.position && (
             <ContextMenuSub>
-              <ContextMenuSubTrigger className={RAIL_MENU_ITEM}>会话位置</ContextMenuSubTrigger>
-              <ContextMenuSubContent className={`w-24 ${RAIL_MENU_CONTENT}`}>
-                <ContextMenuItem className={RAIL_MENU_ITEM} disabled={pos === 'left'} onClick={() => rowContextMenu.position!.set(item.id, 'left')}>左侧</ContextMenuItem>
-                <ContextMenuItem className={RAIL_MENU_ITEM} disabled={pos === 'right'} onClick={() => rowContextMenu.position!.set(item.id, 'right')}>右侧</ContextMenuItem>
+              <ContextMenuSubTrigger className={RAIL_MENU_ITEM}>{rowContextMenu.positionLabel ?? '任务列表位置'}</ContextMenuSubTrigger>
+              {/* 当前值用左列打钩表示（与筛选菜单一致），不置灰——置灰读作"不可用"。 */}
+              <ContextMenuSubContent className={`w-28 ${RAIL_MENU_CONTENT}`}>
+                {(['left', 'right'] as const).map((side) => (
+                  <ContextMenuItem key={side} className={`gap-0 ${RAIL_MENU_ITEM}`} onClick={() => rowContextMenu.position!.set(item.id, side)}>
+                    <span className="w-6 flex-shrink-0 flex items-center">{pos === side && <Check size={13} className="text-foreground" />}</span>
+                    {side === 'left' ? '左侧' : '右侧'}
+                  </ContextMenuItem>
+                ))}
               </ContextMenuSubContent>
             </ContextMenuSub>
           )}
@@ -538,10 +580,13 @@ export function EntityRail({ title, items, activeId, onSelect, onNew, onEdit, se
                     </>
                   ) : groupHoverMenu.expert ? (
                     <>
-                      <DropdownMenuItem className={RAIL_MENU_ITEM} onClick={() => groupHoverMenu.expert!.onEdit(g.key)}>编辑专家</DropdownMenuItem>
-                      <DropdownMenuItem className={RAIL_MENU_ITEM} onClick={() => groupHoverMenu.expert!.onPinTop(g.key)}>置顶专家</DropdownMenuItem>
+                      <DropdownMenuItem className={RAIL_MENU_ITEM} onClick={() => groupHoverMenu.expert!.onEdit(g.key)}>{`编辑${groupHoverMenu.expert.label ?? '专家'}`}</DropdownMenuItem>
+                      <DropdownMenuItem className={RAIL_MENU_ITEM} onClick={() => groupHoverMenu.expert!.onPinTop(g.key)}>{`置顶${groupHoverMenu.expert.label ?? '专家'}`}</DropdownMenuItem>
+                      {groupHoverMenu.expert.onClearTopics && (
+                        <DropdownMenuItem className={RAIL_MENU_ITEM} onClick={() => groupHoverMenu.expert!.onClearTopics!(g.key)}>清空话题</DropdownMenuItem>
+                      )}
                       <DropdownMenuSub>
-                        <DropdownMenuSubTrigger className={RAIL_MENU_ITEM}>专家图标</DropdownMenuSubTrigger>
+                        <DropdownMenuSubTrigger className={RAIL_MENU_ITEM}>{`${groupHoverMenu.expert.label ?? '专家'}图标`}</DropdownMenuSubTrigger>
                         <DropdownMenuSubContent className={`w-32 ${RAIL_MENU_CONTENT}`} sideOffset={4}>
                           {([['emoji', 'Emoji 表情'], ['model', '模型图标'], ['none', '不显示']] as const).map(([mode, label]) => (
                             <DropdownMenuItem
@@ -557,8 +602,13 @@ export function EntityRail({ title, items, activeId, onSelect, onNew, onEdit, se
                           ))}
                         </DropdownMenuSubContent>
                       </DropdownMenuSub>
+                      {groupHoverMenu.expert.tagGrouping && (
+                        <DropdownMenuItem className={RAIL_MENU_ITEM} onClick={() => groupHoverMenu.expert!.tagGrouping!.onToggle()}>
+                          {groupHoverMenu.expert.tagGrouping.enabled ? '关闭标签分组' : '开启标签分组'}
+                        </DropdownMenuItem>
+                      )}
                       <DropdownMenuSeparator />
-                      <DropdownMenuItem className={RAIL_MENU_ITEM} variant="destructive" onClick={() => groupHoverMenu.expert!.onDelete(g.key)}>删除专家</DropdownMenuItem>
+                      <DropdownMenuItem className={RAIL_MENU_ITEM} variant="destructive" onClick={() => groupHoverMenu.expert!.onDelete(g.key)}>{`删除${groupHoverMenu.expert.label ?? '专家'}`}</DropdownMenuItem>
                     </>
                   ) : null}
                 </DropdownMenuContent>
@@ -772,16 +822,24 @@ export function EntityRail({ title, items, activeId, onSelect, onNew, onEdit, se
                   <DropdownMenuContent align="end" sideOffset={4} className={`w-48 ${RAIL_MENU_CONTENT}`}>
                     {railMenu.displayModes && subMenu('展示方式', railMenu.displayModes)}
                     {railMenu.sortModes && subMenu('排序方式', railMenu.sortModes)}
+                    {railMenu.taskPosition && subMenu(railMenu.taskPosition.label ?? '任务列表位置', railMenu.taskPosition)}
                     {railMenu.expandCollapse && (() => {
-                      // 单按钮切换：只要还有展开的分组就提供「全部收起」，
-                      // 全收起后变为「全部展开」。
-                      const anyExpanded = (treeGroups ?? []).some(g => g.children.length > 0 && !collapsedGroups.has(g.key));
+                      // 只有当前视图存在分组（专家组/文件夹组）才提供此项——
+                      // 平铺视图（话题列表/任务列表）直接不出现。
+                      const hasGroupContent = sections
+                        ? sections.some(s => (s.groups?.length ?? 0) > 0)
+                        : (treeGroups ?? []).some(g => g.children.length > 0);
+                      if (!hasGroupContent) return null;
+                      // 单按钮切换：只要还有展开的段或分组就提供「全部收起」，
+                      // 全收起后变为「全部展开」。分段模式下段和组都要算。
+                      const anyExpanded = sections
+                        ? (sections.some(s => !collapsedSections.has(s.key)) || allGroups.some(g => g.children.length > 0 && !collapsedGroups.has(g.key)))
+                        : (treeGroups ?? []).some(g => g.children.length > 0 && !collapsedGroups.has(g.key));
                       return (
                         <>
                           <DropdownMenuSeparator />
                           <DropdownMenuItem
                             className={RAIL_MENU_ITEM}
-                            disabled={!hasFoldableGroups}
                             onClick={anyExpanded ? collapseAllGroups : expandAllGroups}
                           >
                             {anyExpanded ? '全部收起' : '全部展开'}

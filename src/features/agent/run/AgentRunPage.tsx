@@ -35,7 +35,7 @@ import { SessionHistoryPage, type SessionDisplayMode } from './SessionHistoryPag
 import { ScheduledTasksPage } from './ScheduledTasksPage';
 import { TaskBoardPage } from './TaskBoardPage';
 import { HistorySidebar } from '@/app/components/shared/HistorySidebar';
-import { EntityRail, type EntityRailItem, type EntityRailTreeGroup, type EntityRailSection } from '@/app/components/shared/EntityNav';
+import { EntityRail, NewSessionIcon, PanelRightInsetIcon, type EntityRailItem, type EntityRailTreeGroup, type EntityRailSection } from '@/app/components/shared/EntityNav';
 import { HistoryManagePage } from './HistoryManagePage';
 import { CreateAgentWizard } from '@/app/components/shared/CreateAgentWizard';
 import { GroupChatPane } from './GroupChatPane';
@@ -101,17 +101,6 @@ function CompactInputBar({ onSendMessage, agentName, headerControls, onNewSessio
 // New Session Empty State
 // ===========================
 
-// 圆角矩形 + 靠右短竖线的「侧栏预览」图标（lucide 无现成款）
-const PanelRightInsetIcon = ({ size = 15, className }: { size?: number; className?: string }) => (
-  <svg
-    width={size} height={size} viewBox="0 0 24 24" fill="none"
-    stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round"
-    className={className}
-  >
-    <rect x="3" y="3.5" width="18" height="17" rx="4.5" />
-    <line x1="15.5" y1="8.5" x2="15.5" y2="15.5" />
-  </svg>
-);
 
 // ===========================
 // CodeX-style Input (shared between empty state and maximized)
@@ -268,7 +257,7 @@ function CodexStyleInput({ onSendMessage, autoFocus = false, placeholder, header
             {/* 新建会话 — 最左侧 */}
             {onNewSession && (
               <Button variant="ghost" size="icon-sm" onClick={onNewSession} title="新建会话" className="p-[5px] w-auto h-auto text-muted-foreground/80 hover:text-foreground hover:bg-accent/50">
-                <MessageSquarePlus size={16} strokeWidth={1.5} />
+                <NewSessionIcon size={16} />
               </Button>
             )}
 
@@ -1123,6 +1112,19 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
   // below read naturally.
   const [dockTab, setDockTab] = useState<'sessions' | 'files' | 'status' | null>(null);
   const showPreview = dockTab === 'files';
+  // 任务列表位置（左/右）— 布局级全局开关，不是单个任务的属性：任务列表
+  // 要么挂在左栏（专家树下 + 置顶段），要么整体搬进右侧「任务」面板。
+  // 选右侧时左栏不再重复展示任务（置顶段一并隐藏），右上角出现任务入口。
+  const [taskListPosition, setTaskListPositionState] = useState<'left' | 'right'>(() => {
+    try { return localStorage.getItem('cherry-agent-task-list-position') === 'right' ? 'right' : 'left'; } catch { return 'left'; }
+  });
+  const setTaskListPosition = useCallback((pos: 'left' | 'right') => {
+    setTaskListPositionState(pos);
+    try { localStorage.setItem('cherry-agent-task-list-position', pos); } catch { /* 忽略 */ }
+    // 切到右侧立即展开右栏任务面板（让用户看到列表去了哪）；切回左侧时收起。
+    if (pos === 'right') setDockTab('sessions');
+    else setDockTab(prev => (prev === 'sessions' ? null : prev));
+  }, []);
   const [dockWidth, setDockWidth] = useState(560);
   // The pinned 会话 popover uses a narrower default so it reads as a popover
   // (浮窗), not a flush full-width dock; sessions/artifacts/status each keep
@@ -1406,6 +1408,14 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
       }];
     }
     if (railDisplay === 'experts') {
+      // 任务列表在右侧时，左栏只当"专家目录"：不再重复展示专家下的任务，
+      // 置顶段（属于任务列表的一部分）也一并隐藏。
+      if (taskListPosition === 'right') {
+        return [{
+          key: 'experts', label: '专家',
+          groups: expertTreeGroups.map(g => ({ ...g, children: [] })),
+        }];
+      }
       return [pinnedSection, {
         key: 'experts', label: '专家', groups: expertTreeGroups,
         dot: sectionDotOf(unpinnedSessions),
@@ -1419,7 +1429,7 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
       key: 'projects', label: '项目', groups: workdirTreeGroups,
       dot: sectionDotOf(unpinnedSessions.filter(s => !looseIds.has(s.id))),
     }];
-  }, [railDisplay, pinnedRailItems, topicRailItems, expertTreeGroups, workdirTreeGroups, looseTaskItems, orderedSessions, unpinnedSessions]);
+  }, [railDisplay, taskListPosition, pinnedRailItems, topicRailItems, expertTreeGroups, workdirTreeGroups, looseTaskItems, orderedSessions, unpinnedSessions]);
 
   // Sessions belong to the selected agent — switching agents changes the list.
   const agentSessions = useMemo(
@@ -1616,15 +1626,15 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
     setSessions(prev => prev.map(s => s.id === id ? { ...s, ...updates } : s));
   }, []);
 
-  // ===== 任务行右键菜单（重命名/置顶/新标签页/新窗口/会话位置/删除） =====
+  // ===== 任务行右键菜单（重命名/置顶/新标签页/新窗口/任务列表位置/删除） =====
   const [renameTarget, setRenameTarget] = useState<AgentSession | null>(null);
   const [renameValue, setRenameValue] = useState('');
-  // 会话位置（左/右）— 仅专家列表视图的右键菜单提供入口，按会话记忆。
-  const [sessionPositions, setSessionPositions] = useState<Record<string, 'left' | 'right'>>({});
+  // 任务列表位置的读写句柄（右键菜单 & 筛选菜单共用；id 参数保留以兼容
+  // EntityRail 的行级接口，实际是全局开关）。
   const sessionPositionApi = useMemo(() => ({
-    get: (id: string): 'left' | 'right' => sessionPositions[id] ?? 'left',
-    set: (id: string, pos: 'left' | 'right') => setSessionPositions(prev => ({ ...prev, [id]: pos })),
-  }), [sessionPositions]);
+    get: (_id: string): 'left' | 'right' => taskListPosition,
+    set: (_id: string, pos: 'left' | 'right') => setTaskListPosition(pos),
+  }), [taskListPosition, setTaskListPosition]);
   const taskContextMenu = useMemo(() => ({
     onRename: (id: string) => {
       const s = sessions.find(x => x.id === id);
@@ -1775,7 +1785,7 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
   const dockTabs = (
     <div className="flex items-center gap-0.5">
       {([
-        { id: 'sessions', label: '会话', Icon: History },
+        { id: 'sessions', label: taskListPosition === 'right' ? '任务' : '会话', Icon: History },
         { id: 'status', label: '状态', Icon: ListChecks },
         { id: 'files', label: '文件', Icon: FileText },
       ] as const).map(({ id, label, Icon }) => {
@@ -1811,7 +1821,7 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
       onNewItem={() => handleNewSessionForAgent(selectedAgent.name)}
       onExpand={() => { historySidebar.expand(); setDockTab(null); }}
       onClose={() => setDockTab(null)}
-      entityLabel="会话"
+      entityLabel={taskListPosition === 'right' ? '任务' : '会话'}
       showStatusDot
       hideGroupBy
       plainList
@@ -1833,7 +1843,7 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
         {onBack && (
           <Button variant="ghost" size="icon-xs" onClick={onBack}
             className="p-1.5 w-auto h-auto text-muted-foreground hover:text-foreground hover:bg-accent/50">
-            <ArrowLeft className="size-[18px]" strokeWidth={1.6} />
+            <ArrowLeft className="size-4" strokeWidth={1.6} />
           </Button>
         )}
 
@@ -1841,28 +1851,32 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
         <Tooltip content={historySidebar.isCompact ? '收起 Agent 列表' : '展开 Agent 列表'} side="bottom">
           <Button variant="ghost" size="icon-xs" onClick={() => historySidebar.toggle()}
             className={`p-1.5 w-auto h-auto mr-0.5 ${historySidebar.isCompact ? 'text-muted-foreground hover:text-foreground hover:bg-accent/40' : 'text-muted-foreground/40 hover:text-foreground hover:bg-accent/40'}`}>
-            {historySidebar.isCompact ? <PanelLeftClose className="size-[18px]" strokeWidth={1.6} /> : <PanelLeftOpen className="size-[18px]" strokeWidth={1.6} />}
+            {historySidebar.isCompact ? <PanelLeftClose className="size-4" strokeWidth={1.6} /> : <PanelLeftOpen className="size-4" strokeWidth={1.6} />}
           </Button>
         </Tooltip>
 
       </div>
 
       <div className="flex items-center gap-0.5">
-        {/* Sessions for the selected agent — opens the right dock to the 会话
-            view (the dock's own top-right switcher handles 会话/状态/文件). */}
-        <Tooltip content="会话" side="bottom">
-          <Button
-            variant="ghost"
-            size="icon-xs"
-            onClick={() => setDockTab(dockTab === 'sessions' ? null : 'sessions')}
-            className={`p-1.5 w-auto h-auto ${
-              dockTab === 'sessions' ? 'bg-accent/25 text-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-accent/40'
-            }`}
-          >
-            <History className="size-[18px]" strokeWidth={1.6} />
-          </Button>
-        </Tooltip>
-        <div className="w-px h-3.5 bg-border/30 mx-0.5" />
+        {/* 任务列表入口 — 仅当任务列表位置=右侧时出现（入口跟着内容走：
+            列表在左栏时右上角不需要重复入口）。点击展开右侧「任务」面板。 */}
+        {taskListPosition === 'right' && (
+          <>
+            <Tooltip content="任务" side="bottom">
+              <Button
+                variant="ghost"
+                size="icon-xs"
+                onClick={() => setDockTab(dockTab === 'sessions' ? null : 'sessions')}
+                className={`p-1.5 w-auto h-auto ${
+                  dockTab === 'sessions' ? 'bg-accent/25 text-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-accent/40'
+                }`}
+              >
+                <History className="size-4" strokeWidth={1.6} />
+              </Button>
+            </Tooltip>
+            <div className="w-px h-3.5 bg-border/30 mx-0.5" />
+          </>
+        )}
 
         {/* "保存为 Skill" is no longer a chrome button — the in-chat
             SaveAsSkillCallout (rendered above the composer) drives
@@ -1882,7 +1896,7 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
             <PopoverTrigger asChild>
               <Button variant="ghost" size="icon-xs"
                 className={`relative p-1.5 w-auto h-auto ${showPlan ? 'text-foreground bg-accent/25' : 'text-muted-foreground hover:text-foreground hover:bg-accent/40'}`}>
-                <ListChecks className="size-[18px]" strokeWidth={1.6} />
+                <ListChecks className="size-4" strokeWidth={1.6} />
                 {sessionData.steps.some(s => s.status === 'running') && (
                   <span className="absolute top-[2px] right-[2px] w-[5px] h-[5px] rounded-full bg-warning animate-pulse" />
                 )}
@@ -1906,16 +1920,20 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
         )}
 
         {/* Preview panel toggle — 常驻在内容区头部最右缘（Claude 式）。面板展开时
-            按钮留在原位（此时紧贴面板左侧），再点即收起，不会消失或移进面板。 */}
+            按钮留在原位（此时紧贴面板左侧），再点即收起，不会消失或移进面板。
+            分隔线只在中间真的有内容（计划/Skill chip）时渲染，否则会话按钮后的
+            那条已经足够，避免两条分隔线连排把间距撑大。 */}
         <div className="flex items-center gap-0.5">
-          <div className="w-px h-3.5 bg-border/30 mx-0.5" />
+          {(activeSkillJob || sessionData.steps.length > 0) && (
+            <div className="w-px h-3.5 bg-border/30 mx-0.5" />
+          )}
           <Tooltip content={showPreview ? '收起预览面板' : '显示预览面板'} side="bottom"><Button variant="ghost" size="icon-xs"
             onClick={() => {
               if (showPreview) { setDockTab(null); setPreviewMaximized(false); }
               else { setDockTab('files'); setShowExplorer(true); }
             }}
             className={`p-1.5 w-auto h-auto ${showPreview ? 'text-foreground bg-accent/25' : 'text-muted-foreground hover:text-foreground hover:bg-accent/40'}`}>
-            <PanelRightInsetIcon size={18} className="size-[18px]" />
+            <PanelRightInsetIcon size={16} className="size-4" />
           </Button></Tooltip>
         </div>
       </div>
@@ -2021,6 +2039,16 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
                   value: railSort,
                   onChange: (id) => setRailSort(id as 'created' | 'updated' | 'manual'),
                 },
+                ...(railDisplay === 'experts' ? {
+                  taskPosition: {
+                    options: [
+                      { id: 'left', label: '左侧' },
+                      { id: 'right', label: '右侧' },
+                    ],
+                    value: taskListPosition,
+                    onChange: (id: string) => setTaskListPosition(id as 'left' | 'right'),
+                  },
+                } : {}),
                 expandCollapse: true,
                 actions: [
                   { id: 'history', label: '历史任务', onClick: openHistoryManage },
@@ -2050,7 +2078,7 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
               }}
               rowContextMenu={{
                 ...taskContextMenu,
-                // 「会话位置」子菜单只在专家列表视图出现。
+                // 「任务列表位置」子菜单只在专家列表视图出现。
                 position: railDisplay === 'experts' ? sessionPositionApi : undefined,
               }}
               groupHoverMenu={{
@@ -2207,10 +2235,11 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
         {dockTab !== null && !isMaximized && (() => {
           // The 会话 list and the 文件 folder-list are compact, fixed-width rails;
           // only the 状态 panel and the file *preview* keep the wide, resizable width.
+          // 任务列表与左栏同宽（220），让中间对话区尽量大。
           const isSessions = dockTab === 'sessions';
           const isFolderList = dockTab === 'files' && showExplorer;
           const isNarrowRail = isSessions || isFolderList;
-          const effectiveWidth = isNarrowRail ? 260 : dockWidth;
+          const effectiveWidth = isSessions ? 220 : isFolderList ? 260 : dockWidth;
           return (
           <motion.div
             initial={{ width: 0, opacity: 0 }}
