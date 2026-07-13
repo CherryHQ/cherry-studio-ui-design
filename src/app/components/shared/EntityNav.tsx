@@ -192,7 +192,7 @@ export function EntityRail({ title, items, activeId, onSelect, onNew, onEdit, se
         <button
           type="button"
           onClick={() => onSelect(item.id)}
-          className={`w-full min-w-0 flex items-center gap-2 py-[6px] pr-9 rounded-md text-left transition-colors ${opts?.indent ? 'pl-7' : 'pl-2.5'} ${
+          className={`w-full min-w-0 flex items-center gap-2 py-[6px] pr-9 rounded-md text-left transition-colors ${opts?.indent ? 'pl-10' : 'pl-2.5'} ${
             active ? 'bg-accent/40 text-foreground' : 'text-foreground/80 hover:bg-accent/40'
           }`}
         >
@@ -470,7 +470,7 @@ export function EntityRail({ title, items, activeId, onSelect, onNew, onEdit, se
                         <ChevronDown size={11} className={`transition-transform ${isCollapsed ? '-rotate-90' : ''}`} />
                       </button>
                     ) : (
-                      <span className="w-[19px] flex-shrink-0" />
+                      <span className="w-[17px] flex-shrink-0" />
                     )}
                     <button
                       type="button"
@@ -483,7 +483,7 @@ export function EntityRail({ title, items, activeId, onSelect, onNew, onEdit, se
                       ) : g.avatar ? (
                         <span className="text-base leading-none flex-shrink-0">{g.avatar}</span>
                       ) : null}
-                      <span className={`text-sm truncate flex-1 min-w-0 ${headerActive ? 'font-medium text-foreground' : g.variant === 'folder' ? 'text-muted-foreground' : 'text-foreground/85'}`}>{g.name}</span>
+                      <span className={`text-sm truncate flex-1 min-w-0 ${headerActive ? 'font-medium text-foreground' : g.variant === 'folder' ? 'text-foreground/70' : 'text-foreground/85'}`}>{g.name}</span>
                       {g.unread ? (
                         <span className="min-w-[14px] h-[14px] px-1 rounded-full bg-primary/12 text-primary/80 text-[9px] leading-[14px] text-center font-medium tabular-nums flex-shrink-0">{g.unread}</span>
                       ) : foldable ? (
