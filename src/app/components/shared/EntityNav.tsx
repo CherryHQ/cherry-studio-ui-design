@@ -33,8 +33,24 @@ export interface EntityRailItem {
   count?: number;
   /** Unread badge count (IM-style). Bumps the row's text to full opacity. */
   unread?: number;
+  /** 未读小蓝点（任务行，Codex 式）— 与 unread 数字二选一。 */
+  unreadDot?: boolean;
   /** 置顶任务 — 行首显示一枚小图钉。 */
   pinned?: boolean;
+}
+
+/** Codex 式分段：置顶 / 任务 / 项目（或专家）。段头可折叠、可拖拽重排。 */
+export interface EntityRailSection {
+  key: string;
+  label: string;
+  /** 段内是否有未读 — 段折叠时段头右侧亮蓝点。 */
+  unread?: boolean;
+  /** 平铺任务行（置顶段、任务段）。 */
+  items?: EntityRailItem[];
+  /** 树形分组（专家段、项目段）。 */
+  groups?: EntityRailTreeGroup[];
+  /** false = 段内行不可拖（置顶段）。默认可拖。 */
+  rowsDraggable?: boolean;
 }
 
 export interface EntityRailProps {
@@ -74,6 +90,11 @@ export interface EntityRailProps {
     active?: boolean;
     onClick: () => void;
   }[];
+  /** Codex 式三段结构（置顶/任务/项目…）。提供时优先于 items/treeGroups
+   * 渲染；空段自动隐藏。段折叠态与顺序按 persistKey 持久化。 */
+  sections?: EntityRailSection[];
+  /** localStorage 持久化键（段顺序 / 段折叠态）。 */
+  persistKey?: string;
   /** Tree view (专家 → 话题 / 工作目录 → 话题): entity headers with nested,
    * collapsible child rows. Overrides `items` rendering when provided. */
   treeGroups?: EntityRailTreeGroup[];
@@ -124,7 +145,7 @@ export interface EntityRailTreeGroup {
   children: EntityRailItem[];
 }
 
-export function EntityRail({ title, items, activeId, onSelect, onNew, onEdit, searchable = true, filterable = true, newLabel, newAsRow, newActions, navEntries, treeGroups, onGroupSelect, activeGroupKey, onReorderGroups, onReorderItems, rowContextMenu, railMenu }: EntityRailProps) {
+export function EntityRail({ title, items, activeId, onSelect, onNew, onEdit, searchable = true, filterable = true, newLabel, newAsRow, newActions, navEntries, sections, persistKey, treeGroups, onGroupSelect, activeGroupKey, onReorderGroups, onReorderItems, rowContextMenu, railMenu }: EntityRailProps) {
   const [query, setQuery] = useState('');
   const [groupByTag, setGroupByTag] = useState(false);
   const [sort, setSort] = useState<'default' | 'time' | 'name'>('default');
@@ -135,10 +156,45 @@ export function EntityRail({ title, items, activeId, onSelect, onNew, onEdit, se
   // (a top border on the current drop target). kind 区分拖的是组头还是行，
   // group 记录被拖行所属的组（树形子行只允许同组内重排）。
   const [dragKey, setDragKey] = useState<string | null>(null);
-  const [dragKind, setDragKind] = useState<'group' | 'row' | null>(null);
+  const [dragKind, setDragKind] = useState<'section' | 'group' | 'row' | null>(null);
   const [dragGroup, setDragGroup] = useState<string | undefined>(undefined);
   const [dropKey, setDropKey] = useState<string | null>(null);
   const clearDrag = () => { setDragKey(null); setDragKind(null); setDragGroup(undefined); setDropKey(null); };
+
+  // ===== Codex 式分段：折叠态与段顺序（按 persistKey 持久化） =====
+  const sectionStore = (suffix: string) => `cherry-rail-${persistKey}-${suffix}`;
+  const [collapsedSections, setCollapsedSections] = useState<Set<string>>(() => {
+    if (!persistKey) return new Set();
+    try { return new Set<string>(JSON.parse(localStorage.getItem(sectionStore('folded')) || '[]')); } catch { return new Set(); }
+  });
+  const persistCollapsedSections = (next: Set<string>) => {
+    setCollapsedSections(next);
+    if (persistKey) try { localStorage.setItem(sectionStore('folded'), JSON.stringify(Array.from(next))); } catch { /* 忽略 */ }
+  };
+  const toggleSection = (key: string) => {
+    const next = new Set(collapsedSections);
+    if (next.has(key)) next.delete(key); else next.add(key);
+    persistCollapsedSections(next);
+  };
+  const [sectionOrder, setSectionOrder] = useState<string[]>(() => {
+    if (!persistKey) return [];
+    try { return JSON.parse(localStorage.getItem(sectionStore('order')) || '[]'); } catch { return []; }
+  });
+  const persistSectionOrder = (keys: string[]) => {
+    setSectionOrder(keys);
+    if (persistKey) try { localStorage.setItem(sectionStore('order'), JSON.stringify(keys)); } catch { /* 忽略 */ }
+  };
+  // 空段自动隐藏；按持久化顺序排列（未登记的段保持传入顺序排在其后）。
+  const orderedSections = useMemo(() => {
+    if (!sections) return null;
+    const visible = sections.filter(s => (s.items?.length ?? 0) > 0 || (s.groups?.length ?? 0) > 0);
+    if (sectionOrder.length === 0) return visible;
+    const pos = new Map(sectionOrder.map((k, i) => [k, i]));
+    return visible
+      .map((s, i) => [s, pos.has(s.key) ? (pos.get(s.key) as number) : sectionOrder.length + i] as const)
+      .sort((a, b) => a[1] - b[1])
+      .map(([s]) => s);
+  }, [sections, sectionOrder]);
 
   const hasTags = useMemo(() => items.some((i) => i.tags && i.tags.length > 0), [items]);
 
@@ -164,14 +220,24 @@ export function EntityRail({ title, items, activeId, onSelect, onNew, onEdit, se
     return Array.from(map.entries());
   }, [filtered, groupByTag]);
 
-  const hasFoldableGroups = !!treeGroups && treeGroups.some(g => g.children.length > 0);
+  const allGroups = useMemo<EntityRailTreeGroup[]>(
+    () => sections ? sections.flatMap(s => s.groups ?? []) : (treeGroups ?? []),
+    [sections, treeGroups],
+  );
+  const hasFoldableGroups = !!sections || allGroups.some(g => g.children.length > 0);
   const toggleGroup = (key: string) => setCollapsedGroups((prev) => {
     const next = new Set(prev);
     if (next.has(key)) next.delete(key); else next.add(key);
     return next;
   });
-  const expandAllGroups = () => setCollapsedGroups(new Set());
-  const collapseAllGroups = () => setCollapsedGroups(new Set((treeGroups ?? []).map(g => g.key)));
+  const expandAllGroups = () => {
+    setCollapsedGroups(new Set());
+    if (sections) persistCollapsedSections(new Set());
+  };
+  const collapseAllGroups = () => {
+    setCollapsedGroups(new Set(allGroups.map(g => g.key)));
+    if (sections) persistCollapsedSections(new Set(sections.map(s => s.key)));
+  };
 
   // Reorder helper: move `from` right before `to` in the given key order.
   const reorder = (keys: string[], from: string, to: string) => {
@@ -183,7 +249,7 @@ export function EntityRail({ title, items, activeId, onSelect, onNew, onEdit, se
 
   const menuActive = sort !== 'default' || groupByTag;
 
-  const renderRow = (item: EntityRailItem, opts?: { indent?: boolean; groupKey?: string; noDrag?: boolean }) => {
+  const renderRow = (item: EntityRailItem, opts?: { indent?: boolean; groupKey?: string; noDrag?: boolean; scopeIds?: string[] }) => {
     const active = item.id === activeId;
     // 平铺行可拖；树形子行也可拖，但只允许在同一组内落下。置顶条不可拖。
     const draggable = !!onReorderItems && !opts?.noDrag && (!!opts?.groupKey || !opts?.indent);
@@ -197,10 +263,10 @@ export function EntityRail({ title, items, activeId, onSelect, onNew, onEdit, se
         onDragLeave={draggable ? () => setDropKey(k => (k === item.id ? null : k)) : undefined}
         onDrop={draggable ? () => {
           if (canDropHere) {
-            // 树形模式下重排的是全量话题的扁平顺序（同组内移动不打散分组）。
-            const ids = treeGroups
-              ? treeGroups.flatMap(g => g.children.map(c => c.id))
-              : filtered.map(i => i.id);
+            // 重排作用域：段/树形传入的扁平 id 列表（同组内移动不打散分组），
+            // 否则用平铺列表。
+            const ids = opts?.scopeIds
+              ?? (treeGroups ? treeGroups.flatMap(g => g.children.map(c => c.id)) : filtered.map(i => i.id));
             onReorderItems!(reorder(ids, dragKey!, item.id));
           }
           clearDrag();
@@ -210,7 +276,7 @@ export function EntityRail({ title, items, activeId, onSelect, onNew, onEdit, se
         <button
           type="button"
           onClick={() => onSelect(item.id)}
-          className={`w-full min-w-0 flex items-center gap-2 py-[6px] pr-9 rounded-md text-left transition-colors ${opts?.indent ? 'pl-10' : 'pl-2.5'} ${
+          className={`w-full min-w-0 flex items-center gap-2 py-[6px] pr-9 rounded-md text-left transition-colors ${opts?.indent ? 'pl-8' : 'pl-2.5'} ${
             active ? 'bg-accent/40 text-foreground' : 'text-foreground/80 hover:bg-accent/40'
           }`}
         >
@@ -222,6 +288,8 @@ export function EntityRail({ title, items, activeId, onSelect, onNew, onEdit, se
               so it informs without shouting. */}
           {item.unread ? (
             <span className="min-w-[14px] h-[14px] px-1 rounded-full bg-primary/12 text-primary/80 text-[9px] leading-[14px] text-center font-medium tabular-nums flex-shrink-0 group-hover/row:opacity-0 transition-opacity">{item.unread}</span>
+          ) : item.unreadDot ? (
+            <span className="w-1.5 h-1.5 rounded-full bg-cherry-primary flex-shrink-0 group-hover/row:opacity-0 transition-opacity" />
           ) : null}
         </button>
         {/* Hover actions, inside the pill: "…" overflow */}
@@ -270,6 +338,100 @@ export function EntityRail({ title, items, activeId, onSelect, onNew, onEdit, se
           <ContextMenuItem className={RAIL_MENU_ITEM} variant="destructive" onClick={() => rowContextMenu.onDelete(item.id)}>删除</ContextMenuItem>
         </ContextMenuContent>
       </ContextMenu>
+    );
+  };
+
+  // 树形分组（专家/项目文件夹）— 段模式与旧 treeGroups 模式共用。
+  // scopeGroups 决定组头拖拽与子行重排的作用范围（同段/同视图内）。
+  const renderTreeGroup = (g: EntityRailTreeGroup, scopeGroups: EntityRailTreeGroup[]) => {
+    const isCollapsed = collapsedGroups.has(g.key);
+    const headerActive = g.key === activeGroupKey;
+    const groupDraggable = !!onReorderGroups;
+    const canDropGroup = dragKind === 'group' && dragKey && dragKey !== g.key;
+    const foldable = g.children.length > 0;
+    const scopeIds = scopeGroups.flatMap(t => t.children.map(c => c.id));
+    return (
+      <div key={g.key} className="mb-px">
+        {/* 只有组头可拖（重排专家顺序）——子行有自己的同组内拖拽。 */}
+        <div
+          className={`flex items-center rounded-md transition-colors ${headerActive ? 'bg-accent/40' : 'hover:bg-accent/40'} ${dropKey === g.key ? 'border-t-2 border-cherry-primary/60' : ''}`}
+          draggable={groupDraggable}
+          onDragStart={groupDraggable ? () => { setDragKey(g.key); setDragKind('group'); setDragGroup(undefined); } : undefined}
+          onDragOver={groupDraggable ? (e) => { if (canDropGroup) { e.preventDefault(); setDropKey(g.key); } } : undefined}
+          onDragLeave={groupDraggable ? () => setDropKey(k => (k === g.key ? null : k)) : undefined}
+          onDrop={groupDraggable ? () => {
+            if (canDropGroup) onReorderGroups!(reorder(scopeGroups.map(t => t.key), dragKey!, g.key));
+            clearDrag();
+          } : undefined}
+          onDragEnd={groupDraggable ? clearDrag : undefined}
+        >
+          <button
+            type="button"
+            onClick={() => { if (g.selectable !== false && onGroupSelect) onGroupSelect(g.key); else if (foldable) toggleGroup(g.key); }}
+            className="flex-1 min-w-0 flex items-center gap-2 py-[6px] pl-2.5 pr-1 text-left"
+            title={g.title}
+          >
+            {g.variant === 'folder' ? (
+              <FolderOpen size={14} strokeWidth={1.75} className="flex-shrink-0 text-muted-foreground/60" />
+            ) : g.avatar ? (
+              <span className="text-base leading-none flex-shrink-0">{g.avatar}</span>
+            ) : null}
+            <span className={`text-sm truncate flex-1 min-w-0 ${headerActive ? 'font-medium text-foreground' : g.variant === 'folder' ? 'text-foreground/70' : 'text-foreground/85'}`}>{g.name}</span>
+            {g.unread ? (
+              <span className="min-w-[14px] h-[14px] px-1 rounded-full bg-primary/12 text-primary/80 text-[9px] leading-[14px] text-center font-medium tabular-nums flex-shrink-0">{g.unread}</span>
+            ) : foldable && g.variant !== 'folder' ? (
+              <span className="text-xs text-muted-foreground/35 tabular-nums flex-shrink-0">{g.children.length}</span>
+            ) : null}
+          </button>
+          {foldable && (
+            <button
+              type="button"
+              onClick={() => toggleGroup(g.key)}
+              className="mr-1 p-[3px] flex-shrink-0 rounded border border-border/60 text-muted-foreground/45 hover:text-foreground hover:bg-accent/60 transition-colors"
+            >
+              <ChevronDown size={10} className={`transition-transform ${isCollapsed ? '-rotate-90' : ''}`} />
+            </button>
+          )}
+        </div>
+        {foldable && !isCollapsed && (
+          <div className="space-y-px">{g.children.map((c) => renderRow(c, { indent: true, groupKey: g.key, scopeIds }))}</div>
+        )}
+      </div>
+    );
+  };
+
+  // Codex 式段头：muted 标签 + 折叠箭头；可拖拽重排段顺序；折叠且段内
+  // 有未读时右侧亮蓝点。
+  const renderSection = (sec: EntityRailSection) => {
+    const collapsed = collapsedSections.has(sec.key);
+    const canDropSection = dragKind === 'section' && dragKey && dragKey !== sec.key;
+    const scopeIds = (sec.items ?? []).map(i => i.id);
+    return (
+      <div key={sec.key} className="mb-1.5">
+        <div
+          className={`group/sec flex items-center gap-1 pl-2.5 pr-2 py-1 rounded-md cursor-pointer hover:bg-accent/30 transition-colors ${dropKey === sec.key ? 'border-t-2 border-cherry-primary/60' : ''}`}
+          draggable
+          onClick={() => toggleSection(sec.key)}
+          onDragStart={() => { setDragKey(sec.key); setDragKind('section'); setDragGroup(undefined); }}
+          onDragOver={(e) => { if (canDropSection) { e.preventDefault(); setDropKey(sec.key); } }}
+          onDragLeave={() => setDropKey(k => (k === sec.key ? null : k))}
+          onDrop={() => {
+            if (canDropSection && orderedSections) persistSectionOrder(reorder(orderedSections.map(s => s.key), dragKey!, sec.key));
+            clearDrag();
+          }}
+          onDragEnd={clearDrag}
+        >
+          <span className="text-xs text-muted-foreground/60">{sec.label}</span>
+          <ChevronDown size={10} className={`flex-shrink-0 text-muted-foreground/40 transition-transform ${collapsed ? '-rotate-90' : ''}`} />
+          {collapsed && sec.unread && <span className="ml-auto w-1.5 h-1.5 rounded-full bg-cherry-primary flex-shrink-0" />}
+        </div>
+        {!collapsed && (
+          <div className="space-y-px">
+            {sec.items?.map(i => renderRow(i, sec.rowsDraggable === false ? { noDrag: true } : { scopeIds }))}
+            {sec.groups?.map(g => renderTreeGroup(g, sec.groups!))}
+          </div>
+        )}
+      </div>
     );
   };
 
@@ -476,71 +638,23 @@ export function EntityRail({ title, items, activeId, onSelect, onNew, onEdit, se
             })}
           </div>
         )}
-        {treeGroups ? (
+        {orderedSections ? (
+          orderedSections.length === 0 ? (
+            <div className="px-3 py-6 text-center text-sm text-muted-foreground/40">暂无内容</div>
+          ) : (
+            orderedSections.map(renderSection)
+          )
+        ) : treeGroups ? (
           <>
             {/* 置顶任务悬浮在所有分组之上（IM 惯例），带所属实体图标保留上下文。 */}
             {filtered.length > 0 && (
               <div className="space-y-px mb-0.5">{filtered.map((i) => renderRow(i, { noDrag: true }))}</div>
             )}
             {treeGroups.length === 0 && filtered.length === 0 ? (
-            <div className="px-3 py-6 text-center text-sm text-muted-foreground/40">暂无内容</div>
-          ) : (
-            treeGroups.map((g) => {
-              const isCollapsed = collapsedGroups.has(g.key);
-              const headerActive = g.key === activeGroupKey;
-              const groupDraggable = !!onReorderGroups;
-              const canDropGroup = dragKind === 'group' && dragKey && dragKey !== g.key;
-              const foldable = g.children.length > 0;
-              return (
-                <div key={g.key} className="mb-px">
-                  {/* 只有组头可拖（重排专家顺序）——子行有自己的同组内拖拽。 */}
-                  <div
-                    className={`flex items-center rounded-md transition-colors ${headerActive ? 'bg-accent/40' : 'hover:bg-accent/40'} ${dropKey === g.key ? 'border-t-2 border-cherry-primary/60' : ''}`}
-                    draggable={groupDraggable}
-                    onDragStart={groupDraggable ? () => { setDragKey(g.key); setDragKind('group'); setDragGroup(undefined); } : undefined}
-                    onDragOver={groupDraggable ? (e) => { if (canDropGroup) { e.preventDefault(); setDropKey(g.key); } } : undefined}
-                    onDragLeave={groupDraggable ? () => setDropKey(k => (k === g.key ? null : k)) : undefined}
-                    onDrop={groupDraggable ? () => {
-                      if (canDropGroup) onReorderGroups!(reorder(treeGroups.map(t => t.key), dragKey!, g.key));
-                      clearDrag();
-                    } : undefined}
-                    onDragEnd={groupDraggable ? clearDrag : undefined}
-                  >
-                    <button
-                      type="button"
-                      onClick={() => { if (g.selectable !== false && onGroupSelect) onGroupSelect(g.key); else if (foldable) toggleGroup(g.key); }}
-                      className="flex-1 min-w-0 flex items-center gap-2 py-[6px] pl-2 pr-1 text-left"
-                      title={g.title}
-                    >
-                      {g.variant === 'folder' ? (
-                        <FolderOpen size={14} strokeWidth={1.75} className="flex-shrink-0 text-muted-foreground/60" />
-                      ) : g.avatar ? (
-                        <span className="text-base leading-none flex-shrink-0">{g.avatar}</span>
-                      ) : null}
-                      <span className={`text-sm truncate flex-1 min-w-0 ${headerActive ? 'font-medium text-foreground' : g.variant === 'folder' ? 'text-foreground/70' : 'text-foreground/85'}`}>{g.name}</span>
-                      {g.unread ? (
-                        <span className="min-w-[14px] h-[14px] px-1 rounded-full bg-primary/12 text-primary/80 text-[9px] leading-[14px] text-center font-medium tabular-nums flex-shrink-0">{g.unread}</span>
-                      ) : foldable && g.variant !== 'folder' ? (
-                        <span className="text-xs text-muted-foreground/35 tabular-nums flex-shrink-0">{g.children.length}</span>
-                      ) : null}
-                    </button>
-                    {foldable && (
-                      <button
-                        type="button"
-                        onClick={() => toggleGroup(g.key)}
-                        className="mr-1 p-[3px] flex-shrink-0 rounded border border-border/60 text-muted-foreground/45 hover:text-foreground hover:bg-accent/60 transition-colors"
-                      >
-                        <ChevronDown size={10} className={`transition-transform ${isCollapsed ? '-rotate-90' : ''}`} />
-                      </button>
-                    )}
-                  </div>
-                  {foldable && !isCollapsed && (
-                    <div className="space-y-px">{g.children.map((c) => renderRow(c, { indent: true, groupKey: g.key }))}</div>
-                  )}
-                </div>
-              );
-            })
-          )}
+              <div className="px-3 py-6 text-center text-sm text-muted-foreground/40">暂无内容</div>
+            ) : (
+              treeGroups.map((g) => renderTreeGroup(g, treeGroups))
+            )}
           </>
         ) : filtered.length === 0 ? (
           <div className="px-3 py-6 text-center text-sm text-muted-foreground/40">无匹配结果</div>

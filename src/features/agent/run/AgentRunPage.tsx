@@ -35,7 +35,7 @@ import { SessionHistoryPage, type SessionDisplayMode } from './SessionHistoryPag
 import { ScheduledTasksPage } from './ScheduledTasksPage';
 import { TaskBoardPage } from './TaskBoardPage';
 import { HistorySidebar } from '@/app/components/shared/HistorySidebar';
-import { EntityRail, type EntityRailItem, type EntityRailTreeGroup } from '@/app/components/shared/EntityNav';
+import { EntityRail, type EntityRailItem, type EntityRailTreeGroup, type EntityRailSection } from '@/app/components/shared/EntityNav';
 import { HistoryManagePage } from './HistoryManagePage';
 import { CreateAgentWizard } from '@/app/components/shared/CreateAgentWizard';
 import { GroupChatPane } from './GroupChatPane';
@@ -1292,22 +1292,22 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
     return [...base.filter(s => s.pinned), ...base.filter(s => !s.pinned)];
   }, [sessions, railSort, topicOrder, applyOrder]);
 
-  // 话题平铺视图的行（带所属专家图标）。
-  const topicRailItems = useMemo<EntityRailItem[]>(() => orderedSessions.map(s => ({
+  const unpinnedSessions = useMemo(() => orderedSessions.filter(s => !s.pinned), [orderedSessions]);
+  // 任务列表视图「任务」段的行（带所属专家图标；置顶的在置顶段，不重复）。
+  const topicRailItems = useMemo<EntityRailItem[]>(() => unpinnedSessions.map(s => ({
     id: s.id, name: s.title,
     avatar: s.agentIcon ?? AVAILABLE_AGENTS.find(a => a.name === s.agentName)?.avatar ?? '💬',
     updatedAt: s.timestamp,
-    pinned: s.pinned,
-  })), [orderedSessions]);
-  const sessionToChildRow = (s: AgentSession): EntityRailItem => ({ id: s.id, name: s.title, avatar: '' });
-  // 树形视图（专家/工作目录）下，置顶任务抽出来悬浮在所有分组之上（IM
-  // 惯例），带所属专家图标保留上下文；分组内不再重复出现。
+    unreadDot: s.unread,
+  })), [unpinnedSessions]);
+  const sessionToChildRow = (s: AgentSession): EntityRailItem => ({ id: s.id, name: s.title, avatar: '', unreadDot: s.unread });
+  // 「置顶」段：三种视图共用，带所属专家图标保留上下文；段内不可拖。
   const pinnedRailItems = useMemo<EntityRailItem[]>(() => orderedSessions.filter(s => s.pinned).map(s => ({
     id: s.id, name: s.title,
     avatar: s.agentIcon ?? AVAILABLE_AGENTS.find(a => a.name === s.agentName)?.avatar ?? '💬',
     pinned: true,
+    unreadDot: s.unread,
   })), [orderedSessions]);
-  const unpinnedSessions = useMemo(() => orderedSessions.filter(s => !s.pinned), [orderedSessions]);
   // 专家树形视图：专家组头 + 其话题子行；WORK_PLUS 下群聊作为无子级的组头
   // 混入（未读的置顶）。
   const expertTreeGroups = useMemo<EntityRailTreeGroup[]>(() => {
@@ -1323,22 +1323,55 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
     const restGroups = groupHeaders.filter(g => !((g.unread ?? 0) > 0));
     return [...unreadGroups, ...agentGroups, ...restGroups];
   }, [orderedAgents, unpinnedSessions]);
-  // 工作目录树形视图：组名只取末级文件夹名（完整路径进 tooltip）。
+  // 工作目录视图「项目」段：每个 workDir 一个文件夹组（组名只取末级文件夹
+  // 名，完整路径进 tooltip）；无工作目录的散任务归入「任务」段。
   const workdirTreeGroups = useMemo<EntityRailTreeGroup[]>(() => {
     const map = new Map<string, AgentSession[]>();
     unpinnedSessions.forEach(s => {
-      const dir = AVAILABLE_AGENTS.find(a => a.name === s.agentName)?.workDir ?? '';
+      const dir = AVAILABLE_AGENTS.find(a => a.name === s.agentName)?.workDir;
+      if (!dir) return;
       map.set(dir, [...(map.get(dir) ?? []), s]);
     });
     return Array.from(map.entries()).map(([dir, list]) => ({
-      key: dir || '__no-workdir__',
-      name: dir ? (dir.split('/').filter(Boolean).pop() ?? dir) : '未设置工作目录',
-      title: dir || undefined,
+      key: dir,
+      name: dir.split('/').filter(Boolean).pop() ?? dir,
+      title: dir,
       selectable: false,
       variant: 'folder' as const,
       children: list.map(sessionToChildRow),
     }));
   }, [unpinnedSessions]);
+  const looseTaskItems = useMemo<EntityRailItem[]>(() => unpinnedSessions
+    .filter(s => !AVAILABLE_AGENTS.find(a => a.name === s.agentName)?.workDir)
+    .map(s => ({ id: s.id, name: s.title, avatar: '', unreadDot: s.unread })), [unpinnedSessions]);
+
+  // ===== Codex 式三段结构：置顶 / 任务 / 专家 | 项目（按视图组合） =====
+  const railSections = useMemo<EntityRailSection[]>(() => {
+    const pinnedSection: EntityRailSection = {
+      key: 'pinned', label: '置顶', items: pinnedRailItems, rowsDraggable: false,
+      unread: orderedSessions.some(s => s.pinned && s.unread),
+    };
+    if (railDisplay === 'topics') {
+      return [pinnedSection, {
+        key: 'tasks', label: '任务', items: topicRailItems,
+        unread: unpinnedSessions.some(s => s.unread),
+      }];
+    }
+    if (railDisplay === 'experts') {
+      return [pinnedSection, {
+        key: 'experts', label: '专家', groups: expertTreeGroups,
+        unread: unpinnedSessions.some(s => s.unread),
+      }];
+    }
+    const looseIds = new Set(looseTaskItems.map(i => i.id));
+    return [pinnedSection, {
+      key: 'tasks', label: '任务', items: looseTaskItems,
+      unread: unpinnedSessions.some(s => looseIds.has(s.id) && s.unread),
+    }, {
+      key: 'projects', label: '项目', groups: workdirTreeGroups,
+      unread: unpinnedSessions.some(s => !looseIds.has(s.id) && s.unread),
+    }];
+  }, [railDisplay, pinnedRailItems, topicRailItems, expertTreeGroups, workdirTreeGroups, looseTaskItems, orderedSessions, unpinnedSessions]);
 
   // Sessions belong to the selected agent — switching agents changes the list.
   const agentSessions = useMemo(
@@ -1943,9 +1976,8 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
                   { id: 'history', label: '历史任务', onClick: openHistoryManage },
                 ],
               }}
-              treeGroups={railDisplay === 'experts' ? expertTreeGroups
-                : railDisplay === 'workdir' ? workdirTreeGroups
-                : undefined}
+              sections={railSections}
+              persistKey="agent-work"
               activeGroupKey={railDisplay === 'experts' && !showScheduledTasks && !showTaskBoard && !showHistoryManage
                 ? (selectedGroupId ?? selectedAgent.id)
                 : null}
@@ -1986,7 +2018,7 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
                 active: showScheduledTasks,
                 onClick: () => openScheduledTasks(null),
               }] : undefined}
-              items={railDisplay === 'topics' ? topicRailItems : pinnedRailItems}
+              items={[]}
               activeId={showScheduledTasks || showTaskBoard || showHistoryManage ? null : activeSessionId}
               onSelect={(id) => {
                 // 所有行都是话题（session）— 树形子行与平铺行一致，直接打开。
