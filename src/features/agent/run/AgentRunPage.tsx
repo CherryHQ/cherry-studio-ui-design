@@ -39,6 +39,7 @@ import { EntityRail, type EntityRailItem } from '@/app/components/shared/EntityN
 import { CreateAgentWizard } from '@/app/components/shared/CreateAgentWizard';
 import { GroupChatPane } from './GroupChatPane';
 import { MOCK_GROUPS } from '@/features/collaboration/data';
+import { WORK_PLUS } from '@/app/config/featureFlags';
 import { NewGroupDialog } from '@/features/collaboration/components/NewGroupDialog';
 import { RecycleBinConfirmDialog } from '@/app/components/shared/RecycleBinConfirmDialog';
 import { ResourceConfigDialog } from '@/app/components/shared/ResourceConfigDialog';
@@ -1220,6 +1221,7 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
     const agentItems: EntityRailItem[] = AVAILABLE_AGENTS.map(a => ({
       id: a.id, name: a.name, avatar: a.avatar, tags: a.tags, updatedAt: a.updatedAt,
     }));
+    if (!WORK_PLUS) return agentItems;
     const groupItems: EntityRailItem[] = MOCK_GROUPS.map(g => ({
       id: g.id, name: g.name, avatar: g.avatarEmoji ?? '💬',
       unread: g.unread,
@@ -1784,9 +1786,9 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
               newAsRow
               newActions={[
                 { id: 'agent', label: '创建 Agent', icon: Bot, onClick: () => setShowCreateAgent(true) },
-                { id: 'group', label: '创建项目组', icon: Users2, onClick: () => setNewGroupOpen(true) },
+                ...(WORK_PLUS ? [{ id: 'group', label: '创建项目组', icon: Users2, onClick: () => setNewGroupOpen(true) }] : []),
               ]}
-              navEntries={[{
+              navEntries={WORK_PLUS ? [{
                 id: 'task-board',
                 label: '任务管理',
                 icon: ListChecks,
@@ -1800,7 +1802,7 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
                 count: MOCK_SCHEDULED_TASKS.length,
                 active: showScheduledTasks,
                 onClick: () => openScheduledTasks(null),
-              }]}
+              }] : undefined}
               items={agentRailItems}
               activeId={showScheduledTasks || showTaskBoard ? null : (selectedGroupId ?? selectedAgent.id)}
               onSelect={(id) => {

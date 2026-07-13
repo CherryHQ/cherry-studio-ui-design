@@ -31,6 +31,7 @@ import { ChannelsPage } from './ChannelsPage';
 import { TeammatesPage } from './TeammatesPage';
 import { ScheduledTasksPage } from './ScheduledTasksPage';
 import { DependenciesPage } from './DependenciesPage';
+import { WORK_PLUS } from '@/app/config/featureFlags';
 import { InlineSelect, SectionCard } from './shared';
 import { Tooltip } from '@/app/components/Tooltip';
 import { Button, Dialog, DialogContent, Typography, Switch, Card, CardContent, ToggleGroup, ToggleGroupItem } from '@cherry-studio/ui';
@@ -105,9 +106,9 @@ const NAV_GROUPS: NavGroup[] = [
   {
     label: '效率',
     items: [
-      { id: 'teammates', label: '队友', icon: Users },
+      ...(WORK_PLUS ? [{ id: 'teammates', label: '队友', icon: Users }] : []),
       { id: 'channels', label: '频道', icon: Radio },
-      { id: 'scheduled-tasks', label: '定时任务', icon: CalendarClock },
+      ...(WORK_PLUS ? [{ id: 'scheduled-tasks', label: '定时任务', icon: CalendarClock }] : []),
       { id: 'selection-assistant', label: '划词助手', icon: MousePointer },
       { id: 'shortcuts', label: '快捷键', icon: Command },
       { id: 'quick-assistant', label: '快捷助手', icon: Sparkles },
