@@ -1926,7 +1926,7 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
                 }
               }}
               onReorderGroups={railSort === 'manual' && railDisplay === 'experts' ? setAgentOrder : undefined}
-              onReorderItems={railSort === 'manual' && railDisplay === 'topics' ? setTopicOrder : undefined}
+              onReorderItems={railSort === 'manual' ? setTopicOrder : undefined}
               navEntries={WORK_PLUS ? [{
                 id: 'task-board',
                 label: '任务管理',
