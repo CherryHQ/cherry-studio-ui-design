@@ -1299,13 +1299,21 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
     updatedAt: s.timestamp,
     pinned: s.pinned,
   })), [orderedSessions]);
-  const sessionToChildRow = (s: AgentSession): EntityRailItem => ({ id: s.id, name: s.title, avatar: '', pinned: s.pinned });
+  const sessionToChildRow = (s: AgentSession): EntityRailItem => ({ id: s.id, name: s.title, avatar: '' });
+  // 树形视图（专家/工作目录）下，置顶任务抽出来悬浮在所有分组之上（IM
+  // 惯例），带所属专家图标保留上下文；分组内不再重复出现。
+  const pinnedRailItems = useMemo<EntityRailItem[]>(() => orderedSessions.filter(s => s.pinned).map(s => ({
+    id: s.id, name: s.title,
+    avatar: s.agentIcon ?? AVAILABLE_AGENTS.find(a => a.name === s.agentName)?.avatar ?? '💬',
+    pinned: true,
+  })), [orderedSessions]);
+  const unpinnedSessions = useMemo(() => orderedSessions.filter(s => !s.pinned), [orderedSessions]);
   // 专家树形视图：专家组头 + 其话题子行；WORK_PLUS 下群聊作为无子级的组头
   // 混入（未读的置顶）。
   const expertTreeGroups = useMemo<EntityRailTreeGroup[]>(() => {
     const agentGroups: EntityRailTreeGroup[] = orderedAgents.map(a => ({
       key: a.id, name: a.name, avatar: a.avatar,
-      children: orderedSessions.filter(s => s.agentName === a.name).map(sessionToChildRow),
+      children: unpinnedSessions.filter(s => s.agentName === a.name).map(sessionToChildRow),
     }));
     if (!WORK_PLUS) return agentGroups;
     const groupHeaders: EntityRailTreeGroup[] = MOCK_GROUPS.map(g => ({
@@ -1314,11 +1322,11 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
     const unreadGroups = groupHeaders.filter(g => (g.unread ?? 0) > 0);
     const restGroups = groupHeaders.filter(g => !((g.unread ?? 0) > 0));
     return [...unreadGroups, ...agentGroups, ...restGroups];
-  }, [orderedAgents, orderedSessions]);
+  }, [orderedAgents, unpinnedSessions]);
   // 工作目录树形视图：组名只取末级文件夹名（完整路径进 tooltip）。
   const workdirTreeGroups = useMemo<EntityRailTreeGroup[]>(() => {
     const map = new Map<string, AgentSession[]>();
-    orderedSessions.forEach(s => {
+    unpinnedSessions.forEach(s => {
       const dir = AVAILABLE_AGENTS.find(a => a.name === s.agentName)?.workDir ?? '';
       map.set(dir, [...(map.get(dir) ?? []), s]);
     });
@@ -1330,7 +1338,7 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
       variant: 'folder' as const,
       children: list.map(sessionToChildRow),
     }));
-  }, [orderedSessions]);
+  }, [unpinnedSessions]);
 
   // Sessions belong to the selected agent — switching agents changes the list.
   const agentSessions = useMemo(
@@ -1978,7 +1986,7 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
                 active: showScheduledTasks,
                 onClick: () => openScheduledTasks(null),
               }] : undefined}
-              items={railDisplay === 'topics' ? topicRailItems : []}
+              items={railDisplay === 'topics' ? topicRailItems : pinnedRailItems}
               activeId={showScheduledTasks || showTaskBoard || showHistoryManage ? null : activeSessionId}
               onSelect={(id) => {
                 // 所有行都是话题（session）— 树形子行与平铺行一致，直接打开。
