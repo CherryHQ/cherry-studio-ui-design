@@ -226,7 +226,7 @@ export interface EntityRailProps {
     taskPosition?: { label?: string; options: { id: string; label: string }[]; value: string; onChange: (id: string) => void };
     /** Show 全部展开 / 全部收起 rows — enabled only when the current view has
      * collapsible groups (treeGroups); greyed out otherwise. */
-    /** 展开/收起全部分组。传实体名（'任务'/'话题'）时文案为「展开任务/收起任务」；
+    /** 展开/收起全部分组。传实体名（'任务'/'话题'）时文案为「展开任务列表/收起任务列表」；
      * true 用默认「全部展开/收起」。列表位置在右侧时应传 false（左栏无行可展开）。 */
     expandCollapse?: boolean | string;
     actions?: { id: string; label: string; onClick: () => void }[];
@@ -1018,7 +1018,7 @@ export function EntityRail({ title, items, activeId, onSelect, onNew, onEdit, se
                             onClick={anyExpanded ? collapseAllGroups : expandAllGroups}
                           >
                             {entity
-                              ? (anyExpanded ? `收起${entity}` : `展开${entity}`)
+                              ? (anyExpanded ? `收起${entity}列表` : `展开${entity}列表`)
                               : (anyExpanded ? '全部收起' : '全部展开')}
                           </DropdownMenuItem>
                         </>
@@ -1038,7 +1038,11 @@ export function EntityRail({ title, items, activeId, onSelect, onNew, onEdit, se
             })()}
           </div>
         )}
-        {/* 拉起的搜索框 — 贴在「新建」行下方；Esc 收起并清空。 */}
+        {/* 拉起的搜索框 — 贴在「新建」行下方；Esc 收起并清空。
+            默认 SearchInput 的 accent/15 底在左栏近白底色上几乎隐形，
+            这里改用 Input 组件的设计 token：实底 input-background + 全
+            透明度 input 描边，聚焦时描边升为 ring 色。字号与列表正文
+            对齐（13px），占位符/图标加深一档保证可读。 */}
         {newAsRow && searchOpen && (
           <div className="px-1 pb-1 mb-0.5">
             <SearchInput
@@ -1046,6 +1050,9 @@ export function EntityRail({ title, items, activeId, onSelect, onNew, onEdit, se
               onChange={setQuery}
               placeholder="搜索..."
               autoFocus
+              iconSize={13}
+              wrapperClassName="px-2.5 py-[6px] rounded-lg bg-input-background border-input shadow-xs focus-within:border-ring transition-colors [&>svg]:text-muted-foreground"
+              className="text-[13px] placeholder:text-muted-foreground"
               onKeyDown={(e) => { if (e.key === 'Escape') { setQuery(''); setSearchOpen(false); } }}
             />
           </div>
