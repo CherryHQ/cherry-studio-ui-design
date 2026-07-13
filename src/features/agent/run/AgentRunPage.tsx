@@ -102,14 +102,14 @@ function CompactInputBar({ onSendMessage, agentName, headerControls, onNewSessio
 // ===========================
 
 // 圆角矩形 + 靠右短竖线的「侧栏预览」图标（lucide 无现成款）
-const PanelRightInsetIcon = ({ size = 12, className }: { size?: number; className?: string }) => (
+const PanelRightInsetIcon = ({ size = 15, className }: { size?: number; className?: string }) => (
   <svg
     width={size} height={size} viewBox="0 0 24 24" fill="none"
-    stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"
+    stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round"
     className={className}
   >
-    <rect x="3" y="4.5" width="18" height="15" rx="4" />
-    <line x1="15.5" y1="9.5" x2="15.5" y2="14.5" />
+    <rect x="3" y="3.5" width="18" height="17" rx="4.5" />
+    <line x1="15.5" y1="8.5" x2="15.5" y2="15.5" />
   </svg>
 );
 
@@ -1811,7 +1811,7 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
         {onBack && (
           <Button variant="ghost" size="icon-xs" onClick={onBack}
             className="p-1.5 w-auto h-auto text-muted-foreground hover:text-foreground hover:bg-accent/50">
-            <ArrowLeft size={13} />
+            <ArrowLeft size={15} strokeWidth={1.6} />
           </Button>
         )}
 
@@ -1819,7 +1819,7 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
         <Tooltip content={historySidebar.isCompact ? '收起 Agent 列表' : '展开 Agent 列表'} side="bottom">
           <Button variant="ghost" size="icon-xs" onClick={() => historySidebar.toggle()}
             className={`p-1.5 w-auto h-auto mr-0.5 ${historySidebar.isCompact ? 'text-muted-foreground hover:text-foreground hover:bg-accent/40' : 'text-muted-foreground/40 hover:text-foreground hover:bg-accent/40'}`}>
-            {historySidebar.isCompact ? <PanelLeftClose size={13} /> : <PanelLeftOpen size={13} />}
+            {historySidebar.isCompact ? <PanelLeftClose size={15} strokeWidth={1.6} /> : <PanelLeftOpen size={15} strokeWidth={1.6} />}
           </Button>
         </Tooltip>
 
@@ -1837,7 +1837,7 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
               dockTab === 'sessions' ? 'bg-accent/25 text-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-accent/40'
             }`}
           >
-            <History size={13} strokeWidth={1.6} />
+            <History size={15} strokeWidth={1.6} />
             <span>会话</span>
             <span className="tabular-nums text-muted-foreground/50">{agentSessions.filter(s => !s.archived).length}</span>
           </Button>
@@ -1862,7 +1862,7 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
             <PopoverTrigger asChild>
               <Button variant="ghost" size="icon-xs"
                 className={`relative p-1.5 w-auto h-auto ${showPlan ? 'text-foreground bg-accent/25' : 'text-muted-foreground hover:text-foreground hover:bg-accent/40'}`}>
-                <ListChecks size={13} />
+                <ListChecks size={15} strokeWidth={1.6} />
                 {sessionData.steps.some(s => s.status === 'running') && (
                   <span className="absolute top-[2px] right-[2px] w-[5px] h-[5px] rounded-full bg-warning animate-pulse" />
                 )}
@@ -1891,7 +1891,7 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
             <div className="w-px h-3.5 bg-border/30 mx-0.5" />
             <Tooltip content={"显示预览面板"} side="bottom"><Button variant="ghost" size="icon-xs" onClick={() => { setDockTab('files'); setShowExplorer(true); }}
               className="p-1.5 w-auto h-auto text-muted-foreground hover:text-foreground hover:bg-accent/40">
-              <PanelRightInsetIcon size={13} />
+              <PanelRightInsetIcon size={15} />
             </Button></Tooltip>
           </div>
         )}
