@@ -214,8 +214,8 @@ export function EntityRail({ title, items, activeId, onSelect, onNew, onEdit, se
             active ? 'bg-accent/40 text-foreground' : 'text-foreground/80 hover:bg-accent/40'
           }`}
         >
-          {item.avatar ? <span className="text-base leading-none flex-shrink-0">{item.avatar}</span> : null}
           {item.pinned && <Pin size={9} className="-rotate-45 text-muted-foreground/50 flex-shrink-0" />}
+          {item.avatar ? <span className="text-base leading-none flex-shrink-0">{item.avatar}</span> : null}
           <span className={`text-sm truncate flex-1 min-w-0 ${active ? 'font-medium' : (item.unread ? 'text-foreground' : '')}`}>{item.name}</span>
           {/* Trailing slot: a small, low-key unread (message) count. Kept
               subtle on purpose — a soft pill rather than a bold filled badge —
@@ -506,21 +506,10 @@ export function EntityRail({ title, items, activeId, onSelect, onNew, onEdit, se
                     } : undefined}
                     onDragEnd={groupDraggable ? clearDrag : undefined}
                   >
-                    {foldable ? (
-                      <button
-                        type="button"
-                        onClick={() => toggleGroup(g.key)}
-                        className="pl-1 pr-0.5 py-[7px] flex-shrink-0 text-muted-foreground/40 hover:text-foreground transition-colors"
-                      >
-                        <ChevronDown size={11} className={`transition-transform ${isCollapsed ? '-rotate-90' : ''}`} />
-                      </button>
-                    ) : (
-                      <span className="w-[17px] flex-shrink-0" />
-                    )}
                     <button
                       type="button"
                       onClick={() => { if (g.selectable !== false && onGroupSelect) onGroupSelect(g.key); else if (foldable) toggleGroup(g.key); }}
-                      className="flex-1 min-w-0 flex items-center gap-2 py-[6px] pr-2 text-left"
+                      className="flex-1 min-w-0 flex items-center gap-2 py-[6px] pl-2 pr-1 text-left"
                       title={g.title}
                     >
                       {g.variant === 'folder' ? (
@@ -535,6 +524,15 @@ export function EntityRail({ title, items, activeId, onSelect, onNew, onEdit, se
                         <span className="text-xs text-muted-foreground/35 tabular-nums flex-shrink-0">{g.children.length}</span>
                       ) : null}
                     </button>
+                    {foldable && (
+                      <button
+                        type="button"
+                        onClick={() => toggleGroup(g.key)}
+                        className="mr-1 p-[3px] flex-shrink-0 rounded border border-border/60 text-muted-foreground/45 hover:text-foreground hover:bg-accent/60 transition-colors"
+                      >
+                        <ChevronDown size={10} className={`transition-transform ${isCollapsed ? '-rotate-90' : ''}`} />
+                      </button>
+                    )}
                   </div>
                   {foldable && !isCollapsed && (
                     <div className="space-y-px">{g.children.map((c) => renderRow(c, { indent: true, groupKey: g.key }))}</div>
