@@ -1285,9 +1285,11 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
     [agentOrder, applyOrder],
   );
   const orderedSessions = useMemo(() => {
+    // 归档的任务不进左栏（历史任务页仍可见）。
+    const visible = sessions.filter(s => !s.archived);
     const base = railSort === 'manual'
-      ? applyOrder(sessions, topicOrder)
-      : sessions; // 创建/更新时间：mock 时间戳为人读文案，保持默认序（已按最近排列）
+      ? applyOrder(visible, topicOrder)
+      : visible; // 创建/更新时间：mock 时间戳为人读文案，保持默认序（已按最近排列）
     // 置顶任务冒泡到最前（树形视图下即各自分组内的最前），相对顺序不变。
     return [...base.filter(s => s.pinned), ...base.filter(s => !s.pinned)];
   }, [sessions, railSort, topicOrder, applyOrder]);
@@ -1346,7 +1348,7 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
   // ===== Codex 式三段结构：置顶 / 任务 / 专家 | 项目（按视图组合） =====
   const railSections = useMemo<EntityRailSection[]>(() => {
     const pinnedSection: EntityRailSection = {
-      key: 'pinned', label: '置顶', items: pinnedRailItems, rowsDraggable: false,
+      key: 'pinned', label: '置顶', items: pinnedRailItems, rowsDraggable: false, limitRows: false,
       unread: orderedSessions.some(s => s.pinned && s.unread),
     };
     if (railDisplay === 'topics') {
@@ -1585,6 +1587,7 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
       const s = sessions.find(x => x.id === id);
       if (s) handleUpdateSession(id, { pinned: !s.pinned });
     },
+    onArchive: (id: string) => handleUpdateSession(id, { archived: true }),
     // 原型行为：新标签页 = 应用内再开一个「工作」tab；新窗口 = 浏览器新窗口。
     onOpenInNewTab: (_id: string) => launchpadOpen('agent'),
     onOpenInNewWindow: (_id: string) => { window.open(window.location.href, '_blank', 'width=1280,height=800'); },

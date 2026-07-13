@@ -51,6 +51,8 @@ export interface AgentSession {
    *  surfaced as the 待确认 column on the task board. */
   status: 'active' | 'completed' | 'error' | 'paused' | 'awaiting';
   pinned?: boolean;
+  /** 归档后从左栏隐藏（历史任务页仍可见）。 */
+  archived?: boolean;
   unread?: boolean;
   tags?: string[];
   group?: string;
