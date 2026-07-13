@@ -20,7 +20,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Tooltip } from '@/app/components/Tooltip';
-import { Button, Switch, Textarea, EmptyState, Popover, PopoverTrigger, PopoverContent, SearchInput, Typography, BrandLogo, Separator, ScrollArea, DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuSub, DropdownMenuSubTrigger, DropdownMenuSubContent } from '@cherry-studio/ui';
+import { Button, Switch, Textarea, EmptyState, Popover, PopoverTrigger, PopoverContent, SearchInput, Typography, BrandLogo, Separator, ScrollArea, DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuSub, DropdownMenuSubTrigger, DropdownMenuSubContent, Dialog, DialogContent, Input } from '@cherry-studio/ui';
 import { ModelPickerPanel } from '@/app/components/shared/ModelPickerPanel';
 import { FileExplorer } from './FileExplorer';
 import { ArtifactViewer } from './ArtifactViewer';
@@ -1095,7 +1095,7 @@ function AgentInfoPanel({ agent, onClose, onEdit }: {
 // ===========================
 
 export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
-  const { navigateToLibrary: _navLib, editAssistantInLibrary, changeTabTitle: onTabTitleChange, openSettings: onOpenSettings } = useGlobalActions();
+  const { navigateToLibrary: _navLib, editAssistantInLibrary, changeTabTitle: onTabTitleChange, openSettings: onOpenSettings, launchpadOpen } = useGlobalActions();
   const onNavigateToLibrary = () => _navLib('agent');
   const [sessions, setSessions] = useState<AgentSession[]>(MOCK_SESSIONS);
   const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
@@ -1285,8 +1285,11 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
     [agentOrder, applyOrder],
   );
   const orderedSessions = useMemo(() => {
-    if (railSort === 'manual') return applyOrder(sessions, topicOrder);
-    return sessions; // 创建/更新时间：mock 时间戳为人读文案，保持默认序（已按最近排列）
+    const base = railSort === 'manual'
+      ? applyOrder(sessions, topicOrder)
+      : sessions; // 创建/更新时间：mock 时间戳为人读文案，保持默认序（已按最近排列）
+    // 置顶任务冒泡到最前（树形视图下即各自分组内的最前），相对顺序不变。
+    return [...base.filter(s => s.pinned), ...base.filter(s => !s.pinned)];
   }, [sessions, railSort, topicOrder, applyOrder]);
 
   // 话题平铺视图的行（带所属专家图标）。
@@ -1294,8 +1297,9 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
     id: s.id, name: s.title,
     avatar: s.agentIcon ?? AVAILABLE_AGENTS.find(a => a.name === s.agentName)?.avatar ?? '💬',
     updatedAt: s.timestamp,
+    pinned: s.pinned,
   })), [orderedSessions]);
-  const sessionToChildRow = (s: AgentSession): EntityRailItem => ({ id: s.id, name: s.title, avatar: '' });
+  const sessionToChildRow = (s: AgentSession): EntityRailItem => ({ id: s.id, name: s.title, avatar: '', pinned: s.pinned });
   // 专家树形视图：专家组头 + 其话题子行；WORK_PLUS 下群聊作为无子级的组头
   // 混入（未读的置顶）。
   const expertTreeGroups = useMemo<EntityRailTreeGroup[]>(() => {
@@ -1522,6 +1526,31 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
   const handleUpdateSession = useCallback((id: string, updates: Partial<AgentSession>) => {
     setSessions(prev => prev.map(s => s.id === id ? { ...s, ...updates } : s));
   }, []);
+
+  // ===== 任务行右键菜单（重命名/置顶/新标签页/新窗口/会话位置/删除） =====
+  const [renameTarget, setRenameTarget] = useState<AgentSession | null>(null);
+  const [renameValue, setRenameValue] = useState('');
+  // 会话位置（左/右）— 仅专家列表视图的右键菜单提供入口，按会话记忆。
+  const [sessionPositions, setSessionPositions] = useState<Record<string, 'left' | 'right'>>({});
+  const sessionPositionApi = useMemo(() => ({
+    get: (id: string): 'left' | 'right' => sessionPositions[id] ?? 'left',
+    set: (id: string, pos: 'left' | 'right') => setSessionPositions(prev => ({ ...prev, [id]: pos })),
+  }), [sessionPositions]);
+  const taskContextMenu = useMemo(() => ({
+    onRename: (id: string) => {
+      const s = sessions.find(x => x.id === id);
+      if (s) { setRenameTarget(s); setRenameValue(s.title); }
+    },
+    isPinned: (id: string) => !!sessions.find(x => x.id === id)?.pinned,
+    onTogglePin: (id: string) => {
+      const s = sessions.find(x => x.id === id);
+      if (s) handleUpdateSession(id, { pinned: !s.pinned });
+    },
+    // 原型行为：新标签页 = 应用内再开一个「工作」tab；新窗口 = 浏览器新窗口。
+    onOpenInNewTab: (_id: string) => launchpadOpen('agent'),
+    onOpenInNewWindow: (_id: string) => { window.open(window.location.href, '_blank', 'width=1280,height=800'); },
+    onDelete: (id: string) => handleDeleteSession(id),
+  }), [sessions, handleUpdateSession, handleDeleteSession, launchpadOpen]);
 
   const handleSendMessage = useCallback((text: string) => {
     const ts = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
@@ -1929,6 +1958,11 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
                 setTopicOrder(ids);
                 if (railSort !== 'manual') setRailSort('manual');
               }}
+              rowContextMenu={{
+                ...taskContextMenu,
+                // 「会话位置」子菜单只在专家列表视图出现。
+                position: railDisplay === 'experts' ? sessionPositionApi : undefined,
+              }}
               navEntries={WORK_PLUS ? [{
                 id: 'task-board',
                 label: '任务管理',
@@ -2207,6 +2241,39 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
         onClose={() => setNewGroupOpen(false)}
         onManageTeammates={() => { setNewGroupOpen(false); onOpenSettings('teammates'); }}
       />
+
+      {/* ===== 任务重命名（右键菜单） ===== */}
+      <Dialog open={!!renameTarget} onOpenChange={(open) => { if (!open) setRenameTarget(null); }}>
+        <DialogContent className="w-[360px] p-5">
+          <div className="text-sm font-medium mb-3">重命名任务</div>
+          <Input
+            value={renameValue}
+            onChange={(e) => setRenameValue(e.target.value)}
+            autoFocus
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && renameTarget && renameValue.trim()) {
+                handleUpdateSession(renameTarget.id, { title: renameValue.trim() });
+                setRenameTarget(null);
+              }
+            }}
+          />
+          <div className="flex justify-end gap-2 mt-4">
+            <Button variant="outline" size="sm" onClick={() => setRenameTarget(null)}>取消</Button>
+            <Button
+              size="sm"
+              disabled={!renameValue.trim()}
+              onClick={() => {
+                if (renameTarget && renameValue.trim()) {
+                  handleUpdateSession(renameTarget.id, { title: renameValue.trim() });
+                  setRenameTarget(null);
+                }
+              }}
+            >
+              确定
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* ===== Recycle Bin: delete-session confirmation ===== */}
       <RecycleBinConfirmDialog
