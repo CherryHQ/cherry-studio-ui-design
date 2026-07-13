@@ -18,6 +18,25 @@ import {
 const RAIL_MENU_ITEM = "text-[13px] font-normal px-2 py-[5px] [&>svg:not([class*='size-'])]:size-4";
 const RAIL_MENU_CONTENT = 'p-1.5 rounded-[14px]';
 
+// 新会话图标（Codex 式）：气泡描边在右上角断开，加号嵌在缺口里。
+// lucide 无现成款，按其 24 网格 / stroke-2 / round 规范手绘。
+const NewSessionIcon = ({ size = 13 }: { size?: number }) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <path d="M13 3H5a2 2 0 0 0-2 2v16l4-4h12a2 2 0 0 0 2-2V9" />
+    <path d="M16 5h6" />
+    <path d="M19 2v6" />
+  </svg>
+);
+
 // ===========================
 // EntityRail
 // ===========================
@@ -346,7 +365,7 @@ export function EntityRail({ title, items, activeId, onSelect, onNew, onEdit, se
                 onClick={(e) => { e.stopPropagation(); rowContextMenu.onTogglePin(item.id); }}
                 className={`p-1 rounded hover:bg-accent/70 transition-colors ${pinned ? 'text-foreground' : 'text-muted-foreground/50 hover:text-foreground'}`}
               >
-                <Pin size={13} className={pinned ? '' : '-rotate-45'} />
+                <Pin size={13} className={pinned ? 'fill-current' : '-rotate-45'} />
               </button>
               {rowContextMenu.onArchive && (
                 <button
@@ -544,11 +563,7 @@ export function EntityRail({ title, items, activeId, onSelect, onNew, onEdit, se
                 onClick={() => groupHoverMenu.onNewSession(g.key)}
                 className="p-1 rounded text-muted-foreground/50 hover:text-foreground hover:bg-accent/70 transition-colors"
               >
-                {/* 气泡 + 右上角加号（Codex 式新会话图标） */}
-                <span className="relative inline-flex">
-                  <MessageSquare size={13} />
-                  <Plus size={8} strokeWidth={3} className="absolute -top-[3px] -right-[3px]" />
-                </span>
+                <NewSessionIcon size={13} />
               </button>
             </div>
           )}

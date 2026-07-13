@@ -2312,7 +2312,7 @@ export function AssistantRunPage() {
           <Tooltip content={historySidebar.isCompact ? '收起助手列表' : '展开助手列表'} side="bottom">
             <Button variant="ghost" size="icon-xs" onClick={() => historySidebar.toggle()}
               className={`p-1.5 w-auto h-auto mr-1 ${historySidebar.isCompact ? 'text-muted-foreground hover:text-foreground hover:bg-accent/40' : 'text-muted-foreground/40 hover:text-foreground hover:bg-accent/40'}`}>
-              {historySidebar.isCompact ? <PanelLeftClose size={13} /> : <PanelLeftOpen size={13} />}
+              {historySidebar.isCompact ? <PanelLeftClose size={18} strokeWidth={1.6} /> : <PanelLeftOpen size={18} strokeWidth={1.6} />}
             </Button>
           </Tooltip>
         <div className="flex-1" />
@@ -2328,7 +2328,7 @@ export function AssistantRunPage() {
                 dockTab === 'topics' ? 'bg-accent/25 text-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-accent/40'
               }`}
             >
-              <MessageCircle size={13} strokeWidth={1.6} />
+              <MessageCircle size={18} strokeWidth={1.6} />
               <span>话题</span>
               <span className="tabular-nums text-muted-foreground/50">{assistantTopics.filter(t => !t.archived).length}</span>
             </Button>
@@ -2337,7 +2337,7 @@ export function AssistantRunPage() {
           <Tooltip content={modelConfigured ? '演示：切到「未配置模型」状态' : '演示：恢复已配置状态'} side="bottom">
             <Button variant="ghost" size="icon-xs" onClick={() => setModelConfigured(v => !v)}
               className={`p-1.5 w-auto h-auto ${modelConfigured ? 'text-muted-foreground/40 hover:text-foreground hover:bg-accent/40' : 'text-foreground bg-accent/25'}`}>
-              <FlaskConical size={12} />
+              <FlaskConical size={18} strokeWidth={1.6} />
             </Button>
           </Tooltip>
           {hasMessages && (
@@ -2345,7 +2345,7 @@ export function AssistantRunPage() {
               <div className="relative">
                 <Tooltip content="历史文件" side="bottom"><Button variant="ghost" size="icon-xs" onClick={() => setShowHeaderFileHistory(v => !v)}
                   className={`p-1.5 w-auto h-auto ${showHeaderFileHistory ? 'text-foreground bg-accent/25' : 'text-muted-foreground hover:text-foreground hover:bg-accent/40'}`}>
-                  <File size={12} />
+                  <File size={18} strokeWidth={1.6} />
                 </Button></Tooltip>
                 <AnimatePresence>
                   {showHeaderFileHistory && (
@@ -2361,14 +2361,14 @@ export function AssistantRunPage() {
               </div>
               <Tooltip content="分支管理" side="bottom"><Button variant="ghost" size="icon-xs" onClick={() => setShowBranchTree(!showBranchTree)}
                 className={`p-1.5 w-auto h-auto ${showBranchTree ? 'text-foreground bg-accent/25' : 'text-muted-foreground hover:text-foreground hover:bg-accent/40'}`}>
-                <GitBranch size={12} />
+                <GitBranch size={18} strokeWidth={1.6} />
               </Button></Tooltip>
               <div className="w-px h-3.5 bg-border/30 mx-0.5" />
             </>
           )}
           <Tooltip content="参数设置" side="bottom"><Button variant="ghost" size="icon-xs" onClick={() => { const open = dockTab !== 'settings'; setDockTab(open ? 'settings' : null); if (open) setTopicsDockPref(false); }}
             className={`p-1.5 w-auto h-auto ${dockTab === 'settings' ? 'text-foreground bg-accent/25' : 'text-muted-foreground hover:text-foreground hover:bg-accent/40'}`}>
-            <Settings2 size={12} />
+            <Settings2 size={18} strokeWidth={1.6} />
           </Button></Tooltip>
         </div>
       </header>
