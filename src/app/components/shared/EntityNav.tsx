@@ -455,8 +455,6 @@ export function EntityRail({ title, items, activeId, onSelect, onNew, onEdit, se
             <span className={`text-sm truncate flex-1 min-w-0 ${headerActive ? 'font-medium text-foreground' : g.variant === 'folder' ? 'text-foreground/70' : 'text-foreground/85'}`}>{g.name}</span>
             {g.unread ? (
               <span className="min-w-[14px] h-[14px] px-1 rounded-full bg-primary/12 text-primary/80 text-[9px] leading-[14px] text-center font-medium tabular-nums flex-shrink-0">{g.unread}</span>
-            ) : foldable && g.variant !== 'folder' ? (
-              <span className="text-xs text-muted-foreground/35 tabular-nums flex-shrink-0">{g.children.length}</span>
             ) : null}
           </button>
           {foldable && (
