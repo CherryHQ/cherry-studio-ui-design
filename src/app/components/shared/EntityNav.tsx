@@ -65,32 +65,54 @@ export interface EntityRailProps {
     active?: boolean;
     onClick: () => void;
   }[];
-  /** Force tag-grouping of the list (each item shows under its tags) with
-   * collapsible section headers — the 工作目录 display mode on the Agent rail. */
-  grouped?: boolean;
+  /** Tree view (专家 → 话题 / 工作目录 → 话题): entity headers with nested,
+   * collapsible child rows. Overrides `items` rendering when provided. */
+  treeGroups?: EntityRailTreeGroup[];
+  /** Click on a tree-group header's text area (the chevron only folds). */
+  onGroupSelect?: (key: string) => void;
+  /** Highlighted tree-group header (e.g. the selected 专家). */
+  activeGroupKey?: string | null;
+  /** 手动排序 drag: reorder tree-group headers. Dragging enabled when set. */
+  onReorderGroups?: (orderedKeys: string[]) => void;
+  /** 手动排序 drag: reorder flat list rows. Dragging enabled when set. */
+  onReorderItems?: (orderedIds: string[]) => void;
   /** Rich filter menu at the right edge of the "new" row (newAsRow only).
-   * Sections render in order: 展示方式 / 排序方式 / 全部展开收起 / actions. */
+   * Sections render in order: 展示方式 / 排序方式 / 全部展开收起 / actions.
+   * Codex-style single layer: left check column, no icons, closes on select. */
   railMenu?: {
     displayModes?: { options: { id: string; label: string }[]; value: string; onChange: (id: string) => void };
     sortModes?: { options: { id: string; label: string }[]; value: string; onChange: (id: string) => void };
-    /** Show 全部展开 / 全部收起 rows — they act on the grouped section headers. */
+    /** Show 全部展开 / 全部收起 rows — enabled only when the current view has
+     * collapsible groups (treeGroups); greyed out otherwise. */
     expandCollapse?: boolean;
-    actions?: {
-      id: string;
-      label: string;
-      icon: React.ComponentType<{ size?: number; className?: string }>;
-      onClick: () => void;
-    }[];
+    actions?: { id: string; label: string; onClick: () => void }[];
   };
 }
 
-export function EntityRail({ title, items, activeId, onSelect, onNew, onEdit, searchable = true, filterable = true, newLabel, newAsRow, newActions, navEntries, grouped, railMenu }: EntityRailProps) {
+export interface EntityRailTreeGroup {
+  key: string;
+  name: string;
+  /** Full text for the hover tooltip (e.g. the complete 工作目录 path). */
+  title?: string;
+  avatar?: string;
+  /** false = header is fold-only (工作目录); default true (专家/群聊). */
+  selectable?: boolean;
+  unread?: number;
+  children: EntityRailItem[];
+}
+
+export function EntityRail({ title, items, activeId, onSelect, onNew, onEdit, searchable = true, filterable = true, newLabel, newAsRow, newActions, navEntries, treeGroups, onGroupSelect, activeGroupKey, onReorderGroups, onReorderItems, railMenu }: EntityRailProps) {
   const [query, setQuery] = useState('');
   const [groupByTag, setGroupByTag] = useState(false);
   const [sort, setSort] = useState<'default' | 'time' | 'name'>('default');
-  // Collapsed section headers in the grouped view. 全部展开/收起 in the
-  // railMenu act on this set.
+  // Collapsed headers in the tree view. 全部展开/收起 in the railMenu act on
+  // this set.
   const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(() => new Set());
+  const [menuOpen, setMenuOpen] = useState(false);
+  // 手动排序 drag state — group headers and flat rows share the indicator
+  // style (a top border on the current drop target).
+  const [dragKey, setDragKey] = useState<string | null>(null);
+  const [dropKey, setDropKey] = useState<string | null>(null);
 
   const hasTags = useMemo(() => items.some((i) => i.tags && i.tags.length > 0), [items]);
 
@@ -104,7 +126,7 @@ export function EntityRail({ title, items, activeId, onSelect, onNew, onEdit, se
 
   // When grouping by tag, an entity shows under each of its tags.
   const groups = useMemo(() => {
-    if (!groupByTag && !grouped) return null;
+    if (!groupByTag) return null;
     const map = new Map<string, EntityRailItem[]>();
     filtered.forEach((item) => {
       const tags = item.tags && item.tags.length > 0 ? item.tags : ['未分类'];
@@ -114,30 +136,52 @@ export function EntityRail({ title, items, activeId, onSelect, onNew, onEdit, se
       });
     });
     return Array.from(map.entries());
-  }, [filtered, groupByTag, grouped]);
+  }, [filtered, groupByTag]);
 
-  const toggleGroup = (tag: string) => setCollapsedGroups((prev) => {
+  const hasFoldableGroups = !!treeGroups && treeGroups.some(g => g.children.length > 0);
+  const toggleGroup = (key: string) => setCollapsedGroups((prev) => {
     const next = new Set(prev);
-    if (next.has(tag)) next.delete(tag); else next.add(tag);
+    if (next.has(key)) next.delete(key); else next.add(key);
     return next;
   });
   const expandAllGroups = () => setCollapsedGroups(new Set());
-  const collapseAllGroups = () => setCollapsedGroups(new Set((groups ?? []).map(([tag]) => tag)));
+  const collapseAllGroups = () => setCollapsedGroups(new Set((treeGroups ?? []).map(g => g.key)));
+
+  // Reorder helper: move `from` right before `to` in the given key order.
+  const reorder = (keys: string[], from: string, to: string) => {
+    const next = keys.filter(k => k !== from);
+    const idx = next.indexOf(to);
+    next.splice(idx < 0 ? next.length : idx, 0, from);
+    return next;
+  };
 
   const menuActive = sort !== 'default' || groupByTag;
 
-  const renderRow = (item: EntityRailItem) => {
+  const renderRow = (item: EntityRailItem, opts?: { indent?: boolean }) => {
     const active = item.id === activeId;
+    const draggable = !!onReorderItems && !opts?.indent;
     return (
-      <div key={item.id} className="group/row relative">
+      <div
+        key={item.id}
+        className={`group/row relative ${dropKey === item.id ? 'border-t-2 border-cherry-primary/60' : ''}`}
+        draggable={draggable}
+        onDragStart={draggable ? () => setDragKey(item.id) : undefined}
+        onDragOver={draggable ? (e) => { e.preventDefault(); if (dragKey && dragKey !== item.id) setDropKey(item.id); } : undefined}
+        onDragLeave={draggable ? () => setDropKey(k => (k === item.id ? null : k)) : undefined}
+        onDrop={draggable ? () => {
+          if (dragKey && dragKey !== item.id) onReorderItems!(reorder(filtered.map(i => i.id), dragKey, item.id));
+          setDragKey(null); setDropKey(null);
+        } : undefined}
+        onDragEnd={draggable ? () => { setDragKey(null); setDropKey(null); } : undefined}
+      >
         <button
           type="button"
           onClick={() => onSelect(item.id)}
-          className={`w-full min-w-0 flex items-center gap-2 px-2.5 py-[6px] pr-9 rounded-md text-left transition-colors ${
+          className={`w-full min-w-0 flex items-center gap-2 py-[6px] pr-9 rounded-md text-left transition-colors ${opts?.indent ? 'pl-7' : 'pl-2.5'} ${
             active ? 'bg-accent/40 text-foreground' : 'text-foreground/80 hover:bg-accent/40'
           }`}
         >
-          <span className="text-base leading-none flex-shrink-0">{item.avatar}</span>
+          {item.avatar ? <span className="text-base leading-none flex-shrink-0">{item.avatar}</span> : null}
           <span className={`text-sm truncate flex-1 min-w-0 ${active ? 'font-medium' : (item.unread ? 'text-foreground' : '')}`}>{item.name}</span>
           {/* Trailing slot: a small, low-key unread (message) count. Kept
               subtle on purpose — a soft pill rather than a bold filled badge —
@@ -285,90 +329,79 @@ export function EntityRail({ title, items, activeId, onSelect, onNew, onEdit, se
                 <span className="text-sm truncate flex-1 min-w-0">{newLabel ?? `新建${title}`}</span>
               </button>
             ) : <div className="flex-1" />}
-            {railMenu && (
-              <Popover>
-                <PopoverTrigger asChild>
-                  <button
-                    type="button"
-                    title="筛选"
-                    className="p-1.5 rounded-md flex-shrink-0 text-muted-foreground/60 hover:text-foreground hover:bg-accent/40 transition-colors"
-                  >
-                    <ListFilter size={14} />
-                  </button>
-                </PopoverTrigger>
-                <PopoverContent align="end" sideOffset={4} className="w-[176px] p-1">
-                  {railMenu.displayModes && (
-                    <>
-                      <div className="px-2 pt-1.5 pb-0.5 text-[11px] text-muted-foreground/50">展示方式</div>
-                      {railMenu.displayModes.options.map((opt) => {
-                        const active = railMenu.displayModes!.value === opt.id;
-                        return (
-                          <Button
-                            key={opt.id}
-                            variant="ghost"
-                            size="xs"
-                            onClick={() => railMenu.displayModes!.onChange(opt.id)}
-                            className={`w-full justify-start gap-2 px-2 ${active ? 'text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
-                          >
-                            <span className="flex-1 text-left">{opt.label}</span>
-                            {active && <Check size={10} className="text-primary flex-shrink-0" />}
-                          </Button>
-                        );
-                      })}
-                    </>
-                  )}
-                  {railMenu.sortModes && (
-                    <>
-                      <div className="my-1 h-px bg-border/40" />
-                      <div className="px-2 pt-0.5 pb-0.5 text-[11px] text-muted-foreground/50">排序方式</div>
-                      {railMenu.sortModes.options.map((opt) => {
-                        const active = railMenu.sortModes!.value === opt.id;
-                        return (
-                          <Button
-                            key={opt.id}
-                            variant="ghost"
-                            size="xs"
-                            onClick={() => railMenu.sortModes!.onChange(opt.id)}
-                            className={`w-full justify-start gap-2 px-2 ${active ? 'text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
-                          >
-                            <span className="flex-1 text-left">{opt.label}</span>
-                            {active && <Check size={10} className="text-primary flex-shrink-0" />}
-                          </Button>
-                        );
-                      })}
-                    </>
-                  )}
-                  {railMenu.expandCollapse && (
-                    <>
-                      <div className="my-1 h-px bg-border/40" />
-                      <Button variant="ghost" size="xs" onClick={expandAllGroups}
-                        className="w-full justify-start gap-2 px-2 text-muted-foreground hover:text-foreground">
-                        <span className="flex-1 text-left">全部展开</span>
-                      </Button>
-                      <Button variant="ghost" size="xs" onClick={collapseAllGroups}
-                        className="w-full justify-start gap-2 px-2 text-muted-foreground hover:text-foreground">
-                        <span className="flex-1 text-left">全部收起</span>
-                      </Button>
-                    </>
-                  )}
-                  {railMenu.actions && railMenu.actions.length > 0 && (
-                    <>
-                      <div className="my-1 h-px bg-border/40" />
-                      {railMenu.actions.map((a) => {
-                        const Icon = a.icon;
-                        return (
-                          <Button key={a.id} variant="ghost" size="xs" onClick={a.onClick}
-                            className="w-full justify-start gap-2 px-2 text-muted-foreground hover:text-foreground">
-                            <Icon size={12} className="flex-shrink-0" />
-                            <span className="flex-1 text-left">{a.label}</span>
-                          </Button>
-                        );
-                      })}
-                    </>
-                  )}
-                </PopoverContent>
-              </Popover>
-            )}
+            {railMenu && (() => {
+              // Every row commits its action and closes the menu (Codex-style
+              // single-layer menu: left check column, no icons).
+              const pick = (fn: () => void) => () => { fn(); setMenuOpen(false); };
+              const optionRow = (opt: { id: string; label: string }, active: boolean, onChange: (id: string) => void) => (
+                <Button
+                  key={opt.id}
+                  variant="ghost"
+                  size="xs"
+                  onClick={pick(() => onChange(opt.id))}
+                  className={`w-full justify-start gap-0 px-2 ${active ? 'text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+                >
+                  <span className="w-5 flex-shrink-0 flex items-center">{active && <Check size={11} className="text-foreground" />}</span>
+                  <span className="flex-1 text-left">{opt.label}</span>
+                </Button>
+              );
+              const actionRow = (key: string, label: string, onClick: () => void, disabled = false) => (
+                <Button
+                  key={key}
+                  variant="ghost"
+                  size="xs"
+                  disabled={disabled}
+                  onClick={pick(onClick)}
+                  className={`w-full justify-start gap-0 px-2 ${disabled ? 'text-muted-foreground/35' : 'text-muted-foreground hover:text-foreground'}`}
+                >
+                  <span className="w-5 flex-shrink-0" />
+                  <span className="flex-1 text-left">{label}</span>
+                </Button>
+              );
+              return (
+                <Popover open={menuOpen} onOpenChange={setMenuOpen}>
+                  <PopoverTrigger asChild>
+                    <button
+                      type="button"
+                      title="筛选"
+                      className="p-1.5 rounded-md flex-shrink-0 text-muted-foreground/60 hover:text-foreground hover:bg-accent/40 transition-colors"
+                    >
+                      <ListFilter size={14} />
+                    </button>
+                  </PopoverTrigger>
+                  <PopoverContent align="end" sideOffset={4} className="w-[172px] p-1">
+                    {railMenu.displayModes && (
+                      <>
+                        <div className="px-2 pt-1.5 pb-0.5 text-[11px] text-muted-foreground/70">展示方式</div>
+                        {railMenu.displayModes.options.map((opt) =>
+                          optionRow(opt, railMenu.displayModes!.value === opt.id, railMenu.displayModes!.onChange))}
+                      </>
+                    )}
+                    {railMenu.sortModes && (
+                      <>
+                        <div className="my-1 h-px bg-border/40" />
+                        <div className="px-2 pt-0.5 pb-0.5 text-[11px] text-muted-foreground/70">排序方式</div>
+                        {railMenu.sortModes.options.map((opt) =>
+                          optionRow(opt, railMenu.sortModes!.value === opt.id, railMenu.sortModes!.onChange))}
+                      </>
+                    )}
+                    {railMenu.expandCollapse && (
+                      <>
+                        <div className="my-1 h-px bg-border/40" />
+                        {actionRow('expand-all', '全部展开', expandAllGroups, !hasFoldableGroups)}
+                        {actionRow('collapse-all', '全部收起', collapseAllGroups, !hasFoldableGroups)}
+                      </>
+                    )}
+                    {railMenu.actions && railMenu.actions.length > 0 && (
+                      <>
+                        <div className="my-1 h-px bg-border/40" />
+                        {railMenu.actions.map((a) => actionRow(a.id, a.label, a.onClick))}
+                      </>
+                    )}
+                  </PopoverContent>
+                </Popover>
+              );
+            })()}
           </div>
         )}
         {/* Fixed nav entries (e.g. 定时任务) — pinned right under the "new" row. */}
@@ -395,7 +428,64 @@ export function EntityRail({ title, items, activeId, onSelect, onNew, onEdit, se
             })}
           </div>
         )}
-        {filtered.length === 0 ? (
+        {treeGroups ? (
+          treeGroups.length === 0 ? (
+            <div className="px-3 py-6 text-center text-sm text-muted-foreground/40">暂无内容</div>
+          ) : (
+            treeGroups.map((g) => {
+              const isCollapsed = collapsedGroups.has(g.key);
+              const headerActive = g.key === activeGroupKey;
+              const groupDraggable = !!onReorderGroups;
+              const foldable = g.children.length > 0;
+              return (
+                <div
+                  key={g.key}
+                  className={`mb-px ${dropKey === g.key ? 'border-t-2 border-cherry-primary/60' : ''}`}
+                  draggable={groupDraggable}
+                  onDragStart={groupDraggable ? () => setDragKey(g.key) : undefined}
+                  onDragOver={groupDraggable ? (e) => { e.preventDefault(); if (dragKey && dragKey !== g.key) setDropKey(g.key); } : undefined}
+                  onDragLeave={groupDraggable ? () => setDropKey(k => (k === g.key ? null : k)) : undefined}
+                  onDrop={groupDraggable ? () => {
+                    if (dragKey && dragKey !== g.key) onReorderGroups!(reorder(treeGroups.map(t => t.key), dragKey, g.key));
+                    setDragKey(null); setDropKey(null);
+                  } : undefined}
+                  onDragEnd={groupDraggable ? () => { setDragKey(null); setDropKey(null); } : undefined}
+                >
+                  <div className={`flex items-center rounded-md transition-colors ${headerActive ? 'bg-accent/40' : 'hover:bg-accent/40'}`}>
+                    {foldable ? (
+                      <button
+                        type="button"
+                        onClick={() => toggleGroup(g.key)}
+                        className="pl-1 pr-0.5 py-[7px] flex-shrink-0 text-muted-foreground/40 hover:text-foreground transition-colors"
+                      >
+                        <ChevronDown size={11} className={`transition-transform ${isCollapsed ? '-rotate-90' : ''}`} />
+                      </button>
+                    ) : (
+                      <span className="w-[19px] flex-shrink-0" />
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => { if (g.selectable !== false && onGroupSelect) onGroupSelect(g.key); else if (foldable) toggleGroup(g.key); }}
+                      className="flex-1 min-w-0 flex items-center gap-2 py-[6px] pr-2 text-left"
+                      title={g.title}
+                    >
+                      {g.avatar && <span className="text-base leading-none flex-shrink-0">{g.avatar}</span>}
+                      <span className={`text-sm truncate flex-1 min-w-0 ${headerActive ? 'font-medium text-foreground' : 'text-foreground/85'}`}>{g.name}</span>
+                      {g.unread ? (
+                        <span className="min-w-[14px] h-[14px] px-1 rounded-full bg-primary/12 text-primary/80 text-[9px] leading-[14px] text-center font-medium tabular-nums flex-shrink-0">{g.unread}</span>
+                      ) : foldable ? (
+                        <span className="text-xs text-muted-foreground/35 tabular-nums flex-shrink-0">{g.children.length}</span>
+                      ) : null}
+                    </button>
+                  </div>
+                  {foldable && !isCollapsed && (
+                    <div className="space-y-px">{g.children.map((c) => renderRow(c, { indent: true }))}</div>
+                  )}
+                </div>
+              );
+            })
+          )
+        ) : filtered.length === 0 ? (
           <div className="px-3 py-6 text-center text-sm text-muted-foreground/40">无匹配结果</div>
         ) : groups ? (
           groups.map(([tag, rows]) => {

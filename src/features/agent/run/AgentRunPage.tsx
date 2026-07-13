@@ -16,7 +16,7 @@ import {
   SquarePlus, RefreshCw, TerminalSquare, Lightbulb, Scan, Languages,
   Hand, ShieldAlert, MoreHorizontal, MousePointer2, Mountain, ExternalLink,
   Package, Eye as EyeIcon, FileImage, Table2, LayoutGrid, Presentation, Monitor,
-  Users2, UserCog,
+  Users2,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Tooltip } from '@/app/components/Tooltip';
@@ -35,7 +35,8 @@ import { SessionHistoryPage, type SessionDisplayMode } from './SessionHistoryPag
 import { ScheduledTasksPage } from './ScheduledTasksPage';
 import { TaskBoardPage } from './TaskBoardPage';
 import { HistorySidebar } from '@/app/components/shared/HistorySidebar';
-import { EntityRail, type EntityRailItem } from '@/app/components/shared/EntityNav';
+import { EntityRail, type EntityRailItem, type EntityRailTreeGroup } from '@/app/components/shared/EntityNav';
+import { HistoryManagePage } from './HistoryManagePage';
 import { CreateAgentWizard } from '@/app/components/shared/CreateAgentWizard';
 import { GroupChatPane } from './GroupChatPane';
 import { MOCK_GROUPS } from '@/features/collaboration/data';
@@ -1166,10 +1167,13 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
     setPreviewMaximized(false);
     setShowExplorer(false);
     setShowTaskBoard(false);
+    setShowHistoryManage(false);
     setSelectedGroupId(null);
     setScheduledDetailId(detailId);
     setShowScheduledTasks(true);
   }, []);
+  // 历史记录 view — 独立的全量会话管理页（筛选菜单进入），接管内容区。
+  const [showHistoryManage, setShowHistoryManage] = useState(false);
   // 任务管理 view — a global, read-only kanban of all sessions by status.
   // Pinned under "添加智能体" alongside 定时任务; takes over the content area.
   const [showTaskBoard, setShowTaskBoard] = useState(false);
@@ -1178,8 +1182,18 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
     setPreviewMaximized(false);
     setShowExplorer(false);
     setShowScheduledTasks(false);
+    setShowHistoryManage(false);
     setSelectedGroupId(null);
     setShowTaskBoard(true);
+  }, []);
+  const openHistoryManage = useCallback(() => {
+    setDockTab(null);
+    setPreviewMaximized(false);
+    setShowExplorer(false);
+    setShowScheduledTasks(false);
+    setShowTaskBoard(false);
+    setSelectedGroupId(null);
+    setShowHistoryManage(true);
   }, []);
   // 项目组 (群聊) — folded into the same rail as 私聊 (Agent). When a group is
   // selected the content column renders GroupChatPane (collaboration's topic
@@ -1189,6 +1203,7 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
   const openGroup = useCallback((id: string) => {
     setShowScheduledTasks(false);
     setShowTaskBoard(false);
+    setShowHistoryManage(false);
     setDockTab(null);
     setPreviewMaximized(false);
     setShowExplorer(false);
@@ -1212,54 +1227,108 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
   const messages = localMessages[activeSessionId || ''] ?? sessionData.messages;
   const hasMessages = messages.length > 0;
   const activeSession = sessions.find(s => s.id === activeSessionId);
-  // Merged rail: 私聊 (Agent) + 群聊 (项目组) in one flat, IM-style list.
-  // Groups with unread bubble to the top; the rest interleave agent/group so
-  // the two kinds read as one mixed conversation list. Group rows carry a
-  // member-count number (the only visual cue separating them from 私聊).
+  // 群聊 id 集合 — 树形组头点击时区分「专家」与「项目组」。
   const groupIdSet = useMemo(() => new Set(MOCK_GROUPS.map(g => g.id)), []);
-  const agentRailItems = useMemo<EntityRailItem[]>(() => {
-    const agentItems: EntityRailItem[] = AVAILABLE_AGENTS.map(a => ({
-      id: a.id, name: a.name, avatar: a.avatar, tags: a.tags, updatedAt: a.updatedAt,
-    }));
-    if (!WORK_PLUS) return agentItems;
-    const groupItems: EntityRailItem[] = MOCK_GROUPS.map(g => ({
-      id: g.id, name: g.name, avatar: g.avatarEmoji ?? '💬',
-      unread: g.unread,
-    }));
-    const unreadGroups = groupItems
-      .filter(g => (g.unread ?? 0) > 0)
-      .sort((a, b) => (b.unread ?? 0) - (a.unread ?? 0));
-    const restGroups = groupItems.filter(g => !((g.unread ?? 0) > 0));
-    const interleaved: EntityRailItem[] = [];
-    const max = Math.max(agentItems.length, restGroups.length);
-    for (let i = 0; i < max; i++) {
-      if (agentItems[i]) interleaved.push(agentItems[i]);
-      if (restGroups[i]) interleaved.push(restGroups[i]);
-    }
-    return [...unreadGroups, ...interleaved];
+  // 「筛选」菜单（创建专家行右侧）的展示/排序状态，选择持久化到 localStorage。
+  // 专家 = 专家为组头、其下挂话题的树形（默认，对应真实 V2 形态）；
+  // 话题 = 全部 session 平铺；工作目录 = 话题按所属专家的 workDir 分组。
+  const [railDisplay, setRailDisplayState] = useState<'topics' | 'experts' | 'workdir'>(() => {
+    try {
+      const v = localStorage.getItem('cherry-agent-rail-display');
+      return v === 'topics' || v === 'workdir' ? v : 'experts';
+    } catch { return 'experts'; }
+  });
+  const setRailDisplay = useCallback((v: 'topics' | 'experts' | 'workdir') => {
+    setRailDisplayState(v);
+    try { localStorage.setItem('cherry-agent-rail-display', v); } catch { /* 隐私模式下不持久化 */ }
   }, []);
-  // 「筛选」菜单（创建专家行右侧）的展示/排序状态。展示方式决定 rail 列的
-  // 内容：专家 = Agent 列表（默认）；话题 = 全部 session 平铺；工作目录 =
-  // session 按所属专家的 workDir 分组（可折叠）。
-  const [railDisplay, setRailDisplay] = useState<'topics' | 'experts' | 'workdir'>('experts');
-  const [railSort, setRailSort] = useState<'created' | 'updated' | 'manual'>('manual');
-  const sessionRailItems = useMemo<EntityRailItem[]>(() => sessions.map(s => {
-    const agent = AVAILABLE_AGENTS.find(a => a.name === s.agentName);
-    return {
-      id: s.id, name: s.title,
-      avatar: s.agentIcon ?? agent?.avatar ?? '💬',
-      updatedAt: s.timestamp,
-      tags: railDisplay === 'workdir' ? [agent?.workDir ?? '未设置工作目录'] : undefined,
-    };
-  }), [sessions, railDisplay]);
-  const railItems = useMemo<EntityRailItem[]>(() => {
-    const base = railDisplay === 'experts' ? agentRailItems : sessionRailItems;
+  const [railSort, setRailSortState] = useState<'created' | 'updated' | 'manual'>(() => {
+    try {
+      const v = localStorage.getItem('cherry-agent-rail-sort');
+      return v === 'created' || v === 'updated' ? v : 'manual';
+    } catch { return 'manual'; }
+  });
+  const setRailSort = useCallback((v: 'created' | 'updated' | 'manual') => {
+    setRailSortState(v);
+    try { localStorage.setItem('cherry-agent-rail-sort', v); } catch { /* 同上 */ }
+  }, []);
+  // 手动排序的自定义顺序（拖拽产生），同样持久化。
+  const [agentOrder, setAgentOrderState] = useState<string[]>(() => {
+    try { return JSON.parse(localStorage.getItem('cherry-agent-rail-agent-order') || '[]'); } catch { return []; }
+  });
+  const setAgentOrder = useCallback((ids: string[]) => {
+    setAgentOrderState(ids);
+    try { localStorage.setItem('cherry-agent-rail-agent-order', JSON.stringify(ids)); } catch { /* 同上 */ }
+  }, []);
+  const [topicOrder, setTopicOrderState] = useState<string[]>(() => {
+    try { return JSON.parse(localStorage.getItem('cherry-agent-rail-topic-order') || '[]'); } catch { return []; }
+  });
+  const setTopicOrder = useCallback((ids: string[]) => {
+    setTopicOrderState(ids);
+    try { localStorage.setItem('cherry-agent-rail-topic-order', JSON.stringify(ids)); } catch { /* 同上 */ }
+  }, []);
+
+  // 按存储的手动顺序重排；未登记的条目保持原相对位置排在其后。
+  const applyOrder = useCallback(<T extends { id: string }>(list: T[], order: string[]): T[] => {
+    if (order.length === 0) return list;
+    const pos = new Map(order.map((id, i) => [id, i]));
+    return list
+      .map((it, i) => [it, pos.has(it.id) ? (pos.get(it.id) as number) : order.length + i] as const)
+      .sort((a, b) => a[1] - b[1])
+      .map(([it]) => it);
+  }, []);
+
+  const orderedAgents = useMemo(() => {
     // mock 的 updatedAt 是人读文案（"2 小时前"），列表本身已按最近使用排序，
-    // 所以「更新时间」「手动排序」保持原序；「创建时间」按 createdAt 倒序。
-    if (railSort !== 'created' || railDisplay !== 'experts') return base;
-    const createdMap = new Map(AVAILABLE_AGENTS.map(a => [a.id, a.createdAt ?? '']));
-    return [...base].sort((x, y) => (createdMap.get(y.id) ?? '').localeCompare(createdMap.get(x.id) ?? ''));
-  }, [agentRailItems, sessionRailItems, railDisplay, railSort]);
+    // 所以「更新时间」保持原序；「创建时间」按 createdAt 倒序。
+    if (railSort === 'created') {
+      return [...AVAILABLE_AGENTS].sort((a, b) => (b.createdAt ?? '').localeCompare(a.createdAt ?? ''));
+    }
+    if (railSort === 'manual') return applyOrder(AVAILABLE_AGENTS, agentOrder);
+    return AVAILABLE_AGENTS;
+  }, [railSort, agentOrder, applyOrder]);
+  const orderedSessions = useMemo(() => {
+    if (railSort === 'manual') return applyOrder(sessions, topicOrder);
+    return sessions; // 创建/更新时间：mock 时间戳为人读文案，保持默认序（已按最近排列）
+  }, [sessions, railSort, topicOrder, applyOrder]);
+
+  // 话题平铺视图的行（带所属专家图标）。
+  const topicRailItems = useMemo<EntityRailItem[]>(() => orderedSessions.map(s => ({
+    id: s.id, name: s.title,
+    avatar: s.agentIcon ?? AVAILABLE_AGENTS.find(a => a.name === s.agentName)?.avatar ?? '💬',
+    updatedAt: s.timestamp,
+  })), [orderedSessions]);
+  const sessionToChildRow = (s: AgentSession): EntityRailItem => ({ id: s.id, name: s.title, avatar: '' });
+  // 专家树形视图：专家组头 + 其话题子行；WORK_PLUS 下群聊作为无子级的组头
+  // 混入（未读的置顶）。
+  const expertTreeGroups = useMemo<EntityRailTreeGroup[]>(() => {
+    const agentGroups: EntityRailTreeGroup[] = orderedAgents.map(a => ({
+      key: a.id, name: a.name, avatar: a.avatar,
+      children: orderedSessions.filter(s => s.agentName === a.name).map(sessionToChildRow),
+    }));
+    if (!WORK_PLUS) return agentGroups;
+    const groupHeaders: EntityRailTreeGroup[] = MOCK_GROUPS.map(g => ({
+      key: g.id, name: g.name, avatar: g.avatarEmoji ?? '💬', unread: g.unread, children: [],
+    }));
+    const unreadGroups = groupHeaders.filter(g => (g.unread ?? 0) > 0);
+    const restGroups = groupHeaders.filter(g => !((g.unread ?? 0) > 0));
+    return [...unreadGroups, ...agentGroups, ...restGroups];
+  }, [orderedAgents, orderedSessions]);
+  // 工作目录树形视图：组名只取末级文件夹名（完整路径进 tooltip）。
+  const workdirTreeGroups = useMemo<EntityRailTreeGroup[]>(() => {
+    const map = new Map<string, AgentSession[]>();
+    orderedSessions.forEach(s => {
+      const dir = AVAILABLE_AGENTS.find(a => a.name === s.agentName)?.workDir ?? '';
+      map.set(dir, [...(map.get(dir) ?? []), s]);
+    });
+    return Array.from(map.entries()).map(([dir, list]) => ({
+      key: dir || '__no-workdir__',
+      name: dir ? (dir.split('/').filter(Boolean).pop() ?? dir) : '未设置工作目录',
+      title: dir || undefined,
+      selectable: false,
+      children: list.map(sessionToChildRow),
+    }));
+  }, [orderedSessions]);
 
   // Sessions belong to the selected agent — switching agents changes the list.
   const agentSessions = useMemo(
@@ -1318,6 +1387,7 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
   const handleSelectSession = useCallback((id: string) => {
     setShowScheduledTasks(false);
     setShowTaskBoard(false);
+    setShowHistoryManage(false);
     setSelectedGroupId(null);
     setActiveSessionId(id);
     setSessions(prev => prev.map(s => s.id === id && s.unread ? { ...s, unread: false } : s));
@@ -1333,6 +1403,7 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
   const handleNewSession = useCallback(() => {
     setShowScheduledTasks(false);
     setShowTaskBoard(false);
+    setShowHistoryManage(false);
     setSelectedGroupId(null);
     setActiveSessionId(null);
     setDockTab(null);
@@ -1805,11 +1876,13 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
               title="对话"
               searchable={false}
               filterable={false}
-              newLabel="创建专家"
+              newLabel={railDisplay === 'experts' ? '创建专家' : '新建话题'}
               newAsRow
-              newActions={[
+              newActions={railDisplay === 'experts' ? [
                 { id: 'agent', label: '创建专家', icon: Bot, onClick: () => setShowCreateAgent(true) },
                 ...(WORK_PLUS ? [{ id: 'group', label: '创建项目组', icon: Users2, onClick: () => setNewGroupOpen(true) }] : []),
+              ] : [
+                { id: 'topic', label: '新建话题', icon: MessageSquarePlus, onClick: handleNewSession },
               ]}
               railMenu={{
                 displayModes: {
@@ -1832,11 +1905,28 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
                 },
                 expandCollapse: true,
                 actions: [
-                  { id: 'history', label: '历史记录', icon: History, onClick: () => { historySidebar.expand(); setDockTab(null); } },
-                  { id: 'manage', label: '管理专家', icon: UserCog, onClick: () => setShowAgentInfo(true) },
+                  { id: 'history', label: '历史记录', onClick: openHistoryManage },
+                  { id: 'manage', label: '管理专家', onClick: () => setShowAgentInfo(true) },
                 ],
               }}
-              grouped={railDisplay === 'workdir'}
+              treeGroups={railDisplay === 'experts' ? expertTreeGroups
+                : railDisplay === 'workdir' ? workdirTreeGroups
+                : undefined}
+              activeGroupKey={railDisplay === 'experts' && !showScheduledTasks && !showTaskBoard && !showHistoryManage
+                ? (selectedGroupId ?? selectedAgent.id)
+                : null}
+              onGroupSelect={(key) => {
+                // 群聊组头 → 打开群聊；专家组头 → 切换当前专家。
+                if (groupIdSet.has(key)) { openGroup(key); return; }
+                const agent = AVAILABLE_AGENTS.find(a => a.id === key);
+                if (agent) {
+                  setShowScheduledTasks(false); setShowTaskBoard(false); setShowHistoryManage(false);
+                  setSelectedGroupId(null);
+                  setSelectedAgent(agent);
+                }
+              }}
+              onReorderGroups={railSort === 'manual' && railDisplay === 'experts' ? setAgentOrder : undefined}
+              onReorderItems={railSort === 'manual' && railDisplay === 'topics' ? setTopicOrder : undefined}
               navEntries={WORK_PLUS ? [{
                 id: 'task-board',
                 label: '任务管理',
@@ -1852,21 +1942,12 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
                 active: showScheduledTasks,
                 onClick: () => openScheduledTasks(null),
               }] : undefined}
-              items={railItems}
-              activeId={showScheduledTasks || showTaskBoard ? null
-                : railDisplay !== 'experts' ? activeSessionId
-                : (selectedGroupId ?? selectedAgent.id)}
+              items={railDisplay === 'topics' ? topicRailItems : []}
+              activeId={showScheduledTasks || showTaskBoard || showHistoryManage ? null : activeSessionId}
               onSelect={(id) => {
-                // 话题 / 工作目录展示方式下，行是 session — 直接打开它。
-                if (railDisplay !== 'experts') {
-                  const session = sessions.find(s => s.id === id);
-                  if (session) handleOpenSessionFromBoard(session);
-                  return;
-                }
-                // 群聊 → open the group pane; 私聊 (Agent) → switch the active agent.
-                if (groupIdSet.has(id)) { openGroup(id); return; }
-                setShowScheduledTasks(false); setShowTaskBoard(false); setSelectedGroupId(null);
-                const agent = AVAILABLE_AGENTS.find(a => a.id === id); if (agent) setSelectedAgent(agent);
+                // 所有行都是话题（session）— 树形子行与平铺行一致，直接打开。
+                const session = sessions.find(s => s.id === id);
+                if (session) handleOpenSessionFromBoard(session);
               }}
               onEdit={(id) => { const agent = AVAILABLE_AGENTS.find(a => a.id === id); if (agent) { setSelectedAgent(agent); setShowAgentInfo(true); } }}
             />
@@ -1878,6 +1959,14 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
       <div className="flex flex-col flex-1 min-w-0 min-h-0 relative">
         {selectedGroup ? (
           <GroupChatPane key={selectedGroup.id} group={selectedGroup} />
+        ) : showHistoryManage ? (
+          <HistoryManagePage
+            sessions={sessions}
+            onBack={() => setShowHistoryManage(false)}
+            onOpenSession={handleOpenSessionFromBoard}
+            onUpdateSession={handleUpdateSession}
+            onDeleteSession={handleDeleteSession}
+          />
         ) : showTaskBoard ? (
           <TaskBoardPage sessions={sessions} onOpenSession={handleOpenSessionFromBoard} />
         ) : showScheduledTasks ? (
