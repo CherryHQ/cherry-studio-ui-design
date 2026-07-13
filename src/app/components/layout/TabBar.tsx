@@ -134,10 +134,10 @@ export function TabBar({
               variant="ghost"
               size="icon-xs"
               onClick={onSearchClick}
-              className="w-7 h-7 text-muted-foreground hover:text-sidebar-foreground hover:bg-sidebar-accent"
+              className="w-8 h-8 text-muted-foreground hover:text-sidebar-foreground hover:bg-sidebar-accent"
               title="搜索"
             >
-              <Search size={15} strokeWidth={1.6} />
+              <Search size={18} strokeWidth={1.6} />
             </Button>
           </Tooltip>
         )}
@@ -146,12 +146,12 @@ export function TabBar({
             <Button
               variant="ghost"
               size="icon-xs"
-              className={`w-7 h-7 ${
+              className={`w-8 h-8 ${
                 tabListOpen ? 'bg-sidebar-accent text-sidebar-foreground' : 'text-muted-foreground hover:text-sidebar-foreground hover:bg-sidebar-accent'
               }`}
               title="全部标签页"
             >
-              <ChevronDown size={15} strokeWidth={1.6} />
+              <ChevronDown size={18} strokeWidth={1.6} />
             </Button>
           </PopoverTrigger>
           <PopoverContent align="end" className="p-0 w-[240px] overflow-hidden">

@@ -1833,7 +1833,7 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
         {onBack && (
           <Button variant="ghost" size="icon-xs" onClick={onBack}
             className="p-1.5 w-auto h-auto text-muted-foreground hover:text-foreground hover:bg-accent/50">
-            <ArrowLeft size={15} strokeWidth={1.6} />
+            <ArrowLeft size={18} strokeWidth={1.6} />
           </Button>
         )}
 
@@ -1841,7 +1841,7 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
         <Tooltip content={historySidebar.isCompact ? '收起 Agent 列表' : '展开 Agent 列表'} side="bottom">
           <Button variant="ghost" size="icon-xs" onClick={() => historySidebar.toggle()}
             className={`p-1.5 w-auto h-auto mr-0.5 ${historySidebar.isCompact ? 'text-muted-foreground hover:text-foreground hover:bg-accent/40' : 'text-muted-foreground/40 hover:text-foreground hover:bg-accent/40'}`}>
-            {historySidebar.isCompact ? <PanelLeftClose size={15} strokeWidth={1.6} /> : <PanelLeftOpen size={15} strokeWidth={1.6} />}
+            {historySidebar.isCompact ? <PanelLeftClose size={18} strokeWidth={1.6} /> : <PanelLeftOpen size={18} strokeWidth={1.6} />}
           </Button>
         </Tooltip>
 
@@ -1853,15 +1853,13 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
         <Tooltip content="会话" side="bottom">
           <Button
             variant="ghost"
-            size="xs"
+            size="icon-xs"
             onClick={() => setDockTab(dockTab === 'sessions' ? null : 'sessions')}
-            className={`gap-1.5 px-2 py-[4px] text-xs ${
+            className={`p-1.5 w-auto h-auto ${
               dockTab === 'sessions' ? 'bg-accent/25 text-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-accent/40'
             }`}
           >
-            <History size={15} strokeWidth={1.6} />
-            <span>会话</span>
-            <span className="tabular-nums text-muted-foreground/50">{agentSessions.filter(s => !s.archived).length}</span>
+            <History size={18} strokeWidth={1.6} />
           </Button>
         </Tooltip>
         <div className="w-px h-3.5 bg-border/30 mx-0.5" />
@@ -1884,7 +1882,7 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
             <PopoverTrigger asChild>
               <Button variant="ghost" size="icon-xs"
                 className={`relative p-1.5 w-auto h-auto ${showPlan ? 'text-foreground bg-accent/25' : 'text-muted-foreground hover:text-foreground hover:bg-accent/40'}`}>
-                <ListChecks size={15} strokeWidth={1.6} />
+                <ListChecks size={18} strokeWidth={1.6} />
                 {sessionData.steps.some(s => s.status === 'running') && (
                   <span className="absolute top-[2px] right-[2px] w-[5px] h-[5px] rounded-full bg-warning animate-pulse" />
                 )}
@@ -1917,7 +1915,7 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
               else { setDockTab('files'); setShowExplorer(true); }
             }}
             className={`p-1.5 w-auto h-auto ${showPreview ? 'text-foreground bg-accent/25' : 'text-muted-foreground hover:text-foreground hover:bg-accent/40'}`}>
-            <PanelRightInsetIcon size={15} />
+            <PanelRightInsetIcon size={18} />
           </Button></Tooltip>
         </div>
       </div>
@@ -2255,9 +2253,11 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
               ) : (
                 <div className="flex flex-col h-full min-w-0">
                   {/* 面板的开关常驻在左侧内容区头部右缘（Claude 式），面板内不再
-                      放关闭钮；仅保留一条空头部行与内容区头部对齐。 */}
+                      放关闭钮；头部行只显示「文件」标题。 */}
                   {showExplorer && (
-                    <div className="flex-shrink-0 h-[36px] border-b border-border/30" />
+                    <div className="flex items-center px-3.5 flex-shrink-0 h-[36px] border-b border-border/30">
+                      <span className="text-xs text-foreground">文件</span>
+                    </div>
                   )}
                   <div className="flex flex-1 min-h-0 min-w-0">
                     {/* Folder list and preview are mutually exclusive — opening a
