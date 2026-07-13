@@ -1,5 +1,5 @@
 import React, { useMemo, useState, useRef } from 'react';
-import { Plus, MessageSquare, ChevronDown, ListFilter, Check, MoreHorizontal, FolderOpen, Pin } from 'lucide-react';
+import { Plus, MessageSquare, ChevronDown, ListFilter, Check, MoreHorizontal, FolderOpen, Pin, Archive } from 'lucide-react';
 import { motion } from 'motion/react';
 import {
   Button, SearchInput, Popover, PopoverTrigger, PopoverContent,
@@ -51,6 +51,9 @@ export interface EntityRailSection {
   groups?: EntityRailTreeGroup[];
   /** false = 段内行不可拖（置顶段）。默认可拖。 */
   rowsDraggable?: boolean;
+  /** false = 段内行不做「超过 5 条截断 + 查看更多」（置顶段——置顶即
+   * 用户标记的重要任务，全量展示）。默认截断。 */
+  limitRows?: boolean;
 }
 
 export interface EntityRailProps {
@@ -112,6 +115,8 @@ export interface EntityRailProps {
     onRename: (id: string) => void;
     isPinned?: (id: string) => boolean;
     onTogglePin: (id: string) => void;
+    /** 归档 — hover 行尾图标 & 右键菜单项。 */
+    onArchive?: (id: string) => void;
     onOpenInNewTab: (id: string) => void;
     onOpenInNewWindow: (id: string) => void;
     position?: { get: (id: string) => 'left' | 'right'; set: (id: string, pos: 'left' | 'right') => void };
@@ -254,6 +259,7 @@ export function EntityRail({ title, items, activeId, onSelect, onNew, onEdit, se
     // 平铺行可拖；树形子行也可拖，但只允许在同一组内落下。置顶条不可拖。
     const draggable = !!onReorderItems && !opts?.noDrag && (!!opts?.groupKey || !opts?.indent);
     const canDropHere = dragKind === 'row' && dragKey && dragKey !== item.id && dragGroup === opts?.groupKey;
+    const pinned = rowContextMenu?.isPinned?.(item.id) ?? false;
     const row = (
       <div
         className={`group/row relative ${dropKey === item.id ? 'border-t-2 border-cherry-primary/60' : ''}`}
@@ -276,46 +282,70 @@ export function EntityRail({ title, items, activeId, onSelect, onNew, onEdit, se
         <button
           type="button"
           onClick={() => onSelect(item.id)}
-          className={`w-full min-w-0 flex items-center gap-2 py-[6px] pr-9 rounded-md text-left transition-colors ${opts?.indent ? 'pl-8' : 'pl-2.5'} ${
+          className={`w-full min-w-0 flex items-center gap-2 py-[6px] rounded-md text-left transition-colors ${rowContextMenu ? 'pr-12' : 'pr-9'} ${opts?.indent ? 'pl-8' : 'pl-2.5'} ${
             active ? 'bg-accent/40 text-foreground' : 'text-foreground/80 hover:bg-accent/40'
           }`}
         >
           {item.pinned && <Pin size={9} className="-rotate-45 text-muted-foreground/50 flex-shrink-0" />}
           {item.avatar ? <span className="text-base leading-none flex-shrink-0">{item.avatar}</span> : null}
           <span className={`text-sm truncate flex-1 min-w-0 ${active ? 'font-medium' : (item.unread ? 'text-foreground' : '')}`}>{item.name}</span>
-          {/* Trailing slot: a small, low-key unread (message) count. Kept
-              subtle on purpose — a soft pill rather than a bold filled badge —
-              so it informs without shouting. */}
-          {item.unread ? (
-            <span className="min-w-[14px] h-[14px] px-1 rounded-full bg-primary/12 text-primary/80 text-[9px] leading-[14px] text-center font-medium tabular-nums flex-shrink-0 group-hover/row:opacity-0 transition-opacity">{item.unread}</span>
-          ) : item.unreadDot ? (
-            <span className="w-1.5 h-1.5 rounded-full bg-cherry-primary flex-shrink-0 group-hover/row:opacity-0 transition-opacity" />
-          ) : null}
         </button>
-        {/* Hover actions, inside the pill: "…" overflow */}
+        {/* 未读标记贴行右缘（Codex 式），hover 时让位给操作图标。 */}
+        {(item.unread || item.unreadDot) && (
+          <span className="absolute right-2.5 top-1/2 -translate-y-1/2 flex items-center group-hover/row:opacity-0 transition-opacity pointer-events-none">
+            {item.unread ? (
+              <span className="min-w-[14px] h-[14px] px-1 rounded-full bg-primary/12 text-primary/80 text-[9px] leading-[14px] text-center font-medium tabular-nums">{item.unread}</span>
+            ) : (
+              <span className="w-1.5 h-1.5 rounded-full bg-cherry-primary" />
+            )}
+          </span>
+        )}
+        {/* Hover actions：任务行 = 置顶/归档（Codex 式）；旧列表 = "…" 菜单。 */}
         <div className="absolute right-1 top-1/2 -translate-y-1/2 flex items-center gap-0.5 opacity-0 group-hover/row:opacity-100 has-[[data-state=open]]:opacity-100 transition-opacity">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
+          {rowContextMenu ? (
+            <>
               <button
                 type="button"
-                onClick={(e) => e.stopPropagation()}
-                title="更多"
-                className="p-1 rounded text-muted-foreground/50 hover:text-foreground hover:bg-accent/70 transition-colors"
+                title={pinned ? '取消置顶' : '置顶'}
+                onClick={(e) => { e.stopPropagation(); rowContextMenu.onTogglePin(item.id); }}
+                className={`p-1 rounded hover:bg-accent/70 transition-colors ${pinned ? 'text-foreground' : 'text-muted-foreground/50 hover:text-foreground'}`}
               >
-                <MoreHorizontal size={12} />
+                <Pin size={13} className={pinned ? '' : '-rotate-45'} />
               </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-32">
-              <DropdownMenuItem className={RAIL_MENU_ITEM} onClick={() => onEdit?.(item.id)}>编辑</DropdownMenuItem>
-              <DropdownMenuItem className={RAIL_MENU_ITEM}>复制</DropdownMenuItem>
-              <DropdownMenuItem className={RAIL_MENU_ITEM} variant="destructive">删除</DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+              {rowContextMenu.onArchive && (
+                <button
+                  type="button"
+                  title="归档"
+                  onClick={(e) => { e.stopPropagation(); rowContextMenu.onArchive!(item.id); }}
+                  className="p-1 rounded text-muted-foreground/50 hover:text-foreground hover:bg-accent/70 transition-colors"
+                >
+                  <Archive size={13} />
+                </button>
+              )}
+            </>
+          ) : (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  type="button"
+                  onClick={(e) => e.stopPropagation()}
+                  title="更多"
+                  className="p-1 rounded text-muted-foreground/50 hover:text-foreground hover:bg-accent/70 transition-colors"
+                >
+                  <MoreHorizontal size={12} />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-32">
+                <DropdownMenuItem className={RAIL_MENU_ITEM} onClick={() => onEdit?.(item.id)}>编辑</DropdownMenuItem>
+                <DropdownMenuItem className={RAIL_MENU_ITEM}>复制</DropdownMenuItem>
+                <DropdownMenuItem className={RAIL_MENU_ITEM} variant="destructive">删除</DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
         </div>
       </div>
     );
     if (!rowContextMenu) return <React.Fragment key={item.id}>{row}</React.Fragment>;
-    const pinned = rowContextMenu.isPinned?.(item.id) ?? false;
     const pos = rowContextMenu.position?.get(item.id) ?? 'left';
     return (
       <ContextMenu key={item.id}>
@@ -323,6 +353,9 @@ export function EntityRail({ title, items, activeId, onSelect, onNew, onEdit, se
         <ContextMenuContent className="w-40">
           <ContextMenuItem className={RAIL_MENU_ITEM} onClick={() => rowContextMenu.onRename(item.id)}>重命名</ContextMenuItem>
           <ContextMenuItem className={RAIL_MENU_ITEM} onClick={() => rowContextMenu.onTogglePin(item.id)}>{pinned ? '取消置顶' : '置顶任务'}</ContextMenuItem>
+          {rowContextMenu.onArchive && (
+            <ContextMenuItem className={RAIL_MENU_ITEM} onClick={() => rowContextMenu.onArchive!(item.id)}>归档任务</ContextMenuItem>
+          )}
           <ContextMenuItem className={RAIL_MENU_ITEM} onClick={() => rowContextMenu.onOpenInNewTab(item.id)}>在新标签页打开</ContextMenuItem>
           <ContextMenuItem className={RAIL_MENU_ITEM} onClick={() => rowContextMenu.onOpenInNewWindow(item.id)}>从新窗口打开</ContextMenuItem>
           {rowContextMenu.position && (
@@ -338,6 +371,34 @@ export function EntityRail({ title, items, activeId, onSelect, onNew, onEdit, se
           <ContextMenuItem className={RAIL_MENU_ITEM} variant="destructive" onClick={() => rowContextMenu.onDelete(item.id)}>删除</ContextMenuItem>
         </ContextMenuContent>
       </ContextMenu>
+    );
+  };
+
+  // 超过 5 条的任务列表默认截断，尾部一行浅灰「展开显示」点开看全部
+  // （Codex 式）。按段 key / 组 key 记忆展开态，仅本次会话有效。
+  const ROW_LIMIT = 5;
+  const [expandedMore, setExpandedMore] = useState<Set<string>>(() => new Set());
+  const renderLimitedRows = (
+    key: string,
+    rows: EntityRailItem[],
+    render: (i: EntityRailItem) => React.ReactNode,
+    indent?: boolean,
+  ) => {
+    const expanded = expandedMore.has(key);
+    const visible = expanded ? rows : rows.slice(0, ROW_LIMIT);
+    return (
+      <>
+        {visible.map(render)}
+        {rows.length > ROW_LIMIT && !expanded && (
+          <button
+            type="button"
+            onClick={() => setExpandedMore(prev => new Set(prev).add(key))}
+            className={`w-full text-left py-[6px] text-sm text-muted-foreground/60 hover:text-muted-foreground transition-colors ${indent ? 'pl-8' : 'pl-2.5'}`}
+          >
+            查看更多
+          </button>
+        )}
+      </>
     );
   };
 
@@ -394,7 +455,7 @@ export function EntityRail({ title, items, activeId, onSelect, onNew, onEdit, se
           )}
         </div>
         {foldable && !isCollapsed && (
-          <div className="space-y-px">{g.children.map((c) => renderRow(c, { indent: true, groupKey: g.key, scopeIds }))}</div>
+          <div className="space-y-px">{renderLimitedRows(g.key, g.children, (c) => renderRow(c, { indent: true, groupKey: g.key, scopeIds }), true)}</div>
         )}
       </div>
     );
@@ -427,7 +488,9 @@ export function EntityRail({ title, items, activeId, onSelect, onNew, onEdit, se
         </div>
         {!collapsed && (
           <div className="space-y-px">
-            {sec.items?.map(i => renderRow(i, sec.rowsDraggable === false ? { noDrag: true } : { scopeIds }))}
+            {sec.items && (sec.limitRows === false
+              ? sec.items.map(i => renderRow(i, sec.rowsDraggable === false ? { noDrag: true } : { scopeIds }))
+              : renderLimitedRows(sec.key, sec.items, i => renderRow(i, sec.rowsDraggable === false ? { noDrag: true } : { scopeIds })))}
             {sec.groups?.map(g => renderTreeGroup(g, sec.groups!))}
           </div>
         )}
