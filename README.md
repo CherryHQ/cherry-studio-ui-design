@@ -2,6 +2,20 @@
 
 Cherry Studio V2 的产品设计与 UI 交互原型。基于 React + TailwindCSS + shadcn/ui 构建的可交互设计稿。
 
+## 在线预览
+
+**本分支（automation_agentIM · 自动化 / Agent IM 协作）：**
+👉 https://cherry-studio-ui-git-automationagentim-sinxus-projects.vercel.app
+
+其他分支：
+
+| 分支 | 说明 | 预览地址 |
+| --- | --- | --- |
+| `main` | V2.0 基线 · 生产 | https://cherry-studio-ui.vercel.app |
+| `work-plus-preview` | 任务管理 / 自动化 / IM 协作全开 | https://cherry-studio-ui-git-work-plus-preview-sinxus-projects.vercel.app |
+
+> 分支预览由 Vercel 自动构建，push 后约 1–2 分钟更新。也可在页面左下角「分支预览」切换器中直接跳转。
+
 ## 快速开始
 
 ```bash
