@@ -25,4 +25,9 @@ export const PREVIEW_BRANCHES: PreviewBranch[] = [
     label: '任务管理 / 自动化 / IM 协作全开',
     url: 'https://cherry-studio-ui-git-work-plus-preview-sinxus-projects.vercel.app',
   },
+  {
+    branch: 'automation_agentIM',
+    label: '自动化 / Agent IM 协作',
+    url: 'https://cherry-studio-ui-git-automationagentim-sinxus-projects.vercel.app',
+  },
 ];
