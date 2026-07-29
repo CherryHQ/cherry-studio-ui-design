@@ -415,6 +415,7 @@ function CherryStudioInner() {
     navigateToLibrary: handleNavigateToLibrary,
     navigateToMarket: handleNavigateToMarket,
     libraryReturn: handleLibraryReturn,
+    navigateToChat: () => navigateToMenuTab('chat'),
     changeTabTitle: handleTabTitleChange,
     openSettings: (section?: string) => { setSettingsInitialSection(section); setSettingsOpen(true); },
     launchpadOpen: handleDialogCreateTab,
@@ -433,7 +434,7 @@ function CherryStudioInner() {
   }), [
     handleOpenMiniApp, handlePinTab, handleEditAssistantInLibrary,
     handleNavigateToKnowledge, handleNavigateToLibrary, handleNavigateToMarket, handleLibraryReturn,
-    handleTabTitleChange, handleDialogCreateTab,
+    navigateToMenuTab, handleTabTitleChange, handleDialogCreateTab,
     pinToSidebar, unpinFromSidebar, openLaunchpad, removeFromLaunchpad,
     libraryEditResourceId, libraryCreateType, removedFromLaunchpad,
     launchpadEditMode, hiddenApps, sidebarMiniapps, sidebarArtifacts,

@@ -22,6 +22,7 @@ import { useRecycleBin, type RecycleBinItemType } from "@/app/context/RecycleBin
 import { RecycleBinConfirmDialog } from "@/app/components/shared/RecycleBinConfirmDialog";
 import { TemplateBrowsePage } from "./TemplateBrowsePage";
 import { PromptEditPage } from "./PromptEditPage";
+import { AssistantResourcePage } from "./AssistantResourcePage";
 import { buildTags, findFolder } from "./helpers";
 
 // ===========================
@@ -339,6 +340,11 @@ export function LibraryPage() {
       />
 
       <div className="flex-1 flex flex-col min-w-0 min-h-0">
+        {/* 助手 tab —— 对齐真实产品的资源浏览页（截图风格）。
+            其他类型仍走通用 ResourceGrid。 */}
+        {sidebarFilter.type === 'resource' && sidebarFilter.resourceType === 'assistant' ? (
+          <AssistantResourcePage />
+        ) : (
         <ResourceGrid
           resources={filtered}
           sortKey={sortKey} search={search}
@@ -353,6 +359,7 @@ export function LibraryPage() {
           onBrowseTemplates={navigateToMarket}
           onCreateSkillWithAgent={() => setAiSkillOpen(true)}
         />
+        )}
       </div>
 
       <ImportModal open={importOpen} onClose={() => setImportOpen(false)} />
