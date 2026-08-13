@@ -672,12 +672,15 @@ function ArtifactOpenMenu({ fileName, onPreview }: { fileName: string; onPreview
 // Agent Message Group
 // ===========================
 
-export function AgentMessageGroup({ msgs, onResolve, onAvatarClick, onOpenArtifact, isRunning = true }: {
+export function AgentMessageGroup({ msgs, onResolve, onAvatarClick, onOpenArtifact, isRunning = true, agentName, modelName }: {
   msgs: AgentChatMessage[];
   onResolve: (msgId: string, value: string) => void;
   onAvatarClick?: () => void;
   onOpenArtifact?: (filePath: string) => void;
   isRunning?: boolean;
+  /** 这一轮是谁在说话 —— 名字 + 模型，和助手页的消息头一致 */
+  agentName?: string;
+  modelName?: string;
 }) {
   const [processExpanded, setProcessExpanded] = useState(false);
 
@@ -714,7 +717,7 @@ export function AgentMessageGroup({ msgs, onResolve, onAvatarClick, onOpenArtifa
     const final_ = lastProcessIdx >= 0 ? msgs.slice(lastProcessIdx + 1) : msgs;
     return {
       processMessages: process,
-      finalMessages: final_.filter(m => m.content && !m.permissionRequest),
+      finalMessages: final_.filter(m => (m.content || m.error) && !m.permissionRequest),
       permissionMsgs: permissions,
       artifacts: collectedArtifacts,
     };
@@ -731,6 +734,15 @@ export function AgentMessageGroup({ msgs, onResolve, onAvatarClick, onOpenArtifa
         <span className="text-[8px] leading-none">🤖</span>
       </Button>
       <div className="flex-1 min-w-0 flex flex-col gap-0.5">
+        {/* 说话人 —— 智能体名 + 模型名。报错也是这个智能体说的话，
+            所以这行在任何一种回复（含错误块）上都要在。 */}
+        {(agentName || modelName) && (
+          <div className="flex items-center gap-1.5 px-1">
+            {agentName && <span className="text-xs text-foreground">{agentName}</span>}
+            {modelName && <span className="text-xs text-muted-foreground/50 truncate">{modelName}</span>}
+          </div>
+        )}
+
         {/* Process steps — collapsible when run completes */}
         {processMessages.length > 0 && (
           <ProcessBlock
@@ -760,6 +772,15 @@ export function AgentMessageGroup({ msgs, onResolve, onAvatarClick, onOpenArtifa
           >
             {msg.content}
             {msg.videos && msg.videos.length > 0 && <VideoGallery videos={msg.videos} />}
+            {/* 这条回复本身是错误（额度用完等）—— 走全站统一的错误块 */}
+            {msg.error && (
+              <MessageErrorBlock
+                className={msg.content ? 'mt-1.5' : undefined}
+                message={msg.error.message}
+                code={msg.error.code}
+                detail={{ message: msg.error.message, code: msg.error.code, classification: msg.error.classification }}
+              />
+            )}
           </motion.div>
         ))}
 

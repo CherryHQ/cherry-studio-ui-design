@@ -1,7 +1,7 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import {
   AUTH_STORAGE_KEY, EMPTY_AUTH, LOGIN_MESSAGE_TYPE,
-  buildLoginUrl, parseAuth, readAuth, readOnboardingSeen, writeAuth, writeOnboardingSeen,
+  buildLoginUrl, hasStoredAuth, parseAuth, readAuth, readOnboardingSeen, writeAuth, writeOnboardingSeen,
   type AuthSnapshot, type AuthUser,
 } from '@/app/lib/authStorage';
 
@@ -64,7 +64,12 @@ export function useAuth(): AuthContextValue {
 }
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [snapshot, setSnapshot] = useState<AuthSnapshot>(() => readAuth());
+  // 演示的默认状态就是「已登录 · 内测账号」—— 打开预览直接能看到 CherryAI 免费
+  // 模型，不用先登录。首启引导页仍然从「欢迎 / 登录」第一步开始，走完整流程会
+  // 覆盖成登录时填的那个账号。
+  const [snapshot, setSnapshot] = useState<AuthSnapshot>(() =>
+    hasStoredAuth() ? readAuth() : DEMO_USERS.beta,
+  );
   const [onboardingSeen, setOnboardingSeen] = useState<boolean>(() => readOnboardingSeen());
   const [loginPending, setLoginPending] = useState(false);
   const loginTabRef = useRef<Window | null>(null);

@@ -145,10 +145,13 @@ function PopupCard({
 export interface ChatPanelProps {
   messages: AgentChatMessage[];
   steps: WorkflowStep[];
-  onSendMessage: (text: string) => void;
+  onSendMessage: (text: string) => void | boolean;
   onResolveUI?: (msgId: string, value: string) => void;
   onAvatarClick?: () => void;
   onOpenArtifact?: (filePath: string) => void;
+  /** 消息头上的说话人 —— 当前智能体名与模型名 */
+  agentName?: string;
+  modelName?: string;
   /** Slot rendered first inside the composer's left toolbar
    *  (e.g. agent picker + model picker pulled in from the page header). */
   headerControls?: React.ReactNode;
@@ -167,6 +170,8 @@ export function ChatPanel({
   onResolveUI,
   onAvatarClick,
   onOpenArtifact,
+  agentName,
+  modelName,
   headerControls,
   onNewSession,
   taskCompleteCallout,
@@ -227,8 +232,9 @@ export function ChatPanel({
     if (isAgentBusy) {
       // Queue while agent is busy — will be sent automatically when agent idles
       setQueuedMessages(prev => [...prev, { id: `q-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`, text: trimmed }]);
-    } else {
-      onSendMessage(trimmed);
+    } else if (onSendMessage(trimmed) === false) {
+      // 被拒（免费额度用完等）—— 保留输入内容
+      return;
     }
     setInput('');
   };
@@ -298,6 +304,8 @@ export function ChatPanel({
               onResolve={onResolveUI ?? (() => {})}
               onAvatarClick={onAvatarClick}
               onOpenArtifact={onOpenArtifact}
+              agentName={agentName}
+              modelName={modelName}
               isRunning={group.msgs.some(m => m.toolCall?.status === 'running' || (m.thinking && !m.content))}
             />
           );

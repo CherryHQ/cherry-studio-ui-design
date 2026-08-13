@@ -9,7 +9,7 @@ import {
   RotateCcw,
   ChevronRight,
 } from 'lucide-react';
-import { InlineSelect, ConfigSection, TextInput, ActionButton, PanelHeader, FormRow } from './shared';
+import { InlineSelect, ConfigSection, TextInput, ActionButton, PanelHeader, FormRow, contentColumn } from './shared';
 import { FALLBACK_BRAND_COLOR } from '@/app/config/brand-colors';
 
 // ===========================
@@ -829,7 +829,7 @@ export function DataSettingsPage() {
 
       {/* Right Column: Config */}
       <div className="flex-1 flex flex-col min-w-0 min-h-0">
-        <div className="flex-1 overflow-y-auto px-6 py-5 scrollbar-thin">
+        <div className={`flex-1 overflow-y-auto px-6 py-5 scrollbar-thin ${contentColumn}`}>
           {renderConfig()}
         </div>
       </div>

@@ -5,7 +5,7 @@ import {
 } from 'lucide-react';
 import { Button, InlineSelect as UIInlineSelect, Slider, Textarea, Typography, Switch } from '@cherry-studio/ui';
 import { useSettings } from '@/app/context/SettingsContext';
-import { FormRow, SectionHeader } from './shared';
+import { FormRow, SectionHeader, contentColumn } from './shared';
 
 // ===========================
 // Types
@@ -27,6 +27,15 @@ const NAV_ITEMS: NavItem[] = [
   { id: 'privacy', label: '隐私与高级', icon: <ShieldCheck size={14} /> },
   { id: 'custom-css', label: '自定义 CSS', icon: <Code2 size={14} /> },
 ];
+
+// 现网把原来的「通用设置」拆成了两个入口：偏好组里的「外观」和系统组里的「系统」。
+// 这里用同一个页面按 scope 过滤二级导航，避免把面板代码复制两份。
+type GeneralScope = 'appearance' | 'system';
+
+const SCOPE_CONFIG: Record<GeneralScope, { title: string; items: SubPage[] }> = {
+  appearance: { title: '外观', items: ['appearance', 'custom-css'] },
+  system: { title: '系统', items: ['system', 'privacy'] },
+};
 
 // ===========================
 // Theme color presets (matches ACCENT_MAP in SettingsContext)
@@ -280,11 +289,17 @@ function CustomCSSPanel() {
 // ===========================
 // Main: GeneralSettingsPage
 // ===========================
-export function GeneralSettingsPage() {
-  const [selectedId, setSelectedId] = useState<SubPage>('appearance');
+export function GeneralSettingsPage({ scope }: { scope?: GeneralScope } = {}) {
+  const config = scope ? SCOPE_CONFIG[scope] : null;
+  const navItems = config ? NAV_ITEMS.filter(item => config.items.includes(item.id)) : NAV_ITEMS;
+  const [selectedId, setSelectedId] = useState<SubPage>(navItems[0].id);
+  // 「外观」和「系统」是同一个组件的两个 scope，React 会复用同一个实例，
+  // useState 的初始值不会随 scope 重算。所以选中项要派生：
+  // 上一个 scope 留下的 selectedId 不在当前列表里时，回落到第一项。
+  const activeId = navItems.some(item => item.id === selectedId) ? selectedId : navItems[0].id;
 
   const renderPanel = () => {
-    switch (selectedId) {
+    switch (activeId) {
       case 'appearance': return <AppearancePanel />;
       case 'system': return <SystemPanel />;
       case 'privacy': return <PrivacyPanel />;
@@ -298,13 +313,13 @@ export function GeneralSettingsPage() {
       {/* Middle Column: Navigation */}
       <div className="w-[160px] flex-shrink-0 flex flex-col border-r border-section-border min-h-0">
         <div className="px-3.5 pt-4 pb-2 flex-shrink-0">
-          <p className="text-xs text-muted-foreground font-medium">通用配置</p>
+          <p className="text-xs text-muted-foreground font-medium">{config?.title ?? '通用配置'}</p>
         </div>
 
         <div className="flex-1 overflow-y-auto px-2.5 pb-3 scrollbar-thin-xs">
           <div className="space-y-[2px]">
-            {NAV_ITEMS.map(item => {
-              const isSelected = selectedId === item.id;
+            {navItems.map(item => {
+              const isSelected = activeId === item.id;
               return (
                 <Button size="inline"
                   key={item.id}
@@ -335,7 +350,7 @@ export function GeneralSettingsPage() {
 
       {/* Right Column: Config */}
       <div className="flex-1 flex flex-col min-w-0 min-h-0">
-        <div className="flex-1 overflow-y-auto px-7 py-5 scrollbar-thin">
+        <div className={`flex-1 overflow-y-auto px-6 py-5 scrollbar-thin ${contentColumn}`}>
           {renderPanel()}
         </div>
       </div>

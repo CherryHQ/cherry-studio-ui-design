@@ -517,7 +517,9 @@ const BRAND_LOGO_MAP: Record<string, (props: LogoProps) => React.JSX.Element> = 
   ollama: OllamaLogo,
   mistral: (props: LogoProps) => <MistralAvatar size={props.size} shape="square" iconMultiple={0.85} />,
   lechat: (props: LogoProps) => <MistralAvatar size={props.size} shape="square" iconMultiple={0.85} />,
-  deepseek: (props: LogoProps) => <DeepSeekAvatar size={props.size} shape="square" iconMultiple={0.85} />,
+  // 鲸鱼 glyph 本身又宽又满，跟其他品牌用同一个 0.85 会顶到方块边缘（看着像被裁
+  // 掉尾巴），这里单独收到 0.65。
+  deepseek: (props: LogoProps) => <DeepSeekAvatar size={props.size} shape="square" iconMultiple={0.65} />,
   perplexity: (props: LogoProps) => <PerplexityAvatar size={props.size} shape="square" iconMultiple={0.85} />,
   huggingchat: (props: LogoProps) => <HuggingFaceAvatar size={props.size} shape="square" iconMultiple={0.85} />,
   qwen: (props: LogoProps) => <QwenAvatar size={props.size} shape="square" iconMultiple={0.85} />,

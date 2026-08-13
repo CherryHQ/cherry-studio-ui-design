@@ -109,6 +109,7 @@ export function DashboardPage() {
   const maxModelTokens = Math.max(...MODEL_USAGE.map(m => m.tokens));
   const avgTokensPerConv = Math.round(totalTokens / totalConversations);
 
+  // 用量统计不套 contentColumn：数据看板要宽度，现网这页也显式 max-w-none
   return (
     <div className="flex-1 overflow-y-auto px-5 py-4 scrollbar-thin">
       {/* Header */}

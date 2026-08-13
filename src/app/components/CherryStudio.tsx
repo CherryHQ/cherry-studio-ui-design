@@ -552,6 +552,13 @@ function CherryStudioInner() {
               onToggleTheme={() => updateSetting('theme', isDark ? 'light' : 'dark')}
             />
           )}
+
+          {/* 设置是一整页，接管整个窗口（对齐现网，不再是居中弹窗） */}
+          <SettingsPage
+            open={settingsOpen}
+            onClose={() => { setSettingsOpen(false); setSettingsInitialSection(undefined); }}
+            initialSection={settingsInitialSection}
+          />
         </div>
 
         <TabContextMenu
@@ -594,12 +601,6 @@ function CherryStudioInner() {
           searchQuickActions={searchQuickActions}
         />
 
-
-        <SettingsPage
-          open={settingsOpen}
-          onClose={() => { setSettingsOpen(false); setSettingsInitialSection(undefined); }}
-          initialSection={settingsInitialSection}
-        />
 
         <QuickProviderSetupHost />
 
@@ -664,14 +665,6 @@ export function CherryStudio() {
 
 /** Mounts the user-info popup at the top level so any component can trigger it via context. */
 function UserInfoPopupHost() {
-  const { userInfoOpen, closeUserInfo, boundEmail, setBoundEmail } = useCollab();
-  return (
-    <UserInfoPopup
-      open={userInfoOpen}
-      onClose={closeUserInfo}
-      boundEmail={boundEmail}
-      onBindEmail={(email) => setBoundEmail(email)}
-      onUnbind={() => setBoundEmail(null)}
-    />
-  );
+  const { userInfoOpen, closeUserInfo } = useCollab();
+  return <UserInfoPopup open={userInfoOpen} onClose={closeUserInfo} />;
 }

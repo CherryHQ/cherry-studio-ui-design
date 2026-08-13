@@ -3,13 +3,13 @@ import { motion, AnimatePresence } from 'motion/react';
 import {
   Settings2,
   Plug, RefreshCw,
-  X,
+  X, ArrowLeft,
   Globe2, Command,
-  Cloud, FileScan, BrainCircuit, Database, Server, Sparkles, Info, MousePointer, Archive, Trash2, HardDrive, Link2,
-  Home, Zap, MessageSquareText, Radio, CalendarClock, UserRound,
+  Cloud, FileScan, Database, Server, Sparkles, Info, MousePointer, Archive, Trash2, HardDrive, Link2,
+  Zap, Radio, CalendarClock,
   HelpCircle, Rss, MessageSquare, Building2, Mail, Users, Bug, Github,
   Loader2, CheckCircle2, Calendar, ArrowUpRight,
-  FileText, BarChart3,
+  FileText, BarChart3, Package, Palette, Terminal,
 } from 'lucide-react';
 import { ModelServicePage } from './ModelServicePage';
 import { WebSearchPage } from './WebSearchPage';
@@ -31,9 +31,8 @@ import { ChannelsPage } from './ChannelsPage';
 import { TeammatesPage } from './TeammatesPage';
 import { ScheduledTasksPage } from './ScheduledTasksPage';
 import { DependenciesPage } from './DependenciesPage';
-import { AccountSettingsPage } from './AccountSettingsPage';
 import { WORK_PLUS } from '@/app/config/featureFlags';
-import { InlineSelect, SectionCard } from './shared';
+import { InlineSelect, SectionCard, contentColumn } from './shared';
 import { Tooltip } from '@/app/components/Tooltip';
 import { Button, Dialog, DialogContent, Typography, Switch, Card, CardContent, ToggleGroup, ToggleGroupItem } from '@cherry-studio/ui';
 
@@ -41,8 +40,8 @@ import { Button, Dialog, DialogContent, Typography, Switch, Card, CardContent, T
 // Types
 // ===========================
 type SettingsSection =
-  | 'home' | 'account'
-  | 'general' | 'data-settings' | 'archive' | 'recycle-bin' | 'api-gateway' | 'shortcuts' | 'about' | 'dashboard'
+  | 'home'
+  | 'appearance' | 'system' | 'data-settings' | 'archive' | 'recycle-bin' | 'api-gateway' | 'shortcuts' | 'about' | 'dashboard'
   | 'models' | 'default-model' | 'mcp' | 'search' | 'documents'
   | 'quick-assistant' | 'selection-assistant'
   | 'channels' | 'scheduled-tasks' | 'teammates'
@@ -70,41 +69,35 @@ interface ModelProvider {
 // ===========================
 // Navigation Config
 // ===========================
+// 分组与顺序对齐现网（cherry-studio main）设置页：
+// 首组无标题（模型相关）→ 工具 → 偏好 → 效率 → 系统。
+// demo 独有的页面（集成 / 归档 / 回收站 / 队友）就近挂到语义最接近的分组里。
 const NAV_GROUPS: NavGroup[] = [
   {
     label: '',
     items: [
-      { id: 'home', label: '首页', icon: Home },
-      // 账号入口常驻在「模型」分组上方：未登录时这里是登录入口，
-      // 已登录时是账号信息。进设置时的默认锚点不变。
-      { id: 'account', label: '账号', icon: UserRound },
-    ],
-  },
-  {
-    label: '模型',
-    items: [
       { id: 'models', label: '模型服务', icon: Cloud },
-      { id: 'default-model', label: '默认模型', icon: Sparkles },
+      { id: 'default-model', label: '默认模型', icon: Package },
       { id: 'api-gateway', label: 'API 网关', icon: Server },
     ],
   },
   {
-    label: '插件',
+    label: '工具',
     items: [
-      { id: 'mcp', label: 'MCP 服务', icon: Plug },
+      { id: 'mcp', label: 'MCP', icon: Plug },
       { id: 'search', label: '网络搜索', icon: Globe2 },
-      { id: 'documents', label: '文档解析', icon: FileScan },
+      { id: 'documents', label: '文档处理', icon: FileScan },
       { id: 'integrations', label: '集成', icon: Link2 },
-      { id: 'data-settings', label: '数据备份', icon: Database },
-      { id: 'dependencies', label: '环境依赖', icon: HardDrive },
     ],
   },
   {
-    label: '应用设置',
+    label: '偏好',
     items: [
-      { id: 'general', label: '通用设置', icon: Settings2 },
+      { id: 'appearance', label: '外观', icon: Palette },
+      { id: 'data-settings', label: '数据', icon: HardDrive },
       { id: 'archive', label: '归档管理', icon: Archive },
       { id: 'recycle-bin', label: '回收站', icon: Trash2 },
+      { id: 'dashboard', label: '用量统计', icon: BarChart3 },
     ],
   },
   {
@@ -113,15 +106,16 @@ const NAV_GROUPS: NavGroup[] = [
       ...(WORK_PLUS ? [{ id: 'teammates', label: '队友', icon: Users }] : []),
       { id: 'channels', label: '频道', icon: Radio },
       ...(WORK_PLUS ? [{ id: 'scheduled-tasks', label: '定时任务', icon: CalendarClock }] : []),
-      { id: 'selection-assistant', label: '划词助手', icon: MousePointer },
       { id: 'shortcuts', label: '快捷键', icon: Command },
       { id: 'quick-assistant', label: '快捷助手', icon: Sparkles },
+      { id: 'selection-assistant', label: '划词助手', icon: MousePointer },
     ],
   },
   {
     label: '系统',
     items: [
-      { id: 'dashboard', label: '数据统计', icon: BarChart3 },
+      { id: 'system', label: '系统', icon: Settings2 },
+      { id: 'dependencies', label: '环境依赖', icon: Terminal },
       { id: 'about', label: '关于我们', icon: Info },
     ],
   },
@@ -293,22 +287,21 @@ const CHANGE_TYPE_MAP = {
 // ===========================
 // Settings Sidebar
 // ===========================
-function SettingsSidebar({ active, onSelect, onClose }: { active: SettingsSection; onSelect: (s: SettingsSection) => void; onClose: () => void }) {
+function SettingsSidebar({ active, onSelect }: { active: SettingsSection; onSelect: (s: SettingsSection) => void }) {
   return (
-    <div className="w-[180px] flex-shrink-0 flex flex-col overflow-y-auto select-none scrollbar-thin-xs">
-      {/* Traffic lights */}
-      <div className="h-10 flex items-center px-4 flex-shrink-0">
-        <div className="flex items-center gap-2">
-          <Button variant="ghost" onClick={onClose} className="w-3 h-3 p-0 min-w-0 rounded-full bg-traffic-red border border-traffic-red-border hover:brightness-90 hover:bg-traffic-red transition-all cursor-default" />
-          <div className="w-3 h-3 rounded-full bg-traffic-yellow border border-traffic-yellow-border" />
-          <div className="w-3 h-3 rounded-full bg-traffic-green border border-traffic-green-border" />
-        </div>
+    <div className="w-[196px] flex-shrink-0 flex flex-col min-h-0 select-none">
+      {/* 页面标题 —— 对齐现网的 PageHeader「设置」 */}
+      <div className="px-4 pt-1 pb-3 flex-shrink-0">
+        <h1 className="text-base text-foreground font-medium">{'设置'}</h1>
       </div>
-      <div className="flex-1 px-2 pb-4 space-y-1">
+      <div className="flex-1 min-h-0 overflow-y-auto px-2 pb-4 space-y-1 scrollbar-thin-xs">
         {NAV_GROUPS.map((group, gi) => (
           <div key={gi}>
             {group.label && (
-              <p className="px-3 pb-1 pt-2 text-xs text-muted-foreground/60 leading-[12px]">{group.label}</p>
+              <>
+                <div className="mx-3 my-1.5 border-t border-section-border/70" />
+                <p className="px-3 pb-1 pt-1 text-xs text-muted-foreground/60 leading-[12px]">{group.label}</p>
+              </>
             )}
             <div className="space-y-[1px]">
               {group.items.map(item => {
@@ -558,7 +551,7 @@ function HomeSettings({ onNavigate }: { onNavigate: (s: SettingsSection) => void
           {[
             { label: '\u5feb\u6377\u952e', icon: Command, target: 'shortcuts' as SettingsSection },
             { label: '\u6570\u636e', icon: Database, target: 'data-settings' as SettingsSection },
-            { label: '\u901a\u7528', icon: Settings2, target: 'general' as SettingsSection },
+            { label: '\u7cfb\u7edf', icon: Settings2, target: 'system' as SettingsSection },
             { label: '\u5173\u4e8e', icon: Info, target: 'about' as SettingsSection },
           ].map(item => {
             const Icon = item.icon;
@@ -916,10 +909,13 @@ function AboutPage() {
 }
 
 // ===========================
-// Main Settings Page (Modal Window)
+// Main Settings Page (Full-window view)
 // ===========================
+// 对齐现网：设置不再是居中弹窗，而是接管整个窗口的一整页，
+// 顶部只留红绿灯 + 「返回」，退出后回到原来的页面。
 export function SettingsPage({ open, onClose, initialSection }: { open: boolean; onClose: () => void; initialSection?: string }) {
-  const [activeSection, setActiveSection] = useState<SettingsSection>('home');
+  // 「首页」导航项已去掉，进设置直接锚定「模型服务」
+  const [activeSection, setActiveSection] = useState<SettingsSection>('models');
 
   // Jump to initial section when opened with one
   React.useEffect(() => {
@@ -927,11 +923,49 @@ export function SettingsPage({ open, onClose, initialSection }: { open: boolean;
       setActiveSection(initialSection as SettingsSection);
     }
     if (!open) {
-      setActiveSection('home');
+      setActiveSection('models');
     }
   }, [open, initialSection]);
 
-  const renderContent = () => {
+  // Esc 返回上一个页面（原来由 Dialog 负责）
+  React.useEffect(() => {
+    if (!open) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [open, onClose]);
+
+  // 自带满高布局（左侧还有二级列表/内部滚动）的页面，直接铺满内容区；
+  // 其余页面（首页概览 / 关于）走统一的内边距 + 滚动容器。
+  const renderFullPage = () => {
+    switch (activeSection) {
+      case 'models': return <ModelServicePage />;
+      case 'default-model': return <DefaultModelSettingsPage />;
+      case 'api-gateway': return <ApiGatewayPage />;
+      case 'mcp': return <MCPServicePage />;
+      case 'search': return <WebSearchPage />;
+      case 'documents': return <DocumentServicePage />;
+      case 'integrations': return <DataSettingsPage />;
+      case 'appearance': return <GeneralSettingsPage scope="appearance" />;
+      case 'system': return <GeneralSettingsPage scope="system" />;
+      case 'data-settings': return <DataSettingsPage />;
+      case 'archive': return <ArchiveManagePage />;
+      case 'recycle-bin': return <RecycleBinPage />;
+      case 'dashboard': return <DashboardPage />;
+      case 'teammates': return <TeammatesPage />;
+      case 'channels': return <ChannelsPage />;
+      case 'scheduled-tasks': return <ScheduledTasksPage />;
+      case 'shortcuts': return <ShortcutsPage />;
+      case 'quick-assistant': return <QuickAssistantPage />;
+      case 'selection-assistant': return <SelectionAssistantPage />;
+      case 'dependencies': return <DependenciesPage />;
+      default: return null;
+    }
+  };
+
+  const renderScrollPage = () => {
     switch (activeSection) {
       case 'home': return <HomeSettings onNavigate={setActiveSection} />;
       case 'about': return <AboutPage />;
@@ -939,44 +973,53 @@ export function SettingsPage({ open, onClose, initialSection }: { open: boolean;
     }
   };
 
-  return (
-    <Dialog open={open} onOpenChange={(o) => { if (!o) onClose(); }}>
-      <DialogContent className="w-[860px] h-[620px] sm:max-w-none flex flex-col overflow-hidden p-0 bg-app-bg" showCloseButton={false} onInteractOutside={(e) => e.preventDefault()} onPointerDownOutside={(e) => e.preventDefault()} onEscapeKeyDown={(e) => { e.preventDefault(); onClose(); }}>
-        {/* Body: sidebar + content */}
-        <div className="flex flex-1 min-h-0 overflow-hidden bg-sidebar">
-          <SettingsSidebar active={activeSection} onSelect={setActiveSection} onClose={onClose} />
+  const fullPage = renderFullPage();
 
-          {/* Content Area */}
-          <div className="flex-1 flex flex-col min-w-0 overflow-hidden mr-2 mb-2 mt-2 ml-0 bg-content-bg border border-content-border rounded-2xl">
-            {activeSection === 'account' || activeSection === 'models' || activeSection === 'default-model' || activeSection === 'search' || activeSection === 'documents' || activeSection === 'data-settings' || activeSection === 'archive' || activeSection === 'recycle-bin' || activeSection === 'api-gateway' || activeSection === 'shortcuts' || activeSection === 'selection-assistant' || activeSection === 'quick-assistant' || activeSection === 'general' || activeSection === 'mcp' || activeSection === 'dashboard' || activeSection === 'channels' || activeSection === 'scheduled-tasks' || activeSection === 'teammates' || activeSection === 'dependencies' ? (
-              activeSection === 'account' ? <AccountSettingsPage />
-                : activeSection === 'models' ? <ModelServicePage />
-                : activeSection === 'default-model' ? <DefaultModelSettingsPage />
-                : activeSection === 'search' ? <WebSearchPage />
-                : activeSection === 'documents' ? <DocumentServicePage />
-                : activeSection === 'data-settings' ? <DataSettingsPage />
-                : activeSection === 'archive' ? <ArchiveManagePage />
-                : activeSection === 'recycle-bin' ? <RecycleBinPage />
-                : activeSection === 'api-gateway' ? <ApiGatewayPage />
-                : activeSection === 'shortcuts' ? <ShortcutsPage />
-                : activeSection === 'selection-assistant' ? <SelectionAssistantPage />
-                : activeSection === 'quick-assistant' ? <QuickAssistantPage />
-                : activeSection === 'general' ? <GeneralSettingsPage />
-                : activeSection === 'dashboard' ? <DashboardPage />
-                : activeSection === 'channels' ? <ChannelsPage />
-                : activeSection === 'teammates' ? <TeammatesPage />
-                : activeSection === 'scheduled-tasks' ? <ScheduledTasksPage />
-                : activeSection === 'integrations' ? <DataSettingsPage />
-                : activeSection === 'dependencies' ? <DependenciesPage />
-                : <MCPServicePage />
-            ) : (
-              <div className="flex-1 overflow-y-auto px-6 py-5 scrollbar-thin">
-                {renderContent()}
-              </div>
-            )}
+  return (
+    <AnimatePresence>
+      {/* z 必须压过侧边栏（--z-sticky）和悬浮窗，否则图标栏会盖在设置导航上 */}
+      {open && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.12 }}
+          className="absolute inset-0 z-[var(--z-modal)] flex flex-col bg-sidebar"
+          data-ui="settings.view"
+        >
+          {/* 顶栏：红绿灯 + 返回 */}
+          <div className="h-11 flex items-center gap-3 px-4 flex-shrink-0 select-none">
+            <div className="flex items-center gap-2 flex-shrink-0">
+              <Button variant="ghost" onClick={onClose} className="w-3 h-3 p-0 min-w-0 rounded-full bg-traffic-red border border-traffic-red-border hover:brightness-90 hover:bg-traffic-red transition-all cursor-default" />
+              <div className="w-3 h-3 rounded-full bg-traffic-yellow border border-traffic-yellow-border" />
+              <div className="w-3 h-3 rounded-full bg-traffic-green border border-traffic-green-border" />
+            </div>
+            <Button
+              variant="ghost"
+              size="xs"
+              onClick={onClose}
+              className="gap-1.5 px-2 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-accent/50"
+            >
+              <ArrowLeft size={14} />
+              <span>{'返回'}</span>
+            </Button>
           </div>
-        </div>
-      </DialogContent>
-    </Dialog>
+
+          {/* Body: sidebar + content */}
+          <div className="flex flex-1 min-h-0 overflow-hidden">
+            <SettingsSidebar active={activeSection} onSelect={setActiveSection} />
+
+            {/* Content Area */}
+            <div className="flex-1 flex flex-col min-w-0 overflow-hidden mr-2 mb-2 ml-0 bg-content-bg border border-content-border rounded-2xl">
+              {fullPage ?? (
+                <div className={`flex-1 overflow-y-auto px-6 py-5 scrollbar-thin ${contentColumn}`}>
+                  {renderScrollPage()}
+                </div>
+              )}
+            </div>
+          </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 }

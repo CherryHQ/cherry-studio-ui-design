@@ -7,7 +7,7 @@ import {
 import { Button, Input, Typography, Switch, EmptyState } from '@cherry-studio/ui';
 import { copyToClipboard } from '@/app/utils/clipboard';
 import { Tooltip } from '@/app/components/Tooltip';
-import { InlineSelect, ConfigSection, FormRow } from './shared';
+import { InlineSelect, ConfigSection, FormRow, contentColumn, contentColumnInner } from './shared';
 
 // ===========================
 // Types
@@ -76,17 +76,19 @@ export function ApiGatewayPage() {
   return (
     <div className="flex flex-col h-full min-h-0">
       {/* Top bar with master toggle */}
-      <div className="flex items-center justify-between px-6 pt-4 pb-0 flex-shrink-0">
-        <div>
-          <Typography variant="subtitle">配置 API 服务</Typography>
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="text-xs text-muted-foreground/60">{serviceEnabled ? '服务已开启' : '服务已关闭'}</span>
-          <Switch size="sm" checked={serviceEnabled} onCheckedChange={setServiceEnabled} />
+      <div className="px-6 pt-4 pb-0 flex-shrink-0">
+        <div className={`flex items-center justify-between ${contentColumnInner}`}>
+          <div>
+            <Typography variant="subtitle">配置 API 服务</Typography>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-muted-foreground/60">{serviceEnabled ? '服务已开启' : '服务已关闭'}</span>
+            <Switch size="sm" checked={serviceEnabled} onCheckedChange={setServiceEnabled} />
+          </div>
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto px-6 py-4 scrollbar-thin">
+      <div className={`flex-1 overflow-y-auto px-6 py-4 scrollbar-thin ${contentColumn}`}>
         {/* Status banner */}
         {serviceEnabled && (
           <div className="flex items-center gap-2.5 px-3.5 py-2.5 bg-success/[0.08] border border-success/20 rounded-xl mb-4">

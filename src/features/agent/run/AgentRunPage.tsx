@@ -6,7 +6,7 @@ import {
   Sparkles, Plus, ArrowUp,
   FileText, Zap, Search as SearchIcon, BookOpen, History,
   MessageCirclePlus, MessageSquarePlus,
-  Code2, Folder, FolderPen, Tag, ListChecks,
+  Code2, Folder, FolderPen, Tag, ListChecks, CircleSlash,
   X,
   Check,
   Edit3, Clock,
@@ -22,6 +22,9 @@ import { motion, AnimatePresence } from 'motion/react';
 import { Tooltip } from '@/app/components/Tooltip';
 import { Button, Switch, Textarea, EmptyState, Popover, PopoverTrigger, PopoverContent, SearchInput, Typography, BrandLogo, Separator, ScrollArea, DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuSub, DropdownMenuSubTrigger, DropdownMenuSubContent, Dialog, DialogContent, Input } from '@cherry-studio/ui';
 import { ModelPickerPanel } from '@/app/components/shared/ModelPickerPanel';
+import { MUTED_LOGO_CLASS } from '@cherry-studio/ui';
+import { useQuotaNotice } from '@/app/components/shared/QuotaNotice';
+import { TopBarSelector } from '@/app/components/shared/ConversationTopBar';
 import { useAgentModels } from '@/app/hooks/useAgentModels';
 import { FileExplorer } from './FileExplorer';
 import { ArtifactViewer } from './ArtifactViewer';
@@ -91,7 +94,7 @@ import {
 // Compact Input Bar — used when artifact is fullscreen-maximized
 // ===========================
 
-function CompactInputBar({ onSendMessage, agentName, headerControls, onNewSession }: { onSendMessage: (text: string) => void; agentName?: string; headerControls?: React.ReactNode; onNewSession?: () => void }) {
+function CompactInputBar({ onSendMessage, agentName, headerControls, onNewSession }: { onSendMessage: (text: string) => void | boolean; agentName?: string; headerControls?: React.ReactNode; onNewSession?: () => void }) {
   return (
     <div className="flex-shrink-0 px-3 pb-3 pt-1.5">
       <CodexStyleInput onSendMessage={onSendMessage} placeholder={`继续与 ${agentName || '智能体'} 对话...`} headerControls={headerControls} onNewSession={onNewSession} />
@@ -127,7 +130,7 @@ const CSI_SLASH_COMMANDS = [
 // MentionPickerPanel — the inline groups that used to live here are gone.
 
 function CodexStyleInput({ onSendMessage, autoFocus = false, placeholder, headerControls, onNewSession }: {
-  onSendMessage: (text: string) => void;
+  onSendMessage: (text: string) => void | boolean;
   autoFocus?: boolean;
   placeholder?: string;
   /** Same as ChatPanel.headerControls — agent + model pickers, etc. */
@@ -152,7 +155,9 @@ function CodexStyleInput({ onSendMessage, autoFocus = false, placeholder, header
 
   const handleSend = () => {
     if (input.trim()) {
-      onSendMessage(input.trim());
+      // onSendMessage 返回 false = 这条没被接受（比如免费额度用完），
+      // 这时保留输入框里的内容，用户换个模型就能直接发。
+      if (onSendMessage(input.trim()) === false) return;
       setInput('');
       if (textareaRef.current) textareaRef.current.style.height = 'auto';
     }
@@ -476,7 +481,7 @@ function CodexStyleInput({ onSendMessage, autoFocus = false, placeholder, header
   );
 }
 
-function NewSessionEmpty({ onSendMessage, agentName, headerControls, onNewSession }: { onSendMessage: (text: string) => void; agentName?: string; headerControls?: React.ReactNode; onNewSession?: () => void }) {
+function NewSessionEmpty({ onSendMessage, agentName, headerControls, onNewSession }: { onSendMessage: (text: string) => void | boolean; agentName?: string; headerControls?: React.ReactNode; onNewSession?: () => void }) {
   return (
     <div className="flex flex-col h-full w-full">
       {/* Centered empty state */}
@@ -1105,8 +1110,17 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
   const [localMessages, setLocalMessages] = useState<Record<string, AgentChatMessage[]>>({});
   const [selectedFile, setSelectedFile] = useState<string | null>('src/App.tsx');
   const [showModelPicker, setShowModelPicker] = useState(false);
+  // 顶栏的工作区选择器。默认跟随当前 Agent 的 workDir；null = 显式选了「无项目」，
+  // undefined = 没覆盖过，跟着 Agent 走。
+  const [showWorkspacePicker, setShowWorkspacePicker] = useState(false);
+  const [workDirOverride, setWorkDirOverride] = useState<string | null | undefined>(undefined);
+  const knownWorkDirs = useMemo(
+    () => Array.from(new Set(AVAILABLE_AGENTS.map(a => a.workDir).filter(Boolean))) as string[],
+    [],
+  );
   // 工作模块的模型列表 = 基础模型 + （内测账号才有的）CherryAI 免费模型
-  const { models: agentModels, noticeOnSelect } = useAgentModels(MODELS);
+  const { models: agentModels, noticeOnSelect, isQuotaBlocked } = useAgentModels(MODELS);
+  const quotaNotice = useQuotaNotice();
   const [selectedModel, setSelectedModel] = useState(MODELS[0]);
   const [showExplorer, setShowExplorer] = useState(true);
   // Single source of truth for the shared right dock: 会话 (session list),
@@ -1666,6 +1680,7 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
   }), [sessions, handleUpdateSession, handleDeleteSession, launchpadOpen]);
 
   const handleSendMessage = useCallback((text: string) => {
+    const quotaBlocked = isQuotaBlocked(selectedModel.id);
     const ts = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
 
     // Auto-create session if none active
@@ -1692,6 +1707,23 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
         [key]: [...(prev[key] ?? sessionData.messages), msg],
       }));
     };
+
+    // 免费额度用完：用户消息照常进对话，Agent 侧回一条错误 —— 错误发生在
+    // 这一轮对话里，就该留在对话里（和请求被拒、超时等一视同仁），
+    // 而不是飘在输入框上方。
+    if (quotaBlocked) {
+      addMsg({ id: `m${Date.now()}`, role: 'user', content: text, timestamp: ts });
+      setTimeout(() => {
+        addMsg({
+          id: `m${Date.now() + 1}`,
+          role: 'agent',
+          error: { message: quotaNotice.detail, classification: quotaNotice.title },
+          timestamp: ts,
+        });
+      }, 200);
+      return;
+    }
+
 
     if (!localMessages[key] && !SESSION_DATA_MAP[key]) {
       setLocalMessages(prev => ({ ...prev, [key]: [] }));
@@ -1720,7 +1752,7 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
     setTimeout(() => {
       addMsg({ id: `m${Date.now() + 3}`, role: 'agent', content: '\u6536\u5230\uff0c\u6b63\u5728\u4e3a\u4f60\u5904\u7406\u4e2d...', timestamp: ts });
     }, 2200);
-  }, [activeSessionId, sessionData.messages, localMessages]);
+  }, [activeSessionId, sessionData.messages, localMessages, isQuotaBlocked, selectedModel.id, quotaNotice]);
 
   const handleResolveUI = useCallback((msgId: string, value: string) => {
     const key = activeSessionId || '';
@@ -1756,24 +1788,40 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
     );
   }
 
-  // Model picker — moved out of the page header into the composer toolbar.
-  // The agent identity is already established by the surrounding Agent run
-  // page, so the in-composer AgentPicker is redundant and was removed.
-  const composerHeaderControls = (
-    <>
+  // 会话上下文选择器 —— Agent / 模型 / 工作区。
+  // 对齐现网：这三个不在输入框里，而是渲染到内容区顶栏
+  // （AgentChatNavbar → AgentConversationControls）。输入框底部只留
+  // 新建会话、思考档位、技能和附件。
+  const activeWorkDir = workDirOverride !== undefined ? workDirOverride : (selectedAgent.workDir ?? null);
+  // 从当前模型列表里取最新状态：免费额度用完后这个模型会被标 muted，
+  // 顶栏要和列表一样褪色，而不是继续显示成正常可用。
+  const selectedModelMuted = agentModels.find(m => m.id === selectedModel.id)?.muted ?? false;
+  const topBarControls = (
+    <div className="flex items-center gap-0.5 min-w-0">
+      {/* Agent —— 会话中点击打开 Agent 详情（现网这里是编辑弹窗，没有 chevron） */}
+      <TopBarSelector
+        icon={<span className="text-[15px] leading-none">{selectedAgent.avatar}</span>}
+        label={selectedAgent.name}
+        onClick={() => setShowAgentInfo(true)}
+      />
+
+      {/* 模型 */}
       <Popover open={showModelPicker} onOpenChange={setShowModelPicker}>
         <PopoverTrigger asChild>
-          <Button variant="ghost" size="inline"
-            className={`gap-1 px-1.5 py-[3px] text-xs ${
-            showModelPicker
-              ? 'bg-accent/25 text-foreground'
-              : 'text-muted-foreground hover:text-foreground hover:bg-accent/40'
-          }`}>
-            <span>{selectedModel.name}</span>
-            <ChevronDown size={7} className={`text-muted-foreground/50 transition-transform duration-100 ${showModelPicker ? 'rotate-180' : ''}`} />
-          </Button>
+          <TopBarSelector
+            icon={
+              // 遮罩要紧贴 logo，所以套在 BrandLogo 外面，而不是外层那个 20px 的居中槽
+              <span className={selectedModelMuted ? MUTED_LOGO_CLASS : undefined}>
+                <BrandLogo id={selectedModel.logoId ?? selectedModel.provider.toLowerCase()} fallbackLetter={selectedModel.provider[0]} size={16} />
+              </span>
+            }
+            label={selectedModel.name}
+            labelClassName={selectedModelMuted ? 'max-w-40 text-muted-foreground/60' : undefined}
+            showChevron
+            open={showModelPicker}
+          />
         </PopoverTrigger>
-        <PopoverContent align="start" side="top" className="p-0 w-[420px]">
+        <PopoverContent align="start" side="bottom" className="p-0 w-[420px]">
           <ModelPickerPanel
             models={agentModels}
             selectedModels={[selectedModel.id]}
@@ -1790,8 +1838,38 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
           />
         </PopoverContent>
       </Popover>
-      <div className="w-px h-3.5 bg-border/30 mx-0.5" />
-    </>
+
+      {/* 工作区 —— 现网是项目目录选择器，「无项目」用 CircleSlash 表示 */}
+      <Popover open={showWorkspacePicker} onOpenChange={setShowWorkspacePicker}>
+        <PopoverTrigger asChild>
+          <TopBarSelector
+            icon={activeWorkDir ? <Folder size={16} /> : <CircleSlash size={16} />}
+            label={activeWorkDir ? (activeWorkDir.split('/').filter(Boolean).pop() ?? activeWorkDir) : '无项目'}
+            title={activeWorkDir}
+            showChevron
+            open={showWorkspacePicker}
+          />
+        </PopoverTrigger>
+        <PopoverContent align="start" side="bottom" className="w-[260px] p-1">
+          <div className="px-2 py-1 text-xs text-muted-foreground/60">项目目录</div>
+          {[undefined, ...knownWorkDirs].map(dir => {
+            const active = (activeWorkDir ?? undefined) === dir;
+            return (
+              <button
+                key={dir ?? '__none__'}
+                type="button"
+                onClick={() => { setWorkDirOverride(dir ?? null); setShowWorkspacePicker(false); }}
+                className={`w-full flex items-center gap-2 px-2 py-[6px] rounded-md text-left text-xs transition-colors ${active ? 'bg-accent/40 text-foreground' : 'text-muted-foreground/80 hover:bg-accent/40'}`}
+              >
+                {dir ? <Folder size={12} className="flex-shrink-0" /> : <CircleSlash size={12} className="flex-shrink-0" />}
+                <span className="flex-1 truncate">{dir ?? '无项目'}</span>
+                {active && <Check size={10} className="text-primary flex-shrink-0" />}
+              </button>
+            );
+          })}
+        </PopoverContent>
+      </Popover>
+    </div>
   );
 
   // 会话 / 状态 / 文件 view switcher — Syncless-style icon toggles docked at the
@@ -1855,8 +1933,8 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
 
   // Extract header into reusable JSX so it can render in both normal and maximized layouts
   const headerJSX = (
-    <header className="flex items-center justify-between px-3 border-b border-transparent flex-shrink-0 h-[40px]">
-      <div className="flex items-center gap-1.5">
+    <header className="flex items-center justify-between px-3 border-b border-transparent flex-shrink-0 h-[40px] gap-2">
+      <div className="flex items-center gap-1.5 min-w-0">
         {onBack && (
           <Button variant="ghost" size="icon-xs" onClick={onBack}
             className="p-1.5 w-auto h-auto text-muted-foreground hover:text-foreground hover:bg-accent/50">
@@ -1872,9 +1950,10 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
           </Button>
         </Tooltip>
 
+        {topBarControls}
       </div>
 
-      <div className="flex items-center gap-0.5">
+      <div className="flex items-center gap-0.5 flex-shrink-0">
         {/* 任务列表入口 — 仅当任务列表实际在右侧（位置=右 且 专家列表视图）
             时出现（入口跟着内容走：列表在左栏时右上角不需要重复入口）。
             点击展开右侧「任务」面板。 */}
@@ -2006,7 +2085,7 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
         </motion.div>
 
         {/* Compact input bar at the bottom */}
-        <CompactInputBar onSendMessage={handleSendMessage} agentName={selectedAgent.name} headerControls={composerHeaderControls} onNewSession={handleNewSession} />
+        <CompactInputBar onSendMessage={handleSendMessage} agentName={selectedAgent.name} onNewSession={handleNewSession} />
 
         {/* Agent configuration dialog — same modal used in LibraryPage. */}
         <ResourceConfigDialog
@@ -2199,7 +2278,7 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
       <div className="flex flex-1 min-h-0 pl-2 min-w-0">
         <div className="min-h-0 h-full flex-1 min-w-0">
           {!hasMessages ? (
-            <NewSessionEmpty onSendMessage={handleSendMessage} agentName={selectedAgent.name} headerControls={composerHeaderControls} onNewSession={handleNewSession} />
+            <NewSessionEmpty onSendMessage={handleSendMessage} agentName={selectedAgent.name} onNewSession={handleNewSession} />
           ) : (
             <ChatPanel
               messages={messages}
@@ -2208,7 +2287,9 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
               onResolveUI={handleResolveUI}
               onAvatarClick={() => setShowAgentInfo(true)}
               onOpenArtifact={handleOpenArtifact}
-              headerControls={composerHeaderControls}
+              agentName={selectedAgent.name}
+              modelName={selectedModel.name}
+             
               onNewSession={handleNewSession}
               taskCompleteCallout={(() => {
                 // Show only after a workflow run actually finished or the

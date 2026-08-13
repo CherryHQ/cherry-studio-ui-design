@@ -35,6 +35,8 @@ export interface AgentChatMessage {
   generativeUI?: GenerativeUIData;
   permissionRequest?: PermissionRequest;
   videos?: import('./chat').VideoClip[];
+  /** 这条回复本身就是一个错误（额度用完、请求被拒等），用统一的错误块渲染 */
+  error?: { message: string; code?: string; classification?: string };
   timestamp: string;
 }
 

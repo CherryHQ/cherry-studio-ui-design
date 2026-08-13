@@ -28,20 +28,22 @@ export const PROVIDER_COLORS: Record<string, string> = {
 // Agent Models (short display names)
 // ===========================
 
+// 每条都带 modelId / 上下文窗口 / 最大输出 / 思维链档位 —— 模型选择器里 hover
+// 出的模型卡读这些字段，缺省的模型不出卡。
 export const AGENT_MODELS: ModelInfo[] = [
-  { id: 'claude-4-sonnet', name: 'Claude 4 Sonnet', provider: 'Anthropic', capabilities: ['vision', 'reasoning', 'tools'] },
-  { id: 'claude-4-opus', name: 'Claude 4 Opus', provider: 'Anthropic', capabilities: ['vision', 'reasoning', 'tools'] },
-  { id: 'claude-4-haiku', name: 'Claude 4 Haiku', provider: 'Anthropic', capabilities: ['vision', 'tools'] },
-  { id: 'gpt-4.1', name: 'GPT-4.1', provider: 'OpenAI', capabilities: ['vision', 'reasoning', 'tools', 'web'] },
-  { id: 'gpt-4.1-mini', name: 'GPT-4.1 Mini', provider: 'OpenAI', capabilities: ['vision', 'tools', 'web'] },
-  { id: 'o3', name: 'o3', provider: 'OpenAI', capabilities: ['vision', 'reasoning', 'tools'] },
-  { id: 'gemini-2.5-pro', name: 'Gemini 2.5 Pro', provider: 'Google', capabilities: ['vision', 'reasoning', 'tools'] },
-  { id: 'gemini-2.5-flash', name: 'Gemini 2.5 Flash', provider: 'Google', capabilities: ['vision', 'reasoning', 'tools'] },
-  { id: 'gemini-3-pro', name: 'Gemini 3 Pro', provider: 'Google', capabilities: ['vision', 'reasoning', 'tools', 'web'] },
-  { id: 'deepseek-r1', name: 'DeepSeek R1', provider: 'DeepSeek', capabilities: ['reasoning'] },
-  { id: 'deepseek-v3', name: 'DeepSeek V3', provider: 'DeepSeek', capabilities: ['tools', 'web'] },
-  { id: 'qwen3-235b', name: 'Qwen3 235B', provider: 'Alibaba', capabilities: ['vision', 'reasoning', 'tools'] },
-  { id: 'qwen3-32b', name: 'Qwen3 32B', provider: 'Alibaba', capabilities: ['reasoning', 'tools'] },
+  { id: 'claude-4-sonnet', name: 'Claude 4 Sonnet', provider: 'Anthropic', capabilities: ['vision', 'reasoning', 'tools'], modelId: 'claude-sonnet-4-20250514', contextWindow: 200_000, maxOutput: 64_000, thinkingLevels: '低, 中, 高' },
+  { id: 'claude-4-opus', name: 'Claude 4 Opus', provider: 'Anthropic', capabilities: ['vision', 'reasoning', 'tools'], modelId: 'claude-opus-4-20250514', contextWindow: 200_000, maxOutput: 32_000, thinkingLevels: '低, 中, 高' },
+  { id: 'claude-4-haiku', name: 'Claude 4 Haiku', provider: 'Anthropic', capabilities: ['vision', 'tools'], modelId: 'claude-haiku-4-20250514', contextWindow: 200_000, maxOutput: 8_192 },
+  { id: 'gpt-4.1', name: 'GPT-4.1', provider: 'OpenAI', capabilities: ['vision', 'reasoning', 'tools', 'web'], modelId: 'gpt-4.1', contextWindow: 1_047_576, maxOutput: 32_768, thinkingLevels: '低, 中, 高' },
+  { id: 'gpt-4.1-mini', name: 'GPT-4.1 Mini', provider: 'OpenAI', capabilities: ['vision', 'tools', 'web'], modelId: 'gpt-4.1-mini', contextWindow: 1_047_576, maxOutput: 32_768 },
+  { id: 'o3', name: 'o3', provider: 'OpenAI', capabilities: ['vision', 'reasoning', 'tools'], modelId: 'o3', contextWindow: 200_000, maxOutput: 100_000, thinkingLevels: '低, 中, 高' },
+  { id: 'gemini-2.5-pro', name: 'Gemini 2.5 Pro', provider: 'Google', capabilities: ['vision', 'reasoning', 'tools'], modelId: 'gemini-2.5-pro', contextWindow: 1_048_576, maxOutput: 65_536, thinkingLevels: '低, 中, 高' },
+  { id: 'gemini-2.5-flash', name: 'Gemini 2.5 Flash', provider: 'Google', capabilities: ['vision', 'reasoning', 'tools'], modelId: 'gemini-2.5-flash', contextWindow: 1_048_576, maxOutput: 65_536, thinkingLevels: '低, 中, 高' },
+  { id: 'gemini-3-pro', name: 'Gemini 3 Pro', provider: 'Google', capabilities: ['vision', 'reasoning', 'tools', 'web'], modelId: 'gemini-3-pro-preview', contextWindow: 1_048_576, maxOutput: 65_536, thinkingLevels: '低, 中, 高' },
+  { id: 'deepseek-r1', name: 'DeepSeek R1', provider: 'DeepSeek', capabilities: ['reasoning'], modelId: 'deepseek-reasoner', contextWindow: 131_072, maxOutput: 32_768, thinkingLevels: '沉思, 极致' },
+  { id: 'deepseek-v3', name: 'DeepSeek V3', provider: 'DeepSeek', capabilities: ['tools', 'web'], modelId: 'deepseek-chat', contextWindow: 131_072, maxOutput: 8_192 },
+  { id: 'qwen3-235b', name: 'Qwen3 235B', provider: 'Alibaba', capabilities: ['vision', 'reasoning', 'tools'], modelId: 'qwen3-235b-a22b', contextWindow: 131_072, maxOutput: 16_384, thinkingLevels: '低, 中, 高' },
+  { id: 'qwen3-32b', name: 'Qwen3 32B', provider: 'Alibaba', capabilities: ['reasoning', 'tools'], modelId: 'qwen3-32b', contextWindow: 131_072, maxOutput: 16_384, thinkingLevels: '低, 中, 高' },
 ];
 
 // ===========================
@@ -58,6 +60,15 @@ export const CHERRY_AI_FREE_MODEL: ModelInfo = {
   name: 'DeepSeek V4 Flash',
   provider: 'CherryAI',
   capabilities: ['reasoning', 'tools', 'free'],
+  // CherryAI 是托管方，模型本身是 DeepSeek —— 图标跟模型走，用 DeepSeek 蓝鲸。
+  logoId: 'deepseek',
+  modelId: 'deepseek-v4-flash',
+  contextWindow: 1_048_576,
+  maxOutput: 393_216,
+  thinkingLevels: '沉思, 极致',
+  // 免费额度只覆盖工作模块，助手对话里选不到这个模型 —— hover 模型卡上说清楚，
+  // 免得用户以为全局免费。
+  note: '限时免费，仅限于工作模块内使用',
 };
 
 // ===========================

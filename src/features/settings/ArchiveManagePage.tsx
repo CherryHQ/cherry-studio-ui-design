@@ -4,6 +4,7 @@ import { Button, SearchInput, EmptyState, Typography } from '@cherry-studio/ui';
 import { toast } from 'sonner';
 import { useRecycleBin } from '@/app/context/RecycleBinContext';
 import { useArchive } from '@/app/context/ArchiveContext';
+import { contentColumn } from './shared';
 
 // ===========================
 // Archive Manage Page
@@ -68,7 +69,7 @@ export function ArchiveManagePage() {
   return (
     <div className="flex flex-col h-full overflow-hidden">
       {/* Header */}
-      <div className="px-6 pt-5 pb-3 flex-shrink-0">
+      <div className={`px-6 pt-5 pb-3 flex-shrink-0 ${contentColumn}`}>
         <div className="flex items-center gap-2 mb-1">
           <Archive size={16} className="text-muted-foreground" />
           <Typography variant="subtitle">归档管理</Typography>
@@ -88,7 +89,7 @@ export function ArchiveManagePage() {
       </div>
 
       {/* List */}
-      <div className="flex-1 overflow-y-auto px-6 pb-4 scrollbar-thin">
+      <div className={`flex-1 overflow-y-auto px-6 pb-4 scrollbar-thin ${contentColumn}`}>
         {filtered.length === 0 ? (
           <EmptyState
             preset="no-result"

@@ -72,6 +72,7 @@ import { BranchTreePanel } from '@/features/assistant/BranchTreePanel';
 import { ChatSettingsPanel } from '@/features/assistant/ChatSettingsPanel';
 import { MentionPickerPanel } from '@/app/components/shared/MentionPickerPanel';
 import { ModelPickerPanel } from '@/app/components/shared/ModelPickerPanel';
+import { TopBarSelector } from '@/app/components/shared/ConversationTopBar';
 import { EntityRail, NewSessionIcon, PanelRightInsetIcon, type EntityRailItem, type EntityRailTreeGroup, type EntityRailSection } from '@/app/components/shared/EntityNav';
 import { InputDialog } from '@/app/components/shared/InputDialog';
 import { AssistantManagePage } from '@/features/assistant/AssistantManagePage';
@@ -1758,6 +1759,7 @@ export function AssistantRunPage() {
   const [minimalInput, setMinimalInput] = useState(true);
   const [toolbarExpanded, setToolbarExpanded] = useState(true);
   const [composerModelOpen, setComposerModelOpen] = useState(false);
+  const [topBarAssistantOpen, setTopBarAssistantOpen] = useState(false);
   const [reasoningLevel, setReasoningLevel] = useState<string | null>(null);
 
   // Toolbar tool definitions — secondary tools are reorderable
@@ -2644,6 +2646,68 @@ export function AssistantRunPage() {
               {historySidebar.isCompact ? <PanelLeftClose size={16} strokeWidth={1.6} /> : <PanelLeftOpen size={16} strokeWidth={1.6} />}
             </Button>
           </Tooltip>
+
+        {/* 会话上下文选择器 —— 助手 + 模型。对齐现网：这两个在顶栏
+            （ChatNavbar 的 conversationControls），不在输入框底部。 */}
+        <div className="flex items-center gap-0.5 min-w-0">
+          <Popover open={topBarAssistantOpen} onOpenChange={setTopBarAssistantOpen}>
+            <PopoverTrigger asChild>
+              <TopBarSelector
+                icon={<span className="text-[15px] leading-none">{currentAssistantEmoji}</span>}
+                label={selectedAssistants.length > 1 ? `${selectedAssistants.length} 个助手` : currentAssistant.name}
+                showChevron
+                open={topBarAssistantOpen}
+              />
+            </PopoverTrigger>
+            <PopoverContent align="start" side="bottom" className="w-[240px] p-1 max-h-[360px] overflow-y-auto scrollbar-thin-xs">
+              {MOCK_ASSISTANTS.map(a => {
+                const active = selectedAssistants.includes(a.id);
+                return (
+                  <button
+                    key={a.id}
+                    type="button"
+                    // 顶栏是单选切换助手（现网 AssistantSelector multi={false}）；
+                    // 多助手并行仍走输入框里的 @ 提及。
+                    onClick={() => { setSelectedAssistants([a.id]); setTopBarAssistantOpen(false); }}
+                    className={`w-full flex items-center gap-2 px-2 py-[6px] rounded-md text-left text-xs transition-colors ${active ? 'bg-accent/40 text-foreground' : 'text-muted-foreground/80 hover:bg-accent/40'}`}
+                  >
+                    <span className="text-sm leading-none flex-shrink-0">{ASSISTANT_EMOJI_MAP[a.name] || '🤖'}</span>
+                    <span className="flex-1 truncate">{a.name}</span>
+                    {active && <Check size={10} className="text-primary flex-shrink-0" />}
+                  </button>
+                );
+              })}
+            </PopoverContent>
+          </Popover>
+
+          <Popover open={composerModelOpen} onOpenChange={setComposerModelOpen}>
+            <PopoverTrigger asChild>
+              {(() => {
+                const am = ASSISTANT_MODELS.find(m => m.id === selectedModels[0]);
+                return (
+                  <TopBarSelector
+                    icon={am ? <BrandLogo id={am.logoId ?? am.provider.toLowerCase()} fallbackLetter={am.provider[0]} size={16} /> : undefined}
+                    label={selectedModels.length > 1 ? `${selectedModels.length} 个模型` : am?.name || '选择模型'}
+                    labelClassName="max-w-52"
+                    showChevron
+                    open={composerModelOpen}
+                  />
+                );
+              })()}
+            </PopoverTrigger>
+            <PopoverContent side="bottom" align="start" className="p-0 w-[480px]">
+              <ModelPickerPanel
+                selectedModels={selectedModels}
+                onSelectModel={handleSelectModel}
+                multiModel={multiModel}
+                onToggleMultiModel={handleToggleMultiModel}
+                onClose={() => setComposerModelOpen(false)}
+                onConnectProvider={() => { setComposerModelOpen(false); openProviderSetup(); }}
+              />
+            </PopoverContent>
+          </Popover>
+        </div>
+
         <div className="flex-1" />
         <div className="flex items-center gap-0.5">
           {/* Topics for the selected assistant — opens the right dock to the
@@ -3039,31 +3103,9 @@ export function AssistantRunPage() {
                           </Tooltip>
                         </>
                       )}
-                      {/* Model picker — sits next to the + */}
-                      <Popover open={composerModelOpen} onOpenChange={setComposerModelOpen}>
-                        <PopoverTrigger asChild>
-                          <Button variant="ghost" size="inline" className="gap-1 px-1.5 py-1 ml-0.5 text-xs text-muted-foreground hover:text-foreground hover:bg-accent/50 rounded-md">
-                            {(() => {
-                              const am = ASSISTANT_MODELS.find(m => m.id === selectedModels[0]);
-                              return (<>
-                                {am && <BrandLogo id={am.provider.toLowerCase()} fallbackLetter={am.provider[0]} size={13} className="shrink-0" />}
-                                <span className="truncate max-w-[130px]">{selectedModels.length > 1 ? `${selectedModels.length} 个模型` : am?.name || '选择模型'}</span>
-                                <ChevronDown size={9} className={`text-muted-foreground/40 transition-transform ${composerModelOpen ? 'rotate-180' : ''}`} />
-                              </>);
-                            })()}
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent side="top" align="start" className="p-0 w-[480px]">
-                          <ModelPickerPanel
-                            selectedModels={selectedModels}
-                            onSelectModel={handleSelectModel}
-                            multiModel={multiModel}
-                            onToggleMultiModel={handleToggleMultiModel}
-                            onClose={() => setComposerModelOpen(false)}
-                            onConnectProvider={() => { setComposerModelOpen(false); openProviderSetup(); }}
-                          />
-                        </PopoverContent>
-                      </Popover>
+                      {/* 模型选择器已经搬到内容区顶栏（对齐现网：助手 + 模型
+                          由 ChatNavbar 的 conversationControls 承载，不再挤在
+                          输入框里）。 */}
                       {/* Thinking level pill — matches the cascade icons:
                           Brain / BrainCircuit / BrainCog ramp by depth. */}
                       {reasoningLevel && (() => {

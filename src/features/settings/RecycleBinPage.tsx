@@ -16,6 +16,7 @@ import {
   type RecycleBinItem,
   type RecycleBinItemType,
 } from '@/app/context/RecycleBinContext';
+import { contentColumn, contentColumnInner } from './shared';
 
 // ===========================
 // Type config
@@ -281,7 +282,8 @@ export function RecycleBinPage() {
           {/* Selection-mode bar (only shows when items are checked). The
               non-selected default shows nothing — keeps the page light. */}
           {someSelected && (
-            <div className="flex items-center gap-2 px-6 pt-3 pb-2 flex-shrink-0 min-h-[40px]">
+            <div className="px-6 pt-3 pb-2 flex-shrink-0">
+            <div className={`flex items-center gap-2 min-h-[40px] ${contentColumnInner}`}>
               <label className="flex items-center gap-1.5 text-xs text-foreground cursor-pointer select-none">
                 <Checkbox checked={allFilteredSelected} onCheckedChange={toggleSelectAll} />
                 <span className="tabular-nums">已选 {selected.size} 项</span>
@@ -305,10 +307,11 @@ export function RecycleBinPage() {
                 </Button>
               </div>
             </div>
+            </div>
           )}
 
           {/* List */}
-          <div className="flex-1 overflow-y-auto px-6 pt-3 pb-4 scrollbar-thin">
+          <div className={`flex-1 overflow-y-auto px-6 pt-3 pb-4 scrollbar-thin ${contentColumn}`}>
             {filtered.length === 0 ? (
               <EmptyState
                 preset="no-result"

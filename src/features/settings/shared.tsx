@@ -17,6 +17,23 @@ export {
 } from '@cherry-studio/ui';
 
 // ===========================
+// contentColumn — 右侧内容列的宽度约束
+// ===========================
+// 对齐现网 DESIGN.md 的「Right-detail content container」强制项：
+// 外层负责边距和滚动，内容本身 768px（max-w-3xl）封顶并居中。
+// 设置从弹窗改成整页后窗口可以拉得很宽，没有这层约束的话一行设置项
+// 会被拉成横跨全屏的长条，label 和右侧控件离得太远。
+//
+// 用 child selector 而不是再包一层 div：直接加在滚动容器的 className 上，
+// 每个直接子块自己居中 + 封顶，行为和现网的两层结构一致。
+export const contentColumn = '[&>*]:mx-auto [&>*]:w-full [&>*]:max-w-3xl';
+
+// 容器自己就是 flex 行（比如标题 + 右侧开关的头部）时不能用 contentColumn ——
+// 那会把每个 flex 子项各撑到 768。这类地方保留外层 padding，
+// 在里面手写一层用这个 token 的 div。
+export const contentColumnInner = 'mx-auto w-full max-w-3xl';
+
+// ===========================
 // SectionCard — simple container (no title)
 // ===========================
 // Package has ConfigSection (with title), this is the untitled variant.

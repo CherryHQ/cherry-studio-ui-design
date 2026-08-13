@@ -1643,7 +1643,7 @@ function AgentCollaborationSection() {
         )}
         {!userEmail && (
           <p className="text-xs text-amber-600 dark:text-amber-400 mt-1">
-            提示：你尚未绑定用户邮箱，建议先去左下角个人信息里完成。
+            提示：你尚未绑定用户邮箱，建议先去协作模块完成绑定。
           </p>
         )}
       </div>

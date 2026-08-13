@@ -1,6 +1,8 @@
-import { useEffect, useMemo, useState } from 'react';
-import { ArrowLeft, Gift, Loader2 } from 'lucide-react';
-import { Button, Checkbox, InlineSelect } from '@cherry-studio/ui';
+import { useEffect, useRef, useState } from 'react';
+import { ArrowLeft, ChevronDown, Gift, Loader2 } from 'lucide-react';
+import { Button, Checkbox, BrandLogo, Popover, PopoverTrigger, PopoverContent } from '@cherry-studio/ui';
+import { ModelPickerPanel } from '@/app/components/shared/ModelPickerPanel';
+import { AGENT_PROVIDER_COLORS } from '@/app/config/agentTools';
 import cherryLogoImg from '@/assets/cherry-icon.png';
 import { useAuth } from '@/app/context/AuthContext';
 import { useAgentModels } from '@/app/hooks/useAgentModels';
@@ -10,11 +12,11 @@ import { CHERRY_AI_FREE_MODEL } from '@/app/config/models';
 // 首启引导（欢迎 → 选择默认模型）
 // ===========================
 // 复刻真实客户端的 onboarding 两步流程（WelcomePage / SelectModelPage /
-// SkipButton），只把主按钮从「登录 CherryIN」换成「登录 Cherry Studio」：
-// 点击后新开标签页打开浏览器登录页，本页进入等待态，登录成功自动进第二步。
+// SkipButton）：主按钮「登录 CherryIN」点击后新开标签页打开浏览器登录页，
+// 本页进入等待态，登录成功自动进第二步。
 //
-// 副标题保持原样，不宣传免费额度 —— 首批额度是邀请制内测，不是每个登录用户
-// 都有，引导页上承诺不了。
+// 原副标题（"使用 CherryIN 服务商可畅享顶级 AI 服务"）去掉了；免费额度也不在
+// 这里宣传 —— 首批额度是邀请制内测，不是每个登录用户都有，引导页上承诺不了。
 //
 // 原型是常驻网页，没有"首次启动"，所以：首次访问自动展示，看过一次就不再出现
 // （localStorage 记标记），右下角「账号演示」切换器里可以一键重放。
@@ -22,20 +24,28 @@ import { CHERRY_AI_FREE_MODEL } from '@/app/config/models';
 type Step = 'welcome' | 'select-model';
 
 export function OnboardingOverlay() {
-  const { onboardingSeen, completeOnboarding, isLoggedIn } = useAuth();
+  const { onboardingSeen, completeOnboarding, isLoggedIn, loginPending } = useAuth();
   const [step, setStep] = useState<Step>('welcome');
   const [dataCollection, setDataCollection] = useState(true); // 真实客户端默认勾选
+  const awaitingLogin = useRef(false);
 
-  // 浏览器那边登录成功 → 自动进第二步（真实代码里就是 setStep('select-model')）
+  // 浏览器那边登录成功 → 自动进第二步（真实代码里就是 setStep('select-model')）。
+  // 认的是"这一轮登录完成了"，不是"当前已登录" —— 演示的默认状态本来就是已登录，
+  // 按后者判断会一进来就跳过欢迎页。
   useEffect(() => {
-    if (isLoggedIn && step === 'welcome') setStep('select-model');
-  }, [isLoggedIn, step]);
+    if (loginPending) {
+      awaitingLogin.current = true;
+      return;
+    }
+    if (awaitingLogin.current && isLoggedIn) {
+      awaitingLogin.current = false;
+      setStep('select-model');
+    }
+  }, [loginPending, isLoggedIn]);
 
   // 重放时回到第一步
   useEffect(() => {
-    if (!onboardingSeen) setStep(isLoggedIn ? 'select-model' : 'welcome');
-    // 只在 onboardingSeen 变化时重置，避免登录后被拉回第一步
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    if (!onboardingSeen) setStep('welcome');
   }, [onboardingSeen]);
 
   if (onboardingSeen) return null;
@@ -93,7 +103,6 @@ function WelcomeStep() {
 
         <div className="flex flex-col items-center gap-2">
           <h1 className="text-2xl font-semibold text-foreground">欢迎使用 Cherry Studio</h1>
-          <p className="text-sm text-muted-foreground">使用 CherryIN 服务商可畅享顶级 AI 服务</p>
         </div>
 
         <div className="mt-2 flex w-[400px] flex-col gap-3">
@@ -109,7 +118,7 @@ function WelcomeStep() {
                 正在浏览器中完成登录…
               </>
             ) : (
-              '登录 Cherry Studio'
+              '登录 CherryIN'
             )}
           </Button>
 
@@ -154,16 +163,12 @@ function SelectModelStep({ onBack, onComplete }: { onBack: (() => void) | null; 
   const { showFreeModels } = useAuth();
   const { models } = useAgentModels();
 
-  const options = useMemo(
-    () => models.map(m => ({ value: m.id, label: m.name, desc: m.provider })),
-    [models],
-  );
-
   // 内测账号默认落在免费模型上 —— 登录后第一件事就能免费用起来
   const defaultModelId = showFreeModels ? CHERRY_AI_FREE_MODEL.id : models[0]?.id ?? '';
   const [selection, setSelection] = useState<Record<string, string>>(() =>
     Object.fromEntries(SCENARIOS.map(s => [s.id, defaultModelId])),
   );
+  const [openPicker, setOpenPicker] = useState<string | null>(null);
 
   return (
     <div className="relative flex h-full w-full flex-col items-center justify-center">
@@ -185,25 +190,46 @@ function SelectModelStep({ onBack, onComplete }: { onBack: (() => void) | null; 
           <p className="text-sm text-muted-foreground">为每个场景选择默认模型</p>
         </div>
 
-        <div className="flex flex-col gap-1 border border-section-border rounded-[var(--radius-button)] px-3.5 py-1">
-          {SCENARIOS.map(s => (
-            <div key={s.id} className="flex items-center justify-between gap-4 py-2">
-              <span className="text-xs text-muted-foreground">{s.label}</span>
-              <div className="flex items-center gap-1.5">
-                {selection[s.id] === CHERRY_AI_FREE_MODEL.id && (
-                  <span className="w-5 h-5 rounded-full bg-success/10 flex items-center justify-center" title="免费额度">
-                    <Gift size={11} className="text-success" />
-                  </span>
-                )}
-                <InlineSelect
-                  value={selection[s.id]}
-                  options={options}
-                  onChange={v => setSelection(prev => ({ ...prev, [s.id]: v }))}
-                  showDesc
-                />
+        {/* 模型选择用应用里那个统一的 ModelPickerPanel，和工作模块的选择器同一个组件 */}
+        <div className="flex flex-col border border-section-border rounded-[var(--radius-button)] px-3.5">
+          {SCENARIOS.map((s, i) => {
+            const model = models.find(m => m.id === selection[s.id]);
+            const isFree = selection[s.id] === CHERRY_AI_FREE_MODEL.id;
+            return (
+              <div
+                key={s.id}
+                className={`flex items-center justify-between gap-4 py-2.5 ${i > 0 ? 'border-t border-section-border/50' : ''}`}
+              >
+                <span className="text-xs text-muted-foreground">{s.label}</span>
+                <Popover open={openPicker === s.id} onOpenChange={o => setOpenPicker(o ? s.id : null)}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      className="h-7 gap-1.5 px-2 text-xs font-normal text-foreground hover:bg-accent/40"
+                    >
+                      {model && <BrandLogo id={model.logoId ?? model.provider.toLowerCase()} fallbackLetter={model.provider[0]} size={14} />}
+                      <span>{model?.name ?? '选择模型'}</span>
+                      {isFree && <Gift size={11} className="text-success" />}
+                      <ChevronDown size={11} className="text-muted-foreground/50" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent align="end" className="p-0 w-[420px]">
+                    <ModelPickerPanel
+                      models={models}
+                      selectedModels={[selection[s.id]]}
+                      onSelectModel={id => setSelection(prev => ({ ...prev, [s.id]: id }))}
+                      multiModel={false}
+                      onToggleMultiModel={() => {}}
+                      showMultiModelToggle={false}
+                      providerColors={AGENT_PROVIDER_COLORS}
+                      onConnectProvider={null}
+                      onClose={() => setOpenPicker(null)}
+                    />
+                  </PopoverContent>
+                </Popover>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
         <Button size="lg" onClick={onComplete} className="w-full h-12 rounded-lg">

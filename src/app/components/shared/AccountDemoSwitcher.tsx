@@ -8,8 +8,8 @@ import { useAuth, type DemoState } from '@/app/context/AuthContext';
 // 看不见"体现；没有这个切换器，评审时要真的注册两个账号、聊到额度耗尽才能看全。
 const STATES: { id: DemoState; title: string; desc: string }[] = [
   { id: 'logged-out', title: '未登录', desc: '模型选择器里没有 CherryAI' },
-  { id: 'beta', title: '已登录 · 内测账号', desc: 'CherryAI 免费模型可用' },
-  { id: 'standard', title: '已登录 · 普通账号', desc: '不在白名单，同样看不到' },
+  { id: 'beta', title: '已登录 · 内测账号', desc: 'CherryAI 免费模型可用（默认）' },
+  { id: 'standard', title: '已登录 · 普通账号', desc: '不在内测白名单，同样看不到' },
   { id: 'beta-exhausted', title: '内测账号 · 额度用完', desc: '礼物标识变灰，选中时提示' },
 ];
 
@@ -67,7 +67,7 @@ export function AccountDemoSwitcher() {
           重放首启引导
         </button>
         <div className="px-2 pt-1 pb-1.5 text-[10px] leading-relaxed text-muted-foreground/45">
-          走完整登录流程：手机号尾号 8 或邮箱以 beta 开头 = 内测白名单。
+          登录进来一律算内测账号；要看非白名单的形态，切到「普通账号」。
         </div>
       </PopoverContent>
     </Popover>

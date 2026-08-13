@@ -7,6 +7,7 @@ import {
   type RuntimeDependency,
   type DepStatus,
 } from '../extensions/ExtensionsData';
+import { contentColumn } from './shared';
 
 function depStatusLabel(s: DepStatus) {
   if (s === 'ready') return '已安装';
@@ -104,7 +105,7 @@ export function DependenciesPage() {
   return (
     <div className="flex flex-col h-full overflow-hidden">
       {/* Header */}
-      <div className="px-6 pt-5 pb-3 flex-shrink-0">
+      <div className={`px-6 pt-5 pb-3 flex-shrink-0 ${contentColumn}`}>
         <div className="flex items-center gap-2 mb-1">
           <HardDrive size={16} className="text-muted-foreground" />
           <h2 className="text-sm font-medium text-foreground">环境依赖</h2>
@@ -121,7 +122,7 @@ export function DependenciesPage() {
       </div>
 
       {/* List */}
-      <div className="flex-1 overflow-y-auto px-4 pb-4 scrollbar-thin">
+      <div className={`flex-1 overflow-y-auto px-4 pb-4 scrollbar-thin ${contentColumn}`}>
         {filtered.length === 0 ? (
           <EmptyState preset="no-result" compact />
         ) : (

@@ -34,6 +34,16 @@ export const EMPTY_AUTH: AuthSnapshot = { user: null, quotaExhausted: false };
 // 读写
 // ===========================
 
+/** 本地是否存过账号态 —— 用来区分"没存过"（首次打开演示）和"存过未登录态" */
+export function hasStoredAuth(): boolean {
+  if (typeof window === 'undefined') return false;
+  try {
+    return localStorage.getItem(AUTH_STORAGE_KEY) !== null;
+  } catch {
+    return false;
+  }
+}
+
 export function readAuth(): AuthSnapshot {
   if (typeof window === 'undefined') return EMPTY_AUTH;
   try {
@@ -95,15 +105,13 @@ export function writeOnboardingSeen(seen: boolean): void {
 // ===========================
 // 演示规则
 // ===========================
-// 首批免费额度是邀请制内测，界面上没有任何数字，所以"我是不是白名单"只能靠
-// 账号本身区分。原型里用一条一眼能记住的规则代替真实白名单查询：
-//   手机号尾号 8  /  邮箱以 beta 开头  →  内测账号
-// 评审时也可以直接用右下角「账号演示」切换器跳到任意状态。
+// 首批免费额度是邀请制内测，但演示里**登录进来一律按内测账号算** —— 这个原型
+// 就是拿来看免费模型这条线的，用手机号尾号之类的规则区分白名单只会让人以为
+// 功能坏了。要看"登录了但不在白名单"的形态，用右下角「账号演示」切换器切到
+// 「已登录 · 普通账号」。
 
-export function resolveTier(channel: LoginChannel, value: string): AccountTier {
-  const v = value.trim().toLowerCase();
-  if (channel === 'phone') return v.endsWith('8') ? 'beta' : 'standard';
-  return v.startsWith('beta') ? 'beta' : 'standard';
+export function resolveTier(_channel: LoginChannel, _value: string): AccountTier {
+  return 'beta';
 }
 
 export function deriveName(channel: LoginChannel, value: string): string {

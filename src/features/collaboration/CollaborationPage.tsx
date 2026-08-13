@@ -13,13 +13,14 @@ import { CreateAgentDialog } from './components/CreateAgentDialog';
 import { NewTopicDialog } from './components/NewTopicDialog';
 import { AddMemberDialog } from './components/AddMemberDialog';
 import { GroupSettingsDrawer } from './components/GroupSettingsDrawer';
+import { EmailAuthWizard } from './components/EmailAuthWizard';
 import { HtmlArtifactPanel } from './components/HtmlArtifactPanel';
 import { Users2, Mail } from 'lucide-react';
 
 type LeftMode = 'sessions' | 'contacts' | 'requests';
 
 export function CollaborationPage() {
-  const { boundEmail, pendingRequests, acceptRequest, rejectRequest, openUserInfo } = useCollab();
+  const { boundEmail, setBoundEmail, pendingRequests, acceptRequest, rejectRequest } = useCollab();
 
   const [mode, setMode] = useState<LeftMode>('sessions');
   const [selectedGroupId, setSelectedGroupId] = useState<string | null>(MOCK_GROUPS[0]?.id ?? null);
@@ -33,19 +34,20 @@ export function CollaborationPage() {
   const [newTopicOpen, setNewTopicOpen] = useState(false);
   const [addMemberOpen, setAddMemberOpen] = useState(false);
   const [groupSettingsOpen, setGroupSettingsOpen] = useState(false);
+  const [emailWizardOpen, setEmailWizardOpen] = useState(false);
   const [openHtmlFile, setOpenHtmlFile] = useState<string | null>(null);
   const [htmlPanelMaximized, setHtmlPanelMaximized] = useState(false);
 
   // Gate add-friend behind email binding. If user hasn't bound their own email,
-  // route to the user info popup with a toast hint instead of opening the
-  // friend dialog — otherwise the "bind YOUR email" banner and the "enter
-  // THEIR email" input both appear at once and fight for attention.
+  // open the binding wizard with a toast hint instead of the friend dialog —
+  // otherwise the "bind YOUR email" banner and the "enter THEIR email" input
+  // both appear at once and fight for attention.
   const handleAddFriendClick = () => {
     if (!boundEmail) {
       toast.warning('请先绑定你的协作邮箱', {
-        description: '在左下角个人信息里绑定 Gmail 或 QQ 邮箱后即可添加好友',
+        description: '绑定 Gmail 或 QQ 邮箱后即可添加好友',
       });
-      openUserInfo();
+      setEmailWizardOpen(true);
       return;
     }
     setAddFriendOpen(true);
@@ -100,7 +102,7 @@ export function CollaborationPage() {
         />
       );
     } else {
-      rightPane = <CollabEmptyState bound={!!boundEmail} onBind={openUserInfo} onAddFriend={handleAddFriendClick} onNewGroup={() => setNewGroupOpen(true)} />;
+      rightPane = <CollabEmptyState bound={!!boundEmail} onBind={() => setEmailWizardOpen(true)} onAddFriend={handleAddFriendClick} onNewGroup={() => setNewGroupOpen(true)} />;
     }
   } else if (mode === 'contacts') {
     rightPane = selectedContactId ? (
@@ -226,6 +228,15 @@ export function CollaborationPage() {
         open={addFriendOpen}
         onClose={() => setAddFriendOpen(false)}
       />
+      {/* 协作邮箱绑定 —— 从头像弹窗挪到协作模块自己这里，头像弹窗只管账号 */}
+      <EmailAuthWizard
+        open={emailWizardOpen}
+        onClose={() => setEmailWizardOpen(false)}
+        onComplete={(email) => {
+          setBoundEmail(email);
+          setEmailWizardOpen(false);
+        }}
+      />
       <NewGroupDialog open={newGroupOpen} onClose={() => setNewGroupOpen(false)} />
       <CreateAgentDialog open={createAgentOpen} onClose={() => setCreateAgentOpen(false)} />
       <NewTopicDialog
@@ -297,7 +308,7 @@ function CollabEmptyState({
               <span>第一步：绑定邮箱</span>
             </div>
             <div className="text-[11px] text-muted-foreground leading-relaxed mb-2">
-              协作消息通过你的邮箱收发，需要先在个人信息里绑定 Gmail 或 QQ 邮箱。
+              协作消息通过你的邮箱收发，需要先绑定 Gmail 或 QQ 邮箱。
             </div>
             <button
               onClick={onBind}

@@ -1,102 +1,105 @@
-import { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Button } from '@cherry-studio/ui';
-import { Mail, Check, AlertCircle } from 'lucide-react';
-import { EmailAuthWizard } from './EmailAuthWizard';
+import { useEffect, useState } from 'react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, Button, Input } from '@cherry-studio/ui';
+import { Loader2 } from 'lucide-react';
+import { useAuth } from '@/app/context/AuthContext';
 import { CURRENT_USER } from '../data';
 
 interface UserInfoPopupProps {
   open: boolean;
   onClose: () => void;
-  // External controlled email state
-  boundEmail: string | null;
-  onBindEmail: (email: string) => void;
-  onUnbind: () => void;
-  // When user enters this popup explicitly to bind email
-  initiallyOpenWizard?: boolean;
 }
 
-export function UserInfoPopup({
-  open, onClose, boundEmail, onBindEmail, onUnbind, initiallyOpenWizard,
-}: UserInfoPopupProps) {
-  const [wizardOpen, setWizardOpen] = useState(initiallyOpenWizard ?? false);
+// ===========================
+// 头像弹窗（个人信息）
+// ===========================
+// 结构对齐客户端的 UserPopup：300px 宽、无标题、居中头像 + 居中姓名输入框。
+// 这版在输入框下面多了一个登录 / 退出登录按钮 —— 登录本身发生在浏览器里，
+// 这里只负责发起、等待和落地。邮箱绑定不在这里，属于协作模块自己的事。
+
+export function UserInfoPopup({ open, onClose }: UserInfoPopupProps) {
+  const {
+    user, isLoggedIn, loginPending, beginBrowserLogin, reopenLoginTab, cancelBrowserLogin, logout,
+  } = useAuth();
+
+  // 姓名是本地资料，登录后默认跟随账号名；每次打开重新取一次，免得切换演示账号后
+  // 还留着上一个人的名字。
+  const [name, setName] = useState('');
+  useEffect(() => {
+    if (open) setName(user?.name ?? CURRENT_USER.name);
+  }, [open, user?.name]);
+
+  const contact = user?.phone ?? user?.email ?? '';
 
   return (
-    <>
-      <Dialog open={open && !wizardOpen} onOpenChange={(o) => !o && onClose()}>
-        <DialogContent className="max-w-[460px]">
-          <DialogHeader>
-            <DialogTitle>个人信息</DialogTitle>
-            <DialogDescription>账号资料与邮箱授权</DialogDescription>
-          </DialogHeader>
+    <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
+      {/* Radix 打开时会自动聚焦第一个可聚焦元素，且对 input 会顺手 select() ——
+          弹窗一开姓名就整段反选，像是要被替换掉。这里不自动聚焦，用户点了才进编辑。 */}
+      <DialogContent
+        className="w-[300px] gap-0 p-0 sm:max-w-[300px]"
+        onOpenAutoFocus={(e) => e.preventDefault()}
+      >
+        <DialogHeader className="sr-only">
+          <DialogTitle>用户名</DialogTitle>
+        </DialogHeader>
 
-          {/* Identity */}
-          <div className="flex items-center gap-3 px-1 py-1">
-            <div className="w-12 h-12 rounded-full overflow-hidden ring-1 ring-border flex-shrink-0">
-              <div className={`w-full h-full bg-gradient-to-br ${CURRENT_USER.avatarColor} flex items-center justify-center text-white text-[16px]`}>
-                {CURRENT_USER.avatarInitial}
-              </div>
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="text-[14px] text-foreground">{CURRENT_USER.name}</div>
-              <div className="text-[11px] text-muted-foreground truncate">{CURRENT_USER.email}</div>
+        {/* 头像 */}
+        <div className="flex justify-center mt-[30px]">
+          <div className="w-20 h-20 rounded-[25%] overflow-hidden">
+            <div className={`w-full h-full bg-gradient-to-br ${CURRENT_USER.avatarColor} flex items-center justify-center text-white text-[28px]`}>
+              {CURRENT_USER.avatarInitial}
             </div>
           </div>
+        </div>
 
-          {/* Email auth section */}
-          <div className="rounded-lg border border-border p-3 space-y-2">
-            <div className="flex items-center gap-1.5 text-[12px] text-foreground/80">
-              <Mail size={13} strokeWidth={1.6} />
-              <span>协作邮箱授权</span>
-            </div>
-            <div className="text-[11px] text-muted-foreground leading-relaxed">
-              Cherry Studio 通过 SMTP 协议在你的邮箱之间收发协作消息。绑定后即可使用协作模块。
-            </div>
+        {/* 姓名 + 登录入口 —— 按钮用主按钮（黑底白字），和上面的白底描边输入框
+            分得开；宽度也比输入框窄一档 */}
+        <div className="flex flex-col items-stretch gap-4 p-5">
+          <Input
+            placeholder="输入您的姓名"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            className="w-full text-center"
+            maxLength={30}
+          />
 
-            {boundEmail ? (
-              <div className="flex items-center justify-between mt-2 px-2.5 py-2 rounded-md bg-primary/5 border border-primary/20">
-                <div className="flex items-center gap-2">
-                  <div className="w-5 h-5 rounded-full bg-primary/15 text-primary flex items-center justify-center">
-                    <Check size={11} strokeWidth={2.4} />
-                  </div>
-                  <div>
-                    <div className="text-[12px] text-foreground">{boundEmail}</div>
-                    <div className="text-[10px] text-muted-foreground">已绑定</div>
-                  </div>
-                </div>
+          {isLoggedIn ? (
+            <div className="flex flex-col items-center gap-1.5">
+              <Button size="sm" className="px-8" onClick={logout}>退出登录</Button>
+              {contact && (
+                <div className="text-[11px] text-muted-foreground">账号：<span className="tabular-nums">{contact}</span></div>
+              )}
+            </div>
+          ) : loginPending ? (
+            <div className="flex flex-col items-center gap-1.5">
+              <Button size="sm" className="px-6" disabled>
+                <Loader2 className="animate-spin" />
+                登录中…
+              </Button>
+              {/* 两个次要动作压到和「将在浏览器中打开登录页」同一档：11px 灰字。
+                  原生 button 不继承字号，字号 / 字重必须写在按钮自己身上 */}
+              <div className="flex items-center gap-3">
                 <button
-                  onClick={onUnbind}
-                  className="text-[11px] text-muted-foreground hover:text-destructive transition-colors"
+                  onClick={reopenLoginTab}
+                  className="text-[11px] font-normal text-muted-foreground hover:text-foreground transition-colors"
                 >
-                  解绑
+                  重新打开
+                </button>
+                <button
+                  onClick={cancelBrowserLogin}
+                  className="text-[11px] font-normal text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  取消
                 </button>
               </div>
-            ) : (
-              <div className="flex items-center justify-between mt-2 px-2.5 py-2 rounded-md bg-amber-500/5 border border-amber-500/20">
-                <div className="flex items-center gap-2 text-amber-700 dark:text-amber-400">
-                  <AlertCircle size={13} strokeWidth={1.8} />
-                  <span className="text-[12px]">尚未绑定</span>
-                </div>
-                <Button size="sm" onClick={() => setWizardOpen(true)}>
-                  立即绑定
-                </Button>
-              </div>
-            )}
-          </div>
-
-          <div className="flex justify-end pt-1">
-            <Button variant="outline" onClick={onClose}>关闭</Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      <EmailAuthWizard
-        open={wizardOpen}
-        onClose={() => setWizardOpen(false)}
-        onComplete={(email) => {
-          onBindEmail(email);
-          setWizardOpen(false);
-        }}
-      />
-    </>
+            </div>
+          ) : (
+            <div className="flex flex-col items-center gap-1.5">
+              <Button size="sm" className="px-10" onClick={beginBrowserLogin}>登录</Button>
+              <div className="text-[11px] text-muted-foreground">将在浏览器中打开登录页</div>
+            </div>
+          )}
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }

@@ -4,6 +4,7 @@ import {
   RotateCcw, AlertTriangle, MessagesSquare,
 } from 'lucide-react';
 import { Button, EmptyState, Typography, Switch } from '@cherry-studio/ui';
+import { contentColumn, contentColumnInner } from './shared';
 
 // ===========================
 // Types
@@ -236,19 +237,21 @@ export function ShortcutsPage() {
       {/* Right content */}
       <div className="flex-1 flex flex-col min-w-0 min-h-0">
         {/* Header row */}
-        <div className="flex items-center justify-between px-5 pt-4 pb-2 flex-shrink-0">
-          <Typography variant="subtitle">{selectedCategory.label}</Typography>
-          <div className="flex items-center gap-1">
-            <Button variant="ghost" size="xs" onClick={handleResetGroup} className="flex items-center gap-0.5 px-2 text-muted-foreground/60 hover:text-foreground transition-colors">
-              <RotateCcw size={7} />
-              <span>重置</span>
-            </Button>
+        <div className="px-5 pt-4 pb-2 flex-shrink-0">
+          <div className={`flex items-center justify-between ${contentColumnInner}`}>
+            <Typography variant="subtitle">{selectedCategory.label}</Typography>
+            <div className="flex items-center gap-1">
+              <Button variant="ghost" size="xs" onClick={handleResetGroup} className="flex items-center gap-0.5 px-2 text-muted-foreground/60 hover:text-foreground transition-colors">
+                <RotateCcw size={7} />
+                <span>重置</span>
+              </Button>
+            </div>
           </div>
         </div>
 
 
         {/* List */}
-        <div className="flex-1 overflow-y-auto px-5 pt-1 pb-4 scrollbar-thin">
+        <div className={`flex-1 overflow-y-auto px-5 pt-1 pb-4 scrollbar-thin ${contentColumn}`}>
           {filteredItems.length === 0 ? (
             <EmptyState preset="no-result" title="没有匹配的快捷键" compact />
           ) : (
