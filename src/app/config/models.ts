@@ -14,6 +14,7 @@ export { MODEL_CAPABILITY_LABELS } from '../types/chat';
 // ===========================
 
 export const PROVIDER_COLORS: Record<string, string> = {
+  CherryAI: 'bg-cherry-primary',
   Anthropic: 'bg-orange-500',
   Google: 'bg-blue-500',
   OpenAI: 'bg-emerald-600',
@@ -42,6 +43,22 @@ export const AGENT_MODELS: ModelInfo[] = [
   { id: 'qwen3-235b', name: 'Qwen3 235B', provider: 'Alibaba', capabilities: ['vision', 'reasoning', 'tools'] },
   { id: 'qwen3-32b', name: 'Qwen3 32B', provider: 'Alibaba', capabilities: ['reasoning', 'tools'] },
 ];
+
+// ===========================
+// CherryAI 免费模型（内测）
+// ===========================
+// 首批免费额度是邀请制内测，所以这个模型只对内测白名单账号出现，未登录和普通
+// 登录用户在模型选择器里看不到 CherryAI 这一组（见 useAgentModels）。额度用完
+// 时礼物标识变灰、选中时提示，模型本身不消失。
+//
+// CherryAI 不是模型服务商，设置 → 模型服务里**不**登记这一条。
+
+export const CHERRY_AI_FREE_MODEL: ModelInfo = {
+  id: 'cherryai-deepseek-v4-flash',
+  name: 'DeepSeek V4 Flash',
+  provider: 'CherryAI',
+  capabilities: ['reasoning', 'tools', 'free'],
+};
 
 // ===========================
 // Assistant Models (vendor/model format)

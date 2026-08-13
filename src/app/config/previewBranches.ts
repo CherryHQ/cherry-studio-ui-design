@@ -30,4 +30,9 @@ export const PREVIEW_BRANCHES: PreviewBranch[] = [
     label: '自动化 / Agent IM 协作',
     url: 'https://cherry-studio-ui-git-automationagentim-sinxus-projects.vercel.app',
   },
+  {
+    branch: 'feat-auth-free-quota',
+    label: '账号登录 / 内测免费模型',
+    url: 'https://cherry-studio-ui-git-feat-auth-free-quota-sinxus-projects.vercel.app',
+  },
 ];

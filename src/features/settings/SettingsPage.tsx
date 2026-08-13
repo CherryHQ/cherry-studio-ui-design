@@ -6,7 +6,7 @@ import {
   X,
   Globe2, Command,
   Cloud, FileScan, BrainCircuit, Database, Server, Sparkles, Info, MousePointer, Archive, Trash2, HardDrive, Link2,
-  Home, Zap, MessageSquareText, Radio, CalendarClock,
+  Home, Zap, MessageSquareText, Radio, CalendarClock, UserRound,
   HelpCircle, Rss, MessageSquare, Building2, Mail, Users, Bug, Github,
   Loader2, CheckCircle2, Calendar, ArrowUpRight,
   FileText, BarChart3,
@@ -31,6 +31,7 @@ import { ChannelsPage } from './ChannelsPage';
 import { TeammatesPage } from './TeammatesPage';
 import { ScheduledTasksPage } from './ScheduledTasksPage';
 import { DependenciesPage } from './DependenciesPage';
+import { AccountSettingsPage } from './AccountSettingsPage';
 import { WORK_PLUS } from '@/app/config/featureFlags';
 import { InlineSelect, SectionCard } from './shared';
 import { Tooltip } from '@/app/components/Tooltip';
@@ -40,7 +41,7 @@ import { Button, Dialog, DialogContent, Typography, Switch, Card, CardContent, T
 // Types
 // ===========================
 type SettingsSection =
-  | 'home'
+  | 'home' | 'account'
   | 'general' | 'data-settings' | 'archive' | 'recycle-bin' | 'api-gateway' | 'shortcuts' | 'about' | 'dashboard'
   | 'models' | 'default-model' | 'mcp' | 'search' | 'documents'
   | 'quick-assistant' | 'selection-assistant'
@@ -74,6 +75,9 @@ const NAV_GROUPS: NavGroup[] = [
     label: '',
     items: [
       { id: 'home', label: '首页', icon: Home },
+      // 账号入口常驻在「模型」分组上方：未登录时这里是登录入口，
+      // 已登录时是账号信息。进设置时的默认锚点不变。
+      { id: 'account', label: '账号', icon: UserRound },
     ],
   },
   {
@@ -944,8 +948,9 @@ export function SettingsPage({ open, onClose, initialSection }: { open: boolean;
 
           {/* Content Area */}
           <div className="flex-1 flex flex-col min-w-0 overflow-hidden mr-2 mb-2 mt-2 ml-0 bg-content-bg border border-content-border rounded-2xl">
-            {activeSection === 'models' || activeSection === 'default-model' || activeSection === 'search' || activeSection === 'documents' || activeSection === 'data-settings' || activeSection === 'archive' || activeSection === 'recycle-bin' || activeSection === 'api-gateway' || activeSection === 'shortcuts' || activeSection === 'selection-assistant' || activeSection === 'quick-assistant' || activeSection === 'general' || activeSection === 'mcp' || activeSection === 'dashboard' || activeSection === 'channels' || activeSection === 'scheduled-tasks' || activeSection === 'teammates' || activeSection === 'dependencies' ? (
-              activeSection === 'models' ? <ModelServicePage />
+            {activeSection === 'account' || activeSection === 'models' || activeSection === 'default-model' || activeSection === 'search' || activeSection === 'documents' || activeSection === 'data-settings' || activeSection === 'archive' || activeSection === 'recycle-bin' || activeSection === 'api-gateway' || activeSection === 'shortcuts' || activeSection === 'selection-assistant' || activeSection === 'quick-assistant' || activeSection === 'general' || activeSection === 'mcp' || activeSection === 'dashboard' || activeSection === 'channels' || activeSection === 'scheduled-tasks' || activeSection === 'teammates' || activeSection === 'dependencies' ? (
+              activeSection === 'account' ? <AccountSettingsPage />
+                : activeSection === 'models' ? <ModelServicePage />
                 : activeSection === 'default-model' ? <DefaultModelSettingsPage />
                 : activeSection === 'search' ? <WebSearchPage />
                 : activeSection === 'documents' ? <DocumentServicePage />

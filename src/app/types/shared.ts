@@ -44,6 +44,8 @@ export interface ModelInfo {
   provider: string;
   capabilities: ModelCapability[];
   group?: string;
+  /** 当前不可用的能力标识（徽标转灰），例：免费额度用完后的 free */
+  mutedCapabilities?: ModelCapability[];
 }
 
 // --- Web Search Types ---

@@ -24,6 +24,11 @@ export interface ModelInfo {
   provider: string;
   capabilities: ModelCapability[];
   group?: string;
+  /**
+   * 当前不可用的能力标识 —— 徽标仍然出现，但转成中性灰，表示"这个模型有这项
+   * 能力，只是现在用不上"。例：免费额度用完后的 free 标识。
+   */
+  mutedCapabilities?: ModelCapability[];
 }
 
 export const MODEL_CAPABILITY_LABELS: Record<ModelCapability, string> = {
@@ -187,9 +192,10 @@ export function ModelPickerPanel({
           {m.capabilities.filter(cap => cap in CAP_CONFIG).map(cap => {
             const cfg = CAP_CONFIG[cap as ModelCapability];
             const CapIcon = cfg.icon;
+            const muted = m.mutedCapabilities?.includes(cap as ModelCapability);
             return (
-              <span key={cap} className={cn("w-5 h-5 rounded-full flex items-center justify-center", cfg.bg)}>
-                <CapIcon size={11} className={cfg.text} />
+              <span key={cap} className={cn("w-5 h-5 rounded-full flex items-center justify-center", muted ? 'bg-muted-foreground/10' : cfg.bg)}>
+                <CapIcon size={11} className={muted ? 'text-muted-foreground/40' : cfg.text} />
               </span>
             );
           })}

@@ -22,6 +22,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { Tooltip } from '@/app/components/Tooltip';
 import { Button, Switch, Textarea, EmptyState, Popover, PopoverTrigger, PopoverContent, SearchInput, Typography, BrandLogo, Separator, ScrollArea, DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuSub, DropdownMenuSubTrigger, DropdownMenuSubContent, Dialog, DialogContent, Input } from '@cherry-studio/ui';
 import { ModelPickerPanel } from '@/app/components/shared/ModelPickerPanel';
+import { useAgentModels } from '@/app/hooks/useAgentModels';
 import { FileExplorer } from './FileExplorer';
 import { ArtifactViewer } from './ArtifactViewer';
 import { ChatPanel } from './ChatPanel';
@@ -1104,6 +1105,8 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
   const [localMessages, setLocalMessages] = useState<Record<string, AgentChatMessage[]>>({});
   const [selectedFile, setSelectedFile] = useState<string | null>('src/App.tsx');
   const [showModelPicker, setShowModelPicker] = useState(false);
+  // 工作模块的模型列表 = 基础模型 + （内测账号才有的）CherryAI 免费模型
+  const { models: agentModels, noticeOnSelect } = useAgentModels(MODELS);
   const [selectedModel, setSelectedModel] = useState(MODELS[0]);
   const [showExplorer, setShowExplorer] = useState(true);
   // Single source of truth for the shared right dock: 会话 (session list),
@@ -1772,9 +1775,13 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
         </PopoverTrigger>
         <PopoverContent align="start" side="top" className="p-0 w-[420px]">
           <ModelPickerPanel
-            models={MODELS}
+            models={agentModels}
             selectedModels={[selectedModel.id]}
-            onSelectModel={(id) => { const m = MODELS.find(m => m.id === id); if (m) setSelectedModel(m); }}
+            onSelectModel={(id) => {
+              const m = agentModels.find(m => m.id === id);
+              if (m) setSelectedModel(m);
+              noticeOnSelect(id);
+            }}
             multiModel={false}
             onToggleMultiModel={() => {}}
             showMultiModelToggle={false}

@@ -45,6 +45,7 @@ export type AgentModelCapability = ModelCapability;
 // ===========================
 
 export const AGENT_PROVIDER_COLORS: Record<string, string> = {
+  CherryAI: 'bg-cherry-primary',
   Anthropic: 'bg-orange-500',
   Google: 'bg-blue-500',
   OpenAI: 'bg-emerald-600',
