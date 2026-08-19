@@ -163,8 +163,9 @@ function SelectModelStep({ onBack, onComplete }: { onBack: (() => void) | null; 
   const { showFreeModels } = useAuth();
   const { models } = useAgentModels();
 
-  // 内测账号默认落在免费模型上 —— 登录后第一件事就能免费用起来
-  const defaultModelId = showFreeModels ? CHERRY_AI_FREE_MODEL.id : models[0]?.id ?? '';
+  // 内测账号默认落在免费模型上 —— 登录后第一件事就能免费用起来。
+  // 列表里可能混着引导行（Go 未订阅的「旗舰开源模型 · 订阅」），不是真模型，跳过。
+  const defaultModelId = showFreeModels ? CHERRY_AI_FREE_MODEL.id : models.find(m => !m.cta)?.id ?? '';
   const [selection, setSelection] = useState<Record<string, string>>(() =>
     Object.fromEntries(SCENARIOS.map(s => [s.id, defaultModelId])),
   );
@@ -223,6 +224,8 @@ function SelectModelStep({ onBack, onComplete }: { onBack: (() => void) | null; 
                       showMultiModelToggle={false}
                       providerColors={AGENT_PROVIDER_COLORS}
                       onConnectProvider={null}
+                      // 首启引导里不做付费引导：Go 的「订阅」行在这里不渲染
+                      onCtaClick={null}
                       onClose={() => setOpenPicker(null)}
                     />
                   </PopoverContent>

@@ -10,6 +10,7 @@ Cherry Studio V2 的产品设计与 UI 交互原型。基于 React + TailwindCSS
 | `work-plus-preview` | 任务管理 / 自动化 / IM 协作全开 | https://cherry-studio-ui-git-work-plus-preview-sinxus-projects.vercel.app |
 | `automation_agentIM` | 自动化 / Agent IM 协作 | https://cherry-studio-ui-git-automationagentim-sinxus-projects.vercel.app |
 | `feat-auth-free-quota` | 账号登录 / 内测免费模型 | https://cherry-studio-ui-git-feat-auth-free-quota-sinxus-projects.vercel.app |
+| `feat-go-subscription` | Cherry Go 订阅模式（客户端 + 官网） | https://cherry-studio-ui-git-feat-go-subscription-sinxus-projects.vercel.app |
 
 > 分支预览由 Vercel 自动构建，push 后约 1–2 分钟更新。也可在页面左下角「分支预览」切换器中直接跳转。新增长期分支时，请同步登记 `src/app/config/previewBranches.ts` 和本表格。
 

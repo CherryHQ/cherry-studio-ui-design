@@ -59,6 +59,11 @@ export interface ModelInfo {
   thinkingLevels?: string;
   /** 模型卡底部的额外说明，例：限时免费的使用范围 */
   note?: string;
+  /**
+   * 引导行（非真模型）：占据一个模型行的位置，右侧是一颗小动作按钮
+   * （如「订阅」「申请」）。点击走选择器的 onCtaClick，不进入选中态。
+   */
+  cta?: { actionLabel: string };
 }
 
 // --- Web Search Types ---

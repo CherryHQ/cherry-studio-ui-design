@@ -9,9 +9,10 @@ import {
   Zap, Radio, CalendarClock,
   HelpCircle, Rss, MessageSquare, Building2, Mail, Users, Bug, Github,
   Loader2, CheckCircle2, Calendar, ArrowUpRight,
-  FileText, BarChart3, Package, Palette, Terminal,
+  FileText, BarChart3, Package, Palette, Terminal, Gauge,
 } from 'lucide-react';
 import { ModelServicePage } from './ModelServicePage';
+import { UsageBillingPage } from './UsageBillingPage';
 import { WebSearchPage } from './WebSearchPage';
 import { DocumentServicePage } from './DocumentServicePage';
 import { MemoriesPage } from './MemoriesPage';
@@ -42,6 +43,7 @@ import { Button, Dialog, DialogContent, Typography, Switch, Card, CardContent, T
 type SettingsSection =
   | 'home'
   | 'appearance' | 'system' | 'data-settings' | 'archive' | 'recycle-bin' | 'api-gateway' | 'shortcuts' | 'about' | 'dashboard'
+  | 'usage-billing'
   | 'models' | 'default-model' | 'mcp' | 'search' | 'documents'
   | 'quick-assistant' | 'selection-assistant'
   | 'channels' | 'scheduled-tasks' | 'teammates'
@@ -76,6 +78,7 @@ const NAV_GROUPS: NavGroup[] = [
   {
     label: '',
     items: [
+      { id: 'usage-billing', label: '订阅额度', icon: Gauge },
       { id: 'models', label: '模型服务', icon: Cloud },
       { id: 'default-model', label: '默认模型', icon: Package },
       { id: 'api-gateway', label: 'API 网关', icon: Server },
@@ -941,6 +944,7 @@ export function SettingsPage({ open, onClose, initialSection }: { open: boolean;
   // 其余页面（首页概览 / 关于）走统一的内边距 + 滚动容器。
   const renderFullPage = () => {
     switch (activeSection) {
+      case 'usage-billing': return <UsageBillingPage />;
       case 'models': return <ModelServicePage />;
       case 'default-model': return <DefaultModelSettingsPage />;
       case 'api-gateway': return <ApiGatewayPage />;

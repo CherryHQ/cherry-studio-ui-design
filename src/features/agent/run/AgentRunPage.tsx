@@ -23,7 +23,6 @@ import { Tooltip } from '@/app/components/Tooltip';
 import { Button, Switch, Textarea, EmptyState, Popover, PopoverTrigger, PopoverContent, SearchInput, Typography, BrandLogo, Separator, ScrollArea, DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuSub, DropdownMenuSubTrigger, DropdownMenuSubContent, Dialog, DialogContent, Input } from '@cherry-studio/ui';
 import { ModelPickerPanel } from '@/app/components/shared/ModelPickerPanel';
 import { MUTED_LOGO_CLASS } from '@cherry-studio/ui';
-import { useQuotaNotice } from '@/app/components/shared/QuotaNotice';
 import { TopBarSelector } from '@/app/components/shared/ConversationTopBar';
 import { useAgentModels } from '@/app/hooks/useAgentModels';
 import { FileExplorer } from './FileExplorer';
@@ -1119,8 +1118,7 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
     [],
   );
   // 工作模块的模型列表 = 基础模型 + （内测账号才有的）CherryAI 免费模型
-  const { models: agentModels, noticeOnSelect, isQuotaBlocked } = useAgentModels(MODELS);
-  const quotaNotice = useQuotaNotice();
+  const { models: agentModels, noticeOnSelect, quotaErrorFor } = useAgentModels(MODELS);
   const [selectedModel, setSelectedModel] = useState(MODELS[0]);
   const [showExplorer, setShowExplorer] = useState(true);
   // Single source of truth for the shared right dock: 会话 (session list),
@@ -1680,7 +1678,7 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
   }), [sessions, handleUpdateSession, handleDeleteSession, launchpadOpen]);
 
   const handleSendMessage = useCallback((text: string) => {
-    const quotaBlocked = isQuotaBlocked(selectedModel.id);
+    const quotaError = quotaErrorFor(selectedModel.id);
     const ts = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
 
     // Auto-create session if none active
@@ -1711,13 +1709,13 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
     // 免费额度用完：用户消息照常进对话，Agent 侧回一条错误 —— 错误发生在
     // 这一轮对话里，就该留在对话里（和请求被拒、超时等一视同仁），
     // 而不是飘在输入框上方。
-    if (quotaBlocked) {
+    if (quotaError) {
       addMsg({ id: `m${Date.now()}`, role: 'user', content: text, timestamp: ts });
       setTimeout(() => {
         addMsg({
           id: `m${Date.now() + 1}`,
           role: 'agent',
-          error: { message: quotaNotice.detail, classification: quotaNotice.title },
+          error: { message: quotaError.message, classification: quotaError.classification },
           timestamp: ts,
         });
       }, 200);
@@ -1752,7 +1750,7 @@ export function AgentRunPage({ onBack }: { onBack?: () => void } = {}) {
     setTimeout(() => {
       addMsg({ id: `m${Date.now() + 3}`, role: 'agent', content: '\u6536\u5230\uff0c\u6b63\u5728\u4e3a\u4f60\u5904\u7406\u4e2d...', timestamp: ts });
     }, 2200);
-  }, [activeSessionId, sessionData.messages, localMessages, isQuotaBlocked, selectedModel.id, quotaNotice]);
+  }, [activeSessionId, sessionData.messages, localMessages, quotaErrorFor, selectedModel.id]);
 
   const handleResolveUI = useCallback((msgId: string, value: string) => {
     const key = activeSessionId || '';

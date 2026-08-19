@@ -489,7 +489,7 @@ function CherryStudioInner() {
                 onItemClick={handleSidebarItemClick}
                 onHoverChange={setHoverVisible}
                 onSearchClick={() => setSearchDialogOpen(true)}
-                onSettingsClick={() => setSettingsOpen(true)}
+                onSettingsClick={(section) => { setSettingsInitialSection(section); setSettingsOpen(true); }}
                 items={visibleMenuItems}
                 activeMiniAppTabs={tabs.filter(t => t.miniAppId && !t.sidebarDocked)}
                 activeTabId={activeTabId}
@@ -539,7 +539,7 @@ function CherryStudioInner() {
               onItemClick={handleSidebarItemClick}
               onHoverChange={setHoverVisible}
               onSearchClick={() => setSearchDialogOpen(true)}
-              onSettingsClick={() => { setSettingsOpen(true); setHoverVisible(false); }}
+              onSettingsClick={(section) => { setSettingsInitialSection(section); setSettingsOpen(true); setHoverVisible(false); }}
               items={visibleMenuItems}
               activeMiniAppTabs={tabs.filter(t => t.miniAppId && !t.sidebarDocked)}
               activeTabId={activeTabId}

@@ -13,6 +13,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import type { AgentChatMessage } from '@/app/types/agent';
 import { GenUIButtons, GenUISelection, GenUIConfirmation } from './GenerativeUI';
 import { VideoGallery } from '@/app/components/shared/Chat/components/MessageComponents';
+import { BillingErrorGoHint, isBillingError } from '@/app/components/shared/GoUpsell';
 
 // Re-export for backward compatibility
 
@@ -723,6 +724,10 @@ export function AgentMessageGroup({ msgs, onResolve, onAvatarClick, onOpenArtifa
     };
   }, [msgs]);
 
+  // 余额类错误连着来好几条时（用户反复重试），弱引导只挂在最后一条下面 ——
+  // 每条都带就从"一行弱引导"累加成硬广了
+  const lastBillingErrorId = [...finalMessages].reverse().find(m => isBillingError(m.error))?.id;
+
   return (
     <div className="flex gap-2 max-w-[95%]">
       <Button
@@ -774,12 +779,16 @@ export function AgentMessageGroup({ msgs, onResolve, onAvatarClick, onOpenArtifa
             {msg.videos && msg.videos.length > 0 && <VideoGallery videos={msg.videos} />}
             {/* 这条回复本身是错误（额度用完等）—— 走全站统一的错误块 */}
             {msg.error && (
-              <MessageErrorBlock
-                className={msg.content ? 'mt-1.5' : undefined}
-                message={msg.error.message}
-                code={msg.error.code}
-                detail={{ message: msg.error.message, code: msg.error.code, classification: msg.error.classification }}
-              />
+              <>
+                <MessageErrorBlock
+                  className={msg.content ? 'mt-1.5' : undefined}
+                  message={msg.error.message}
+                  code={msg.error.code}
+                  detail={{ message: msg.error.message, code: msg.error.code, classification: msg.error.classification }}
+                />
+                {/* 服务商余额类错误：一行弱引导到 Cherry Go（只挂在最后一条错误下） */}
+                {msg.id === lastBillingErrorId && <BillingErrorGoHint className="mt-1 px-0.5" />}
+              </>
             )}
           </motion.div>
         ))}

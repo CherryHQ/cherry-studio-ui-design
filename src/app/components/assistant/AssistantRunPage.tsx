@@ -71,6 +71,7 @@ import { TopicHistoryPage } from '@/features/assistant/TopicHistoryPage';
 import { BranchTreePanel } from '@/features/assistant/BranchTreePanel';
 import { ChatSettingsPanel } from '@/features/assistant/ChatSettingsPanel';
 import { MentionPickerPanel } from '@/app/components/shared/MentionPickerPanel';
+import { BillingErrorGoHint, isBillingError } from '@/app/components/shared/GoUpsell';
 import { ModelPickerPanel } from '@/app/components/shared/ModelPickerPanel';
 import { TopBarSelector } from '@/app/components/shared/ConversationTopBar';
 import { EntityRail, NewSessionIcon, PanelRightInsetIcon, type EntityRailItem, type EntityRailTreeGroup, type EntityRailSection } from '@/app/components/shared/EntityNav';
@@ -1448,13 +1449,21 @@ function MessageBubble({ msg, onOpenPanel, onAvatarClick, onOpenArtifact, assist
         {msg.videos && msg.videos.length > 0 && <VideoGallery videos={msg.videos} />}
 
         {(displayMsg.errorMessage || displayMsg.error || displayMsg.metadata?.status === 'error') && (
-          <MessageErrorBlock
-            className="mt-1.5"
-            message={displayMsg.errorMessage || displayMsg.error?.message || '请求失败，请重试'}
-            code={displayMsg.errorCode || displayMsg.error?.code}
-            detail={displayMsg.error}
-            onRetry={onRetry ? () => onRetry(msg.id) : undefined}
-          />
+          <>
+            <MessageErrorBlock
+              className="mt-1.5"
+              message={displayMsg.errorMessage || displayMsg.error?.message || '请求失败，请重试'}
+              code={displayMsg.errorCode || displayMsg.error?.code}
+              detail={displayMsg.error}
+              onRetry={onRetry ? () => onRetry(msg.id) : undefined}
+            />
+            {/* 服务商余额类错误：一行弱引导到 Cherry Go —— 与工作模块同一条规则 */}
+            {isBillingError({
+              code: displayMsg.errorCode || displayMsg.error?.code,
+              message: displayMsg.errorMessage || displayMsg.error?.message,
+              classification: displayMsg.error?.classification,
+            }) && <BillingErrorGoHint className="mt-1 px-0.5" />}
+          </>
         )}
 
         {/* Triggered indicators */}

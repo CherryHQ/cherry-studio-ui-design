@@ -12,6 +12,7 @@ import { BP_ICON, BP_FULL, getLayout } from '@/app/config/constants';
 import type { MenuItem, Tab } from '@/app/types';
 import { useCollab } from '@/features/collaboration/CollabContext';
 import { useGlobalActions } from '@/app/context/GlobalActionContext';
+import { SettingsMenu } from '@/app/components/shared/SettingsMenu';
 import { resolveArtifactIcon } from '@/app/utils/artifactIcons';
 
 function CherryLogo({ size = 'md' }: { size?: 'sm' | 'md' }) {
@@ -248,21 +249,22 @@ function FullDockedTabs({
 
 /** Full-layout bottom section — 用户信息已移到顶部头像，这里只留设置 */
 function FullBottomSection({ onSettingsClick }: {
-  onSettingsClick?: () => void;
+  onSettingsClick?: (section?: string) => void;
   isDark?: boolean;
   onToggleTheme?: () => void;
 }) {
   return (
     <div className="px-2.5 py-2.5 space-y-1">
-      {/* Bottom bar: settings shortcut */}
-      <button
-        onClick={() => onSettingsClick?.()}
-        className="flex items-center gap-2.5 w-full rounded-lg px-1.5 py-1.5 -mx-1 text-sidebar-foreground/80 hover:text-sidebar-foreground hover:bg-accent/40 transition-colors cursor-pointer"
-        title="设置"
-      >
-        <Settings size={16} strokeWidth={1.6} className="flex-shrink-0" />
-        <span className="text-xs truncate">设置</span>
-      </button>
+      {/* Bottom bar: settings shortcut —— 点击先弹菜单（用量 / 设置 / 模型服务 / 反馈） */}
+      <SettingsMenu onNavigate={(section) => onSettingsClick?.(section)}>
+        <button
+          className="flex items-center gap-2.5 w-full rounded-lg px-1.5 py-1.5 -mx-1 text-sidebar-foreground/80 hover:text-sidebar-foreground hover:bg-accent/40 transition-colors cursor-pointer"
+          title="设置"
+        >
+          <Settings size={16} strokeWidth={1.6} className="flex-shrink-0" />
+          <span className="text-xs truncate">设置</span>
+        </button>
+      </SettingsMenu>
     </div>
   );
 }
@@ -278,7 +280,8 @@ interface SidebarProps {
   onItemClick: (id: string) => void;
   onHoverChange: (visible: boolean) => void;
   onSearchClick: () => void;
-  onSettingsClick?: () => void;
+  /** 从设置菜单进入设置页；section 缺省 = 设置首页 */
+  onSettingsClick?: (section?: string) => void;
   items: MenuItem[];
   activeMiniAppTabs?: Tab[];
   activeTabId?: string;
@@ -788,19 +791,23 @@ export function Sidebar({
         {layout === 'icon' && (
           <div className="flex flex-col items-center gap-1 py-2 px-1.5">
             <Tooltip content="设置">
-              <Button variant="ghost" size="icon-sm" onClick={onSettingsClick} className="text-muted-foreground hover:text-foreground hover:bg-accent/50">
-                <Settings size={18} strokeWidth={1.6} />
-              </Button>
+              <SettingsMenu onNavigate={(section) => onSettingsClick?.(section)} side="right" align="end">
+                <Button variant="ghost" size="icon-sm" aria-label="设置" className="text-muted-foreground hover:text-foreground hover:bg-accent/50">
+                  <Settings size={18} strokeWidth={1.6} />
+                </Button>
+              </SettingsMenu>
             </Tooltip>
           </div>
         )}
 
         {layout === 'vertical-card' && (
           <div className="flex flex-col items-center gap-0 py-1.5 px-1">
-            <Button variant="ghost" size="sm" onClick={onSettingsClick} className="w-full flex-col items-center gap-0.5 py-2 text-muted-foreground hover:text-foreground hover:bg-accent/50">
-              <Settings size={18} strokeWidth={1.6} />
-              <span className="text-xs leading-tight">设置</span>
-            </Button>
+            <SettingsMenu onNavigate={(section) => onSettingsClick?.(section)} side="right" align="end">
+              <Button variant="ghost" size="sm" className="w-full flex-col items-center gap-0.5 py-2 text-muted-foreground hover:text-foreground hover:bg-accent/50">
+                <Settings size={18} strokeWidth={1.6} />
+                <span className="text-xs leading-tight">设置</span>
+              </Button>
+            </SettingsMenu>
           </div>
         )}
 

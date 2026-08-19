@@ -3,16 +3,19 @@ import { Plus } from 'lucide-react';
 import { ModelPickerPanel as BaseModelPickerPanel } from '@cherry-studio/ui';
 import type { ModelPickerPanelProps as BaseModelPickerPanelProps } from '@cherry-studio/ui';
 import { ASSISTANT_MODELS, PROVIDER_COLORS } from '@/app/config/models';
+import { buildGoPageUrl } from '@/app/lib/authStorage';
 import { usePinnedModels } from '@/app/hooks/usePinnedModels';
 import { useGlobalActions } from '@/app/context/GlobalActionContext';
 import { openQuickProviderSetup } from '@/features/chat/QuickProviderSetup/quickProviderSetupStore';
 
-export type ModelPickerPanelProps = Omit<BaseModelPickerPanelProps, 'models' | 'providerColors' | 'pinnedModelIds' | 'onTogglePin' | 'onManageProvider'> & {
+export type ModelPickerPanelProps = Omit<BaseModelPickerPanelProps, 'models' | 'providerColors' | 'pinnedModelIds' | 'onTogglePin' | 'onManageProvider' | 'onCtaClick'> & {
   models?: BaseModelPickerPanelProps['models'];
   providerColors?: BaseModelPickerPanelProps['providerColors'];
   pinnedModelIds?: BaseModelPickerPanelProps['pinnedModelIds'];
   onTogglePin?: BaseModelPickerPanelProps['onTogglePin'];
   onManageProvider?: BaseModelPickerPanelProps['onManageProvider'];
+  /** 引导行点击（默认：跳网页端 Go 工作台订阅）。传 null 隐藏引导行。 */
+  onCtaClick?: BaseModelPickerPanelProps['onCtaClick'] | null;
   /**
    * Footer action to connect a new provider. Defaults to opening the global
    * QuickProviderSetupDialog (closing the surrounding popover first). Pass
@@ -28,6 +31,7 @@ export function ModelPickerPanel({
   onTogglePin: onTogglePinProp,
   onManageProvider: onManageProviderProp,
   onConnectProvider,
+  onCtaClick: onCtaClickProp,
   onClose,
   ...props
 }: ModelPickerPanelProps) {
@@ -37,6 +41,14 @@ export function ModelPickerPanel({
   const defaultManageProvider = useCallback(() => {
     openSettings('models');
   }, [openSettings]);
+
+  // 引导行（Go 未订阅的「旗舰开源模型 · 订阅」）默认跳网页端 Go 工作台，
+  // 在网页里登录并订阅后由 storage / postMessage 写回客户端
+  const defaultCtaClick = useCallback(() => {
+    window.open(buildGoPageUrl(), '_blank')?.focus();
+  }, []);
+  const handleCtaClick =
+    onCtaClickProp === null ? undefined : onCtaClickProp ?? defaultCtaClick;
 
   // Default: close the surrounding popover, then open the global dialog.
   const handleConnect =
@@ -54,6 +66,7 @@ export function ModelPickerPanel({
       pinnedModelIds={pinnedProp ?? defaultPinned}
       onTogglePin={onTogglePinProp ?? defaultTogglePin}
       onManageProvider={onManageProviderProp ?? defaultManageProvider}
+      onCtaClick={handleCtaClick}
       onClose={onClose}
       {...props}
     />

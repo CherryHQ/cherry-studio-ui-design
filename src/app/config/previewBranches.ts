@@ -35,4 +35,9 @@ export const PREVIEW_BRANCHES: PreviewBranch[] = [
     label: '账号登录 / 内测免费模型',
     url: 'https://cherry-studio-ui-git-feat-auth-free-quota-sinxus-projects.vercel.app',
   },
+  {
+    branch: 'feat-go-subscription',
+    label: 'Cherry Go 订阅模式（客户端 + 官网）',
+    url: 'https://cherry-studio-ui-git-feat-go-subscription-sinxus-projects.vercel.app',
+  },
 ];

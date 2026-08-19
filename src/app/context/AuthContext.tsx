@@ -1,9 +1,11 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import {
-  AUTH_STORAGE_KEY, EMPTY_AUTH, LOGIN_MESSAGE_TYPE,
+  AUTH_STORAGE_KEY, EMPTY_AUTH, GO_MESSAGE_TYPE, LOGIN_MESSAGE_TYPE,
   buildLoginUrl, hasStoredAuth, parseAuth, readAuth, readOnboardingSeen, writeAuth, writeOnboardingSeen,
-  type AuthSnapshot, type AuthUser,
+  type AuthSnapshot, type AuthUser, type GoState,
 } from '@/app/lib/authStorage';
+
+export type { GoState };
 
 // ===========================
 // Cherry Studio 账号
@@ -19,14 +21,17 @@ const DEMO_USERS: Record<Exclude<DemoState, 'logged-out'>, AuthSnapshot> = {
   beta: {
     user: { name: '用户8888', tier: 'beta', phone: '138 0000 8888' },
     quotaExhausted: false,
+    go: 'none',
   },
   standard: {
     user: { name: '用户1234', tier: 'standard', phone: '138 0000 1234' },
     quotaExhausted: false,
+    go: 'none',
   },
   'beta-exhausted': {
     user: { name: '用户8888', tier: 'beta', phone: '138 0000 8888' },
     quotaExhausted: true,
+    go: 'none',
   },
 };
 
@@ -39,6 +44,18 @@ interface AuthContextValue {
   showFreeModels: boolean;
   /** 本月免费额度是否已用完（礼物标识变灰，选中时提示） */
   quotaExhausted: boolean;
+
+  /** Cherry Go 订阅态（none / active / limit-5h / limit-month） */
+  goState: GoState;
+  /** 是否已订阅 Go（含额度打满的两种状态） */
+  goSubscribed: boolean;
+  /**
+   * 使用限额重置 —— 客户端内直接完成，不跳网页。只对 5 小时打满有效
+   * （恢复 5 小时 + 每周窗口）；月度打满不受重置影响，调了也不改状态。
+   */
+  resetGoQuota: () => void;
+  /** 演示切换器用：直接设 Go 状态；未登录时会先落到内测账号（订阅必须先有账号） */
+  applyGoDemoState: (next: GoState) => void;
 
   /** 正在等浏览器那边完成登录 */
   loginPending: boolean;
@@ -89,9 +106,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
     const onMessage = (e: MessageEvent) => {
       if (e.origin !== window.location.origin) return;
-      if ((e.data as { type?: string })?.type !== LOGIN_MESSAGE_TYPE) return;
+      const type = (e.data as { type?: string })?.type;
+      if (type !== LOGIN_MESSAGE_TYPE && type !== GO_MESSAGE_TYPE) return;
       setSnapshot(readAuth());
-      setLoginPending(false);
+      if (type === LOGIN_MESSAGE_TYPE) setLoginPending(false);
     };
     window.addEventListener('storage', onStorage);
     window.addEventListener('message', onMessage);
@@ -122,9 +140,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const logout = useCallback(() => {
-    persist(EMPTY_AUTH);
+    // 订阅在服务端跟着账号走：退出登录不清 Go 订阅态，重新登录后自动恢复
+    // （goSubscribed 要求已登录，未登录期间 Go 一律按未订阅表现）
+    persist({ ...EMPTY_AUTH, go: snapshot.go });
     setLoginPending(false);
-  }, [persist]);
+  }, [persist, snapshot.go]);
 
   const completeOnboarding = useCallback(() => {
     setOnboardingSeen(true);
@@ -145,9 +165,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [snapshot]);
 
   const applyDemoState = useCallback((next: DemoState) => {
-    persist(next === 'logged-out' ? EMPTY_AUTH : DEMO_USERS[next]);
+    // 账号维度和 Go 维度是两个开关：切账号态保留当前 Go 订阅（登出除外——订阅跟账号走）
+    persist(next === 'logged-out' ? EMPTY_AUTH : { ...DEMO_USERS[next], go: snapshot.go });
     setLoginPending(false);
-  }, [persist]);
+  }, [persist, snapshot.go]);
+
+  const resetGoQuota = useCallback(() => {
+    if (snapshot.go !== 'limit-5h') return;
+    persist({ ...snapshot, go: 'active' });
+  }, [persist, snapshot]);
+
+  const applyGoDemoState = useCallback((next: GoState) => {
+    // 未登录 + 切「未订阅」= 现状，别把人悄悄登录进去
+    if (!snapshot.user && next === 'none') return;
+    // 订阅必须先有账号：未登录时切其他 Go 状态，先落到默认的内测账号
+    const base = snapshot.user ? snapshot : DEMO_USERS.beta;
+    persist({ ...base, go: next });
+    setLoginPending(false);
+  }, [persist, snapshot]);
 
   const value = useMemo<AuthContextValue>(() => {
     const isLoggedIn = snapshot.user !== null;
@@ -158,6 +193,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       isBeta,
       showFreeModels: isLoggedIn && isBeta,
       quotaExhausted: snapshot.quotaExhausted,
+      goState: snapshot.go,
+      // 过期不算在订阅内：客户端表现与未订阅一致（Go 组回到订阅引导行），
+      // 续费入口在网页端「我的订阅」页
+      goSubscribed: isLoggedIn && snapshot.go !== 'none' && snapshot.go !== 'expired',
+      resetGoQuota,
+      applyGoDemoState,
       loginPending,
       beginBrowserLogin,
       reopenLoginTab: openLoginTab,
@@ -172,6 +213,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [
     snapshot, loginPending, beginBrowserLogin, openLoginTab, cancelBrowserLogin,
     logout, onboardingSeen, completeOnboarding, replayOnboarding, demoState, applyDemoState,
+    applyGoDemoState, resetGoQuota,
   ]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

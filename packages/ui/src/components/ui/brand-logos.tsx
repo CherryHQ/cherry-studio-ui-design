@@ -4,6 +4,8 @@ import * as React from "react"
 
 import { cn } from "../../lib/utils"
 
+import cherryIconPng from "../../assets/cherry-icon.png"
+
 // @lobehub/icons — ProviderIcon renders colored avatar/icon for any known AI provider
 import LobeProviderIcon from "@lobehub/icons/es/features/ProviderIcon"
 
@@ -647,6 +649,18 @@ const BRAND_LOGO_MAP: Record<string, (props: LogoProps) => React.JSX.Element> = 
   cherry: (props: LogoProps) => (
     <LetterBadge letter="C" bg="#10b981" size={props.size} className={props.className} />
   ),
+  // Cherry Studio 红色 logo（png）—— CherryAI Go 订阅引导行等品牌位使用
+  cherryai: (props: LogoProps) => (
+    <img
+      src={cherryIconPng}
+      alt=""
+      width={props.size}
+      height={props.size}
+      className={cn("rounded-[3px] object-contain", props.className)}
+      style={{ width: props.size, height: props.size }}
+    />
+  ),
+  minimax: (props: LogoProps) => <MinimaxAvatar size={props.size} shape="square" iconMultiple={0.85} />,
   "cherry-in": (props: LogoProps) => (
     <LetterBadge letter="🍒" bg="#10b981" size={props.size} className={props.className} />
   ),

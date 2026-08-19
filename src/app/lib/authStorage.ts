@@ -8,6 +8,18 @@
 export type AccountTier = 'beta' | 'standard';
 export type LoginChannel = 'phone' | 'email';
 
+/**
+ * Cherry Go 订阅的演示态。
+ * - none        未订阅（默认）—— 模型列表里 Go 组只有一行「旗舰开源模型 · 订阅」
+ * - active      已订阅，额度充足
+ * - limit-5h    已订阅，5 小时窗口额度打满（模型置灰，到点自动恢复）
+ * - limit-month 已订阅，本月额度打满（先不做加购，锁到下月重置）
+ * - expired     订阅已过期 —— Go 模型停用，「我的订阅」页引导续费
+ */
+export type GoState = 'none' | 'active' | 'limit-5h' | 'limit-month' | 'expired';
+
+const GO_STATES: GoState[] = ['none', 'active', 'limit-5h', 'limit-month', 'expired'];
+
 export interface AuthUser {
   name: string;
   /** beta = 内测白名单，能看到 CherryAI 的免费模型；standard = 普通登录用户 */
@@ -20,15 +32,27 @@ export interface AuthSnapshot {
   user: AuthUser | null;
   /** 只对 beta 账号有意义：本月免费额度是否已用完 */
   quotaExhausted: boolean;
+  /** Cherry Go 订阅态 —— 跟账号走（网页端订阅后写回，客户端靠 storage 事件同步） */
+  go: GoState;
 }
 
 export const AUTH_STORAGE_KEY = 'cherry-ui-auth';
 export const ONBOARDING_STORAGE_KEY = 'cherry-ui-onboarding-seen';
 export const LOGIN_MESSAGE_TYPE = 'cherry-ui-login-success';
+/** 网页端 Go 工作台改了订阅态之后，用它通知打开它的客户端标签页 */
+export const GO_MESSAGE_TYPE = 'cherry-ui-go-updated';
 /** 浏览器登录页的入口参数 —— 原型是静态站，没有 SPA 路由重写，走 query 最稳 */
 export const LOGIN_QUERY_FLAG = 'login';
+/** 网页端 Go 工作台（订阅 / 管理 / 用量）的入口参数 */
+export const GO_QUERY_FLAG = 'go';
+/** 官方文档「Go 订阅模式介绍」页的入口参数 */
+export const GO_DOCS_QUERY_FLAG = 'docs';
+/** 模拟 Stripe Checkout 支付页的入口参数（?checkout=go） */
+export const GO_CHECKOUT_QUERY_FLAG = 'checkout';
+/** 「我的订阅」页（账号菜单进入的 Go 套餐管理页）的入口参数 */
+export const GO_SUBSCRIPTION_QUERY_FLAG = 'subscription';
 
-export const EMPTY_AUTH: AuthSnapshot = { user: null, quotaExhausted: false };
+export const EMPTY_AUTH: AuthSnapshot = { user: null, quotaExhausted: false, go: 'none' };
 
 // ===========================
 // 读写
@@ -71,6 +95,7 @@ export function parseAuth(raw: string | null): AuthSnapshot {
         email: user.email,
       },
       quotaExhausted: parsed.quotaExhausted === true,
+      go: GO_STATES.includes(parsed.go as GoState) ? (parsed.go as GoState) : 'none',
     };
   } catch {
     return EMPTY_AUTH;
@@ -140,12 +165,73 @@ export function isLoginRoute(): boolean {
   return new URLSearchParams(window.location.search).get(LOGIN_QUERY_FLAG) === '1';
 }
 
-/** 客户端点「登录 Cherry Studio」时要打开的地址 */
-export function buildLoginUrl(): string {
+/** 当前页面是不是网页端 Go 工作台（?go=1） */
+export function isGoRoute(): boolean {
+  if (typeof window === 'undefined') return false;
+  return new URLSearchParams(window.location.search).get(GO_QUERY_FLAG) === '1';
+}
+
+/** 当前页面是不是官方文档的 Go 介绍页（?docs=go） */
+export function isGoDocsRoute(): boolean {
+  if (typeof window === 'undefined') return false;
+  return new URLSearchParams(window.location.search).get(GO_DOCS_QUERY_FLAG) === 'go';
+}
+
+/** 当前页面是不是模拟 Stripe Checkout 支付页（?checkout=go） */
+export function isGoCheckoutRoute(): boolean {
+  if (typeof window === 'undefined') return false;
+  return new URLSearchParams(window.location.search).get(GO_CHECKOUT_QUERY_FLAG) === 'go';
+}
+
+/** 当前页面是不是「我的订阅」页（?subscription=1） */
+export function isGoSubscriptionRoute(): boolean {
+  if (typeof window === 'undefined') return false;
+  return new URLSearchParams(window.location.search).get(GO_SUBSCRIPTION_QUERY_FLAG) === '1';
+}
+
+function buildQueryUrl(key: string, value: string): string {
   const url = new URL(window.location.href);
-  url.searchParams.set(LOGIN_QUERY_FLAG, '1');
+  // 网页路由互斥，拼地址前先清掉别的 flag，避免 ?login=1&go=1 这类叠加态
+  url.searchParams.delete(LOGIN_QUERY_FLAG);
+  url.searchParams.delete(GO_QUERY_FLAG);
+  url.searchParams.delete(GO_DOCS_QUERY_FLAG);
+  url.searchParams.delete(GO_CHECKOUT_QUERY_FLAG);
+  url.searchParams.delete(GO_SUBSCRIPTION_QUERY_FLAG);
+  url.searchParams.set(key, value);
   url.hash = '';
   return url.toString();
+}
+
+/** 客户端点「登录 Cherry Studio」时要打开的地址 */
+export function buildLoginUrl(): string {
+  return buildQueryUrl(LOGIN_QUERY_FLAG, '1');
+}
+
+/** 所有「订阅 Go / 查看套餐 / 前往网页端」入口打开的地址 */
+export function buildGoPageUrl(): string {
+  return buildQueryUrl(GO_QUERY_FLAG, '1');
+}
+
+/** 「查看详情」打开的官方文档 Go 介绍页 */
+export function buildGoDocsUrl(): string {
+  return buildQueryUrl(GO_DOCS_QUERY_FLAG, 'go');
+}
+
+/** Go 介绍页点「订阅」后同标签页跳转的支付页（模拟 Stripe Checkout） */
+export function buildGoCheckoutUrl(): string {
+  return buildQueryUrl(GO_CHECKOUT_QUERY_FLAG, 'go');
+}
+
+/** 账号菜单「我的订阅」进入的 Go 套餐管理页 */
+export function buildGoSubscriptionUrl(): string {
+  return buildQueryUrl(GO_SUBSCRIPTION_QUERY_FLAG, '1');
+}
+
+/** 网页端右上角账号菜单的退出登录 —— 只清账号，订阅态跟账号走、重登后恢复 */
+export function completeWebLogout(): AuthSnapshot {
+  const snapshot: AuthSnapshot = { ...readAuth(), user: null, quotaExhausted: false };
+  writeAuth(snapshot);
+  return snapshot;
 }
 
 /**
@@ -155,11 +241,27 @@ export function buildLoginUrl(): string {
  */
 export function completeBrowserLogin(channel: LoginChannel, value: string): AuthUser {
   const user = makeUser(channel, value);
-  writeAuth({ user, quotaExhausted: false });
+  // 重新登录不动 Go 订阅态 —— 订阅跟账号走，演示里视为同一个账号
+  writeAuth({ user, quotaExhausted: false, go: readAuth().go });
   try {
     window.opener?.postMessage({ type: LOGIN_MESSAGE_TYPE, user }, window.location.origin);
   } catch {
     // 跨源或 opener 已关闭 —— storage 事件兜底
   }
   return user;
+}
+
+/**
+ * 网页端 Go 工作台调用：改订阅态并通知客户端标签页。
+ * 和登录一样，落盘触发 storage 事件兜底，postMessage 只是更快。
+ */
+export function completeGoStateChange(next: GoState): AuthSnapshot {
+  const snapshot: AuthSnapshot = { ...readAuth(), go: next };
+  writeAuth(snapshot);
+  try {
+    window.opener?.postMessage({ type: GO_MESSAGE_TYPE, go: next }, window.location.origin);
+  } catch {
+    // 同上
+  }
+  return snapshot;
 }

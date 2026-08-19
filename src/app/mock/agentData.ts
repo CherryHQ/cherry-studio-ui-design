@@ -111,6 +111,20 @@ export const MOCK_SESSIONS: AgentSession[] = [
     group: '调研分析',
   },
   {
+    // 演示「用户自己的服务商余额不足」的报错形态：错误块 + 一行 Cherry Go 弱引导
+    id: 'session-balance-error',
+    title: '竞品功能矩阵梳理',
+    agentName: '调研分析师',
+    agentIcon: '🔍',
+    lastMessage: '请求失败：OpenAI 账户余额不足。',
+    timestamp: '14:21',
+    messageCount: 2,
+    status: 'error',
+    unread: true,
+    tags: ['调研'],
+    group: '调研分析',
+  },
+  {
     id: 'session-3',
     title: 'Dashboard 数据看板',
     agentName: '全栈工程师',
@@ -2061,6 +2075,28 @@ export const DEMO_PREVIEWS: Record<string, string> = {
 };
 
 // Empty session data
+// 服务商余额不足的演示会话 —— 报错块下带一行 Cherry Go 弱引导（见 GoUpsell）
+SESSION_DATA_MAP['session-balance-error'] = {
+  messages: [
+    { id: 'be-1', role: 'user', content: '帮我梳理一下主要竞品的功能矩阵，输出一张对比表。', timestamp: '14:20' },
+    {
+      id: 'be-2',
+      role: 'agent',
+      // message 写中文人话（与仓库其他错误 mock 口径一致），英文原文只留在 code 里
+      error: {
+        message: 'OpenAI 账户余额不足，请前往服务商充值后重试。',
+        code: 'insufficient_quota',
+        classification: '服务商余额不足',
+      },
+      timestamp: '14:21',
+    },
+  ],
+  steps: [],
+  files: [],
+  outputFiles: [],
+  fileContents: {},
+};
+
 export const EMPTY_SESSION_DATA: AgentSessionData = {
   messages: [],
   steps: [],

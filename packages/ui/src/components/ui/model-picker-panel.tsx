@@ -62,6 +62,13 @@ export interface ModelInfo {
   muted?: boolean;
   /** 模型名下面的一行灰色说明，例：限时免费的使用范围 */
   note?: string;
+  /**
+   * 引导行（非真模型）：占一个模型行的位置，品牌 logo + 正常字色的名称，
+   * 右侧一颗小按钮（如「订阅」「申请」）。按钮点击走 onCtaClick 而不是
+   * onSelectModel，不进入选中态；没传 onCtaClick 的选择器不渲染这一行。
+   * 搜索 / 标签筛选时也不出现。
+   */
+  cta?: { actionLabel: string };
 }
 
 export const MODEL_CAPABILITY_LABELS: Record<ModelCapability, string> = {
@@ -213,6 +220,8 @@ export interface ModelPickerPanelProps {
   onManageProvider?: (provider: string) => void;
   /** Hover 出模型详情卡（默认开；仅对填了详情字段的模型生效） */
   showModelCard?: boolean;
+  /** 引导行（ModelInfo.cta）被点击时的回调；不传则整行不渲染 */
+  onCtaClick?: (id: string) => void;
 }
 
 export function ModelPickerPanel({
@@ -232,6 +241,7 @@ export function ModelPickerPanel({
   showMultiModelToggle = true,
   onManageProvider,
   showModelCard = true,
+  onCtaClick,
 }: ModelPickerPanelProps) {
   const uiLabels = {
     searchPlaceholder: "搜索模型...",
@@ -260,6 +270,8 @@ export function ModelPickerPanel({
   // Filter and group models
   const { pinnedModels, providerGroups, totalFiltered } = useMemo(() => {
     const filtered = models.filter(m => {
+      // 引导行只在「完整列表」形态下出现：搜索 / 筛选是在找具体模型，引导行帮不上忙
+      if (m.cta) return Boolean(onCtaClick) && !search && !capFilter;
       if (search && !m.name.toLowerCase().includes(search.toLowerCase())) return false;
       if (capFilter && !m.capabilities.includes(capFilter)) return false;
       return true;
@@ -280,7 +292,7 @@ export function ModelPickerPanel({
       providerGroups: Array.from(groups.entries()),
       totalFiltered: filtered.length,
     };
-  }, [models, search, capFilter, pinnedSet]);
+  }, [models, search, capFilter, pinnedSet, onCtaClick]);
 
   const handleSelect = (id: string) => {
     onSelectModel(id);
@@ -288,6 +300,33 @@ export function ModelPickerPanel({
   };
 
   const renderModelRow = (m: ModelInfo) => {
+    // 引导行：样式与普通模型行一致（品牌 logo + 正常字色）—— 这一行就是希望
+    // 用户点的，不置灰。右侧是一颗真按钮，右缘与上下行能力徽标列对齐
+    // （尾随留出与普通行相同的 w-5 槽位）。
+    if (m.cta) {
+      return (
+        <div
+          key={m.id}
+          className="w-full flex items-center gap-2.5 px-3 py-[5px] mb-0.5 rounded-lg"
+        >
+          <span className="flex-shrink-0 flex items-center">
+            <BrandLogo id={m.logoId ?? m.provider.toLowerCase()} fallbackLetter={m.provider[0]} size={16} />
+          </span>
+          <span className="text-sm font-normal truncate flex-1 min-w-0 text-foreground/80">{m.name}</span>
+          {/* 白底细线框、无阴影 —— 对齐现网的小按钮样式，黑色实心在列表里太突兀 */}
+          <Button
+            variant="outline"
+            size="xs"
+            onClick={() => { onCtaClick?.(m.id); onClose?.(); }}
+            className="flex-shrink-0 h-[22px] px-2.5 shadow-none border-border"
+          >
+            {m.cta.actionLabel}
+          </Button>
+          <span className="w-5 h-5 flex-shrink-0" />
+        </div>
+      );
+    }
+
     const isSelected = selectedModels.includes(m.id);
     const isPinned = pinnedSet.has(m.id);
     const provColor = providerColors[m.provider] || 'bg-muted-foreground/40';
@@ -309,9 +348,10 @@ export function ModelPickerPanel({
         <span className={cn("flex-shrink-0 flex items-center", m.muted && MUTED_LOGO_CLASS)}>
           <BrandLogo id={m.logoId ?? m.provider.toLowerCase()} fallbackLetter={m.provider[0]} size={16} />
         </span>
-        {/* Model name */}
+        {/* Model name —— theme.css 给 button 元素兜了 font-weight: 500，
+            不加 font-normal 模型名会整列变粗；选中态仍用 font-medium 区分 */}
         <span className={cn(
-          "text-sm truncate flex-1 min-w-0",
+          "text-sm truncate flex-1 min-w-0 font-normal",
           isSelected && 'font-medium',
           m.muted && 'text-muted-foreground/50'
         )}>{m.name}</span>
