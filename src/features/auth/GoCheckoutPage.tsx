@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react';
 import { ArrowLeft, Check, Loader2, Lock } from 'lucide-react';
-import { Button } from '@cherry-studio/ui';
 import {
-  buildGoPageUrl, buildGoSubscriptionUrl, completeGoStateChange, readAuth,
+  buildGoPageUrl, buildGoSubscriptionUrl,
 } from '@/app/lib/authStorage';
 import { GO_PLAN } from '@/app/config/goPlan';
+import { GoSiteHeader, SiteButton } from './goSiteWeb';
+import { useAuth } from '@/app/context/AuthContext';
+import { AccountDemoSwitcher } from '@/app/components/shared/AccountDemoSwitcher';
 
 // ===========================
 // 模拟 Stripe Checkout（?checkout=go）
@@ -17,12 +19,12 @@ type Stage = 'form' | 'paying' | 'done';
 
 export function GoCheckoutPage() {
   const [stage, setStage] = useState<Stage>('form');
-  const user = readAuth().user;
+  const { user, logout, applyGoDemoState } = useAuth();
 
   const pay = () => {
     setStage('paying');
     window.setTimeout(() => {
-      completeGoStateChange('active');
+      applyGoDemoState('active');
       setStage('done');
     }, 1200);
   };
@@ -37,9 +39,14 @@ export function GoCheckoutPage() {
   }, [stage]);
 
   return (
-    <div className="min-h-screen w-full bg-app-bg flex flex-col">
-      {/* 顶栏 —— 返回 + 演示标注 */}
-      <div className="mx-auto w-full max-w-[880px] px-6 h-14 flex items-center justify-between">
+    <div className="go-site min-h-screen w-full flex flex-col">
+      {/* 官网页头（含账号菜单）；支付页的账号态只读，退出即回介绍页 */}
+      <GoSiteHeader
+        user={user}
+        onLogout={() => { logout(); window.location.href = buildGoPageUrl(); }}
+      />
+      {/* 返回 + 演示标注 */}
+      <div className="mx-auto w-full max-w-[880px] px-6 h-12 flex items-center justify-between">
         <button
           onClick={() => { window.location.href = buildGoPageUrl(); }}
           className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
@@ -101,7 +108,7 @@ export function GoCheckoutPage() {
                   <ReadonlyInput value={user?.name ?? '用户'} />
                 </Field>
 
-                <Button size="lg" className="mt-6 w-full text-sm" disabled={stage === 'paying'} onClick={pay}>
+                <SiteButton size="md" className="mt-6 w-full" disabled={stage === 'paying'} onClick={pay}>
                   {stage === 'paying' ? (
                     <span className="inline-flex items-center gap-2">
                       <Loader2 size={14} className="animate-spin" />
@@ -110,7 +117,7 @@ export function GoCheckoutPage() {
                   ) : (
                     '订阅 · 支付 $10.00'
                   )}
-                </Button>
+                </SiteButton>
                 <p className="mt-3 flex items-center justify-center gap-1 text-[11px] text-muted-foreground/50">
                   <Lock size={10} />
                   演示表单已预填测试卡号，点击即完成订阅
@@ -120,6 +127,8 @@ export function GoCheckoutPage() {
           </div>
         </div>
       </div>
+      {/* 左下角演示状态切换器 —— 网页端评审用，切账号 / 订阅形态即时生效 */}
+      <AccountDemoSwitcher triggerClassName="left-4" hideOnboardingRow />
     </div>
   );
 }

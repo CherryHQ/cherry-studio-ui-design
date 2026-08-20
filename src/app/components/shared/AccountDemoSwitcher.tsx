@@ -23,7 +23,12 @@ const GO_STATES: { id: GoState; title: string; desc: string }[] = [
   { id: 'expired', title: '订阅已过期', desc: '客户端回到订阅引导，「我的订阅」页引导续费' },
 ];
 
-export function AccountDemoSwitcher() {
+export function AccountDemoSwitcher({ triggerClassName, hideOnboardingRow }: {
+  /** 覆盖触发器定位；客户端默认在左下角分支切换器旁（left-[168px]），网页端传 left-4 放角落 */
+  triggerClassName?: string;
+  /** 隐藏「重放首启引导」—— 网页端没有首启引导 */
+  hideOnboardingRow?: boolean;
+} = {}) {
   const [open, setOpen] = useState(false);
   const {
     demoState, applyDemoState, goState, applyGoDemoState,
@@ -41,7 +46,7 @@ export function AccountDemoSwitcher() {
       <PopoverTrigger asChild>
         <button
           title="账号演示"
-          className={`fixed bottom-2 left-[168px] z-[95] flex items-center gap-1 h-6 px-1.5 rounded-full border text-[10px] transition-all
+          className={`fixed bottom-2 z-[95] flex items-center gap-1 h-6 px-1.5 rounded-full border text-[10px] transition-all ${triggerClassName ?? 'left-[168px]'}
             ${demoState === 'logged-out'
               ? 'border-border/50 bg-background/80 text-muted-foreground/60 opacity-50 hover:opacity-100'
               : 'border-cherry-primary/50 bg-cherry-active-bg text-cherry-primary opacity-90'}
@@ -89,15 +94,19 @@ export function AccountDemoSwitcher() {
           </div>
         )}
 
-        <div className="my-1.5 h-px bg-border/50" />
-        <button
-          onClick={() => { replayOnboarding(); setOpen(false); }}
-          disabled={!onboardingSeen}
-          className="w-full flex items-center gap-2 px-2 py-1.5 rounded-lg text-left text-[11px] text-muted-foreground/70 hover:bg-accent/40 transition-colors disabled:opacity-40 disabled:hover:bg-transparent"
-        >
-          <RotateCcw size={12} className="flex-shrink-0" />
-          重放首启引导
-        </button>
+        {!hideOnboardingRow && (
+          <>
+            <div className="my-1.5 h-px bg-border/50" />
+            <button
+              onClick={() => { replayOnboarding(); setOpen(false); }}
+              disabled={!onboardingSeen}
+              className="w-full flex items-center gap-2 px-2 py-1.5 rounded-lg text-left text-[11px] text-muted-foreground/70 hover:bg-accent/40 transition-colors disabled:opacity-40 disabled:hover:bg-transparent"
+            >
+              <RotateCcw size={12} className="flex-shrink-0" />
+              重放首启引导
+            </button>
+          </>
+        )}
         <div className="px-2 pt-1 pb-1.5 text-[10px] leading-relaxed text-muted-foreground/45">
           登录进来一律算内测账号；要看非白名单的形态，切到「普通账号」。
         </div>

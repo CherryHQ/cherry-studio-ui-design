@@ -1,8 +1,9 @@
 import { ArrowUpRight } from 'lucide-react';
-import { Button } from '@cherry-studio/ui';
-import cherryLogoImg from '@/assets/cherry-icon.png';
 import { buildGoPageUrl } from '@/app/lib/authStorage';
-import { GO_PLAN, GO_RESETS } from '@/app/config/goPlan';
+import { GO_PLAN, GO_RESETS, GO_WINDOW_CREDITS } from '@/app/config/goPlan';
+import { GoSiteHeader, SiteButton } from './goSiteWeb';
+import { useAuth } from '@/app/context/AuthContext';
+import { AccountDemoSwitcher } from '@/app/components/shared/AccountDemoSwitcher';
 
 // ===========================
 // 官方文档 · Go 订阅模式介绍（?docs=go）
@@ -15,9 +16,9 @@ import { GO_PLAN, GO_RESETS } from '@/app/config/goPlan';
 const openGoPage = () => window.open(buildGoPageUrl(), '_blank')?.focus();
 
 const LIMIT_ROWS = [
-  { window: '5 小时', quota: '600 积分', reset: '滚动窗口，每 5 小时恢复' },
-  { window: '每周', quota: '2,400 积分', reset: '每周一 08:00 恢复' },
-  { window: '每月', quota: '8,000 积分', reset: '每月 1 日恢复' },
+  { window: '5 小时', quota: `${GO_WINDOW_CREDITS['5h'].toLocaleString('en-US')} 积分`, reset: '滚动窗口，每 5 小时恢复' },
+  { window: '每周', quota: `${GO_WINDOW_CREDITS.week.toLocaleString('en-US')} 积分`, reset: '每周一 08:00 恢复' },
+  { window: '每月', quota: `${GO_WINDOW_CREDITS.month.toLocaleString('en-US')} 积分`, reset: '每月 1 日恢复' },
 ];
 
 const PRIVACY_ROWS = [
@@ -26,6 +27,9 @@ const PRIVACY_ROWS = [
   { series: 'Qwen 系列', training: '不用于训练', retention: '0 天' },
   { series: 'GLM 系列', training: '不用于训练', retention: '0 天' },
   { series: 'MiniMax 系列', training: '不用于训练', retention: '30 天' },
+  { series: 'MiMo 系列', training: '不用于训练', retention: '0 天' },
+  { series: 'Muse Spark 系列', training: '不用于训练', retention: '0 天' },
+  { series: 'Hy 系列', training: '不用于训练', retention: '0 天' },
 ];
 
 const GOALS = [
@@ -36,18 +40,16 @@ const GOALS = [
 ];
 
 export function GoDocsPage() {
+  const { user, logout } = useAuth();
+
   return (
-    <div className="min-h-screen w-full bg-app-bg">
-      <header className="border-b border-border/40">
-        <div className="mx-auto w-full max-w-[680px] px-6 h-14 flex items-center gap-2.5">
-          <img src={cherryLogoImg} alt="Cherry Studio" className="w-6 h-6 rounded-md" />
-          <span className="text-sm font-medium text-foreground">Cherry Studio</span>
-          <span className="text-muted-foreground/30 text-sm">/</span>
-          <span className="text-sm text-muted-foreground">文档</span>
-          <span className="text-muted-foreground/30 text-sm">/</span>
-          <span className="text-sm text-muted-foreground">Go</span>
-        </div>
-      </header>
+    <div className="go-site min-h-screen w-full">
+      {/* 官网页头（文档 tab 高亮） */}
+      <GoSiteHeader
+        user={user}
+        onLogout={() => { logout(); window.location.href = buildGoPageUrl(); }}
+        active="docs"
+      />
 
       <main className="mx-auto w-full max-w-[680px] px-6 py-10">
         <article className="flex flex-col gap-8">
@@ -146,13 +148,15 @@ export function GoDocsPage() {
               <p className="text-sm font-medium text-foreground">Cherry Go</p>
               <p className="mt-0.5 text-xs text-muted-foreground">{GO_PLAN.tagline} · {GO_PLAN.price}</p>
             </div>
-            <Button size="sm" onClick={openGoPage} className="gap-1 flex-shrink-0">
+            <SiteButton size="sm" onClick={openGoPage} className="gap-1 flex-shrink-0">
               订阅 Go
               <ArrowUpRight size={12} />
-            </Button>
+            </SiteButton>
           </div>
         </article>
       </main>
+      {/* 左下角演示状态切换器 —— 网页端评审用，切账号 / 订阅形态即时生效 */}
+      <AccountDemoSwitcher triggerClassName="left-4" hideOnboardingRow />
     </div>
   );
 }

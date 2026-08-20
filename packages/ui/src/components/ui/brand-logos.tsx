@@ -546,6 +546,9 @@ const BRAND_LOGO_MAP: Record<string, (props: LogoProps) => React.JSX.Element> = 
   lambda: (props: LogoProps) => <LambdaAvatar size={props.size} shape="square" iconMultiple={0.85} />,
   lambdachat: (props: LogoProps) => <LambdaAvatar size={props.size} shape="square" iconMultiple={0.85} />,
   stepfun: (props: LogoProps) => <StepfunAvatar size={props.size} shape="square" iconMultiple={0.85} />,
+  // 小米 MiMo / OpenCSG Muse Spark —— @lobehub/icons 无对应品牌，用品牌色字母徽标兜底
+  xiaomi: (props: LogoProps) => <LetterBadge letter="米" bg="#ff6900" size={props.size} className={props.className} />,
+  muse: (props: LogoProps) => <LetterBadge letter="M" bg="#6c5ce7" size={props.size} className={props.className} />,
   hunyuan: (props: LogoProps) => <HunyuanAvatar size={props.size} shape="square" iconMultiple={0.85} />,
   wenxin: (props: LogoProps) => <WenxinAvatar size={props.size} shape="square" iconMultiple={0.85} />,
   bytedance: (props: LogoProps) => <ByteDanceAvatar size={props.size} shape="square" iconMultiple={0.85} />,

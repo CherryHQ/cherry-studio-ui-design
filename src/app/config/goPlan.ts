@@ -8,6 +8,12 @@
 //     消耗单位是**积分**（不是美元）—— 每次请求扣多少积分，明细里可查。
 // 套餐价格是钱（$10/月），用量全部用积分说话。
 //
+// 积分制是统一的对外口径（背后仍是美元）：暂定 $10 = 10,000 积分（$1 = 1,000 积分）。
+// 选积分而不是直接标美元：① 后续增值服务（多端同步、加购等）按积分定价更灵活；
+// ② 官方增长活动可以直接赠积分，直接送钱不合理。模型单价、三档窗口预算都锚定
+// opencode（opencode.ai/docs/go）的美元定价 ×1000 换算，见下方
+// GO_MODEL_RATES / GO_WINDOW_CREDITS。
+//
 // 客户端不碰支付：订阅、查看套餐、限额重置全部跳网页端（?go=1）。
 // 先不做加购：月度打满就锁到下月，没有「升级 / 买次数」入口。
 
@@ -29,6 +35,55 @@ export const GO_PLAN = {
 
 /** 未订阅时的引导文案 —— 模型选择器的订阅行、设置菜单里共用同一句 */
 export const GO_PROMO_TEXT = '$10 畅享旗舰开源模型';
+
+// --- 积分计价（统一口径）---
+// 对外全部按积分计价，背后锚定美元：$10 = 10,000 积分（$1 = 1,000 积分）。
+// 用积分而不是直接标美元：① 增值服务（多端同步等）与加购按积分定价更灵活；
+// ② 官方增长活动直接赠积分，而不是送钱。模型单价、窗口预算均抄 opencode
+// 美元定价 ×1000（opencode.ai/docs/go）。
+
+export const GO_CREDITS_PER_DOLLAR = 1_000;
+
+/** opencode 的三档美元预算 → 积分窗口（5h $12 / 每周 $30 / 每月 $60） */
+export const GO_WINDOW_CREDITS = {
+  '5h': 12_000,
+  week: 30_000,
+  month: 60_000,
+} as const;
+
+export interface GoModelRate {
+  name: string;
+  /** 输入 · 积分 / 百万 Token */
+  input: number;
+  /** 输出 · 积分 / 百万 Token */
+  output: number;
+}
+
+/**
+ * 每百万 Token 消耗积分 —— 锚定 opencode 美元单价 ×1000。
+ * 开源子集（去掉闭源的 GPT / Grok），同展示顺序；上下文超限
+ * （Qwen3.7/3.6 Plus >256K）与高峰时段（DeepSeek）取常规档。
+ */
+export const GO_MODEL_RATES: GoModelRate[] = [
+  { name: 'GLM-5.3', input: 1_400, output: 4_400 },
+  { name: 'GLM-5.2', input: 1_400, output: 4_400 },
+  { name: 'GLM-5.1', input: 1_400, output: 4_400 },
+  { name: 'Kimi K3', input: 3_000, output: 15_000 },
+  { name: 'Kimi K2.7 Code', input: 950, output: 4_000 },
+  { name: 'Kimi K2.6', input: 950, output: 4_000 },
+  { name: 'MiMo-V2.5', input: 140, output: 280 },
+  { name: 'MiMo-V2.5-Pro', input: 435, output: 870 },
+  { name: 'MiniMax M3', input: 300, output: 1_200 },
+  { name: 'MiniMax M2.7', input: 300, output: 1_200 },
+  { name: 'Muse Spark 1.2 Contributor', input: 100, output: 200 },
+  { name: 'Qwen3.8 Max', input: 2_000, output: 6_000 },
+  { name: 'Qwen3.7 Max', input: 2_500, output: 7_500 },
+  { name: 'Qwen3.7 Plus', input: 400, output: 1_600 },
+  { name: 'Qwen3.6 Plus', input: 500, output: 3_000 },
+  { name: 'DeepSeek V4 Pro', input: 660, output: 1_980 },
+  { name: 'DeepSeek V4 Flash', input: 220, output: 660 },
+  { name: 'Hy3', input: 140, output: 580 },
+];
 
 // --- 额度窗口 ---
 
@@ -55,22 +110,23 @@ export function getGoUsage(go: GoState): GoUsageWindow[] {
     {
       key: '5h',
       label: '5 小时用量',
-      used: limit5h ? 600 : limitMonth ? 380 : 252,
-      total: 600,
+      // 已用值按窗口新比例重排：默认态 ~40% / ~20% / ~12%，两个打满态保持原百分比故事
+      used: limit5h ? GO_WINDOW_CREDITS['5h'] : limitMonth ? 7_560 : 4_800,
+      total: GO_WINDOW_CREDITS['5h'],
       resetNote: '14:30 重置',
     },
     {
       key: 'week',
       label: '每周用量',
-      used: limit5h ? 1660 : limitMonth ? 1900 : 432,
-      total: 2400,
+      used: limit5h ? 20_700 : limitMonth ? 23_700 : 6_000,
+      total: GO_WINDOW_CREDITS.week,
       resetNote: '周一 08:00 重置',
     },
     {
       key: 'month',
       label: '每月用量',
-      used: limitMonth ? 8000 : limit5h ? 4160 : 720,
-      total: 8000,
+      used: limitMonth ? GO_WINDOW_CREDITS.month : limit5h ? 31_200 : 7_200,
+      total: GO_WINDOW_CREDITS.month,
       resetNote: '9 月 1 日重置',
     },
   ];
@@ -125,32 +181,32 @@ export interface GoUsageRecord {
 export const GO_USAGE_PAGE_SIZE = 8;
 
 export const GO_USAGE_RECORDS: GoUsageRecord[] = [
-  { time: '08-18 14:02', model: 'Kimi K2.5', tokens: '12.4k', credits: 38 },
-  { time: '08-18 13:47', model: 'DeepSeek V4', tokens: '8.1k', credits: 21 },
-  { time: '08-18 11:20', model: 'Qwen3 Coder Max', tokens: '31.9k', credits: 86 },
-  { time: '08-18 10:52', model: 'GLM-5', tokens: '5.6k', credits: 14 },
-  { time: '08-18 09:31', model: 'DeepSeek V4', tokens: '6.9k', credits: 18 },
-  { time: '08-17 22:15', model: 'Kimi K2.5', tokens: '19.2k', credits: 57 },
-  { time: '08-17 21:03', model: 'MiniMax M2.5', tokens: '3.8k', credits: 9 },
-  { time: '08-17 18:40', model: 'DeepSeek V4', tokens: '24.7k', credits: 63 },
-  { time: '08-17 16:28', model: 'Qwen3 Coder Max', tokens: '11.3k', credits: 30 },
-  { time: '08-17 14:19', model: 'GLM-5', tokens: '9.4k', credits: 24 },
-  { time: '08-17 11:07', model: 'Kimi K2.5', tokens: '15.8k', credits: 47 },
-  { time: '08-17 09:44', model: 'MiniMax M2.5', tokens: '2.6k', credits: 6 },
-  { time: '08-16 23:12', model: 'DeepSeek V4', tokens: '18.5k', credits: 48 },
-  { time: '08-16 20:36', model: 'Qwen3 Coder Max', tokens: '27.1k', credits: 73 },
-  { time: '08-16 17:58', model: 'Kimi K2.5', tokens: '8.7k', credits: 26 },
-  { time: '08-16 15:23', model: 'GLM-5', tokens: '13.2k', credits: 33 },
-  { time: '08-16 10:41', model: 'DeepSeek V4', tokens: '5.3k', credits: 13 },
-  { time: '08-15 21:55', model: 'Qwen3 Coder Max', tokens: '22.9k', credits: 61 },
-  { time: '08-15 19:14', model: 'Kimi K2.5', tokens: '10.6k', credits: 32 },
-  { time: '08-15 16:02', model: 'MiniMax M2.5', tokens: '4.4k', credits: 11 },
-  { time: '08-15 13:37', model: 'GLM-5', tokens: '7.8k', credits: 20 },
-  { time: '08-15 09:26', model: 'DeepSeek V4', tokens: '16.3k', credits: 42 },
-  { time: '08-14 22:49', model: 'Kimi K2.5', tokens: '21.5k', credits: 64 },
-  { time: '08-14 18:11', model: 'Qwen3 Coder Max', tokens: '14.7k', credits: 40 },
-  { time: '08-14 15:33', model: 'GLM-5', tokens: '6.1k', credits: 16 },
-  { time: '08-14 11:08', model: 'MiniMax M2.5', tokens: '3.2k', credits: 8 },
+  { time: '08-18 14:02', model: 'Kimi K3', tokens: '12.4k', credits: 54 },
+  { time: '08-18 13:47', model: 'DeepSeek V4 Pro', tokens: '8.1k', credits: 22 },
+  { time: '08-18 11:20', model: 'Qwen3.8 Max', tokens: '31.9k', credits: 68 },
+  { time: '08-18 10:52', model: 'GLM-5.3', tokens: '5.6k', credits: 16 },
+  { time: '08-18 09:31', model: 'DeepSeek V4 Flash', tokens: '6.9k', credits: 6 },
+  { time: '08-17 22:15', model: 'Kimi K3', tokens: '19.2k', credits: 74 },
+  { time: '08-17 21:03', model: 'MiniMax M3', tokens: '3.8k', credits: 5 },
+  { time: '08-17 18:40', model: 'DeepSeek V4 Pro', tokens: '24.7k', credits: 52 },
+  { time: '08-17 16:28', model: 'Qwen3.8 Max', tokens: '11.3k', credits: 31 },
+  { time: '08-17 14:19', model: 'GLM-5.3', tokens: '9.4k', credits: 25 },
+  { time: '08-17 11:07', model: 'Kimi K3', tokens: '15.8k', credits: 62 },
+  { time: '08-17 09:44', model: 'Muse Spark 1.2 Contributor', tokens: '2.6k', credits: 2 },
+  { time: '08-16 23:12', model: 'DeepSeek V4 Pro', tokens: '18.5k', credits: 41 },
+  { time: '08-16 20:36', model: 'Qwen3.8 Max', tokens: '27.1k', credits: 58 },
+  { time: '08-16 17:58', model: 'Kimi K3', tokens: '8.7k', credits: 35 },
+  { time: '08-16 15:23', model: 'GLM-5.3', tokens: '13.2k', credits: 30 },
+  { time: '08-16 10:41', model: 'DeepSeek V4 Flash', tokens: '5.3k', credits: 5 },
+  { time: '08-15 21:55', model: 'Qwen3.8 Max', tokens: '22.9k', credits: 49 },
+  { time: '08-15 19:14', model: 'Kimi K3', tokens: '10.6k', credits: 44 },
+  { time: '08-15 16:02', model: 'MiniMax M3', tokens: '4.4k', credits: 6 },
+  { time: '08-15 13:37', model: 'GLM-5.3', tokens: '7.8k', credits: 21 },
+  { time: '08-15 09:26', model: 'DeepSeek V4 Pro', tokens: '16.3k', credits: 37 },
+  { time: '08-14 22:49', model: 'Kimi K3', tokens: '21.5k', credits: 78 },
+  { time: '08-14 18:11', model: 'Qwen3.8 Max', tokens: '14.7k', credits: 36 },
+  { time: '08-14 15:33', model: 'GLM-5.3', tokens: '6.1k', credits: 18 },
+  { time: '08-14 11:08', model: 'Muse Spark 1.2 Contributor', tokens: '3.2k', credits: 3 },
 ];
 
 // --- 外链 ---

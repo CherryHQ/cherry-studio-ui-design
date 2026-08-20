@@ -1,16 +1,19 @@
 import { useEffect, useState } from 'react';
-import { AlertTriangle, Check, ChevronDown, ChevronLeft, ChevronRight, CreditCard, Loader2, LogOut, RotateCcw } from 'lucide-react';
-import { Button, Popover, PopoverTrigger, PopoverContent, Progress } from '@cherry-studio/ui';
-import cherryLogoImg from '@/assets/cherry-icon.png';
 import {
-  AUTH_STORAGE_KEY, buildGoCheckoutUrl, buildGoDocsUrl, buildGoPageUrl, buildGoSubscriptionUrl,
-  buildLoginUrl, completeGoStateChange, completeWebLogout, parseAuth, readAuth,
-  type AuthSnapshot,
+  AlertTriangle, Check, ChevronDown, ChevronLeft, ChevronRight,
+  Loader2, RotateCcw,
+} from 'lucide-react';
+import { Button, Progress } from '@cherry-studio/ui';
+import {
+  buildGoCheckoutUrl, buildGoDocsUrl, buildGoPageUrl, buildGoSubscriptionUrl, buildLoginUrl,
 } from '@/app/lib/authStorage';
 import { CHERRY_GO_MODELS } from '@/app/config/models';
 import {
-  GO_PLAN, GO_RESETS, GO_USAGE_PAGE_SIZE, GO_USAGE_RECORDS, getGoUsage, usagePercent,
+  GO_MODEL_RATES, GO_PLAN, GO_RESETS, GO_USAGE_PAGE_SIZE, GO_USAGE_RECORDS, getGoUsage, usagePercent,
 } from '@/app/config/goPlan';
+import { GoSiteHeader, SiteButton } from './goSiteWeb';
+import { useAuth } from '@/app/context/AuthContext';
+import { AccountDemoSwitcher } from '@/app/components/shared/AccountDemoSwitcher';
 
 // ===========================
 // 官网 Go 相关的两个页面
@@ -24,29 +27,14 @@ import {
 // 2. 我的订阅页（?subscription=1，本文件的 GoSubscriptionPage）：
 //    从右上角账号菜单「我的订阅」进入，查看我的订阅情况——订阅信息 +
 //    三档用量 + 使用限额重置 + 用量明细（分页）。支付成功后也回到这里。
-
-/** 共享的账号态 hook —— 两个页面都要跨标签页同步 */
-function useAuthSnapshot() {
-  const [snapshot, setSnapshot] = useState<AuthSnapshot>(() => readAuth());
-  useEffect(() => {
-    const onStorage = (e: StorageEvent) => {
-      if (e.key !== AUTH_STORAGE_KEY) return;
-      setSnapshot(parseAuth(e.newValue));
-    };
-    window.addEventListener('storage', onStorage);
-    return () => window.removeEventListener('storage', onStorage);
-  }, []);
-  return { snapshot, setSnapshot };
-}
+//    页面账号态来自 AuthContext（与客户端同一份 localStorage），左下角挂着
+//    演示状态切换器，评审时可直接切各订阅形态。
 
 // --- 1. Go 产品介绍页（?go=1）—— 公开营销页，与登录 / 订阅状态无关 ---
 
 export function GoWorkspacePage() {
-  const { snapshot, setSnapshot } = useAuthSnapshot();
+  const { user, goState: go, logout } = useAuth();
   const [pendingSubscribe, setPendingSubscribe] = useState(false);
-
-  const user = snapshot.user;
-  const go = snapshot.go;
 
   // 点订阅：未登录先登录（登录后自动继续）；订阅生效中带去「我的订阅」；
   // 未订阅 / 已过期进支付（过期续费也走 Stripe）
@@ -66,11 +54,13 @@ export function GoWorkspacePage() {
   }, [pendingSubscribe, user, needPay]);
 
   return (
-    <div className="min-h-screen w-full bg-app-bg">
-      <SiteHeader user={user} goTabActive onLogout={() => setSnapshot(completeWebLogout())} />
-      <main className="mx-auto w-full max-w-[680px] px-6 py-10" id="go">
+    <div className="go-site min-h-screen w-full">
+      <GoSiteHeader user={user} onLogout={logout} active="go" />
+      <main id="go" className="mx-auto w-full max-w-[680px] px-6 py-10">
         <MarketingView onSubscribe={handleSubscribe} loginPending={pendingSubscribe && !user} />
       </main>
+      {/* 左下角演示状态切换器 —— 网页端评审用，切账号 / 订阅形态即时生效 */}
+      <AccountDemoSwitcher triggerClassName="left-4" hideOnboardingRow />
     </div>
   );
 }
@@ -81,33 +71,28 @@ export function GoWorkspacePage() {
 //   已过期：续费卡置顶（Go 模型已停用，续费走 Stripe），历史用量明细保留可查
 
 export function GoSubscriptionPage() {
-  const { snapshot, setSnapshot } = useAuthSnapshot();
-  const user = snapshot.user;
-  const go = snapshot.go;
+  const { user, goState: go, logout } = useAuth();
+
+  useEffect(() => {
+    if (!user) window.location.replace(buildGoPageUrl());
+  }, [user]);
+
+  if (!user) return <div className="go-site min-h-screen w-full" />;
 
   return (
-    <div className="min-h-screen w-full bg-app-bg">
-      <SiteHeader user={user} onLogout={() => setSnapshot(completeWebLogout())} />
-      <main className="mx-auto w-full max-w-[680px] px-6 py-10">
-        {!user ? (
-          <Card>
-            <p className="text-sm text-foreground">登录后查看我的订阅</p>
-            <Button
-              size="lg"
-              className="mt-5 w-full text-sm"
-              onClick={() => window.open(buildLoginUrl(), '_blank')?.focus()}
-            >
-              登录 Cherry Studio
-            </Button>
-          </Card>
-        ) : go === 'none' ? (
+    <div className="go-site min-h-screen w-full">
+      <GoSiteHeader user={user} onLogout={logout} />
+      <main className="mx-auto w-full max-w-[880px] px-6 py-10">
+        {go === 'none' ? (
           <SubscriptionIntroView />
         ) : go === 'expired' ? (
           <ExpiredView />
         ) : (
-          <ManageView snapshot={snapshot} setSnapshot={setSnapshot} />
+          <ManageView />
         )}
       </main>
+      {/* 左下角演示状态切换器 —— 网页端评审用，切账号 / 订阅形态即时生效 */}
+      <AccountDemoSwitcher triggerClassName="left-4" hideOnboardingRow />
     </div>
   );
 }
@@ -115,44 +100,100 @@ export function GoSubscriptionPage() {
 // --- 我的订阅 · 未订阅态 —— workspace 内的精简介绍（参考 opencode workspace/go） ---
 
 function SubscriptionIntroView() {
+  const [tab, setTab] = useState<SubTabId>('overview');
+
   return (
-    <div>
-      <h1 className="text-2xl font-bold tracking-tight text-foreground">Go</h1>
-      <p className="mt-2 text-sm text-muted-foreground">
-        低成本旗舰开源模型，人人可用。
-        <button
-          onClick={() => window.open(buildGoDocsUrl(), '_blank')?.focus()}
-          className="ml-1.5 text-[13px] font-normal text-foreground/70 underline underline-offset-4 hover:text-foreground transition-colors"
-        >
-          了解更多
-        </button>
-      </p>
+    <div className="flex flex-col gap-8 md:flex-row md:items-start">
+      <SubscriptionTabNav active={tab} onChange={setTab} />
+      <div className="flex min-w-0 flex-1 flex-col gap-6">
+        {tab === 'overview' ? (
+          <>
+            <SubscriptionPlanHeader
+              action={(
+                <div className="flex-shrink-0 text-right">
+                  <SiteButton size="sm" onClick={() => { window.location.href = buildGoCheckoutUrl(); }}>
+                    订阅 Go
+                  </SiteButton>
+                  <p className="mt-2 text-[11px] text-muted-foreground/50">可随时取消</p>
+                </div>
+              )}
+            />
+            <Card>
+              <p className="text-sm leading-relaxed text-muted-foreground">
+                Cherry Go 定价 <strong className="font-medium text-foreground">{GO_PLAN.price}</strong>，
+                提供对旗舰开源模型的可靠访问，同时享有充裕的使用限额。
+                <button
+                  onClick={() => window.open(buildGoDocsUrl(), '_blank')?.focus()}
+                  className="ml-1.5 text-[13px] font-normal text-foreground/70 underline underline-offset-4 transition-colors hover:text-foreground"
+                >
+                  了解更多
+                </button>
+              </p>
 
-      <div className="my-6 h-px bg-border/50" />
+              <h2 className="mt-6 text-sm font-medium text-foreground">包含模型</h2>
+              <ul className="mt-3 flex list-disc flex-col gap-1.5 pl-5 text-sm text-foreground/85">
+                {CHERRY_GO_MODELS.map(m => (
+                  <li key={m.id}>{m.name}</li>
+                ))}
+              </ul>
 
-      <p className="text-sm text-muted-foreground leading-relaxed">
-        Cherry Go 定价 <strong className="text-foreground font-medium">{GO_PLAN.price}</strong>，
-        提供对旗舰开源模型的可靠访问，同时享有充裕的使用限额。
-      </p>
-
-      <h2 className="mt-6 text-sm font-medium text-foreground">包含模型</h2>
-      <ul className="mt-3 flex flex-col gap-1.5 list-disc pl-5 text-sm text-foreground/85">
-        {CHERRY_GO_MODELS.map(m => (
-          <li key={m.id}>{m.name}</li>
-        ))}
-      </ul>
-
-      <p className="mt-6 text-sm text-muted-foreground leading-relaxed">
-        该计划主要面向国际用户，提供稳定的全球访问体验。随着我们持续了解早期使用情况并收集反馈，
-        定价和使用限额可能会有所调整。
-      </p>
-
-      <div className="mt-8">
-        <Button size="sm" onClick={() => { window.location.href = buildGoCheckoutUrl(); }}>
-          订阅 Go
-        </Button>
-        <p className="mt-2.5 text-[11px] text-muted-foreground/50">通过 Stripe 安全支付 · 可随时取消</p>
+              <p className="mt-6 text-sm leading-relaxed text-muted-foreground">
+                该计划主要面向国际用户，提供稳定的全球访问体验。随着我们持续了解早期使用情况并收集反馈，
+                定价和使用限额可能会有所调整。
+              </p>
+            </Card>
+          </>
+        ) : (
+          <Card>
+            <p className="text-sm font-medium text-foreground">暂无用量明细</p>
+            <p className="mt-1.5 text-xs text-muted-foreground">订阅 Cherry Go 后，这里会展示每次模型调用的 Tokens 与积分消耗。</p>
+          </Card>
+        )}
       </div>
+    </div>
+  );
+}
+
+// --- 我的订阅 · 左侧 tab 导航（参考 opencode 的 workspace 布局：左列上下两个 tab） ---
+// 使用概览 = 订阅信息 + 用量 + 使用限额重置；用量明细 = 分页的记录表（第二个 tab）
+
+const SUB_TABS = [
+  { id: 'overview', label: '使用概览' },
+  { id: 'usage', label: '用量明细' },
+] as const;
+type SubTabId = (typeof SUB_TABS)[number]['id'];
+
+function SubscriptionTabNav({ active, onChange }: { active: SubTabId; onChange: (t: SubTabId) => void }) {
+  return (
+    <nav className="flex flex-col gap-1 w-full md:w-[168px] flex-shrink-0">
+      {SUB_TABS.map(tab => {
+        const on = active === tab.id;
+        return (
+          <button
+            key={tab.id}
+            onClick={() => onChange(tab.id)}
+            className={`w-full flex items-center justify-between rounded-lg px-3.5 py-2 text-[13px] transition-colors ${
+              on
+                ? 'bg-section-border/60 text-foreground font-medium'
+                : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
+            }`}
+          >
+            {tab.label}
+          </button>
+        );
+      })}
+    </nav>
+  );
+}
+
+function SubscriptionPlanHeader({ action }: { action?: React.ReactNode }) {
+  return (
+    <div className="flex items-start justify-between gap-4">
+      <div className="min-w-0">
+        <h1 className="text-xl font-semibold text-foreground">Go</h1>
+        <p className="mt-1 text-[13px] text-muted-foreground">{GO_PLAN.tagline}</p>
+      </div>
+      {action}
     </div>
   );
 }
@@ -160,128 +201,44 @@ function SubscriptionIntroView() {
 // --- 我的订阅 · 已过期态 —— 续费卡置顶，历史明细保留 ---
 
 function ExpiredView() {
+  const [tab, setTab] = useState<SubTabId>('overview');
+
   return (
-    <div className="flex flex-col gap-8">
-      <div>
-        <h1 className="text-xl font-semibold text-foreground mb-1">Go</h1>
-        <p className="text-[13px] text-muted-foreground mb-4">{GO_PLAN.tagline}</p>
-        <Card>
-          <div className="flex items-center justify-between gap-4">
-            <div className="min-w-0">
-              <div className="flex items-center gap-2">
-                <span className="w-4 h-4 rounded-full bg-destructive/10 flex items-center justify-center">
-                  <AlertTriangle size={10} className="text-destructive" strokeWidth={2.4} />
-                </span>
-                <span className="text-sm font-medium text-foreground">订阅已过期 · Cherry Go</span>
-              </div>
-              <p className="mt-1.5 text-xs text-muted-foreground">
-                已于 {GO_PLAN.expiredDate} 到期，Go 模型已停用
-                <span className="mx-1.5 text-muted-foreground/40">·</span>
-                续费后立即恢复模型与额度
-              </p>
-            </div>
-            <Button size="sm" className="flex-shrink-0" onClick={() => { window.location.href = buildGoCheckoutUrl(); }}>
-              立即续费
-            </Button>
-          </div>
-        </Card>
-      </div>
-
-      {/* 历史用量明细保留可查 */}
-      <UsageRecordsTable />
-    </div>
-  );
-}
-
-// ===========================
-// 官网页头 —— 右上角导航带「Go」tab（锚定本页）
-// ===========================
-
-function SiteHeader({ user, goTabActive, onLogout }: {
-  user: AuthSnapshot['user'];
-  /** 「Go」tab 是否为当前页（介绍页高亮；我的订阅页点击则跳回介绍页） */
-  goTabActive?: boolean;
-  onLogout: () => void;
-}) {
-  return (
-    <header className="border-b border-border/40 sticky top-0 bg-app-bg/90 backdrop-blur z-10">
-      <div className="mx-auto w-full max-w-[680px] px-6 h-14 flex items-center justify-between">
-        <div className="flex items-center gap-2.5">
-          <img src={cherryLogoImg} alt="Cherry Studio" className="w-6 h-6 rounded-md" />
-          <span className="text-sm font-medium text-foreground">Cherry Studio</span>
+    <div>
+      <div className="flex flex-col md:flex-row gap-8 md:items-start">
+        <SubscriptionTabNav active={tab} onChange={setTab} />
+        <div className="flex-1 min-w-0 flex flex-col gap-6">
+          {tab === 'overview' ? (
+            <>
+              <SubscriptionPlanHeader />
+              <Card>
+                <div className="flex items-center justify-between gap-4">
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className="w-4 h-4 rounded-full bg-destructive/10 flex items-center justify-center">
+                        <AlertTriangle size={10} className="text-destructive" strokeWidth={2.4} />
+                      </span>
+                      <span className="text-sm font-medium text-foreground">订阅已过期 · Cherry Go</span>
+                    </div>
+                    <p className="mt-1.5 text-xs text-muted-foreground">
+                      已于 {GO_PLAN.expiredDate} 到期，Go 模型已停用
+                      <span className="mx-1.5 text-muted-foreground/40">·</span>
+                      续费后立即恢复模型与额度
+                    </p>
+                  </div>
+                  <SiteButton size="sm" className="flex-shrink-0" onClick={() => { window.location.href = buildGoCheckoutUrl(); }}>
+                    立即续费
+                  </SiteButton>
+                </div>
+              </Card>
+            </>
+          ) : (
+            /* 历史用量明细保留可查 */
+            <UsageRecordsTable />
+          )}
         </div>
-        <nav className="flex items-center gap-5">
-          <a
-            href="https://www.cherryai.com.cn/"
-            target="_blank"
-            rel="noreferrer"
-            className="text-xs text-muted-foreground hover:text-foreground transition-colors"
-          >
-            首页
-          </a>
-          <button
-            onClick={() => window.open(buildGoDocsUrl(), '_blank')?.focus()}
-            className="text-xs font-normal text-muted-foreground hover:text-foreground transition-colors"
-          >
-            文档
-          </button>
-          {goTabActive ? (
-            <a href="#go" className="text-xs font-medium text-foreground">
-              Go
-            </a>
-          ) : (
-            <button
-              onClick={() => { window.location.href = buildGoPageUrl(); }}
-              className="text-xs font-normal text-muted-foreground hover:text-foreground transition-colors"
-            >
-              Go
-            </button>
-          )}
-          <span className="w-px h-3.5 bg-border/60" />
-          {user ? (
-            <AccountMenu name={user.name} onLogout={onLogout} />
-          ) : (
-            <button
-              onClick={() => window.open(buildLoginUrl(), '_blank')?.focus()}
-              className="text-xs font-normal text-foreground/70 hover:text-foreground hover:underline underline-offset-2"
-            >
-              登录
-            </button>
-          )}
-        </nav>
       </div>
-    </header>
-  );
-}
-
-function AccountMenu({ name, onLogout }: { name: string; onLogout: () => void }) {
-  const [open, setOpen] = useState(false);
-  return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <button className="flex items-center gap-1 text-xs font-normal text-foreground/80 hover:text-foreground transition-colors">
-          {name}
-          <ChevronDown size={12} className="text-muted-foreground/60" />
-        </button>
-      </PopoverTrigger>
-      <PopoverContent align="end" sideOffset={8} className="w-[160px] p-1.5">
-        {/* 我的订阅 —— 进「我的订阅」页查看订阅情况（?subscription=1） */}
-        <button
-          onClick={() => { setOpen(false); window.location.href = buildGoSubscriptionUrl(); }}
-          className="w-full flex items-center gap-2 px-2 py-1.5 rounded-lg text-left text-xs text-foreground/85 hover:bg-accent/40 transition-colors"
-        >
-          <CreditCard size={13} className="text-muted-foreground/70" />
-          我的订阅
-        </button>
-        <button
-          onClick={() => { setOpen(false); onLogout(); }}
-          className="w-full flex items-center gap-2 px-2 py-1.5 rounded-lg text-left text-xs text-foreground/85 hover:bg-accent/40 transition-colors"
-        >
-          <LogOut size={13} className="text-muted-foreground/70" />
-          退出登录
-        </button>
-      </PopoverContent>
-    </Popover>
+    </div>
   );
 }
 
@@ -289,14 +246,7 @@ function AccountMenu({ name, onLogout }: { name: string; onLogout: () => void })
 // 公开营销内容（结构参考 opencode 的 /go，按 Cherry 改写）
 // ===========================
 
-/** 营销页的「每 5 小时可用请求」估算 —— 同样的积分，轻量模型能发起更多请求 */
-const MODEL_RATES: { name: string; per5h: string }[] = [
-  { name: 'MiniMax M2.5', per5h: '约 65 次' },
-  { name: 'GLM-5', per5h: '约 40 次' },
-  { name: 'DeepSeek V4', per5h: '约 28 次' },
-  { name: 'Kimi K2.5', per5h: '约 15 次' },
-  { name: 'Qwen3 Coder Max', per5h: '约 8 次' },
-];
+// 「包含模型」表数据统一在 goPlan.ts 的 GO_MODEL_RATES（积分计价，锚定 opencode 美元定价）
 
 const GO_HIGHLIGHTS = [
   { title: '一个订阅，整个阵容', desc: `${GO_PLAN.price}，用上 Kimi、DeepSeek、Qwen、GLM、MiniMax 等系列的旗舰开源模型，不用再逐家申请 API Key、逐家充值。` },
@@ -326,7 +276,7 @@ function MarketingView({ onSubscribe, loginPending }: { onSubscribe: () => void;
       <h1 className="text-4xl font-bold tracking-tight text-foreground leading-tight">
         人人用得起的
         <br />
-        旗舰开源模型
+        <span className="gradient-text">旗舰开源模型</span>
       </h1>
       <p className="mt-4 text-sm text-muted-foreground leading-relaxed">
         Cherry Go 以 {GO_PLAN.price} 提供充裕的使用额度与稳定的全球访问，
@@ -338,10 +288,8 @@ function MarketingView({ onSubscribe, loginPending }: { onSubscribe: () => void;
           了解更多
         </button>
       </p>
-      <div className="mt-6 flex items-center gap-4">
-        <Button size="sm" onClick={onSubscribe}>
-          订阅 Go — {GO_PLAN.price}
-        </Button>
+      <div className="mt-6 flex flex-wrap items-center gap-4">
+        <SiteButton onClick={onSubscribe}>订阅 Go — {GO_PLAN.price}</SiteButton>
         {loginPending && (
           <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
             <Loader2 size={12} className="animate-spin" />
@@ -353,24 +301,28 @@ function MarketingView({ onSubscribe, loginPending }: { onSubscribe: () => void;
 
       <div className="my-10 h-px bg-border/50" />
 
-      {/* 包含模型 + 请求量估算 */}
+      {/* 包含模型 —— 每百万 Token 消耗积分（积分制，区别于 opencode 的请求次数） */}
       <h2 className="text-base font-medium text-foreground">包含模型</h2>
       <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
-        额度按积分透明计量——同样的积分，轻量模型能发起更多请求：
+        额度按积分透明计量——同样的积分，轻量模型能处理更多 Token：
       </p>
       <div className="mt-4 rounded-[var(--radius-button)] border border-section-border overflow-hidden">
-        <div className="grid grid-cols-2 gap-2 px-4 py-2 bg-muted/40 text-xs font-medium text-foreground/70">
+        <div className="grid grid-cols-3 gap-2 px-4 py-2 bg-muted/40 text-xs font-medium text-foreground/70">
           <span>模型</span>
-          <span className="text-right">每 5 小时可用请求</span>
+          <span className="text-right">输入 · 积分 / 百万 Token</span>
+          <span className="text-right">输出 · 积分 / 百万 Token</span>
         </div>
-        {MODEL_RATES.map(r => (
-          <div key={r.name} className="grid grid-cols-2 gap-2 px-4 py-2.5 text-[13px] border-t border-section-border/50">
+        {GO_MODEL_RATES.map(r => (
+          <div key={r.name} className="grid grid-cols-3 gap-2 px-4 py-2.5 text-[13px] border-t border-section-border/50">
             <span className="text-foreground">{r.name}</span>
-            <span className="text-right text-muted-foreground tabular-nums">{r.per5h}</span>
+            <span className="text-right text-muted-foreground tabular-nums">{r.input.toLocaleString('en-US')}</span>
+            <span className="text-right text-muted-foreground tabular-nums">{r.output.toLocaleString('en-US')}</span>
           </div>
         ))}
       </div>
       <p className="mt-3 text-[13px] text-muted-foreground/70">
+        积分按 $10 = 10,000 积分、以 opencode 定价换算（每百万 Token）；
+        上下文超限（Qwen3.7/3.6 Plus）与高峰时段（DeepSeek）价格更高。
         模型列表随开源生态持续更新，新模型发布后自动加入，无需额外付费。
       </p>
 
@@ -394,7 +346,7 @@ function MarketingView({ onSubscribe, loginPending }: { onSubscribe: () => void;
       <ol className="mt-4 flex flex-col gap-3">
         {GO_STEPS.map((s, i) => (
           <li key={s} className="flex items-start gap-3 text-sm text-foreground/85 leading-relaxed">
-            <span className="mt-px w-5 h-5 rounded-full bg-muted flex items-center justify-center text-[11px] font-medium text-foreground/70 flex-shrink-0">
+            <span className="mt-px w-5 h-5 rounded-full bg-primary/10 text-primary flex items-center justify-center text-[11px] font-medium flex-shrink-0">
               {i + 1}
             </span>
             {s}
@@ -407,13 +359,6 @@ function MarketingView({ onSubscribe, loginPending }: { onSubscribe: () => void;
       {/* FAQ */}
       <h2 className="text-base font-medium text-foreground">常见问题</h2>
       <Faq />
-
-      {/* 底部再给一次入口 */}
-      <div className="mt-10">
-        <Button size="sm" onClick={onSubscribe}>
-          订阅 Go — {GO_PLAN.price}
-        </Button>
-      </div>
     </div>
   );
 }
@@ -447,11 +392,9 @@ function Faq() {
 // 已订阅：套餐管理页
 // ===========================
 
-function ManageView({ snapshot, setSnapshot }: {
-  snapshot: AuthSnapshot;
-  setSnapshot: (s: AuthSnapshot) => void;
-}) {
-  const go = snapshot.go;
+function ManageView() {
+  const { goState: go, applyGoDemoState } = useAuth();
+  const [tab, setTab] = useState<SubTabId>('overview');
   const [resetsUsed, setResetsUsed] = useState<number>(GO_RESETS.used);
   const [justReset, setJustReset] = useState(false);
   const [manageOpen, setManageOpen] = useState(false);
@@ -462,7 +405,7 @@ function ManageView({ snapshot, setSnapshot }: {
   }, [go]);
 
   const unsubscribe = () => {
-    setSnapshot(completeGoStateChange('none'));
+    applyGoDemoState('none');
     setManageOpen(false);
   };
   // 有剩余次数就可点（与客户端订阅额度页同一条规则）；重置恢复 5 小时 + 每周窗口
@@ -471,111 +414,117 @@ function ManageView({ snapshot, setSnapshot }: {
   const resetQuota = () => {
     if (!canReset) return;
     setResetsUsed(n => n + 1);
-    if (go === 'limit-5h') setSnapshot(completeGoStateChange('active'));
+    if (go === 'limit-5h') applyGoDemoState('active');
     setJustReset(true);
   };
 
   return (
-    <div className="flex flex-col gap-8">
-      {/* 1. 订阅信息 */}
-      <div>
-        <h1 className="text-xl font-semibold text-foreground mb-1">Go</h1>
-        <p className="text-[13px] text-muted-foreground mb-4">{GO_PLAN.tagline}</p>
-        <Card>
-          <div className="flex items-center justify-between gap-4">
-            <div className="min-w-0">
-              <div className="flex items-center gap-2">
-                <span className="w-4 h-4 rounded-full bg-success/15 flex items-center justify-center">
-                  <Check size={10} className="text-success" strokeWidth={2.6} />
-                </span>
-                <span className="text-sm font-medium text-foreground">已订阅 · Cherry Go</span>
-              </div>
-              <p className="mt-1.5 text-xs text-muted-foreground">
-                {GO_PLAN.price}
-                <span className="mx-1.5 text-muted-foreground/40">·</span>
-                下次扣款 {GO_PLAN.renewDate}
-              </p>
-            </div>
-            <Button variant="outline" size="xs" className="flex-shrink-0 shadow-none border-border" onClick={() => setManageOpen(v => !v)}>
-              管理订阅
-            </Button>
-          </div>
-          {manageOpen && (
-            <div className="mt-4 pt-3 border-t border-border/40 flex items-center justify-between gap-4">
-              <p className="text-[11px] text-muted-foreground/60">
-                真实产品中本期额度保留至 {GO_PLAN.renewDate}；演示环境取消立即生效
-              </p>
-              <button
-                onClick={unsubscribe}
-                className="text-[11px] text-destructive/70 hover:text-destructive hover:underline underline-offset-2 flex-shrink-0"
-              >
-                取消订阅（演示）
-              </button>
-            </div>
-          )}
-        </Card>
-      </div>
-
-      {/* 2. 用量 */}
-      <section>
-        <SectionTitle>用量</SectionTitle>
-        <Card>
-          {getGoUsage(go).map((w, i) => {
-            const pct = usagePercent(w);
-            const full = pct >= 100;
-            return (
-              <div key={w.key} className={`py-3 ${i > 0 ? 'border-t border-border/30' : ''} first:pt-1 last:pb-1`}>
-                <div className="flex items-baseline justify-between gap-4 mb-2">
-                  <span className="text-[13px] text-foreground">{w.label}</span>
-                  <span className="text-xs tabular-nums text-muted-foreground">
-                    {w.used.toLocaleString('en-US')} / {w.total.toLocaleString('en-US')} 积分
-                    <span className={`ml-2 font-medium ${full ? 'text-destructive' : 'text-foreground'}`}>{pct}%</span>
-                  </span>
-                </div>
-                <Progress
-                  value={pct}
-                  className={`h-1.5 bg-muted ${full ? '[&>[data-slot=progress-indicator]]:bg-destructive' : ''}`}
-                />
-                <p className="mt-1.5 text-[11px] text-muted-foreground/60">{w.resetNote}</p>
-              </div>
-            );
-          })}
-        </Card>
-      </section>
-
-      {/* 3. 使用限额重置 —— 用完时方框里只剩一句话 */}
-      <section>
-        <SectionTitle>使用限额重置</SectionTitle>
-        <Card>
-          {canReset ? (
+    <div>
+      <div className="flex flex-col md:flex-row gap-8 md:items-start">
+        <SubscriptionTabNav active={tab} onChange={setTab} />
+        <div className="flex-1 min-w-0 flex flex-col gap-6">
+          {tab === 'overview' ? (
             <>
-              <div className="flex items-center justify-between gap-4">
-                <div className="min-w-0">
-                  <p className="text-[13px] text-foreground flex items-center gap-1.5">
-                    <RotateCcw size={13} className="text-muted-foreground" />
-                    本月剩余 {resetsLeft} 次重置
-                  </p>
-                  <p className="mt-1 text-[11px] text-muted-foreground/60">{GO_RESETS.note}</p>
+              <SubscriptionPlanHeader />
+              {/* 1. 订阅信息 */}
+              <Card>
+                <div className="flex items-center justify-between gap-4">
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className="w-4 h-4 rounded-full bg-success/15 flex items-center justify-center">
+                        <Check size={10} className="text-success" strokeWidth={2.6} />
+                      </span>
+                      <span className="text-sm font-medium text-foreground">已订阅 · Cherry Go</span>
+                    </div>
+                    <p className="mt-1.5 text-xs text-muted-foreground">
+                      {GO_PLAN.price}
+                      <span className="mx-1.5 text-muted-foreground/40">·</span>
+                      下次扣款 {GO_PLAN.renewDate}
+                    </p>
+                  </div>
+                  <Button variant="outline" size="xs" className="flex-shrink-0 shadow-none border-border" onClick={() => setManageOpen(v => !v)}>
+                    管理订阅
+                  </Button>
                 </div>
-                <Button variant="outline" size="xs" className="flex-shrink-0 shadow-none border-border" onClick={resetQuota}>
-                  立即重置
-                </Button>
-              </div>
-              {justReset && (
-                <p className="mt-3 pt-3 border-t border-border/40 text-[11px] text-success flex items-center gap-1.5">
-                  <Check size={11} strokeWidth={2.6} />
-                  已重置，5 小时与每周额度已恢复
-                </p>
-              )}
+                {manageOpen && (
+                  <div className="mt-4 pt-3 border-t border-border/40 flex items-center justify-between gap-4">
+                    <p className="text-[11px] text-muted-foreground/60">
+                      真实产品中本期额度保留至 {GO_PLAN.renewDate}；演示环境取消立即生效
+                    </p>
+                    <button
+                      onClick={unsubscribe}
+                      className="text-[11px] text-destructive/70 hover:text-destructive hover:underline underline-offset-2 flex-shrink-0"
+                    >
+                      取消订阅（演示）
+                    </button>
+                  </div>
+                )}
+              </Card>
+
+              {/* 2. 用量 */}
+              <section>
+                <SectionTitle>用量</SectionTitle>
+                <Card>
+                  {getGoUsage(go).map((w, i) => {
+                    const pct = usagePercent(w);
+                    const full = pct >= 100;
+                    return (
+                      <div key={w.key} className={`py-3 ${i > 0 ? 'border-t border-border/30' : ''} first:pt-1 last:pb-1`}>
+                        <div className="flex items-baseline justify-between gap-4 mb-2">
+                          <span className="text-[13px] text-foreground">{w.label}</span>
+                          <span className="text-xs tabular-nums text-muted-foreground">
+                            {w.used.toLocaleString('en-US')} / {w.total.toLocaleString('en-US')} 积分
+                            <span className={`ml-2 font-medium ${full ? 'text-destructive' : 'text-foreground'}`}>{pct}%</span>
+                          </span>
+                        </div>
+                        <Progress
+                          value={pct}
+                          className={`h-1.5 bg-muted ${full ? '[&>[data-slot=progress-indicator]]:bg-destructive' : ''}`}
+                        />
+                        <p className="mt-1.5 text-[11px] text-muted-foreground/60">{w.resetNote}</p>
+                      </div>
+                    );
+                  })}
+                </Card>
+              </section>
+
+              {/* 3. 使用限额重置 —— 用完时方框里只剩一句话 */}
+              <section>
+                <SectionTitle>使用限额重置</SectionTitle>
+                <Card>
+                  {canReset ? (
+                    <>
+                      <div className="flex items-center justify-between gap-4">
+                        <div className="min-w-0">
+                          <p className="text-[13px] text-foreground flex items-center gap-1.5">
+                            <RotateCcw size={13} className="text-muted-foreground" />
+                            本月剩余 {resetsLeft} 次重置
+                          </p>
+                          <p className="mt-1 text-[11px] text-muted-foreground/60">{GO_RESETS.note}</p>
+                        </div>
+                        <Button variant="outline" size="xs" className="flex-shrink-0 shadow-none border-border" onClick={resetQuota}>
+                          立即重置
+                        </Button>
+                      </div>
+                      {justReset && (
+                        <p className="mt-3 pt-3 border-t border-border/40 text-[11px] text-success flex items-center gap-1.5">
+                          <Check size={11} strokeWidth={2.6} />
+                          已重置，5 小时与每周额度已恢复
+                        </p>
+                      )}
+                    </>
+                  ) : (
+                    <p className="text-[13px] text-muted-foreground">无可用重置次数</p>
+                  )}
+                </Card>
+              </section>
             </>
           ) : (
-            <p className="text-[13px] text-muted-foreground">无可用重置次数</p>
+            /* 4. 用量明细 —— 积分口径，分页 */
+            <UsageRecordsTable />
           )}
-        </Card>
-      </section>
-
-      {/* 4. 用量明细 —— 积分口径，分页 */}
-      <UsageRecordsTable />
+        </div>
+      </div>
     </div>
   );
 }
@@ -588,10 +537,8 @@ function UsageRecordsTable() {
   const rows = GO_USAGE_RECORDS.slice(page * GO_USAGE_PAGE_SIZE, (page + 1) * GO_USAGE_PAGE_SIZE);
 
   return (
-    <section>
-      <SectionTitle>用量明细</SectionTitle>
-      <Card className="px-0 py-0">
-        <div className="grid grid-cols-[110px_1fr_72px_64px] gap-2 px-5 py-2.5 border-b border-border/40 text-[11px] text-muted-foreground/60">
+    <Card className="px-0 py-0">
+      <div className="grid grid-cols-[110px_1fr_72px_64px] gap-2 px-5 py-2.5 border-b border-border/40 text-[11px] text-muted-foreground/60">
           <span>时间</span>
           <span>模型</span>
           <span className="text-right">Tokens</span>
@@ -637,8 +584,7 @@ function UsageRecordsTable() {
             </Button>
           </div>
         </div>
-      </Card>
-    </section>
+    </Card>
   );
 }
 

@@ -4,6 +4,24 @@
     <head>
       <meta charset="UTF-8" />
       <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <script>
+        (() => {
+          const params = new URLSearchParams(window.location.search);
+          const isWebsiteRoute = ['login', 'go', 'subscription', 'checkout', 'docs'].some(key => params.has(key));
+          if (!isWebsiteRoute) return;
+
+          let theme = 'system';
+          try {
+            const stored = localStorage.getItem('theme-preference');
+            if (stored === 'light' || stored === 'dark' || stored === 'system') theme = stored;
+          } catch {
+            // ignore
+          }
+
+          const isDark = theme === 'dark' || (theme === 'system' && matchMedia('(prefers-color-scheme: dark)').matches);
+          document.documentElement.classList.add(isDark ? 'dark' : 'light');
+        })();
+      </script>
       <link rel="icon" type="image/png" href="/favicon.png" />
       <title>Cherry Studio</title>
     </head>
@@ -13,4 +31,3 @@
       <script type="module" src="/src/main.tsx"></script>
     </body>
   </html>
-  

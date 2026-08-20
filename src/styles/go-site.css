@@ -1,0 +1,253 @@
+/* ============================================================
+ * 官网（CherryHQ/cherry-studio-website）设计规范 · 作用域主题层
+ *
+ * 用途：网页端路由页面（?go=1 / ?subscription=1 / ?checkout=go / ?docs=go）
+ *       需要以官网视觉呈现时，把根节点包上 .go-site 即可。
+ *
+ * 规范源：cherry-studio-website/src/index.css —— light / dark 双主题，
+ *        樱桃红 #e54d4d 只做氛围（渐变字 / 光晕 / 选中态 / ring），
+ *        主 CTA 是单色前景按钮（bg-foreground text-background）。
+ *
+ * 隔离性：所有 token / 工具类作用在 .go-site 内，不影响桌面 App 的
+ *        --cs-* 全局 token。官网路由使用独立的主题 Provider，与 App
+ *        当前主题设置互不覆盖。
+ * ============================================================ */
+
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap");
+
+.go-site {
+  /* ---- 字体 ---- */
+  --font-sans: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+
+  /* ---- 主题 token（官网 :root 深色值）---- */
+  --background: #0a0a0b;
+  --foreground: #fafafa;
+  --card: #141416;
+  --card-foreground: #fafafa;
+  --popover: #141416;
+  --popover-foreground: #fafafa;
+  --primary: #e54d4d;
+  --primary-foreground: #ffffff;
+  --secondary: #1c1c1f;
+  --secondary-foreground: #fafafa;
+  --muted: #27272a;
+  --muted-foreground: #a1a1aa;
+  --accent: #27272a;
+  --accent-foreground: #fafafa;
+  --destructive: #ef4444;
+  --border: rgba(255, 255, 255, 0.08);
+  --input: rgba(255, 255, 255, 0.08);
+  --input-background: #1c1c1f;
+  --ring: #e54d4d;
+  --chart-1: #e54d4d;
+  --chart-2: #f97316;
+  --chart-3: #22c55e;
+  --chart-4: #3b82f6;
+  --chart-5: #a855f7;
+  --section-border: rgba(255, 255, 255, 0.08);
+  --app-bg: #0a0a0b;
+  --go-popover-shadow: 0 16px 48px rgba(0, 0, 0, 0.45);
+
+  /* ---- 圆角（官网 radius 0.75rem）---- */
+  --radius: 0.75rem;
+  --radius-sm: calc(0.75rem - 4px);
+  --radius-md: calc(0.75rem - 2px);
+  --radius-lg: 0.75rem;
+  --radius-xl: calc(0.75rem + 4px);
+  --radius-card: 16px;
+  --radius-button: 10px;
+
+  /* ---- 字号（App 的 @theme inline 把 text-xs~lg 映射到 --fs-* 的 Figma 刻度，
+          在这里覆盖回 Tailwind 默认，避免官网文字被压小）---- */
+  --fs-xs: 12px;
+  --fs-sm: 14px;
+  --fs-md: 14px;
+  --fs-base: 16px;
+  --fs-lg: 18px;
+
+  /* ---- 显式映射 --color-*（兼容直接引用这些变量的组件）---- */
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-input-background: var(--input-background);
+  --color-ring: var(--ring);
+  --color-section-border: var(--section-border);
+  --color-app-bg: var(--app-bg);
+
+  /* ---- 本体 ---- */
+  background-color: var(--background);
+  color: var(--foreground);
+  color-scheme: dark;
+  font-family: var(--font-sans);
+}
+
+/* ---- 官网浅色 token（与 cherry-studio-website 的 .light 保持一致）---- */
+
+.light .go-site {
+  --background: #ffffff;
+  --foreground: #0a0a0b;
+  --card: #ffffff;
+  --card-foreground: #0a0a0b;
+  --popover: #ffffff;
+  --popover-foreground: #0a0a0b;
+  --primary: #dc2626;
+  --primary-foreground: #ffffff;
+  --secondary: #f4f4f5;
+  --secondary-foreground: #18181b;
+  --muted: #f4f4f5;
+  --muted-foreground: #71717a;
+  --accent: #f4f4f5;
+  --accent-foreground: #18181b;
+  --destructive: #ef4444;
+  --border: #e4e4e7;
+  --input: #e4e4e7;
+  --input-background: #ffffff;
+  --ring: #dc2626;
+  --section-border: #e4e4e7;
+  --app-bg: #fafafa;
+  --go-popover-shadow: 0 16px 48px rgba(0, 0, 0, 0.14);
+
+  color-scheme: light;
+}
+
+/* ---- 官网特色工具类（全部作用在 .go-site 内）---- */
+
+.go-site .gradient-text {
+  background: linear-gradient(135deg, #e54d4d 0%, #f97316 50%, #e54d4d 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+}
+
+.go-site .glow-primary {
+  box-shadow:
+    0 0 20px rgba(229, 77, 77, 0.3),
+    0 0 60px rgba(229, 77, 77, 0.1);
+}
+
+.go-site .glow-text {
+  text-shadow: 0 0 20px rgba(229, 77, 77, 0.5);
+}
+
+.go-site .glass {
+  background: rgba(20, 20, 22, 0.8);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.light .go-site .glass {
+  background: rgba(255, 255, 255, 0.8);
+  border-color: rgba(0, 0, 0, 0.08);
+}
+
+.go-site .dot-pattern {
+  background-image: radial-gradient(rgba(255, 255, 255, 0.12) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+.light .go-site .dot-pattern {
+  background-image: radial-gradient(rgba(0, 0, 0, 0.08) 1px, transparent 1px);
+}
+
+.go-site .grid-pattern {
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+  background-size: 64px 64px;
+}
+
+.light .go-site .grid-pattern {
+  background-image:
+    linear-gradient(rgba(0, 0, 0, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 0, 0, 0.04) 1px, transparent 1px);
+}
+
+.go-site .noise {
+  position: relative;
+}
+
+.go-site .noise::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  opacity: 0.02;
+  pointer-events: none;
+}
+
+/* ---- 动画（keyframes 放顶层，供 .go-site 内元素引用）---- */
+
+@keyframes go-float {
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes go-pulse-glow {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+@keyframes go-gradient-shift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+@keyframes go-orb-breathe {
+  0%,
+  100% {
+    transform: translate(-50%, -50%) scale(1);
+  }
+  50% {
+    transform: translate(-50%, -50%) scale(1.15);
+  }
+}
+
+.go-site .animate-float {
+  animation: go-float 6s ease-in-out infinite;
+}
+
+.go-site .animate-pulse-glow {
+  animation: go-pulse-glow 2s ease-in-out infinite;
+}
+
+.go-site .animate-gradient {
+  background-size: 200% 200%;
+  animation: go-gradient-shift 8s ease infinite;
+}
+
+.go-site .animate-orb-breathe {
+  animation: go-orb-breathe 8s ease-in-out infinite;
+}

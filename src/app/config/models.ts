@@ -76,9 +76,10 @@ export const CHERRY_AI_FREE_MODEL: ModelInfo = {
 // ===========================
 // CherryAI Go（订阅）
 // ===========================
-// Go 是 $10/月 的订阅：旗舰**开源**模型畅享（Kimi / DeepSeek / Qwen / GLM /
-// MiniMax），消耗按积分计。列表分组名固定 "CherryAI Go"，与 CherryAI（免费内测）
-// 是两个组，参考 opencode 的做法。
+// Go 是 $10/月 的订阅：旗舰**开源**模型畅享，消耗按积分计。列表分组名固定
+// "CherryAI Go"，与 CherryAI（免费内测）是两个组，参考 opencode 的做法。
+// 模型清单与官网介绍页 / goPlan.ts 的 GO_MODEL_RATES 保持一致（18 个，
+// 对齐 opencode 的开源子集，同展示顺序）。
 //
 // 未订阅时这些模型名**不展示**：组里只有一行「旗舰开源模型 · 订阅」引导
 // （见 CHERRY_GO_CTA_MODEL），点击跳网页端订阅。
@@ -90,11 +91,24 @@ export const CHERRY_GO_PROVIDER = 'CherryAI Go';
 const GO_MODEL_NOTE = 'Cherry Go 订阅内，消耗按积分计入用量';
 
 export const CHERRY_GO_MODELS: ModelInfo[] = [
-  { id: 'cherry-go-kimi-k25', name: 'Kimi K2.5', provider: CHERRY_GO_PROVIDER, capabilities: ['vision', 'reasoning', 'tools'], logoId: 'kimi', modelId: 'kimi-k2.5', contextWindow: 262_144, maxOutput: 32_768, thinkingLevels: '低, 中, 高', note: GO_MODEL_NOTE },
-  { id: 'cherry-go-deepseek-v4', name: 'DeepSeek V4', provider: CHERRY_GO_PROVIDER, capabilities: ['reasoning', 'tools'], logoId: 'deepseek', modelId: 'deepseek-v4', contextWindow: 1_048_576, maxOutput: 131_072, thinkingLevels: '沉思, 极致', note: GO_MODEL_NOTE },
-  { id: 'cherry-go-qwen3-coder', name: 'Qwen3 Coder Max', provider: CHERRY_GO_PROVIDER, capabilities: ['reasoning', 'tools'], logoId: 'qwen', modelId: 'qwen3-coder-max', contextWindow: 262_144, maxOutput: 65_536, thinkingLevels: '低, 中, 高', note: GO_MODEL_NOTE },
-  { id: 'cherry-go-glm-5', name: 'GLM-5', provider: CHERRY_GO_PROVIDER, capabilities: ['vision', 'reasoning', 'tools'], logoId: 'zhipu', modelId: 'glm-5', contextWindow: 204_800, maxOutput: 32_768, thinkingLevels: '低, 中, 高', note: GO_MODEL_NOTE },
-  { id: 'cherry-go-minimax-m25', name: 'MiniMax M2.5', provider: CHERRY_GO_PROVIDER, capabilities: ['tools', 'web'], logoId: 'minimax', modelId: 'minimax-m2.5', contextWindow: 204_800, maxOutput: 16_384, note: GO_MODEL_NOTE },
+  { id: 'cherry-go-glm-53', name: 'GLM-5.3', provider: CHERRY_GO_PROVIDER, capabilities: ['vision', 'reasoning', 'tools'], logoId: 'zhipu', modelId: 'glm-5.3', contextWindow: 204_800, maxOutput: 32_768, thinkingLevels: '低, 中, 高', note: GO_MODEL_NOTE },
+  { id: 'cherry-go-glm-52', name: 'GLM-5.2', provider: CHERRY_GO_PROVIDER, capabilities: ['vision', 'reasoning', 'tools'], logoId: 'zhipu', modelId: 'glm-5.2', contextWindow: 204_800, maxOutput: 32_768, thinkingLevels: '低, 中, 高', note: GO_MODEL_NOTE },
+  { id: 'cherry-go-glm-51', name: 'GLM-5.1', provider: CHERRY_GO_PROVIDER, capabilities: ['vision', 'reasoning', 'tools'], logoId: 'zhipu', modelId: 'glm-5.1', contextWindow: 204_800, maxOutput: 32_768, thinkingLevels: '低, 中, 高', note: GO_MODEL_NOTE },
+  { id: 'cherry-go-kimi-k3', name: 'Kimi K3', provider: CHERRY_GO_PROVIDER, capabilities: ['vision', 'reasoning', 'tools'], logoId: 'kimi', modelId: 'kimi-k3', contextWindow: 262_144, maxOutput: 32_768, thinkingLevels: '低, 中, 高', note: GO_MODEL_NOTE },
+  { id: 'cherry-go-kimi-k27-code', name: 'Kimi K2.7 Code', provider: CHERRY_GO_PROVIDER, capabilities: ['reasoning', 'tools'], logoId: 'kimi', modelId: 'kimi-k2.7-code', contextWindow: 262_144, maxOutput: 65_536, note: GO_MODEL_NOTE },
+  { id: 'cherry-go-kimi-k26', name: 'Kimi K2.6', provider: CHERRY_GO_PROVIDER, capabilities: ['vision', 'reasoning', 'tools'], logoId: 'kimi', modelId: 'kimi-k2.6', contextWindow: 262_144, maxOutput: 32_768, thinkingLevels: '低, 中, 高', note: GO_MODEL_NOTE },
+  { id: 'cherry-go-mimo-v25', name: 'MiMo-V2.5', provider: CHERRY_GO_PROVIDER, capabilities: ['reasoning', 'tools'], logoId: 'xiaomi', modelId: 'mimo-v2.5', contextWindow: 262_144, maxOutput: 32_768, note: GO_MODEL_NOTE },
+  { id: 'cherry-go-mimo-v25-pro', name: 'MiMo-V2.5-Pro', provider: CHERRY_GO_PROVIDER, capabilities: ['reasoning', 'tools'], logoId: 'xiaomi', modelId: 'mimo-v2.5-pro', contextWindow: 262_144, maxOutput: 32_768, note: GO_MODEL_NOTE },
+  { id: 'cherry-go-minimax-m3', name: 'MiniMax M3', provider: CHERRY_GO_PROVIDER, capabilities: ['tools', 'web'], logoId: 'minimax', modelId: 'minimax-m3', contextWindow: 204_800, maxOutput: 16_384, note: GO_MODEL_NOTE },
+  { id: 'cherry-go-minimax-m27', name: 'MiniMax M2.7', provider: CHERRY_GO_PROVIDER, capabilities: ['tools', 'web'], logoId: 'minimax', modelId: 'minimax-m2.7', contextWindow: 204_800, maxOutput: 16_384, note: GO_MODEL_NOTE },
+  { id: 'cherry-go-muse-spark-12', name: 'Muse Spark 1.2 Contributor', provider: CHERRY_GO_PROVIDER, capabilities: ['reasoning', 'tools'], logoId: 'muse', modelId: 'muse-spark-1.2-contributor', contextWindow: 262_144, maxOutput: 32_768, note: GO_MODEL_NOTE },
+  { id: 'cherry-go-qwen38-max', name: 'Qwen3.8 Max', provider: CHERRY_GO_PROVIDER, capabilities: ['reasoning', 'tools'], logoId: 'qwen', modelId: 'qwen3.8-max', contextWindow: 262_144, maxOutput: 65_536, thinkingLevels: '低, 中, 高', note: GO_MODEL_NOTE },
+  { id: 'cherry-go-qwen37-max', name: 'Qwen3.7 Max', provider: CHERRY_GO_PROVIDER, capabilities: ['reasoning', 'tools'], logoId: 'qwen', modelId: 'qwen3.7-max', contextWindow: 262_144, maxOutput: 65_536, thinkingLevels: '低, 中, 高', note: GO_MODEL_NOTE },
+  { id: 'cherry-go-qwen37-plus', name: 'Qwen3.7 Plus', provider: CHERRY_GO_PROVIDER, capabilities: ['reasoning', 'tools'], logoId: 'qwen', modelId: 'qwen3.7-plus', contextWindow: 262_144, maxOutput: 65_536, thinkingLevels: '低, 中, 高', note: GO_MODEL_NOTE },
+  { id: 'cherry-go-qwen36-plus', name: 'Qwen3.6 Plus', provider: CHERRY_GO_PROVIDER, capabilities: ['reasoning', 'tools'], logoId: 'qwen', modelId: 'qwen3.6-plus', contextWindow: 262_144, maxOutput: 65_536, thinkingLevels: '低, 中, 高', note: GO_MODEL_NOTE },
+  { id: 'cherry-go-deepseek-v4-pro', name: 'DeepSeek V4 Pro', provider: CHERRY_GO_PROVIDER, capabilities: ['reasoning', 'tools'], logoId: 'deepseek', modelId: 'deepseek-v4-pro', contextWindow: 1_048_576, maxOutput: 131_072, thinkingLevels: '沉思, 极致', note: GO_MODEL_NOTE },
+  { id: 'cherry-go-deepseek-v4-flash', name: 'DeepSeek V4 Flash', provider: CHERRY_GO_PROVIDER, capabilities: ['reasoning', 'tools'], logoId: 'deepseek', modelId: 'deepseek-v4-flash', contextWindow: 1_048_576, maxOutput: 131_072, thinkingLevels: '沉思, 极致', note: GO_MODEL_NOTE },
+  { id: 'cherry-go-hy3', name: 'Hy3', provider: CHERRY_GO_PROVIDER, capabilities: ['reasoning', 'tools'], logoId: 'stepfun', modelId: 'hy3', contextWindow: 262_144, maxOutput: 32_768, note: GO_MODEL_NOTE },
 ];
 
 /**

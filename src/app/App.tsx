@@ -7,16 +7,38 @@ import { LoginPage } from '@/features/auth/LoginPage';
 import { GoWorkspacePage, GoSubscriptionPage } from '@/features/auth/GoWorkspacePage';
 import { GoDocsPage } from '@/features/auth/GoDocsPage';
 import { GoCheckoutPage } from '@/features/auth/GoCheckoutPage';
+import { GoSiteThemeProvider } from '@/features/auth/goSiteTheme';
 import { OnboardingOverlay } from '@/features/onboarding/OnboardingOverlay';
 
 // Main App entry
 export default function App() {
-  // 「网页端」路由 —— 独立网页，不套客户端外壳
-  if (isLoginRoute()) return <LoginPage />;         // ?login=1        浏览器登录页
-  if (isGoRoute()) return <GoWorkspacePage />;      // ?go=1           官网 Go 介绍页（公开）
-  if (isGoSubscriptionRoute()) return <GoSubscriptionPage />; // ?subscription=1 我的订阅
-  if (isGoDocsRoute()) return <GoDocsPage />;       // ?docs=go        文档：Go 订阅模式介绍
-  if (isGoCheckoutRoute()) return <GoCheckoutPage />; // ?checkout=go  模拟 Stripe 支付页
+  // 「网页端」路由 —— 独立网页，不套客户端外壳。Go 相关网页页套 AuthProvider：
+  // 订阅页左下角的演示状态切换器（AccountDemoSwitcher）依赖账号上下文。
+  if (isLoginRoute()) {
+    return (
+      <GoSiteThemeProvider>
+        <LoginPage />
+      </GoSiteThemeProvider>
+    );
+  }
+
+  const goSitePage = isGoRoute() ? (
+    <GoWorkspacePage />
+  ) : isGoSubscriptionRoute() ? (
+    <GoSubscriptionPage />
+  ) : isGoDocsRoute() ? (
+    <GoDocsPage />
+  ) : isGoCheckoutRoute() ? (
+    <GoCheckoutPage />
+  ) : null;
+
+  if (goSitePage) {
+    return (
+      <GoSiteThemeProvider>
+        <AuthProvider>{goSitePage}</AuthProvider>
+      </GoSiteThemeProvider>
+    );
+  }
 
   return (
     <AuthProvider>

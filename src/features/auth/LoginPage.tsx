@@ -6,6 +6,7 @@ import {
 } from '@cherry-studio/ui';
 import cherryLogoImg from '@/assets/cherry-icon.png';
 import { completeBrowserLogin } from '@/app/lib/authStorage';
+import { GoSiteThemeSelector } from './goSiteTheme';
 
 // ===========================
 // 浏览器登录页（?login=1）
@@ -127,7 +128,11 @@ export function LoginPage() {
                   <ChevronDown size={12} className="text-muted-foreground/60" />
                 </button>
               </PopoverTrigger>
-              <PopoverContent align="start" className="w-[96px] p-1">
+              <PopoverContent
+                align="start"
+                className="go-site w-[96px] p-1"
+                style={{ backgroundColor: 'var(--popover)' }}
+              >
                 {AREA_CODES.map(c => (
                   <button
                     key={c}
@@ -229,7 +234,8 @@ export function LoginPage() {
 
 function Page({ children }: { children: React.ReactNode }) {
   return (
-    <div className="min-h-screen w-full flex flex-col items-center justify-center bg-app-bg px-4 py-10">
+    <div className="go-site relative min-h-screen w-full flex flex-col items-center justify-center bg-app-bg px-4 py-10">
+      <GoSiteThemeSelector className="absolute right-4 top-4" />
       {children}
     </div>
   );
