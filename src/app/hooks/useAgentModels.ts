@@ -9,7 +9,7 @@ import { useAuth } from '@/app/context/AuthContext';
 import { useQuotaNotice } from '@/app/components/shared/QuotaNotice';
 
 // ===========================
-// 工作模块（Agent）的模型列表
+// 客户端托管模型列表（Agent / Chat 共用）
 // ===========================
 // CherryAI（免费内测）与 CherryAI Go（订阅）是两个分组，参考 opencode：
 // - Go 已订阅：Go 组置顶（付费买到的东西最该先看到），Free 组其后；
@@ -28,9 +28,17 @@ export interface AgentModelsResult {
   quotaErrorFor: (modelId: string) => { classification: string; message: string } | null;
 }
 
+interface AgentModelsOptions {
+  /** CherryAI 免费模型仅限工作模块；Chat 传 false，但仍保留 Cherry Go。 */
+  includeFreeModel?: boolean;
+}
+
 const GO_MODEL_IDS = new Set(CHERRY_GO_MODELS.map(m => m.id));
 
-export function useAgentModels(baseModels: ModelInfo[] = AGENT_MODELS): AgentModelsResult {
+export function useAgentModels(
+  baseModels: ModelInfo[] = AGENT_MODELS,
+  { includeFreeModel = true }: AgentModelsOptions = {},
+): AgentModelsResult {
   const { showFreeModels, goSubscribed, goState, resetGoQuota } = useAuth();
   const { quotaExhausted, message, notify, title, detail } = useQuotaNotice();
 
@@ -40,7 +48,7 @@ export function useAgentModels(baseModels: ModelInfo[] = AGENT_MODELS): AgentMod
 
   const models = useMemo(() => {
     // 免费模型：额度用完时礼物标识转灰、整行置灰，说明行换成用完状态
-    const free: ModelInfo | null = !showFreeModels
+    const free: ModelInfo | null = !includeFreeModel || !showFreeModels
       ? null
       : quotaExhausted
         ? { ...CHERRY_AI_FREE_MODEL, mutedCapabilities: ['free'], muted: true, note: message }
@@ -54,15 +62,15 @@ export function useAgentModels(baseModels: ModelInfo[] = AGENT_MODELS): AgentMod
     }
     // 未订阅：Free 在前，Go 的一行引导其后（没有 onCtaClick 的选择器不会渲染它）
     return [...(free ? [free] : []), CHERRY_GO_CTA_MODEL, ...baseModels];
-  }, [baseModels, showFreeModels, quotaExhausted, message, goSubscribed, goLimitMessage]);
+  }, [baseModels, includeFreeModel, showFreeModels, quotaExhausted, message, goSubscribed, goLimitMessage]);
 
   const isQuotaBlocked = useCallback(
     (modelId: string) => {
-      if (showFreeModels && quotaExhausted && modelId === CHERRY_AI_FREE_MODEL.id) return true;
+      if (includeFreeModel && showFreeModels && quotaExhausted && modelId === CHERRY_AI_FREE_MODEL.id) return true;
       if (goSubscribed && goLimited && GO_MODEL_IDS.has(modelId)) return true;
       return false;
     },
-    [showFreeModels, quotaExhausted, goSubscribed, goLimited],
+    [includeFreeModel, showFreeModels, quotaExhausted, goSubscribed, goLimited],
   );
 
   const noticeOnSelect = useCallback((modelId: string) => {

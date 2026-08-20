@@ -87,6 +87,7 @@ import { ResourceConfigDialog } from '@/app/components/shared/ResourceConfigDial
 import { useRecycleBin } from '@/app/context/RecycleBinContext';
 import { useHistorySidebar } from '@/app/hooks/useHistorySidebar';
 import { useDockPreference } from '@/app/hooks/useDockPreference';
+import { useAgentModels } from '@/app/hooks/useAgentModels';
 import type { ResourceItem } from '@/app/types';
 
 // Convert the runtime AssistantInfo + emoji into the ResourceItem the
@@ -1592,6 +1593,10 @@ function MultiSelectPicker({
 export function AssistantRunPage() {
   const { editAssistantInLibrary: onEditAssistantInLibrary, navigateToKnowledge: onNavigateToKnowledge, navigateToLibrary: _navLib, changeTabTitle: onTabTitleChange, openSettings: onOpenSettings, launchpadOpen } = useGlobalActions();
   const onNavigateToLibrary = () => _navLib('assistant');
+  const { models: chatModels, noticeOnSelect } = useAgentModels(
+    ASSISTANT_MODELS,
+    { includeFreeModel: false },
+  );
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isResponding, setIsResponding] = useState(false);
@@ -1678,7 +1683,10 @@ export function AssistantRunPage() {
     () => topics.filter(t => t.assistantName === currentAssistant.name),
     [topics, currentAssistant],
   );
-  const currentModel = useMemo(() => ASSISTANT_MODELS.find(m => m.id === selectedModels[0]) || ASSISTANT_MODELS[0], [selectedModels]);
+  const currentModel = useMemo(
+    () => chatModels.find(m => m.id === selectedModels[0]) || ASSISTANT_MODELS[0],
+    [chatModels, selectedModels],
+  );
   const currentAssistantEmoji = ASSISTANT_EMOJI_MAP[currentAssistant.name] || '🤖';
   const currentModelDisplayName = currentModel.name.split('/').pop() || currentModel.name;
 
@@ -1813,6 +1821,7 @@ export function AssistantRunPage() {
   }, [multiAssistant]);
 
   const handleSelectModel = useCallback((id: string) => {
+    noticeOnSelect(id);
     if (multiModel) {
       setSelectedModels(prev => {
         if (prev.includes(id)) {
@@ -1824,7 +1833,7 @@ export function AssistantRunPage() {
     } else {
       setSelectedModels([id]);
     }
-  }, [multiModel]);
+  }, [multiModel, noticeOnSelect]);
 
   const handleToggleMultiAssistant = useCallback(() => {
     setMultiAssistant(prev => {
@@ -2246,7 +2255,7 @@ export function AssistantRunPage() {
   // Inner send: actually pushes the user message and simulates a response
   const performSend = useCallback((text: string) => {
     const ts = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
-    const activeModel = ASSISTANT_MODELS.find(m => m.id === selectedModels[0]) || ASSISTANT_MODELS[0];
+    const activeModel = chatModels.find(m => m.id === selectedModels[0]) || ASSISTANT_MODELS[0];
 
     setMessages(prev => [...prev, { id: `msg-${Date.now()}`, role: 'user', content: text, timestamp: ts }]);
     setIsResponding(true);
@@ -2283,7 +2292,7 @@ export function AssistantRunPage() {
     } else if (respondingModels.length > 1) {
       // Multi-model parallel
       const parallelResps: ParallelResponse[] = respondingModels.map((modelId, idx) => {
-        const mdl = ASSISTANT_MODELS.find(m => m.id === modelId);
+        const mdl = chatModels.find(m => m.id === modelId);
         return {
           id: `pr-${Date.now()}-${idx}`,
           modelName: mdl?.name || 'Unknown',
@@ -2328,7 +2337,7 @@ export function AssistantRunPage() {
         setIsResponding(false);
       }, 800);
     }
-  }, [selectedModels, selectedAssistants]);
+  }, [chatModels, selectedModels, selectedAssistants]);
 
   // Public send: routes to queue when responding, else fires immediately
   const handleSend = useCallback(() => {
@@ -2692,7 +2701,7 @@ export function AssistantRunPage() {
           <Popover open={composerModelOpen} onOpenChange={setComposerModelOpen}>
             <PopoverTrigger asChild>
               {(() => {
-                const am = ASSISTANT_MODELS.find(m => m.id === selectedModels[0]);
+                const am = chatModels.find(m => m.id === selectedModels[0]);
                 return (
                   <TopBarSelector
                     icon={am ? <BrandLogo id={am.logoId ?? am.provider.toLowerCase()} fallbackLetter={am.provider[0]} size={16} /> : undefined}
@@ -2706,6 +2715,7 @@ export function AssistantRunPage() {
             </PopoverTrigger>
             <PopoverContent side="bottom" align="start" className="p-0 w-[480px]">
               <ModelPickerPanel
+                models={chatModels}
                 selectedModels={selectedModels}
                 onSelectModel={handleSelectModel}
                 multiModel={multiModel}
@@ -2903,6 +2913,7 @@ export function AssistantRunPage() {
                     <div className="absolute bottom-full left-0 right-0 mb-1 z-10">
                       <div className="mx-2 rounded-xl border border-border/50 bg-popover shadow-lg overflow-hidden max-h-[360px]">
                         <MentionPickerPanel
+                          models={chatModels}
                           selectedAssistantIds={selectedAssistants}
                           selectedModelIds={selectedModels}
                           multiAssistant={multiAssistant}
@@ -3323,7 +3334,7 @@ export function AssistantRunPage() {
               messages={messages}
               onClose={() => setShowBranchTree(false)}
               assistantName={currentAssistant.name}
-              modelName={ASSISTANT_MODELS.find(m => m.id === selectedModels[0])?.name || 'Gemini 3 Pro'}
+              modelName={chatModels.find(m => m.id === selectedModels[0])?.name || 'Gemini 3 Pro'}
               topicName={activeTopic?.title}
               onCopyAsTopic={handleCopyAsTopic}
               onBranchChange={(branchId, newNode) => {

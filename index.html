@@ -10,7 +10,7 @@
           const isWebsiteRoute = ['login', 'go', 'subscription', 'checkout', 'docs'].some(key => params.has(key));
           if (!isWebsiteRoute) return;
 
-          let theme = 'system';
+          let theme = 'light';
           try {
             const stored = localStorage.getItem('theme-preference');
             if (stored === 'light' || stored === 'dark' || stored === 'system') theme = stored;

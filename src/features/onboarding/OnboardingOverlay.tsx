@@ -12,7 +12,7 @@ import { CHERRY_AI_FREE_MODEL } from '@/app/config/models';
 // 首启引导（欢迎 → 选择默认模型）
 // ===========================
 // 复刻真实客户端的 onboarding 两步流程（WelcomePage / SelectModelPage /
-// SkipButton）：主按钮「登录 CherryIN」点击后新开标签页打开浏览器登录页，
+// SkipButton）：主按钮「登录 Cherry Studio」点击后新开标签页打开浏览器登录页，
 // 本页进入等待态，登录成功自动进第二步。
 //
 // 原副标题（"使用 CherryIN 服务商可畅享顶级 AI 服务"）去掉了；免费额度也不在
@@ -118,7 +118,7 @@ function WelcomeStep() {
                 正在浏览器中完成登录…
               </>
             ) : (
-              '登录 CherryIN'
+              '登录 Cherry Studio'
             )}
           </Button>
 

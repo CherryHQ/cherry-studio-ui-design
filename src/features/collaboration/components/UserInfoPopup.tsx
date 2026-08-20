@@ -94,7 +94,7 @@ export function UserInfoPopup({ open, onClose }: UserInfoPopupProps) {
             </div>
           ) : (
             <div className="flex flex-col items-center gap-1.5">
-              <Button size="sm" className="px-10" onClick={beginBrowserLogin}>登录</Button>
+              <Button size="sm" className="px-6" onClick={beginBrowserLogin}>登录 Cherry Studio</Button>
               <div className="text-[11px] text-muted-foreground">将在浏览器中打开登录页</div>
             </div>
           )}

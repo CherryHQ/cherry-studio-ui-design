@@ -17,9 +17,9 @@ function readTheme(): GoSiteTheme {
     const stored = window.localStorage.getItem(THEME_STORAGE_KEY);
     if (stored === 'light' || stored === 'dark' || stored === 'system') return stored;
   } catch {
-    // localStorage 不可用时跟随系统。
+    // localStorage 不可用时使用官网默认浅色。
   }
-  return 'system';
+  return 'light';
 }
 
 function resolveTheme(theme: GoSiteTheme): 'light' | 'dark' {

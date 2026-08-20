@@ -7,6 +7,7 @@ import { Separator, AssistantPickerPanel } from '@cherry-studio/ui';
 import { ModelPickerPanel } from '@/app/components/shared/ModelPickerPanel';
 import { MOCK_ASSISTANTS, ASSISTANT_EMOJI_MAP } from '@/app/mock';
 import { ASSISTANT_MODELS } from '@/app/config/models';
+import type { ModelInfo } from '@/app/types/chat';
 
 // ===========================
 // Shared @ Mention Picker
@@ -29,6 +30,8 @@ export type MentionPick =
   | { type: 'mcp'; label: string };
 
 export interface MentionPickerPanelProps {
+  /** Available models for the current surface. Chat injects Cherry Go here. */
+  models?: ModelInfo[];
   /** Currently-selected assistant ids — used to render check marks. */
   selectedAssistantIds?: string[];
   /** Currently-selected model ids — used to render check marks. */
@@ -69,6 +72,7 @@ const MCP_ITEMS = [
 type Page = 'root' | 'assistants' | 'models' | 'files' | 'mcp';
 
 export function MentionPickerPanel({
+  models = ASSISTANT_MODELS,
   selectedAssistantIds = [],
   selectedModelIds = [],
   multiAssistant = false,
@@ -137,7 +141,7 @@ export function MentionPickerPanel({
     type Cat = { id: Page; title: string; Icon: React.ComponentType<{ size?: number; className?: string }>; count: number };
     const cats: Cat[] = [
       { id: 'assistants', title: assistantLabel, Icon: Bot, count: MOCK_ASSISTANTS.length },
-      { id: 'models',     title: '模型', Icon: Cpu,      count: ASSISTANT_MODELS.length },
+      { id: 'models',     title: '模型', Icon: Cpu,      count: models.length },
       { id: 'files',      title: '文件', Icon: FileText, count: FILE_ITEMS.length },
       { id: 'mcp',        title: 'MCP',  Icon: Wrench,   count: MCP_ITEMS.length },
     ];
@@ -197,10 +201,10 @@ export function MentionPickerPanel({
         <Separator opacity={30} />
         <div className="flex-1 min-h-0 overflow-hidden">
           <ModelPickerPanel
-            models={ASSISTANT_MODELS}
+            models={models}
             selectedModels={selectedModelIds}
             onSelectModel={(id) => {
-              const m = ASSISTANT_MODELS.find(x => x.id === id);
+              const m = models.find(x => x.id === id);
               if (m) onPick({ type: 'model', id, name: m.name });
             }}
             multiModel={!disableMulti && effMultiModel}
