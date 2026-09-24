@@ -66,6 +66,16 @@ function AppearancePanel() {
       <Typography variant="subtitle" className="mb-3">{'外观与显示'}</Typography>
 
       <div className="border border-section-border rounded-[var(--radius-button)] px-3.5 py-1">
+      <FormRow label="布局模式" desc="极简模式专注智能体对话；传统模式保留多标签和完整工作台。">
+        <UIInlineSelect
+          value={settings.layoutMode}
+          onChange={v => updateSetting('layoutMode', v as 'traditional' | 'minimal')}
+          options={[
+            { value: 'traditional', label: '传统模式' },
+            { value: 'minimal', label: '极简模式' },
+          ]}
+        />
+      </FormRow>
       <FormRow label={'语言 (Language)'} desc={'设置应用程序显示的语言。'}>
         <UIInlineSelect
           value={settings.language}

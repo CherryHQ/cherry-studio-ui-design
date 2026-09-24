@@ -5,11 +5,11 @@ import {
   Plug, RefreshCw,
   X,
   Globe2, Command,
-  Cloud, FileScan, BrainCircuit, Database, Server, Sparkles, Info, MousePointer, Archive, Trash2, HardDrive, Link2,
-  Home, Zap, MessageSquareText, Radio, CalendarClock,
+  Cloud, BrainCircuit, Database, Server, Sparkles, Info, MousePointer, Archive, Trash2, HardDrive,
+  Zap, MessageSquareText, Radio,
   HelpCircle, Rss, MessageSquare, Building2, Mail, Users, Bug, Github,
   Loader2, CheckCircle2, Calendar, ArrowUpRight,
-  FileText, BarChart3,
+  FileText, UserRound, CreditCard, Bot, Wrench, ListChecks,
 } from 'lucide-react';
 import { ModelServicePage } from './ModelServicePage';
 import { WebSearchPage } from './WebSearchPage';
@@ -31,6 +31,7 @@ import { ChannelsPage } from './ChannelsPage';
 import { TeammatesPage } from './TeammatesPage';
 import { ScheduledTasksPage } from './ScheduledTasksPage';
 import { DependenciesPage } from './DependenciesPage';
+import { ProfileSettingsPage, SubscriptionSettingsPage, AgentProviderSettingsPage, BuiltinToolsSettingsPage, TasksSettingsPage, ResourcesSettingsPage } from './WorkspaceSettingsPages';
 import { WORK_PLUS } from '@/app/config/featureFlags';
 import { InlineSelect, SectionCard } from './shared';
 import { Tooltip } from '@/app/components/Tooltip';
@@ -45,7 +46,7 @@ type SettingsSection =
   | 'models' | 'default-model' | 'mcp' | 'search' | 'documents'
   | 'quick-assistant' | 'selection-assistant'
   | 'channels' | 'scheduled-tasks' | 'teammates'
-  | 'dependencies' | 'integrations';
+  | 'dependencies' | 'integrations' | 'profile' | 'subscription' | 'agent-providers' | 'builtin-tools' | 'tasks' | 'prompts' | 'skills';
 
 interface NavGroup {
   label: string;
@@ -70,57 +71,33 @@ interface ModelProvider {
 // Navigation Config
 // ===========================
 const NAV_GROUPS: NavGroup[] = [
-  {
-    label: '',
-    items: [
-      { id: 'home', label: '首页', icon: Home },
-    ],
-  },
-  {
-    label: '模型',
-    items: [
-      { id: 'models', label: '模型服务', icon: Cloud },
-      { id: 'default-model', label: '默认模型', icon: Sparkles },
-      { id: 'api-gateway', label: 'API 网关', icon: Server },
-    ],
-  },
-  {
-    label: '插件',
-    items: [
-      { id: 'mcp', label: 'MCP 服务', icon: Plug },
-      { id: 'search', label: '网络搜索', icon: Globe2 },
-      { id: 'documents', label: '文档解析', icon: FileScan },
-      { id: 'integrations', label: '集成', icon: Link2 },
-      { id: 'data-settings', label: '数据备份', icon: Database },
-      { id: 'dependencies', label: '环境依赖', icon: HardDrive },
-    ],
-  },
-  {
-    label: '应用设置',
-    items: [
-      { id: 'general', label: '通用设置', icon: Settings2 },
-      { id: 'archive', label: '归档管理', icon: Archive },
-      { id: 'recycle-bin', label: '回收站', icon: Trash2 },
-    ],
-  },
-  {
-    label: '效率',
-    items: [
-      ...(WORK_PLUS ? [{ id: 'teammates', label: '队友', icon: Users }] : []),
-      { id: 'channels', label: '频道', icon: Radio },
-      ...(WORK_PLUS ? [{ id: 'scheduled-tasks', label: '定时任务', icon: CalendarClock }] : []),
-      { id: 'selection-assistant', label: '划词助手', icon: MousePointer },
-      { id: 'shortcuts', label: '快捷键', icon: Command },
-      { id: 'quick-assistant', label: '快捷助手', icon: Sparkles },
-    ],
-  },
-  {
-    label: '系统',
-    items: [
-      { id: 'dashboard', label: '数据统计', icon: BarChart3 },
-      { id: 'about', label: '关于我们', icon: Info },
-    ],
-  },
+  { label: '账户', items: [
+    { id: 'profile', label: '个人资料', icon: UserRound },
+    { id: 'subscription', label: '订阅与用量', icon: CreditCard },
+  ] },
+  { label: '服务与能力', items: [
+    { id: 'models', label: '模型服务', icon: Cloud },
+    { id: 'default-model', label: '默认模型', icon: Sparkles },
+    { id: 'api-gateway', label: 'API 网关', icon: Server },
+    { id: 'agent-providers', label: 'Agent Provider', icon: Bot },
+    { id: 'builtin-tools', label: '内置工具', icon: Wrench },
+    { id: 'tasks', label: '任务', icon: ListChecks },
+  ] },
+  { label: '应用设置', items: [
+    { id: 'general', label: '通用设置', icon: Settings2 },
+    { id: 'data-settings', label: '数据备份', icon: Database },
+    { id: 'dependencies', label: '环境依赖', icon: HardDrive },
+    { id: 'archive', label: '归档管理', icon: Archive },
+    { id: 'recycle-bin', label: '回收站', icon: Trash2 },
+  ] },
+  { label: '效率', items: [
+    ...(WORK_PLUS ? [{ id: 'teammates' as const, label: '队友', icon: Users }] : []),
+    { id: 'channels', label: '频道', icon: Radio },
+    { id: 'selection-assistant', label: '划词助手', icon: MousePointer },
+    { id: 'shortcuts', label: '快捷键', icon: Command },
+    { id: 'quick-assistant', label: '快捷助手', icon: Sparkles },
+    { id: 'about', label: '关于我们', icon: Info },
+  ] },
 ];
 
 // ===========================
@@ -915,15 +892,21 @@ function AboutPage() {
 // Main Settings Page (Modal Window)
 // ===========================
 export function SettingsPage({ open, onClose, initialSection }: { open: boolean; onClose: () => void; initialSection?: string }) {
-  const [activeSection, setActiveSection] = useState<SettingsSection>('home');
+  const [activeSection, setActiveSection] = useState<SettingsSection>('profile');
+  const [visitedSections, setVisitedSections] = useState(() => new Set<SettingsSection>(['profile']));
+  const selectSection = (section: SettingsSection) => {
+    setVisitedSections(previous => new Set(previous).add(section));
+    setActiveSection(section);
+  };
 
   // Jump to initial section when opened with one
   React.useEffect(() => {
     if (open && initialSection) {
+      setVisitedSections(previous => new Set(previous).add(initialSection as SettingsSection));
       setActiveSection(initialSection as SettingsSection);
     }
     if (!open) {
-      setActiveSection('home');
+      setActiveSection('profile');
     }
   }, [open, initialSection]);
 
@@ -940,10 +923,16 @@ export function SettingsPage({ open, onClose, initialSection }: { open: boolean;
       <DialogContent className="w-[860px] h-[620px] sm:max-w-none flex flex-col overflow-hidden p-0 bg-app-bg" showCloseButton={false} onInteractOutside={(e) => e.preventDefault()} onPointerDownOutside={(e) => e.preventDefault()} onEscapeKeyDown={(e) => { e.preventDefault(); onClose(); }}>
         {/* Body: sidebar + content */}
         <div className="flex flex-1 min-h-0 overflow-hidden bg-sidebar">
-          <SettingsSidebar active={activeSection} onSelect={setActiveSection} onClose={onClose} />
+          <SettingsSidebar active={activeSection} onSelect={selectSection} onClose={onClose} />
 
           {/* Content Area */}
           <div className="flex-1 flex flex-col min-w-0 overflow-hidden mr-2 mb-2 mt-2 ml-0 bg-content-bg border border-content-border rounded-2xl">
+            {(['profile', 'subscription', 'agent-providers', 'builtin-tools', 'tasks', 'prompts', 'skills'] as const).filter(section => visitedSections.has(section)).map(section => (
+              <div key={section} className={activeSection === section ? 'flex min-h-0 flex-1 flex-col' : 'hidden'}>
+                {section === 'profile' ? <ProfileSettingsPage /> : section === 'subscription' ? <SubscriptionSettingsPage /> : section === 'agent-providers' ? <AgentProviderSettingsPage onClose={onClose} /> : section === 'builtin-tools' ? <BuiltinToolsSettingsPage /> : section === 'tasks' ? <TasksSettingsPage onClose={onClose} /> : <ResourcesSettingsPage kind={section === 'prompts' ? 'prompt' : 'skill'} />}
+              </div>
+            ))}
+            {!['profile', 'subscription', 'agent-providers', 'builtin-tools', 'tasks', 'prompts', 'skills'].includes(activeSection) && <>
             {activeSection === 'models' || activeSection === 'default-model' || activeSection === 'search' || activeSection === 'documents' || activeSection === 'data-settings' || activeSection === 'archive' || activeSection === 'recycle-bin' || activeSection === 'api-gateway' || activeSection === 'shortcuts' || activeSection === 'selection-assistant' || activeSection === 'quick-assistant' || activeSection === 'general' || activeSection === 'mcp' || activeSection === 'dashboard' || activeSection === 'channels' || activeSection === 'scheduled-tasks' || activeSection === 'teammates' || activeSection === 'dependencies' ? (
               activeSection === 'models' ? <ModelServicePage />
                 : activeSection === 'default-model' ? <DefaultModelSettingsPage />
@@ -969,6 +958,7 @@ export function SettingsPage({ open, onClose, initialSection }: { open: boolean;
                 {renderContent()}
               </div>
             )}
+            </>}
           </div>
         </div>
       </DialogContent>

@@ -580,7 +580,7 @@ const FILE_KIND: Record<string, string> = {
   mp4: '视频', mov: '视频',
 };
 
-function ArtifactCard({ filePath, onOpen }: { filePath: string; onOpen?: (filePath: string) => void }) {
+export function ArtifactCard({ filePath, onOpen }: { filePath: string; onOpen?: (filePath: string) => void }) {
   const fileExt = (filePath.split('.').pop() || '').toLowerCase();
   const fileName = filePath.split('/').pop() || filePath;
   const fts = ARTIFACT_TYPE_STYLE[fileExt] || { iconCls: 'text-muted-foreground', tileCls: 'bg-muted/40' };

@@ -4,6 +4,7 @@ import React, { createContext, useContext, useState, useEffect, useCallback, use
 // Types
 // ===========================
 export interface AppSettings {
+  layoutMode: 'traditional' | 'minimal';
   language: string;
   theme: 'light' | 'dark' | 'system';
   accentColor: string;
@@ -29,6 +30,7 @@ export interface AppSettings {
 type UpdateSettingFn = <K extends keyof AppSettings>(key: K, value: AppSettings[K]) => void;
 
 const defaultSettings: AppSettings = {
+  layoutMode: 'traditional',
   language: 'zh-CN',
   theme: 'light',
   accentColor: 'neutral',
@@ -135,10 +137,27 @@ const CODE_FONT_MAP: Record<string, string> = {
 // Provider
 // ===========================
 export function SettingsProvider({ children }: { children: React.ReactNode }) {
-  const [settings, setSettings] = useState<AppSettings>(defaultSettings);
+  const [settings, setSettings] = useState<AppSettings>(() => ({
+    ...defaultSettings,
+    layoutMode: new URLSearchParams(window.location.search).get('mode') === 'minimal' ? 'minimal' : 'traditional',
+  }));
 
   const updateSetting = useCallback(<K extends keyof AppSettings>(key: K, value: AppSettings[K]) => {
+    if (key === 'layoutMode') {
+      const url = new URL(window.location.href);
+      url.searchParams.set('mode', String(value));
+      window.history.replaceState(null, '', url);
+    }
     setSettings(prev => ({ ...prev, [key]: value }));
+  }, []);
+
+  useEffect(() => {
+    const syncMode = () => setSettings(prev => ({
+      ...prev,
+      layoutMode: new URLSearchParams(window.location.search).get('mode') === 'minimal' ? 'minimal' : 'traditional',
+    }));
+    window.addEventListener('popstate', syncMode);
+    return () => window.removeEventListener('popstate', syncMode);
   }, []);
 
   // Resolve theme (handle 'system')

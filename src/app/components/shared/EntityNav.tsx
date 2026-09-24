@@ -636,7 +636,7 @@ export function EntityRail({ title, items, activeId, onSelect, onNew, onEdit, se
               className="flex items-center gap-0.5 mr-0.5 flex-shrink-0 opacity-0 group-hover/ghdr:opacity-100 has-[[data-state=open]]:opacity-100 transition-opacity"
               onClick={(e) => e.stopPropagation()}
             >
-              <DropdownMenu open={groupMenuKey === menuKey} onOpenChange={(o) => setGroupMenuKey(k => (o ? menuKey : (k === menuKey ? null : k)))}>
+              <DropdownMenu modal={false} open={groupMenuKey === menuKey} onOpenChange={(o) => setGroupMenuKey(k => (o ? menuKey : (k === menuKey ? null : k)))}>
                 <DropdownMenuTrigger asChild>
                   <button
                     type="button"

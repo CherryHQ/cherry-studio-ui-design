@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { Button, Input, BrandLogo, Typography, Switch } from '@cherry-studio/ui';
 import { InlineSelect, ConfigSection, TextInput } from './shared';
+import { useWorkspaceSettings } from '@/app/context/WorkspaceSettingsContext';
 
 // ===========================
 // Types
@@ -56,7 +57,9 @@ function FieldLabel({ children, hint }: { children: React.ReactNode; hint?: stri
 // System OCR Config
 // ===========================
 function SystemOCRConfig() {
-  const [enabled, setEnabled] = useState(true);
+  const { toolEnabled, setToolEnabled } = useWorkspaceSettings();
+  const enabled = toolEnabled.ocr;
+  const setEnabled = (value: boolean) => setToolEnabled(previous => ({ ...previous, ocr: value }));
   return (
     <div className="flex-1 overflow-y-auto px-6 py-5 scrollbar-thin">
       <div className="flex items-center gap-3 mb-5">
@@ -412,12 +415,12 @@ function Doc2xConfig() {
 // ===========================
 // Main: DocumentServicePage
 // ===========================
-export function DocumentServicePage() {
-  const [selectedId, setSelectedId] = useState<string>('system-ocr');
+export function DocumentServicePage({ category }: { category?: ProviderCategory }) {
+  const [selectedId, setSelectedId] = useState<string>(() => MOCK_DOC_PROVIDERS.find(provider => !category || provider.category === category)!.id);
   const [providers] = useState(MOCK_DOC_PROVIDERS);
 
-  const ocrProviders = providers.filter(p => p.category === 'ocr');
-  const docProviders = providers.filter(p => p.category === 'doc-parsing');
+  const ocrProviders = category === 'doc-parsing' ? [] : providers.filter(p => p.category === 'ocr');
+  const docProviders = category === 'ocr' ? [] : providers.filter(p => p.category === 'doc-parsing');
 
   const renderConfig = () => {
     switch (selectedId) {
@@ -490,7 +493,7 @@ export function DocumentServicePage() {
         <div className="flex-1 overflow-y-auto px-2.5 pb-3 scrollbar-thin-xs">
           <div className="space-y-[2px]">
             {/* OCR Section */}
-            <p className="text-xs text-muted-foreground/40 tracking-wider px-3 pt-1 pb-1 font-medium">OCR</p>
+            {ocrProviders.length > 0 && <p className="text-xs text-muted-foreground/40 tracking-wider px-3 pt-1 pb-1 font-medium">OCR</p>}
             {ocrProviders.map(provider => {
               const isSelected = selectedId === provider.id;
               return (
@@ -516,7 +519,7 @@ export function DocumentServicePage() {
             })}
 
             {/* Doc Parsing Section */}
-            <p className="text-xs text-muted-foreground/40 tracking-wider px-3 pt-2.5 pb-1 font-medium">文档处理</p>
+            {docProviders.length > 0 && <p className="text-xs text-muted-foreground/40 tracking-wider px-3 pt-2.5 pb-1 font-medium">文档处理</p>}
             {docProviders.map(provider => {
               const isSelected = selectedId === provider.id;
               return (

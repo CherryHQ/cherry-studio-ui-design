@@ -55,6 +55,7 @@ function MarkdownRenderer({ content, className }: MarkdownRendererProps) {
   return (
     <div data-slot="markdown-renderer" className={cn("prose-cherry tracking-[-0.14px]", className)}>
       <ReactMarkdown
+        children={content}
         remarkPlugins={[remarkGfm, remarkMath]}
         rehypePlugins={[rehypeHighlight, rehypeKatex]}
         components={{

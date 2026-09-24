@@ -2,7 +2,10 @@ import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { Puzzle, Layers, Database, Globe } from 'lucide-react';
 import { Sidebar } from './layout/Sidebar';
 import { TabBar } from './layout/TabBar';
-import { TabContextMenu, FloatingWindow, NewTabDialog, SearchDialog, DragGhost, AnnotationProvider, AnnotationOverlay, AnnotationToggle, AnnotationList } from '@cherry-studio/ui';
+import { Button, TabContextMenu, FloatingWindow, NewTabDialog, SearchDialog, DragGhost, AnnotationProvider, AnnotationOverlay, AnnotationToggle, AnnotationList } from '@cherry-studio/ui';
+import { PiAgentWorkspace } from '@/features/agent/minimal/PiAgentWorkspace';
+import { WorkspaceSettingsProvider } from '@/app/context/WorkspaceSettingsContext';
+import { PiAgentDemoProvider } from '@/features/agent/minimal/PiAgentDemoContext';
 import { MainContent } from './MainContent';
 import {
   menuItems, getLayout, BP_ICON,
@@ -632,6 +635,22 @@ function CherryStudioInner() {
   );
 }
 
+function CherryStudioDemo() {
+  const { settings, updateSetting } = useSettings();
+  const mode = settings.layoutMode;
+  const changeMode = (next: 'traditional' | 'minimal') => updateSetting('layoutMode', next);
+
+  return <>
+    {mode === 'traditional' && <CherryStudioInner />}
+    <PiAgentWorkspace active={mode === 'minimal'} />
+    <div aria-label="Demo 布局模式" className="fixed bottom-3 left-1/2 z-50 flex -translate-x-1/2 items-center gap-1 rounded-full border border-border bg-popover p-1 shadow-sm">
+      <span className="px-2 text-[9px] tracking-widest text-muted-foreground">DEMO</span>
+      <Button size="xs" variant={mode === 'traditional' ? 'secondary' : 'ghost'} className="rounded-full" aria-pressed={mode === 'traditional'} onClick={() => changeMode('traditional')}>传统模式</Button>
+      <Button size="xs" variant={mode === 'minimal' ? 'secondary' : 'ghost'} className="rounded-full" aria-pressed={mode === 'minimal'} onClick={() => changeMode('minimal')}>极简模式</Button>
+    </div>
+  </>;
+}
+
 export function CherryStudio() {
   React.useEffect(() => {
     initGlobalErrorHandler();
@@ -642,7 +661,7 @@ export function CherryStudio() {
       <RecycleBinProvider>
         <ArchiveProvider>
           <CollabProvider>
-            <CherryStudioInner />
+            <WorkspaceSettingsProvider><PiAgentDemoProvider><CherryStudioDemo /></PiAgentDemoProvider></WorkspaceSettingsProvider>
             <UserInfoPopupHost />
             {/* Radix Dialog sets body { pointer-events: none } while open;
                 Sonner's portal-rendered toast inherits that and becomes

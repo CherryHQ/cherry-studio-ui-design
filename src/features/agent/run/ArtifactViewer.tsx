@@ -6,7 +6,7 @@ import {
   Maximize2, Minimize2,
 } from 'lucide-react';
 import {
-  Button, EmptyState,
+  Button, EmptyState, MarkdownRenderer,
 } from '@cherry-studio/ui';
 import { MOCK_GROUPS } from '@/features/collaboration/data';
 import { pinArtifact, shareArtifactToGroup, updateArtifact, usePinnedArtifacts } from '@/app/stores/sharedArtifactsStore';
@@ -67,8 +67,9 @@ const TOKEN_PATTERN = new RegExp(
   '|[a-zA-Z_$][a-zA-Z0-9_$]*' +             // identifiers
   '|[{}()\\[\\];,.:=<>+\\-*/!&|?@#~^%]+' +  // punctuation
   '|\\s+' +                                  // whitespace
+  '|.' +
   ')',
-  'g'
+  'gu'
 );
 
 const RE_LINE_COMMENT = new RegExp('^\\/' + String.fromCharCode(47));
@@ -281,7 +282,7 @@ export function ArtifactViewer({ fileContent, fileName, previewUrl, hasArtifact,
         {/* Right controls */}
         <div className="flex items-center gap-0.5">
           {activeTab === 'preview' && (
-            <Tooltip content="刷新" side="bottom"><Button variant="ghost" size="icon-xs" onClick={() => setPreviewKey(k => k + 1)}
+            <Tooltip content="刷新" side="bottom"><Button aria-label="刷新预览" variant="ghost" size="icon-xs" onClick={() => setPreviewKey(k => k + 1)}
               className="text-muted-foreground hover:text-foreground">
               <RotateCw size={10} />
             </Button></Tooltip>
@@ -319,7 +320,7 @@ export function ArtifactViewer({ fileContent, fileName, previewUrl, hasArtifact,
           {onTogglePreview && (
             <div className="flex items-center">
               <div className="w-px h-3 bg-border/30 mx-1" />
-              <Tooltip content="关闭预览" side="bottom"><Button variant="ghost" size="icon-xs" onClick={onTogglePreview}
+              <Tooltip content="关闭预览" side="bottom"><Button aria-label="关闭预览" variant="ghost" size="icon-xs" onClick={onTogglePreview}
                 className="text-muted-foreground hover:text-foreground hover:bg-accent/40">
                 <X size={11} />
               </Button></Tooltip>
@@ -358,6 +359,18 @@ export function ArtifactViewer({ fileContent, fileName, previewUrl, hasArtifact,
                     />
                   </div>
                 </div>
+              ) : previewUrl ? (
+                /\.(png|jpe?g|gif|webp|svg|avif)$/i.test(fileName || '') ? (
+                  <img src={previewUrl} alt={fileName || '附件预览'} className="max-w-full h-auto object-contain p-4" />
+                ) : /\.pdf$/i.test(fileName || '') ? (
+                  <iframe src={previewUrl} title={fileName || 'PDF 预览'} className="w-full h-full border-0" />
+                ) : (
+                  <div className="m-auto flex flex-col items-center gap-4 p-6 text-sm"><p>此文件可下载后在本地应用中打开。</p><Button asChild variant="outline"><a href={previewUrl} download={fileName || 'attachment'}>下载 {fileName}</a></Button></div>
+                )
+              ) : fileContent !== null ? (
+                <div className="w-full p-5 overflow-auto">
+                  {/\.md$/i.test(fileName || '') ? <MarkdownRenderer content={fileContent} /> : <pre className="text-sm leading-7 whitespace-pre-wrap break-words">{fileContent}</pre>}
+                </div>
               ) : (
                 <EmptyState icon={Monitor} title="暂无预览" compact />
               )}
@@ -394,4 +407,3 @@ export function ArtifactViewer({ fileContent, fileName, previewUrl, hasArtifact,
     </div>
   );
 }
-

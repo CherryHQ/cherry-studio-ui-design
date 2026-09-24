@@ -32,6 +32,7 @@ import {
   Input, Textarea, EmptyState, SearchInput, Typography, SimpleTooltip, Switch,
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Separator,
 } from '@cherry-studio/ui';
+import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'motion/react';
 import type { ResourceItem, MCPServerStatus } from '@/app/types';
 import { PromptSection } from '@/features/assistant/sections/PromptSection';
@@ -46,7 +47,7 @@ interface Props { resource: ResourceItem; onBack: () => void; inModal?: boolean 
 // sub-tabs each become a separate sidebar item under it. Other entries
 // stay flat.
 type ToolchainTabId = 'tools' | 'mcp' | 'skills' | 'integrations';
-type Section = 'basic' | 'models' | 'prompt' | 'knowledge' | 'collaboration' | 'advanced' | `toolchain:${ToolchainTabId}`;
+type Section = 'basic' | 'automation' | 'prompt' | 'knowledge' | 'collaboration' | 'advanced' | `toolchain:${ToolchainTabId}`;
 
 // 拓展 group children — Skills 排第一位（最高频）。Knowledge / notes
 // 走自己的 dedicated section；toolchain 四个子 tab 走 <ToolchainSection
@@ -57,16 +58,16 @@ const EXPANSION_CHILDREN: { id: Section; label: string; icon: React.ElementType 
   { id: 'toolchain:mcp',          label: 'MCP Server', icon: Cable },
   { id: 'toolchain:integrations', label: '连接器',     icon: Plug },
   { id: 'knowledge',              label: '知识库',     icon: BookOpen },
+  { id: 'collaboration', label: '协作', icon: Users2 },
 ];
 
 // Flat top-level entries above the collapsible 拓展 group + the
 // 高级设置 tail. 模型设置 split out from BasicSection per design feedback.
 const sections: { id: Section; label: string; icon: React.ElementType }[] = [
-  { id: 'basic',         label: '基础设置', icon: Settings },
-  { id: 'models',        label: '模型设置', icon: Layers },
+  { id: 'basic',         label: '基本', icon: Settings },
   { id: 'prompt',        label: '提示词',   icon: FileText },
-  { id: 'collaboration', label: '协作',     icon: Users2 },
-  { id: 'advanced',      label: '高级设置', icon: Settings2 },
+  { id: 'automation', label: '自动化', icon: Zap },
+  { id: 'advanced',      label: '高级', icon: Settings2 },
 ];
 
 
@@ -87,6 +88,11 @@ function getTagColor(tag: string): string {
 // ===========================
 export function AgentConfig({ resource, onBack, inModal = false }: Props) {
   const [activeSection, setActiveSection] = useState<Section>('basic');
+  const [visitedSections, setVisitedSections] = useState(() => new Set(['basic']));
+  const selectSection = (section: Section) => {
+    setVisitedSections(previous => new Set(previous).add(section.startsWith('toolchain:') ? 'capabilities' : section));
+    setActiveSection(section);
+  };
   const [toolchainExpanded, setToolchainExpanded] = useState(true);
   const [saved, setSaved] = useState(false);
   const handleSave = () => { setSaved(true); setTimeout(() => setSaved(false), 2000); };
@@ -108,15 +114,16 @@ export function AgentConfig({ resource, onBack, inModal = false }: Props) {
           <Button size="sm" onClick={handleSave} className="active:scale-[0.97]"><Save size={10} /><span>{"保存"}</span></Button>
         </div>
       )}
+      <div className="border-border flex items-center gap-2 border-b px-5 py-3 text-sm"><span>{resource.avatar}</span><span>{resource.name}</span><Badge variant="outline">Built-in</Badge><span className="text-muted-foreground text-xs">Pi Agent</span></div>
       <div className="flex flex-1 min-h-0">
         <div className="w-[150px] flex-shrink-0 border-r border-border/15 p-2 overflow-y-auto">
           {/* Flat entries: 基础设置 / 提示词 (advanced moved below
               the 拓展 group; knowledge + notes now live inside it). */}
-          {sections.filter(s => s.id !== 'advanced').map(s => {
+          {sections.filter(s => s.id !== 'advanced' && s.id !== 'automation').map(s => {
             const active = activeSection === s.id;
             const Icon = s.icon;
             return (
-              <Button variant="ghost" key={s.id} onClick={() => setActiveSection(s.id)}
+              <Button variant="ghost" key={s.id} onClick={() => selectSection(s.id)}
                 className={`w-full justify-start gap-2 px-3 py-2 mb-0.5 rounded-lg transition-colors ${active ? 'bg-accent/50 text-foreground font-medium' : 'font-normal text-muted-foreground/60 hover:text-foreground hover:bg-accent/40'}`}>
                 <Icon size={13} strokeWidth={1.5} className={`flex-shrink-0 ${active ? 'text-muted-foreground' : 'text-muted-foreground/40'}`} />
                 <span className="text-sm">{s.label}</span>
@@ -135,7 +142,7 @@ export function AgentConfig({ resource, onBack, inModal = false }: Props) {
                   onClick={() => setToolchainExpanded(v => !v)}
                   className={`w-full justify-start gap-2 px-3 py-2 mb-0.5 rounded-lg transition-colors ${childActive ? 'bg-accent/50 text-foreground font-medium' : 'font-normal text-muted-foreground/60 hover:text-foreground hover:bg-accent/40'}`}>
                   <Blocks size={13} strokeWidth={1.5} className={`flex-shrink-0 ${childActive ? 'text-muted-foreground' : 'text-muted-foreground/40'}`} />
-                  <span className="text-sm flex-1 text-left">拓展</span>
+                  <span className="text-sm flex-1 text-left">能力</span>
                   <ChevronDown size={11} className={`flex-shrink-0 text-muted-foreground/40 transition-transform ${toolchainExpanded ? '' : '-rotate-90'}`} />
                 </Button>
                 <AnimatePresence initial={false}>
@@ -153,7 +160,7 @@ export function AgentConfig({ resource, onBack, inModal = false }: Props) {
                           const isActive = activeSection === c.id;
                           const CIcon = c.icon;
                           return (
-                            <Button variant="ghost" key={c.id} onClick={() => setActiveSection(c.id)}
+                            <Button variant="ghost" key={c.id} onClick={() => selectSection(c.id)}
                               className={`w-full justify-start gap-2 px-3 py-1.5 mb-0.5 rounded-lg transition-colors ${isActive ? 'bg-accent/50 text-foreground font-medium' : 'font-normal text-muted-foreground/60 hover:text-foreground hover:bg-accent/40'}`}>
                               <CIcon size={11} strokeWidth={1.5} className={`flex-shrink-0 ${isActive ? 'text-muted-foreground' : 'text-muted-foreground/40'}`} />
                               <span className="text-sm">{c.label}</span>
@@ -169,11 +176,11 @@ export function AgentConfig({ resource, onBack, inModal = false }: Props) {
           })()}
 
           {/* 高级设置 — sits below the 拓展 group as the tail entry. */}
-          {sections.filter(s => s.id === 'advanced').map(s => {
+          {sections.filter(s => s.id === 'advanced' || s.id === 'automation').map(s => {
             const active = activeSection === s.id;
             const Icon = s.icon;
             return (
-              <Button variant="ghost" key={s.id} onClick={() => setActiveSection(s.id)}
+              <Button variant="ghost" key={s.id} onClick={() => selectSection(s.id)}
                 className={`w-full justify-start gap-2 px-3 py-2 mb-0.5 rounded-lg transition-colors ${active ? 'bg-accent/50 text-foreground font-medium' : 'font-normal text-muted-foreground/60 hover:text-foreground hover:bg-accent/40'}`}>
                 <Icon size={13} strokeWidth={1.5} className={`flex-shrink-0 ${active ? 'text-muted-foreground' : 'text-muted-foreground/40'}`} />
                 <span className="text-sm">{s.label}</span>
@@ -182,22 +189,14 @@ export function AgentConfig({ resource, onBack, inModal = false }: Props) {
           })}
         </div>
         <div className="flex-1 overflow-y-auto px-5 py-4 scrollbar-thin">
-          <AnimatePresence mode="wait">
-            <motion.div key={activeSection} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.2 }}>
-              {activeSection === 'basic' && <AgentBasicSection resource={resource} />}
-              {activeSection === 'models' && <AgentModelsSection />}
-              {activeSection === 'prompt' && <AgentPromptSection />}
-              {activeSection === 'knowledge' && <KnowledgeBaseSection />}
-              {typeof activeSection === 'string' && activeSection.startsWith('toolchain:') && (
-                <ToolchainSection
-                  onExplore={onBack}
-                  controlledTab={activeSection.slice('toolchain:'.length) as ToolchainTabId}
-                />
-              )}
-              {activeSection === 'collaboration' && <AgentCollaborationSection />}
-              {activeSection === 'advanced' && <AgentAdvancedSection />}
-            </motion.div>
-          </AnimatePresence>
+          {visitedSections.has('basic') && <div hidden={activeSection !== 'basic'} className="space-y-6"><AgentBasicSection resource={resource} /><AgentModelsSection /></div>}
+          {visitedSections.has('automation') && <div hidden={activeSection !== 'automation'}><AgentAutomationSection /></div>}
+          {visitedSections.has('prompt') && <div hidden={activeSection !== 'prompt'}><AgentPromptSection /></div>}
+          {visitedSections.has('knowledge') && <div hidden={activeSection !== 'knowledge'}><KnowledgeBaseSection /></div>}
+          {visitedSections.has('capabilities') && <div hidden={!activeSection.startsWith('toolchain:')}><ToolchainSection onExplore={onBack} controlledTab={activeSection.startsWith('toolchain:') ? activeSection.slice('toolchain:'.length) as ToolchainTabId : 'tools'} /></div>}
+          {visitedSections.has('collaboration') && <div hidden={activeSection !== 'collaboration'}><AgentCollaborationSection /></div>}
+          {visitedSections.has('advanced') && <div hidden={activeSection !== 'advanced'}><AgentAdvancedSection /></div>}
+
         </div>
       </div>
     </div>
@@ -250,9 +249,6 @@ function AgentBasicSection({ resource }: { resource: ResourceItem }) {
   const [avatarUrl, setAvatarUrl] = useState('');
   const [avatarTab, setAvatarTab] = useState<'emoji' | 'image'>('emoji');
   const fileInputRef2 = useRef<HTMLInputElement>(null);
-  // Agent runtime type — drives how the agent executes (terminal-native
-  // Claude Code, Cherry's in-app runtime, or long-running background job)
-  const [agentType, setAgentType] = useState<'claude-code' | 'cherry-runtime' | 'long-running'>('cherry-runtime');
   return (
     <div className="max-w-3xl space-y-5">
       <div className="grid grid-cols-1 gap-3">
@@ -333,17 +329,8 @@ function AgentBasicSection({ resource }: { resource: ResourceItem }) {
           </div>
         </div>
         <div className="min-w-0">
-          <label className="text-sm text-muted-foreground mb-1.5 block">类型</label>
-          <Select value={agentType} onValueChange={(v) => setAgentType(v as typeof agentType)}>
-            <SelectTrigger className="w-full !h-9 px-3 text-xs border border-border/60 bg-accent/15 hover:bg-accent/40 rounded-lg">
-              <SelectValue placeholder="类型" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="claude-code">Claude Code</SelectItem>
-              <SelectItem value="cherry-runtime">Cherry Runtime</SelectItem>
-              <SelectItem value="long-running">Long Running</SelectItem>
-            </SelectContent>
-          </Select>
+          <label className="text-sm text-muted-foreground mb-1.5 block">运行时与来源</label>
+          <div className="flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm"><span>Pi Agent</span><Badge variant="outline">Built-in · 内置智能体</Badge></div>
         </div>
       </div>
       <FieldGroup label="简介">
@@ -359,29 +346,23 @@ function AgentBasicSection({ resource }: { resource: ResourceItem }) {
 }
 
 // ===========================
-// 模型设置 — Three-tier model picker (规划 / 常规 / 快速). Split out
-// from BasicSection so the basic info form stays focused on identity.
+// Pi uses one execution model.
 // ===========================
 function AgentModelsSection() {
-  const [planningModel, setPlanningModel] = useState('claude-4-opus');
-  const [regularModel, setRegularModel] = useState('gpt-41');
-  const [fastModel, setFastModel] = useState('gemini-25-flash');
+  const [model, setModel] = useState('gpt-41');
+  const [permission, setPermission] = useState('auto');
+  const [language, setLanguage] = useState('system');
+  return <div className="max-w-3xl space-y-4">
+    <ModelSelector label="模型" value={model} onChange={setModel} hint="Pi Agent 执行任务使用的模型" />
+    <FieldGroup label="权限模式"><Select value={permission} onValueChange={setPermission}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="default">默认 · 操作前询问</SelectItem><SelectItem value="acceptEdits">接受文件编辑</SelectItem><SelectItem value="auto">自动</SelectItem><SelectItem value="bypassPermissions">跳过审批</SelectItem></SelectContent></Select></FieldGroup>
+    <FieldGroup label="语言"><Select value={language} onValueChange={setLanguage}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="system">跟随系统</SelectItem><SelectItem value="zh-CN">简体中文</SelectItem><SelectItem value="en">English</SelectItem></SelectContent></Select></FieldGroup>
+  </div>;
+}
 
-  return (
-    <div className="max-w-3xl space-y-3">
-      <div>
-        <h3 className="text-sm font-medium text-foreground">三档模型</h3>
-        <p className="text-xs text-muted-foreground/60 mt-0.5">
-          智能体按任务自动选择对应档位。规划负责拆解 / 决策，常规负责推理 / 执行，快速负责简单判断 / 格式化。
-        </p>
-      </div>
-      <div className="grid grid-cols-1 gap-y-2.5">
-        <ModelSelector label="规划模型" value={planningModel} onChange={setPlanningModel} hint="负责任务拆解和决策" />
-        <ModelSelector label="常规模型" value={regularModel} onChange={setRegularModel} hint="负责主要推理和执行" />
-        <ModelSelector label="快速模型" value={fastModel} onChange={setFastModel} hint="负责简单判断和格式化" />
-      </div>
-    </div>
-  );
+function AgentAutomationSection() {
+  const [heartbeat, setHeartbeat] = useState(false);
+  const [interval, setInterval] = useState('30');
+  return <div className="max-w-3xl space-y-5"><div className="flex items-center justify-between"><div><h3 className="text-sm">Heartbeat</h3><p className="text-muted-foreground mt-1 text-xs">让 Pi 定期检查工作区并继续待处理任务。</p></div><Switch checked={heartbeat} onCheckedChange={setHeartbeat} /></div><FieldGroup label="Heartbeat 间隔（分钟）"><Input type="number" min={1} value={interval} disabled={!heartbeat} onChange={event => setInterval(event.target.value)} /></FieldGroup><div className="border-border rounded-xl border p-4"><p className="text-sm">定时任务</p><p className="text-muted-foreground mt-2 text-xs">在全局设置 → 任务中管理定时任务与任务看板。</p></div></div>;
 }
 
 function AgentPromptSection() { return <div className="space-y-6"><PromptSection hideFewShot /></div>; }
@@ -1558,8 +1539,12 @@ function AgentNotesSection() {
 
 function AgentAdvancedSection() {
   const [maxRounds, setMaxRounds] = useState(10);
+  const [env, setEnv] = useState('');
   return (
     <div className="max-w-3xl space-y-5">
+      <FieldGroup label="环境变量"><Textarea value={env} onChange={event => setEnv(event.target.value)} placeholder="KEY=value" /></FieldGroup>
+      <div className="text-muted-foreground text-xs">Provider：Cherry Studio · Pi Agent · Built-in</div>
+      <Button variant="outline" onClick={() => toast.success("诊断演示：Pi Agent 运行正常，配置检查通过。")}>运行诊断 · Demo</Button>
       <div>
         <label className="text-sm text-muted-foreground mb-1.5 block">{"最大执行轮次"} <span className="text-muted-foreground/50 ml-1">{maxRounds}</span></label>
         <Slider min={1} max={100} step={1} value={[maxRounds]} onValueChange={([v]) => setMaxRounds(v)} />
